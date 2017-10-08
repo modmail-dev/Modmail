@@ -3,11 +3,12 @@ This is an open source discord bot made by verixx and improved upon suggestions 
 
 ## Hosting on Heroku
 **What is Heroku?**    
-Heroku is a free hosting site that can host many web apps for free. However, the web apps cannot store any data.    
-We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in json files.
+Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data.    
+We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in json files or any other storage files.
 
-**How do I do it?**
-If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone. (Provided you have your bot token and your server ID).
+**How do I do it?**    
+If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone!    
+*Provided you have your Server ID*
 
 ### GitHub Account
 
