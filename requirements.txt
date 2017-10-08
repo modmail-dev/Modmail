@@ -1,0 +1,15 @@
+git+https://github.com/Rapptz/discord.py@rewrite
+aiohttp
+websockets
+chardet
+requests
+beautifulsoup4
+lxml
+Pillow
+pyfiglet
+wikipedia
+pyparsing
+urbandict
+colorthief
+psutil
+urllib3
