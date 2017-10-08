@@ -148,7 +148,7 @@ class Modmail(commands.Bot):
     @commands.command(name='close')
     @commands.has_permissions(manage_guild=True)
     async def _close(self, ctx):
-        if 'User ID:' not in ctx.channel.topic:
+        if 'User ID:' not in str(ctx.channel.topic):
             return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
