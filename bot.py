@@ -288,6 +288,7 @@ class Modmail(commands.Bot):
         if channel is not None:
             await self.send_mail(message, channel, mod=False)
         else:
+            await message.author.send('Mod mail thread created.')
             channel = await guild.create_text_channel(
                 name=self.format_name(author),
                 category=categ
