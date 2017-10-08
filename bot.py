@@ -141,6 +141,7 @@ class Modmail(commands.Bot):
 
         categ = await ctx.guild.create_category(name='modmail', overwrites=self.overwrites(ctx))
         await categ.edit(position=0)
+        await ctx.guild.create_text_channel(name='discussion', category=categ)
         await ctx.send('Successfully set up server.')
 
     @commands.command(name='close')
@@ -169,30 +170,34 @@ class Modmail(commands.Bot):
     def format_info(self, user):
         '''Get information about a member of a server'''
         server = self.guild
-        user = self.guild.get_member(user.id)
-        avi = user.avatar_url
-        roles = sorted(user.roles, key=lambda c: c.position)
-
-        for role in roles:
-            if str(role.color) != "#000000":
-                color = role.color
-        if 'color' not in locals():
-            color = 0
-
-        rolenames = ', '.join([r.name for r in roles if r.name != "@everyone"]) or 'None'
+        member = self.guild.get_member(user.id)
+        avi = member.avatar_url
         time = datetime.datetime.utcnow()
         desc = 'Modmail thread started.'
-        member_number = sorted(server.members, key=lambda m: m.joined_at).index(user) + 1
+        color = 0
 
+        if member:
+            for role in roles:
+                if str(role.color) != "#000000":
+                    color = role.color
+                    
         em = discord.Embed(colour=color, description=desc, timestamp=time)
-        em.add_field(name='Nick', value=user.nick, inline=True)
-        em.add_field(name='Member No.',value=str(member_number),inline = True)
+
         em.add_field(name='Account Created', value=str((time - user.created_at).days)+' days ago.')
-        em.add_field(name='Joined', value=str((time - user.joined_at).days)+' days ago.')
-        em.add_field(name='Roles', value=rolenames, inline=True)
         em.set_footer(text='User ID: '+str(user.id))
         em.set_thumbnail(url=avi)
         em.set_author(name=user, icon_url=server.icon_url)
+
+        if member:
+            roles = sorted(member.roles, key=lambda c: c.position)
+            rolenames = ', '.join([r.name for r in roles if r.name != "@everyone"]) or 'None'
+            member_number = sorted(server.members, key=lambda m: m.joined_at).index(member) + 1
+
+            em.add_field(name='Joined', value=str((time - member.joined_at).days)+' days ago.')
+            em.add_field(name='Member No.',value=str(member_number),inline = True)
+            em.add_field(name='Nick', value=member.nick, inline=True)
+            em.add_field(name='Roles', value=rolenames, inline=True)
+
 
         return em
 
@@ -259,4 +264,4 @@ class Modmail(commands.Bot):
                     await self.process_reply(message)
 
 if __name__ == '__main__':
-    Modmail.init()
+    Modmail.init('MzYxNDgyNjcxNDUwMzU3NzYy.DLXz9g.uCsZWMhzTCwHR6LBW35bS8cfeVw')
