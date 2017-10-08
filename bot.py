@@ -141,8 +141,6 @@ class Modmail(commands.Bot):
 
         categ = await ctx.guild.create_category(name='modmail', overwrites=self.overwrites(ctx))
         await categ.edit(position=0)
-        c = await ctx.guild.create_text_channel(name='discussion', category=categ)
-        await c.edit(topic='DO NOT CHANGE THE CATEGORY NAME OR THE BOT WILL BREAK')
         await ctx.send('Successfully set up server.')
 
     @commands.command(name='close')
@@ -203,12 +201,12 @@ class Modmail(commands.Bot):
 
         return em
 
-    async def send_mail(self, message, channel):
+    async def send_mail(self, message, channel, mod):
         author = message.author
-        if isinstance(channel, discord.TextChannel):
-            fmt = f'» **{author}:** {message.content}'
+        if mod:
+            fmt = f'**Mod » {author.name}:** {message.content}'
         else:
-            fmt = f'» **{author} (Mod):** {message.content}'
+            fmt = f'**User » {author.name}:** {message.content}'
         embed = None
         if message.embeds:
             embed = message.embeds[0]
@@ -221,10 +219,10 @@ class Modmail(commands.Bot):
             await message.delete()
         except discord.errors.NotFound:
             pass
-        await self.send_mail(message, message.channel)
+        await self.send_mail(message, message.channel, mod=True)
         user_id = int(message.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
-        await self.send_mail(message, user)
+        await self.send_mail(message, user, mod=True)
 
     def format_name(self, author):
         name = author.name
@@ -245,7 +243,7 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(guild.categories, name='modmail')
 
         if channel is not None:
-            await self.send_mail(message, channel)
+            await self.send_mail(message, channel, mod=False)
         else:
             channel = await guild.create_text_channel(
                 name=self.format_name(author),
@@ -253,7 +251,7 @@ class Modmail(commands.Bot):
                 )
             await channel.edit(topic=topic)
             await channel.send('@here', embed=self.format_info(author))
-            await self.send_mail(message, channel)
+            await self.send_mail(message, channel, mod=False)
 
     async def on_message(self, message):
         if message.author.bot:
