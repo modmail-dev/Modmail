@@ -24,7 +24,7 @@ After making a Github account, you need to make a Heroku account. Make one at [H
 2. Head over to the [applicatons page](https://discordapp.com/developers/applications/me).
 3. Click “new application”. Give it a name, picture and description.
 4. Click “Create Bot User” and click “Yes, Do It!” when the dialog pops up.
-5. Copy down the bot token. This is what is used to login to your bot and will be used at step 8.
+5. Copy down the bot token. This is what is used to login to your bot and will be used at Step 8, or 11 if you are setting up on your PC.
 
 *Here's a GIF to explain the first 5 steps*
 ![GIF to explain the first 5 steps](https://i.imgur.com/Y2ouW7I.gif)
@@ -53,15 +53,7 @@ This is a self-bot written in the python programming language. So if you don't a
 
 Now that you have python installed, you are good to go. Follow the steps below for a successful installation.
 
-1. Create a Bot Application for Discord
-2. Head over to the [applicatons page](https://discordapp.com/developers/applications/me).
-3. Click “new application”. Give it a name, picture and description.
-4. Click “Create Bot User” and click “Yes, Do It!” when the dialog pops up.
-5. Copy down the bot token. This is what is used to login to your bot and will be used at step 12.
-
-*Here's a GIF to explain the first 5 steps*
-![GIF to explain the first 5 steps](https://i.imgur.com/Y2ouW7I.gif)
-
+1. Look at [Steps 1 to 5 of Setting up on Heroku](https://github.com/verixx/modmail/blob/master/README.md#setting-it-up)
 6. Download the selfbot from the [github page](https://github.com/verixx/modmail/archive/master.zip).
 7. Extract the zip file to the desktop or wherever you want.
 8. Open your terminal or cmd.
