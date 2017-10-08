@@ -152,7 +152,7 @@ class Modmail(commands.Bot):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def setup(self, ctx, modrole: discord.Role):
+    async def setup(self, ctx, modrole: discord.Role=None):
         '''Sets up a server for modmail'''
         if discord.utils.get(ctx.guild.categories, name='modmail'):
             return await ctx.send('This server is already set up.')
