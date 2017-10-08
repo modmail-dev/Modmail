@@ -171,16 +171,19 @@ class Modmail(commands.Bot):
         '''Get information about a member of a server'''
         server = self.guild
         member = self.guild.get_member(user.id)
-        avi = member.avatar_url
+        avi = user.avatar_url
         time = datetime.datetime.utcnow()
         desc = 'Modmail thread started.'
         color = 0
 
         if member:
+            roles = sorted(member.roles, key=lambda c: c.position)
+            rolenames = ', '.join([r.name for r in roles if r.name != "@everyone"]) or 'None'
+            member_number = sorted(server.members, key=lambda m: m.joined_at).index(member) + 1
             for role in roles:
                 if str(role.color) != "#000000":
                     color = role.color
-                    
+
         em = discord.Embed(colour=color, description=desc, timestamp=time)
 
         em.add_field(name='Account Created', value=str((time - user.created_at).days)+' days ago.')
@@ -189,10 +192,6 @@ class Modmail(commands.Bot):
         em.set_author(name=user, icon_url=server.icon_url)
 
         if member:
-            roles = sorted(member.roles, key=lambda c: c.position)
-            rolenames = ', '.join([r.name for r in roles if r.name != "@everyone"]) or 'None'
-            member_number = sorted(server.members, key=lambda m: m.joined_at).index(member) + 1
-
             em.add_field(name='Joined', value=str((time - member.joined_at).days)+' days ago.')
             em.add_field(name='Member No.',value=str(member_number),inline = True)
             em.add_field(name='Nick', value=member.nick, inline=True)
@@ -215,7 +214,10 @@ class Modmail(commands.Bot):
         await channel.send(fmt, embed=embed)
 
     async def process_reply(self, message):
-        await message.delete()
+        try:
+            await message.delete()
+        except discord.errors.NotFound:
+            pass
         await self.send_mail(message, message.channel)
         user_id = int(message.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
