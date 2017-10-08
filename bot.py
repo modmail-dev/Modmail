@@ -20,8 +20,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
 '''
+
+GUILD_ID = 364718578223808514
 
 import discord
 from discord.ext import commands
@@ -35,6 +36,8 @@ import sys
 import os
 import re
 import textwrap
+import string
+
 
 class Modmail(commands.Bot):
     def __init__(self):
@@ -97,8 +100,13 @@ class Modmail(commands.Bot):
         print('---------------')
         print('Modmail connected!')
 
+    @property
+    def guild_id(self):
+        return int(os.environ.get('GUILD_ID')) or GUILD_ID
+
     async def on_ready(self):
         '''Bot startup, sets uptime.'''
+        self.guild = discord.utils.get(self.guilds, id=self.guild_id)
         if not hasattr(self, 'uptime'):
             self.uptime = datetime.datetime.utcnow()
         print(textwrap.dedent(f'''
@@ -130,10 +138,17 @@ class Modmail(commands.Bot):
         if discord.utils.get(ctx.guild.categories, name='modmail'):
             return await ctx.send('This server is already set up.')
 
-
         categ = await ctx.guild.create_category(name='modmail', overwrites=self.overwrites(ctx))
         await categ.edit(position=0)
         await ctx.send('Successfully set up server.')
+
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def close(self, ctx):
+        user_id = int(ctx.channel.topic.split(': ')[1])
+        user = self.get_user(user_id)
+        await user.send('A moderator has closed this modmail session.')
+        await ctx.channel.delete()
 
     @commands.command()
     async def ping(self, ctx):
@@ -150,14 +165,97 @@ class Modmail(commands.Bot):
             if role.permissions.manage_guild:
                 yield role
 
+    def format_info(self, user):
+        '''Get information about a member of a server'''
+        server = self.guild
+        user = self.guild.get_member(user.id)
+        avi = user.avatar_url
+        roles = sorted(user.roles, key=lambda c: c.position)
+
+        for role in roles:
+            if str(role.color) != "#000000":
+                color = role.color
+        if 'color' not in locals():
+            color = 0
+
+        rolenames = ', '.join([r.name for r in roles if r.name != "@everyone"]) or 'None'
+        time = datetime.datetime.utcnow()
+        desc = 'Modmail thread started.'
+        member_number = sorted(server.members, key=lambda m: m.joined_at).index(user) + 1
+
+        em = discord.Embed(colour=color, description=desc, timestamp=time)
+        em.add_field(name='Nick', value=user.nick, inline=True)
+        em.add_field(name='Member No.',value=str(member_number),inline = True)
+        em.add_field(name='Account Created', value=str((time - user.created_at).days)+' days ago.')
+        em.add_field(name='Joined', value=str((time - user.joined_at).days)+' days ago.')
+        em.add_field(name='Roles', value=rolenames, inline=True)
+        em.set_footer(text='User ID: '+str(user.id))
+        em.set_thumbnail(url=avi)
+        em.set_author(name=user, icon_url=server.icon_url)
+
+        return em
+
+    async def send_mail(self, message, channel):
+        author = message.author
+        if isinstance(channel, discord.TextChannel):
+            fmt = f'» **{author}:** {message.content}'
+        else:
+            fmt = f'» **{author} (Mod):** {message.content}'
+        embed = None
+        if message.embeds:
+            embed = message.embeds[0]
+        if message.attachments:
+            fmt += '\n\n **Attachment: ' + message.attachments[0].url
+        await channel.send(fmt, embed=embed)
+
+    async def process_reply(self, message):
+        await message.delete()
+        await self.send_mail(message, message.channel)
+        user_id = int(message.channel.topic.split(': ')[1])
+        user = self.get_user(user_id)
+        await self.send_mail(message, user)
+
+    def format_name(self, author):
+        name = author.name
+        new_name = ''
+        for letter in name:
+            if letter in string.ascii_letters + string.digits:
+                new_name += letter
+        if not new_name:
+            new_name = 'null'
+        new_name += f'-{author.discriminator}'
+        return new_name
 
     async def process_modmail(self, message):
-        pass
+        guild = self.guild
+        author = message.author
+        topic = f'User ID: {author.id}'
+        channel = discord.utils.get(guild.text_channels, topic=topic)
+        categ = discord.utils.get(guild.categories, name='modmail')
+
+        if channel is not None:
+            await self.send_mail(message, channel)
+        else:
+            channel = await guild.create_text_channel(
+                name=self.format_name(author),
+                category=categ
+                )
+            await channel.edit(topic=topic)
+            await channel.send(embed=self.format_info(author))
+            await self.send_mail(message, channel)
 
     async def on_message(self, message):
+        if message.author.bot:
+            return
         await self.process_commands(message)
         if isinstance(message.channel, discord.DMChannel):
             await self.process_modmail(message)
+        else:
+            c_id = message.channel.category_id
+            categ = discord.utils.get(message.guild.categories, id=c_id)
+            if categ is not None:
+                if categ.name == 'modmail':
+                    await self.process_reply(message)
 
 if __name__ == '__main__':
-    Modmail.init('token')
+    Modmail.init()
