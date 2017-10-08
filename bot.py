@@ -27,14 +27,11 @@ GUILD_ID = 0 # your guild id here
 import discord
 from discord.ext import commands
 import asyncio
-import aiohttp
 import datetime
-import psutil
 import time
 import json
 import sys
 import os
-import re
 import textwrap
 import string
 
