@@ -112,8 +112,6 @@ class Modmail(commands.Bot):
     async def on_ready(self):
         '''Bot startup, sets uptime.'''
         self.guild = discord.utils.get(self.guilds, id=self.guild_id)
-        if not hasattr(self, 'uptime'):
-            self.uptime = datetime.datetime.utcnow()
         print(textwrap.dedent(f'''
         ---------------
         Client is ready!
