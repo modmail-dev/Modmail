@@ -308,8 +308,8 @@ class Modmail(commands.Bot):
         if isinstance(message.channel, discord.DMChannel):
             await self.process_modmail(message)
 
-    @commands.command()
-    async def reply(self, ctx, *, msg):
+    @commands.command(name='reply')
+    async def _reply(self, ctx, *, msg):
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         if categ is not None:
             if categ.name == 'modmail':
