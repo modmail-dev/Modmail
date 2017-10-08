@@ -157,7 +157,7 @@ class Modmail(commands.Bot):
     @commands.has_permissions(administrator=True)
     async def setup(self, ctx, *, modrole: discord.Role=None):
         '''Sets up a server for modmail'''
-        if discord.utils.get(ctx.guild.categories, name='modmail'):
+        if discord.utils.get(ctx.guild.categories, name='Mod Mail'):
             return await ctx.send('This server is already set up.')
 
         categ = await ctx.guild.create_category(
@@ -285,7 +285,7 @@ class Modmail(commands.Bot):
         author = message.author
         topic = f'User ID: {author.id}'
         channel = discord.utils.get(guild.text_channels, topic=topic)
-        categ = discord.utils.get(guild.categories, name='modmail')
+        categ = discord.utils.get(guild.categories, name='Mod Mail')
 
         if channel is not None:
             await self.send_mail(message, channel, mod=False)
