@@ -150,7 +150,8 @@ class Modmail(commands.Bot):
         cmds = '`m.setup [modrole] <- (optional)` - Command that sets up the bot.\n' \
                '`m.reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                '`m.close` - Closes the current thread and deletes the channel.\n' \
-               '`m.disable` - Closes all threads and disables modmail for the server.'
+               '`m.disable` - Closes all threads and disables modmail for the server.\n' \
+               '`m.customstatus` - Sets the Bot status to whatever you want.'
 
         warn = 'Do not manually delete the category or channels as it will break the system. ' \
                'Modifying the channel topic will also break the system.'
@@ -323,6 +324,11 @@ class Modmail(commands.Bot):
                 if 'User ID:' in ctx.channel.topic:
                     ctx.message.content = msg
                     await self.process_reply(ctx.message)
+
+    @commands.command(name="customstatus", aliases=['status', 'presence'])
+    async def _status(self, ctx, *, message):
+        await self.change_presence(game=discord.Game(name=message), status=discord.Status.online)
+        await ctx.send(f"Changed status to **{message}**")
                 
 if __name__ == '__main__':
     Modmail.init()
