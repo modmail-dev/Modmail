@@ -266,4 +266,4 @@ class Modmail(commands.Bot):
                     await self.process_reply(message)
 
 if __name__ == '__main__':
-    Modmail.init('MzYxNDgyNjcxNDUwMzU3NzYy.DLXz9g.uCsZWMhzTCwHR6LBW35bS8cfeVw')
+    Modmail.init()
