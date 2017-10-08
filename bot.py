@@ -323,6 +323,11 @@ class Modmail(commands.Bot):
                 if 'User ID:' in ctx.channel.topic:
                     ctx.message.content = msg
                     await self.process_reply(ctx.message)
+
+    @commands.command(name="customstatus", aliases=['status', 'presence'])
+    async def _status(self, ctx, *, message):
+        await self.change_presence(game=discord.Game(name=message), status=discord.Status.online)
+        await ctx.send(f"Changed status to **{message}**")
                 
 if __name__ == '__main__':
     Modmail.init()
