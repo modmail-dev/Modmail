@@ -260,10 +260,11 @@ class Modmail(commands.Bot):
             await self.process_modmail(message)
 
     @commands.command()
-    async def reply(self, ctx):
+    async def reply(self, ctx, *, msg):
         categ = discord.utils.get(ctx.message.guild.categories, id=ctx.message.channel.category_id)
         if categ is not None:
             if categ.name == 'modmail':
+                ctx.message.content = msg
                 await self.process_reply(ctx.message)
                 
 if __name__ == '__main__':
