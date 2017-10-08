@@ -69,7 +69,7 @@ class Modmail(commands.Bot):
         '''Returns the prefix.'''
         with open('data/config.json') as f:
             prefix = json.load(f).get('PREFIX')
-        return os.environ.get('PREFIX') or prefix or 'r.'
+        return os.environ.get('PREFIX') or prefix or 'm.'
 
     @staticmethod
     def run_wizard():
