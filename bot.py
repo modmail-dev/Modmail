@@ -288,6 +288,7 @@ class Modmail(commands.Bot):
                 )
             await channel.edit(topic=topic)
             await channel.send('@here', embed=self.format_info(author))
+            await channel.send('\u200b')
             await self.send_mail(message, channel, mod=False)
 
     async def on_message(self, message):
