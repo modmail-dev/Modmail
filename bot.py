@@ -117,15 +117,14 @@ class Modmail(commands.Bot):
         ---------------
         '''))
 
-    def overwrites(self, ctx, modroles=None):
+    def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False)
         }
 
-        if modroles:
-            for role in modroles:
-                overwrites[role] = discord.PermissionOverwrite(read_messages=True)
+        if modrole:
+            overwrites[modrole] = discord.PermissionOverwrite(read_messages=True)
         else:
             for role in self.guess_modroles(ctx):
                 overwrites[role] = discord.PermissionOverwrite(read_messages=True)
@@ -153,14 +152,14 @@ class Modmail(commands.Bot):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def setup(self, ctx, modroles: discord.Role):
+    async def setup(self, ctx, modrole: discord.Role):
         '''Sets up a server for modmail'''
         if discord.utils.get(ctx.guild.categories, name='modmail'):
             return await ctx.send('This server is already set up.')
 
         categ = await ctx.guild.create_category(
             name='modmail', 
-            overwrites=self.overwrites(ctx, modroles=modroles)
+            overwrites=self.overwrites(ctx, modrole=modrole)
             )
         await categ.edit(position=0)
         c = await ctx.guild.create_text_channel(name='information', category=categ)
