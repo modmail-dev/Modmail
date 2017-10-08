@@ -190,7 +190,7 @@ class Modmail(commands.Bot):
                     if 'User ID:' in str(chan.topic):
                         user_id = int(chan.topic.split(': ')[1])
                         user = self.get_user(user_id)
-                        await user.send(f'{ctx.author.name} has closed this modmail session.')
+                        await user.send(f'**{ctx.author}** has closed this modmail session.')
                     await chan.delete()
         await categ.delete()
         await ctx.send('Disabled modmail.')
@@ -203,7 +203,7 @@ class Modmail(commands.Bot):
             return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
-        await user.send(f'{ctx.author.name} has closed this modmail session.')
+        await user.send(f'**{ctx.author}** has closed this modmail session.')
         await ctx.channel.delete()
 
     @commands.command()
