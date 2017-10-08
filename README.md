@@ -64,4 +64,19 @@ Now that you have python installed, you are good to go. Follow the steps below f
 13. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
 You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
 
+## Commands
+Parameters are either [] or <>.    
+[] - Optional Parameters    
+<> - Mandatory Parameters    
+Do not include these while typing your command    
+Include your prefix in front of every commmand
+
+| Command | Description | Usage |
+| ------------- | ------------- | ------------- |
+| setup  | Sets up your server for Mod Mail `ADMINISTRATOR Required` | `setup [modrole]` |
+| reply | Sends a message to the current thread  | `reply <message...>` |
+| close | Closes the current thread and deletes the channel | `close` |
+| disable | Closes all threads and disables modmail for the server. `ADMINISTRATOR Required` | `disable` |
+
+
 If you do use the bot, a star on this repository is appreciated ;)
