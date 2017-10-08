@@ -56,7 +56,7 @@ class Modmail(commands.Bot):
     def token(self):
         '''Returns your token wherever it is'''
         try:
-            with open('data/config.json') as f:
+            with open('config.json') as f:
                 config = json.load(f)
                 if config.get('TOKEN') == "your_token_here":
                     if not os.environ.get('TOKEN'):
