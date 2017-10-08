@@ -38,7 +38,7 @@ import string
 
 class Modmail(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix='m.')
+        super().__init__(command_prefix=self.get_pre)
         self.uptime = datetime.datetime.utcnow()
         self._add_commands()
 
@@ -63,6 +63,13 @@ class Modmail(commands.Bot):
         except FileNotFoundError:
             token = None
         return os.environ.get('TOKEN') or token
+    
+    @staticmethod
+    async def get_pre(bot, message):
+        '''Returns the prefix.'''
+        with open('data/config.json') as f:
+            prefix = json.load(f).get('PREFIX')
+        return os.environ.get('PREFIX') or prefix or 'r.'
 
     @staticmethod
     def run_wizard():
