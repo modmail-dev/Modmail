@@ -102,7 +102,8 @@ class Modmail(commands.Bot):
 
     @property
     def guild_id(self):
-        return int(os.environ.get('GUILD_ID')) or GUILD_ID
+        from_heroku = os.environ.get('GUILD_ID')
+        return int(from_heroku) if from_heroku else GUILD_ID
 
     async def on_ready(self):
         '''Bot startup, sets uptime.'''
