@@ -155,13 +155,13 @@ class Modmail(commands.Bot):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def setup(self, ctx, modrole: discord.Role=None):
+    async def setup(self, ctx, *, modrole: discord.Role=None):
         '''Sets up a server for modmail'''
         if discord.utils.get(ctx.guild.categories, name='modmail'):
             return await ctx.send('This server is already set up.')
 
         categ = await ctx.guild.create_category(
-            name='modmail', 
+            name='Mod Mail', 
             overwrites=self.overwrites(ctx, modrole=modrole)
             )
         await categ.edit(position=0)
@@ -173,7 +173,7 @@ class Modmail(commands.Bot):
     @commands.has_permissions(administrator=True)
     async def disable(self, ctx):
         '''Close all threads and disable modmail.'''
-        categ = discord.utils.get(ctx.guild.categories, name='modmail')
+        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         if not categ:
             return await ctx.send('This server is not set up.')
         for category, channels in ctx.guild.by_category():
@@ -311,7 +311,7 @@ class Modmail(commands.Bot):
     async def reply(self, ctx, *, msg):
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         if categ is not None:
-            if categ.name == 'modmail':
+            if categ.name == 'Mod Mail':
                 if 'User ID:' in ctx.channel.topic:
                     ctx.message.content = msg
                     await self.process_reply(ctx.message)
