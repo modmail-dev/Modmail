@@ -25,15 +25,24 @@ SOFTWARE.
 
 import discord
 from discord.ext import commands
+import asyncio
+import aiohttp
 import datetime
+import psutil
+import time
+import json
+import sys
+import os
+import re
+import textwrap
 
 class Modmail(commands.Bot):
-    def __init__(self, token):
-        super().__init__(command_prefix='?')
+    def __init__(self):
+        super().__init__(command_prefix='m.')
         self.uptime = datetime.datetime.utcnow()
-        self.add_commands()
+        self._add_commands()
 
-    def add_commands(self):
+    def _add_commands(self):
         '''Adds commands automatically'''
         for attr in dir(self):
             cmd = getattr(self, attr)
@@ -43,13 +52,16 @@ class Modmail(commands.Bot):
     @property
     def token(self):
         '''Returns your token wherever it is'''
-        with open('data/config.json') as f:
-            config = json.load(f)
-            if config.get('TOKEN') == "your_token_here":
-                if not os.environ.get('TOKEN'):
-                    self.run_wizard()
-            else:
-                token = config.get('TOKEN').strip('\"')
+        try:
+            with open('data/config.json') as f:
+                config = json.load(f)
+                if config.get('TOKEN') == "your_token_here":
+                    if not os.environ.get('TOKEN'):
+                        self.run_wizard()
+                else:
+                    token = config.get('TOKEN').strip('\"')
+        except FileNotFoundError:
+            token = None
         return os.environ.get('TOKEN') or token
 
     @staticmethod
@@ -72,9 +84,12 @@ class Modmail(commands.Bot):
     def init(bot, token=None):
         '''Starts the actual bot'''
         selfbot = bot()
-        safe_token = token or selfbot.token.strip('\"')
+        if token:
+            to_use = token.strip('"')
+        else:
+            to_use = selfbot.token.strip('"')
         try:
-            selfbot.run(safe_token, bot=False, reconnect=True)
+            selfbot.run(to_use, reconnect=True)
         except Exception as e:
             print(e)
 
@@ -97,39 +112,52 @@ class Modmail(commands.Bot):
         ---------------
         '''))
 
-    @commands.command()
-    async def setup(self, ctx):
-        '''Sets up a server for modmail'''
-        if discord.utils.get(ctx.guild.categories, name='modmail'):
-            return await ctx.send('This server is already set up.')
+    def overwrites(self, ctx):
+        '''Permision overwrites for the guild.'''
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False)
         }
 
-        modrole = self.guess_modrole(ctx)
-        if modrole:
-            overwrites[modrole] = discord.PermissionOverwrite(read_messages=True)
+        for role in self.guess_modroles(ctx):
+            overwrites[role] = discord.PermissionOverwrite(read_messages=True)
 
-        await ctx.guild.create_category(name='modmail', overwrites=overwrites)
+        return overwrites
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def setup(self, ctx):
+        '''Sets up a server for modmail'''
+        if discord.utils.get(ctx.guild.categories, name='modmail'):
+            return await ctx.send('This server is already set up.')
+
+
+        categ = await ctx.guild.create_category(name='modmail', overwrites=self.overwrites(ctx))
+        await categ.edit(position=0)
         await ctx.send('Successfully set up server.')
 
-    def guess_modrole(ctx):
-        '''
-        Finds a role if it has the manage_guild 
-        permission or if it startswith `mod`
-        '''
-        perm_check = lambda r: r.permissions.manage_guild
-        loose_check = lambda r: r.name.lower.startswith('mod')
-        perm = discord.utils.find(perm_check, ctx.guild.roles)
-        loose = discord.utils.find(loose_check, ctx.guild.roles)
-        return perm or loose
+    @commands.command()
+    async def ping(self, ctx):
+        """Pong! Returns your websocket latency."""
+        em = discord.Embed()
+        em.title ='Pong! Websocket Latency:'
+        em.description = f'{self.ws.latency * 1000:.4f} ms'
+        em.color = 0x00FF00
+        await ctx.send(embed=em)
+
+    def guess_modroles(self, ctx):
+        '''Finds roles if it has the manage_guild perm'''
+        for role in ctx.guild.roles:
+            if role.permissions.manage_guild:
+                yield role
+
 
     async def process_modmail(self, message):
         pass
 
     async def on_message(self, message):
-        self.process_commands(message)
-        if message.channel.is_private:
+        await self.process_commands(message)
+        if isinstance(message.channel, discord.DMChannel):
             await self.process_modmail(message)
 
-        
+if __name__ == '__main__':
+    Modmail.init('token')
