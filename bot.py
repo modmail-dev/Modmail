@@ -137,7 +137,8 @@ class Modmail(commands.Bot):
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
         em.description = 'This bot is a python implementation of a stateless "Mod Mail" bot. ' \
                          'Made by verixx and improved by the suggestions of others. This bot ' \
-                         'saves no data and utilises channel topics for storage and syncing.'
+                         'saves no data and utilises channel topics for storage and syncing.' 
+                 
 
         cmds = '`m.setup [modrole] <- (optional)` - Command that sets up the bot.\n' \
                '`m.reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
@@ -148,6 +149,7 @@ class Modmail(commands.Bot):
                'Modifying the channel topic will also break the system.'
         em.add_field(name='Commands', value=cmds)
         em.add_field(name='Warning', value=warn)
+        em.add_field(name='Github', value='https://github.com/verixx/modmail')
 
         return em
 
