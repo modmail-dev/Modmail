@@ -143,9 +143,9 @@ class Modmail(commands.Bot):
         await categ.edit(position=0)
         await ctx.send('Successfully set up server.')
 
-    @commands.command()
+    @commands.command(name='close')
     @commands.has_permissions(manage_guild=True)
-    async def close(self, ctx):
+    async def _close(self, ctx):
         user_id = int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         await user.send('A moderator has closed this modmail session.')
@@ -242,7 +242,7 @@ class Modmail(commands.Bot):
                 category=categ
                 )
             await channel.edit(topic=topic)
-            await channel.send(embed=self.format_info(author))
+            await channel.send('@here', embed=self.format_info(author))
             await self.send_mail(message, channel)
 
     async def on_message(self, message):
