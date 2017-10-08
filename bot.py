@@ -84,17 +84,17 @@ class Modmail(commands.Bot):
         os.execv(sys.executable, ['python'] + sys.argv)
 
     @classmethod
-    def init(bot, token=None):
+    def init(cls, token=None):
         '''Starts the actual bot'''
-        selfbot = bot()
+        bot = cls()
         if token:
             to_use = token.strip('"')
         else:
-            to_use = selfbot.token.strip('"')
+            to_use = bot.token.strip('"')
         try:
-            selfbot.run(to_use, reconnect=True)
+            bot.run(to_use, reconnect=True)
         except Exception as e:
-            print(e)
+            raise e
 
     async def on_connect(self):
         print('---------------')
@@ -121,14 +121,18 @@ class Modmail(commands.Bot):
         ---------------
         '''))
 
-    def overwrites(self, ctx):
+    def overwrites(self, ctx, modroles=None):
         '''Permision overwrites for the guild.'''
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False)
         }
 
-        for role in self.guess_modroles(ctx):
-            overwrites[role] = discord.PermissionOverwrite(read_messages=True)
+        if modroles:
+            for role in modroles:
+                overwrites[role] = discord.PermissionOverwrite(read_messages=True)
+        else:
+            for role in self.guess_modroles(ctx):
+                overwrites[role] = discord.PermissionOverwrite(read_messages=True)
 
         return overwrites
 
@@ -136,13 +140,16 @@ class Modmail(commands.Bot):
         em = discord.Embed(color=0x00FFFF)
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
         em.description = 'This bot is a python implementation of a stateless "Mod Mail" bot. ' \
-                         'Made by verixx and improved by the suggestions of others. This bot saves no data and utilises channel topics for storage and syncing.'
+                         'Made by verixx and improved by the suggestions of others. This bot ' \
+                         'saves no data and utilises channel topics for storage and syncing.'
+
         cmds = '`m.setup [modrole] <- (optional)` - Command that sets up the bot.\n' \
                '`m.reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                '`m.close` - Closes the current thread and deletes the channel.\n' \
                '`m.disable` - Closes all threads and disables modmail for the server.'
 
-        warn = 'Do not manually delete the category or channels as it will break the system. Modifying the channel topic will also break the system.'
+        warn = 'Do not manually delete the category or channels as it will break the system. ' \
+               'Modifying the channel topic will also break the system.'
         em.add_field(name='Commands', value=cmds)
         em.add_field(name='Warning', value=warn)
 
@@ -150,12 +157,15 @@ class Modmail(commands.Bot):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def setup(self, ctx):
+    async def setup(self, ctx, *modroles: discord.Role = None):
         '''Sets up a server for modmail'''
         if discord.utils.get(ctx.guild.categories, name='modmail'):
             return await ctx.send('This server is already set up.')
 
-        categ = await ctx.guild.create_category(name='modmail', overwrites=self.overwrites(ctx))
+        categ = await ctx.guild.create_category(
+            name='modmail', 
+            overwrites=self.overwrites(ctx, modroles=modroles)
+            )
         await categ.edit(position=0)
         c = await ctx.guild.create_text_channel(name='information', category=categ)
         await c.send(embed=self.help_embed())
@@ -206,7 +216,8 @@ class Modmail(commands.Bot):
                 yield role
 
     def format_info(self, user):
-        '''Get information about a member of a server'''
+        '''Get information about a member of a server
+        supports users from the guild or not.'''
         server = self.guild
         member = self.guild.get_member(user.id)
         avi = user.avatar_url
@@ -234,7 +245,6 @@ class Modmail(commands.Bot):
             em.add_field(name='Member No.',value=str(member_number),inline = True)
             em.add_field(name='Nick', value=member.nick, inline=True)
             em.add_field(name='Roles', value=rolenames, inline=True)
-
 
         return em
 
