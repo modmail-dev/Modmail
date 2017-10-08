@@ -141,12 +141,15 @@ class Modmail(commands.Bot):
 
         categ = await ctx.guild.create_category(name='modmail', overwrites=self.overwrites(ctx))
         await categ.edit(position=0)
-        await ctx.guild.create_text_channel(name='discussion', category=categ)
+        c = await ctx.guild.create_text_channel(name='discussion', category=categ)
+        await c.edit(topic='DO NOT CHANGE THE CATEGORY NAME OR THE BOT WILL BREAK')
         await ctx.send('Successfully set up server.')
 
     @commands.command(name='close')
     @commands.has_permissions(manage_guild=True)
     async def _close(self, ctx):
+        if 'User ID:' not in ctx.channel.topic:
+            return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         await user.send('A moderator has closed this modmail session.')
@@ -261,11 +264,12 @@ class Modmail(commands.Bot):
 
     @commands.command()
     async def reply(self, ctx, *, msg):
-        categ = discord.utils.get(ctx.message.guild.categories, id=ctx.message.channel.category_id)
+        categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         if categ is not None:
             if categ.name == 'modmail':
-                ctx.message.content = msg
-                await self.process_reply(ctx.message)
+                if 'User ID:' in ctx.channel.topic:
+                    ctx.message.content = msg
+                    await self.process_reply(ctx.message)
                 
 if __name__ == '__main__':
     Modmail.init()
