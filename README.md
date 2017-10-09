@@ -17,6 +17,7 @@ For this to work you will need to make a Github account (If you don't have one a
 ### Heroku Account
 
 After making a Github account, you need to make a Heroku account. Make one at [Heroku's Website](https://heroku.com/) and then follow the steps below: 
+[![Heroku Tutorial](https://img.youtube.com/vi/MSJWMhC5X3I/0.jpg)](https://www.youtube.com/watch?v=MSJWMhC5X3I)
 
 ### Setting it up
 
