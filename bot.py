@@ -326,9 +326,18 @@ class Modmail(commands.Bot):
                     await self.process_reply(ctx.message)
 
     @commands.command(name="customstatus", aliases=['status', 'presence'])
+    @commands.has_permissions(administrator=True)
     async def _status(self, ctx, *, message):
         await self.change_presence(game=discord.Game(name=message), status=discord.Status.online)
         await ctx.send(f"Changed status to **{message}**")
+
+    @commands.command()
+    async def block(self, ctx):
+        categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
+        if categ is not None:
+            if categ.name == 'Mod Mail':
+                await self.get_user(int(ctx.channel.topic.split(': ')[1])).block()
+                await ctx.channel.delete()
                 
 if __name__ == '__main__':
     Modmail.init()
