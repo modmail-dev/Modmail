@@ -204,7 +204,10 @@ class Modmail(commands.Bot):
             return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
-        await user.send(f'**{ctx.author}** has closed this modmail session.')
+        try:
+            await user.send(f'**{ctx.author}** has closed this modmail session.')
+        except:
+            pass
         await ctx.channel.delete()
 
     @commands.command()
