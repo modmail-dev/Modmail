@@ -49,19 +49,19 @@ Now you should be done. Go over to discord and try it out!
 ## Self-Hosting on your own PC or VPS    
 ### Installing Python
 
-This is a self-bot written in the python programming language. So if you don't already have python correctly installed, you must [install it](http://www.ics.uci.edu/~pattis/common/handouts/pythoneclipsejava/python.html).
+This is a bot written in the python programming language. So if you don't already have python correctly installed, you must [install it](http://www.ics.uci.edu/~pattis/common/handouts/pythoneclipsejava/python.html).
 
 ### Installing the Bot
 
 Now that you have python installed, you are good to go. Follow the steps below for a successful installation.
 
 1. Look at [Steps 1 to 5 of Setting up on Heroku](https://github.com/verixx/modmail/blob/master/README.md#setting-it-up)
-6. Download the selfbot from the [github page](https://github.com/verixx/modmail/archive/master.zip).
+6. Download the bot from the [github page](https://github.com/verixx/modmail/archive/master.zip).
 7. Extract the zip file to the desktop or wherever you want.
 8. Open your terminal or cmd.
 9. Navigate to the bot folder. i.e `cd desktop/modmail-master`
 10. Install all the requirements: `pip install -r requirements.txt`
-11. Run the bot with `python selfbot.py` or on mac or linux `python3.6 selfbot.py`
+11. Run the bot with `python bot.py` or on mac or linux `python3.6 bot.py`
 12. Enter your token and server ID in the wizard.
 13. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
 You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
