@@ -260,16 +260,18 @@ class Modmail(commands.Bot):
 
     async def send_mail(self, message, channel, mod):
         author = message.author
+        fmt = discord.Embed()
+        fmt.description = message.content
         if mod:
-            fmt = f'**Mod » {author.name}:** {message.content}'
+            fmt.color=discord.Color.green()
+            fmt.set_author(name=f'Mod » {author}', icon_url=author.avatar_url)
         else:
-            fmt = f'**User » {author.name}:** {message.content}'
+            fmt.color=discord.Color.gold()
+            fmt.set_author(name=f'User » {author}', icon_url=author.avatar_url)
         embed = None
-        if message.embeds:
-            embed = message.embeds[0]
         if message.attachments:
-            fmt += '\n\n **Attachment: ' + message.attachments[0].url
-        await channel.send(fmt, embed=embed)
+            fmt.set_image(url=message.attachments[0].url)
+        await channel.send(embed=fmt)
 
     async def process_reply(self, message):
         try:
