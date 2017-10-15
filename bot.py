@@ -262,12 +262,15 @@ class Modmail(commands.Bot):
         author = message.author
         fmt = discord.Embed()
         fmt.description = message.content
+        fmt.timestamp = message.created_at
         if mod:
             fmt.color=discord.Color.green()
-            fmt.set_author(name=f'Mod » {author}', icon_url=author.avatar_url)
+            fmt.set_author(name=str(author), icon_url=author.avatar_url)
+            fmt.set_footer(text='Moderator')
         else:
             fmt.color=discord.Color.gold()
-            fmt.set_author(name=f'User » {author}', icon_url=author.avatar_url)
+            fmt.set_author(name=str(author), icon_url=author.avatar_url)
+            fmt.set_footer(text='User')
         embed = None
         if message.attachments:
             fmt.set_image(url=message.attachments[0].url)
