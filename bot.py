@@ -204,8 +204,11 @@ class Modmail(commands.Bot):
             return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
+        em = discord.Embed(title='Thread Closed')
+        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.color = discord.Color.red()
         try:
-            await user.send(f'**{ctx.author}** has closed this modmail session.')
+            await user.send(embed=em)
         except:
             pass
         await ctx.channel.delete()
@@ -298,16 +301,24 @@ class Modmail(commands.Bot):
         return new_name
 
     async def process_modmail(self, message):
+        try:
+            await message.add_reaction('✅')
+        except:
+            pass
         guild = self.guild
         author = message.author
         topic = f'User ID: {author.id}'
         channel = discord.utils.get(guild.text_channels, topic=topic)
         categ = discord.utils.get(guild.categories, name='Mod Mail')
 
+        em = discord.Embed(title='Thanks for the message!')
+        em.description = 'The moderation team will get back to you as soon as possible!'
+        em.color = discord.Color.green()
+
         if channel is not None:
             await self.send_mail(message, channel, mod=False)
         else:
-            await message.author.send('Thanks for the message. The moderation team will get back to you as soon as possible!')
+            await message.author.send(embed=em)
             channel = await guild.create_text_channel(
                 name=self.format_name(author),
                 category=categ
