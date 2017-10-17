@@ -174,7 +174,7 @@ class Modmail(commands.Bot):
             overwrites=self.overwrites(ctx, modrole=modrole)
             )
         await categ.edit(position=0)
-        c = await ctx.guild.create_text_channel(name='information', category=categ)
+        c = await ctx.guild.create_text_channel(name='bot-info', category=categ)
         await c.send(embed=self.help_embed())
         await ctx.send('Successfully set up server.')
 
