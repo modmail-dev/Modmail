@@ -26,6 +26,7 @@ GUILD_ID = 0 # your guild id here
 
 import discord
 from discord.ext import commands
+from urllib.parse import urlparse
 import asyncio
 import textwrap
 import datetime
@@ -33,6 +34,7 @@ import time
 import json
 import sys
 import os
+import re
 import string
 
 
@@ -266,6 +268,16 @@ class Modmail(commands.Bot):
         fmt = discord.Embed()
         fmt.description = message.content
         fmt.timestamp = message.created_at
+
+        urls = re.findall(r'(https?://[^\s]+)', message.content)
+
+        types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
+
+        for u in urls:
+            if any(urlparse(u).path.endswith(x) for x in types):
+                fmt.set_image(u)
+                break
+
         if mod:
             fmt.color=discord.Color.green()
             fmt.set_author(name=str(author), icon_url=author.avatar_url)
@@ -274,9 +286,12 @@ class Modmail(commands.Bot):
             fmt.color=discord.Color.gold()
             fmt.set_author(name=str(author), icon_url=author.avatar_url)
             fmt.set_footer(text='User')
+
         embed = None
+
         if message.attachments:
             fmt.set_image(url=message.attachments[0].url)
+
         await channel.send(embed=fmt)
 
     async def process_reply(self, message):
