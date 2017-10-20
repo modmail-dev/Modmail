@@ -275,7 +275,7 @@ class Modmail(commands.Bot):
 
         for u in urls:
             if any(urlparse(u).path.endswith(x) for x in types):
-                fmt.set_image(u)
+                fmt.set_image(url=u)
                 break
 
         if mod:
