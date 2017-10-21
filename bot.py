@@ -396,7 +396,7 @@ class Modmail(commands.Bot):
         topic = str(top_chan.topic)
         topic += id + '\n'
 
-        if user not in top_chan.topic:  
+        if id not in top_chan.topic:  
             await top_chan.edit(topic=topic)
             await ctx.send('User successfully blocked!')
         else:
@@ -417,7 +417,7 @@ class Modmail(commands.Bot):
         topic = str(top_chan.topic)
         topic = topic.replace(id, '')
 
-        if user in top_chan.topic:
+        if id in top_chan.topic:
             await top_chan.edit(topic=topic)
             await ctx.send('User successfully unblocked!')
         else:
