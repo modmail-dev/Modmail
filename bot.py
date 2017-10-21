@@ -313,16 +313,29 @@ class Modmail(commands.Bot):
         new_name += f'-{author.discriminator}'
         return new_name
 
+    @property
+    def blocked_em(self):
+        em = discord.Embed(title='Message not sent!', color=discord.Color.red())
+        em.description = 'You have been blocked from using modmail.'
+        return em
+
     async def process_modmail(self, message):
+        '''Processes messages sent to the bot.'''
         try:
             await message.add_reaction('✅')
         except:
             pass
+
         guild = self.guild
         author = message.author
         topic = f'User ID: {author.id}'
         channel = discord.utils.get(guild.text_channels, topic=topic)
         categ = discord.utils.get(guild.categories, name='Mod Mail')
+        top_chan = categ.channels[0] #bot-info
+        blocked = top_chan.topic.split('Blocked\n-------')[1].strip().split('\n')
+
+        if str(message.author.id) in blocked:
+            return await message.author.send(embed=self.blocked_em)
 
         em = discord.Embed(title='Thanks for the message!')
         em.description = 'The moderation team will get back to you as soon as possible!'
@@ -364,12 +377,41 @@ class Modmail(commands.Bot):
         await ctx.send(f"Changed status to **{message}**")
 
     @commands.command()
-    async def block(self, ctx):
-        categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
-        if categ is not None:
-            if categ.name == 'Mod Mail':
-                await self.get_user(int(ctx.channel.topic.split(': ')[1])).block()
-                await ctx.channel.delete()
+    @commands.has_permissions(manage_guild=True)
+    async def block(self, ctx, id=None):
+        '''Block a user from using modmail.'''
+        if 'User ID:' in str(ctx.channel.topic):
+            id = ctx.channel.topic.split('User ID: ')[1].strip()
+        else:
+            if id is None:
+                return await ctx.send('No User ID provided.')
+
+        categ = discord.utils.get(guild.categories, name='Mod Mail')
+        top_chan = categ.channels[0] #bot-info
+        topic = top_chan.topic
+        topic += id + '\n'
+
+        await top_chan.edit(topic=topic)
+        await ctx.send('User successfully blocked!')
+
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def unblock(self, ctx, id=None):
+        if 'User ID:' in str(ctx.channel.topic):
+            id = ctx.channel.topic.split('User ID: ')[1].strip()
+        else:
+            if id is None:
+                return await ctx.send('No User ID provided.')
+
+        categ = discord.utils.get(guild.categories, name='Mod Mail')
+        top_chan = categ.channels[0] #bot-info
+        topic = top_chan.topic
+        topic.replace(id+'\n', '')
+
+        await top_chan.edit(topic=topic)
+        await ctx.send('User successfully blocked!')
+
+
                 
 if __name__ == '__main__':
     Modmail.init()
