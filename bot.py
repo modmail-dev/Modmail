@@ -418,7 +418,7 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
         topic = str(top_chan.topic)
-        topic = topic.replace(id, '')
+        topic = topic.replace(id+'\n', '')
 
         if id in top_chan.topic:
             await top_chan.edit(topic=topic)
