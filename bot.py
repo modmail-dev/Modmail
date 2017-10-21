@@ -412,10 +412,10 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
         topic = top_chan.topic
-        topic.replace(id+'\n', '')
+        topic.replace(id, '')
 
         await top_chan.edit(topic=topic)
-        await ctx.send('User successfully blocked!')
+        await ctx.send('User successfully unblockedblocked!')
 
 
                 
