@@ -388,10 +388,10 @@ class Modmail(commands.Bot):
     @commands.has_permissions(manage_guild=True)
     async def block(self, ctx, id=None):
         '''Block a user from using modmail.'''
-        if 'User ID:' in str(ctx.channel.topic):
-            id = ctx.channel.topic.split('User ID: ')[1].strip()
-        else:
-            if id is None:
+        if id is None:
+            if 'User ID:' in str(ctx.channel.topic):
+                id = ctx.channel.topic.split('User ID: ')[1].strip()
+            else:
                 return await ctx.send('No User ID provided.')
 
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
@@ -409,10 +409,10 @@ class Modmail(commands.Bot):
     @commands.has_permissions(manage_guild=True)
     async def unblock(self, ctx, id=None):
         '''Unblocks a user from using modmail.'''
-        if 'User ID:' in str(ctx.channel.topic):
-            id = ctx.channel.topic.split('User ID: ')[1].strip()
-        else:
-            if id is None:
+        if id is None:
+            if 'User ID:' in str(ctx.channel.topic):
+                id = ctx.channel.topic.split('User ID: ')[1].strip()
+            else:
                 return await ctx.send('No User ID provided.')
 
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
