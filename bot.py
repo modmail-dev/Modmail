@@ -202,6 +202,7 @@ class Modmail(commands.Bot):
     @commands.command(name='close')
     @commands.has_permissions(manage_guild=True)
     async def _close(self, ctx):
+        '''Close the current thread.'''
         if 'User ID:' not in str(ctx.channel.topic):
             return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
@@ -366,6 +367,7 @@ class Modmail(commands.Bot):
 
     @commands.command()
     async def reply(self, ctx, *, msg):
+        '''Reply to users using this command.'''
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         if categ is not None:
             if categ.name == 'Mod Mail':
@@ -400,6 +402,7 @@ class Modmail(commands.Bot):
     @commands.command()
     @commands.has_permissions(manage_guild=True)
     async def unblock(self, ctx, id=None):
+        '''Unblocks a user from using modmail.'''
         if 'User ID:' in str(ctx.channel.topic):
             id = ctx.channel.topic.split('User ID: ')[1].strip()
         else:
