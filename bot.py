@@ -393,11 +393,14 @@ class Modmail(commands.Bot):
 
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
-        topic = top_chan.topic
+        topic = str(top_chan.topic)
         topic += id + '\n'
 
-        await top_chan.edit(topic=topic)
-        await ctx.send('User successfully blocked!')
+        if user not in top_chan.topic:  
+            await top_chan.edit(topic=topic)
+            await ctx.send('User successfully blocked!')
+        else:
+            await ctx.send('User is already blocked.')
 
     @commands.command()
     @commands.has_permissions(manage_guild=True)
@@ -411,11 +414,14 @@ class Modmail(commands.Bot):
 
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
-        topic = top_chan.topic
-        topic.replace(id, '')
+        topic = str(top_chan.topic)
+        topic = topic.replace(id, '')
 
-        await top_chan.edit(topic=topic)
-        await ctx.send('User successfully unblockedblocked!')
+        if user in top_chan.topic:
+            await top_chan.edit(topic=topic)
+            await ctx.send('User successfully unblocked!')
+        else:
+            await ctx.send('User is not already blocked.')
 
 
                 
