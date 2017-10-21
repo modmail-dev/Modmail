@@ -391,7 +391,7 @@ class Modmail(commands.Bot):
             if id is None:
                 return await ctx.send('No User ID provided.')
 
-        categ = discord.utils.get(guild.categories, name='Mod Mail')
+        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
         topic = top_chan.topic
         topic += id + '\n'
@@ -409,7 +409,7 @@ class Modmail(commands.Bot):
             if id is None:
                 return await ctx.send('No User ID provided.')
 
-        categ = discord.utils.get(guild.categories, name='Mod Mail')
+        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
         topic = top_chan.topic
         topic.replace(id+'\n', '')
