@@ -175,6 +175,8 @@ class Modmail(commands.Bot):
             )
         await categ.edit(position=0)
         c = await ctx.guild.create_text_channel(name='bot-info', category=categ)
+        await c.edit(topic='Manually add user id\'s to block users.\n\n'
+                           'Blocked\n-------\n\n')
         await c.send(embed=self.help_embed())
         await ctx.send('Successfully set up server.')
 
@@ -333,6 +335,7 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
         blocked = top_chan.topic.split('Blocked\n-------')[1].strip().split('\n')
+        blocked = [x.strip() for x in blocked]
 
         if str(message.author.id) in blocked:
             return await message.author.send(embed=self.blocked_em)
