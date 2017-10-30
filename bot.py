@@ -311,8 +311,8 @@ class Modmail(commands.Bot):
         channel = discord.utils.get(guild.text_channels, topic=topic)
         categ = discord.utils.get(guild.categories, name='Mod Mail')
 
-        em = discord.Embed(title='Thanks for the message!')
-        em.description = 'The moderation team will get back to you as soon as possible!'
+        em = discord.Embed(title='ROBCO INDUSTRIES UNIFIED OPERATING SYSTEM')
+        em.description = 'Vault-Tec has recieved your query, please be patient and a representative will get back to you as soon as possible!'
         em.color = discord.Color.green()
 
         if channel is not None:
