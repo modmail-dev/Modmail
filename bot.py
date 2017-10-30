@@ -26,7 +26,6 @@ GUILD_ID = 0 # your guild id here
 
 import discord
 from discord.ext import commands
-from urllib.parse import urlparse
 import asyncio
 import textwrap
 import datetime
@@ -34,7 +33,6 @@ import time
 import json
 import sys
 import os
-import re
 import string
 
 
@@ -105,6 +103,8 @@ class Modmail(commands.Bot):
     async def on_connect(self):
         print('---------------')
         print('Modmail connected!')
+        game = discord.Game(name='DM to contact mods!')
+        await self.change_presence(game=game)
 
     @property
     def guild_id(self):
@@ -175,8 +175,6 @@ class Modmail(commands.Bot):
             )
         await categ.edit(position=0)
         c = await ctx.guild.create_text_channel(name='bot-info', category=categ)
-        await c.edit(topic='Manually add user id\'s to block users.\n\n'
-                           'Blocked\n-------\n\n')
         await c.send(embed=self.help_embed())
         await ctx.send('Successfully set up server.')
 
@@ -202,7 +200,6 @@ class Modmail(commands.Bot):
     @commands.command(name='close')
     @commands.has_permissions(manage_guild=True)
     async def _close(self, ctx):
-        '''Close the current thread.'''
         if 'User ID:' not in str(ctx.channel.topic):
             return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
@@ -269,16 +266,6 @@ class Modmail(commands.Bot):
         fmt = discord.Embed()
         fmt.description = message.content
         fmt.timestamp = message.created_at
-
-        urls = re.findall(r'(https?://[^\s]+)', message.content)
-
-        types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
-
-        for u in urls:
-            if any(urlparse(u).path.endswith(x) for x in types):
-                fmt.set_image(url=u)
-                break
-
         if mod:
             fmt.color=discord.Color.green()
             fmt.set_author(name=str(author), icon_url=author.avatar_url)
@@ -287,12 +274,9 @@ class Modmail(commands.Bot):
             fmt.color=discord.Color.gold()
             fmt.set_author(name=str(author), icon_url=author.avatar_url)
             fmt.set_footer(text='User')
-
         embed = None
-
         if message.attachments:
             fmt.set_image(url=message.attachments[0].url)
-
         await channel.send(embed=fmt)
 
     async def process_reply(self, message):
@@ -316,30 +300,16 @@ class Modmail(commands.Bot):
         new_name += f'-{author.discriminator}'
         return new_name
 
-    @property
-    def blocked_em(self):
-        em = discord.Embed(title='Message not sent!', color=discord.Color.red())
-        em.description = 'You have been blocked from using modmail.'
-        return em
-
     async def process_modmail(self, message):
-        '''Processes messages sent to the bot.'''
         try:
             await message.add_reaction('✅')
         except:
             pass
-
         guild = self.guild
         author = message.author
         topic = f'User ID: {author.id}'
         channel = discord.utils.get(guild.text_channels, topic=topic)
         categ = discord.utils.get(guild.categories, name='Mod Mail')
-        top_chan = categ.channels[0] #bot-info
-        blocked = top_chan.topic.split('Blocked\n-------')[1].strip().split('\n')
-        blocked = [x.strip() for x in blocked]
-
-        if str(message.author.id) in blocked:
-            return await message.author.send(embed=self.blocked_em)
 
         em = discord.Embed(title='Thanks for the message!')
         em.description = 'The moderation team will get back to you as soon as possible!'
@@ -367,7 +337,6 @@ class Modmail(commands.Bot):
 
     @commands.command()
     async def reply(self, ctx, *, msg):
-        '''Reply to users using this command.'''
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         if categ is not None:
             if categ.name == 'Mod Mail':
@@ -378,55 +347,16 @@ class Modmail(commands.Bot):
     @commands.command(name="customstatus", aliases=['status', 'presence'])
     @commands.has_permissions(administrator=True)
     async def _status(self, ctx, *, message):
-        '''Set a custom playing status for the bot.'''
-        if message == 'clear':
-            return await self.change_presence(game=None)
         await self.change_presence(game=discord.Game(name=message), status=discord.Status.online)
         await ctx.send(f"Changed status to **{message}**")
 
     @commands.command()
-    @commands.has_permissions(manage_guild=True)
-    async def block(self, ctx, id=None):
-        '''Block a user from using modmail.'''
-        if id is None:
-            if 'User ID:' in str(ctx.channel.topic):
-                id = ctx.channel.topic.split('User ID: ')[1].strip()
-            else:
-                return await ctx.send('No User ID provided.')
-
-        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
-        top_chan = categ.channels[0] #bot-info
-        topic = str(top_chan.topic)
-        topic += id + '\n'
-
-        if id not in top_chan.topic:  
-            await top_chan.edit(topic=topic)
-            await ctx.send('User successfully blocked!')
-        else:
-            await ctx.send('User is already blocked.')
-
-    @commands.command()
-    @commands.has_permissions(manage_guild=True)
-    async def unblock(self, ctx, id=None):
-        '''Unblocks a user from using modmail.'''
-        if id is None:
-            if 'User ID:' in str(ctx.channel.topic):
-                id = ctx.channel.topic.split('User ID: ')[1].strip()
-            else:
-                return await ctx.send('No User ID provided.')
-
-        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
-        top_chan = categ.channels[0] #bot-info
-        topic = str(top_chan.topic)
-        topic = topic.replace(id+'\n', '')
-
-        if id in top_chan.topic:
-            await top_chan.edit(topic=topic)
-            await ctx.send('User successfully unblocked!')
-        else:
-            await ctx.send('User is not already blocked.')
-
-
+    async def block(self, ctx):
+        categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
+        if categ is not None:
+            if categ.name == 'Mod Mail':
+                await self.get_user(int(ctx.channel.topic.split(': ')[1])).block()
+                await ctx.channel.delete()
                 
 if __name__ == '__main__':
     Modmail.init()

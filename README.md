@@ -31,7 +31,7 @@ After making a Github account, you need to make a Heroku account. Make one at [H
 *Here's a GIF to explain the first 5 steps*
 ![GIF to explain the first 5 steps](https://i.imgur.com/Y2ouW7I.gif)
 
-6. Create anapplication on Heroku (this is pretty straightforward)
+6. Create a python application on Heroku (this is pretty straightforward)
 7. Go to your application settings and find the `config vars` section. 
 8. Create a config variable, name the key to be `TOKEN` and the value to be your bot token as retrived from step 5.
 9. Create another config variable, name the key to be `GUILD_ID` and the value to be the [ID of your Server](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-).
