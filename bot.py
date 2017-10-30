@@ -204,8 +204,8 @@ class Modmail(commands.Bot):
             return await ctx.send('This is not a modmail thread.')
         user_id = int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
-        em = discord.Embed(title='Thread Closed')
-        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em = discord.Embed(title='CONNECTION TERMINATED')
+        em.description = f'**{ctx.author}** has closed the connection. Thank you for using Vault-Tec!'
         em.color = discord.Color.red()
         try:
             await user.send(embed=em)
