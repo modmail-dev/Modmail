@@ -103,7 +103,7 @@ class Modmail(commands.Bot):
     async def on_connect(self):
         print('---------------')
         print('Modmail connected!')
-        game = discord.Game(name='DM to contact mods!')
+        game = discord.Game(name='Contact Vault-Tec!')
         await self.change_presence(game=game)
 
     @property
