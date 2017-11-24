@@ -139,7 +139,7 @@ class Modmail(commands.Bot):
 
         return overwrites
 
-    def help_embed(self):
+    def help_embed(self, prefix):
         em = discord.Embed(color=0x00FFFF)
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
         em.description = 'This bot is a python implementation of a stateless "Mod Mail" bot. ' \
@@ -147,11 +147,11 @@ class Modmail(commands.Bot):
                          'saves no data and utilises channel topics for storage and syncing.' 
                  
 
-        cmds = '`m.setup [modrole] <- (optional)` - Command that sets up the bot.\n' \
-               '`m.reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
-               '`m.close` - Closes the current thread and deletes the channel.\n' \
-               '`m.disable` - Closes all threads and disables modmail for the server.\n' \
-               '`m.customstatus` - Sets the Bot status to whatever you want.'
+        cmds = f'`{prefix}setup [modrole] <- (optional)` - Command that sets up the bot.\n' \
+               f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
+               f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
+               f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' \
+               f'`{prefix}customstatus` - Sets the Bot status to whatever you want.'
 
         warn = 'Do not manually delete the category or channels as it will break the system. ' \
                'Modifying the channel topic will also break the system.'
@@ -177,7 +177,7 @@ class Modmail(commands.Bot):
         c = await ctx.guild.create_text_channel(name='bot-info', category=categ)
         await c.edit(topic='Manually add user id\'s to block users.\n\n'
                            'Blocked\n-------\n\n')
-        await c.send(embed=self.help_embed())
+        await c.send(embed=self.help_embed(ctx.prefix))
         await ctx.send('Successfully set up server.')
 
     @commands.command()
