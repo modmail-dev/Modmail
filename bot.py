@@ -1,7 +1,7 @@
 '''
 MIT License
 
-Copyright (c) 2017 verixx
+Copyright (c) 2017 Kyb3r
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -118,7 +118,7 @@ class Modmail(commands.Bot):
         ---------------
         Client is ready!
         ---------------
-        Author: verixx#7220
+        Author: Kyb3r#7220
         ---------------
         Logged in as: {self.user}
         User ID: {self.user.id}
@@ -143,7 +143,7 @@ class Modmail(commands.Bot):
         em = discord.Embed(color=0x00FFFF)
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
         em.description = 'This bot is a python implementation of a stateless "Mod Mail" bot. ' \
-                         'Made by verixx and improved by the suggestions of others. This bot ' \
+                         'Made by Kyb3r and improved by the suggestions of others. This bot ' \
                          'saves no data and utilises channel topics for storage and syncing.' 
                  
 
