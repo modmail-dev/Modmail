@@ -1,6 +1,6 @@
 # Mod Mail for Discord
 This is an open source discord bot made by kyb3r and improved upon suggestions by the users!
-
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 ## Hosting on Heroku
 ### What is Heroku?
 Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data.    
