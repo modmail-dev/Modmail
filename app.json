@@ -4,16 +4,16 @@
   "repository": "https://github.com/kyb3r/modmail",
   "env": {
     "TOKEN": {
-        "description": "Discord token used to log in",
+        "description": "Your discord bot's token.",
         "required": true
-    },
-    "PREFIX": {
-      "description": "Command prefix to use.",
-      "required": true
     },
     "GUILD_ID": {
       "description": "The id for the server you are hosting this bot for.",
       "required": true
+    },
+    "PREFIX": {
+      "description": "Command prefix to use.",
+      "required": false
     }
   }
 }
