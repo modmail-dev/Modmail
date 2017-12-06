@@ -25,6 +25,7 @@ You need to make a Heroku account. Make one at [Heroku's Website](https://heroku
 ![GIF to explain the first 5 steps](https://i.imgur.com/Y2ouW7I.gif)
 
 6. Click this button:
+
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 8. Input your bot token from step 5 into the `TOKEN` field.
 9. Put the [ID of your Server](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) into the `GUILD_ID` field.
