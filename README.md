@@ -1,6 +1,6 @@
 # Mod Mail for Discord
 This is an open source discord bot made by kyb3r and improved upon suggestions by the users!
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
 ## Hosting on Heroku
 ### What is Heroku?
 Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data.    
@@ -8,17 +8,10 @@ We have made Mod Mail to do exactly that. It was made to be *stateless* and not 
 
 ### How do I do it? 
 If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone!    
-*Provided you have your Server ID*
-
-### GitHub Account
-
-For this to work you will need to make a Github account (If you don't have one already). After you have made your Github account go to [this repository and fork it](https://github.com/verixx/modmail/fork).
 
 ### Heroku Account
 
-After making a Github account, you need to make a Heroku account. Make one at [Heroku's Website](https://heroku.com/) and then follow the steps below: 
-
-[![Heroku Tutorial](https://img.youtube.com/vi/MSJWMhC5X3I/0.jpg)](https://www.youtube.com/watch?v=MSJWMhC5X3I)
+You need to make a Heroku account. Make one at [Heroku's Website](https://heroku.com/) and then follow the steps below: 
 
 ### Setting it up
 
@@ -31,20 +24,21 @@ After making a Github account, you need to make a Heroku account. Make one at [H
 *Here's a GIF to explain the first 5 steps*
 ![GIF to explain the first 5 steps](https://i.imgur.com/Y2ouW7I.gif)
 
-6. Create an application on Heroku (this is pretty straightforward)
-7. Go to your application settings and find the `config vars` section. 
-8. Create a config variable, name the key to be `TOKEN` and the value to be your bot token as retrived from step 5.
-9. Create another config variable, name the key to be `GUILD_ID` and the value to be the [ID of your Server](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-).
-9. Create yet another config variable, name the key to be `PREFIX` and the value to be the bot prefix you want.
-10. Find the `deploy` section on your applications dashboard.
-11. In deploy method, click on the GitHub option and link your Github account to Heroku.
-12. Now select the forked repository and click `deploy application`
-13. Go to the `resources` tab and turn on the worker.
+6. Click this button:
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+8. Input your bot token from step 5 into the `TOKEN` field.
+9. Put the [ID of your Server](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) into the `GUILD_ID` field.
+9. Put the command prefix you want in the `PREFIX` field. e.g `?`
+10. Click the `deploy app` button and wait for it to finish.
+11. Click `manage app` and go into the `resources` tab. 
+12. Now turn on the worker by clicking the pencil icon.
 14. If you want, you can go over and check the application logs to see if everything is running smoothly.
 15. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
 You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
 
 Now you should be done. Go over to discord and try it out!
+
+Make sure to give the bot manage channel permissions!
 
 ## Self-Hosting on your own PC or VPS    
 ### Installing Python
