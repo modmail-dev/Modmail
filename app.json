@@ -1,0 +1,19 @@
+{
+  "name": "ModMail",
+  "description": "Dm to contact mods.",
+  "repository": "https://github.com/kyb3r/modmail",
+  "env": {
+    "TOKEN": {
+        "description": "Discord token used to log in",
+        "required": true
+    },
+    "PREFIX": {
+      "description": "Command prefix to use.",
+      "required": true
+    },
+    "GUILD_ID": {
+      "description": "The id for the server you are hosting this bot for.",
+      "required": true
+    }
+  }
+}
