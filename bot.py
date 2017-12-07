@@ -231,9 +231,10 @@ class Modmail(commands.Bot):
             if role.permissions.manage_guild:
                 yield role
 
-    def format_info(self, user):
+    def format_info(self, message):
         '''Get information about a member of a server
         supports users from the guild or not.'''
+        user = message.author
         server = self.guild
         member = self.guild.get_member(user.id)
         avi = user.avatar_url
@@ -255,6 +256,7 @@ class Modmail(commands.Bot):
         em.set_footer(text='User ID: '+str(user.id))
         em.set_thumbnail(url=avi)
         em.set_author(name=user, icon_url=server.icon_url)
+        em.add_field(name='Message', value=message.content, inline=False)
 
         if member:
             em.add_field(name='Joined', value=str((time - member.joined_at).days)+' days ago.')
@@ -354,8 +356,7 @@ class Modmail(commands.Bot):
                 category=categ
                 )
             await channel.edit(topic=topic)
-            await channel.send('@here', embed=self.format_info(author))
-            await channel.send('\u200b')
+            await channel.send('@here', embed=self.format_info(message))
             await self.send_mail(message, channel, mod=False)
 
     async def on_message(self, message):
@@ -385,7 +386,7 @@ class Modmail(commands.Bot):
         await ctx.send(f"Changed status to **{message}**")
 
     @commands.command()
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_channels=True)
     async def block(self, ctx, id=None):
         '''Block a user from using modmail.'''
         if id is None:
@@ -406,7 +407,7 @@ class Modmail(commands.Bot):
             await ctx.send('User is already blocked.')
 
     @commands.command()
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_channels=True)
     async def unblock(self, ctx, id=None):
         '''Unblocks a user from using modmail.'''
         if id is None:
