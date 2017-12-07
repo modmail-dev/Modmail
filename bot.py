@@ -151,7 +151,9 @@ class Modmail(commands.Bot):
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' \
-               f'`{prefix}customstatus` - Sets the Bot status to whatever you want.'
+               f'`{prefix}customstatus` - Sets the Bot status to whatever you want.' \
+               f'`{prefix}block` - Blocks a user from using modmail!' \
+               f'`{prefix}unblock` - Unblocks a user from using modmail!'
 
         warn = 'Do not manually delete the category or channels as it will break the system. ' \
                'Modifying the channel topic will also break the system.'
