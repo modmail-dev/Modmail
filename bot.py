@@ -256,13 +256,15 @@ class Modmail(commands.Bot):
         em.set_footer(text='User ID: '+str(user.id))
         em.set_thumbnail(url=avi)
         em.set_author(name=user, icon_url=server.icon_url)
-        em.add_field(name='Message', value=message.content, inline=False)
+      
 
         if member:
             em.add_field(name='Joined', value=str((time - member.joined_at).days)+' days ago.')
             em.add_field(name='Member No.',value=str(member_number),inline = True)
             em.add_field(name='Nick', value=member.nick, inline=True)
             em.add_field(name='Roles', value=rolenames, inline=True)
+        
+        em.add_field(name='Message', value=message.content, inline=False)
 
         return em
 
@@ -357,7 +359,6 @@ class Modmail(commands.Bot):
                 )
             await channel.edit(topic=topic)
             await channel.send('@here', embed=self.format_info(message))
-            await self.send_mail(message, channel, mod=False)
 
     async def on_message(self, message):
         if message.author.bot:
