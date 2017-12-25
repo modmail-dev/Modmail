@@ -82,7 +82,7 @@ class Modmail(commands.Bot):
         data = {
                 "TOKEN" : token,
             }
-        with open('data/config.json','w') as f:
+        with open('config.json','w') as f:
             f.write(json.dumps(data, indent=4))
         print('------------------------------------------')
         print('Restarting...')
