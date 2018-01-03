@@ -36,6 +36,9 @@ import sys
 import os
 import re
 import string
+import traceback
+import io
+from contextlib import redirect_stdout
 
 
 class Modmail(commands.Bot):
@@ -435,6 +438,74 @@ class Modmail(commands.Bot):
             await ctx.send('User successfully unblocked!')
         else:
             await ctx.send('User is not already blocked.')
+
+    @commands.command(hidden=True, name='eval')
+    async def _eval(self, ctx, *, body: str):
+        """Evaluates python code"""
+        allowed = [int(x) for x in os.getenv('OWNERS', '').split(',')]
+        if ctx.author.id not in allowed: 
+            return
+        
+        env = {
+            'bot': self,
+            'ctx': ctx,
+            'channel': ctx.channel,
+            'author': ctx.author,
+            'guild': ctx.guild,
+            'message': ctx.message,
+            'source': inspect.getsource
+        }
+
+        env.update(globals())
+
+        body = self.cleanup_code(body)
+        stdout = io.StringIO()
+        err = out = None
+
+        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            err = await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+            return await err.add_reaction('\u2049')
+
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            err = await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        else:
+            value = stdout.getvalue()
+            if ret is None:
+                if value:
+                    try:
+                        out = await ctx.send(f'```py\n{value}\n```')
+                    except:
+                        await ctx.send('```Result is too long to send.```')
+            else:
+                self._last_result = ret
+                try:
+                    out = await ctx.send(f'```py\n{value}{ret}\n```')
+                except:
+                    await ctx.send('```Result is too long to send.```')
+        if out:
+            await ctx.message.add_reaction('\u2705') #tick
+        if err:
+            await ctx.message.add_reaction('\u2049') #x
+        else:
+            await ctx.message.add_reaction('\u2705')
+
+    def cleanup_code(self, content):
+        """Automatically removes code blocks from the code."""
+        # remove ```py\n```
+        if content.startswith('```') and content.endswith('```'):
+            return '\n'.join(content.split('\n')[1:-1])
+
+        # remove `foo`
+        return content.strip('` \n')
 
 
                 
