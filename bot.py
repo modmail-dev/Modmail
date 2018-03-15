@@ -111,7 +111,7 @@ class Modmail(commands.Bot):
         print('Modmail connected!')
         status = os.getenv('STATUS')
         if status:   
-            await self.change_presence(game=discord.Activity(name=status))
+            await self.change_presence(activity=discord.Activity(name=status))
             print(f'Setting Status to {status}')
         else:
             print('No status set.')
@@ -394,8 +394,8 @@ class Modmail(commands.Bot):
     async def _status(self, ctx, *, message):
         '''Set a custom playing status for the bot.'''
         if message == 'clear':
-            return await self.change_presence(game=None)
-        await self.change_presence(game=discord.Activity(name=message), status=discord.Status.online)
+            return await self.change_presence(activity=None)
+        await self.change_presence(activity=discord.Activity(name=message), status=discord.Status.online)
         await ctx.send(f"Changed status to **{message}**")
 
     @commands.command()
