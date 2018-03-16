@@ -72,6 +72,8 @@ You can add the bot to your server with [this tool](https://finitereality.github
 
 **Create an issue if you need help**
 
+#### IF STEP ONE GIVES A 404 ERROR
+You would have to redo from step 6 of [this](https://github.com/kyb3r/modmail/#setting-it-up)
 
 ## Thanks For Using This Bot!
 
