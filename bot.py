@@ -102,7 +102,7 @@ class Modmail(commands.Bot):
         else:
             to_use = bot.token.strip('"')
         try:
-            bot.run(to_use, reconnect=True)
+            bot.run(to_use, activity=discord.Game(os.getenv('STATUS')), reconnect=True)
         except Exception as e:
             raise e
 
@@ -110,8 +110,7 @@ class Modmail(commands.Bot):
         print('---------------')
         print('Modmail connected!')
         status = os.getenv('STATUS')
-        if status:   
-            await self.change_presence(activity=discord.Activity(name=status))
+        if status:
             print(f'Setting Status to {status}')
         else:
             print('No status set.')
@@ -395,7 +394,7 @@ class Modmail(commands.Bot):
         '''Set a custom playing status for the bot.'''
         if message == 'clear':
             return await self.change_presence(activity=None)
-        await self.change_presence(activity=discord.Activity(name=message), status=discord.Status.online)
+        await self.change_presence(activity=discord.Game(message))
         await ctx.send(f"Changed status to **{message}**")
 
     @commands.command()
@@ -507,8 +506,6 @@ class Modmail(commands.Bot):
 
         # remove `foo`
         return content.strip('` \n')
-
-
-                
+        
 if __name__ == '__main__':
     Modmail.init()
