@@ -48,8 +48,8 @@ This is a bot written in the python programming language. So if you don't alread
 
 Now that you have python installed, you are good to go. Follow the steps below for a successful installation.
 
-1. Look at [Steps 1 to 5 of Setting up on Heroku](https://github.com/verixx/modmail/blob/master/README.md#setting-it-up)
-6. Download the bot from the [github page](https://github.com/verixx/modmail/archive/master.zip).
+1. Look at [Steps 1 to 5 of Setting up on Heroku](https://github.com/kyb3r/modmail/blob/master/README.md#setting-it-up)
+6. Download the bot from the [github page](https://github.com/kyb3r/modmail/archive/master.zip).
 7. Extract the zip file to the desktop or wherever you want.
 8. Open your terminal or cmd.
 9. Navigate to the bot folder. i.e `cd desktop/modmail-master`
@@ -58,6 +58,20 @@ Now that you have python installed, you are good to go. Follow the steps below f
 12. Enter your token and server ID in the wizard.
 13. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
 You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
+
+## Updating your ModMail (Heroku)
+1. Go to `https://github.com/<YOUR GITHUB USERNAME>/modmail/compare/master...kyb3r:master?quick_pull=1&title=Updating`
+2. Click `Create pull request`    
+![image representation](https://i.imgur.com/iMpMxWF.png)    
+*It should look exactly like the image*
+3. Scroll all the way down till you see the following image    
+![this](https://i.imgur.com/UbODNga.png)
+4. Click `Merge pull request`
+5. Go back to Heroku and click `Deploy`
+6. Click `Deploy Branch`
+
+**Create an issue if you need help**
+
 
 ## Thanks For Using This Bot!
 
