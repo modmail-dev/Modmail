@@ -133,6 +133,11 @@ class Modmail(commands.Bot):
         User ID: {self.user.id}
         ---------------
         '''))
+        
+        
+    async def on_command_error(ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            return await ctx.send("Trying to use the `setup` or `disable` command? The **Administrator** permission is required to do that.")
 
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
