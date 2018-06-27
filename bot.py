@@ -369,7 +369,12 @@ class Modmail(commands.Bot):
                 category=categ
                 )
             await channel.edit(topic=topic)
-            await channel.send('@here', embed=self.format_info(message))
+            em = discord.Embed()
+            em.description = message.content
+            if message.attachments:
+                em.set_image(url=message.attachments[0].url)
+            await channel.send('@here')
+            await channel.send(embed = em)
 
     async def on_message(self, message):
         if message.author.bot:
