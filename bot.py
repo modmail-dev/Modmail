@@ -512,10 +512,55 @@ class Modmail(commands.Bot):
        
 async def status_task():
     while True:
-        await bot.change_presence(game=discord.Game(name='DM me if you need help!', type=1))
+        await self.bot.change_presence(game=discord.Game(name='DM me if you need help!', type=1))
         await asyncio.sleep(3)
-        await bot.change_presence(game=discord.Game(name='server.exe', type=1))
+        await self.bot.change_presence(game=discord.Game(name='server.exe', type=1))
         await asyncio.sleep(3)
+        
+        @bot.command(pass_context=True, hidden=True)
+async def setavatar(ctx, url):
+	if ctx.message.author.id not in owner:
+		return
+	async with aiohttp.ClientSession() as session:
+		async with session.get(url) as r:
+			data = await r.read()
+	await bot.edit_profile(avatar=data)
+	await bot.say("I changed my avatar.", delete_after=6)
+	await bot.delete_message(ctx.message)
+
+
+
+  	
+@bot.command(pass_context=True, hidden=True)
+async def setgame(ctx, *, game):
+    if ctx.message.author.id not in owner:
+        return
+    game = game.strip()
+    if game != "":
+        try:
+            await bot.change_presence(game=discord.Game(name=game))
+        except:
+            await bot.say("Failed to change game")
+        else:
+            await bot.say("Successfuly changed game to {}".format(game))
+    else:
+        await bot.send_cmd_help(ctx)
+
+@bot.command(pass_context=True, hidden=True)
+async def setname(ctx, *, name):
+    if ctx.message.author.id not in owner:
+        return
+    name = name.strip()
+    if name != "":
+        try:
+            await bot.edit_profile(username=name)
+        except:
+           await bot.say("Failed to change name")
+        else:
+            await bot.say("Successfuly changed name to {}".format(name))
+    else:
+        await bot.send_cmd_help(ctx)
+        await bot.delete_message(ctx.message)
         
 if __name__ == '__main__':
     Modmail.init()
