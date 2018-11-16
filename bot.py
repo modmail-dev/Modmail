@@ -509,6 +509,13 @@ class Modmail(commands.Bot):
 
         # remove `foo`
         return content.strip('` \n')
+       
+async def status_task():
+    while True:
+        await bot.change_presence(game=discord.Game(name='DM me if you need help!', type=1))
+        await asyncio.sleep(3)
+        await bot.change_presence(game=discord.Game(name='server.exe', type=1))
+        await asyncio.sleep(3)
         
 if __name__ == '__main__':
     Modmail.init()
