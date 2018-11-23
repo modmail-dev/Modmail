@@ -201,13 +201,16 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         if not categ:
             return await ctx.send('This server is not set up.')
+        em = discord.Embed(title='Thread Closed')
+        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.color = discord.Color.red()
         for category, channels in ctx.guild.by_category():
             if category == categ:
                 for chan in channels:
                     if 'User ID:' in str(chan.topic):
                         user_id = int(chan.topic.split(': ')[1])
                         user = self.get_user(user_id)
-                        await user.send(f'**{ctx.author}** has closed this modmail session.')
+                        await user.send(embed=em)
                     await chan.delete()
         await categ.delete()
         await ctx.send('Disabled modmail.')
@@ -277,8 +280,6 @@ class Modmail(commands.Bot):
             em.add_field(name='Member No.',value=str(member_number),inline = True)
             em.add_field(name='Nick', value=member.nick, inline=True)
             em.add_field(name='Roles', value=rolenames, inline=True)
-        
-        em.add_field(name='Message', value=message.content, inline=False)
 
         return em
 
@@ -373,6 +374,7 @@ class Modmail(commands.Bot):
                 )
             await channel.edit(topic=topic)
             await channel.send('@here', embed=self.format_info(message))
+            await self.send_mail(message, channel, mod=False)
 
     async def on_message(self, message):
         if message.author.bot:
@@ -413,7 +415,7 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
         topic = str(top_chan.topic)
-        topic += id + '\n'
+        topic += '\n' + id
 
         if id not in top_chan.topic:  
             await top_chan.edit(topic=topic)
@@ -434,7 +436,7 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         top_chan = categ.channels[0] #bot-info
         topic = str(top_chan.topic)
-        topic = topic.replace(id+'\n', '')
+        topic = topic.replace('\n'+id, '')
 
         if id in top_chan.topic:
             await top_chan.edit(topic=topic)
