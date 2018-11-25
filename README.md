@@ -26,10 +26,17 @@
 
 ## How does it work?
 
-Assuming you got the bot setup (Read below on how to set it up), the first thing that you would do is type the command `<prefix>setup [modrole]` where `<prefix>` is the bot prefix you have chosen and `[modrole]` is an optional role you can specify which determines who can see the relayed messages. If a role is not specified, the bot will chose the first role that has `manage guild` permissions as the modrole. The bot will then set up a channel category named `Mod Mail` where the magic will happen. 
 
-![img](https://imgur.com/a/vCdC65V)
 
+<img src='https://i.imgur.com/aHtn4C5.png' align='right' height=140>
+
+Assuming you got the bot setup (Read below on how to set it up), the first thing that you would do is type the command ```<prefix>setup [modrole]``` where `[modrole]` is an optional role you can specify which determines who can see the relayed messages. If a role is not specified, the bot will choose the first role that has `manage guild` permissions as the modrole. The bot will then set up a channel category named `Mod Mail`. 
+
+When a user sends a direct message to the bot, a channel is created within this new category. This channel is where messages will be relayed. To reply to a message, simply type the command `<prefix>reply <message>` in the channel.
+
+## What it looks like
+
+![a](https://i.imgur.com/BVvIfru.png)
 
 
 ## Hosting on Heroku
@@ -90,24 +97,12 @@ Now that you have python installed, you are good to go. Follow the steps below f
 13. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
 You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
 
-## Updating your ModMail (Heroku)
-1. Go to `https://github.com/<YOUR GITHUB USERNAME>/modmail/compare/master...kyb3r:master?quick_pull=1&title=Updating`
-2. Click `Create pull request`    
-![image representation](https://i.imgur.com/iMpMxWF.png)    
-*It should look exactly like the image*
-3. Scroll all the way down till you see the following image    
-![this](https://i.imgur.com/UbODNga.png)
-4. Click `Merge pull request`
-5. Go back to Heroku and click `Deploy`
-6. Click `Deploy Branch`
-
-**Create an issue if you need help**
-
-#### IF STEP ONE GIVES A 404 ERROR
-You would have to redo from step 6 of [this](https://github.com/kyb3r/modmail/#setting-it-up)
-
 ## Thanks For Using This Bot!
 
 If you do use the bot, a star on this repository is appreciated ;)
 
-Dont copy this code or incorporate the code into your own bot without permission and/or credit.
+This project is licenced under MIT.
+
+## Contributing
+
+Feel free to contribute to the development of this bot.
