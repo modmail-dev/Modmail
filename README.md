@@ -20,12 +20,11 @@
 </div>
 <br>
 <div align="center">
-    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! This bot enables server members to DM it, the messages then get relayed to the server moderators which can then respond. In essence this bot serves as a means for members to communicate with server leadership in an organised manner.
+    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! This bot enables server members to DM it, the messages then get relayed to the server moderators which can then respond. In essence this bot serves as a means for members to communicate with server leadership in an organised manner. Join the discord <a href=[https://discord.gg/etJNHCQ>here</a>.
 
 </div>
 
 ## How does it work?
-
 
 
 <img src='https://i.imgur.com/aHtn4C5.png' align='right' height=140>
