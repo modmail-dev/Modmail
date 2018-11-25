@@ -1,5 +1,36 @@
-# Mod Mail for Discord
-This is an open source discord bot made by kyb3r and improved upon suggestions by the users! Join the discord [here](https://discord.gg/etJNHCQ).
+<h1 align="center">Discord Mod Mail Bot</h1>
+
+<div align="center">
+    <strong><i>A simple yet functional modmail bot.</i></strong>
+    <br>
+    <br>
+    
+<a href="https://travis-ci.com/kyb3r/dhooks">
+  <img src="https://img.shields.io/badge/build-passing-7289DA.svg?style=for-the-badge" alt="Travis" />
+</a>
+
+<a href="https://pypi.org/project/dhooks/">
+  <img src="https://img.shields.io/badge/python-3.6-7289DA.svg?style=for-the-badge" alt="Travis" />
+</a>
+
+<a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
+  <img src="https://img.shields.io/github/license/kyb3r/modmail.svg?style=for-the-badge&colorB=7289DA" alt="Travis" />
+</a>
+
+</div>
+<br>
+<div align="center">
+    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! This bot enables server members to DM it, the messages then get relayed to the server moderators which can then respond. In essence this bot serves as a means for members to communicate with server leadership in an organised manner.
+
+</div>
+
+## How does it work?
+
+Assuming you got the bot setup (Read below on how to set it up), the first thing that you would do is type the command `<prefix>setup [modrole]` where `<prefix>` is the bot prefix you have chosen and `[modrole]` is an optional role you can specify which determines who can see the relayed messages. If a role is not specified, the bot will chose the first role that has `manage guild` permissions as the modrole. The bot will then set up a channel category named `Mod Mail` where the magic will happen. 
+
+![img](https://imgur.com/a/vCdC65V)
+
+
 
 ## Hosting on Heroku
 ### What is Heroku?
