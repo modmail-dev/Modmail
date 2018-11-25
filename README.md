@@ -55,10 +55,7 @@ You need to make a Heroku account. Make one at [Heroku's Website](https://heroku
 2. Head over to the [applicatons page](https://discordapp.com/developers/applications/me).
 3. Click “new application”. Give it a name, picture and description.
 4. Click “Create Bot User” and click “Yes, Do It!” when the dialog pops up.
-5. Copy down the bot token. This is what is used to login to your bot and will be used at Step 8, or 11 if you are setting up on your PC.
-
-[*Here's a GIF to explain the first 5 steps*](https://i.imgur.com/Y2ouW7I.gif)
-
+5. Copy down the bot token. This is what is used to login to your bot and will be used at Step 8, or 11 if you are setting up on your PC. [Here's a GIF to explain the first 5 steps](https://i.imgur.com/Y2ouW7I.gif)
 6. Click this button: [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 7. Input some random name for your app, the heroku app name is not important.
 8. Input your bot token from step 5 into the `TOKEN` field.
