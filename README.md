@@ -20,7 +20,7 @@
 </div>
 <br>
 <div align="center">
-    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! This bot enables server members to DM it, the messages then get relayed to the server moderators who can then respond through the bot. In essence this bot serves as a means for members to effortlessly communicate with server leadership in an organised manner. 
+    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! This bot enables server members to DM it, the messages then get relayed to the server moderators who can then respond through the bot. In essence this bot serves as a means for members to communicate with server leadership in an organised manner. 
 
 </div>
 
