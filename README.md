@@ -70,7 +70,7 @@ You can add the bot to your server with [this tool](https://finitereality.github
 
 Now you should be done. Go over to discord and try it out!
 
-Make sure to give the bot manage channel permissions!
+**Make sure to give the bot manage channel permissions!**
 
 ## Self-Hosting on your own PC or VPS    
 ### Installing Python
