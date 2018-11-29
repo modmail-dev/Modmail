@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-GUILD_ID = 0 # your guild id here
-
 import discord
 from discord.ext import commands
 from urllib.parse import urlparse
@@ -54,21 +52,15 @@ class Modmail(commands.Bot):
             cmd = getattr(self, attr)
             if isinstance(cmd, commands.Command):
                 self.add_command(cmd)
+    @property
+    def config(self):
+        with open('config.json') as f:
+            return json.load(f)
 
     @property
     def token(self):
         '''Returns your token wherever it is'''
-        try:
-            with open('config.json') as f:
-                config = json.load(f)
-                if config.get('TOKEN') == "your_token_here":
-                    if not os.environ.get('TOKEN'):
-                        self.run_wizard()
-                else:
-                    token = config.get('TOKEN').strip('\"')
-        except FileNotFoundError:
-            token = None
-        return os.environ.get('TOKEN') or token
+        return os.environ.get('TOKEN') or self.config.get('TOKEN')
     
     @staticmethod
     async def get_pre(bot, message):
@@ -77,48 +69,26 @@ class Modmail(commands.Bot):
             prefix = json.load(f).get('PREFIX')
         return os.environ.get('PREFIX') or prefix or 'm.'
 
-    @staticmethod
-    def run_wizard():
-        '''Wizard for first start'''
-        print('------------------------------------------')
-        token = input('Enter your token:\n> ')
-        print('------------------------------------------')
-        data = {
-                "TOKEN" : token,
-            }
-        with open('config.json','w') as f:
-            f.write(json.dumps(data, indent=4))
-        print('------------------------------------------')
-        print('Restarting...')
-        print('------------------------------------------')
-        os.execv(sys.executable, ['python'] + sys.argv)
 
-    @classmethod
-    def init(cls, token=None):
-        '''Starts the actual bot'''
-        bot = cls()
-        if token:
-            to_use = token.strip('"')
+    async def on_connect(self):
+        print('---------------')
+        print('Modmail connected!')
+        status = os.getenv('STATUS') or self.config.get('STATUS')
+        if status:
+            print(f'Setting Status to {status}')
+            await self.change_presence(activity=discord.Game(status))
         else:
-            to_use = bot.token.strip('"')
-        try:
-            bot.run(to_use, activity=discord.Game(os.getenv('STATUS')), reconnect=True)
-        except Exception as e:
-            raise e
+            print('No status set.')
 
     @property
     def guild_id(self):
         from_heroku = os.environ.get('GUILD_ID')
-        if GUILD_ID != 0:
-            return GUILD_ID
-        else:
-            return int(from_heroku)
+        from_config = self.config.get('GUILD_ID')
+        return int(from_heroku) if from_heroku else from_config
     
     @property
     def guild(self):
         g = discord.utils.get(self.guilds, id=self.guild_id)
-        if not g:
-            print('The bot is not in any servers with the provided GUILD_ID')
         return g
 
     async def on_ready(self):
@@ -127,17 +97,12 @@ class Modmail(commands.Bot):
         ---------------
         Client is ready!
         ---------------
-        Author: Kyb3r#7220
+        Author: kyb3r
         ---------------
         Logged in as: {self.user}
         User ID: {self.user.id}
         ---------------
         '''))
-        status = os.getenv('STATUS')
-        if status:
-            print(f'Setting Status to {status}')
-        else:
-            print('No status set.')
 
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
@@ -515,4 +480,5 @@ class Modmail(commands.Bot):
         return content.strip('` \n')
         
 if __name__ == '__main__':
-    Modmail.init()
+    bot = Modmail()
+    bot.run(bot.token)
