@@ -1,7 +1,7 @@
 <h1 align="center">Discord Mod Mail Bot</h1>
 
 <div align="center">
-    <strong><i>A simple yet functional modmail bot.</i></strong>
+    <strong><i>A simple and functional modmail bot.</i></strong>
     <br>
     <br>
     
@@ -49,23 +49,27 @@ If you choose to install the bot using Heroku, you do not need to download anyth
 
 You need to make a Heroku account. Make one at [Heroku's Website](https://heroku.com/) and then follow the steps below: 
 
-### Setting it up
+### Creating a bot account
 
 1. Create a Bot Application for Discord
 2. Head over to the [applicatons page](https://discordapp.com/developers/applications/me).
 3. Click “new application”. Give it a name, picture and description.
 4. Click “Create Bot User” and click “Yes, Do It!” when the dialog pops up.
 5. Copy down the bot token. This is what is used to login to your bot and will be used at Step 8, or 11 if you are setting up on your PC. [Here's a GIF to explain the first 5 steps](https://i.imgur.com/Y2ouW7I.gif)
-6. Click this button: [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-7. Input some random name for your app, the heroku app name is not important.
-8. Input your bot token from step 5 into the `TOKEN` field.
-7. Put the [ID of your Server](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) into the `GUILD_ID` field.
-10. Put the command prefix you want in the `PREFIX` field. e.g `?` The default prefix is `m.`
-11. Click the `deploy app` button and wait for it to finish.
-12. Click `manage app` and go into the `resources` tab. 
-13. Now turn on the worker by clicking the pencil icon.
-14. If you want, you can go over and check the application logs to see if everything is running smoothly.
-15. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
+
+### Deploying the bot
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
+1. Click the button above
+2. Input a name of your choosing for your app, the heroku app name is not important.
+3. Input your bot token into the `TOKEN` field.
+4. Put the [ID of your Server](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) into the `GUILD_ID` field.
+5. Put the command prefix you want in the `PREFIX` field. e.g `?` The default prefix is `m.`
+6. Click the `deploy app` button and wait for it to finish.
+7. Click `manage app` and go into the `resources` tab. 
+8. Now turn on the worker by clicking the pencil icon.
+9. If you want, you can go over and check the application logs to see if everything is running smoothly.
+10. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
 You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
 
 Now you should be done. Go over to discord and try it out!
