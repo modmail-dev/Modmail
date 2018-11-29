@@ -122,10 +122,16 @@ class Modmail(commands.Bot):
             return GUILD_ID
         else:
             return int(from_heroku)
+    
+    @property
+    def guild(self):
+        g = discord.utils.get(self.guilds, id=self.guild_id)
+        if not g:
+            print('The bot is not in any servers with the provided GUILD_ID')
+        return g
 
     async def on_ready(self):
         '''Bot startup, sets uptime.'''
-        self.guild = discord.utils.get(self.guilds, id=self.guild_id)
         print(textwrap.dedent(f'''
         ---------------
         Client is ready!
