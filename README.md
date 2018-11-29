@@ -70,9 +70,10 @@ You need to make a Heroku account. Make one at [Heroku's Website](https://heroku
 8. Now turn on the worker by clicking the pencil icon.
 9. If you want, you can go over and check the application logs to see if everything is running smoothly.
 10. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
+
 You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
 
-Now you should be done. Go over to discord and try it out!
+Now you should be done. Go over to discord and try it out! If you have any issues, join the [discord server](https://kybr.tk/discord).
 
 **Make sure to give the bot manage channel permissions!**
 
