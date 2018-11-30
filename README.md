@@ -75,7 +75,7 @@ You can add the bot to your server with [this tool](https://finitereality.github
 
 Now you should be done. Go over to discord and try it out! If you have any issues, join the [discord server](https://kybr.tk/discord).
 
-**Make sure to give the bot manage channel permissions!**
+**Make sure to give the bot Manage Channels and Manage Messages permissions!**
 
 ## Self-Hosting on your own PC or VPS
 ### Installing Python
