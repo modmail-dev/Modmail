@@ -65,10 +65,8 @@ class Modmail(commands.Bot):
     @staticmethod
     async def get_pre(bot, message):
         '''Returns the prefix.'''
-        with open('config.json') as f:
-            prefix = json.load(f).get('PREFIX')
+        prefix = bot.config.get('PREFIX')
         return os.environ.get('PREFIX') or prefix or 'm.'
-
 
     async def on_connect(self):
         print('---------------')
@@ -250,46 +248,53 @@ class Modmail(commands.Bot):
 
         return em
 
-    async def send_mail(self, message, channel, mod):
+    async def send_mail(self, message, channel, from_mod, delete_message=True):
         author = message.author
-        fmt = discord.Embed()
-        fmt.description = message.content
-        fmt.timestamp = message.created_at
+        em = discord.Embed()
+        em.description = message.content
+        em.timestamp = message.created_at
 
-        urls = re.findall(r'(https?://[^\s]+)', message.content)
+        image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
+        is_image_url = lambda u: any(urlparse(u).path.endswith(x) for x in image_types)
 
-        types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
+        delete_message = not bool(message.attachments) 
+        attachments = list(filter(lambda a: not is_image_url(a.url), message.attachments))
 
-        for u in urls:
-            if any(urlparse(u).path.endswith(x) for x in types):
-                fmt.set_image(url=u)
-                break
+        image_urls = [a.url for a in message.attachments]
+        image_urls.extend(re.findall(r'(https?://[^\s]+)', message.content))
+        image_urls = list(filter(is_image_url, image_urls))
 
-        if mod:
-            fmt.color=discord.Color.green()
-            fmt.set_author(name=str(author), icon_url=author.avatar_url)
-            fmt.set_footer(text='Moderator')
+        if image_urls:
+            em.set_image(url=image_urls[0])
+
+        if attachments:
+            att = attachments[0]
+            em.add_field(name='File Attachment', value=f'[{att.filename}]({att.url})')
+
+        if from_mod:
+            em.color=discord.Color.green()
+            em.set_author(name=str(author), icon_url=author.avatar_url)
+            em.set_footer(text='Moderator')
         else:
-            fmt.color=discord.Color.gold()
-            fmt.set_author(name=str(author), icon_url=author.avatar_url)
-            fmt.set_footer(text='User')
+            em.color=discord.Color.gold()
+            em.set_author(name=str(author), icon_url=author.avatar_url)
+            em.set_footer(text='User')
 
-        embed = None
+        await channel.send(embed=em)
 
-        if message.attachments:
-            fmt.set_image(url=message.attachments[0].url)
-
-        await channel.send(embed=fmt)
+        if delete_message:
+            try:
+                await message.delete()
+            except:
+                pass
 
     async def process_reply(self, message):
-        try:
-            await message.delete()
-        except discord.errors.NotFound:
-            pass
-        await self.send_mail(message, message.channel, mod=True)
         user_id = int(message.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
-        await self.send_mail(message, user, mod=True)
+        await asyncio.gather(
+            self.send_mail(message, message.channel, from_mod=True),
+            self.send_mail(message, user, from_mod=True)
+        )
 
     def format_name(self, author):
         name = author.name
@@ -332,7 +337,7 @@ class Modmail(commands.Bot):
         em.color = discord.Color.green()
 
         if channel is not None:
-            await self.send_mail(message, channel, mod=False)
+            await self.send_mail(message, channel, from_mod=False)
         else:
             await message.author.send(embed=em)
             channel = await guild.create_text_channel(
@@ -341,7 +346,7 @@ class Modmail(commands.Bot):
                 )
             await channel.edit(topic=topic)
             await channel.send('@here', embed=self.format_info(message))
-            await self.send_mail(message, channel, mod=False)
+            await self.send_mail(message, channel, from_mod=False)
 
     async def on_message(self, message):
         if message.author.bot:
@@ -351,14 +356,13 @@ class Modmail(commands.Bot):
             await self.process_modmail(message)
 
     @commands.command()
-    async def reply(self, ctx, *, msg):
+    async def reply(self, ctx, *, msg=''):
         '''Reply to users using this command.'''
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
-        if categ is not None:
-            if categ.name == 'Mod Mail':
-                if 'User ID:' in ctx.channel.topic:
-                    ctx.message.content = msg
-                    await self.process_reply(ctx.message)
+        if categ is not None and categ.name == 'Mod Mail':
+            if 'User ID:' in ctx.channel.topic:
+                ctx.message.content = msg
+                await self.process_reply(ctx.message)
 
     @commands.command(name="customstatus", aliases=['status', 'presence'])
     @commands.has_permissions(administrator=True)
