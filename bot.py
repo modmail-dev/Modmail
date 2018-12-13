@@ -122,18 +122,19 @@ class Modmail(commands.Bot):
         em.description = 'This bot is a python implementation of a stateless "Mod Mail" bot. ' \
                          'Made by Kyb3r and improved by the suggestions of others. This bot ' \
                          'saves no data and utilises channel topics for storage and syncing.' 
-                 
 
         cmds = f'`{prefix}setup [modrole] <- (optional)` - Command that sets up the bot.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
+               f'`{prefix}archive` - Closes the current thread and moves the channel to archive category.\n' \
                f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' \
                f'`{prefix}customstatus` - Sets the Bot status to whatever you want.\n' \
                f'`{prefix}block` - Blocks a user from using modmail!\n' \
                f'`{prefix}unblock` - Unblocks a user from using modmail!\n'
 
         warn = 'Do not manually delete the category or channels as it will break the system. ' \
-               'Modifying the channel topic will also break the system.'
+               'Modifying the channel topic will also break the system. Dont break the system buddy.'
+
         em.add_field(name='Commands', value=cmds)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
@@ -152,6 +153,10 @@ class Modmail(commands.Bot):
             name='Mod Mail', 
             overwrites=self.overwrites(ctx, modrole=modrole)
             )
+        archives = await ctx.guild.create_category(
+            name='Mod Mail Archives',
+            overwrites=self.overwrites(ctx, modrole=modrole)
+        )
         await categ.edit(position=0)
         c = await ctx.guild.create_text_channel(name='bot-info', category=categ)
         await c.edit(topic='Manually add user id\'s to block users.\n\n'
@@ -161,9 +166,10 @@ class Modmail(commands.Bot):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def disable(self, ctx):
+    async def disable(self, ctx, delete_archives: bool):
         '''Close all threads and disable modmail.'''
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
+        archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
         if not categ:
             return await ctx.send('This server is not set up.')
         em = discord.Embed(title='Thread Closed')
@@ -178,6 +184,8 @@ class Modmail(commands.Bot):
                         await user.send(embed=em)
                     await chan.delete()
         await categ.delete()
+        if delete_archives:
+            await archives.delete()
         await ctx.send('Disabled modmail.')
 
 
@@ -197,6 +205,34 @@ class Modmail(commands.Bot):
         except:
             pass
         await ctx.channel.delete()
+    
+
+    @commands.command()
+    @commands.has_permissions(manage_channels=True)
+    async def archive(self, ctx):
+        '''
+        Archive the current thread. (Visually closes the thread
+        but moves the channel into an archives category instead of 
+        deleteing the channel.)
+        '''
+        if 'User ID:' not in str(ctx.channel.topic):
+            return await ctx.send('This is not a modmail thread.')
+        user_id = int(ctx.channel.topic.split(': ')[1])
+        user = self.get_user(user_id)
+        em = discord.Embed(title='Thread Closed')
+        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.color = discord.Color.red()
+        try:
+            await user.send(embed=em)
+        except:
+            pass
+
+        archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
+        await ctx.channel.edit(category=archives)
+        done = discord.Embed(title='Thread Archived')
+        done.description = f'**{ctx.author}** has archived this modmail session.'
+        done.color = discord.Color.red()
+        await ctx.send(embed=done)
 
     @commands.command()
     async def ping(self, ctx):
@@ -325,6 +361,7 @@ class Modmail(commands.Bot):
         topic = f'User ID: {author.id}'
         channel = discord.utils.get(guild.text_channels, topic=topic)
         categ = discord.utils.get(guild.categories, name='Mod Mail')
+        archives = discord.utils.get(guild.categories, name='Mod Mail Archives')
         top_chan = categ.channels[0] #bot-info
         blocked = top_chan.topic.split('Blocked\n-------')[1].strip().split('\n')
         blocked = [x.strip() for x in blocked]
@@ -337,6 +374,9 @@ class Modmail(commands.Bot):
         em.color = discord.Color.green()
 
         if channel is not None:
+            if channel.category is archives:
+                await channel.edit(category=categ)
+                await channel.send('@here', embed=self.format_info(message))
             await self.send_mail(message, channel, from_mod=False)
         else:
             await message.author.send(embed=em)
