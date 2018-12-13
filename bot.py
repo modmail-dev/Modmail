@@ -200,10 +200,11 @@ class Modmail(commands.Bot):
         em = discord.Embed(title='Thread Closed')
         em.description = f'**{ctx.author}** has closed this modmail session.'
         em.color = discord.Color.red()
-        try:
-            await user.send(embed=em)
-        except:
-            pass
+        if ctx.channel.category.name != 'Mod Mail Archives': # already closed.
+            try:
+                await user.send(embed=em)
+            except:
+                pass
         await ctx.channel.delete()
     
 
@@ -332,7 +333,7 @@ class Modmail(commands.Bot):
             self.send_mail(message, user, from_mod=True)
         )
 
-    def format_name(self, author):
+    def format_name(self, author, channels):
         name = author.name
         new_name = ''
         for letter in name:
@@ -341,6 +342,8 @@ class Modmail(commands.Bot):
         if not new_name:
             new_name = 'null'
         new_name += f'-{author.discriminator}'
+        while new_name not in [c.name for c in channels]:
+            new_name += '-x' # two channels with same name
         return new_name
 
     @property
@@ -381,7 +384,7 @@ class Modmail(commands.Bot):
         else:
             await message.author.send(embed=em)
             channel = await guild.create_text_channel(
-                name=self.format_name(author),
+                name=self.format_name(author, guild.text_channels),
                 category=categ
                 )
             await channel.edit(topic=topic)
