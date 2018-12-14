@@ -166,7 +166,7 @@ class Modmail(commands.Bot):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def disable(self, ctx, delete_archives: bool):
+    async def disable(self, ctx, delete_archives: bool=False):
         '''Close all threads and disable modmail.'''
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
@@ -342,7 +342,7 @@ class Modmail(commands.Bot):
         if not new_name:
             new_name = 'null'
         new_name += f'-{author.discriminator}'
-        while new_name not in [c.name for c in channels]:
+        while new_name in [c.name for c in channels]:
             new_name += '-x' # two channels with same name
         return new_name
 
