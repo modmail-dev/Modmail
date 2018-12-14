@@ -100,6 +100,7 @@ You can add the bot to your server with [this tool](https://finitereality.github
 ## Thanks For Using This Bot!
 
 If you do use the bot, a star on this repository is appreciated ;)
+If you want to support me here is my [patreon](https://www.patreon.com/kyber). 
 
 This project is licenced under MIT.
 
