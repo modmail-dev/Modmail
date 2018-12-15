@@ -8,16 +8,20 @@
         "required": true
     },
     "GUILD_ID": {
-      "description": "The id for the server you are hosting this bot for.",
-      "required": true
+        "description": "The id for the server you are hosting this bot for.",
+        "required": true
     },
     "PREFIX": {
-      "description": "Command prefix to use.",
-      "required": false
+        "description": "Command prefix to use.",
+        "required": false
     },
     "STATUS": {
-      "description": "Set a custom playing status for the bot.",
-      "required": false
+        "description": "Set a custom playing status for the bot.",
+        "required": false
+    },
+    "MENTION": {
+        "description": "A custom role/user to mention when creating a modmail thread. Default is @here",
+        "required": false
     }
   }
 }
