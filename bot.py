@@ -55,18 +55,19 @@ class Modmail(commands.Bot):
     @property
     def config(self):
         with open('config.json') as f:
-            return json.load(f)
+            config = json.load(f)
+        config.update(os.environ)
+        return config
 
     @property
     def token(self):
         '''Returns your token wherever it is'''
-        return os.environ.get('TOKEN') or self.config.get('TOKEN')
+        return self.config.get('TOKEN')
     
     @staticmethod
     async def get_pre(bot, message):
         '''Returns the prefix.'''
-        prefix = bot.config.get('PREFIX')
-        return os.environ.get('PREFIX') or prefix or 'm.'
+        return bot.config.get('PREFIX') or 'm.'
 
     async def on_connect(self):
         print('---------------')
@@ -80,9 +81,7 @@ class Modmail(commands.Bot):
 
     @property
     def guild_id(self):
-        from_heroku = os.environ.get('GUILD_ID')
-        from_config = self.config.get('GUILD_ID')
-        return int(from_heroku) if from_heroku else from_config
+        return int(self.config.get('GUILD_ID'))
     
     @property
     def guild(self):
@@ -258,12 +257,12 @@ class Modmail(commands.Bot):
         member = self.guild.get_member(user.id)
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
-        desc = 'Modmail thread started.'
-        color = 0
+        desc = f'{user.mention} has started a thread.'
+        color = discord.Color.blurple()
 
         if member:
             roles = sorted(member.roles, key=lambda c: c.position)
-            rolenames = ', '.join([r.name for r in roles if r.name != "@everyone"]) or 'None'
+            rolenames = ' '.join([r.mention for r in roles if r.name != "@everyone"])
             member_number = sorted(server.members, key=lambda m: m.joined_at).index(member) + 1
             for role in roles:
                 if str(role.color) != "#000000":
@@ -271,17 +270,27 @@ class Modmail(commands.Bot):
 
         em = discord.Embed(colour=color, description=desc, timestamp=time)
 
-        em.add_field(name='Account Created', value=str((time - user.created_at).days)+' days ago.')
-        em.set_footer(text='User ID: '+str(user.id))
+        days = lambda d: (' day ago.' if d == '1' else ' days ago.')
+
+        created = str((time - user.created_at).days)
+        # em.add_field(name='Mention', value=user.mention)
+        em.add_field(name='Registered', value=created + days(created))
+        footer = 'User ID: '+str(user.id)
+        em.set_footer(text=footer)
         em.set_thumbnail(url=avi)
-        em.set_author(name=user, icon_url=server.icon_url)
-      
+        em.set_author(name=str(user), icon_url=avi)
 
         if member:
-            em.add_field(name='Joined', value=str((time - member.joined_at).days)+' days ago.')
+            joined = str((time - member.joined_at).days)
+            em.add_field(name='Joined', value=joined + days(joined))
             em.add_field(name='Member No.',value=str(member_number),inline = True)
-            em.add_field(name='Nick', value=member.nick, inline=True)
-            em.add_field(name='Roles', value=rolenames, inline=True)
+            em.add_field(name='Nickname', value=member.nick, inline=True)
+            if rolenames:
+                em.add_field(name='Roles', value=rolenames, inline=False)
+        else:
+            em.set_footer(text=footer+' | Note: this member is not part of this server.')
+        
+        
 
         return em
 
@@ -375,11 +384,12 @@ class Modmail(commands.Bot):
         em = discord.Embed(title='Thanks for the message!')
         em.description = 'The moderation team will get back to you as soon as possible!'
         em.color = discord.Color.green()
+        mention = self.config.get('MENTION') or '@here'
 
         if channel is not None:
             if channel.category is archives:
                 await channel.edit(category=categ)
-                await channel.send('@here', embed=self.format_info(message))
+                await channel.send(mention, embed=self.format_info(message))
             await self.send_mail(message, channel, from_mod=False)
         else:
             await message.author.send(embed=em)
@@ -388,7 +398,7 @@ class Modmail(commands.Bot):
                 category=categ
                 )
             await channel.edit(topic=topic)
-            await channel.send('@here', embed=self.format_info(message))
+            await channel.send(mention, embed=self.format_info(message))
             await self.send_mail(message, channel, from_mod=False)
 
     async def on_message(self, message):
