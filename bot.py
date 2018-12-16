@@ -163,7 +163,7 @@ class Modmail(commands.Bot):
         snippets = 'Snippets are shortcuts for predefined messages that you can send.' \
                    ' You can add snippets by adding config variables in the form **`SNIPPET_{NAME}`**' \
                    ' and setting the value to what you want the message to be. You can now use the snippet by' \
-                   f' typing `{prefix}name` in the thread you want to reply to.'
+                   f' typing the command `{prefix}name` in the thread you want to reply to.'
 
         mention = 'If you want the bot to mention a specific role instead of @here,' \
                   ' you need to set a config variable **`MENTION`** and set the value ' \
