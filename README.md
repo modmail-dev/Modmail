@@ -35,7 +35,7 @@ When a user sends a direct message to the bot, a channel is created within this 
 
 ## What it looks like
 
-![a](https://i.imgur.com/BVvIfru.png)
+![a](https://i.imgur.com/LZCHeaR.jpg)
 
 
 ## Hosting on Heroku
