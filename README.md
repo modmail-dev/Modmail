@@ -37,7 +37,7 @@ When a user sends a direct message to the bot, a channel is created within this 
 
 ![a](https://i.imgur.com/LZCHeaR.jpg)
 
-<h1 align="center"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Discord Mod Mail Bot</a></h1>
+<h1 align="center"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Installation</a></h1>
 
 You have the two options of using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone! Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation).
 
