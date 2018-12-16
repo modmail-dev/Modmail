@@ -48,6 +48,7 @@ class Modmail(commands.Bot):
 
     def _add_commands(self):
         '''Adds commands automatically'''
+        self.remove_command('help')
         for attr in dir(self):
             cmd = getattr(self, attr)
             if isinstance(cmd, commands.Command):
@@ -58,6 +59,14 @@ class Modmail(commands.Bot):
             config = json.load(f)
         config.update(os.environ)
         return config
+    
+    @property
+    def snippets(self):
+        return {
+            key.split('_')[1].lower(): val
+            for key, val in self.config.items() 
+            if key.startswith('SNIPPET_')
+            }
 
     @property
     def token(self):
@@ -101,6 +110,22 @@ class Modmail(commands.Bot):
         ---------------
         '''))
 
+
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+        if isinstance(message.channel, discord.DMChannel):
+            return await self.process_modmail(message)
+
+        prefix = self.config.get('PREFIX', 'm.')
+
+        if message.content.startswith(prefix):
+            cmd = message.content[len(prefix):].strip()
+            if cmd in self.snippets:
+                message.content = f'{prefix}reply {self.snippets[cmd]}'
+                
+        await self.process_commands(message)
+
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
         overwrites = {
@@ -119,27 +144,48 @@ class Modmail(commands.Bot):
         em = discord.Embed(color=0x00FFFF)
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
         em.description = 'This bot is a python implementation of a stateless "Mod Mail" bot. ' \
-                         'Made by Kyb3r and improved by the suggestions of others. This bot ' \
+                         'Made by kyb3r and improved by the suggestions of others. This bot ' \
                          'saves no data and utilises channel topics for storage and syncing.' 
 
-        cmds = f'`{prefix}setup [modrole] <- (optional)` - Command that sets up the bot.\n' \
+        cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the current thread and moves the channel to archive category.\n' \
-               f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' \
+               f'`{prefix}block` - Blocks a user from using modmail\n' \
+               f'`{prefix}unblock` - Unblocks a user from using modmail\n' \
+               f'`{prefix}snippets` - See a list of snippets that are currently configured.\n' \
                f'`{prefix}customstatus` - Sets the Bot status to whatever you want.\n' \
-               f'`{prefix}block` - Blocks a user from using modmail!\n' \
-               f'`{prefix}unblock` - Unblocks a user from using modmail!\n'
+               f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' 
 
         warn = 'Do not manually delete the category or channels as it will break the system. ' \
                'Modifying the channel topic will also break the system. Dont break the system buddy.'
 
+        snippets = 'Snippets are shortcuts for predefined messages that you can send.' \
+                   ' You can add snippets by adding config variables in the form **`SNIPPET_{NAME}`**' \
+                   ' and setting the value to what you want the message to be. You can now use the snippet by' \
+                   f' typing `{prefix}name` in the thread you want to reply to.'
+
+        mention = 'If you want the bot to mention a specific role instead of @here,' \
+                  ' you need to set a config variable **`MENTION`** and set the value ' \
+                  'to the *mention* of the role or user you want mentioned. To get the ' \
+                  'mention of a role or user, type `\@role` in chat and you will see ' \
+                  'something like `<@&515651147516608512>` use this string as ' \
+                  'the value for the config variable.'
+
         em.add_field(name='Commands', value=cmds)
+        em.add_field(name='Snippets', value=snippets)
+        em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
         em.set_footer(text='Star the repository to unlock hidden features! /s')
 
         return em
+
+    @commands.command()
+    async def help(self, ctx):
+        prefix = self.config.get('PREFIX', 'm.')
+        em = self.help_embed(prefix)
+        await ctx.send(embed=em)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -162,6 +208,21 @@ class Modmail(commands.Bot):
                            'Blocked\n-------\n\n')
         await c.send(embed=self.help_embed(ctx.prefix))
         await ctx.send('Successfully set up server.')
+    
+    @commands.command(name='snippets')
+    @commands.has_permissions(manage_messages=True)
+    async def _snippets(self, ctx):
+        '''Returns a list of snippets that are currently set.'''
+        em = discord.Embed(color=discord.Color.green())
+        em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
+        first_line = 'Here is a list of snippets that are currently configured. '
+        if not self.snippets:
+            first_line = 'You dont have any snippets at the moment. '
+        em.description =  first_line + 'You can add snippets by adding config variables in the form' \
+                         ' **`SNIPPET_{NAME}`**'
+        for name, value in self.snippets.items():
+            em.add_field(name=name, value=value, inline=False)
+        await ctx.send(embed=em)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -187,7 +248,6 @@ class Modmail(commands.Bot):
             await archives.delete()
         await ctx.send('Disabled modmail.')
 
-
     @commands.command(name='close')
     @commands.has_permissions(manage_channels=True)
     async def _close(self, ctx):
@@ -206,7 +266,6 @@ class Modmail(commands.Bot):
                 pass
         await ctx.channel.delete()
     
-
     @commands.command()
     @commands.has_permissions(manage_channels=True)
     async def archive(self, ctx):
@@ -400,13 +459,6 @@ class Modmail(commands.Bot):
             await channel.edit(topic=topic)
             await channel.send(mention, embed=self.format_info(message))
             await self.send_mail(message, channel, from_mod=False)
-
-    async def on_message(self, message):
-        if message.author.bot:
-            return
-        await self.process_commands(message)
-        if isinstance(message.channel, discord.DMChannel):
-            await self.process_modmail(message)
 
     @commands.command()
     async def reply(self, ctx, *, msg=''):
