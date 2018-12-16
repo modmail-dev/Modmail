@@ -294,6 +294,7 @@ class Modmail(commands.Bot):
         await ctx.send(embed=done)
 
     @commands.command()
+    @commands.has_permissions(administrator=True)
     async def ping(self, ctx):
         """Pong! Returns your websocket latency."""
         em = discord.Embed()
