@@ -177,7 +177,7 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text='Modmail v1.0.0 | Star the repository to unlock hidden features! /s')
+        em.set_footer(text='Modmail v1.0.1 | Star the repository to unlock hidden features! /s')
 
         return em
 
@@ -252,9 +252,13 @@ class Modmail(commands.Bot):
     @commands.has_permissions(manage_channels=True)
     async def _close(self, ctx):
         '''Close the current thread.'''
-        if 'User ID:' not in str(ctx.channel.topic):
+        user_id = None
+        if not ctx.channel.topic:
+            user_id = await self.find_user_id_from_channel(ctx.channel)
+        elif 'User ID:' not in str(ctx.channel.topic) or not user_id:
             return await ctx.send('This is not a modmail thread.')
-        user_id = int(ctx.channel.topic.split(': ')[1])
+
+        user_id = user_id or int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
         em.description = f'**{ctx.author}** has closed this modmail session.'
@@ -274,9 +278,13 @@ class Modmail(commands.Bot):
         but moves the channel into an archives category instead of 
         deleteing the channel.)
         '''
-        if 'User ID:' not in str(ctx.channel.topic):
+        user_id = None
+        if not ctx.channel.topic:
+            user_id = await self.find_user_id_from_channel(ctx.channel)
+        elif 'User ID:' not in str(ctx.channel.topic) or not user_id:
             return await ctx.send('This is not a modmail thread.')
-        user_id = int(ctx.channel.topic.split(': ')[1])
+
+        user_id = user_id or int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
         em.description = f'**{ctx.author}** has closed this modmail session.'
@@ -394,16 +402,18 @@ class Modmail(commands.Bot):
             except:
                 pass
 
-    async def process_reply(self, message):
-        user_id = int(message.channel.topic.split(': ')[1])
+    async def process_reply(self, message, user_id=None):
+        user_id = user_id or int(re.findall(r'\d+', message.channel.topic)[0])
         user = self.get_user(user_id)
+        if not user:
+            return await message.channel.send('This user does not have any mutual servers with the bot and is thus unreachable.')
         await asyncio.gather(
             self.send_mail(message, message.channel, from_mod=True),
             self.send_mail(message, user, from_mod=True)
         )
 
     def format_name(self, author, channels):
-        name = author.name
+        name = author.name.lower()
         new_name = ''
         for letter in name:
             if letter in string.ascii_letters + string.digits:
@@ -460,15 +470,28 @@ class Modmail(commands.Bot):
             await channel.edit(topic=topic)
             await channel.send(mention, embed=self.format_info(message))
             await self.send_mail(message, channel, from_mod=False)
+    
+    async def find_user_id_from_channel(self, channel):
+        async for message in channel.history():
+            if message.embeds:
+                em = message.embeds[0]
+                matches = re.findall(r'\d+', em.description)
+                if matches:
+                    return int(matches[0])
 
     @commands.command()
     async def reply(self, ctx, *, msg=''):
         '''Reply to users using this command.'''
+        ctx.message.content = msg
+
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         if categ is not None and categ.name == 'Mod Mail':
-            if 'User ID:' in ctx.channel.topic:
-                ctx.message.content = msg
+            if ctx.channel.topic and 'User ID:' in ctx.channel.topic:
                 await self.process_reply(ctx.message)
+            if not ctx.channel.topic:
+                user_id = await self.find_user_id_from_channel(ctx.channel)
+                if user_id:
+                    await self.process_reply(ctx.message, user_id=user_id)
 
     @commands.command(name="customstatus", aliases=['status', 'presence'])
     @commands.has_permissions(administrator=True)
