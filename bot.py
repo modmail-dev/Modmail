@@ -143,9 +143,8 @@ class Modmail(commands.Bot):
     def help_embed(self, prefix):
         em = discord.Embed(color=0x00FFFF)
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
-        em.description = 'This bot is a python implementation of a stateless "Mod Mail" bot. ' \
-                         'Made by kyb3r and improved by the suggestions of others. This bot ' \
-                         'saves no data and utilises channel topics for storage and syncing.' 
+        em.description = 'This bot is a python implementation of a "Mod Mail" bot. ' \
+                         'Made by kyb3r and improved by the suggestions of others.' 
 
         cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
@@ -157,7 +156,8 @@ class Modmail(commands.Bot):
                f'`{prefix}customstatus` - Sets the Bot status to whatever you want.\n' \
                f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' 
 
-        warn = 'Do not manually delete the category or channels as it will break the system. ' \
+        warn = 'This bot saves no data and utilises channel topics for tracking and relaying messages.' \
+               ' Therefore do not manually delete the category or channels as it will break the system. ' \
                'Modifying the channel topic will also break the system. Dont break the system buddy.'
 
         snippets = 'Snippets are shortcuts for predefined messages that you can send.' \
