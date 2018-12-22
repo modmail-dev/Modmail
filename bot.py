@@ -41,9 +41,12 @@ from contextlib import redirect_stdout
 
 
 class Modmail(commands.Bot):
+
+    version = '1.1.4'
+
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
-        self.uptime = datetime.datetime.utcnow()
+        self.start_time = datetime.datetime.utcnow()
         self._add_commands()
 
     def _add_commands(self):
@@ -76,7 +79,8 @@ class Modmail(commands.Bot):
     @staticmethod
     async def get_pre(bot, message):
         '''Returns the prefix.'''
-        return bot.config.get('PREFIX') or 'm.'
+        p = bot.config.get('PREFIX') or 'm.'
+        return [p, bot.user.mention+' ']
 
     async def on_connect(self):
         print('---------------')
@@ -199,14 +203,47 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text='Modmail v1.1.3 | Star the repository to unlock hidden features! /s')
+        em.set_footer(text=f'Modmail v{self.version} | Star the repository to unlock hidden features! /s')
 
         return em
+
+    @property
+    def uptime(self):
+        now = datetime.datetime.utcnow()
+        delta = now - self.start_time
+        hours, remainder = divmod(int(delta.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        days, hours = divmod(hours, 24)
+
+        fmt = '{h}h {m}m {s}s'
+        if days:
+            fmt = '{d}d ' + fmt
+
+        return fmt.format(d=days, h=hours, m=minutes, s=seconds)
 
     @commands.command()
     async def help(self, ctx):
         prefix = self.config.get('PREFIX', 'm.')
         em = self.help_embed(prefix)
+        await ctx.send(embed=em)
+    
+    @commands.command()
+    async def about(self, ctx):
+        em = discord.Embed(color=discord.Color.green())
+        em.set_author(name='Mod Mail - Information', icon_url=self.user.avatar_url)
+        em.set_thumbnail(url=self.user.avatar_url)
+
+        em.description = 'This is an open source discord bot made by kyb3r and '\
+                         'improved upon suggestions by the users! This bot serves as a means for members to '\
+                         'easily communicate with server leadership in an organised manner.'
+
+        em.add_field(name='Uptime', value=self.uptime)
+        em.add_field(name='Latency', value=f'{self.latency*1000:.2f} ms')
+        em.add_field(name='Version', value=f'`v{self.version}`')
+        em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
+        em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
+        em.set_footer(text=f'Bot ID: {self.user.id}')
+
         await ctx.send(embed=em)
 
     @commands.command()
