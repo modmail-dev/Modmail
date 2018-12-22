@@ -229,7 +229,7 @@ class Modmail(commands.Bot):
     
     @commands.command()
     async def about(self, ctx):
-        em = discord.Embed(color=discord.Color.green())
+        em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
         em.set_author(name='Mod Mail - Information', icon_url=self.user.avatar_url)
         em.set_thumbnail(url=self.user.avatar_url)
 
@@ -239,7 +239,7 @@ class Modmail(commands.Bot):
 
         em.add_field(name='Uptime', value=self.uptime)
         em.add_field(name='Latency', value=f'{self.latency*1000:.2f} ms')
-        em.add_field(name='Version', value=f'`v{self.version}`')
+        em.add_field(name='Version', value=f'[`{self.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L45)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
         em.set_footer(text=f'Bot ID: {self.user.id}')
