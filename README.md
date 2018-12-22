@@ -52,11 +52,13 @@ If you are keen to stay updated with the latest features then follow the updatin
 | Name         | Description                                                          |
 |--------------|----------------------------------------------------------------------|
 | setup        | Sets up the categories that will be used by the bot.                 |
-| contact      | Allows a moderator to initiate a thread with a given recipient.
+| about        | Shows some general information about the bot.                        |
+| contact      | Allows a moderator to initiate a thread with a given recipient.      |
 | reply        | Sends a message to the current thread's recipient.                   |
 | close        | Closes the current thread and deletes the channel.                   |
 | archive      | Closes the thread and moves the channel to the archive category.     | 
 | block        | Blocks a user from using modmail                                     |
+| blocked      | Shows a list of users that are currently blocked                     |
 | unblock      | Unblocks a user from using modmail                                   |
 | snippets     | Shows a list of snippets that are currently configured.              |
 | customstatus | Sets the bot playing status to a message of your choosin             |
