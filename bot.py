@@ -502,6 +502,7 @@ class Modmail(commands.Bot):
                 if creator: # thread appears to be closed 
                     await user.send(embed=em)
                 await channel.edit(category=categ)
+                info_description = info_description or f'{user.mention} has reopened this thread.'
                 await channel.send(mention, embed=self.format_info(user, info_description))
         else:
             await user.send(embed=em)
