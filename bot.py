@@ -199,7 +199,7 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text='Modmail v1.1.2 | Star the repository to unlock hidden features! /s')
+        em.set_footer(text='Modmail v1.1.3 | Star the repository to unlock hidden features! /s')
 
         return em
 
