@@ -125,6 +125,26 @@ class Modmail(commands.Bot):
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
                 
         await self.process_commands(message)
+    
+    async def on_message_delete(self, message):
+        '''Support for deleting linked messages'''
+        if message.embeds and not isinstance(message.channel, discord.DMChannel):
+            matches = re.findall(r'Moderator - (\d+)', str(message.embeds[0].footer.text))
+            if matches:
+                user_id = None
+                if not message.channel.topic:
+                    user_id = await self.find_user_id_from_channel(message.channel)
+                user_id = user_id or int(message.channel.topic.split(': ')[1])
+
+                user = self.get_user(user_id)
+                channel = user.dm_channel
+                message_id = matches[0]
+
+                async for msg in channel.history():
+                    if msg.embeds:
+                        if f'Moderator - {message_id}' == msg.embeds[0].footer.text:
+                            await msg.delete()
+                            break
 
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
@@ -147,6 +167,7 @@ class Modmail(commands.Bot):
                          'Made by kyb3r and improved by the suggestions of others.' 
 
         cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
+               f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the current thread and moves the channel to archive category.\n' \
@@ -177,7 +198,7 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text='Modmail v1.0.1 | Star the repository to unlock hidden features! /s')
+        em.set_footer(text='Modmail v1.1.2 | Star the repository to unlock hidden features! /s')
 
         return em
 
@@ -233,7 +254,7 @@ class Modmail(commands.Bot):
         if not categ:
             return await ctx.send('This server is not set up.')
         em = discord.Embed(title='Thread Closed')
-        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
         for category, channels in ctx.guild.by_category():
             if category == categ:
@@ -261,7 +282,7 @@ class Modmail(commands.Bot):
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
-        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
         if ctx.channel.category.name != 'Mod Mail Archives': # already closed.
             try:
@@ -287,7 +308,7 @@ class Modmail(commands.Bot):
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
-        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
         try:
             await user.send(embed=em)
@@ -317,15 +338,14 @@ class Modmail(commands.Bot):
             if role.permissions.manage_guild:
                 yield role
 
-    def format_info(self, message):
+    def format_info(self, user, description=None):
         '''Get information about a member of a server
         supports users from the guild or not.'''
-        user = message.author
         server = self.guild
         member = self.guild.get_member(user.id)
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
-        desc = f'{user.mention} has started a thread.'
+        desc = description or f'{user.mention} has started a thread.'
         color = discord.Color.blurple()
 
         if member:
@@ -388,7 +408,7 @@ class Modmail(commands.Bot):
         if from_mod:
             em.color=discord.Color.green()
             em.set_author(name=str(author), icon_url=author.avatar_url)
-            em.set_footer(text='Moderator')
+            em.set_footer(text=f'Moderator - {message.id}')
         else:
             em.color=discord.Color.gold()
             em.set_author(name=str(author), icon_url=author.avatar_url)
@@ -433,49 +453,73 @@ class Modmail(commands.Bot):
 
     async def process_modmail(self, message):
         '''Processes messages sent to the bot.'''
-        try:
-            await message.add_reaction('✅')
-        except:
-            pass
 
         guild = self.guild
-        author = message.author
-        topic = f'User ID: {author.id}'
-        channel = discord.utils.get(guild.text_channels, topic=topic)
         categ = discord.utils.get(guild.categories, name='Mod Mail')
-        archives = discord.utils.get(guild.categories, name='Mod Mail Archives')
         top_chan = categ.channels[0] #bot-info
         blocked = top_chan.topic.split('Blocked\n-------')[1].strip().split('\n')
         blocked = [x.strip() for x in blocked]
+        reaction = '🚫' if str(message.author.id) in blocked else '✅'
+
+        try:
+            await message.add_reaction(reaction)
+        except:
+            pass
 
         if str(message.author.id) in blocked:
-            return await message.author.send(embed=self.blocked_em)
+            await message.author.send(embed=self.blocked_em)
+        else:
+            channel = await self.create_thread(message.author)
+            await self.send_mail(message, channel, from_mod=False)
+            
+
+    async def create_thread(self, user, *, creator=None):
+
+        guild = self.guild
+        topic = f'User ID: {user.id}'
+        channel = discord.utils.get(guild.text_channels, topic=topic)
+        categ = discord.utils.get(guild.categories, name='Mod Mail')
+        archives = discord.utils.get(guild.categories, name='Mod Mail Archives')
 
         em = discord.Embed(title='Thanks for the message!')
         em.description = 'The moderation team will get back to you as soon as possible!'
         em.color = discord.Color.green()
-        mention = self.config.get('MENTION') or '@here'
+        
+        info_description = None
+
+        if creator:
+            em = discord.Embed(title='Modmail thread started')
+            em.description = f'{creator.mention} has started a modmail thread with you.'
+            em.color = discord.Color.green()
+
+            info_description = f'{creator.mention} has created a thread with {user.mention}'
+
+        mention = (self.config.get('MENTION') or '@here') if not creator else None
+
 
         if channel is not None:
             if channel.category is archives:
+                if creator: # thread appears to be closed 
+                    await user.send(embed=em)
                 await channel.edit(category=categ)
-                await channel.send(mention, embed=self.format_info(message))
-            await self.send_mail(message, channel, from_mod=False)
+                info_description = info_description or f'{user.mention} has reopened this thread.'
+                await channel.send(mention, embed=self.format_info(user, info_description))
         else:
-            await message.author.send(embed=em)
+            await user.send(embed=em)
             channel = await guild.create_text_channel(
-                name=self.format_name(author, guild.text_channels),
+                name=self.format_name(user, guild.text_channels),
                 category=categ
                 )
             await channel.edit(topic=topic)
-            await channel.send(mention, embed=self.format_info(message))
-            await self.send_mail(message, channel, from_mod=False)
-    
+            await channel.send(mention, embed=self.format_info(user, info_description))
+        
+        return channel
+
     async def find_user_id_from_channel(self, channel):
         async for message in channel.history():
             if message.embeds:
                 em = message.embeds[0]
-                matches = re.findall(r'\d+', em.description)
+                matches = re.findall(r'<@(\d+)>', str(em.description))
                 if matches:
                     return int(matches[0])
 
@@ -492,6 +536,14 @@ class Modmail(commands.Bot):
                 user_id = await self.find_user_id_from_channel(ctx.channel)
                 if user_id:
                     await self.process_reply(ctx.message, user_id=user_id)
+    
+    @commands.command()
+    async def contact(self, ctx, *, user: discord.Member):
+        '''Create a thread with a specified member.'''
+        categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
+        if categ is not None and categ.name == 'Mod Mail':
+            channel = await self.create_thread(user, creator=ctx.author)
+            await ctx.send(f'Created thread {channel.mention}')
 
     @commands.command(name="customstatus", aliases=['status', 'presence'])
     @commands.has_permissions(administrator=True)
@@ -547,7 +599,8 @@ class Modmail(commands.Bot):
     @commands.command(hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):
         """Evaluates python code"""
-        allowed = [int(x) for x in os.getenv('OWNERS', '').split(',')]
+        allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
+
         if ctx.author.id not in allowed: 
             return
         
