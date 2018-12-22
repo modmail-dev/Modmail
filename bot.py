@@ -167,6 +167,7 @@ class Modmail(commands.Bot):
                          'Made by kyb3r and improved by the suggestions of others.' 
 
         cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
+               f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the current thread and moves the channel to archive category.\n' \
