@@ -71,6 +71,9 @@ If you want the bot to mention a specific role instead of `@here`, you need to s
 ### Delete Linked Messages
 Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! 
 
+## Updating
+If you are keen to stay updated with the latest features then follow the updating guide [here](https://github.com/kyb3r/modmail/wiki/Updating). It has a few more steps so it may not be for everyone.
+
 ## Thanks For Using This Bot!
 
 If you do use the bot, a star on this repository is appreciated! If you want to support me here is my [patreon](https://www.patreon.com/kyber). 
