@@ -77,8 +77,4 @@ Did you accidentally send something you didnt mean to with the `reply` command? 
 
 If you do use the bot, a star on this repository is appreciated! If you want to support me here is my [patreon](https://www.patreon.com/kyber). 
 
-This project is licenced under MIT.
-
-## Contributing
-
-Feel free to contribute to the development of this bot.
+This project is licenced under MIT. Feel free to contribute to the development of this bot.
