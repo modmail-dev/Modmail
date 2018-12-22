@@ -177,7 +177,7 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text='Modmail v1.0.1 | Star the repository to unlock hidden features! /s')
+        em.set_footer(text='Modmail v1.0.2 | Star the repository to unlock hidden features! /s')
 
         return em
 
@@ -475,7 +475,7 @@ class Modmail(commands.Bot):
         async for message in channel.history():
             if message.embeds:
                 em = message.embeds[0]
-                matches = re.findall(r'\d+', em.description)
+                matches = re.findall(r'<@(\d+)>', str(em.description))
                 if matches:
                     return int(matches[0])
 
