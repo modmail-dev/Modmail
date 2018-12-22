@@ -41,9 +41,12 @@ from contextlib import redirect_stdout
 
 
 class Modmail(commands.Bot):
+
+    version = '1.1.5'
+
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
-        self.uptime = datetime.datetime.utcnow()
+        self.start_time = datetime.datetime.utcnow()
         self._add_commands()
 
     def _add_commands(self):
@@ -76,7 +79,8 @@ class Modmail(commands.Bot):
     @staticmethod
     async def get_pre(bot, message):
         '''Returns the prefix.'''
-        return bot.config.get('PREFIX') or 'm.'
+        p = bot.config.get('PREFIX') or 'm.'
+        return [p, bot.user.mention+' ']
 
     async def on_connect(self):
         print('---------------')
@@ -167,12 +171,14 @@ class Modmail(commands.Bot):
                          'Made by kyb3r and improved by the suggestions of others.' 
 
         cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
+               f'`{prefix}about` - Shows general information about the bot.\n' \
                f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the current thread and moves the channel to archive category.\n' \
-               f'`{prefix}block` - Blocks a user from using modmail\n' \
-               f'`{prefix}unblock` - Unblocks a user from using modmail\n' \
+               f'`{prefix}block` - Blocks a user from using modmail.\n' \
+               f'`{prefix}blocked` - Shows a list of currently blocked users.\n' \
+               f'`{prefix}unblock` - Unblocks a user from using modmail.\n' \
                f'`{prefix}snippets` - See a list of snippets that are currently configured.\n' \
                f'`{prefix}customstatus` - Sets the Bot status to whatever you want.\n' \
                f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' 
@@ -198,14 +204,47 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text='Modmail v1.1.2 | Star the repository to unlock hidden features! /s')
+        em.set_footer(text=f'Modmail v{self.version} | Star the repository to unlock hidden features! /s')
 
         return em
+
+    @property
+    def uptime(self):
+        now = datetime.datetime.utcnow()
+        delta = now - self.start_time
+        hours, remainder = divmod(int(delta.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        days, hours = divmod(hours, 24)
+
+        fmt = '{h}h {m}m {s}s'
+        if days:
+            fmt = '{d}d ' + fmt
+
+        return fmt.format(d=days, h=hours, m=minutes, s=seconds)
 
     @commands.command()
     async def help(self, ctx):
         prefix = self.config.get('PREFIX', 'm.')
         em = self.help_embed(prefix)
+        await ctx.send(embed=em)
+    
+    @commands.command()
+    async def about(self, ctx):
+        em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
+        em.set_author(name='Mod Mail - Information', icon_url=self.user.avatar_url)
+        em.set_thumbnail(url=self.user.avatar_url)
+
+        em.description = 'This is an open source discord bot made by kyb3r and '\
+                         'improved upon suggestions by the users! This bot serves as a means for members to '\
+                         'easily communicate with server leadership in an organised manner.'
+
+        em.add_field(name='Uptime', value=self.uptime)
+        em.add_field(name='Latency', value=f'{self.latency*1000:.2f} ms')
+        em.add_field(name='Version', value=f'[`{self.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L45)')
+        em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
+        em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
+        em.set_footer(text=f'Bot ID: {self.user.id}')
+
         await ctx.send(embed=em)
 
     @commands.command()
@@ -300,27 +339,35 @@ class Modmail(commands.Bot):
         deleteing the channel.)
         '''
         user_id = None
+
         if not ctx.channel.topic:
             user_id = await self.find_user_id_from_channel(ctx.channel)
         elif 'User ID:' not in str(ctx.channel.topic) and not user_id:
             return await ctx.send('This is not a modmail thread.')
 
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
+
+        archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
+
+        if ctx.channel.category is archives:
+            return await ctx.send('This channel is already archived.')
+
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
         em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
+
         try:
             await user.send(embed=em)
         except:
             pass
 
-        archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
         await ctx.channel.edit(category=archives)
         done = discord.Embed(title='Thread Archived')
-        done.description = f'**{ctx.author}** has archived this modmail session.'
+        done.description = f'{ctx.author.mention} has archived this modmail session.'
         done.color = discord.Color.red()
         await ctx.send(embed=done)
+        await ctx.message.delete()
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -538,12 +585,17 @@ class Modmail(commands.Bot):
                     await self.process_reply(ctx.message, user_id=user_id)
     
     @commands.command()
+    @commands.has_permissions(manage_channels=True)
     async def contact(self, ctx, *, user: discord.Member):
         '''Create a thread with a specified member.'''
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
-        if categ is not None and categ.name == 'Mod Mail':
-            channel = await self.create_thread(user, creator=ctx.author)
-            await ctx.send(f'Created thread {channel.mention}')
+        channel = await self.create_thread(user, creator=ctx.author)
+        
+        em = discord.Embed(title='Created Thread')
+        em.description = f'Thread started in {channel.mention} for {user.mention}'
+        em.color = discord.Color.green()
+
+        await ctx.send(embed=em)
 
     @commands.command(name="customstatus", aliases=['status', 'presence'])
     @commands.has_permissions(administrator=True)
@@ -552,8 +604,45 @@ class Modmail(commands.Bot):
         if message == 'clear':
             return await self.change_presence(activity=None)
         await self.change_presence(activity=discord.Game(message))
-        await ctx.send(f"Changed status to **{message}**")
+        em = discord.Embed(title='Status Changed')
+        em.description = message
+        em.color = discord.Color.green()
+        em.set_footer(text='Note: this change is temporary.')
+        await ctx.send(embed=em)
+    
+    @commands.command()
+    @commands.has_permissions(manage_channels=True)
+    async def blocked(self, ctx):
+        '''Returns a list of blocked users'''
+        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
+        top_chan = categ.channels[0] #bot-info
+        ids = re.findall(r'\d+', top_chan.topic)
 
+        em = discord.Embed(title='Blocked Users', color=discord.Color.green())
+        em.description = ''
+
+        users = []
+        not_reachable = []
+
+        for id in ids:
+            user = self.get_user(int(id))
+            if user:
+                users.append(user)
+            else:
+                not_reachable.append(id)
+        
+        em.description = 'Here is a list of blocked users.'
+        
+        if users:
+            em.add_field(name='Currently Known', value=' '.join(u.mention for u in users))
+        if not_reachable:
+            em.add_field(name='Unknown', value='\n'.join(f'`{i}`' for i in not_reachable), inline=False)
+        
+        if not users and not not_reachable:
+            em.description = 'Currently there are no blocked users'
+
+        await ctx.send(embed=em)
+        
     @commands.command()
     @commands.has_permissions(manage_channels=True)
     async def block(self, ctx, id=None):
@@ -569,11 +658,25 @@ class Modmail(commands.Bot):
         topic = str(top_chan.topic)
         topic += '\n' + id
 
+        user = self.get_user(int(id))
+        mention = user.mention if user else f'`{id}`'
+
+        em = discord.Embed()
+        em.color = discord.Color.green()
+
         if id not in top_chan.topic:  
             await top_chan.edit(topic=topic)
-            await ctx.send('User successfully blocked!')
+
+            em.title = 'Success'
+            em.description = f'{mention} is now blocked'
+
+            await ctx.send(embed=em)
         else:
-            await ctx.send('User is already blocked.')
+            em.title = 'Error'
+            em.description = f'{mention} is already blocked'
+            em.color = discord.Color.red()
+
+            await ctx.send(embed=em)
 
     @commands.command()
     @commands.has_permissions(manage_channels=True)
@@ -590,11 +693,25 @@ class Modmail(commands.Bot):
         topic = str(top_chan.topic)
         topic = topic.replace('\n'+id, '')
 
-        if id in top_chan.topic:
+        user = self.get_user(int(id))
+        mention = user.mention if user else f'`{id}`'
+
+        em = discord.Embed()
+        em.color = discord.Color.green()
+
+        if id in top_chan.topic:  
             await top_chan.edit(topic=topic)
-            await ctx.send('User successfully unblocked!')
+
+            em.title = 'Success'
+            em.description = f'{mention} is no longer blocked'
+
+            await ctx.send(embed=em)
         else:
-            await ctx.send('User is not already blocked.')
+            em.title = 'Error'
+            em.description = f'{mention} is not already blocked'
+            em.color = discord.Color.red()
+
+            await ctx.send(embed=em)
 
     @commands.command(hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):
