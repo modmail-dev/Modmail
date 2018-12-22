@@ -50,6 +50,7 @@ Heroku is a free hosting site that can host many web apps. However, the web apps
 | Name         | Description                                                          |
 |--------------|----------------------------------------------------------------------|
 | setup        | Sets up the categories that will be used by the bot.                 |
+| contact      | Allows a moderator to initiate a thread with a given recipient.
 | reply        | Sends a message to the current thread's recipient.                   |
 | close        | Closes the current thread and deletes the channel.                   |
 | archive      | Closes the thread and moves the channel to the archive category.     | 
@@ -59,11 +60,16 @@ Heroku is a free hosting site that can host many web apps. However, the web apps
 | customstatus | Sets the bot playing status to a message of your choosin             |
 | disable      | Closes all threads and disables modmail for the server.              |
 
+## Features
+
 ### Snippets
 Snippets are shortcuts for predefined messages that you can send. You can add snippets by adding config variables by prefixing the name of the snippet with `SNIPPET_` and setting the value to what you want the message to be. For example you can make a snippet called `hi` by making a config variabled named `SNIPPET_hi`, you can then use the snippet by typing the command `?hi` in the thread you want to reply to.
 
 ### Custom Mentions
 If you want the bot to mention a specific role instead of `@here`, you need to set a config variable `MENTION` and set the value to the mention of the role or user you want mentioned. To get the mention of a role or user, type `\@role` in chat and you will see something like `<@&515651147516608512>` use this string as the value for the config variable.
+
+### Delete Linked Messages
+Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! 
 
 ## Thanks For Using This Bot!
 
