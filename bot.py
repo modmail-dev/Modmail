@@ -42,7 +42,7 @@ from contextlib import redirect_stdout
 
 class Modmail(commands.Bot):
 
-    version = '1.1.5'
+    version = '1.1.6'
 
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
@@ -80,7 +80,7 @@ class Modmail(commands.Bot):
     async def get_pre(bot, message):
         '''Returns the prefix.'''
         p = bot.config.get('PREFIX') or 'm.'
-        return [p, bot.user.mention+' ']
+        return [p, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
     async def on_connect(self):
         print('---------------')
