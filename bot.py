@@ -282,7 +282,7 @@ class Modmail(commands.Bot):
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
-        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
         if ctx.channel.category.name != 'Mod Mail Archives': # already closed.
             try:
@@ -308,7 +308,7 @@ class Modmail(commands.Bot):
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
-        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
         try:
             await user.send(embed=em)
