@@ -42,8 +42,10 @@ When a user sends a direct message to the bot, a channel is created within this 
 You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone! Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation).
 
 ### What is Heroku?
-Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data on site (changing files). We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in any files, utilising discord channel topics for tracking and relaying conversations. 
+Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data on site (changing files). We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in any files, utilising discord channel topics for tracking and relaying conversations.
 
+### Updating
+If you are keen to stay updated with the latest features then follow the updating guide [here](https://github.com/kyb3r/modmail/wiki/Updating). It has a few more steps so it may not be for everyone.
 
 ## Commands
 
@@ -70,9 +72,6 @@ If you want the bot to mention a specific role instead of `@here`, you need to s
 
 ### Delete Linked Messages
 Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! 
-
-## Updating
-If you are keen to stay updated with the latest features then follow the updating guide [here](https://github.com/kyb3r/modmail/wiki/Updating). It has a few more steps so it may not be for everyone.
 
 ## Thanks For Using This Bot!
 
