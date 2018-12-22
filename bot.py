@@ -318,9 +318,10 @@ class Modmail(commands.Bot):
         archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
         await ctx.channel.edit(category=archives)
         done = discord.Embed(title='Thread Archived')
-        done.description = f'**{ctx.author}** has archived this modmail session.'
+        done.description = f'{ctx.author.mention} has archived this modmail session.'
         done.color = discord.Color.red()
         await ctx.send(embed=done)
+        await ctx.message.delete()
 
     @commands.command()
     @commands.has_permissions(administrator=True)
