@@ -254,7 +254,7 @@ class Modmail(commands.Bot):
         if not categ:
             return await ctx.send('This server is not set up.')
         em = discord.Embed(title='Thread Closed')
-        em.description = f'**{ctx.author}** has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
         for category, channels in ctx.guild.by_category():
             if category == categ:
