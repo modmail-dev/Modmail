@@ -42,7 +42,7 @@ from contextlib import redirect_stdout
 
 class Modmail(commands.Bot):
 
-    version = '1.1.4'
+    version = '1.1.5'
 
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
@@ -171,6 +171,7 @@ class Modmail(commands.Bot):
                          'Made by kyb3r and improved by the suggestions of others.' 
 
         cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
+               f'`{prefix}about` - Shows general information about the bot.\n' \
                f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
