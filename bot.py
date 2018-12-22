@@ -300,22 +300,29 @@ class Modmail(commands.Bot):
         deleteing the channel.)
         '''
         user_id = None
+
         if not ctx.channel.topic:
             user_id = await self.find_user_id_from_channel(ctx.channel)
         elif 'User ID:' not in str(ctx.channel.topic) and not user_id:
             return await ctx.send('This is not a modmail thread.')
 
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
+
+        archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
+
+        if ctx.channel.category is archives:
+            return await ctx.send('This channel is already archived.')
+
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
         em.description = f'{ctx.author.mention} has closed this modmail session.'
         em.color = discord.Color.red()
+        
         try:
             await user.send(embed=em)
         except:
             pass
 
-        archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
         await ctx.channel.edit(category=archives)
         done = discord.Embed(title='Thread Archived')
         done.description = f'{ctx.author.mention} has archived this modmail session.'
