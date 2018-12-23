@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 
 import discord
 from discord.ext import commands
@@ -339,6 +339,7 @@ class Modmail(commands.Bot):
         access_token = self.config.get('GITHUB_ACCESS_TOKEN')
 
         if not access_token:
+            em.title = 'Invalid Access Token'
             em.description = 'You have not properly set up GitHub credentials. '\
                              'Create a config variable named `GITHUB_ACCESS_TOKEN`'\
                              ' and set the value as your personal access token which'\
