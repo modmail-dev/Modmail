@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 import discord
 from discord.ext import commands
@@ -267,14 +267,18 @@ class Modmail(commands.Bot):
 
         em.add_field(name='Uptime', value=self.uptime)
         em.add_field(name='Latency', value=f'{self.latency*1000:.2f} ms')
-        em.add_field(name='Version', value=f'[`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L45)')
+        em.add_field(name='Version', value=f'[`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
         
         footer = f'Bot ID: {self.user.id}'
+        
         if meta:
             em.add_field(name='Instances', value=meta['instances'])
+
             if __version__ != meta['latest_version']:
                 footer = f"A newer version is available v{meta['latest_version']}"
+            else:
+                footer = 'You are up to date with the latest version.'
         
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail', inline=False)
 
