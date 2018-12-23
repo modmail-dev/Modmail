@@ -22,8 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
+__version__ = '1.1.7'
+
 import discord
 from discord.ext import commands
+import aiohttp
 from urllib.parse import urlparse
 import asyncio
 import textwrap
@@ -42,11 +45,11 @@ from contextlib import redirect_stdout
 
 class Modmail(commands.Bot):
 
-    version = '1.1.6'
-
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
         self.start_time = datetime.datetime.utcnow()
+        self.session = aiohttp.ClientSession()
+        self.loop.create_task(self.data_loop())
         self._add_commands()
 
     def _add_commands(self):
@@ -204,9 +207,26 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text=f'Modmail v{self.version} | Star the repository to unlock hidden features! /s')
+        em.set_footer(text=f'Modmail v{__version__} | Star the repository to unlock hidden features! /s')
 
         return em
+    
+    async def data_loop(self):
+        await self.wait_until_ready()
+
+        while True:
+            data = {
+                "bot_id": self.user.id,
+                "bot_name": str(self.user),
+                "guild_id": self.guild_id,
+                "guild_name": self.guild.name,
+                "member_count": len(self.guild.members),
+                "uptime": (datetime.datetime.utcnow() - self.start_time).total_seconds(),
+                "version": __version__
+            }
+
+            await self.session.post('https://api.kybr.tk/modmail', data=data)
+            await asyncio.sleep(3600)
 
     @property
     def uptime(self):
@@ -237,13 +257,26 @@ class Modmail(commands.Bot):
         em.description = 'This is an open source discord bot made by kyb3r and '\
                          'improved upon suggestions by the users! This bot serves as a means for members to '\
                          'easily communicate with server leadership in an organised manner.'
+        
+        try:
+            meta = await self.session.get('https://api.kybr.tk/modmail')
+        except:
+            meta = None
 
         em.add_field(name='Uptime', value=self.uptime)
         em.add_field(name='Latency', value=f'{self.latency*1000:.2f} ms')
-        em.add_field(name='Version', value=f'[`{self.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L45)')
+        em.add_field(name='Version', value=f'[`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L45)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
+        
+        footer = f'Bot ID: {self.user.id}'
+        if meta:
+            em.add_field(name='Instances', value=meta['instances'])
+            if __version__ != meta['latest_version']:
+                footer = f'Latest version available is {meta['latest_version']}'
+        
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text=f'Bot ID: {self.user.id}')
+
+        em.set_footer(text=footer)
 
         await ctx.send(embed=em)
 
