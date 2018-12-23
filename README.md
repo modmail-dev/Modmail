@@ -5,11 +5,11 @@
     <br>
     <br>
 
-<a href="https://travis-ci.com/kyb3r/dhooks">
+<a href="">
   <img src="https://img.shields.io/badge/build-passing-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
 
-<a href="https://pypi.org/project/dhooks/">
+<a href="">
   <img src="https://img.shields.io/badge/python-3.6-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
 
@@ -39,7 +39,7 @@ When a user sends a direct message to the bot, a channel is created within this 
 
 <h1 align="center"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Installation</a></h1>
 
-You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone! Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation).
+You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone! Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation). If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
 
 ### What is Heroku?
 Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data on site (changing files). We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in any files, utilising discord channel topics for tracking and relaying conversations.
@@ -52,11 +52,13 @@ If you are keen to stay updated with the latest features then follow the updatin
 | Name         | Description                                                          |
 |--------------|----------------------------------------------------------------------|
 | setup        | Sets up the categories that will be used by the bot.                 |
-| contact      | Allows a moderator to initiate a thread with a given recipient.
+| about        | Shows some general information about the bot.                        |
+| contact      | Allows a moderator to initiate a thread with a given recipient.      |
 | reply        | Sends a message to the current thread's recipient.                   |
 | close        | Closes the current thread and deletes the channel.                   |
 | archive      | Closes the thread and moves the channel to the archive category.     | 
 | block        | Blocks a user from using modmail                                     |
+| blocked      | Shows a list of users that are currently blocked                     |
 | unblock      | Unblocks a user from using modmail                                   |
 | snippets     | Shows a list of snippets that are currently configured.              |
 | customstatus | Sets the bot playing status to a message of your choosin             |
