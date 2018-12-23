@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.3'
+__version__ = '1.3.5'
 
 import discord
 from discord.ext import commands
@@ -62,11 +62,15 @@ class Github:
         }
         merge_url = self.merge_url.format(username=self.username)
 
-        await self.request(merge_url, method='POST', payload=payload)
+        r = await self.request(merge_url, method='POST', payload=payload)
+        print(r)
 
     async def request(self, url, method='GET', payload=None):
         async with self.session.request(method, url, headers=self.headers, json=payload) as resp:
-            return await resp.json()
+            try:
+                return await resp.json()
+            except:
+                return await resp.text()
     
     @classmethod
     async def login(cls, bot, access_token):
@@ -321,8 +325,12 @@ class Modmail(commands.Bot):
     
     
     @commands.command()
-    @commands.has_permissions(administrator=True)
     async def update(self, ctx):
+        allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
+
+        if ctx.author.id not in allowed: 
+            return
+
         await ctx.trigger_typing()
 
         async with self.session.get('https://api.kybr.tk/modmail') as resp:
