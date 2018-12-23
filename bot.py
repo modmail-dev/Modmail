@@ -225,7 +225,8 @@ class Modmail(commands.Bot):
                 "version": __version__
             }
 
-            await self.session.post('https://api.kybr.tk/modmail', data=data)
+            resp = await self.session.post('https://api.kybr.tk/modmail', json=data)
+
             await asyncio.sleep(3600)
 
     @property
