@@ -63,6 +63,7 @@ If you are keen to stay updated with the latest features then follow the updatin
 | snippets     | Shows a list of snippets that are currently configured.              |
 | customstatus | Sets the bot playing status to a message of your choosin             |
 | disable      | Closes all threads and disables modmail for the server.              |
+| update       | Checks for new versions and updates the bot, follow the [updating guide](https://github.com/kyb3r/modmail/wiki/Updating) to use this command. |
 
 ## Features
 
