@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.1.7'
+__version__ = '1.2.0'
 
 import discord
 from discord.ext import commands
@@ -274,7 +274,7 @@ class Modmail(commands.Bot):
         if meta:
             em.add_field(name='Instances', value=meta['instances'])
             if __version__ != meta['latest_version']:
-                footer = f"Latest version available is {meta['latest_version']}"
+                footer = f"A newer version is available v{meta['latest_version']}"
         
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail', inline=False)
 
