@@ -48,7 +48,6 @@ class Modmail(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
         self.start_time = datetime.datetime.utcnow()
-        self.session = aiohttp.ClientSession()
         self.loop.create_task(self.data_loop())
         self._add_commands()
 
@@ -88,6 +87,7 @@ class Modmail(commands.Bot):
     async def on_connect(self):
         print('---------------')
         print('Modmail connected!')
+        self.session = aiohttp.ClientSession()
         status = os.getenv('STATUS') or self.config.get('STATUS')
         if status:
             print(f'Setting Status to {status}')
@@ -259,7 +259,8 @@ class Modmail(commands.Bot):
                          'easily communicate with server leadership in an organised manner.'
         
         try:
-            meta = await self.session.get('https://api.kybr.tk/modmail')
+            async with self.session.get('https://api.kybr.tk/modmail'):
+                meta = await resp.json()
         except:
             meta = None
 
