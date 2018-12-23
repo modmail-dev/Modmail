@@ -210,7 +210,7 @@ class Modmail(commands.Bot):
                f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
                f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
-               f'`{prefix}archive` - Closes the current thread and moves the channel to archive category.\n' \
+               f'`{prefix}archive` - Closes the thread and moves the channel to archive category.\n' \
                f'`{prefix}block` - Blocks a user from using modmail.\n' \
                f'`{prefix}blocked` - Shows a list of currently blocked users.\n' \
                f'`{prefix}unblock` - Unblocks a user from using modmail.\n' \
