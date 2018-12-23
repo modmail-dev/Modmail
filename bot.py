@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 import discord
 from discord.ext import commands
@@ -328,8 +328,8 @@ class Modmail(commands.Bot):
             data = await resp.json()
         
         em = discord.Embed(
-                title='Cannot update',
-                description=f'The bot is already up to date v`{__version__}`',
+                title='Already Up To Date',
+                description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
             )
 
@@ -339,7 +339,12 @@ class Modmail(commands.Bot):
         access_token = self.config.get('GITHUB_ACCESS_TOKEN')
 
         if not access_token:
-            em.description = 'You have not properly set up github credentials.'
+            em.description = 'You have not properly set up GitHub credentials. '\
+                             'Create a config variable named `GITHUB_ACCESS_TOKEN`'\
+                             ' and set the value as your personal access token which'\
+                             ' can be generated in your GitHub account\'s [developer '\
+                             'settings](https://github.com/settings/tokens).'
+
             em.color = discord.Color.red()
             return await ctx.send(embed=em)
         
