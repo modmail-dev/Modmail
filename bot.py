@@ -272,7 +272,7 @@ class Modmail(commands.Bot):
         if meta:
             em.add_field(name='Instances', value=meta['instances'])
             if __version__ != meta['latest_version']:
-                footer = f'Latest version available is {meta['latest_version']}'
+                footer = f"Latest version available is {meta['latest_version']}"
         
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
 
