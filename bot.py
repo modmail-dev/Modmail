@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.2'
+__version__ = '1.3.3'
 
 import discord
 from discord.ext import commands
@@ -216,7 +216,8 @@ class Modmail(commands.Bot):
                f'`{prefix}unblock` - Unblocks a user from using modmail.\n' \
                f'`{prefix}snippets` - See a list of snippets that are currently configured.\n' \
                f'`{prefix}customstatus` - Sets the Bot status to whatever you want.\n' \
-               f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' 
+               f'`{prefix}disable` - Closes all threads and disables modmail for the server.\n' \
+               f'`{prefix}update` - Checks for a new version and updates the bot.\n' 
 
         warn = 'This bot saves no data and utilises channel topics for tracking and relaying messages.' \
                ' Therefore do not manually delete the category or channels as it will break the system. ' \
