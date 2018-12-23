@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.4'
+__version__ = '1.3.5'
 
 import discord
 from discord.ext import commands
@@ -325,8 +325,12 @@ class Modmail(commands.Bot):
     
     
     @commands.command()
-    @commands.has_permissions(administrator=True)
     async def update(self, ctx):
+        allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
+
+        if ctx.author.id not in allowed: 
+            return
+
         await ctx.trigger_typing()
 
         async with self.session.get('https://api.kybr.tk/modmail') as resp:
