@@ -328,7 +328,7 @@ class Modmail(commands.Bot):
             data = await resp.json()
         
         em = discord.Embed(
-                title='Already Up To Date',
+                title='Already up to date',
                 description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
             )
