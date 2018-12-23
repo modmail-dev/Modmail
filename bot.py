@@ -259,7 +259,7 @@ class Modmail(commands.Bot):
                          'easily communicate with server leadership in an organised manner.'
         
         try:
-            async with self.session.get('https://api.kybr.tk/modmail'):
+            async with self.session.get('https://api.kybr.tk/modmail') as resp:
                 meta = await resp.json()
         except:
             meta = None
@@ -275,7 +275,7 @@ class Modmail(commands.Bot):
             if __version__ != meta['latest_version']:
                 footer = f"Latest version available is {meta['latest_version']}"
         
-        em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
+        em.add_field(name='Github', value='https://github.com/kyb3r/modmail', inline=False)
 
         em.set_footer(text=footer)
 
