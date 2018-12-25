@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.5'
+__version__ = '1.3.6'
 
 import discord
 from discord.ext import commands
@@ -590,7 +590,7 @@ class Modmail(commands.Bot):
         user_id = user_id or int(re.findall(r'\d+', message.channel.topic)[0])
         user = self.get_user(user_id)
         if not user:
-            return await message.channel.send('This user does not have any mutual servers with the bot and is thus unreachable.')
+            return await message.channel.send('This user does not share any servers with the bot and is thus unreachable.')
         await asyncio.gather(
             self.send_mail(message, message.channel, from_mod=True),
             self.send_mail(message, user, from_mod=True)
@@ -637,7 +637,7 @@ class Modmail(commands.Bot):
             await self.send_mail(message, channel, from_mod=False)
             
 
-    async def create_thread(self, user, *, creator=None):
+    async def create_thread(self, user, *, creator=None, reopen=False):
 
         guild = self.guild
         topic = f'User ID: {user.id}'
@@ -653,10 +653,13 @@ class Modmail(commands.Bot):
 
         if creator:
             em = discord.Embed(title='Modmail thread started')
-            em.description = f'{creator.mention} has started a modmail thread with you.'
+            second = 'has started a modmail thread with you.' if not reopen else 'has reopened this modmail thread.'
+            em.description = f'{creator.mention} ' + second
+
             em.color = discord.Color.green()
 
-            info_description = f'{creator.mention} has created a thread with {user.mention}'
+            info_description = f'{creator.mention} has {"created" if not reopen else "reopened"} a thread with {user.mention}'
+
 
         mention = (self.config.get('MENTION') or '@here') if not creator else None
 
@@ -703,13 +706,24 @@ class Modmail(commands.Bot):
     
     @commands.command()
     @commands.has_permissions(manage_channels=True)
-    async def contact(self, ctx, *, user: discord.Member):
+    async def contact(self, ctx, *, user: discord.Member=None):
         '''Create a thread with a specified member.'''
+        reopen = False
+        if not user and ctx.channel.category and ctx.channel.category.name == 'Mod Mail Archives':
+            user_id = None
+            if not ctx.channel.topic:
+                user_id = await self.find_user_id_from_channel(ctx.channel)
+            user_id = user_id or int(ctx.channel.topic.split(': ')[1])
+            user = self.get_user(user_id)
+            reopen = True
+            if not user:
+                return await ctx.send('This user does not share any servers with the bot and is thus unreachable.')
+
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
-        channel = await self.create_thread(user, creator=ctx.author)
+        channel = await self.create_thread(user, creator=ctx.author, reopen=reopen)
         
-        em = discord.Embed(title='Created Thread')
-        em.description = f'Thread started in {channel.mention} for {user.mention}'
+        em = discord.Embed(title='Thread reopened' if reopen else 'Created thread')
+        em.description = f'Thread {"reopned" if reopen else "started"} in {channel.mention} for {user.mention}'
         em.color = discord.Color.green()
 
         await ctx.send(embed=em)
