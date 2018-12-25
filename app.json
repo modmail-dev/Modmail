@@ -22,6 +22,14 @@
     "MENTION": {
         "description": "A custom role/user to mention when creating a modmail thread. Default is @here",
         "required": false
+    },
+    "OWNERS": {
+        "description": "Comma seperated user IDs of people that are allowed to use owner only commands. (eval and update)",
+        "required": false
+    },
+    "GITHUB_ACCESS_TOKEN": {
+        "description": "Github personal access token to enable use of the update command.",
+        "required": false
     }
   }
 }

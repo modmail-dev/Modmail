@@ -78,6 +78,6 @@ Did you accidentally send something you didnt mean to with the `reply` command? 
 
 ## Thanks For Using This Bot!
 
-If you do use the bot, a star on this repository is appreciated! If you want to support me here is my [patreon](https://www.patreon.com/kyber). 
+If you do use the bot, a star on this repository is appreciated!
 
 This project is licenced under MIT. Feel free to contribute to the development of this bot.
