@@ -410,7 +410,7 @@ class Modmail(commands.Bot):
         if not categ:
             return await ctx.send('This server is not set up.')
         em = discord.Embed(title='Thread Closed')
-        em.description = f'{ctx.author.mention} has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail thread.'
         em.color = discord.Color.red()
         for category, channels in ctx.guild.by_category():
             if category == categ:
@@ -438,7 +438,7 @@ class Modmail(commands.Bot):
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
-        em.description = f'{ctx.author.mention} has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail thread.'
         em.color = discord.Color.red()
         if ctx.channel.category.name != 'Mod Mail Archives': # already closed.
             try:
@@ -471,7 +471,7 @@ class Modmail(commands.Bot):
 
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
-        em.description = f'{ctx.author.mention} has closed this modmail session.'
+        em.description = f'{ctx.author.mention} has closed this modmail thread.'
         em.color = discord.Color.red()
 
         try:
@@ -481,7 +481,7 @@ class Modmail(commands.Bot):
 
         await ctx.channel.edit(category=archives)
         done = discord.Embed(title='Thread Archived')
-        done.description = f'{ctx.author.mention} has archived this modmail session.'
+        done.description = f'{ctx.author.mention} has archived this modmail thread.'
         done.color = discord.Color.red()
         await ctx.send(embed=done)
         await ctx.message.delete()
@@ -652,7 +652,7 @@ class Modmail(commands.Bot):
         info_description = None
 
         if creator:
-            em = discord.Embed(title='Modmail thread started')
+            em = discord.Embed(title='Thread Started')
             second = 'has started a modmail thread with you.' if not reopen else 'has reopened this modmail thread.'
             em.description = f'{creator.mention} ' + second
 
@@ -722,9 +722,10 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         channel = await self.create_thread(user, creator=ctx.author, reopen=reopen)
         
-        em = discord.Embed(title='Thread reopened' if reopen else 'Created thread')
-        em.description = f'Thread {"reopned" if reopen else "started"} in {channel.mention} for {user.mention}'
-        em.color = discord.Color.green()
+        if channel is not ctx.channel:
+            em = discord.Embed(title='Thread reopened' if reopen else 'Created thread')
+            em.description = f'Thread {"reopned" if reopen else "started"} in {channel.mention} for {user.mention}'
+            em.color = discord.Color.green()
 
         await ctx.send(embed=em)
 
