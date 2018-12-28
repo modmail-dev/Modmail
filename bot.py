@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -350,6 +350,7 @@ class Modmail(commands.Bot):
 
                 em.color = discord.Color.red()
                 return await ctx.send(embed=em)
+
             user = await Github.login(self, access_token)
             data = await user.update_repository()
 
@@ -361,7 +362,7 @@ class Modmail(commands.Bot):
                 message = data['commit']['message']
                 html_url = data["html_url"]
                 short_sha = data['sha'][:6]
-                em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) {message} - [`{user.name}`]({user.url})')
+                em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) {message} - [`{user.username}`]({user.url})')
             else:
                 em.description = 'Already up to date with master repository.'
 
