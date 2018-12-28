@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.8'
+__version__ = '1.3.9'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -39,47 +39,13 @@ import os
 import re
 import io
 
-import discord
 from discord.ext import commands
-from paginator import PaginatorSession
+import discord
 import aiohttp
 
+from utils.paginator import PaginatorSession
+from utils.github import Github
 
-class Github:
-    head = 'https://api.github.com/repos/kyb3r/modmail/git/refs/heads/master'
-    merge_url = 'https://api.github.com/repos/{username}/modmail/merges'
-
-    def __init__(self, bot, access_token, username=None):
-        self.bot = bot
-        self.session = bot.session
-        self.access_token = access_token
-        self.username = username
-        self.headers = {'Authorization': 'Bearer '+access_token}
-    
-    async def update_repository(self):
-        sha = (await self.request(self.head))['object']['sha']
-        payload = {
-            'base': 'master',
-            'head': sha,
-            'commit_message': 'Updating bot'
-        }
-        merge_url = self.merge_url.format(username=self.username)
-
-        r = await self.request(merge_url, method='POST', payload=payload)
-        print(r)
-
-    async def request(self, url, method='GET', payload=None):
-        async with self.session.request(method, url, headers=self.headers, json=payload) as resp:
-            try:
-                return await resp.json()
-            except:
-                return await resp.text()
-    
-    @classmethod
-    async def login(cls, bot, access_token):
-        self = cls(bot, access_token)
-        self.username = (await self.request('https://api.github.com/user'))['login']
-        return self
 
 
 class Modmail(commands.Bot):
@@ -371,9 +337,15 @@ class Modmail(commands.Bot):
             return await ctx.send(embed=em)
         
         user = await Github.login(self, access_token)
-        await user.update_repository()
+        url = await user.update_repository()
         em.title = 'Success'
-        em.description = 'Bot successfully updated, the bot will restart momentarily'
+        
+        if url:
+            em.description = 'Bot successfully updated, the bot will restart momentarily'
+            em.add_field(name='Commit', value=f'[Click Here]({url})')
+        else:
+            em.description = 'Already up to date with master repository.'
+
         await ctx.send(embed=em)
 
     @commands.command()
