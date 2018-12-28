@@ -339,7 +339,7 @@ class Modmail(commands.Bot):
             color=discord.Color.red(),
             description=f'Not logged in, do `{prefix}github login` to login with GitHub.'
             )
-        em.add_field(name='Subcommands', value=f'`{prefix}github login` Login with github\n`{prefix}github logout` Logout of current github account if any.')
+        em.add_field(name='Subcommands', value=f'`{prefix}github login`\n`{prefix}github logout`')
 
         if not data['error']:
             user = data['user']
