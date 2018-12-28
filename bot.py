@@ -373,6 +373,7 @@ class Modmail(commands.Bot):
 
         em.add_field(name='Login', value=f'[Click Here]({oauth_url})', inline=False)
         em.add_field(name='Warning', value='Dont share this link as it contains sensitive information.')
+        await ctx.send('Check your direct messages.')
         await ctx.author.send(embed=em)
     
     @github.command(name='logout')
