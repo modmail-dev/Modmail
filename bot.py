@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.9'
+__version__ = '1.5.0'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
