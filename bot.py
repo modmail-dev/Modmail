@@ -337,6 +337,7 @@ class Modmail(commands.Bot):
     
     @commands.command()
     async def update(self, ctx):
+        '''Updates the bot, this only works with heroku users.'''
         allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
 
         if ctx.author.id not in allowed: 
