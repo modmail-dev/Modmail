@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.0'
+__version__ = '1.4.1'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -362,7 +362,7 @@ class Modmail(commands.Bot):
         short_sha = latest_update['sha'][:6]
         html_url = latest_update['html_url']
         message = latest_update['message']
-        em.add_field(name='Latest Commit', value=f'[`{short_sha}`]({html_url}) - {message}')
+        em.add_field(name='Latest Commit', value=f'[`{short_sha}`]({html_url}) - {message}', inline=False)
 
         await ctx.send(embed=em)
 
