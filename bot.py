@@ -341,24 +341,37 @@ class Modmail(commands.Bot):
                 title='Already up to date',
                 description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
-            )
+        )
 
-        access_token = self.config.get('GITHUB_ACCESS_TOKEN')
+        oauth_url = f'https://github.com/login/oauth/authorize?client_id=e54e4ff0f234ee9f22aa&scope=public_repo&redirect_uri=http://api.kybr.tk/api/modmail/github/callback?user_id={self.user.id}'
 
         if data['latest_version'] == __version__:
-            if access_token:
-                user = await Github.login(self, access_token)
-                em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
-
-        if data['latest_version'] != __version__:
-            async with self.session.get(f'http://localhost:8000/api/modmail/githubcheck/{ctx.author.id}') as resp:
+            async with self.session.get(f'http://api.kybr.tk/api/modmail/github/user/{self.user.id}') as resp:
                 if resp.status == 403:
                     em.title = 'Unauthorised'
                     em.description = 'You have not authorised modmail. '\
-                                     'Go to [this]'\
-                                     f'(https://github.com/login/oauth/authorize?client_id=e54e4ff0f234ee9f22aa&scope=public_repo&redirect_uri=http://localhost:8000/api/modmail/github?user_id={ctx.author.id})'\
-                                     ' url to update the bot. In the future, '\
-                                     'the command will work without the url.'
+                                     'Ask the user who setup modmail to go '\
+                                     f'to [this]({oauth_url}) url to authorise the '\
+                                     'bot. Come back for the command later.'
+
+                    em.color = discord.Color.red()
+                    return await ctx.send(embed=em)
+                elif resp.status == 200:
+                    # updated!
+                    new_commit = await resp.json()
+                    commit_data = new_commit['data']
+                else:
+                    raise NotImplementedError(f'Server returned {resp.status}')
+                em.set_author(name=new_commit['user']['username'], icon_url=new_commit['user']['avatar_url'], url=new_commit['user']['url'])
+
+        if data['latest_version'] != __version__:
+            async with self.session.get(f'http://api.kybr.tk/api/modmail/github/pull/{self.user.id}') as resp:
+                if resp.status == 403:
+                    em.title = 'Unauthorised'
+                    em.description = 'You have not authorised modmail. '\
+                                     'Ask the user who setup modmail to go '\
+                                     f'to [this]({oauth_url}) url to authorise the '\
+                                     'bot. Come back for the command later.'
 
                     em.color = discord.Color.red()
                     return await ctx.send(embed=em)
