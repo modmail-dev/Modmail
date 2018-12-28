@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.5'
+__version__ = '1.4.4'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -339,8 +339,6 @@ class Modmail(commands.Bot):
                 description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
             )
-        
-        em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
         
         access_token = self.config.get('GITHUB_ACCESS_TOKEN')
 
