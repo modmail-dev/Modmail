@@ -343,10 +343,10 @@ class Modmail(commands.Bot):
                 color=discord.Color.green()
         )
 
-        oauth_url = f'https://github.com/login/oauth/authorize?client_id=e54e4ff0f234ee9f22aa&scope=public_repo&redirect_uri=https://api.kybr.tk/api/modmail/github/callback?user_id={self.user.id}'
+        oauth_url = f'https://github.com/login/oauth/authorize?client_id=e54e4ff0f234ee9f22aa&scope=public_repo&redirect_uri=https://api.kybr.tk/modmail/github/callback?user_id={self.user.id}'
 
         if data['latest_version'] == __version__:
-            async with self.session.get(f'https://api.kybr.tk/api/modmail/github/user/{self.user.id}') as resp:
+            async with self.session.get(f'https://api.kybr.tk/modmail/github/user/{self.user.id}') as resp:
                 if resp.status == 403:
                     em.title = 'Unauthorised'
                     em.description = 'You have not authorised modmail. '\
@@ -365,7 +365,7 @@ class Modmail(commands.Bot):
                 em.set_author(name=new_commit['user']['username'], icon_url=new_commit['user']['avatar_url'], url=new_commit['user']['url'])
 
         if data['latest_version'] != __version__:
-            async with self.session.get(f'https://api.kybr.tk/api/modmail/github/pull/{self.user.id}') as resp:
+            async with self.session.get(f'https://api.kybr.tk/modmail/github/pull/{self.user.id}') as resp:
                 if resp.status == 403:
                     em.title = 'Unauthorised'
                     em.description = 'You have not authorised modmail. '\
