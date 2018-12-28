@@ -81,12 +81,7 @@ class PaginatorSession:
             await self.create_base(page)
 
     def react_check(self, reaction, user):
-        if user.id != self.ctx.author.id:
-            return False
-        if reaction.message.id != self.base.id:
-            return False
-        if reaction.emoji in self.reaction_map.keys():
-            return True
+        return user.id == self.ctx.author.id and reaction.emoji in self.reaction_map.keys()
 
     async def run(self):
         if not self.running:
