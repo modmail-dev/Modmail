@@ -254,7 +254,6 @@ class Modmail(commands.Bot):
 
         return latest_commits
 
-
     @property
     def uptime(self):
         now = datetime.datetime.utcnow()
@@ -340,6 +339,7 @@ class Modmail(commands.Bot):
             color=discord.Color.red(),
             description=f'Not logged in, do `{prefix}github login` to login with GitHub.'
             )
+        em.add_field(name='Subcommands', value=f'`{prefix}github login` Login with github\n`{prefix}github logout` Logout of current github account if any.')
 
         if not data['error']:
             user = data['user']
@@ -392,9 +392,6 @@ class Modmail(commands.Bot):
             em.description = 'You are not logged in already.'
         
         await ctx.send(embed=em)
-
-            
-
     
     @commands.command()
     async def update(self, ctx):
