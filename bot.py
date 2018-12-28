@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.5'
+__version__ = '1.4.6'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -136,6 +136,14 @@ class Modmail(commands.Bot):
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
                 
         await self.process_commands(message)
+
+    async def process_commands(self, message):
+        if message.author.bot:
+            return
+        ctx = await self.get_context(message)
+        if ctx.command is not None:
+            await ctx.trigger_typing()
+        await self.invoke(ctx)
     
     async def on_message_delete(self, message):
         '''Support for deleting linked messages'''
@@ -328,8 +336,6 @@ class Modmail(commands.Bot):
 
         if ctx.author.id not in allowed: 
             return
-
-        await ctx.trigger_typing()
 
         async with self.session.get('https://api.kybr.tk/modmail') as resp:
             data = await resp.json()
@@ -606,6 +612,7 @@ class Modmail(commands.Bot):
             em.set_author(name=str(author), icon_url=author.avatar_url)
             em.set_footer(text='User')
 
+        await channel.trigger_typing()
         await channel.send(embed=em)
 
         if delete_message:
