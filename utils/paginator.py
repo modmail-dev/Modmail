@@ -40,6 +40,7 @@ class PaginatorSession:
             '⏭': self.last_page,
             # '⏹': self.close
             }
+            
         if options.get('edit_footer', True) and len(self.embeds) > 1:
             for i, em in enumerate(self.embeds):
                 footer_text = f'Page {i+1} of {len(self.embeds)}'
