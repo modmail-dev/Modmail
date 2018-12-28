@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -233,6 +233,22 @@ class Modmail(commands.Bot):
 
             await asyncio.sleep(3600)
 
+    async def get_latest_updates(self, limit=3):
+        latest_commits = ''
+
+        async for commit in Github(self).get_latest_commits(limit=limit):
+
+            short_sha = commit['sha'][:6]
+            html_url = commit['html_url']
+            message = commit['commit']['message']
+            author_name = commit['author']['login']
+            author_url = commit['author']['html_url']
+
+            latest_commits += f'[`{short_sha}`]({html_url}) {message} - {author_name}\n'
+
+        return latest_commits
+
+
     @property
     def uptime(self):
         now = datetime.datetime.utcnow()
@@ -271,6 +287,7 @@ class Modmail(commands.Bot):
                          'improved upon suggestions by the users! This bot serves as a means for members to '\
                          'easily communicate with server leadership in an organised manner.'
         
+        
         try:
             async with self.session.get('https://api.kybr.tk/modmail') as resp:
                 meta = await resp.json()
@@ -282,8 +299,12 @@ class Modmail(commands.Bot):
             em.add_field(name='Instances', value=meta['instances'])
         else:
             em.add_field(name='Latency', value=f'{self.latency*1000:.2f} ms')
+        
+
         em.add_field(name='Version', value=f'[`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
+
+        em.add_field(name='Latest Updates', value=await self.get_latest_updates())
         
         footer = f'Bot ID: {self.user.id}'
         
@@ -319,25 +340,14 @@ class Modmail(commands.Bot):
                 color=discord.Color.green()
             )
         
+        em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
+        
         access_token = self.config.get('GITHUB_ACCESS_TOKEN')
 
         if data['latest_version'] == __version__:
             if access_token:
                 user = await Github.login(self, access_token)
                 em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
-        
-        latest_commits = ''
-
-        async for commit in Github(self).get_latest_commits():
-
-            short_sha = commit['sha'][:6]
-            html_url = commit['html_url']
-            message = commit['commit']['message']
-            author_name = commit['author']['login']
-            author_url = commit['author']['html_url']
-
-            latest_commits += f'[`{short_sha}`]({html_url}) {message} - [`{author_name}`]({author_url})\n'
-
 
         if data['latest_version'] != __version__:
             if not access_token:
@@ -350,6 +360,8 @@ class Modmail(commands.Bot):
 
                 em.color = discord.Color.red()
                 return await ctx.send(embed=em)
+            
+            em.set_footer(text=f"Updating modmail v{__version__} -> v{data['latest_version']}")
 
             user = await Github.login(self, access_token)
             data = await user.update_repository()
@@ -365,9 +377,7 @@ class Modmail(commands.Bot):
                 em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) {message} - [`{user.username}`]({user.url})')
             else:
                 em.description = 'Already up to date with master repository.'
-
-        em.add_field(name='Latest Updates', value=latest_commits, inline=False)
-
+            
         await ctx.send(embed=em)
 
     @commands.command()

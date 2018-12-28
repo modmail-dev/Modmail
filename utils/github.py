@@ -16,7 +16,6 @@ class Github:
     
     async def get_latest_commits(self, limit=3):
         resp = await self.request(self.commit_url)
-        print(resp)
         for index in range(limit):
             yield resp[index]
     
