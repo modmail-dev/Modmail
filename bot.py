@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -121,7 +121,6 @@ class Modmail(commands.Bot):
         User ID: {self.user.id}
         ---------------
         '''))
-
 
     async def on_message(self, message):
         if message.author.bot:
@@ -326,43 +325,47 @@ class Modmail(commands.Bot):
             if access_token:
                 user = await Github.login(self, access_token)
                 em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
-            return await ctx.send(embed=em)
-
-        if not access_token:
-            em.title = 'Invalid Access Token'
-            em.description = 'You have not properly set up GitHub credentials. '\
-                             'Create a config variable named `GITHUB_ACCESS_TOKEN`'\
-                             ' and set the value as your personal access token which'\
-                             ' can be generated in your GitHub account\'s [developer '\
-                             'settings](https://github.com/settings/tokens).'
-
-            em.color = discord.Color.red()
-            return await ctx.send(embed=em)
         
-        user = await Github.login(self, access_token)
-        resp = await user.request(user.head)
-        sha, commit_url = resp['object']['sha'], resp['object']['url']
-        data = await user.update_repository(sha)
+        latest_commits = ''
 
-        latest_update = await user.request(commit_url)
+        async for commit in Github(self).get_latest_commits():
 
-        em.title = 'Success'
-        em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
-        
-        if data:
-            em.description = 'Bot successfully updated, the bot will restart momentarily'
-            message = data['commit']['message']
-            html_url = data["html_url"]
-            short_sha = data['sha'][:6]
-            em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) - {message}')
-        else:
-            em.description = 'Already up to date with master repository.'
-        
+            short_sha = commit['sha'][:6]
+            html_url = commit['html_url']
+            message = commit['commit']['message']
+            author_name = commit['author']['login']
+            author_url = commit['author']['html_url']
 
-        short_sha = latest_update['sha'][:6]
-        html_url = latest_update['html_url']
-        message = latest_update['message']
-        em.add_field(name='Latest Commit', value=f'[`{short_sha}`]({html_url}) - {message}', inline=False)
+            latest_commits += f'[`{short_sha}`]({html_url}) {message} - [`{author_name}`]({author_url})\n'
+
+
+        if data['latest_version'] != __version__:
+            if not access_token:
+                em.title = 'Invalid Access Token'
+                em.description = 'You have not properly set up GitHub credentials. '\
+                                'Create a config variable named `GITHUB_ACCESS_TOKEN`'\
+                                ' and set the value as your personal access token which'\
+                                ' can be generated in your GitHub account\'s [developer '\
+                                'settings](https://github.com/settings/tokens).'
+
+                em.color = discord.Color.red()
+                return await ctx.send(embed=em)
+            user = await Github.login(self, access_token)
+            data = await user.update_repository()
+
+            em.title = 'Success'
+            em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
+            
+            if data:
+                em.description = 'Bot successfully updated, the bot will restart momentarily'
+                message = data['commit']['message']
+                html_url = data["html_url"]
+                short_sha = data['sha'][:6]
+                em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) {message} - [`{user.name}`]({user.url})')
+            else:
+                em.description = 'Already up to date with master repository.'
+
+        em.add_field(name='Latest Updates', value=latest_commits, inline=False)
 
         await ctx.send(embed=em)
 

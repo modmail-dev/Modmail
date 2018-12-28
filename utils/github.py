@@ -1,15 +1,24 @@
 class Github:
     head = 'https://api.github.com/repos/kyb3r/modmail/git/refs/heads/master'
     merge_url = 'https://api.github.com/repos/{username}/modmail/merges'
+    commit_url = 'https://api.github.com/repos/kyb3r/modmail/commits'
 
-    def __init__(self, bot, access_token, username=None):
+    def __init__(self, bot, access_token=None, username=None):
         self.bot = bot
         self.session = bot.session
         self.access_token = access_token
         self.username = username
         self.avatar_url = None
         self.url = None
-        self.headers = {'Authorization': 'Bearer '+access_token}
+        self.headers = None
+        if self.access_token:
+            self.headers = {'Authorization': 'Bearer '+ str(access_token)}
+    
+    async def get_latest_commits(self, limit=3):
+        resp = await self.request(self.commit_url)
+        print(resp)
+        for index in range(limit):
+            yield resp[index]
     
     async def update_repository(self, sha=None):
         if sha is None:
@@ -21,7 +30,7 @@ class Github:
             'head': sha,
             'commit_message': 'Updating bot'
         }
-        
+
         merge_url = self.merge_url.format(username=self.username)
 
         resp = await self.request(merge_url, method='POST', payload=payload)
