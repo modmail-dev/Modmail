@@ -24,23 +24,26 @@ SOFTWARE.
 
 __version__ = '1.3.7'
 
-import discord
-from discord.ext import commands
-import aiohttp
+from contextlib import redirect_stdout
 from urllib.parse import urlparse
+from copy import deepcopy
 import asyncio
 import textwrap
+import traceback
 import datetime
+import inspect
+import string
 import time
 import json
-import sys
 import os
 import re
-import string
-import traceback
 import io
-import inspect
-from contextlib import redirect_stdout
+
+import discord
+from discord.ext import commands
+from paginator import PaginatorSession
+import aiohttp
+
 
 class Github:
     head = 'https://api.github.com/repos/kyb3r/modmail/git/refs/heads/master'
@@ -206,13 +209,12 @@ class Modmail(commands.Bot):
     def help_embed(self, prefix):
         em = discord.Embed(color=0x00FFFF)
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
-        em.description = 'This bot is a python implementation of a "Mod Mail" bot. ' \
-                         'Made by kyb3r and improved by the suggestions of others.' 
+        em.description = 'Here is a list of commands for the bot.'
 
         cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
                f'`{prefix}about` - Shows general information about the bot.\n' \
                f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
-               f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
+               f'`{prefix}reply` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the thread and moves the channel to archive category.\n' \
                f'`{prefix}block` - Blocks a user from using modmail.\n' \
@@ -244,7 +246,7 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text=f'Modmail v{__version__} | Star the repository to unlock hidden features! /s')
+        em.set_footer(text=f'modmail v{__version__} • A star on the repository is appreciated.')
 
         return em
     
@@ -283,8 +285,16 @@ class Modmail(commands.Bot):
     @commands.command()
     async def help(self, ctx):
         prefix = self.config.get('PREFIX', 'm.')
-        em = self.help_embed(prefix)
-        await ctx.send(embed=em)
+
+        em1 = self.help_embed(prefix)
+        em2 = deepcopy(em1)
+        em1.set_footer(text=f'modmail v{__version__}')
+        em2.description = None
+        em2.remove_field(0)
+        em1._fields = em1._fields[0:1]
+
+        session = PaginatorSession(ctx, em1, em2)
+        await session.run()
     
     @commands.command()
     async def about(self, ctx):
@@ -391,16 +401,28 @@ class Modmail(commands.Bot):
     @commands.has_permissions(manage_messages=True)
     async def _snippets(self, ctx):
         '''Returns a list of snippets that are currently set.'''
+        embeds = []
+
         em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
-        first_line = 'Here is a list of snippets that are currently configured. '
+
+        embeds.append(em)
+
+        em.description = 'Here is a list of snippets that are currently configured.'
+
         if not self.snippets:
-            first_line = 'You dont have any snippets at the moment. '
-        em.description =  first_line + 'You can add snippets by adding config variables in the form' \
-                         ' **`SNIPPET_{NAME}`**'
+            em.color = discord.Color.red()
+            em.description = 'You dont have any snippets at the moment.'
+        
         for name, value in self.snippets.items():
+            if len(em.fields) == 5:
+                em = discord.Embed(color=discord.Color.green(), description=em.description)
+                em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
+                embeds.append(em)
             em.add_field(name=name, value=value, inline=False)
-        await ctx.send(embed=em)
+        
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
 
     @commands.command()
     @commands.has_permissions(administrator=True)
