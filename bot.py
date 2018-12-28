@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.9'
+__version__ = '1.4.0'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -319,11 +319,14 @@ class Modmail(commands.Bot):
                 description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
             )
+        
+        access_token = self.config.get('GITHUB_ACCESS_TOKEN')
 
         if data['latest_version'] == __version__:
+            if access_token:
+                user = await Github.login(self, access_token)
+                em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
             return await ctx.send(embed=em)
-
-        access_token = self.config.get('GITHUB_ACCESS_TOKEN')
 
         if not access_token:
             em.title = 'Invalid Access Token'
@@ -337,14 +340,29 @@ class Modmail(commands.Bot):
             return await ctx.send(embed=em)
         
         user = await Github.login(self, access_token)
-        url = await user.update_repository()
+        resp = await user.request(user.head)
+        sha, commit_url = resp['object']['sha'], resp['object']['url']
+        data = await user.update_repository(sha)
+
+        latest_update = await user.request(commit_url)
+
         em.title = 'Success'
+        em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
         
-        if url:
+        if data:
             em.description = 'Bot successfully updated, the bot will restart momentarily'
-            em.add_field(name='Commit', value=f'[Click Here]({url})')
+            message = data['commit']['message']
+            html_url = data["html_url"]
+            short_sha = data['sha'][:6]
+            em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) - {message}')
         else:
             em.description = 'Already up to date with master repository.'
+        
+
+        short_sha = latest_update['sha'][:6]
+        html_url = latest_update['html_url']
+        message = latest_update['message']
+        em.add_field(name='Latest Commit', value=f'[`{short_sha}`]({html_url}) - {message}')
 
         await ctx.send(embed=em)
 

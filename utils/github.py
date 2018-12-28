@@ -7,20 +7,26 @@ class Github:
         self.session = bot.session
         self.access_token = access_token
         self.username = username
+        self.avatar_url = None
+        self.url = None
         self.headers = {'Authorization': 'Bearer '+access_token}
     
-    async def update_repository(self):
-        sha = (await self.request(self.head))['object']['sha']
+    async def update_repository(self, sha=None):
+        if sha is None:
+            resp = await self.request(self.head)
+            sha = resp['object']['sha']
+
         payload = {
             'base': 'master',
             'head': sha,
             'commit_message': 'Updating bot'
         }
+        
         merge_url = self.merge_url.format(username=self.username)
 
-        r = await self.request(merge_url, method='POST', payload=payload)
-        if isinstance(r, dict):
-            return r['html_url']
+        resp = await self.request(merge_url, method='POST', payload=payload)
+        if isinstance(resp, dict):
+            return resp
 
     async def request(self, url, method='GET', payload=None):
         async with self.session.request(method, url, headers=self.headers, json=payload) as resp:
@@ -32,5 +38,8 @@ class Github:
     @classmethod
     async def login(cls, bot, access_token):
         self = cls(bot, access_token)
-        self.username = (await self.request('https://api.github.com/user'))['login']
+        resp = await self.request('https://api.github.com/user')
+        self.username = resp['login']
+        self.avatar_url = resp['avatar_url']
+        self.url = resp['html_url']
         return self
