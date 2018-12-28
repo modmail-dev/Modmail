@@ -22,61 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.3.7'
+__version__ = '1.4.6'
 
-import discord
-from discord.ext import commands
-import aiohttp
+from contextlib import redirect_stdout
 from urllib.parse import urlparse
+from copy import deepcopy
 import asyncio
 import textwrap
+import traceback
 import datetime
+import inspect
+import string
 import time
 import json
-import sys
 import os
 import re
-import string
-import traceback
 import io
-import inspect
-from contextlib import redirect_stdout
 
-class Github:
-    head = 'https://api.github.com/repos/kyb3r/modmail/git/refs/heads/master'
-    merge_url = 'https://api.github.com/repos/{username}/modmail/merges'
+from discord.ext import commands
+import discord
+import aiohttp
 
-    def __init__(self, bot, access_token, username=None):
-        self.bot = bot
-        self.session = bot.session
-        self.access_token = access_token
-        self.username = username
-        self.headers = {'Authorization': 'Bearer '+access_token}
-    
-    async def update_repository(self):
-        sha = (await self.request(self.head))['object']['sha']
-        payload = {
-            'base': 'master',
-            'head': sha,
-            'commit_message': 'Updating bot'
-        }
-        merge_url = self.merge_url.format(username=self.username)
+from utils.paginator import PaginatorSession
+from utils.github import Github
 
-        r = await self.request(merge_url, method='POST', payload=payload)
-        print(r)
-
-    async def request(self, url, method='GET', payload=None):
-        async with self.session.request(method, url, headers=self.headers, json=payload) as resp:
-            try:
-                return await resp.json()
-            except:
-                return await resp.text()
-    
-    @classmethod
-    async def login(cls, bot, access_token):
-        self = cls(bot, access_token)
-        self.username = (await self.request('https://api.github.com/user'))['login']
-        return self
 
 
 class Modmail(commands.Bot):
@@ -153,7 +122,6 @@ class Modmail(commands.Bot):
         ---------------
         '''))
 
-
     async def on_message(self, message):
         if message.author.bot:
             return
@@ -168,6 +136,14 @@ class Modmail(commands.Bot):
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
                 
         await self.process_commands(message)
+
+    async def process_commands(self, message):
+        if message.author.bot:
+            return
+        ctx = await self.get_context(message)
+        if ctx.command is not None:
+            await ctx.trigger_typing()
+        await self.invoke(ctx)
     
     async def on_message_delete(self, message):
         '''Support for deleting linked messages'''
@@ -206,13 +182,12 @@ class Modmail(commands.Bot):
     def help_embed(self, prefix):
         em = discord.Embed(color=0x00FFFF)
         em.set_author(name='Mod Mail - Help', icon_url=self.user.avatar_url)
-        em.description = 'This bot is a python implementation of a "Mod Mail" bot. ' \
-                         'Made by kyb3r and improved by the suggestions of others.' 
+        em.description = 'Here is a list of commands for the bot.'
 
         cmds = f'`{prefix}setup` - Sets up the categories that will be used by the bot.\n' \
                f'`{prefix}about` - Shows general information about the bot.\n' \
                f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
-               f'`{prefix}reply <message...>` - Sends a message to the current thread\'s recipient.\n' \
+               f'`{prefix}reply` - Sends a message to the current thread\'s recipient.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the thread and moves the channel to archive category.\n' \
                f'`{prefix}block` - Blocks a user from using modmail.\n' \
@@ -244,7 +219,7 @@ class Modmail(commands.Bot):
         em.add_field(name='Custom Mentions', value=mention)
         em.add_field(name='Warning', value=warn)
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail')
-        em.set_footer(text=f'Modmail v{__version__} | Star the repository to unlock hidden features! /s')
+        em.set_footer(text=f'modmail v{__version__} • A star on the repository is appreciated.')
 
         return em
     
@@ -266,6 +241,22 @@ class Modmail(commands.Bot):
 
             await asyncio.sleep(3600)
 
+    async def get_latest_updates(self, limit=3):
+        latest_commits = ''
+
+        async for commit in Github(self).get_latest_commits(limit=limit):
+
+            short_sha = commit['sha'][:6]
+            html_url = commit['html_url']
+            message = commit['commit']['message']
+            author_name = commit['author']['login']
+            author_url = commit['author']['html_url']
+
+            latest_commits += f'[`{short_sha}`]({html_url}) {message} - {author_name}\n'
+
+        return latest_commits
+
+
     @property
     def uptime(self):
         now = datetime.datetime.utcnow()
@@ -283,8 +274,16 @@ class Modmail(commands.Bot):
     @commands.command()
     async def help(self, ctx):
         prefix = self.config.get('PREFIX', 'm.')
-        em = self.help_embed(prefix)
-        await ctx.send(embed=em)
+
+        em1 = self.help_embed(prefix)
+        em2 = deepcopy(em1)
+        em1.set_footer(text=f'modmail v{__version__}')
+        em2.description = None
+        em2.remove_field(0)
+        em1._fields = em1._fields[0:1]
+
+        session = PaginatorSession(ctx, em1, em2)
+        await session.run()
     
     @commands.command()
     async def about(self, ctx):
@@ -295,6 +294,7 @@ class Modmail(commands.Bot):
         em.description = 'This is an open source discord bot made by kyb3r and '\
                          'improved upon suggestions by the users! This bot serves as a means for members to '\
                          'easily communicate with server leadership in an organised manner.'
+        
         
         try:
             async with self.session.get('https://api.kybr.tk/modmail') as resp:
@@ -307,8 +307,12 @@ class Modmail(commands.Bot):
             em.add_field(name='Instances', value=meta['instances'])
         else:
             em.add_field(name='Latency', value=f'{self.latency*1000:.2f} ms')
+        
+
         em.add_field(name='Version', value=f'[`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
+
+        em.add_field(name='Latest Updates', value=await self.get_latest_updates())
         
         footer = f'Bot ID: {self.user.id}'
         
@@ -327,12 +331,11 @@ class Modmail(commands.Bot):
     
     @commands.command()
     async def update(self, ctx):
+        '''Updates the bot, this only works with heroku users.'''
         allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
 
         if ctx.author.id not in allowed: 
             return
-
-        await ctx.trigger_typing()
 
         async with self.session.get('https://api.kybr.tk/modmail') as resp:
             data = await resp.json()
@@ -342,27 +345,45 @@ class Modmail(commands.Bot):
                 description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
             )
-
-        if data['latest_version'] == __version__:
-            return await ctx.send(embed=em)
-
+        
         access_token = self.config.get('GITHUB_ACCESS_TOKEN')
 
-        if not access_token:
-            em.title = 'Invalid Access Token'
-            em.description = 'You have not properly set up GitHub credentials. '\
-                             'Create a config variable named `GITHUB_ACCESS_TOKEN`'\
-                             ' and set the value as your personal access token which'\
-                             ' can be generated in your GitHub account\'s [developer '\
-                             'settings](https://github.com/settings/tokens).'
+        if data['latest_version'] == __version__:
+            if access_token:
+                user = await Github.login(self, access_token)
+                em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
 
-            em.color = discord.Color.red()
-            return await ctx.send(embed=em)
+        if data['latest_version'] != __version__:
+            if not access_token:
+                em.title = 'Invalid Access Token'
+                em.description = 'You have not properly set up GitHub credentials. '\
+                                'Create a config variable named `GITHUB_ACCESS_TOKEN`'\
+                                ' and set the value as your personal access token which'\
+                                ' can be generated in your GitHub account\'s [developer '\
+                                'settings](https://github.com/settings/tokens).'
+
+                em.color = discord.Color.red()
+                return await ctx.send(embed=em)
+            
+            em.set_footer(text=f"Updating modmail v{__version__} -> v{data['latest_version']}")
+
+            user = await Github.login(self, access_token)
+            data = await user.update_repository()
+
+            em.title = 'Success'
+            em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
+            
+            if data:
+                em.description = 'Bot successfully updated, the bot will restart momentarily'
+                message = data['commit']['message']
+                html_url = data["html_url"]
+                short_sha = data['sha'][:6]
+                em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) {message} - {user.username}')
+            else:
+                em.description = 'Already up to date with master repository.'
         
-        user = await Github.login(self, access_token)
-        await user.update_repository()
-        em.title = 'Success'
-        em.description = 'Bot successfully updated, the bot will restart momentarily'
+        em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
+            
         await ctx.send(embed=em)
 
     @commands.command()
@@ -391,16 +412,28 @@ class Modmail(commands.Bot):
     @commands.has_permissions(manage_messages=True)
     async def _snippets(self, ctx):
         '''Returns a list of snippets that are currently set.'''
+        embeds = []
+
         em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
-        first_line = 'Here is a list of snippets that are currently configured. '
+
+        embeds.append(em)
+
+        em.description = 'Here is a list of snippets that are currently configured.'
+
         if not self.snippets:
-            first_line = 'You dont have any snippets at the moment. '
-        em.description =  first_line + 'You can add snippets by adding config variables in the form' \
-                         ' **`SNIPPET_{NAME}`**'
+            em.color = discord.Color.red()
+            em.description = 'You dont have any snippets at the moment.'
+        
         for name, value in self.snippets.items():
+            if len(em.fields) == 5:
+                em = discord.Embed(color=discord.Color.green(), description=em.description)
+                em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
+                embeds.append(em)
             em.add_field(name=name, value=value, inline=False)
-        await ctx.send(embed=em)
+        
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -579,6 +612,7 @@ class Modmail(commands.Bot):
             em.set_author(name=str(author), icon_url=author.avatar_url)
             em.set_footer(text='User')
 
+        await channel.trigger_typing()
         await channel.send(embed=em)
 
         if delete_message:
