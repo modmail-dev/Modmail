@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.5.0'
+__version__ = '1.5.1'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -167,10 +167,24 @@ class Modmail(commands.Bot):
                 message_id = matches[0]
 
                 async for msg in channel.history():
-                    if msg.embeds:
-                        if f'Moderator - {message_id}' == msg.embeds[0].footer.text:
-                            await msg.delete()
-                            break
+                    if msg.embeds and f'Moderator - {message_id}' in msg.embeds[0].footer.text:
+                        await msg.delete()
+                        break
+    
+    async def on_message_edit(self, before, after):
+        if before.author.bot:
+            return
+        if isinstance(before.channel, discord.DMChannel):
+            channel = await self.find_or_create_thread(before.author)
+            async for msg in channel.history():
+                if msg.embeds:
+                    embed = msg.embeds[0]
+                    if f'User - {before.id}' in embed.footer.text:
+                        if ' - (Edited)' not in embed.footer.text:
+                            embed.set_footer(text=embed.footer.text + ' - (Edited)')
+                        embed.description = after.content
+                        await msg.edit(embed=embed)
+                        break
 
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
@@ -694,7 +708,7 @@ class Modmail(commands.Bot):
         else:
             em.color=discord.Color.gold()
             em.set_author(name=str(author), icon_url=author.avatar_url)
-            em.set_footer(text='User')
+            em.set_footer(text=f'User - {message.id}')
 
         await channel.trigger_typing()
         await channel.send(embed=em)
@@ -752,11 +766,11 @@ class Modmail(commands.Bot):
         if str(message.author.id) in blocked:
             await message.author.send(embed=self.blocked_em)
         else:
-            channel = await self.create_thread(message.author)
+            channel = await self.find_or_create_thread(message.author)
             await self.send_mail(message, channel, from_mod=False)
             
 
-    async def create_thread(self, user, *, creator=None, reopen=False):
+    async def find_or_create_thread(self, user, *, creator=None, reopen=False):
 
         guild = self.guild
         topic = f'User ID: {user.id}'
@@ -784,9 +798,8 @@ class Modmail(commands.Bot):
 
 
         if channel is not None:
-            if channel.category is archives:
-                if creator: # thread appears to be closed 
-                    await user.send(embed=em)
+            if channel.category is archives: # thread appears to be closed 
+                if creator: await user.send(embed=em)
                 await channel.edit(category=categ)
                 info_description = info_description or f'{user.mention} has reopened this thread.'
                 await channel.send(mention, embed=self.format_info(user, info_description))
@@ -841,7 +854,7 @@ class Modmail(commands.Bot):
                 return await ctx.send('This user does not share any servers with the bot and is thus unreachable.')
 
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
-        channel = await self.create_thread(user, creator=ctx.author, reopen=reopen)
+        channel = await self.find_or_create_thread(user, creator=ctx.author, reopen=reopen)
         
         if channel is not ctx.channel:
             em = discord.Embed(title='Thread reopened' if reopen else 'Created thread')
