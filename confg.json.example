@@ -1,0 +1,7 @@
+{
+    "TOKEN": "XXX.XXX.XXX",
+    "PREFIX": "m.",
+    "GUILD_ID": EDITTHIS,
+    "STATUS": "DM me for help!",
+    "OWNERS": "comma,seperated,user_ids"
+}

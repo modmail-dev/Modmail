@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.4.6'
+__version__ = '1.5.0'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -44,8 +44,7 @@ import discord
 import aiohttp
 
 from utils.paginator import PaginatorSession
-from utils.github import Github
-
+from utils.api import Github, ModmailApiClient
 
 
 class Modmail(commands.Bot):
@@ -237,7 +236,7 @@ class Modmail(commands.Bot):
                 "version": __version__
             }
 
-            resp = await self.session.post('https://api.kybr.tk/modmail', json=data)
+            await self.session.post('https://api.kybr.tk/modmail', json=data)
 
             await asyncio.sleep(3600)
 
@@ -250,12 +249,10 @@ class Modmail(commands.Bot):
             html_url = commit['html_url']
             message = commit['commit']['message']
             author_name = commit['author']['login']
-            author_url = commit['author']['html_url']
 
             latest_commits += f'[`{short_sha}`]({html_url}) {message} - {author_name}\n'
 
         return latest_commits
-
 
     @property
     def uptime(self):
@@ -294,8 +291,7 @@ class Modmail(commands.Bot):
         em.description = 'This is an open source discord bot made by kyb3r and '\
                          'improved upon suggestions by the users! This bot serves as a means for members to '\
                          'easily communicate with server leadership in an organised manner.'
-        
-        
+
         try:
             async with self.session.get('https://api.kybr.tk/modmail') as resp:
                 meta = await resp.json()
@@ -328,62 +324,127 @@ class Modmail(commands.Bot):
 
         await ctx.send(embed=em)
     
+    @commands.group(invoke_without_subcommand=True)
+    async def github(self, ctx):
+        if ctx.invoked_subcommand:
+            return
+
+        client = ModmailApiClient(self)
+        data = await client.get_user_info()
+
+        prefix = self.config.get('PREFIX', 'm.')
+
+        em = discord.Embed(
+            title='Github',
+            color=discord.Color.red(),
+            description=f'Not logged in, do `{prefix}github login` to login with GitHub.'
+            )
+        em.add_field(name='Subcommands', value=f'`{prefix}github login`\n`{prefix}github logout`')
+
+        if not data['error']:
+            user = data['user']
+            em.color = discord.Color.green()
+            em.description = f"Currently logged in."
+            em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+            em.set_thumbnail(url=user['avatar_url'])
+            await ctx.send(embed=em)
+        else:
+            await ctx.send(embed=em)
+    
+    @github.command(name='login')
+    async def _login(self, ctx):
+        client = ModmailApiClient(self)
+
+        oauth_url = 'https://github.com/login/oauth/authorize?client_id' \
+                    '=e54e4ff0f234ee9f22aa&scope=public_repo&redirect_uri=' \
+                    'https://api.kybr.tk/modmail/github/callback' \
+                   f'?token={client.token}'
+
+        em = discord.Embed(
+            color=discord.Color.green(),
+            title='Login with GitHub',
+            description='In order to use the update command, you need ' \
+            'to have fork the [repo](https://github.com/kyb3r/modmail) and ' \
+            'login with GitHub so that we can update your fork to ' \
+            'match the main repository whenever there is an update.' \
+            'Click the link below to be taken to log in with github to authorize Modmail.'
+        )
+        em.set_thumbnail(url='https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png')
+
+        em.add_field(name='Login', value=f'[Click Here]({oauth_url})', inline=False)
+        em.add_field(name='Warning', value='Dont share this link as it contains sensitive information.')
+        await ctx.send('Check your direct messages.')
+        await ctx.author.send(embed=em)
+    
+    @github.command(name='logout')
+    async def _logout(self, ctx):
+        client = ModmailApiClient(self)
+        data = await client.logout()
+
+        em = discord.Embed(
+            color=discord.Color.green(),
+            title='Logged out',
+            description='Successfully logged out.'
+            )
+
+        if data['error']:
+            em.color = discord.Color.red()
+            em.title = 'Error'
+            em.description = 'You are not logged in already.'
+        
+        await ctx.send(embed=em)
     
     @commands.command()
     async def update(self, ctx):
         '''Updates the bot, this only works with heroku users.'''
         allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
 
-        if ctx.author.id not in allowed: 
+        if ctx.author.id not in allowed:
             return
 
-        async with self.session.get('https://api.kybr.tk/modmail') as resp:
-            data = await resp.json()
-        
+        client = ModmailApiClient(self)
+
+        metadata = await client.get_metadata()
+
         em = discord.Embed(
                 title='Already up to date',
                 description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
-            )
-        
-        access_token = self.config.get('GITHUB_ACCESS_TOKEN')
+        )
 
-        if data['latest_version'] == __version__:
-            if access_token:
-                user = await Github.login(self, access_token)
-                em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
+        if metadata['latest_version'] == __version__:
+            data = await client.get_user_info()
+            if not data['error']:
+                user = data['user']
+                em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
 
-        if data['latest_version'] != __version__:
-            if not access_token:
-                em.title = 'Invalid Access Token'
-                em.description = 'You have not properly set up GitHub credentials. '\
-                                'Create a config variable named `GITHUB_ACCESS_TOKEN`'\
-                                ' and set the value as your personal access token which'\
-                                ' can be generated in your GitHub account\'s [developer '\
-                                'settings](https://github.com/settings/tokens).'
+        if metadata['latest_version'] != __version__:
+            data = await client.update_repository()
 
+            if data['error']:
+                prefix = self.config.get('PREFIX', 'm.')
+                em.title = 'Unauthorised'
+                em.description = f"You haven't logged in with github yet. Type the command `{prefix}github login` to authorize this bot."
                 em.color = discord.Color.red()
                 return await ctx.send(embed=em)
-            
-            em.set_footer(text=f"Updating modmail v{__version__} -> v{data['latest_version']}")
 
-            user = await Github.login(self, access_token)
-            data = await user.update_repository()
-
+            commit_data = data['data']
+            user = data['user']
             em.title = 'Success'
-            em.set_author(name=user.username, icon_url=user.avatar_url, url=user.url)
-            
-            if data:
+            em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+            em.set_footer(text=f"Updating modmail v{__version__} -> v{metadata['latest_version']}")  
+
+            if commit_data:
                 em.description = 'Bot successfully updated, the bot will restart momentarily'
-                message = data['commit']['message']
-                html_url = data["html_url"]
-                short_sha = data['sha'][:6]
-                em.add_field(name='Merge Commit', value=f'[`{short_sha}`]({html_url}) {message} - {user.username}')
+                message = commit_data['commit']['message']
+                html_url = commit_data["html_url"]
+                short_sha = commit_data['sha'][:6]
+                em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
             else:
                 em.description = 'Already up to date with master repository.'
-        
+
         em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
-            
+
         await ctx.send(embed=em)
 
     @commands.command()
