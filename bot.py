@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.5.0'
+__version__ = '1.5.1'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -387,13 +387,18 @@ class Modmail(commands.Bot):
         em = discord.Embed(
             color=discord.Color.green(),
             title='Logged out',
-            description='Successfully logged out.'
+            description='No longer logged into '
             )
 
         if data['error']:
             em.color = discord.Color.red()
             em.title = 'Error'
             em.description = 'You are not logged in already.'
+        else:
+            user = data['user']
+            em.description += user['username']
+            em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+            em.set_thumbnail(url=user['avatar_url'])
         
         await ctx.send(embed=em)
     
