@@ -22,11 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.5.1'
+__version__ = '1.5.0'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
 from copy import deepcopy
+import functools
 import asyncio
 import textwrap
 import traceback
@@ -45,7 +46,6 @@ import aiohttp
 
 from utils.paginator import PaginatorSession
 from utils.api import Github, ModmailApiClient
-
 
 class Modmail(commands.Bot):
 
@@ -90,6 +90,19 @@ class Modmail(commands.Bot):
         '''Returns the prefix.'''
         p = bot.config.get('PREFIX') or 'm.'
         return [p, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
+    
+    def owner_only():
+        async def predicate(ctx):
+            allowed = [int(x) for x in ctx.bot.config.get('OWNERS', '0').split(',')]
+            return ctx.author.id in allowed
+        return commands.check(predicate)
+    
+    def trigger_typing(func):
+        @functools.wraps(func)
+        async def wrapper(self, ctx, *args, **kwargs):
+            await ctx.trigger_typing()
+            return await func(self, ctx, *args, **kwargs)
+        return wrapper
 
     async def on_connect(self):
         print('---------------')
@@ -138,14 +151,6 @@ class Modmail(commands.Bot):
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
                 
         await self.process_commands(message)
-
-    async def process_commands(self, message):
-        if message.author.bot:
-            return
-        ctx = await self.get_context(message)
-        if ctx.command is not None:
-            await ctx.trigger_typing()
-        await self.invoke(ctx)
     
     async def on_message_delete(self, message):
         '''Support for deleting linked messages'''
@@ -272,6 +277,7 @@ class Modmail(commands.Bot):
         return fmt.format(d=days, h=hours, m=minutes, s=seconds)
 
     @commands.command()
+    @trigger_typing
     async def help(self, ctx):
         prefix = self.config.get('PREFIX', 'm.')
 
@@ -286,6 +292,7 @@ class Modmail(commands.Bot):
         await session.run()
     
     @commands.command()
+    @trigger_typing
     async def about(self, ctx):
         em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
         em.set_author(name='Mod Mail - Information', icon_url=self.user.avatar_url)
@@ -328,6 +335,8 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
     
     @commands.group(invoke_without_subcommand=True)
+    @owner_only()
+    @trigger_typing
     async def github(self, ctx):
         if ctx.invoked_subcommand:
             return
@@ -355,6 +364,8 @@ class Modmail(commands.Bot):
             await ctx.send(embed=em)
     
     @github.command(name='login')
+    @owner_only()
+    @trigger_typing
     async def _login(self, ctx):
         client = ModmailApiClient(self)
 
@@ -380,6 +391,8 @@ class Modmail(commands.Bot):
         await ctx.author.send(embed=em)
     
     @github.command(name='logout')
+    @owner_only()
+    @trigger_typing
     async def _logout(self, ctx):
         client = ModmailApiClient(self)
         data = await client.logout()
@@ -403,12 +416,10 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
     
     @commands.command()
+    @owner_only()
+    @trigger_typing
     async def update(self, ctx):
         '''Updates the bot, this only works with heroku users.'''
-        allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
-
-        if ctx.author.id not in allowed:
-            return
 
         client = ModmailApiClient(self)
 
@@ -456,6 +467,7 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(administrator=True)
     async def setup(self, ctx, *, modrole: discord.Role=None):
         '''Sets up a server for modmail'''
@@ -505,6 +517,7 @@ class Modmail(commands.Bot):
         await session.run()
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(administrator=True)
     async def disable(self, ctx, delete_archives: bool=False):
         '''Close all threads and disable modmail.'''
@@ -551,6 +564,7 @@ class Modmail(commands.Bot):
         await ctx.channel.delete()
     
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def archive(self, ctx):
         '''
@@ -590,6 +604,7 @@ class Modmail(commands.Bot):
         await ctx.message.delete()
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(administrator=True)
     async def ping(self, ctx):
         """Pong! Returns your websocket latency."""
@@ -795,6 +810,7 @@ class Modmail(commands.Bot):
                     return int(matches[0])
 
     @commands.command()
+    @trigger_typing
     async def reply(self, ctx, *, msg=''):
         '''Reply to users using this command.'''
         ctx.message.content = msg
@@ -809,6 +825,7 @@ class Modmail(commands.Bot):
                     await self.process_reply(ctx.message, user_id=user_id)
     
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def contact(self, ctx, *, user: discord.Member=None):
         '''Create a thread with a specified member.'''
@@ -847,6 +864,7 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
     
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         '''Returns a list of blocked users'''
@@ -880,6 +898,7 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
         
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def block(self, ctx, id=None):
         '''Block a user from using modmail.'''
@@ -915,6 +934,7 @@ class Modmail(commands.Bot):
             await ctx.send(embed=em)
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def unblock(self, ctx, id=None):
         '''Unblocks a user from using modmail.'''
@@ -950,12 +970,9 @@ class Modmail(commands.Bot):
             await ctx.send(embed=em)
 
     @commands.command(hidden=True, name='eval')
+    @owner_only()
     async def _eval(self, ctx, *, body: str):
         """Evaluates python code"""
-        allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
-
-        if ctx.author.id not in allowed: 
-            return
         
         env = {
             'bot': self,
