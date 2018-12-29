@@ -64,8 +64,11 @@ class Modmail(commands.Bot):
                 self.add_command(cmd)
     @property
     def config(self):
-        with open('config.json') as f:
-            config = json.load(f)
+        try:
+            with open('config.json') as f:
+                config = json.load(f)
+        except FileNotFoundError:
+            config = {}
         config.update(os.environ)
         return config
     
