@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.5.1'
+__version__ = '1.5.2'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -58,16 +58,24 @@ class Modmail(commands.Bot):
     def _add_commands(self):
         '''Adds commands automatically'''
         self.remove_command('help')
+        print('-------------------------')
+        print('┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬',
+              '││││ │ │││││├─┤││',
+              '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
+        print(f'v{__version__}')
+        print('Author: kyb3r')
         for attr in dir(self):
             cmd = getattr(self, attr)
             if isinstance(cmd, commands.Command):
                 self.add_command(cmd)
+        
     @property
     def config(self):
         try:
             with open('config.json') as f:
                 config = json.load(f)
         except FileNotFoundError:
+            print('config.json not found, falling back to env vars.')
             config = {}
         config.update(os.environ)
         return config
@@ -105,12 +113,13 @@ class Modmail(commands.Bot):
         return wrapper
 
     async def on_connect(self):
-        print('---------------')
-        print('Modmail connected!')
+        print('-------------------------')
+        print('Connected to gateway.')
+        
         self.session = aiohttp.ClientSession()
         status = os.getenv('STATUS') or self.config.get('STATUS')
         if status:
-            print(f'Setting Status to {status}')
+            print(f'Changing presence.')
             await self.change_presence(activity=discord.Game(status))
         else:
             print('No status set.')
@@ -127,15 +136,14 @@ class Modmail(commands.Bot):
     async def on_ready(self):
         '''Bot startup, sets uptime.'''
         print(textwrap.dedent(f'''
-        ---------------
-        Client is ready!
-        ---------------
-        Author: kyb3r
-        ---------------
+        -------------------------
+        Client ready.
+        -------------------------
         Logged in as: {self.user}
         User ID: {self.user.id}
-        ---------------
-        '''))
+        Guild ID: {self.guild.id if self.guild else 0}
+        -------------------------
+        ''').strip())
 
     async def on_message(self, message):
         if message.author.bot:
@@ -185,6 +193,14 @@ class Modmail(commands.Bot):
                         embed.description = after.content
                         await msg.edit(embed=embed)
                         break
+    
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, (commands.MissingRequiredArgument, commands.UserInputError)):
+            prefix = self.config.get('PREFIX', 'm.')
+            em = discord.Embed(color=discord.Color.green())
+            em.title = f'`{prefix}{ctx.command.signature}`'
+            em.description = ctx.command.help
+            await ctx.send(embed=em)
 
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
@@ -209,6 +225,7 @@ class Modmail(commands.Bot):
                f'`{prefix}about` - Shows general information about the bot.\n' \
                f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
                f'`{prefix}reply` - Sends a message to the current thread\'s recipient.\n' \
+               f'`{prefix}edit` - Edit a message sent by the reply command.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the thread and moves the channel to archive category.\n' \
                f'`{prefix}block` - Blocks a user from using modmail.\n' \
@@ -269,7 +286,7 @@ class Modmail(commands.Bot):
 
             short_sha = commit['sha'][:6]
             html_url = commit['html_url']
-            message = commit['commit']['message']
+            message = commit['commit']['message'].splitlines()[0]
             author_name = commit['author']['login']
 
             latest_commits += f'[`{short_sha}`]({html_url}) {message} - {author_name}\n'
@@ -293,6 +310,7 @@ class Modmail(commands.Bot):
     @commands.command()
     @trigger_typing
     async def help(self, ctx):
+        '''Shows the help message'''
         prefix = self.config.get('PREFIX', 'm.')
 
         em1 = self.help_embed(prefix)
@@ -308,6 +326,7 @@ class Modmail(commands.Bot):
     @commands.command()
     @trigger_typing
     async def about(self, ctx):
+        '''Shows information about the bot.'''
         em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
         em.set_author(name='Mod Mail - Information', icon_url=self.user.avatar_url)
         em.set_thumbnail(url=self.user.avatar_url)
@@ -722,6 +741,8 @@ class Modmail(commands.Bot):
     async def process_reply(self, message, user_id=None):
         user_id = user_id or int(re.findall(r'\d+', message.channel.topic)[0])
         user = self.get_user(user_id)
+        if not message.content and not message.attachments:
+            raise commands.UserInputError('msg is required argument.')
         if not user:
             return await message.channel.send('This user does not share any servers with the bot and is thus unreachable.')
         await asyncio.gather(
@@ -836,6 +857,41 @@ class Modmail(commands.Bot):
                 user_id = await self.find_user_id_from_channel(ctx.channel)
                 if user_id:
                     await self.process_reply(ctx.message, user_id=user_id)
+
+    async def _edit_thread_message(self, channel, message_id, message):
+        async for msg in channel.history():
+            if msg.embeds:
+                embed = msg.embeds[0]
+                if f'Moderator - {message_id}' in embed.footer.text:
+                    if ' - (Edited)' not in embed.footer.text:
+                            embed.set_footer(text=embed.footer.text + ' - (Edited)')
+                    embed.description = message
+                    await msg.edit(embed=embed)
+                    break
+    
+    def edit_thread_message(self, user, channel, message_id, message):
+        return asyncio.gather(
+            self._edit_thread_message(user, message_id, message),
+            self._edit_thread_message(channel, message_id, message)
+        )
+    
+    @commands.command()
+    async def edit(self, ctx, message_id: int, *, new_message):
+        '''Edit a message that was sent using the reply command.
+        
+        `<message_id>` is the id shown in the footer of thread messages.
+        `<new_message>` is the new message that will be edited in.
+        '''
+        categ = ctx.channel.category
+        if categ and categ.name in 'Mod Mail Archives':
+            if ctx.channel.topic and 'User ID:' in ctx.channel.topic:
+                user = self.get_user(int(re.findall(r'\d+', ctx.channel.topic)[0]))
+                await self.edit_thread_message(user, ctx.channel, message_id, new_message)
+            if not ctx.channel.topic:
+                user_id = await self.find_user_id_from_channel(ctx.channel)
+                if user_id:
+                    user = self.get_user(user_id)
+                    await self.edit_thread_message(user, ctx.channel, message_id, new_message)
     
     @commands.command()
     @trigger_typing
@@ -875,7 +931,7 @@ class Modmail(commands.Bot):
         em.color = discord.Color.green()
         em.set_footer(text='Note: this change is temporary.')
         await ctx.send(embed=em)
-    
+
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
