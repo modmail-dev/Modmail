@@ -846,7 +846,10 @@ class Modmail(commands.Bot):
     @commands.command()
     @trigger_typing
     async def reply(self, ctx, *, msg=''):
-        '''Reply to users using this command.'''
+        '''Reply to users using this command.
+        
+        Supports attachments and images as well as automatically embedding image_urls.
+        '''
         ctx.message.content = msg
 
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
