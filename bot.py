@@ -40,12 +40,20 @@ import os
 import re
 import io
 
+from colorama import init, Fore, Back, Style
+
+init()
+
 from discord.ext import commands
 import discord
 import aiohttp
 
 from utils.paginator import PaginatorSession
 from utils.api import Github, ModmailApiClient
+
+
+
+line = Fore.RED + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
 
 class Modmail(commands.Bot):
 
@@ -58,17 +66,17 @@ class Modmail(commands.Bot):
     def _add_commands(self):
         '''Adds commands automatically'''
         self.remove_command('help')
-        print('-------------------------')
-        print('┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬',
+        print(line)
+        print(Fore.YELLOW + '┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬',
               '││││ │ │││││├─┤││',
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
-        print('Author: kyb3r')
+        print('Author: kyb3r' + Style.RESET_ALL)
         for attr in dir(self):
             cmd = getattr(self, attr)
             if isinstance(cmd, commands.Command):
                 self.add_command(cmd)
-        
+
     @property
     def config(self):
         try:
@@ -113,16 +121,13 @@ class Modmail(commands.Bot):
         return wrapper
 
     async def on_connect(self):
-        print('-------------------------')
-        print('Connected to gateway.')
+        print(line)
+        print(Fore.YELLOW + 'Connected to gateway.')
         
         self.session = aiohttp.ClientSession()
         status = os.getenv('STATUS') or self.config.get('STATUS')
         if status:
-            print(f'Changing presence.')
             await self.change_presence(activity=discord.Game(status))
-        else:
-            print('No status set.')
 
     @property
     def guild_id(self):
@@ -136,13 +141,13 @@ class Modmail(commands.Bot):
     async def on_ready(self):
         '''Bot startup, sets uptime.'''
         print(textwrap.dedent(f'''
-        -------------------------
-        Client ready.
-        -------------------------
-        Logged in as: {self.user}
-        User ID: {self.user.id}
-        Guild ID: {self.guild.id if self.guild else 0}
-        -------------------------
+        {line}
+        {Fore.YELLOW}Client ready.
+        {line}
+        {Fore.YELLOW}Logged in as: {self.user}
+        {Fore.YELLOW}User ID: {self.user.id}
+        {Fore.YELLOW}Guild ID: {self.guild.id if self.guild else 0}
+        {line}
         ''').strip())
 
     async def on_message(self, message):
