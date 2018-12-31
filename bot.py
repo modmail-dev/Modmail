@@ -40,6 +40,7 @@ import os
 import re
 import io
 
+from cachetools import TTLCache
 from colorama import init, Fore, Back, Style
 
 init()
@@ -60,6 +61,8 @@ class Modmail(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
         self.start_time = datetime.datetime.utcnow()
+        self.channel_cache = TTLCache(100, 30)
+        self.channel_ready_events = {}     
         self.loop.create_task(self.data_loop())
         self._add_commands()
 
@@ -138,6 +141,7 @@ class Modmail(commands.Bot):
         print(Fore.YELLOW + 'Connected to gateway.')
         
         self.session = aiohttp.ClientSession()
+        self.modmail_api = ModmailApiClient(self) 
         status = os.getenv('STATUS') or self.config.get('STATUS')
         if status:
             await self.change_presence(activity=discord.Game(status))
@@ -395,8 +399,7 @@ class Modmail(commands.Bot):
         if ctx.invoked_subcommand:
             return
 
-        client = ModmailApiClient(self)
-        data = await client.get_user_info()
+        data = await self.modmail_api.get_user_info()
 
         prefix = self.config.get('PREFIX', 'm.')
 
@@ -416,10 +419,7 @@ class Modmail(commands.Bot):
     @trigger_typing
     async def update(self, ctx):
         '''Updates the bot, this only works with heroku users.'''
-
-        client = ModmailApiClient(self)
-
-        metadata = await client.get_metadata()
+        metadata = await self.modmail_api.get_metadata()
 
         em = discord.Embed(
                 title='Already up to date',
@@ -427,19 +427,19 @@ class Modmail(commands.Bot):
                 color=discord.Color.green()
         )
 
-        if not client.token:
+        if not self.modmail_api.token:
             em.title = 'Unauthorised'
             em.description = f"You haven't logged in with github yet. Please get your api token from https://dashboard.modmail.tk"
             em.color = discord.Color.red()
             return await ctx.send(embed=em)
 
         if metadata['latest_version'] == __version__:
-            data = await client.get_user_info()
+            data = await self.modmail_api.get_user_info()
             if not data['error']:
                 user = data['user']
                 em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
         else:
-            data = await client.update_repository()
+            data = await self.modmail_api.update_repository()
 
             commit_data = data['data']
             user = data['user']
@@ -549,6 +549,12 @@ class Modmail(commands.Bot):
             return await ctx.send('This is not a modmail thread.')
 
         user_id = user_id or int(ctx.channel.topic.split(': ')[1])
+        
+        try:
+            del self.channel_cache[user_id]
+        except KeyError:
+            pass
+
         user = self.get_user(user_id)
         em = discord.Embed(title='Thread Closed')
         em.description = f'{ctx.author.mention} has closed this modmail thread.'
@@ -565,8 +571,7 @@ class Modmail(commands.Bot):
         categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
         log_channel = categ.channels[1]
 
-        client = ModmailApiClient(self)
-        log_data = await client.post_log(ctx.channel.id, {
+        log_data = await self.modmail_api.post_log(ctx.channel.id, {
             'open': False, 'closed_at': str(datetime.datetime.utcnow()), 'closer': {
                 'id': str(ctx.author.id),
                 'name': ctx.author.name,
@@ -578,11 +583,17 @@ class Modmail(commands.Bot):
 
         log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
 
-        desc = f"{ctx.author.mention} closed a thread with {user.mention}"
+        desc = f"[`{log_data['key']}`]({log_url}) {ctx.author.mention} closed a thread with  {user.mention} - `{user} ({user.id})`"
         em = discord.Embed(description=desc, color=em.color)
         em.set_author(name='Thread closed', url=log_url)
-        em.add_field(name='Log URL', value=f"[`{log_data['key']}`]({log_url})")
         await log_channel.send(embed=em)
+
+    @commands.command()
+    async def nsfw(self, ctx):
+        if ctx.channel.category and ctx.channel.category.name == 'Mod Mail':
+            await ctx.edit(nsfw=True)
+        await ctx.send('Done')
+        
 
     @commands.command()
     @trigger_typing
@@ -609,7 +620,8 @@ class Modmail(commands.Bot):
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
         desc = description or f'{user.mention} has started a thread.'
-        desc += f'\nLog URL: {log_url}'
+        key = log_url.split('/')[-1]
+        desc = f'{desc} [`{key}`]({log_url})'
         color = discord.Color.blurple()
 
         if member:
@@ -629,12 +641,11 @@ class Modmail(commands.Bot):
         em.add_field(name='Registered', value=created + days(created))
         footer = 'User ID: '+str(user.id)
         em.set_footer(text=footer)
-        em.set_thumbnail(url=avi)
         em.set_author(name=str(user), icon_url=avi)
 
         if member:
             if log_count:
-                em.add_field(name='Past logs', value=f'{log_count}. Use `logs` to view them')
+                em.add_field(name='Past logs', value=f'{log_count}')
             joined = str((time - member.joined_at).days)
             em.add_field(name='Joined', value=joined + days(joined))
             em.add_field(name='Member No.',value=str(member_number),inline = True)
@@ -647,12 +658,11 @@ class Modmail(commands.Bot):
         return em
 
     async def send_mail(self, message, channel, from_mod, delete_message=True):
-        client = ModmailApiClient(self)
         if from_mod and not isinstance(channel, discord.User):
             # ensures logs wont dupe
-            self.loop.create_task(client.append_log(message))
+            self.loop.create_task(self.modmail_api.append_log(message))
         elif not from_mod:
-            self.loop.create_task(client.append_log(message, channel.id))
+            self.loop.create_task(self.modmail_api.append_log(message, channel.id))
 
         author = message.author
         em = discord.Embed()
@@ -744,6 +754,9 @@ class Modmail(commands.Bot):
             await message.author.send(embed=self.blocked_em)
         else:
             channel = await self.find_or_create_thread(message.author)
+            event = self.channel_ready_events.get(channel.id)
+            if event is not None:
+                await event.wait()
             await self.send_mail(message, channel, from_mod=False)
             
 
@@ -753,7 +766,6 @@ class Modmail(commands.Bot):
         topic = f'User ID: {user.id}'
         channel = discord.utils.get(guild.text_channels, topic=topic)
         categ = discord.utils.get(guild.categories, name='Mod Mail')
-        archives = discord.utils.get(guild.categories, name='Mod Mail Archives')
 
         em = discord.Embed(title='Thanks for the message!')
         em.description = 'The moderation team will get back to you as soon as possible!'
@@ -773,36 +785,34 @@ class Modmail(commands.Bot):
 
         mention = (self.config.get('MENTION') or '@here') if not creator else None
 
-        client = ModmailApiClient(self)
-
         if channel is not None:
-            if channel.category is archives: # thread appears to be closed 
-                if creator: await user.send(embed=em)
-                await channel.edit(category=categ)
-                log_url, logs = await asyncio.gather(
-                    client.get_log_url(user, channel, creator or user),
-                    client.get_user_logs(user.id)
-                    )
-                log_count = len(logs)
-                info_description = info_description or f'{user.mention} has reopened this thread.'
-                await channel.send(mention, embed=self.format_info(user, info_description, log_url, log_count))
-        else:
+            return channel
+
+        try:
+            channel = self.channel_cache[user.id]
+            return channel
+        except KeyError:
             await user.send(embed=em)
             channel = await guild.create_text_channel(
                 name=self.format_name(user, guild.text_channels),
                 category=categ
             )
+            self.channel_cache[user.id] = channel
+            self.channel_ready_events[channel.id] = channel_ready = asyncio.Event()
             log_url, logs = await asyncio.gather( # concurrently make requests
-                client.get_log_url(user, channel, creator or user),
-                client.get_user_logs(user.id)
-                )
+                self.modmail_api.get_log_url(user, channel, creator or user),
+                self.modmail_api.get_user_logs(user.id)
+            )
             log_count = len(logs)
             await channel.edit(topic=topic)
             await channel.send(mention, embed=self.format_info(user, info_description, log_url, log_count))
-        
+            channel_ready.set()
+
         return channel
 
     async def find_user_id_from_channel(self, channel):
+
+        user_id = None 
         async for message in channel.history():
             if message.embeds:
                 em = message.embeds[0]
@@ -821,54 +831,45 @@ class Modmail(commands.Bot):
             user_id = user_id or int(ctx.channel.topic.split(': ')[1])
 
         user = member or self.get_user(user_id)
-        
 
-        client = ModmailApiClient(self)
-        logs = await client.get_user_logs(user.id)
+        logs = await self.modmail_api.get_user_logs(user.id)
 
         if not logs:
             return await ctx.send('This user has no previous logs.')
 
-        embeds = []
-
         em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Previous Logs', icon_url=user.avatar_url)
 
-        embeds.append(em)
+        embeds = [em]
 
-        current_day = datetime.datetime.fromisoformat(logs[0]['created_at']).strftime('%d %b %Y')
+        current_day = datetime.datetime.fromisoformat(logs[0]['created_at']).strftime(r'%d %b %Y')
 
         fmt = ''
 
         for index, entry in enumerate(logs):
+            if len(embeds[-1].fields) == 3:
+                em = discord.Embed(color=discord.Color.green())
+                em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+                embeds.append(em)
 
             date = datetime.datetime.fromisoformat(entry['created_at'])
-            new_day = date.strftime('%d %b %Y')
+            new_day = date.strftime(r'%d %b %Y')
             
             key = entry['key']
             user_id = entry['user_id']
             log_url = f"https://logs.modmail.tk/{user_id}/{key}"
             
-            if not entry['open']:
+            if not entry['open']:  # only list closed threads
                 fmt += f"[`{key}`]({log_url})\n"
 
-            if current_day != new_day or index == len(logs) - 1:
-                em.add_field(name=current_day, value=fmt)
-                current_day = new_day
-                fmt = ''
-            
-            if len(em.fields) == 3:
-                embeds.append(em)
-                em = discord.Embed(color=discord.Color.green())
-                em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+                if current_day != new_day or index == len(logs) - 1:
+                    embeds[-1].add_field(name=current_day, value=fmt)
+                    current_day = new_day
+                    fmt = ''
 
-        for em in embeds:
-            print(em.to_dict())
         
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-            
-
 
     @commands.command()
     @trigger_typing
