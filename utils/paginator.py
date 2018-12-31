@@ -44,7 +44,6 @@ class PaginatorSession:
         if options.get('edit_footer', True) and len(self.embeds) > 1:
             for i, em in enumerate(self.embeds):
                 footer_text = f'Page {i+1} of {len(self.embeds)}'
-                em.footer.text = options.get('footer_text', em.footer.text)
                 if em.footer.text:
                     footer_text = footer_text + ' • ' + em.footer.text
                 em.set_footer(text=footer_text, icon_url=em.footer.icon_url)

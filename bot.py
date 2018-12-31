@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.5.3'
+__version__ = '2.0.0'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -481,6 +481,9 @@ class Modmail(commands.Bot):
         await c.edit(topic='Manually add user id\'s to block users.\n\n'
                            'Blocked\n-------\n\n')
         await c.send(embed=self.help_embed(ctx.prefix))
+
+        await ctx.guild.create_text_channel(name='logs', category=categ)
+
         await ctx.send('Successfully set up server.')
     
     @commands.command(name='snippets')
@@ -550,52 +553,36 @@ class Modmail(commands.Bot):
         em = discord.Embed(title='Thread Closed')
         em.description = f'{ctx.author.mention} has closed this modmail thread.'
         em.color = discord.Color.red()
+
         if ctx.channel.category.name != 'Mod Mail Archives': # already closed.
             try:
                 await user.send(embed=em)
             except:
                 pass
         await ctx.channel.delete()
-    
-    @commands.command()
-    @trigger_typing
-    @commands.has_permissions(manage_channels=True)
-    async def archive(self, ctx):
-        '''
-        Archive the current thread. (Visually closes the thread
-        but moves the channel into an archives category instead of 
-        deleteing the channel.)
-        '''
-        user_id = None
 
-        if not ctx.channel.topic:
-            user_id = await self.find_user_id_from_channel(ctx.channel)
-        elif 'User ID:' not in str(ctx.channel.topic) and not user_id:
-            return await ctx.send('This is not a modmail thread.')
+        # Logging
+        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
+        log_channel = categ.channels[1]
 
-        user_id = user_id or int(ctx.channel.topic.split(': ')[1])
+        client = ModmailApiClient(self)
+        log_data = await client.post_log(ctx.channel.id, {
+            'open': False, 'closed_at': str(datetime.datetime.utcnow()), 'closer': {
+                'id': str(ctx.author.id),
+                'name': ctx.author.name,
+                'discriminator': ctx.author.discriminator,
+                'avatar_url': ctx.author.avatar_url,
+                'mod': True
+            }
+        })
 
-        archives = discord.utils.get(ctx.guild.categories, name='Mod Mail Archives')
+        log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
 
-        if ctx.channel.category is archives:
-            return await ctx.send('This channel is already archived.')
-
-        user = self.get_user(user_id)
-        em = discord.Embed(title='Thread Closed')
-        em.description = f'{ctx.author.mention} has closed this modmail thread.'
-        em.color = discord.Color.red()
-
-        try:
-            await user.send(embed=em)
-        except:
-            pass
-
-        await ctx.channel.edit(category=archives)
-        done = discord.Embed(title='Thread Archived')
-        done.description = f'{ctx.author.mention} has archived this modmail thread.'
-        done.color = discord.Color.red()
-        await ctx.send(embed=done)
-        await ctx.message.delete()
+        desc = f"{ctx.author.mention} closed a thread with {user.mention}"
+        em = discord.Embed(description=desc, color=em.color)
+        em.set_author(name='Thread closed', url=log_url)
+        em.add_field(name='Log URL', value=f"[`{log_data['key']}`]({log_url})")
+        await log_channel.send(embed=em)
 
     @commands.command()
     @trigger_typing
@@ -614,7 +601,7 @@ class Modmail(commands.Bot):
             if role.permissions.manage_guild:
                 yield role
 
-    def format_info(self, user, description, log_url):
+    def format_info(self, user, description, log_url, log_count=None):
         '''Get information about a member of a server
         supports users from the guild or not.'''
         server = self.guild
@@ -646,6 +633,8 @@ class Modmail(commands.Bot):
         em.set_author(name=str(user), icon_url=avi)
 
         if member:
+            if log_count:
+                em.add_field(name='Past logs', value=f'{log_count}. Use `logs` to view them')
             joined = str((time - member.joined_at).days)
             em.add_field(name='Joined', value=joined + days(joined))
             em.add_field(name='Member No.',value=str(member_number),inline = True)
@@ -654,12 +643,17 @@ class Modmail(commands.Bot):
                 em.add_field(name='Roles', value=rolenames, inline=False)
         else:
             em.set_footer(text=footer+' | Note: this member is not part of this server.')
-        
-        
 
         return em
 
     async def send_mail(self, message, channel, from_mod, delete_message=True):
+        client = ModmailApiClient(self)
+        if from_mod and not isinstance(channel, discord.User):
+            # ensures logs wont dupe
+            self.loop.create_task(client.append_log(message))
+        elif not from_mod:
+            self.loop.create_task(client.append_log(message, channel.id))
+
         author = message.author
         em = discord.Embed()
         em.description = message.content
@@ -779,24 +773,32 @@ class Modmail(commands.Bot):
 
         mention = (self.config.get('MENTION') or '@here') if not creator else None
 
+        client = ModmailApiClient(self)
 
         if channel is not None:
             if channel.category is archives: # thread appears to be closed 
                 if creator: await user.send(embed=em)
                 await channel.edit(category=categ)
-                log_url = await client.get_log_url(user, channel)
+                log_url, logs = await asyncio.gather(
+                    client.get_log_url(user, channel, creator or user),
+                    client.get_user_logs(user.id)
+                    )
+                log_count = len(logs)
                 info_description = info_description or f'{user.mention} has reopened this thread.'
-                await channel.send(mention, embed=self.format_info(user, info_description, log_url))
+                await channel.send(mention, embed=self.format_info(user, info_description, log_url, log_count))
         else:
-            client = ModmailApiClient(self)
             await user.send(embed=em)
             channel = await guild.create_text_channel(
                 name=self.format_name(user, guild.text_channels),
                 category=categ
             )
-            log_url = await client.get_log_url(user, channel)
+            log_url, logs = await asyncio.gather( # concurrently make requests
+                client.get_log_url(user, channel, creator or user),
+                client.get_user_logs(user.id)
+                )
+            log_count = len(logs)
             await channel.edit(topic=topic)
-            await channel.send(mention, embed=self.format_info(user, info_description, log_url))
+            await channel.send(mention, embed=self.format_info(user, info_description, log_url, log_count))
         
         return channel
 
@@ -807,6 +809,66 @@ class Modmail(commands.Bot):
                 matches = re.findall(r'<@(\d+)>', str(em.description))
                 if matches:
                     return int(matches[0])
+    
+    @commands.command()
+    @trigger_typing
+    async def logs(self, ctx, *, member: discord.Member=None):
+
+        if not member: 
+            user_id = None
+            if not ctx.channel.topic:
+                user_id = await self.find_user_id_from_channel(ctx.channel) 
+            user_id = user_id or int(ctx.channel.topic.split(': ')[1])
+
+        user = member or self.get_user(user_id)
+        
+
+        client = ModmailApiClient(self)
+        logs = await client.get_user_logs(user.id)
+
+        if not logs:
+            return await ctx.send('This user has no previous logs.')
+
+        embeds = []
+
+        em = discord.Embed(color=discord.Color.green())
+        em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+
+        embeds.append(em)
+
+        current_day = datetime.datetime.fromisoformat(logs[0]['created_at']).strftime('%d %b %Y')
+
+        fmt = ''
+
+        for index, entry in enumerate(logs):
+
+            date = datetime.datetime.fromisoformat(entry['created_at'])
+            new_day = date.strftime('%d %b %Y')
+            
+            key = entry['key']
+            user_id = entry['user_id']
+            log_url = f"https://logs.modmail.tk/{user_id}/{key}"
+            
+            if not entry['open']:
+                fmt += f"[`{key}`]({log_url})\n"
+
+            if current_day != new_day or index == len(logs) - 1:
+                em.add_field(name=current_day, value=fmt)
+                current_day = new_day
+                fmt = ''
+            
+            if len(em.fields) == 3:
+                embeds.append(em)
+                em = discord.Embed(color=discord.Color.green())
+                em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+
+        for em in embeds:
+            print(em.to_dict())
+        
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
+            
+
 
     @commands.command()
     @trigger_typing
