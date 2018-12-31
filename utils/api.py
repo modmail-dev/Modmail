@@ -1,3 +1,5 @@
+import secrets
+
 from hashlib import sha256
 
 class ApiClient:
@@ -15,61 +17,27 @@ class ApiClient:
     
 
 class Github(ApiClient):
-    head = 'https://api.github.com/repos/kyb3r/modmail/git/refs/heads/master'
-    merge_url = 'https://api.github.com/repos/{username}/modmail/merges'
     commit_url = 'https://api.github.com/repos/kyb3r/modmail/commits'
-
-    def __init__(self, app, access_token=None):
-        super().__init__(app)
-        self.username = None
-        self.avatar_url = None
-        self.url = None
-        self.headers = None
-        if access_token:
-            self.headers = {'Authorization': 'token ' + str(access_token)}
-
-    @classmethod
-    async def login(cls, bot, access_token):
-        self = cls(bot, access_token)
-        resp = await self.request('https://api.github.com/user')
-        self.username = resp['login']
-        self.avatar_url = resp['avatar_url']
-        self.url = resp['html_url']
-        return self
 
     async def get_latest_commits(self, limit=3):
         resp = await self.request(self.commit_url)
         for index in range(limit):
             yield resp[index]
 
-    async def update_repository(self, sha=None):
-        if sha is None:
-            resp = await self.request(self.head)
-            sha = resp['object']['sha']
-
-        payload = {
-            'base': 'master',
-            'head': sha,
-            'commit_message': 'Updating bot'
-        }
-
-        merge_url = self.merge_url.format(username=self.username)
-
-        resp = await self.request(merge_url, method='POST', payload=payload)
-        if isinstance(resp, dict):
-            return resp
 
 class ModmailApiClient(ApiClient):
 
-    base = 'https://api.kybr.tk/modmail'
+    base = 'https://api.modmail.tk'
     github = base + '/github'
+    logs = base + '/logs/key'
 
     def __init__(self, bot):
         super().__init__(bot)
-        self.token = str(sha256(bot.token.encode()).hexdigest()) # added security
-        self.headers = {
-            'Authorization': 'Bearer ' + self.token
-        }
+        self.token = bot.config.get('MODMAIL_API_TOKEN')
+        if self.token:
+            self.headers = {
+                'Authorization': 'Bearer ' + self.token
+            }
     
     def get_user_info(self):
         return self.request(self.github + '/userinfo')
@@ -77,8 +45,12 @@ class ModmailApiClient(ApiClient):
     def update_repository(self):
         return self.request(self.github + '/update-repository')
     
-    def logout(self):
-        return self.request(self.github + '/logout')
-    
     def get_metadata(self):
-        return self.request(self.base)
+        return self.request(self.base + '/metadata')
+
+    def get_log_url(self, user, channel):
+        return self.request(self.logs, payload={
+            'discord_uid': user.id,
+            'channel_id': channel.id,
+            'guild_id': self.app.guild_id
+        })

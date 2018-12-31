@@ -119,6 +119,19 @@ class Modmail(commands.Bot):
             await ctx.trigger_typing()
             return await func(self, ctx, *args, **kwargs)
         return wrapper
+    
+    def modmail_api_token_required(func):
+        @functools.wraps(func)
+        async def wrapper(self, ctx, *args, **kwargs):
+            if self.config.get('MODMAIL_API_TOKEN'):
+                return await func(self, ctx, *args, **kwargs)
+            em = discord.Embed(
+                color=discord.Color.red(),
+                title='Unauthorized',
+                description='You can only use this command if you have a configured `MODMAIL_API_TOKEN`. Get your token from https://dashboard.modmail.tk'
+                )
+            await ctx.send(embed=em)
+        return wrapper 
 
     async def on_connect(self):
         print(line)
@@ -374,8 +387,9 @@ class Modmail(commands.Bot):
 
         await ctx.send(embed=em)
     
-    @commands.group(invoke_without_subcommand=True)
+    @commands.command()
     @owner_only()
+    @modmail_api_token_required
     @trigger_typing
     async def github(self, ctx):
         if ctx.invoked_subcommand:
@@ -386,77 +400,19 @@ class Modmail(commands.Bot):
 
         prefix = self.config.get('PREFIX', 'm.')
 
-        em = discord.Embed(
-            title='Github',
-            color=discord.Color.red(),
-            description=f'Not logged in, do `{prefix}github login` to login with GitHub.'
-            )
-        em.add_field(name='Subcommands', value=f'`{prefix}github login`\n`{prefix}github logout`')
+        em = discord.Embed(title='Github')
 
-        if not data['error']:
-            user = data['user']
-            em.color = discord.Color.green()
-            em.description = f"Currently logged in."
-            em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-            em.set_thumbnail(url=user['avatar_url'])
-            await ctx.send(embed=em)
-        else:
-            await ctx.send(embed=em)
-    
-    @github.command(name='login')
-    @owner_only()
-    @trigger_typing
-    async def _login(self, ctx):
-        client = ModmailApiClient(self)
-
-        oauth_url = 'https://github.com/login/oauth/authorize?client_id' \
-                    '=bcff71fd67581b703408&scope=public_repo&redirect_uri=' \
-                    'https://api.kybr.tk/modmail/github/callback' \
-                   f'?token={client.token}'
-
-        em = discord.Embed(
-            color=discord.Color.green(),
-            title='Login with GitHub',
-            description='In order to use the update command, you need ' \
-            'to have fork the [repo](https://github.com/kyb3r/modmail) and ' \
-            'login with GitHub so that we can update your fork to ' \
-            'match the main repository whenever there is an update.' \
-            'Click the link below to be taken to log in with github to authorize Modmail.'
-        )
-        em.set_thumbnail(url='https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png')
-
-        em.add_field(name='Login', value=f'[Click Here]({oauth_url})', inline=False)
-        em.add_field(name='Warning', value='Dont share this link as it contains sensitive information.')
-        await ctx.send('Check your direct messages.')
-        await ctx.author.send(embed=em)
-    
-    @github.command(name='logout')
-    @owner_only()
-    @trigger_typing
-    async def _logout(self, ctx):
-        client = ModmailApiClient(self)
-        data = await client.logout()
-
-        em = discord.Embed(
-            color=discord.Color.green(),
-            title='Logged out',
-            description='No longer logged into '
-            )
-
-        if data['error']:
-            em.color = discord.Color.red()
-            em.title = 'Error'
-            em.description = 'You are not logged in already.'
-        else:
-            user = data['user']
-            em.description += user['username']
-            em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-            em.set_thumbnail(url=user['avatar_url'])
-        
+        user = data['user']
+        em.color = discord.Color.green()
+        em.description = f"Current user."
+        em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+        em.set_thumbnail(url=user['avatar_url'])
         await ctx.send(embed=em)
+
     
     @commands.command()
     @owner_only()
+    @modmail_api_token_required
     @trigger_typing
     async def update(self, ctx):
         '''Updates the bot, this only works with heroku users.'''
@@ -471,21 +427,19 @@ class Modmail(commands.Bot):
                 color=discord.Color.green()
         )
 
+        if not client.token:
+            em.title = 'Unauthorised'
+            em.description = f"You haven't logged in with github yet. Please get your api token from https://dashboard.modmail.tk"
+            em.color = discord.Color.red()
+            return await ctx.send(embed=em)
+
         if metadata['latest_version'] == __version__:
             data = await client.get_user_info()
             if not data['error']:
                 user = data['user']
                 em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-
-        if metadata['latest_version'] != __version__:
+        else:
             data = await client.update_repository()
-
-            if data['error']:
-                prefix = self.config.get('PREFIX', 'm.')
-                em.title = 'Unauthorised'
-                em.description = f"You haven't logged in with github yet. Type the command `{prefix}github login` to authorize this bot."
-                em.color = discord.Color.red()
-                return await ctx.send(embed=em)
 
             commit_data = data['data']
             user = data['user']
@@ -660,7 +614,7 @@ class Modmail(commands.Bot):
             if role.permissions.manage_guild:
                 yield role
 
-    def format_info(self, user, description=None):
+    def format_info(self, user, description, log_url):
         '''Get information about a member of a server
         supports users from the guild or not.'''
         server = self.guild
@@ -668,6 +622,7 @@ class Modmail(commands.Bot):
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
         desc = description or f'{user.mention} has started a thread.'
+        desc += f'\nLog URL: {log_url}'
         color = discord.Color.blurple()
 
         if member:
@@ -829,16 +784,19 @@ class Modmail(commands.Bot):
             if channel.category is archives: # thread appears to be closed 
                 if creator: await user.send(embed=em)
                 await channel.edit(category=categ)
+                log_url = await client.get_log_url(user, channel)
                 info_description = info_description or f'{user.mention} has reopened this thread.'
-                await channel.send(mention, embed=self.format_info(user, info_description))
+                await channel.send(mention, embed=self.format_info(user, info_description, log_url))
         else:
+            client = ModmailApiClient(self)
             await user.send(embed=em)
             channel = await guild.create_text_channel(
                 name=self.format_name(user, guild.text_channels),
                 category=categ
-                )
+            )
+            log_url = await client.get_log_url(user, channel)
             await channel.edit(topic=topic)
-            await channel.send(mention, embed=self.format_info(user, info_description))
+            await channel.send(mention, embed=self.format_info(user, info_description, log_url))
         
         return channel
 
