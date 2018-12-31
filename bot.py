@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.5.2'
+__version__ = '1.5.3'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
@@ -206,6 +206,8 @@ class Modmail(commands.Bot):
             em.title = f'`{prefix}{ctx.command.signature}`'
             em.description = ctx.command.help
             await ctx.send(embed=em)
+        else:
+            raise error
 
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
@@ -280,7 +282,7 @@ class Modmail(commands.Bot):
                 "version": __version__
             }
 
-            await self.session.post('https://api.kybr.tk/modmail', json=data)
+            await self.session.post('https://api.modmail.tk/metadata', json=data)
 
             await asyncio.sleep(3600)
 
@@ -341,7 +343,7 @@ class Modmail(commands.Bot):
                          'easily communicate with server leadership in an organised manner.'
 
         try:
-            async with self.session.get('https://api.kybr.tk/modmail') as resp:
+            async with self.session.get('https://api.modmail.tk/metadata') as resp:
                 meta = await resp.json()
         except:
             meta = None
@@ -916,6 +918,9 @@ class Modmail(commands.Bot):
             reopen = True
             if not user:
                 return await ctx.send('This user does not share any servers with the bot and is thus unreachable.')
+        
+        if not user:
+            raise commands.UserInputError('user must be provided')
 
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
         channel = await self.find_or_create_thread(user, creator=ctx.author, reopen=reopen)
