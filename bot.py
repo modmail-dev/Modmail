@@ -410,7 +410,7 @@ class Modmail(commands.Bot):
         client = ModmailApiClient(self)
 
         oauth_url = 'https://github.com/login/oauth/authorize?client_id' \
-                    '=e54e4ff0f234ee9f22aa&scope=public_repo&redirect_uri=' \
+                    '=bcff71fd67581b703408&scope=public_repo&redirect_uri=' \
                     'https://api.kybr.tk/modmail/github/callback' \
                    f'?token={client.token}'
 
