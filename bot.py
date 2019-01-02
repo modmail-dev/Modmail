@@ -22,11 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-__version__ = '1.5.0'
+__version__ = '1.5.3'
 
 from contextlib import redirect_stdout
 from urllib.parse import urlparse
 from copy import deepcopy
+import functools
 import asyncio
 import textwrap
 import traceback
@@ -39,6 +40,10 @@ import os
 import re
 import io
 
+from colorama import init, Fore, Back, Style
+
+init()
+
 from discord.ext import commands
 import discord
 import aiohttp
@@ -46,6 +51,9 @@ import aiohttp
 from utils.paginator import PaginatorSession
 from utils.api import Github, ModmailApiClient
 
+
+
+line = Fore.RED + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
 
 class Modmail(commands.Bot):
 
@@ -58,14 +66,25 @@ class Modmail(commands.Bot):
     def _add_commands(self):
         '''Adds commands automatically'''
         self.remove_command('help')
+        print(line)
+        print(Fore.YELLOW + '┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬',
+              '││││ │ │││││├─┤││',
+              '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
+        print(f'v{__version__}')
+        print('Author: kyb3r' + Style.RESET_ALL)
         for attr in dir(self):
             cmd = getattr(self, attr)
             if isinstance(cmd, commands.Command):
                 self.add_command(cmd)
+
     @property
     def config(self):
-        with open('config.json') as f:
-            config = json.load(f)
+        try:
+            with open('config.json') as f:
+                config = json.load(f)
+        except FileNotFoundError:
+            print('config.json not found, falling back to env vars.')
+            config = {}
         config.update(os.environ)
         return config
     
@@ -87,17 +106,28 @@ class Modmail(commands.Bot):
         '''Returns the prefix.'''
         p = bot.config.get('PREFIX') or 'm.'
         return [p, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
+    
+    def owner_only():
+        async def predicate(ctx):
+            allowed = [int(x) for x in ctx.bot.config.get('OWNERS', '0').split(',')]
+            return ctx.author.id in allowed
+        return commands.check(predicate)
+    
+    def trigger_typing(func):
+        @functools.wraps(func)
+        async def wrapper(self, ctx, *args, **kwargs):
+            await ctx.trigger_typing()
+            return await func(self, ctx, *args, **kwargs)
+        return wrapper
 
     async def on_connect(self):
-        print('---------------')
-        print('Modmail connected!')
+        print(line)
+        print(Fore.YELLOW + 'Connected to gateway.')
+        
         self.session = aiohttp.ClientSession()
         status = os.getenv('STATUS') or self.config.get('STATUS')
         if status:
-            print(f'Setting Status to {status}')
             await self.change_presence(activity=discord.Game(status))
-        else:
-            print('No status set.')
 
     @property
     def guild_id(self):
@@ -111,15 +141,14 @@ class Modmail(commands.Bot):
     async def on_ready(self):
         '''Bot startup, sets uptime.'''
         print(textwrap.dedent(f'''
-        ---------------
-        Client is ready!
-        ---------------
-        Author: kyb3r
-        ---------------
-        Logged in as: {self.user}
-        User ID: {self.user.id}
-        ---------------
-        '''))
+        {line}
+        {Fore.YELLOW}Client ready.
+        {line}
+        {Fore.YELLOW}Logged in as: {self.user}
+        {Fore.YELLOW}User ID: {self.user.id}
+        {Fore.YELLOW}Guild ID: {self.guild.id if self.guild else 0}
+        {line}
+        ''').strip())
 
     async def on_message(self, message):
         if message.author.bot:
@@ -135,14 +164,6 @@ class Modmail(commands.Bot):
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
                 
         await self.process_commands(message)
-
-    async def process_commands(self, message):
-        if message.author.bot:
-            return
-        ctx = await self.get_context(message)
-        if ctx.command is not None:
-            await ctx.trigger_typing()
-        await self.invoke(ctx)
     
     async def on_message_delete(self, message):
         '''Support for deleting linked messages'''
@@ -159,10 +180,34 @@ class Modmail(commands.Bot):
                 message_id = matches[0]
 
                 async for msg in channel.history():
-                    if msg.embeds:
-                        if f'Moderator - {message_id}' == msg.embeds[0].footer.text:
-                            await msg.delete()
-                            break
+                    if msg.embeds and f'Moderator - {message_id}' in msg.embeds[0].footer.text:
+                        await msg.delete()
+                        break
+    
+    async def on_message_edit(self, before, after):
+        if before.author.bot:
+            return
+        if isinstance(before.channel, discord.DMChannel):
+            channel = await self.find_or_create_thread(before.author)
+            async for msg in channel.history():
+                if msg.embeds:
+                    embed = msg.embeds[0]
+                    if f'User - {before.id}' in embed.footer.text:
+                        if ' - (Edited)' not in embed.footer.text:
+                            embed.set_footer(text=embed.footer.text + ' - (Edited)')
+                        embed.description = after.content
+                        await msg.edit(embed=embed)
+                        break
+    
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, (commands.MissingRequiredArgument, commands.UserInputError)):
+            prefix = self.config.get('PREFIX', 'm.')
+            em = discord.Embed(color=discord.Color.green())
+            em.title = f'`{prefix}{ctx.command.signature}`'
+            em.description = ctx.command.help
+            await ctx.send(embed=em)
+        else:
+            raise error
 
     def overwrites(self, ctx, modrole=None):
         '''Permision overwrites for the guild.'''
@@ -187,6 +232,7 @@ class Modmail(commands.Bot):
                f'`{prefix}about` - Shows general information about the bot.\n' \
                f'`{prefix}contact` - Allows a moderator to initiate a thread with a given recipient.\n' \
                f'`{prefix}reply` - Sends a message to the current thread\'s recipient.\n' \
+               f'`{prefix}edit` - Edit a message sent by the reply command.\n' \
                f'`{prefix}close` - Closes the current thread and deletes the channel.\n' \
                f'`{prefix}archive` - Closes the thread and moves the channel to archive category.\n' \
                f'`{prefix}block` - Blocks a user from using modmail.\n' \
@@ -236,7 +282,7 @@ class Modmail(commands.Bot):
                 "version": __version__
             }
 
-            await self.session.post('https://api.kybr.tk/modmail', json=data)
+            await self.session.post('https://api.modmail.tk/metadata', json=data)
 
             await asyncio.sleep(3600)
 
@@ -247,7 +293,7 @@ class Modmail(commands.Bot):
 
             short_sha = commit['sha'][:6]
             html_url = commit['html_url']
-            message = commit['commit']['message']
+            message = commit['commit']['message'].splitlines()[0]
             author_name = commit['author']['login']
 
             latest_commits += f'[`{short_sha}`]({html_url}) {message} - {author_name}\n'
@@ -269,7 +315,9 @@ class Modmail(commands.Bot):
         return fmt.format(d=days, h=hours, m=minutes, s=seconds)
 
     @commands.command()
+    @trigger_typing
     async def help(self, ctx):
+        '''Shows the help message'''
         prefix = self.config.get('PREFIX', 'm.')
 
         em1 = self.help_embed(prefix)
@@ -283,7 +331,9 @@ class Modmail(commands.Bot):
         await session.run()
     
     @commands.command()
+    @trigger_typing
     async def about(self, ctx):
+        '''Shows information about the bot.'''
         em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
         em.set_author(name='Mod Mail - Information', icon_url=self.user.avatar_url)
         em.set_thumbnail(url=self.user.avatar_url)
@@ -293,7 +343,7 @@ class Modmail(commands.Bot):
                          'easily communicate with server leadership in an organised manner.'
 
         try:
-            async with self.session.get('https://api.kybr.tk/modmail') as resp:
+            async with self.session.get('https://api.modmail.tk/metadata') as resp:
                 meta = await resp.json()
         except:
             meta = None
@@ -325,6 +375,8 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
     
     @commands.group(invoke_without_subcommand=True)
+    @owner_only()
+    @trigger_typing
     async def github(self, ctx):
         if ctx.invoked_subcommand:
             return
@@ -352,11 +404,13 @@ class Modmail(commands.Bot):
             await ctx.send(embed=em)
     
     @github.command(name='login')
+    @owner_only()
+    @trigger_typing
     async def _login(self, ctx):
         client = ModmailApiClient(self)
 
         oauth_url = 'https://github.com/login/oauth/authorize?client_id' \
-                    '=e54e4ff0f234ee9f22aa&scope=public_repo&redirect_uri=' \
+                    '=bcff71fd67581b703408&scope=public_repo&redirect_uri=' \
                     'https://api.kybr.tk/modmail/github/callback' \
                    f'?token={client.token}'
 
@@ -377,6 +431,8 @@ class Modmail(commands.Bot):
         await ctx.author.send(embed=em)
     
     @github.command(name='logout')
+    @owner_only()
+    @trigger_typing
     async def _logout(self, ctx):
         client = ModmailApiClient(self)
         data = await client.logout()
@@ -384,23 +440,26 @@ class Modmail(commands.Bot):
         em = discord.Embed(
             color=discord.Color.green(),
             title='Logged out',
-            description='Successfully logged out.'
+            description='No longer logged into '
             )
 
         if data['error']:
             em.color = discord.Color.red()
             em.title = 'Error'
             em.description = 'You are not logged in already.'
+        else:
+            user = data['user']
+            em.description += user['username']
+            em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+            em.set_thumbnail(url=user['avatar_url'])
         
         await ctx.send(embed=em)
     
     @commands.command()
+    @owner_only()
+    @trigger_typing
     async def update(self, ctx):
         '''Updates the bot, this only works with heroku users.'''
-        allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
-
-        if ctx.author.id not in allowed:
-            return
 
         client = ModmailApiClient(self)
 
@@ -448,6 +507,7 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(administrator=True)
     async def setup(self, ctx, *, modrole: discord.Role=None):
         '''Sets up a server for modmail'''
@@ -497,6 +557,7 @@ class Modmail(commands.Bot):
         await session.run()
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(administrator=True)
     async def disable(self, ctx, delete_archives: bool=False):
         '''Close all threads and disable modmail.'''
@@ -543,6 +604,7 @@ class Modmail(commands.Bot):
         await ctx.channel.delete()
     
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def archive(self, ctx):
         '''
@@ -582,6 +644,7 @@ class Modmail(commands.Bot):
         await ctx.message.delete()
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(administrator=True)
     async def ping(self, ctx):
         """Pong! Returns your websocket latency."""
@@ -671,7 +734,7 @@ class Modmail(commands.Bot):
         else:
             em.color=discord.Color.gold()
             em.set_author(name=str(author), icon_url=author.avatar_url)
-            em.set_footer(text='User')
+            em.set_footer(text=f'User - {message.id}')
 
         await channel.trigger_typing()
         await channel.send(embed=em)
@@ -685,6 +748,8 @@ class Modmail(commands.Bot):
     async def process_reply(self, message, user_id=None):
         user_id = user_id or int(re.findall(r'\d+', message.channel.topic)[0])
         user = self.get_user(user_id)
+        if not message.content and not message.attachments:
+            raise commands.UserInputError('msg is required argument.')
         if not user:
             return await message.channel.send('This user does not share any servers with the bot and is thus unreachable.')
         await asyncio.gather(
@@ -729,11 +794,11 @@ class Modmail(commands.Bot):
         if str(message.author.id) in blocked:
             await message.author.send(embed=self.blocked_em)
         else:
-            channel = await self.create_thread(message.author)
+            channel = await self.find_or_create_thread(message.author)
             await self.send_mail(message, channel, from_mod=False)
             
 
-    async def create_thread(self, user, *, creator=None, reopen=False):
+    async def find_or_create_thread(self, user, *, creator=None, reopen=False):
 
         guild = self.guild
         topic = f'User ID: {user.id}'
@@ -761,9 +826,8 @@ class Modmail(commands.Bot):
 
 
         if channel is not None:
-            if channel.category is archives:
-                if creator: # thread appears to be closed 
-                    await user.send(embed=em)
+            if channel.category is archives: # thread appears to be closed 
+                if creator: await user.send(embed=em)
                 await channel.edit(category=categ)
                 info_description = info_description or f'{user.mention} has reopened this thread.'
                 await channel.send(mention, embed=self.format_info(user, info_description))
@@ -787,8 +851,12 @@ class Modmail(commands.Bot):
                     return int(matches[0])
 
     @commands.command()
+    @trigger_typing
     async def reply(self, ctx, *, msg=''):
-        '''Reply to users using this command.'''
+        '''Reply to users using this command.
+        
+        Supports attachments and images as well as automatically embedding image_urls.
+        '''
         ctx.message.content = msg
 
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
@@ -799,8 +867,44 @@ class Modmail(commands.Bot):
                 user_id = await self.find_user_id_from_channel(ctx.channel)
                 if user_id:
                     await self.process_reply(ctx.message, user_id=user_id)
+
+    async def _edit_thread_message(self, channel, message_id, message):
+        async for msg in channel.history():
+            if msg.embeds:
+                embed = msg.embeds[0]
+                if f'Moderator - {message_id}' in embed.footer.text:
+                    if ' - (Edited)' not in embed.footer.text:
+                            embed.set_footer(text=embed.footer.text + ' - (Edited)')
+                    embed.description = message
+                    await msg.edit(embed=embed)
+                    break
+    
+    def edit_thread_message(self, user, channel, message_id, message):
+        return asyncio.gather(
+            self._edit_thread_message(user, message_id, message),
+            self._edit_thread_message(channel, message_id, message)
+        )
     
     @commands.command()
+    async def edit(self, ctx, message_id: int, *, new_message):
+        '''Edit a message that was sent using the reply command.
+        
+        `<message_id>` is the id shown in the footer of thread messages.
+        `<new_message>` is the new message that will be edited in.
+        '''
+        categ = ctx.channel.category
+        if categ and categ.name in 'Mod Mail Archives':
+            if ctx.channel.topic and 'User ID:' in ctx.channel.topic:
+                user = self.get_user(int(re.findall(r'\d+', ctx.channel.topic)[0]))
+                await self.edit_thread_message(user, ctx.channel, message_id, new_message)
+            if not ctx.channel.topic:
+                user_id = await self.find_user_id_from_channel(ctx.channel)
+                if user_id:
+                    user = self.get_user(user_id)
+                    await self.edit_thread_message(user, ctx.channel, message_id, new_message)
+    
+    @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def contact(self, ctx, *, user: discord.Member=None):
         '''Create a thread with a specified member.'''
@@ -814,9 +918,12 @@ class Modmail(commands.Bot):
             reopen = True
             if not user:
                 return await ctx.send('This user does not share any servers with the bot and is thus unreachable.')
+        
+        if not user:
+            raise commands.UserInputError('user must be provided')
 
         categ = discord.utils.get(ctx.guild.categories, id=ctx.channel.category_id)
-        channel = await self.create_thread(user, creator=ctx.author, reopen=reopen)
+        channel = await self.find_or_create_thread(user, creator=ctx.author, reopen=reopen)
         
         if channel is not ctx.channel:
             em = discord.Embed(title='Thread reopened' if reopen else 'Created thread')
@@ -837,8 +944,9 @@ class Modmail(commands.Bot):
         em.color = discord.Color.green()
         em.set_footer(text='Note: this change is temporary.')
         await ctx.send(embed=em)
-    
+
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         '''Returns a list of blocked users'''
@@ -872,6 +980,7 @@ class Modmail(commands.Bot):
         await ctx.send(embed=em)
         
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def block(self, ctx, id=None):
         '''Block a user from using modmail.'''
@@ -907,6 +1016,7 @@ class Modmail(commands.Bot):
             await ctx.send(embed=em)
 
     @commands.command()
+    @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def unblock(self, ctx, id=None):
         '''Unblocks a user from using modmail.'''
@@ -942,12 +1052,9 @@ class Modmail(commands.Bot):
             await ctx.send(embed=em)
 
     @commands.command(hidden=True, name='eval')
+    @owner_only()
     async def _eval(self, ctx, *, body: str):
         """Evaluates python code"""
-        allowed = [int(x) for x in self.config.get('OWNERS', '').split(',')]
-
-        if ctx.author.id not in allowed: 
-            return
         
         env = {
             'bot': self,
