@@ -1,0 +1,375 @@
+import discord
+from discord.ext import commands
+import traceback
+import inspect
+import io
+import textwrap
+from contextlib import redirect_stdout
+from difflib import get_close_matches
+
+from core.paginator import PaginatorSession
+from core.decorators import auth_required, owner_only, trigger_typing
+
+class Utility:
+    '''General commands that provide utility'''
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    def format_cog_help(self, ctx, cog):
+        """Formats the text for a cog help"""
+        sigs = []
+        prefix = self.bot.config.get('PREFIX', 'm.')
+
+        for cmd in self.bot.commands:
+            if cmd.hidden:
+                continue
+            if cmd.instance is cog:
+                sigs.append(len(cmd.qualified_name) + len(prefix))
+                if hasattr(cmd, 'all_commands'):
+                    for c in cmd.all_commands.values():
+                        sigs.append(len('\u200b  └─ ' + c.name) + 1)
+
+        if not sigs:
+            return
+
+        maxlen = max(sigs)
+
+        fmt = ['']
+        index = 0
+        for cmd in self.bot.commands:
+            if cmd.instance is cog:
+                if cmd.hidden:
+                    continue
+                if len(fmt[index] + f'`{prefix+cmd.qualified_name:<{maxlen}}` - ' + f'{cmd.short_doc:<{maxlen}}\n') > 1024:
+                    index += 1
+                    fmt.append('')
+                fmt[index] += f'`{prefix+cmd.qualified_name:<{maxlen}}` - '
+                fmt[index] += f'{cmd.short_doc:<{maxlen}}\n'
+                if hasattr(cmd, 'commands'):
+                    for c in cmd.commands:
+                        branch = '\u200b  └─ ' + c.name
+                        if len(fmt[index] + f"`{branch:<{maxlen+1}}` - " + f"{c.short_doc:<{maxlen}}\n") > 1024:
+                            index += 1
+                            fmt.append('')
+                        fmt[index] += f"`{branch:<{maxlen+1}}` - "
+                        fmt[index] += f"{c.short_doc:<{maxlen}}\n"
+
+        em = discord.Embed(
+            description='*' + inspect.getdoc(cog) + '*',
+            color=discord.Colour.green()
+        )
+        em.set_author(name=cog.__class__.__name__ + ' - Help', icon_url=ctx.bot.user.avatar_url)
+
+        for n, i in enumerate(fmt):
+            if n == 0:
+                em.add_field(name='Commands', value=i)
+            else:
+                em.add_field(name=u'\u200b', value=i)
+
+        em.set_footer(text=f'Type {prefix}command for more info on a command.')
+        return em
+
+    def format_command_help(self, ctx, cmd):
+        '''Formats command help.'''
+        prefix = self.bot.config.get('PREFIX', 'm.')
+        em = discord.Embed(
+            color=discord.Color.green(),
+            description=cmd.help
+        )
+
+        if hasattr(cmd, 'invoke_without_command') and cmd.invoke_without_command:
+            em.title = f'`Usage: {prefix}{cmd.signature}`'
+        else:
+            em.title = f'`{prefix}{cmd.signature}`'
+
+        if not hasattr(cmd, 'commands'):
+            return em
+
+        maxlen = max(len(prefix + str(c)) for c in cmd.commands)
+        fmt = ''
+
+        for i, c in enumerate(cmd.commands):
+            if len(cmd.commands) == i + 1:  # last
+                branch = '└─ ' + c.name
+            else:
+                branch = '├─ ' + c.name
+            fmt += f"`{branch:<{maxlen+1}}` - "
+            fmt += f"{c.short_doc:<{maxlen}}\n"
+
+        em.add_field(name='Subcommands', value=fmt)
+        em.set_footer(text=f'Type {prefix}help {cmd} command for more info on a command.')
+
+        return em
+
+    def format_not_found(self, ctx, command):
+        prefix = ctx.prefix
+        em = discord.Embed()
+        em.title = 'Could not find a cog or command by that name.'
+        em.color = discord.Color.green()
+        em.set_footer(text=f'Type {prefix}help to get a full list of commands.')
+        cogs = get_close_matches(command, self.bot.cogs.keys())
+        cmds = get_close_matches(command, self.bot.all_commands.keys())
+        if cogs or cmds:
+            em.description = 'Did you mean...'
+        if cogs:
+            em.add_field(name='Cogs', value='\n'.join(f'`{x}`' for x in cogs))
+        if cmds:
+            em.add_field(name='Commands', value='\n'.join(f'`{x}`' for x in cmds))
+        return em
+
+    @commands.command()
+    async def help(self, ctx, *, command: str=None):
+        """Shows the help message."""
+
+        await ctx.trigger_typing()
+
+        if command is not None:
+            cog = self.bot.cogs.get(command)
+            cmd = self.bot.get_command(command)
+            if cog is not None:
+                em = self.format_cog_help(ctx, cog)
+            elif cmd is not None:
+                em = self.format_command_help(ctx, cmd)
+            else:
+                em = self.format_not_found(ctx, command)
+            if em:
+                return await ctx.send(embed=em)
+
+        pages = []
+
+        prefix = self.bot.config.get('PREFIX', 'm.')
+
+        for _, cog in sorted(self.bot.cogs.items()):
+            em = self.format_cog_help(ctx, cog)
+            if em:
+                pages.append(em)
+
+        p_session = PaginatorSession(ctx, *pages)
+
+        await p_session.run()
+
+    @commands.command()
+    @trigger_typing
+    async def about(self, ctx):
+        '''Shows information about the bot.'''
+        em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
+        em.set_author(name='Mod Mail - Information', icon_url=self.bot.user.avatar_url)
+        em.set_thumbnail(url=self.bot.user.avatar_url)
+
+        em.description = 'This is an open source discord bot made by kyb3r and '\
+                         'improved upon suggestions by the users! This bot serves as a means for members to '\
+                         'easily communicate with server leadership in an organised manner.'
+
+        try:
+            async with self.bot.session.get('https://api.modmail.tk/metadata') as resp:
+                meta = await resp.json()
+        except:
+            meta = None
+
+        em.add_field(name='Uptime', value=self.bot.uptime)
+        if meta:
+            em.add_field(name='Instances', value=meta['instances'])
+        else:
+            em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
+        
+
+        em.add_field(name='Version', value=f'[`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
+        em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
+
+        em.add_field(name='Latest Updates', value=await self.bot.get_latest_updates())
+        
+        footer = f'Bot ID: {self.bot.user.id}'
+        
+        if meta:
+            if __version__ != meta['latest_version']:
+                footer = f"A newer version is available v{meta['latest_version']}"
+            else:
+                footer = 'You are up to date with the latest version.'
+        
+        em.add_field(name='Github', value='https://github.com/kyb3r/modmail', inline=False)
+
+        em.set_footer(text=footer)
+
+        await ctx.send(embed=em)
+    
+    @commands.command()
+    @owner_only()
+    @auth_required
+    @trigger_typing
+    async def github(self, ctx):
+        '''Shows the github user your access token is linked to.'''
+        if ctx.invoked_subcommand:
+            return
+
+        data = await self.bot.modmail_api.get_user_info()
+        print(data)
+
+        prefix = self.bot.config.get('PREFIX', 'm.')
+
+        em = discord.Embed(title='Github')
+
+        user = data['user']
+        em.color = discord.Color.green()
+        em.description = f"Current user."
+        em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+        em.set_thumbnail(url=user['avatar_url'])
+        await ctx.send(embed=em)
+
+    
+    @commands.command()
+    @owner_only()
+    @auth_required
+    @trigger_typing
+    async def update(self, ctx):
+        '''Updates the bot, this only works with heroku users.'''
+        metadata = await self.bot.modmail_api.get_metadata()
+
+        em = discord.Embed(
+                title='Already up to date',
+                description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
+                color=discord.Color.green()
+        )
+
+        if metadata['latest_version'] == __version__:
+            data = await self.bot.modmail_api.get_user_info()
+            if not data['error']:
+                user = data['user']
+                em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+        else:
+            data = await self.bot.modmail_api.update_repository()
+
+            commit_data = data['data']
+            user = data['user']
+            em.title = 'Success'
+            em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+            em.set_footer(text=f"Updating modmail v{__version__} -> v{metadata['latest_version']}")  
+
+            if commit_data:
+                em.description = 'Bot successfully updated, the bot will restart momentarily'
+                message = commit_data['commit']['message']
+                html_url = commit_data["html_url"]
+                short_sha = commit_data['sha'][:6]
+                em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
+            else:
+                em.description = 'Already up to date with master repository.'
+
+        em.add_field(name='Latest Commit', value=await self.bot.get_latest_updates(limit=1), inline=False)
+
+        await ctx.send(embed=em)
+
+    @commands.command(name="status", aliases=['customstatus', 'presence'])
+    @commands.has_permissions(administrator=True)
+    async def _status(self, ctx, *, message):
+        '''Set a custom playing status for the bot.'''
+        if message == 'clear':
+            return await self.bot.change_presence(activity=None)
+        await self.bot.change_presence(activity=discord.Game(message))
+        em = discord.Embed(title='Status Changed')
+        em.description = message
+        em.color = discord.Color.green()
+        em.set_footer(text='Note: this change is temporary.')
+        await ctx.send(embed=em)
+
+    @commands.command()
+    @trigger_typing
+    @commands.has_permissions(administrator=True)
+    async def ping(self, ctx):
+        """Pong! Returns your websocket latency."""
+        em = discord.Embed()
+        em.title ='Pong! Websocket Latency:'
+        em.description = f'{self.bot.ws.latency * 1000:.4f} ms'
+        em.color = 0x00FF00
+        await ctx.send(embed=em)
+
+    @commands.command(hidden=True, name='eval')
+    @owner_only()
+    async def _eval(self, ctx, *, body):
+        """Evaluates python code"""
+        env = {
+            'ctx': ctx,
+            'bot': self.bot,
+            'channel': ctx.channel,
+            'author': ctx.author,
+            'guild': ctx.guild,
+            'message': ctx.message,
+            'source': inspect.getsource,
+        }
+
+        env.update(globals())
+
+        def cleanup_code(content):
+            """Automatically removes code blocks from the code."""
+            # remove ```py\n```
+            if content.startswith('```') and content.endswith('```'):
+                return '\n'.join(content.split('\n')[1:-1])
+
+            # remove `foo`
+            return content.strip('` \n')
+
+        body = cleanup_code(body)
+        stdout = io.StringIO()
+        err = out = None
+
+        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
+
+        def paginate(text: str):
+            '''Simple generator that paginates text.'''
+            last = 0
+            pages = []
+            for curr in range(0, len(text)):
+                if curr % 1980 == 0:
+                    pages.append(text[last:curr])
+                    last = curr
+                    appd_index = curr
+            if appd_index != len(text) - 1:
+                pages.append(text[last:curr])
+            return list(filter(lambda a: a != '', pages))
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            err = await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+            return await ctx.message.add_reaction('\u2049')
+
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            err = await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        else:
+            value = stdout.getvalue()
+            if ret is None:
+                if value:
+                    try:
+                        out = await ctx.send(f'```py\n{value}\n```')
+                    except:
+                        paginated_text = paginate(value)
+                        for page in paginated_text:
+                            if page == paginated_text[-1]:
+                                out = await ctx.send(f'```py\n{page}\n```')
+                                break
+                            await ctx.send(f'```py\n{page}\n```')
+            else:
+                try:
+                    out = await ctx.send(f'```py\n{value}{ret}\n```')
+                except:
+                    paginated_text = paginate(f"{value}{ret}")
+                    for page in paginated_text:
+                        if page == paginated_text[-1]:
+                            out = await ctx.send(f'```py\n{page}\n```')
+                            break
+                        await ctx.send(f'```py\n{page}\n```')
+
+        if out:
+            await ctx.message.add_reaction('\u2705')  # tick
+        elif err:
+            await ctx.message.add_reaction('\u2049')  # x
+        else:
+            await ctx.message.add_reaction('\u2705')
+
+
+def setup(bot):
+    bot.add_cog(Utility(bot))
