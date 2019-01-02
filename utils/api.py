@@ -28,7 +28,7 @@ class Github(ApiClient):
 
 class ModmailApiClient(ApiClient):
 
-    base = 'http://api.example.com'
+    base = 'https://api.modmail.tk'
     github = base + '/github'
     logs = base + '/logs'
 
