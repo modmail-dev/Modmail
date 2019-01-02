@@ -654,7 +654,6 @@ class Modmail(commands.Bot):
             await message.author.send(embed=self.blocked_em)
         else:
             thread = await self.threads.find_or_create(message.author)
-            await thread.wait_until_ready()
             await thread.send(message)
     
     @commands.command()

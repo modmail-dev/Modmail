@@ -100,7 +100,7 @@ class Thread:
             em.set_author(name=str(author), icon_url=author.avatar_url)
             em.set_footer(text=f'User - {message.id}')
 
-
+        await self.wait_until_ready()
         await destination.trigger_typing()
         await destination.send(embed=em)
 
