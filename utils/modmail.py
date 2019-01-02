@@ -13,6 +13,9 @@ class Thread:
         self.channel = None
         self.ready_event = asyncio.Event()
     
+    def __repr__(self):
+        return f'Thread(recipient="{self.recipient}", channel={self.channel.id})'
+    
     def wait_until_ready(self):
         '''Blocks execution until the thread is fully set up.'''
         return self.ready_event.wait()
@@ -121,6 +124,10 @@ class ThreadManager:
     def __getitem__(self, item):
         return self.cache[item]
 
+    async def populate_cache(self):
+        for channel in self.bot.guild.text_channels:
+            await self.find(channel=channel)
+
     async def find(self, *, recipient=None, channel=None):
         '''Finds a thread from cache or from discord channel topics.'''
         if recipient is None and channel is not None:
@@ -151,7 +158,7 @@ class ThreadManager:
 
         if channel.topic and 'User ID: ' in channel.topic:
             user_id = int(re.findall(r'\d+', channel.topic)[0])
-        elif channel.topic is None:
+        elif channel.topic is None and channel.category.name == 'Mod Mail':
             async for message in channel.history():
                 if message.embeds:
                     em = message.embeds[0]
@@ -204,7 +211,7 @@ class ThreadManager:
         info_embed = self.bot.format_info(recipient, creator, log_url, log_count)
 
         topic = f'User ID: {recipient.id}'
-        mention = self.bot.config.get('MENTION', '@here')
+        mention = self.bot.config.get('MENTION', '@here') if not creator else None
 
         await asyncio.gather(
             channel.edit(topic=topic), 

@@ -175,6 +175,8 @@ class Modmail(commands.Bot):
         {Fore.YELLOW}Guild ID: {self.guild.id if self.guild else 0}
         {line}
         ''').strip())
+        
+        await self.threads.populate_cache()
 
     async def on_message(self, message):
         if message.author.bot:
@@ -734,9 +736,11 @@ class Modmail(commands.Bot):
     async def contact(self, ctx, *, user: discord.Member):
         '''Create a thread with a specified member.'''
 
-        # TODO: HANDLE WHEN A THREAD ALREADY EXISTS
-
-        thread = await self.threads.create(user, creator=ctx.author)
+        exists = await self.threads.find(recipient=user)
+        if exists:
+            return await ctx.send('Thread already exists.')
+        else:
+            thread = await self.threads.create(user, creator=ctx.author)
         
         em = discord.Embed(
             title='Created thread',
