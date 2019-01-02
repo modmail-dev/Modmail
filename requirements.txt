@@ -1,3 +1,4 @@
 git+https://github.com/Rapptz/discord.py@rewrite
 colorama
 cachetools
+python-dateutil
