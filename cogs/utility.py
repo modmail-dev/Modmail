@@ -300,7 +300,7 @@ class Utility:
     @commands.has_permissions(administrator=True)
     async def mention(self, ctx, *, mention=None):
         '''Changes what the bot mentions at the start of each thread.'''
-        current = self.bot.config.get("mention", "@here")
+        current = self.bot.config.get('mention', '@here')
         em = discord.Embed(
             title='Current text',
             color=discord.Color.green(),
