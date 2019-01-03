@@ -4,6 +4,7 @@ import json
 import box
 
 class ConfigManager:
+    '''Class that manages a cached configuration'''
 
     def __init__(self, bot):
         self.bot = bot 
