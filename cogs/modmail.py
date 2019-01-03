@@ -325,7 +325,7 @@ class Modmail:
         if id is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
             if thread:
-                id = thread.recipient.id
+                id = str(thread.recipient.id)
             else:
                 raise commands.UserInputError
 
@@ -362,7 +362,7 @@ class Modmail:
         if id is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
             if thread:
-                id = thread.recipient.id
+                id = str(thread.recipient.id)
             else:
                 raise commands.UserInputError
 
