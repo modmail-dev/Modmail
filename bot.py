@@ -121,15 +121,23 @@ class ModmailBot(commands.Bot):
     @property
     def guild(self):
         return discord.utils.get(self.guilds, id=self.guild_id)
+    
+    @property
+    def modmail_guild(self):
+        modmail_guild_id = self.config.get('modmail_guild_id')
+        if not modmail_guild_id:
+            return self.guild 
+        else:
+            return discord.utils.get(self.guilds, id=int(modmail_guild_id))
 
     @property
     def main_category(self):
         if self.guild:
-            return discord.utils.get(self.guild.categories, name='Mod Mail')
+            return discord.utils.get(self.modmail_guild.categories, name='Mod Mail')
 
     @property
     def blocked_users(self):
-        if self.guild:
+        if self.modmail_guild:
             top_chan = self.main_category.channels[0]
             return [int(i) for i in re.findall(r'\d+', top_chan.topic)]
     

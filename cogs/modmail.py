@@ -20,16 +20,16 @@ class Modmail:
     async def setup(self, ctx):
         '''Sets up a server for modmail'''
         if self.bot.main_category:
-            return await ctx.send('This server is already set up.')
+            return await ctx.send(f'{self.bot.modmail_guild} is already set up.')
 
-        categ = await ctx.guild.create_category(
+        categ = await self.bot.modmail_guild.create_category(
             name='Mod Mail', 
             overwrites=self.bot.overwrites(ctx, modrole=modrole)
             )
 
         await categ.edit(position=0)
 
-        c = await ctx.guild.create_text_channel(name='thread-logs', category=categ)
+        c = await self.bot.modmail_guild.create_text_channel(name='thread-logs', category=categ)
         await c.edit(topic='Manually add user id\'s to block users.\n\n'
                            'Blocked\n-------\n\n')
 
@@ -163,11 +163,11 @@ class Modmail:
     @commands.command()
     async def nsfw(self, ctx):
         '''Flags a modmail thread as nsfw.'''
-        if ctx.channel.category and ctx.channel.category.name == 'Mod Mail':
-            await ctx.edit(nsfw=True)
-        em = discord.Embed(description=desc, color=discord.Color.green())
-        em.set_author(name='Thread closed', url=log_url)
-        await ctx.send('Done')
+        thread = self.bot.threads.find(channel=ctx.channel)
+        if thread is None:
+            return 
+        await ctx.edit(nsfw=True)
+        await ctx.message.add_reaction('✅')
     
     @commands.command()
     @trigger_typing
@@ -228,7 +228,7 @@ class Modmail:
         '''
         ctx.message.content = msg
         thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread and thread.channel.category.name == 'Mod Mail':
+        if thread:
             await thread.reply(ctx.message)
     
     @commands.command()
@@ -241,27 +241,29 @@ class Modmail:
         `<new_message>` is the new message that will be edited in.
         '''
         thread = await self.bot.threads.find(channel=ctx.channel)
-        print(message_id, new_message)
-        if thread and thread.channel.category.name == 'Mod Mail':
-            linked_message_id = None
-             
-            async for msg in ctx.channel.history():
-                if message_id is None and msg.embeds:
-                    em = msg.embeds[0]
-                    if 'Moderator' not in str(em.footer.text):
-                        continue
-                    linked_message_id = int(re.findall(r'\d+', em.author.url)[0])
-                    break 
-                elif message_id and msg.id == message_id:
-                    url = msg.embeds[0].author.url 
-                    linked_message_id = int(re.findall(r'\d+', url)[0])
-                    break
-            
-            if not linked_message_id:
-                raise commands.UserInputError
 
-            await thread.edit_message(linked_message_id, new_message)
-            await ctx.message.add_reaction('✅')
+        if thread is None:
+            return 
+
+        linked_message_id = None
+            
+        async for msg in ctx.channel.history():
+            if message_id is None and msg.embeds:
+                em = msg.embeds[0]
+                if 'Moderator' not in str(em.footer.text):
+                    continue
+                linked_message_id = int(re.findall(r'\d+', em.author.url)[0])
+                break 
+            elif message_id and msg.id == message_id:
+                url = msg.embeds[0].author.url 
+                linked_message_id = int(re.findall(r'\d+', url)[0])
+                break
+        
+        if not linked_message_id:
+            raise commands.UserInputError
+
+        await thread.edit_message(linked_message_id, new_message)
+        await ctx.message.add_reaction('✅')
 
     @commands.command()
     @trigger_typing
@@ -363,8 +365,8 @@ class Modmail:
             else:
                 raise commands.UserInputError
 
-        categ = discord.utils.get(ctx.guild.categories, name='Mod Mail')
-        top_chan = categ.channels[0] #bot-info
+        categ = self.bot.main_category
+        top_chan = categ.channels[0] #thread-logs
         topic = str(top_chan.topic)
         topic = topic.replace('\n'+id, '')
 

@@ -13,7 +13,7 @@ def trigger_typing(func):
 def auth_required(func):
     @functools.wraps(func)
     async def wrapper(self, ctx, *args, **kwargs):
-        if self.bot.config.get('MODMAIL_API_TOKEN'):
+        if self.bot.config.get('modmail_api_token'):
             return await func(self, ctx, *args, **kwargs)
         em = discord.Embed(
             color=discord.Color.red(),

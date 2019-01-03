@@ -133,7 +133,7 @@ class ThreadManager:
         self.cache = {}
 
     async def populate_cache(self):
-        for channel in self.bot.guild.text_channels:
+        for channel in self.bot.modmail_guild.text_channels:
             await self.find(channel=channel)
 
     def __len__(self):
@@ -153,7 +153,7 @@ class ThreadManager:
             thread = self.cache[recipient.id]
         except KeyError:
             channel = discord.utils.get(
-                self.bot.guild.text_channels, 
+                self.bot.modmail_guild.text_channels, 
                 topic=f'User ID: {recipient.id}'
                 )
             if not channel:
@@ -175,8 +175,8 @@ class ThreadManager:
 
         if channel.topic and 'User ID: ' in channel.topic:
             user_id = int(re.findall(r'\d+', channel.topic)[0])
-        elif channel.topic is None and channel.category.name == 'Mod Mail':
-            async for message in channel.history():
+        elif channel.topic is None:
+            async for message in channel.history(limit=50):
                 if message.embeds:
                     em = message.embeds[0]
                     matches = re.findall(r'<@(\d+)>', str(em.description))
@@ -213,7 +213,7 @@ class ThreadManager:
 
         self.cache[recipient.id] = thread = Thread(self, recipient)
 
-        channel = await self.bot.guild.create_text_channel(
+        channel = await self.bot.modmail_guild.create_text_channel(
             name=self._format_channel_name(recipient),
             category=self.bot.main_category
             )
@@ -282,7 +282,7 @@ class ThreadManager:
         allowed = string.ascii_letters + string.digits + '-'
         new_name = ''.join(l for l in name if l in allowed) or 'null'
         new_name += f'-{author.discriminator}'
-        while new_name in [c.name for c in self.bot.guild.text_channels]:
+        while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:
             new_name += '-x' # two channels with same name
         return new_name
 
