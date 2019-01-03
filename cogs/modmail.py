@@ -3,6 +3,8 @@ import discord
 from discord.ext import commands
 import datetime
 import dateutil.parser
+import re
+from typing import Optional
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
 
@@ -104,6 +106,17 @@ class Modmail:
 
         await ctx.send(embed=em)
 
+    @commands.command()
+    @commands.has_permissions(manage_channels=True)
+    async def move(self, ctx, *, category: discord.CategoryChannel):
+        '''Moves a thread to a specified cateogry.'''
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if not thread:
+            return await ctx.send('This is not a modmail thread.')
+        
+        await thread.channel.edit(category=category)
+        await ctx.message.add_reaction('✅')
+
     @commands.command(name='close')
     @commands.has_permissions(manage_channels=True)
     async def _close(self, ctx):
@@ -126,7 +139,7 @@ class Modmail:
 
         # Logging
         categ = self.bot.main_category
-        log_channel = categ.channels[1]
+        log_channel = categ.channels[0]
 
         log_data = await self.bot.modmail_api.post_log(ctx.channel.id, {
             'open': False, 'closed_at': str(datetime.datetime.utcnow()), 'closer': {
@@ -219,16 +232,35 @@ class Modmail:
             await thread.reply(ctx.message)
     
     @commands.command()
-    async def edit(self, ctx, message_id: int, *, new_message):
+    async def edit(self, ctx, message_id: Optional[int]=None, *, new_message):
         '''Edit a message that was sent using the reply command.
         
         `<message_id>` is the id shown in the footer of thread messages.
         `<new_message>` is the new message that will be edited in.
         '''
-        thread = self.bot.threads.find(channel=ctx.channel)
-        if thread and thread.category.name == 'Mod Mail':
-            await thread.edit_message(message_id, new_message)
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        print(message_id, new_message)
+        if thread and thread.channel.category.name == 'Mod Mail':
+            linked_message_id = None
+             
+            async for msg in ctx.channel.history():
+                if message_id is None and msg.embeds:
+                    em = msg.embeds[0]
+                    if 'Moderator' not in str(em.footer.text):
+                        continue
+                    linked_message_id = int(re.findall(r'\d+', em.author.url)[0])
+                    break 
+                elif message_id and msg.id == message_id:
+                    url = msg.embeds[0].author.url 
+                    linked_message_id = int(re.findall(r'\d+', url)[0])
+                    break
             
+            if not linked_message_id:
+                raise commands.UserInputError
+
+            await thread.edit_message(linked_message_id, new_message)
+            await ctx.message.add_reaction('✅')
+
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)

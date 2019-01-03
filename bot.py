@@ -25,7 +25,6 @@ SOFTWARE.
 __version__ = '2.0.0'
 
 from contextlib import redirect_stdout
-from urllib.parse import urlparse
 from copy import deepcopy
 import functools
 import asyncio
@@ -243,7 +242,7 @@ class ModmailBot(commands.Bot):
     async def on_message_delete(self, message):
         '''Support for deleting linked messages'''
         if message.embeds and not isinstance(message.channel, discord.DMChannel):
-            matches = re.findall(r'Moderator - (\d+)', str(message.embeds[0].footer.text))
+            matches = re.findall(r'\d+', str(message.embeds[0].author.url))
             if matches:
                 thread = await self.threads.find(channel=message.channel)
 
@@ -251,8 +250,10 @@ class ModmailBot(commands.Bot):
                 message_id = matches[0]
 
                 async for msg in channel.history():
-                    if msg.embeds and f'Moderator - {message_id}' in msg.embeds[0].footer.text:
-                        return await msg.delete()
+                    if msg.embeds and msg.embeds[0].author:
+                        url = msg.embeds[0].author.url 
+                        if message_id == re.findall(r'\d+', url):
+                            return await msg.delete()
     
     async def on_message_edit(self, before, after):
         if before.author.bot:
