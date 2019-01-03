@@ -25,6 +25,5 @@ def auth_required(func):
 def owner_only():
     async def predicate(ctx):
         allowed = [int(x) for x in str(ctx.bot.config.get('owners', '0')).split(',')]
-        print(allowed)
         return ctx.author.id in allowed
     return commands.check(predicate)

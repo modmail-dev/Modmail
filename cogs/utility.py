@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import datetime
 import traceback
 import inspect
 import json
@@ -11,8 +12,6 @@ from difflib import get_close_matches
 from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
 
-from prettytable import PrettyTable
-
 class Utility:
     '''General commands that provide utility'''
 
@@ -22,7 +21,7 @@ class Utility:
     def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
         sigs = []
-        prefix = self.bot.config.get('prefix', 'm.')
+        prefix = self.bot.prefix
 
         for cmd in self.bot.commands:
             if cmd.hidden:
@@ -50,8 +49,11 @@ class Utility:
                 fmt[index] += f'`{prefix+cmd.qualified_name:<{maxlen}}` - '
                 fmt[index] += f'{cmd.short_doc:<{maxlen}}\n'
                 if hasattr(cmd, 'commands'):
-                    for c in cmd.commands:
-                        branch = '\u200b  └─ ' + c.name
+                    for i, c in enumerate(cmd.commands):
+                        if len(cmd.commands) == i + 1:  # last
+                            branch = '\u200b  └─ ' + c.name
+                        else:
+                            branch = '\u200b  ├─ ' + c.name
                         if len(fmt[index] + f"`{branch:<{maxlen+1}}` - " + f"{c.short_doc:<{maxlen}}\n") > 1024:
                             index += 1
                             fmt.append('')
@@ -75,7 +77,7 @@ class Utility:
 
     def format_command_help(self, ctx, cmd):
         '''Formats command help.'''
-        prefix = self.bot.config.get('prefix', 'm.')
+        prefix = self.bot.prefix
         em = discord.Embed(
             color=discord.Color.green(),
             description=cmd.help
@@ -141,7 +143,7 @@ class Utility:
 
         pages = []
 
-        prefix = self.bot.config.get('prefix', 'm.')
+        prefix = self.bot.prefix
 
         for _, cog in sorted(self.bot.cogs.items()):
             em = self.format_cog_help(ctx, cog)
@@ -177,7 +179,7 @@ class Utility:
             em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
         
 
-        em.add_field(name='Version', value=f'[`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
+        em.add_field(name='Version', value=f'[`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
 
         em.add_field(name='Latest Updates', value=await self.bot.get_latest_updates())
@@ -185,7 +187,7 @@ class Utility:
         footer = f'Bot ID: {self.bot.user.id}'
         
         if meta:
-            if __version__ != meta['latest_version']:
+            if self.bot.version != meta['latest_version']:
                 footer = f"A newer version is available v{meta['latest_version']}"
             else:
                 footer = 'You are up to date with the latest version.'
@@ -208,7 +210,7 @@ class Utility:
         data = await self.bot.modmail_api.get_user_info()
         print(data)
 
-        prefix = self.bot.config.get('prefix', 'm.')
+        prefix = self.bot.prefix
 
         em = discord.Embed(title='Github')
 
@@ -230,11 +232,11 @@ class Utility:
 
         em = discord.Embed(
                 title='Already up to date',
-                description=f'The latest version is [`{__version__}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
+                description=f'The latest version is [`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
                 color=discord.Color.green()
         )
 
-        if metadata['latest_version'] == __version__:
+        if metadata['latest_version'] == self.bot.version:
             data = await self.bot.modmail_api.get_user_info()
             if not data['error']:
                 user = data['user']
@@ -246,7 +248,7 @@ class Utility:
             user = data['user']
             em.title = 'Success'
             em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-            em.set_footer(text=f"Updating modmail v{__version__} -> v{metadata['latest_version']}")  
+            em.set_footer(text=f"Updating modmail v{self.bot.version} -> v{metadata['latest_version']}")  
 
             if commit_data:
                 em.description = 'Bot successfully updated, the bot will restart momentarily'
@@ -264,14 +266,24 @@ class Utility:
     @commands.command(name="status", aliases=['customstatus', 'presence'])
     @commands.has_permissions(administrator=True)
     async def _status(self, ctx, *, message):
-        '''Set a custom playing status for the bot.'''
+        '''Set a custom playing status for the bot.
+        
+        Set the message to `clear` if you want to remove the playing status.
+        '''
+
         if message == 'clear':
+            self.bot.config['status'] = None
+            await self.bot.config.update()
             return await self.bot.change_presence(activity=None)
+            
+            
         await self.bot.change_presence(activity=discord.Game(message))
+        self.bot.config['status'] = message
+        await self.bot.config.update()
+
         em = discord.Embed(title='Status Changed')
         em.description = message
         em.color = discord.Color.green()
-        em.set_footer(text='Note: this change is temporary.')
         await ctx.send(embed=em)
 
     @commands.command()
@@ -285,17 +297,66 @@ class Utility:
         em.color = 0x00FF00
         await ctx.send(embed=em)
 
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def mention(self, ctx, *, mention=None):
+        '''Changes what the bot mentions at the start of each thread.'''
+        current = self.bot.config.get("mention", "@here")
+        em = discord.Embed(
+            title='Current text',
+            color=discord.Color.green(),
+            description=f'{current}'
+        )
+
+        if mention is None:
+            await ctx.send(embed=em)
+        else:
+            em.title = 'Changed mention!'
+            em.description = f'On thread creation the bot now says: {mention}'
+            self.bot.config['mention'] = mention
+            await self.bot.config.update()
+            await ctx.send(embed=em)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def prefix(self, ctx, *, prefix=None):
+        '''Changes the prefix for the bot.'''
+
+        current = self.bot.config.get("prefix", "m.")
+        em = discord.Embed(
+            title='Current prefix',
+            color=discord.Color.green(),
+            description=f'{current}'
+        )
+
+        if prefix is None:
+            await ctx.send(embed=em)
+        else:
+            em.title = 'Changed prefix!'
+            em.description = f'Set prefix to `{prefix}`'
+            self.bot.config['prefix'] = prefix 
+
+            await self.bot.config.update()
+            await ctx.send(embed=em)
+            
+
     @commands.group()
     @owner_only()
     async def config(self, ctx):
-        '''Change configuration for the bot.'''
+        '''Change configuration for the bot.
+
+        You shouldn't have to use these commands as other commands such 
+        as `prefix` and `status` should change config vars for you.
+        '''
         if ctx.invoked_subcommand is None:
             cmd = self.bot.get_command('help')
             await ctx.invoke(cmd, command='config')
      
     @config.command(name='set')
     async def _set(self, ctx, key: str.lower, *, value):
-        '''Sets a configuration variable and its value'''
+        '''
+        Sets a configuration variable and its value
+        '''
 
         em = discord.Embed(
             title='Success',
@@ -364,7 +425,76 @@ class Utility:
         await ctx.send(embed=em)
         
         
+    @commands.group(name='alias', aliases=['aliases'])
+    @commands.has_permissions(manage_messages=True)
+    async def aliases(self, ctx):
+        '''Returns a list of aliases that are currently set.'''
+        if ctx.invoked_subcommand is not None:
+            return 
 
+        embeds = []
+
+        em = discord.Embed(color=discord.Color.green())
+        em.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
+
+        embeds.append(em)
+
+        em.description = 'Here is a list of aliases that are currently configured.'
+
+        if not self.bot.aliases:
+            em.color = discord.Color.red()
+            em.description = f'You dont have any aliases at the moment.'
+            em.set_footer(text=f'Do {self.bot.prefix}help aliases for more commands.')
+        
+        for name, value in self.bot.aliases.items():
+            if len(em.fields) == 5:
+                em = discord.Embed(color=discord.Color.green(), description=em.description)
+                em.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
+                embeds.append(em)
+            em.add_field(name=name, value=value, inline=False)
+        
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
+    
+    @aliases.command(name='add')
+    async def _add(self, ctx, name: str.lower, *, value):
+        '''Add an alias to the bot config.'''
+        if 'aliases' not in self.bot.config.cache:
+            self.bot.config['aliases'] = {}
+
+        self.bot.config.aliases[name] = value
+        await self.bot.config.update()
+
+        em = discord.Embed(
+            title='Added alias',
+            color=discord.Color.green(),
+            description=f'`{name}` points to: {value}'
+        )
+
+        await ctx.send(embed=em)
+
+    @aliases.command(name='del')
+    async def __del(self, ctx, *, name: str.lower):
+        '''Removes a alias from bot config.'''
+
+        if 'aliases' not in self.bot.config.cache:
+            self.bot.config['aliases'] = {}
+
+        em = discord.Embed(
+            title='Removed alias',
+            color=discord.Color.green(),
+            description=f'`{name}` no longer exists.'
+        )
+
+        if not self.bot.config.aliases.get(name):
+            em.title = 'Error'
+            em.color = discord.Color.red()
+            em.description = f'Alias `{name}` does not exist.'
+        else:
+            self.bot.config['aliases'][name] = None
+            await self.bot.config.update()
+
+        await ctx.send(embed=em)
 
     @commands.command(hidden=True, name='eval')
     @owner_only()
@@ -447,12 +577,8 @@ class Utility:
                             break
                         await ctx.send(f'```py\n{page}\n```')
 
-        if out:
-            await ctx.message.add_reaction('\u2705')  # tick
-        elif err:
-            await ctx.message.add_reaction('\u2049')  # x
-        else:
-            await ctx.message.add_reaction('\u2705')
+        if err:
+            await ctx.message.add_reaction('\u2049')
 
 
 def setup(bot):
