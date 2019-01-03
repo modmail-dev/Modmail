@@ -87,11 +87,14 @@ Snippets are shortcuts for predefined messages that you can send. You can add sn
 ### Custom Mentions
 If you want the bot to mention a specific role instead of `@here`, you need to set a config variable `MENTION` and set the value to the mention of the role or user you want mentioned. To get the mention of a role or user, type `\@role` in chat and you will see something like `<@&515651147516608512>` use this string as the value for the config variable.
 
+### Delete Linked Messages
+Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! This also works with message edits in reverse.
+
 ### Thread Logs
 Thread conversations are automatically logged and a log link (logs.modmail.tk) is provided with each thread.
 
-### Delete Linked Messages
-Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! 
+### Automatic Updates
+The bot checks for new updates every hour and automatically updates to a newer version if found. You can disable this functionality by adding a `disable_autoupdates` config variable.
 
 ## Contributing
 This project is licenced under MIT. Feel free to contribute to the development of this bot.
