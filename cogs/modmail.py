@@ -196,9 +196,9 @@ class Modmail:
 
         fmt = ''
 
-        open_logs = [l for l in logs if not l['open']]
+        closed_logs = [l for l in logs if not l['open']]
 
-        for index, entry in enumerate(open_logs):
+        for index, entry in enumerate(closed_logs):
             if len(embeds[-1].fields) == 3:
                 em = discord.Embed(color=discord.Color.green())
                 em.set_author(name='Previous Logs', icon_url=user.avatar_url)
@@ -213,7 +213,7 @@ class Modmail:
 
             fmt += f"[`{key}`]({log_url})\n"
 
-            if current_day != new_day or index == len(logs) - 1:
+            if current_day != new_day or index == len(closed_logs) - 1:
                 embeds[-1].add_field(name=current_day, value=fmt)
                 current_day = new_day
                 fmt = ''
