@@ -291,8 +291,7 @@ class Modmail:
     @commands.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
-        em = discord.Embed(title='Blocked Users', color=discord.Color.green())
-        em.description = ''
+        em = discord.Embed(title='Blocked Users', color=discord.Color.green(), description='')
 
         users = []
         not_reachable = []
@@ -381,7 +380,7 @@ class Modmail:
             await top_chan.edit(topic=topic)
 
             em.title = 'Success'
-            em.description = f'{mention} is no longer blocked'
+            em.description = f'{mention} (`{mention.id}`) is no longer blocked'
 
             await ctx.send(embed=em)
         else:

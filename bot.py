@@ -306,8 +306,7 @@ class ModmailBot(commands.Bot):
 
     async def autoupdate_loop(self):
         while True:
-            if not self.config.get('autoupdates'):
-                print(self.config.get('autoupdates', 'none'))
+            if self.config.get('disable_autoupdates'):
                 await asyncio.sleep(3600)
                 continue
 
