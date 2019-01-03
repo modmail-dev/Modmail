@@ -46,6 +46,7 @@ import dateutil.parser
 init()
 
 from discord.ext import commands
+from discord.ext.commands.view import StringView
 import discord
 import aiohttp
 
@@ -186,6 +187,44 @@ class ModmailBot(commands.Bot):
             thread = await self.threads.find_or_create(message.author)
             await thread.send(message)
 
+    async def get_context(self, message, *, cls=commands.Context):
+        """
+        Returns the invocation context from the message.
+        Supports getting the prefix from database as well as command aliases.
+        """
+
+        view = StringView(message.content)
+        ctx = cls(prefix=None, view=view, bot=self, message=message)
+
+        if self._skip_check(message.author.id, self.user.id):
+            return ctx
+        
+
+        prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}>']
+
+        invoked_prefix = discord.utils.find(view.skip_string, prefixes)
+        if invoked_prefix is None:
+            return ctx
+
+        invoker = view.get_word().lower()
+
+        # Check if there is any aliases being called.
+        alias = self.config.get('aliases', {}).get(invoker)
+        if alias is not None:
+            ctx._alias_invoked = True
+            _len = len(f'{invoked_prefix}{invoker}')
+            ctx.view = view = StringView(f'{alias}{ctx.message.content[_len:]}')
+            invoker = view.get_word()
+
+        ctx.invoked_with = invoker
+        ctx.prefix = self.prefix # Sane prefix (No mentions)
+        ctx.command = self.all_commands.get(invoker)
+
+        # if hasattr(ctx, '_alias_invoked'):
+        #     ctx.command.checks = None # Let anyone use the command.
+
+        return ctx
+
     async def on_message(self, message):
         if message.author.bot:
             return
@@ -198,8 +237,6 @@ class ModmailBot(commands.Bot):
             cmd = message.content[len(prefix):].strip()
             if cmd in self.snippets:
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
-            if cmd in self.aliases:
-                message.content = f'{prefix}{self.aliases[cmd]}'
                 
         await self.process_commands(message)
     

@@ -440,16 +440,17 @@ class Utility:
         embeds.append(em)
 
         em.description = 'Here is a list of aliases that are currently configured.'
+        em.set_footer(text=f'Do {self.bot.prefix}help aliases for more commands.')
 
         if not self.bot.aliases:
             em.color = discord.Color.red()
             em.description = f'You dont have any aliases at the moment.'
-            em.set_footer(text=f'Do {self.bot.prefix}help aliases for more commands.')
         
         for name, value in self.bot.aliases.items():
             if len(em.fields) == 5:
                 em = discord.Embed(color=discord.Color.green(), description=em.description)
                 em.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
+                em.set_footer(text=f'Do {self.bot.prefix}help aliases for more commands.')
                 embeds.append(em)
             em.add_field(name=name, value=value, inline=False)
         
