@@ -50,7 +50,7 @@ class Thread:
                 continue
             embed = msg.embeds[0]
             if embed and embed.author:
-                if message_id == int(re.findall('\d+', embed.author.url)[0]):
+                if message_id == int(re.findall(r'\d+', embed.author.url)[0]):
                     if ' - (Edited)' not in embed.footer.text:
                         embed.set_footer(text=embed.footer.text + ' - (Edited)')
                     embed.description = message

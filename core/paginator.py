@@ -1,8 +1,6 @@
 import discord
-from discord.ext import commands
-from collections import OrderedDict
 import asyncio
-import inspect
+
 
 class PaginatorSession:
     """
@@ -39,15 +37,14 @@ class PaginatorSession:
             '▶': self.next_page,
             '⏭': self.last_page,
             # '⏹': self.close
-            }
-            
+        }
+
         if options.get('edit_footer', True) and len(self.embeds) > 1:
             for i, em in enumerate(self.embeds):
                 footer_text = f'Page {i+1} of {len(self.embeds)}'
                 if em.footer.text:
                     footer_text = footer_text + ' • ' + em.footer.text
                 em.set_footer(text=footer_text, icon_url=em.footer.icon_url)
-
 
     def add_page(self, embed):
         if isinstance(embed, discord.Embed):
@@ -60,7 +57,7 @@ class PaginatorSession:
 
         if len(self.embeds) == 1:
             self.running = False
-            return 
+            return
 
         self.running = True
         for reaction in self.reaction_map.keys():
@@ -99,15 +96,14 @@ class PaginatorSession:
                 await self.base.remove_reaction(reaction, user)
             except:
                 pass
-            
-            
+
     def previous_page(self):
         """Go to the previous page."""
-        return self.show_page(self.current-1)
+        return self.show_page(self.current - 1)
 
     def next_page(self):
         """Go to the next page"""
-        return self.show_page(self.current+1)
+        return self.show_page(self.current + 1)
 
     async def close(self, delete=True):
         """Delete this embed."""
@@ -120,7 +116,7 @@ class PaginatorSession:
 
         if delete:
             return await self.base.delete()
-            
+
         try:
             await self.base.clear_reactions()
         except:
@@ -132,4 +128,4 @@ class PaginatorSession:
 
     def last_page(self):
         """Go to immediately to the last page"""
-        return self.show_page(len(self.embeds)-1)
+        return self.show_page(len(self.embeds) - 1)
