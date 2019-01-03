@@ -235,7 +235,9 @@ class Modmail:
     async def edit(self, ctx, message_id: Optional[int]=None, *, new_message):
         '''Edit a message that was sent using the reply command.
         
-        `<message_id>` is the id shown in the footer of thread messages.
+        If no message_id is provided, that last message sent by a mod will be edited.
+
+        `[message_id]` the id of the message that you want to edit.
         `<new_message>` is the new message that will be edited in.
         '''
         thread = await self.bot.threads.find(channel=ctx.channel)

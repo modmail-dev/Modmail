@@ -316,7 +316,7 @@ class ModmailBot(commands.Bot):
             message = commit['commit']['message'].splitlines()[0]
             author_name = commit['author']['login']
 
-            latest_commits += f'[`{short_sha}`]({html_url}) {message} - {author_name}\n'
+            latest_commits += f'[`{short_sha}`]({html_url}) {message}\n'
 
         return latest_commits
 
