@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import traceback
 import inspect
+import json
 import io
 import textwrap
 from contextlib import redirect_stdout
@@ -9,6 +10,8 @@ from difflib import get_close_matches
 
 from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
+
+from prettytable import PrettyTable
 
 class Utility:
     '''General commands that provide utility'''
@@ -19,7 +22,7 @@ class Utility:
     def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
         sigs = []
-        prefix = self.bot.config.get('PREFIX', 'm.')
+        prefix = self.bot.config.get('prefix', 'm.')
 
         for cmd in self.bot.commands:
             if cmd.hidden:
@@ -72,7 +75,7 @@ class Utility:
 
     def format_command_help(self, ctx, cmd):
         '''Formats command help.'''
-        prefix = self.bot.config.get('PREFIX', 'm.')
+        prefix = self.bot.config.get('prefix', 'm.')
         em = discord.Embed(
             color=discord.Color.green(),
             description=cmd.help
@@ -138,7 +141,7 @@ class Utility:
 
         pages = []
 
-        prefix = self.bot.config.get('PREFIX', 'm.')
+        prefix = self.bot.config.get('prefix', 'm.')
 
         for _, cog in sorted(self.bot.cogs.items()):
             em = self.format_cog_help(ctx, cog)
@@ -205,7 +208,7 @@ class Utility:
         data = await self.bot.modmail_api.get_user_info()
         print(data)
 
-        prefix = self.bot.config.get('PREFIX', 'm.')
+        prefix = self.bot.config.get('prefix', 'm.')
 
         em = discord.Embed(title='Github')
 
@@ -281,6 +284,87 @@ class Utility:
         em.description = f'{self.bot.ws.latency * 1000:.4f} ms'
         em.color = 0x00FF00
         await ctx.send(embed=em)
+
+    @commands.group()
+    @owner_only()
+    async def config(self, ctx):
+        '''Change configuration for the bot.'''
+        if ctx.invoked_subcommand is None:
+            cmd = self.bot.get_command('help')
+            await ctx.invoke(cmd, command='config')
+     
+    @config.command(name='set')
+    async def _set(self, ctx, key: str.lower, *, value):
+        '''Sets a configuration variable and its value'''
+
+        em = discord.Embed(
+            title='Success',
+            color=discord.Color.green(),
+            description=f'Set `{key}` to `{value}`'
+        )
+
+        if key not in self.bot.mutable_config_keys:
+            em.title='Error'
+            em.color=discord.Color.green()
+            em.description=f'{key} is an invalid key.'
+            valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
+            em.add_field(name='Valid keys', value=', '.join(valid_keys))
+        else:
+            await self.bot.config.update({key: value})
+
+        await ctx.send(embed=em)
+
+    @config.command(name='del')
+    async def _del(self, ctx, key: str.lower):
+        '''Sets a specified key from the config to nothing.'''
+        em = discord.Embed(
+            title='Success',
+            color=discord.Color.green(),
+            description=f'Set `{key}` to nothing.'
+        )
+
+        if key not in self.bot.mutable_config_keys:
+            em.title='Error'
+            em.color=discord.Color.green()
+            em.description=f'{key} is an invalid key.'
+            valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
+            em.add_field(name='Valid keys', value=', '.join(valid_keys))
+        else:
+            self.bot.config.cache[key] = None
+            await self.bot.config.update()
+
+        await ctx.send(embed=em)
+    
+    @config.command(name='get')
+    async def get(self, ctx, key=None):
+        '''Shows the config variables that are currently set.'''
+        em = discord.Embed(color=discord.Color.green())
+        em.set_author(name='Current config', icon_url=self.bot.user.avatar_url)
+
+        if key and key not in self.bot.mutable_config_keys:
+            em.title='Error'
+            em.color=discord.Color.green()
+            em.description=f'`{key}` is an invalid key.'
+            valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
+            em.add_field(name='Valid keys', value=', '.join(valid_keys))
+        elif key:
+            em.set_author(name='Config variable', icon_url=self.bot.user.avatar_url)
+            em.description = f'`{key}` is set to `{self.bot.config.get(key)}`'
+        else:
+            em.description = 'Here is a list of currently set configuration variables.'
+
+            config = { 
+                k: v for k, v in self.bot.config.cache.items() 
+                if v and k in self.bot.mutable_config_keys
+                }
+
+            for k, v in reversed(list(config.items())):
+                em.add_field(name=k, value=f'`{v}`')
+
+        await ctx.send(embed=em)
+        
+        
+
 
     @commands.command(hidden=True, name='eval')
     @owner_only()

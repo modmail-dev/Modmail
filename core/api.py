@@ -30,10 +30,11 @@ class ModmailApiClient(ApiClient):
     base = 'https://api.modmail.tk'
     github = base + '/github'
     logs = base + '/logs'
+    config = base + '/config'
 
     def __init__(self, bot):
         super().__init__(bot)
-        self.token = bot.config.get('MODMAIL_API_TOKEN')
+        self.token = bot.config.get('modmail_api_token')
         if self.token:
             self.headers = {
                 'Authorization': 'Bearer ' + self.token
@@ -53,6 +54,15 @@ class ModmailApiClient(ApiClient):
 
     def get_log(self, channel_id):
         return self.request(self.logs + '/' + str(channel_id))
+    
+    def get_config(self):
+        return self.request(self.config)
+    
+    def update_config(self, data):
+        valid_keys = ['prefix', 'status', 'owners', 'guild_id', 'mention', 'snippets']
+        
+        data = {k: v for k, v in data.items() if k in valid_keys}
+        return self.request(self.config, method='PATCH', payload=data)
 
     def get_log_url(self, recipient, channel, creator):
         return self.request(self.logs + '/key', payload={

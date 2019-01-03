@@ -51,20 +51,23 @@ import aiohttp
 
 from core.paginator import PaginatorSession
 from core.api import Github, ModmailApiClient
-from core.thread import ThreadManager, Thread
+from core.thread import ThreadManager
+from core.config import ConfigManager
 
 line = Fore.BLACK + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
 
 class ModmailBot(commands.Bot):
 
-    '''Commands directly related to Modmail functionality.'''
+    mutable_config_keys = ['prefix', 'status', 'guild_id', 'mention']
 
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
         self.start_time = datetime.datetime.utcnow()
         self.threads = ThreadManager(self) 
+        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.config = ConfigManager(self)
+        self.modmail_api = ModmailApiClient(self)
         self.data_task = self.loop.create_task(self.data_loop())
-        
         self._add_commands()
 
     def _add_commands(self):
@@ -79,10 +82,6 @@ class ModmailBot(commands.Bot):
         print('Author: kyb3r' + Style.RESET_ALL)
         print(line + Fore.CYAN)
 
-        for attr in dir(self):
-            cmd = getattr(self, attr)
-            if isinstance(cmd, commands.Command):
-                self.add_command(cmd)
 
         for file in os.listdir('cogs'):
             if not file.endswith('.py'):
@@ -101,32 +100,18 @@ class ModmailBot(commands.Bot):
             super().run(self.token)
         finally:
             print(Fore.CYAN + ' Shutting down bot' + Style.RESET_ALL)
-
-    @property
-    def config(self):
-        try:
-            with open('config.json') as f:
-                config = json.load(f)
-        except FileNotFoundError:
-            config = {}
-        config.update(os.environ)
-        return config
     
     @property
     def snippets(self):
-        return {
-            key.split('_')[1].lower(): val
-            for key, val in self.config.items() 
-            if key.startswith('SNIPPET_')
-            }
+        return self.config.get('snippets', {})
 
     @property
     def token(self):
-        return self.config.get('TOKEN')
+        return self.config.token
 
     @property
     def guild_id(self):
-        return int(self.config.get('GUILD_ID'))
+        return int(self.config.guild_id)
     
     @property
     def guild(self):
@@ -146,16 +131,14 @@ class ModmailBot(commands.Bot):
     @staticmethod
     async def get_pre(bot, message):
         '''Returns the prefix.'''
-        p = bot.config.get('PREFIX') or 'm.'
+        p = bot.config.get('prefix') or 'm.'
         return [p, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
     async def on_connect(self):
         print(line)
         print(Fore.CYAN + 'Connected to gateway.')
-        
-        self.session = aiohttp.ClientSession()
-        self.modmail_api = ModmailApiClient(self) 
-        status = os.getenv('STATUS') or self.config.get('STATUS')
+
+        status = self.config.get('status')
         if status:
             await self.change_presence(activity=discord.Game(status))
 
@@ -201,7 +184,7 @@ class ModmailBot(commands.Bot):
         if isinstance(message.channel, discord.DMChannel):
             return await self.process_modmail(message)
 
-        prefix = self.config.get('PREFIX', 'm.')
+        prefix = self.config.get('prefix', 'm.')
 
         if message.content.startswith(prefix):
             cmd = message.content[len(prefix):].strip()
