@@ -1,10 +1,17 @@
-import discord
-from discord.ext import commands
+from urllib.parse import urlparse
+import traceback
 import datetime
 import asyncio
 import functools
 import string
 import re
+import io
+
+import discord
+from discord.ext import commands
+
+from core.decorators import asyncexecutor
+from colorthief import ColorThief
 
 class Thread:
     '''Represents a discord modmail thread'''
@@ -39,11 +46,13 @@ class Thread:
 
     async def _edit_thread_message(self, channel, message_id, message):
         async for msg in channel.history():
-            if msg.embeds:
-                embed = msg.embeds[0]
-                if f'Moderator - {message_id}' in embed.footer.text:
+            if not msg.embeds:
+                continue
+            embed = msg.embeds[0]
+            if embed and embed.author:
+                if message_id == int(re.findall('\d+', embed.author.url)[0]):
                     if ' - (Edited)' not in embed.footer.text:
-                            embed.set_footer(text=embed.footer.text + ' - (Edited)')
+                        embed.set_footer(text=embed.footer.text + ' - (Edited)')
                     embed.description = message
                     await msg.edit(embed=embed)
                     break
@@ -80,6 +89,8 @@ class Thread:
             description=message.content,
             timestamp=message.created_at
             )
+        
+        em.set_author(name=str(author), icon_url=author.avatar_url, url=f'https://{message.id}.id') # store message id in hidden url
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
         is_image_url = lambda u: any(urlparse(u).path.endswith(x) for x in image_types)
@@ -100,12 +111,10 @@ class Thread:
 
         if from_mod:
             em.color=discord.Color.green()
-            em.set_author(name=str(author), icon_url=author.avatar_url)
-            em.set_footer(text=f'Moderator - {message.id}')
+            em.set_footer(text=f'Moderator')
         else:
             em.color=discord.Color.gold()
-            em.set_author(name=str(author), icon_url=author.avatar_url)
-            em.set_footer(text=f'User - {message.id}')
+            em.set_footer(text=f'User')
         
         await destination.trigger_typing()
         await destination.send(embed=em)
@@ -211,13 +220,14 @@ class ThreadManager:
         
         thread.channel = channel
 
-        log_url, log_data = await asyncio.gather(
+        log_url, log_data, dc = await asyncio.gather(
             self.bot.modmail_api.get_log_url(recipient, channel, creator or recipient),
-            self.bot.modmail_api.get_user_logs(recipient.id)
+            self.bot.modmail_api.get_user_logs(recipient.id),
+            self.get_dominant_color(recipient.avatar_url)
             )
 
         log_count = len(log_data)
-        info_embed = self._format_info_embed(recipient, creator, log_url, log_count)
+        info_embed = self._format_info_embed(recipient, creator, log_url, log_count, dc)
 
         topic = f'User ID: {recipient.id}'
         mention = self.bot.config.get('MENTION', '@here') if not creator else None
@@ -233,6 +243,39 @@ class ThreadManager:
     async def find_or_create(self, recipient):
         return await self.find(recipient=recipient) or await self.create(recipient)
 
+    @staticmethod
+    def valid_image_url(url):
+        '''Checks if a url leads to an image.'''
+        types = ['.png', '.jpg', '.gif', '.webp']
+        parsed = urlparse(url)
+        if any(parsed.path.endswith(i) for i in types):
+            return url.replace(parsed.query, 'size=128')
+        return False
+        
+    @asyncexecutor()
+    def _do_get_dc(self, image, quality):
+        with io.BytesIO(image) as f:
+            return ColorThief(f).get_color(quality=quality)
+
+    async def get_dominant_color(self, url=None, quality=10):
+        '''
+        Returns the dominant color of an image from a url
+        (misc)
+        '''
+        url = self.valid_image_url(url)
+
+        if not url:
+            raise ValueError('Invalid image url passed.')
+        try:
+            async with self.bot.session.get(url) as resp:
+                image = await resp.read()
+                color = await self._do_get_dc(image, quality)
+        except Exception as e:
+            traceback.print_exc()
+            return discord.Color.blurple()
+        else:
+            return discord.Color.from_rgb(*color)
+
     def _format_channel_name(self, author):
         '''Sanitises a username for use with text channel names'''
         name = author.name.lower()
@@ -243,27 +286,22 @@ class ThreadManager:
             new_name += '-x' # two channels with same name
         return new_name
 
-    def _format_info_embed(self, user, creator, log_url, log_count=None):
+    def _format_info_embed(self, user, creator, log_url, log_count, dc):
         '''Get information about a member of a server
         supports users from the guild or not.'''
         server = self.bot.guild
         member = self.bot.guild.get_member(user.id)
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
-        desc = f'{creator.mention} has created a thread with {user.mention}' if creator else f'{user.mention} has started a thread.'
+        desc = f'{creator.mention} has created a thread with {user.mention}' if creator else f'{user.mention} has started a thread:'
         key = log_url.split('/')[-1]
         desc = f'{desc} [`{key}`]({log_url})'
-        color = discord.Color.blurple()
 
         if member:
             roles = sorted(member.roles, key=lambda c: c.position)
             rolenames = ' '.join([r.mention for r in roles if r.name != "@everyone"])
-            # member_number = sorted(server.members, key=lambda m: m.joined_at).index(member) + 1
-            for role in roles:
-                if str(role.color) != "#000000":
-                    color = role.color
 
-        em = discord.Embed(colour=color, description=desc, timestamp=time)
+        em = discord.Embed(colour=dc, description=desc, timestamp=time)
 
         days = lambda d: (' day ago.' if d == '1' else ' days ago.')
 

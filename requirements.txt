@@ -3,3 +3,4 @@ colorama
 cachetools
 python-dateutil
 python-box
+colorthief
