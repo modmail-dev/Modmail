@@ -262,7 +262,7 @@ class Utility:
 
         await ctx.send(embed=em)
 
-    @commands.command(name="status", aliases=['customstatus', 'presence'])
+    @commands.command(name='status', aliases=['customstatus', 'presence'])
     @commands.has_permissions(administrator=True)
     async def _status(self, ctx, *, message):
         '''Set a custom playing status for the bot.
@@ -300,7 +300,7 @@ class Utility:
     @commands.has_permissions(administrator=True)
     async def mention(self, ctx, *, mention=None):
         '''Changes what the bot mentions at the start of each thread.'''
-        current = self.bot.config.get("mention", "@here")
+        current = self.bot.config.get('mention', '@here')
         em = discord.Embed(
             title='Current text',
             color=discord.Color.green(),
@@ -311,7 +311,7 @@ class Utility:
             await ctx.send(embed=em)
         else:
             em.title = 'Changed mention!'
-            em.description = f'On thread creation the bot now says: {mention}'
+            em.description = f'On thread creation the bot now says {mention}'
             self.bot.config['mention'] = mention
             await self.bot.config.update()
             await ctx.send(embed=em)
