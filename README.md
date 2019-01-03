@@ -77,7 +77,7 @@ If you are keen to stay updated with the latest features then follow the updatin
 | status   | Set a custom playing status for the bot.                   |
 | ping     | Pong! Returns your websocket latency.                      |
 | eval     | Evaluates python code (Bot owner only)                     |
-| config   | Manually hange configuration for the bot.                  |
+| config   | Manually change configuration for the bot.                 |
 
 ## Features
 
