@@ -238,9 +238,10 @@ class ThreadManager:
             channel.send(mention, embed=info_embed)
         )
 
+        thread.ready = True
+
         await msg.pin()
 
-        thread.ready = True
         return thread
 
     async def find_or_create(self, recipient):
