@@ -179,7 +179,7 @@ class ModmailBot(commands.Bot):
             description='You have been blocked from using modmail.'
         )
 
-        if str(message.author.id) in self.blocked_users:
+        if message.author.id in self.blocked_users:
             await message.author.send(embed=blocked_em)
         else:
             thread = await self.threads.find_or_create(message.author)
