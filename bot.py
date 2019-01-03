@@ -332,7 +332,7 @@ class ModmailBot(commands.Bot):
                     short_sha = commit_data['sha'][:6]
                     em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
                 else:
-                    em.description = 'Already up to date with master repository.'
+                    continue
 
                 em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
 
