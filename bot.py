@@ -144,7 +144,7 @@ class ModmailBot(commands.Bot):
     async def on_connect(self):
         print(line)
         print(Fore.CYAN + 'Connected to gateway.')
-
+        await self.config.refresh()
         status = self.config.get('status')
         if status:
             await self.change_presence(activity=discord.Game(status))
