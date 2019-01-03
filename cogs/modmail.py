@@ -164,7 +164,7 @@ class Modmail:
     @commands.command()
     async def nsfw(self, ctx):
         """Flags a modmail thread as nsfw."""
-        thread = self.bot.threads.find(channel=ctx.channel)
+        thread = await self.bot.threads.find(channel=ctx.channel)
         if thread is None:
             return
         await ctx.channel.edit(nsfw=True)
@@ -196,7 +196,9 @@ class Modmail:
 
         fmt = ''
 
-        for index, entry in enumerate(logs):
+        open_logs = [l for l in logs if not l['open']]
+
+        for index, entry in enumerate(open_logs):
             if len(embeds[-1].fields) == 3:
                 em = discord.Embed(color=discord.Color.green())
                 em.set_author(name='Previous Logs', icon_url=user.avatar_url)
@@ -209,12 +211,11 @@ class Modmail:
             user_id = entry['user_id']
             log_url = f"https://logs.modmail.tk/{user_id}/{key}"
 
-            if not entry['open']:  # only list closed threads
-                fmt += f"[`{key}`]({log_url})\n"
+            fmt += f"[`{key}`]({log_url})\n"
 
-                if current_day != new_day or index == len(logs) - 2:
-                    embeds[-1].add_field(name=current_day, value=fmt)
-                    current_day = new_day
+            if current_day != new_day or index == len(logs) - 1:
+                embeds[-1].add_field(name=current_day, value=fmt)
+                current_day = new_day
                     fmt = ''
 
         session = PaginatorSession(ctx, *embeds)
