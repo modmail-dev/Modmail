@@ -381,7 +381,7 @@ class Modmail:
             await top_chan.edit(topic=topic)
 
             em.title = 'Success'
-            em.description = f'{mention} (`{mention.id}`) is no longer blocked'
+            em.description = f'{mention} is no longer blocked'
 
             await ctx.send(embed=em)
         else:
