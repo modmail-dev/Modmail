@@ -176,14 +176,16 @@ class ThreadManager:
 
         if channel.topic and 'User ID: ' in channel.topic:
             user_id = int(re.findall(r'\d+', channel.topic)[0])
-        elif channel.topic is None:
-            async for message in channel.history(limit=50):
-                if message.embeds:
-                    em = message.embeds[0]
-                    matches = re.findall(r'<@(\d+)>', str(em.description))
-                    if matches:
-                        user_id = int(matches[-1])
-                        break
+        
+        # BUG: This wont work with multiple categories.
+        # elif channel.topic is None:
+        #     async for message in channel.history(limit=50):
+        #         if message.embeds:
+        #             em = message.embeds[0]
+        #             matches = re.findall(r'<@(\d+)>', str(em.description))
+        #             if matches:
+        #                 user_id = int(matches[-1])
+        #                 break
 
         if user_id is not None:
             if user_id in self.cache:
