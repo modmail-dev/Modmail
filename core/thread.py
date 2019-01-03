@@ -293,7 +293,7 @@ class ThreadManager:
         member = self.bot.guild.get_member(user.id)
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
-        desc = f'{creator.mention} has created a thread with {user.mention}' if creator else f'{user.mention} has started a thread:'
+        desc = f'{creator.mention} has created a thread with {user.mention}' if creator else f'{user.mention} has started a thread'
         key = log_url.split('/')[-1]
         desc = f'{desc} [`{key}`]({log_url})'
 
