@@ -319,13 +319,15 @@ class ModmailBot(commands.Bot):
     async def autoupdate_loop(self):
         while True:
             if not self.config.get('autoupdates'):
+                print(self.config.get('autoupdates', 'none'))
                 await asyncio.sleep(3600)
                 continue
 
             metadata = await self.modmail_api.get_metadata()
 
-            if metadata[version] != self.bot.version:
+            if metadata['latest_version'] != self.version:
                 data = await self.modmail_api.update_repository()
+                print('Updating bot.')
 
                 em = discord.Embed(title='Updating bot', color=discord.Color.green())
 

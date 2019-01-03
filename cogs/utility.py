@@ -208,7 +208,6 @@ class Utility:
             return
 
         data = await self.bot.modmail_api.get_user_info()
-        print(data)
 
         prefix = self.bot.prefix
 
@@ -322,7 +321,7 @@ class Utility:
     async def prefix(self, ctx, *, prefix=None):
         '''Changes the prefix for the bot.'''
 
-        current = self.bot.config.get("prefix", "m.")
+        current = self.bot.prefix
         em = discord.Embed(
             title='Current prefix',
             color=discord.Color.green(),
@@ -335,7 +334,6 @@ class Utility:
             em.title = 'Changed prefix!'
             em.description = f'Set prefix to `{prefix}`'
             self.bot.config['prefix'] = prefix 
-
             await self.bot.config.update()
             await ctx.send(embed=em)
             
@@ -420,7 +418,7 @@ class Utility:
                 }
 
             for k, v in reversed(list(config.items())):
-                em.add_field(name=k, value=f'`{v}`')
+                em.add_field(name=k, value=f'`{v}`', inline=False)
 
         await ctx.send(embed=em)
         
