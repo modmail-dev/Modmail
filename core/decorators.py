@@ -1,6 +1,7 @@
 import functools
 import discord
 from discord.ext import commands
+import asyncio
 
 def trigger_typing(func):
     @functools.wraps(func)
@@ -27,3 +28,13 @@ def owner_only():
         allowed = [int(x) for x in str(ctx.bot.config.get('owners', '0')).split(',')]
         return ctx.author.id in allowed
     return commands.check(predicate)
+
+def asyncexecutor(loop=None, executor=None):
+    loop = loop or asyncio.get_event_loop()
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            partial = functools.partial(func, *args, **kwargs)
+            return loop.run_in_executor(executor, partial)
+        return wrapper
+    return decorator
