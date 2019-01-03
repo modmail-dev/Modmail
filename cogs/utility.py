@@ -311,7 +311,7 @@ class Utility:
             await ctx.send(embed=em)
         else:
             em.title = 'Changed mention!'
-            em.description = f'On thread creation the bot now says: {mention}'
+            em.description = f'On thread creation the bot now says {mention}'
             self.bot.config['mention'] = mention
             await self.bot.config.update()
             await ctx.send(embed=em)
