@@ -111,7 +111,7 @@ class Utility:
         prefix = ctx.prefix
         em = discord.Embed()
         em.title = 'Could not find a cog or command by that name.'
-        em.color = discord.Color.green()
+        em.color = discord.Color.red()
         em.set_footer(text=f'Type {prefix}help to get a full list of commands.')
         cogs = get_close_matches(command, self.bot.cogs.keys())
         cmds = get_close_matches(command, self.bot.all_commands.keys())
