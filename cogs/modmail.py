@@ -4,6 +4,7 @@ from discord.ext import commands
 import datetime
 import dateutil.parser
 from core.decorators import trigger_typing
+from core.paginator import PaginatorSession
 
 class Modmail:
     '''Commands directly related to Modmail functionality.'''
@@ -32,10 +33,13 @@ class Modmail:
 
         await ctx.send('Successfully set up server.')
     
-    @commands.command(name='snippets')
+    @commands.group(name='snippets')
     @commands.has_permissions(manage_messages=True)
-    async def _snippets(self, ctx):
+    async def snippets(self, ctx):
         '''Returns a list of snippets that are currently set.'''
+        if ctx.invoked_subcommand is not None:
+            return 
+
         embeds = []
 
         em = discord.Embed(color=discord.Color.green())
@@ -47,7 +51,8 @@ class Modmail:
 
         if not self.bot.snippets:
             em.color = discord.Color.red()
-            em.description = 'You dont have any snippets at the moment.'
+            em.description = f'You dont have any snippets at the moment.'
+            em.set_footer(text=f'Do {self.bot.prefix}help snippets for more commands.')
         
         for name, value in self.bot.snippets.items():
             if len(em.fields) == 5:
@@ -58,6 +63,46 @@ class Modmail:
         
         session = PaginatorSession(ctx, *embeds)
         await session.run()
+    
+    @snippets.command(name='add')
+    async def _add(self, ctx, name: str.lower, *, value):
+        '''Add a snippet to the bot config.'''
+        if 'snippets' not in self.bot.config.cache:
+            self.bot.config['snippets'] = {}
+
+        self.bot.config.snippets[name] = value
+        await self.bot.config.update()
+
+        em = discord.Embed(
+            title='Added snippet',
+            color=discord.Color.green(),
+            description=f'`{name}` points to: {value}'
+        )
+
+        await ctx.send(embed=em)
+
+    @snippets.command(name='del')
+    async def __del(self, ctx, *, name: str.lower):
+        '''Removes a snippet from bot config.'''
+
+        if 'snippets' not in self.bot.config.cache:
+            self.bot.config['snippets'] = {}
+
+        em = discord.Embed(
+            title='Removed snippet',
+            color=discord.Color.green(),
+            description=f'`{name}` no longer exists.'
+        )
+
+        if not self.bot.config.snippets.get(name):
+            em.title = 'Error'
+            em.color = discord.Color.red()
+            em.description = f'Snippet `{name}` does not exist.'
+        else:
+            self.bot.config['snippets'][name] = None
+            await self.bot.config.update()
+
+        await ctx.send(embed=em)
 
     @commands.command(name='close')
     @commands.has_permissions(manage_channels=True)

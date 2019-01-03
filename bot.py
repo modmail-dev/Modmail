@@ -62,6 +62,7 @@ class ModmailBot(commands.Bot):
 
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
+        self.version = __version__
         self.start_time = datetime.datetime.utcnow()
         self.threads = ThreadManager(self) 
         self.session = aiohttp.ClientSession(loop=self.loop)
@@ -103,7 +104,11 @@ class ModmailBot(commands.Bot):
     
     @property
     def snippets(self):
-        return self.config.get('snippets', {})
+        return {k: v for k, v in self.config.get('snippets', {}).items() if v}
+
+    @property
+    def aliases(self):
+        return {k: v for k, v in self.config.get('aliases', {}).items() if v}     
 
     @property
     def token(self):
@@ -127,12 +132,15 @@ class ModmailBot(commands.Bot):
         if self.guild:
             top_chan = self.main_category.channels[0]
             return [int(i) for i in re.findall(r'\d+', top_chan.topic)]
+    
+    @property
+    def prefix(self):
+        return self.config.get('prefix', '?')
 
     @staticmethod
     async def get_pre(bot, message):
         '''Returns the prefix.'''
-        p = bot.config.get('prefix') or 'm.'
-        return [p, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
+        return [bot.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
     async def on_connect(self):
         print(line)
@@ -184,12 +192,14 @@ class ModmailBot(commands.Bot):
         if isinstance(message.channel, discord.DMChannel):
             return await self.process_modmail(message)
 
-        prefix = self.config.get('prefix', 'm.')
+        prefix = self.prefix
 
         if message.content.startswith(prefix):
             cmd = message.content[len(prefix):].strip()
             if cmd in self.snippets:
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
+            if cmd in self.aliases:
+                message.content = f'{prefix}{self.aliases[cmd]}'
                 
         await self.process_commands(message)
     

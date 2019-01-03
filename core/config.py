@@ -42,6 +42,12 @@ class ConfigManager:
     def __getattr__(self, value):
         return self.cache[value]
 
+    def __setitem__(self, key, item):
+        self.cache[key] = item
+
+    def __getitem__(self, key):
+        return self.cache[key]
+
     def get(self, value, default=None):
         return self.cache.get(value) or default
     
