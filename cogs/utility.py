@@ -262,7 +262,7 @@ class Utility:
 
         await ctx.send(embed=em)
 
-    @commands.command(name="status", aliases=['customstatus', 'presence'])
+    @commands.command(name='status', aliases=['customstatus', 'presence'])
     @commands.has_permissions(administrator=True)
     async def _status(self, ctx, *, message):
         '''Set a custom playing status for the bot.
