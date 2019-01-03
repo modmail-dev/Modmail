@@ -223,7 +223,7 @@ class ModmailBot(commands.Bot):
         return ctx
 
     async def on_message(self, message):
-        if m.type == discord.MessageType.pins_add and m.author == self.user: 
+        if message.type == discord.MessageType.pins_add and message.author == self.user: 
             await message.delete()
         if message.author.bot:
             return
