@@ -56,6 +56,7 @@ If you are keen to stay updated with the latest features then follow the updatin
 | edit     | Edit a message that was sent using the reply command.      |
 | contact  | Create a thread with a specified member.                   |
 | close    | Close the current thread.                                  |
+| move     | Moves the thread channel to a specified category           |
 | logs     | Shows a list of previous modmail thread logs of a member.  |
 | block    | Block a user from using modmail.                           |
 | blocked  | Returns a list of blocked users                            |
@@ -92,8 +93,5 @@ Thread conversations are automatically logged and a log link (logs.modmail.tk) i
 ### Delete Linked Messages
 Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! 
 
-## Thanks For Using This Bot!
-
-If you do use the bot, a star on this repository is appreciated!
-
+## Contributing
 This project is licenced under MIT. Feel free to contribute to the development of this bot.
