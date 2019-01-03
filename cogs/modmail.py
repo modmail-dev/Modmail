@@ -290,8 +290,7 @@ class Modmail:
     @commands.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         '''Returns a list of blocked users'''
-        em = discord.Embed(title='Blocked Users', color=discord.Color.green())
-        em.description = ''
+        em = discord.Embed(title='Blocked Users', color=discord.Color.green(), description='')
 
         users = []
         not_reachable = []
