@@ -1,20 +1,19 @@
 import discord
-import secrets
 
-from hashlib import sha256
 
 class ApiClient:
     def __init__(self, app):
-        self.app = app 
+        self.app = app
         self.session = app.session
         self.headers = None
-    
+
     async def request(self, url, method='GET', payload=None):
         async with self.session.request(method, url, headers=self.headers, json=payload) as resp:
             try:
                 return await resp.json()
             except:
                 return await resp.text()
+
 
 class Github(ApiClient):
     commit_url = 'https://api.github.com/repos/kyb3r/modmail/commits'
@@ -39,13 +38,13 @@ class ModmailApiClient(ApiClient):
             self.headers = {
                 'Authorization': 'Bearer ' + self.token
             }
-    
+
     def get_user_info(self):
         return self.request(self.github + '/userinfo')
-    
+
     def update_repository(self):
         return self.request(self.github + '/update')
-    
+
     def get_metadata(self):
         return self.request(self.base + '/metadata')
 
@@ -54,10 +53,10 @@ class ModmailApiClient(ApiClient):
 
     def get_log(self, channel_id):
         return self.request(self.logs + '/' + str(channel_id))
-    
+
     def get_config(self):
         return self.request(self.config)
-    
+
     def update_config(self, data):
         valid_keys = ['prefix', 'status', 'guild_id', 'mention', 'snippets', 'aliases', 'autoupdates', 'modmail_guild_id']
         data = {k: v for k, v in data.items() if k in valid_keys}
