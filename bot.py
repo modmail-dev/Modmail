@@ -252,18 +252,19 @@ class ModmailBot(commands.Bot):
                 async for msg in channel.history():
                     if msg.embeds and msg.embeds[0].author:
                         url = msg.embeds[0].author.url
-                        if message_id == re.findall(r'\d+', url):
+                        if message_id == re.findall(r'\d+', url)[0]:
                             return await msg.delete()
 
     async def on_message_edit(self, before, after):
         if before.author.bot:
             return
         if isinstance(before.channel, discord.DMChannel):
-            channel = await self.find_or_create_thread(before.author)
-            async for msg in channel.history():
+            thread = await self.threads.find(recipient=before.author)
+            async for msg in thread.channel.history():
                 if msg.embeds:
                     embed = msg.embeds[0]
-                    if f'User - {before.id}' in embed.footer.text:
+                    matches = re.findall(r'\d+', str(embed.author.url))
+                    if matches and int(matches[0]) == before.id:
                         if ' - (Edited)' not in embed.footer.text:
                             embed.set_footer(text=embed.footer.text + ' - (Edited)')
                         embed.description = after.content
