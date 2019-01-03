@@ -1,7 +1,7 @@
-'''
+"""
 MIT License
 
-Copyright (c) 2017 kyb3r
+Copyright (c) 2017-2019 kyb3r
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,41 +20,31 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 __version__ = '2.0.0'
 
-from contextlib import redirect_stdout
-from copy import deepcopy
-import functools
 import asyncio
 import textwrap
-import traceback
 import datetime
-import inspect
-import string
-import time
-import json
 import os
 import re
-import io
 
-from colorama import init, Fore, Back, Style
-import dateutil.parser
-
-init()
-
-from discord.ext import commands
-from discord.ext.commands.view import StringView
 import discord
 import aiohttp
+from discord.ext import commands
+from discord.ext.commands.view import StringView
+from colorama import init, Fore, Style
 
-from core.paginator import PaginatorSession
 from core.api import Github, ModmailApiClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 
+
+init()
+
 line = Fore.BLACK + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
+
 
 class ModmailBot(commands.Bot):
 
@@ -64,7 +54,7 @@ class ModmailBot(commands.Bot):
         super().__init__(command_prefix=self.get_pre)
         self.version = __version__
         self.start_time = datetime.datetime.utcnow()
-        self.threads = ThreadManager(self) 
+        self.threads = ThreadManager(self)
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
         self.modmail_api = ModmailApiClient(self)
@@ -73,7 +63,7 @@ class ModmailBot(commands.Bot):
         self._add_commands()
 
     def _add_commands(self):
-        '''Adds commands automatically'''
+        """Adds commands automatically"""
         self.remove_command('help')
 
         print(line + Fore.CYAN)
@@ -84,33 +74,32 @@ class ModmailBot(commands.Bot):
         print('Authors: kyb3r, fourjr' + Style.RESET_ALL)
         print(line + Fore.CYAN)
 
-
         for file in os.listdir('cogs'):
             if not file.endswith('.py'):
                 continue
             cog = f'cogs.{file[:-3]}'
             print(f'Loading {cog}')
             self.load_extension(cog)
-        
+
     async def logout(self):
         await self.session.close()
         self.data_task.cancel()
         self.autoupdate_task.cancel()
         await super().logout()
-    
+
     def run(self):
         try:
             super().run(self.token)
         finally:
             print(Fore.CYAN + ' Shutting down bot' + Style.RESET_ALL)
-    
+
     @property
     def snippets(self):
         return {k: v for k, v in self.config.get('snippets', {}).items() if v}
 
     @property
     def aliases(self):
-        return {k: v for k, v in self.config.get('aliases', {}).items() if v}     
+        return {k: v for k, v in self.config.get('aliases', {}).items() if v}
 
     @property
     def token(self):
@@ -119,16 +108,16 @@ class ModmailBot(commands.Bot):
     @property
     def guild_id(self):
         return int(self.config.guild_id)
-    
+
     @property
     def guild(self):
         return discord.utils.get(self.guilds, id=self.guild_id)
-    
+
     @property
     def modmail_guild(self):
         modmail_guild_id = self.config.get('modmail_guild_id')
         if not modmail_guild_id:
-            return self.guild 
+            return self.guild
         else:
             return discord.utils.get(self.guilds, id=int(modmail_guild_id))
 
@@ -142,14 +131,14 @@ class ModmailBot(commands.Bot):
         if self.modmail_guild:
             top_chan = self.main_category.channels[0]
             return [int(i) for i in re.findall(r'\d+', top_chan.topic)]
-    
+
     @property
     def prefix(self):
         return self.config.get('prefix', '?')
 
     @staticmethod
     async def get_pre(bot, message):
-        '''Returns the prefix.'''
+        """Returns the prefix."""
         return [bot.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
     async def on_connect(self):
@@ -161,8 +150,8 @@ class ModmailBot(commands.Bot):
             await self.change_presence(activity=discord.Game(status))
 
     async def on_ready(self):
-        '''Bot startup, sets uptime.'''
-        print(textwrap.dedent(f'''
+        """Bot startup, sets uptime."""
+        print(textwrap.dedent(f"""
         {line}
         {Fore.CYAN}Client ready.
         {line}
@@ -170,12 +159,12 @@ class ModmailBot(commands.Bot):
         {Fore.CYAN}User ID: {self.user.id}
         {Fore.CYAN}Guild ID: {self.guild.id if self.guild else 0}
         {line}
-        ''').strip())
-        
+        """).strip())
+
         await self.threads.populate_cache()
 
     async def process_modmail(self, message):
-        '''Processes messages sent to the bot.'''
+        """Processes messages sent to the bot."""
 
         reaction = '🚫' if message.author.id in self.blocked_users else '✅'
 
@@ -185,10 +174,10 @@ class ModmailBot(commands.Bot):
             pass
 
         blocked_em = discord.Embed(
-            title='Message not sent!', 
+            title='Message not sent!',
             color=discord.Color.red(),
             description='You have been blocked from using modmail.'
-            )
+        )
 
         if str(message.author.id) in self.blocked_users:
             await message.author.send(embed=blocked_em)
@@ -207,7 +196,6 @@ class ModmailBot(commands.Bot):
 
         if self._skip_check(message.author.id, self.user.id):
             return ctx
-        
 
         prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}>']
 
@@ -226,7 +214,7 @@ class ModmailBot(commands.Bot):
             invoker = view.get_word()
 
         ctx.invoked_with = invoker
-        ctx.prefix = self.prefix # Sane prefix (No mentions)
+        ctx.prefix = self.prefix  # Sane prefix (No mentions)
         ctx.command = self.all_commands.get(invoker)
 
         # if hasattr(ctx, '_alias_invoked'):
@@ -246,11 +234,11 @@ class ModmailBot(commands.Bot):
             cmd = message.content[len(prefix):].strip()
             if cmd in self.snippets:
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
-                
+
         await self.process_commands(message)
-    
+
     async def on_message_delete(self, message):
-        '''Support for deleting linked messages'''
+        """Support for deleting linked messages"""
         if message.embeds and not isinstance(message.channel, discord.DMChannel):
             matches = re.findall(r'\d+', str(message.embeds[0].author.url))
             if matches:
@@ -261,10 +249,10 @@ class ModmailBot(commands.Bot):
 
                 async for msg in channel.history():
                     if msg.embeds and msg.embeds[0].author:
-                        url = msg.embeds[0].author.url 
+                        url = msg.embeds[0].author.url
                         if message_id == re.findall(r'\d+', url):
                             return await msg.delete()
-    
+
     async def on_message_edit(self, before, after):
         if before.author.bot:
             return
@@ -279,7 +267,7 @@ class ModmailBot(commands.Bot):
                         embed.description = after.content
                         await msg.edit(embed=embed)
                         break
-    
+
     async def on_command_error(self, ctx, error):
         if isinstance(error, (commands.MissingRequiredArgument, commands.UserInputError)):
             await ctx.invoke(self.get_command('help'), command=str(ctx.command))
@@ -287,7 +275,7 @@ class ModmailBot(commands.Bot):
             raise error
 
     def overwrites(self, ctx):
-        '''Permision overwrites for the guild.'''
+        """Permision overwrites for the guild."""
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False)
         }
@@ -297,7 +285,7 @@ class ModmailBot(commands.Bot):
                 overwrites[role] = discord.PermissionOverwrite(read_messages=True)
 
         return overwrites
-    
+
     async def data_loop(self):
         await self.wait_until_ready()
 
@@ -315,7 +303,7 @@ class ModmailBot(commands.Bot):
             await self.session.post('https://api.modmail.tk/metadata', json=data)
 
             await asyncio.sleep(3600)
-    
+
     async def autoupdate_loop(self):
         while True:
             if not self.config.get('autoupdates'):
@@ -334,7 +322,7 @@ class ModmailBot(commands.Bot):
                 commit_data = data['data']
                 user = data['user']
                 em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-                em.set_footer(text=f"Updating modmail v{self.version} -> v{metadata['latest_version']}")  
+                em.set_footer(text=f"Updating modmail v{self.version} -> v{metadata['latest_version']}")
 
                 if commit_data:
                     em.description = 'Bot successfully updated, the bot will restart momentarily'
@@ -344,14 +332,13 @@ class ModmailBot(commands.Bot):
                     em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
                 else:
                     em.description = 'Already up to date with master repository.'
-                
+
                 em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
 
                 channel = self.main_category.channels[0]
                 await channel.send(embed=em)
 
             await asyncio.sleep(3600)
-
 
     async def get_latest_updates(self, limit=3):
         latest_commits = ''
@@ -361,7 +348,6 @@ class ModmailBot(commands.Bot):
             short_sha = commit['sha'][:6]
             html_url = commit['html_url']
             message = commit['commit']['message'].splitlines()[0]
-            author_name = commit['author']['login']
 
             latest_commits += f'[`{short_sha}`]({html_url}) {message}\n'
 
@@ -380,6 +366,7 @@ class ModmailBot(commands.Bot):
             fmt = '{d}d ' + fmt
 
         return fmt.format(d=days, h=hours, m=minutes, s=seconds)
+
 
 if __name__ == '__main__':
     bot = ModmailBot()

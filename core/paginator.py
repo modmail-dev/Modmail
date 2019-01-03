@@ -5,7 +5,7 @@ import asyncio
 import inspect
 
 class PaginatorSession:
-    '''
+    """
     Class that interactively paginates a set of embeds
 
     Parameters
@@ -25,7 +25,7 @@ class PaginatorSession:
         Run the interactive session
     close:
         Forcefully destroy a session
-    '''
+    """
     def __init__(self, ctx, *embeds, **options):
         self.ctx = ctx
         self.timeout = options.get('timeout', 60)
@@ -102,15 +102,15 @@ class PaginatorSession:
             
             
     def previous_page(self):
-        '''Go to the previous page.'''
+        """Go to the previous page."""
         return self.show_page(self.current-1)
 
     def next_page(self):
-        '''Go to the next page'''
+        """Go to the next page"""
         return self.show_page(self.current+1)
 
     async def close(self, delete=True):
-        '''Delete this embed.'''
+        """Delete this embed."""
         self.running = False
 
         try:
@@ -127,9 +127,9 @@ class PaginatorSession:
             pass
 
     def first_page(self):
-        '''Go to immediately to the first page'''
+        """Go to immediately to the first page"""
         return self.show_page(0)
 
     def last_page(self):
-        '''Go to immediately to the last page'''
+        """Go to immediately to the last page"""
         return self.show_page(len(self.embeds)-1)
