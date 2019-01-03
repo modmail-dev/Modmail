@@ -1,7 +1,7 @@
 '''
 MIT License
 
-Copyright (c) 2017 kyb3r
+Copyright (c) 2019 kyb3r
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -318,8 +318,7 @@ class ModmailBot(commands.Bot):
     
     async def autoupdate_loop(self):
         while True:
-            if not self.config.get('autoupdates'):
-                print(self.config.get('autoupdates', 'none'))
+            if self.config.get('disable_autoupdates'):
                 await asyncio.sleep(3600)
                 continue
 
