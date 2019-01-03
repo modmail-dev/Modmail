@@ -4,7 +4,7 @@ from discord.ext import commands
 import datetime
 import dateutil.parser
 import re
-from typing import Optional
+from typing import Optional, Union
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
 
@@ -172,7 +172,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    async def logs(self, ctx, *, member: discord.Member=None):
+    async def logs(self, ctx, *, member: Union[discord.Member, discord.User]=None):
         """Shows a list of previous modmail thread logs of a member."""
 
         if not member:
@@ -270,7 +270,7 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def contact(self, ctx, *, user: discord.Member):
+    async def contact(self, ctx, *, user: Union[discord.Member, discord.User]):
         """Create a thread with a specified member."""
 
         exists = await self.bot.threads.find(recipient=user)
