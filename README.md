@@ -42,9 +42,6 @@ You have two options for using this bot, hosting on Heroku or self hosting the b
 ### What is Heroku?
 Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data on site (changing files). We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in any files, utilising discord channel topics for tracking and relaying conversations.
 
-### Updating
-If you are keen to stay updated with the latest features then follow the updating guide [here](https://github.com/kyb3r/modmail/wiki/Updating). It has a few more steps so it may not be for everyone.
-
 ## Commands
 
 ### Modmail related 
