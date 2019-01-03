@@ -233,10 +233,12 @@ class ThreadManager:
         topic = f'User ID: {recipient.id}'
         mention = self.bot.config.get('mention', '@here') if not creator else None
 
-        await asyncio.gather(
+        _, msg = await asyncio.gather(
             channel.edit(topic=topic),
             channel.send(mention, embed=info_embed)
         )
+
+        await msg.pin()
 
         thread.ready = True
         return thread
