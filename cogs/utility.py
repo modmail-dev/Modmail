@@ -3,7 +3,6 @@ from discord.ext import commands
 import datetime
 import traceback
 import inspect
-import json
 import io
 import textwrap
 from contextlib import redirect_stdout
@@ -12,8 +11,9 @@ from difflib import get_close_matches
 from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
 
+
 class Utility:
-    '''General commands that provide utility'''
+    """General commands that provide utility"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -76,7 +76,7 @@ class Utility:
         return em
 
     def format_command_help(self, ctx, cmd):
-        '''Formats command help.'''
+        """Formats command help."""
         prefix = self.bot.prefix
         em = discord.Embed(
             color=discord.Color.green(),
@@ -143,8 +143,6 @@ class Utility:
 
         pages = []
 
-        prefix = self.bot.prefix
-
         for _, cog in sorted(self.bot.cogs.items()):
             em = self.format_cog_help(ctx, cog)
             if em:
@@ -157,7 +155,7 @@ class Utility:
     @commands.command()
     @trigger_typing
     async def about(self, ctx):
-        '''Shows information about the bot.'''
+        """Shows information about the bot."""
         em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
         em.set_author(name='Mod Mail - Information', icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
@@ -177,62 +175,59 @@ class Utility:
             em.add_field(name='Instances', value=meta['instances'])
         else:
             em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
-        
 
         em.add_field(name='Version', value=f'[`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
 
         em.add_field(name='Latest Updates', value=await self.bot.get_latest_updates())
-        
+
         footer = f'Bot ID: {self.bot.user.id}'
-        
+
         if meta:
             if self.bot.version != meta['latest_version']:
                 footer = f"A newer version is available v{meta['latest_version']}"
             else:
                 footer = 'You are up to date with the latest version.'
-        
+
         em.add_field(name='Github', value='https://github.com/kyb3r/modmail', inline=False)
 
         em.set_footer(text=footer)
 
         await ctx.send(embed=em)
-    
+
     @commands.command()
     @owner_only()
     @auth_required
     @trigger_typing
     async def github(self, ctx):
-        '''Shows the github user your access token is linked to.'''
+        """Shows the github user your access token is linked to."""
         if ctx.invoked_subcommand:
             return
 
         data = await self.bot.modmail_api.get_user_info()
 
-        prefix = self.bot.prefix
-
-        em = discord.Embed(title='Github')
-
+        em = discord.Embed(
+            title='Github',
+            description='Current User',
+            color=discord.Color.green()
+        )
         user = data['user']
-        em.color = discord.Color.green()
-        em.description = f"Current user."
         em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
         em.set_thumbnail(url=user['avatar_url'])
         await ctx.send(embed=em)
 
-    
     @commands.command()
     @owner_only()
     @auth_required
     @trigger_typing
     async def update(self, ctx):
-        '''Updates the bot, this only works with heroku users.'''
+        """Updates the bot, this only works with heroku users."""
         metadata = await self.bot.modmail_api.get_metadata()
 
         em = discord.Embed(
-                title='Already up to date',
-                description=f'The latest version is [`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
-                color=discord.Color.green()
+            title='Already up to date',
+            description=f'The latest version is [`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
+            color=discord.Color.green()
         )
 
         if metadata['latest_version'] == self.bot.version:
@@ -247,7 +242,7 @@ class Utility:
             user = data['user']
             em.title = 'Success'
             em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-            em.set_footer(text=f"Updating modmail v{self.bot.version} -> v{metadata['latest_version']}")  
+            em.set_footer(text=f"Updating modmail v{self.bot.version} -> v{metadata['latest_version']}")
 
             if commit_data:
                 em.description = 'Bot successfully updated, the bot will restart momentarily'
@@ -265,17 +260,16 @@ class Utility:
     @commands.command(name='status', aliases=['customstatus', 'presence'])
     @commands.has_permissions(administrator=True)
     async def _status(self, ctx, *, message):
-        '''Set a custom playing status for the bot.
-        
+        """Set a custom playing status for the bot.
+
         Set the message to `clear` if you want to remove the playing status.
-        '''
+        """
 
         if message == 'clear':
             self.bot.config['status'] = None
             await self.bot.config.update()
             return await self.bot.change_presence(activity=None)
-            
-            
+
         await self.bot.change_presence(activity=discord.Game(message))
         self.bot.config['status'] = message
         await self.bot.config.update()
@@ -291,7 +285,7 @@ class Utility:
     async def ping(self, ctx):
         """Pong! Returns your websocket latency."""
         em = discord.Embed()
-        em.title ='Pong! Websocket Latency:'
+        em.title = 'Pong! Websocket Latency:'
         em.description = f'{self.bot.ws.latency * 1000:.4f} ms'
         em.color = 0x00FF00
         await ctx.send(embed=em)
@@ -299,7 +293,7 @@ class Utility:
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def mention(self, ctx, *, mention=None):
-        '''Changes what the bot mentions at the start of each thread.'''
+        """Changes what the bot mentions at the start of each thread."""
         current = self.bot.config.get('mention', '@here')
         em = discord.Embed(
             title='Current text',
@@ -319,7 +313,7 @@ class Utility:
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def prefix(self, ctx, *, prefix=None):
-        '''Changes the prefix for the bot.'''
+        """Changes the prefix for the bot."""
 
         current = self.bot.prefix
         em = discord.Embed(
@@ -333,28 +327,27 @@ class Utility:
         else:
             em.title = 'Changed prefix!'
             em.description = f'Set prefix to `{prefix}`'
-            self.bot.config['prefix'] = prefix 
+            self.bot.config['prefix'] = prefix
             await self.bot.config.update()
             await ctx.send(embed=em)
-            
 
     @commands.group()
     @owner_only()
     async def config(self, ctx):
-        '''Change configuration for the bot.
+        """Change configuration for the bot.
 
-        You shouldn't have to use these commands as other commands such 
+        You shouldn't have to use these commands as other commands such
         as `prefix` and `status` should change config vars for you.
-        '''
+        """
         if ctx.invoked_subcommand is None:
             cmd = self.bot.get_command('help')
             await ctx.invoke(cmd, command='config')
-     
+
     @config.command(name='set')
     async def _set(self, ctx, key: str.lower, *, value):
-        '''
+        """
         Sets a configuration variable and its value
-        '''
+        """
 
         em = discord.Embed(
             title='Success',
@@ -363,9 +356,9 @@ class Utility:
         )
 
         if key not in self.bot.mutable_config_keys:
-            em.title='Error'
-            em.color=discord.Color.green()
-            em.description=f'{key} is an invalid key.'
+            em.title = 'Error'
+            em.color = discord.Color.green()
+            em.description = f'{key} is an invalid key.'
             valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
         else:
@@ -375,7 +368,7 @@ class Utility:
 
     @config.command(name='del')
     async def _del(self, ctx, key: str.lower):
-        '''Sets a specified key from the config to nothing.'''
+        """Sets a specified key from the config to nothing."""
         em = discord.Embed(
             title='Success',
             color=discord.Color.green(),
@@ -383,9 +376,9 @@ class Utility:
         )
 
         if key not in self.bot.mutable_config_keys:
-            em.title='Error'
-            em.color=discord.Color.green()
-            em.description=f'{key} is an invalid key.'
+            em.title = 'Error'
+            em.color = discord.Color.green()
+            em.description = f'{key} is an invalid key.'
             valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
         else:
@@ -393,17 +386,17 @@ class Utility:
             await self.bot.config.update()
 
         await ctx.send(embed=em)
-    
+
     @config.command(name='get')
     async def get(self, ctx, key=None):
-        '''Shows the config variables that are currently set.'''
+        """Shows the config variables that are currently set."""
         em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Current config', icon_url=self.bot.user.avatar_url)
 
         if key and key not in self.bot.mutable_config_keys:
-            em.title='Error'
-            em.color=discord.Color.green()
-            em.description=f'`{key}` is an invalid key.'
+            em.title = 'Error'
+            em.color = discord.Color.green()
+            em.description = f'`{key}` is an invalid key.'
             valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
         elif key:
@@ -412,23 +405,22 @@ class Utility:
         else:
             em.description = 'Here is a list of currently set configuration variables.'
 
-            config = { 
-                k: v for k, v in self.bot.config.cache.items() 
+            config = {
+                k: v for k, v in self.bot.config.cache.items()
                 if v and k in self.bot.mutable_config_keys
-                }
+            }
 
             for k, v in reversed(list(config.items())):
                 em.add_field(name=k, value=f'`{v}`', inline=False)
 
         await ctx.send(embed=em)
-        
-        
+
     @commands.group(name='alias', aliases=['aliases'])
     @commands.has_permissions(manage_messages=True)
     async def aliases(self, ctx):
-        '''Returns a list of aliases that are currently set.'''
+        """Returns a list of aliases that are currently set."""
         if ctx.invoked_subcommand is not None:
-            return 
+            return
 
         embeds = []
 
@@ -443,7 +435,7 @@ class Utility:
         if not self.bot.aliases:
             em.color = discord.Color.red()
             em.description = f'You dont have any aliases at the moment.'
-        
+
         for name, value in self.bot.aliases.items():
             if len(em.fields) == 5:
                 em = discord.Embed(color=discord.Color.green(), description=em.description)
@@ -451,13 +443,13 @@ class Utility:
                 em.set_footer(text=f'Do {self.bot.prefix}help aliases for more commands.')
                 embeds.append(em)
             em.add_field(name=name, value=value, inline=False)
-        
+
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-    
+
     @aliases.command(name='add')
     async def _add(self, ctx, name: str.lower, *, value):
-        '''Add an alias to the bot config.'''
+        """Add an alias to the bot config."""
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
 
@@ -474,7 +466,7 @@ class Utility:
 
     @aliases.command(name='del')
     async def __del(self, ctx, *, name: str.lower):
-        '''Removes a alias from bot config.'''
+        """Removes a alias from bot config."""
 
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
@@ -522,12 +514,12 @@ class Utility:
 
         body = cleanup_code(body)
         stdout = io.StringIO()
-        err = out = None
+        err = None
 
         to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
 
         def paginate(text: str):
-            '''Simple generator that paginates text.'''
+            """Simple generator that paginates text."""
             last = 0
             pages = []
             for curr in range(0, len(text)):
@@ -549,7 +541,7 @@ class Utility:
         try:
             with redirect_stdout(stdout):
                 ret = await func()
-        except Exception as e:
+        except Exception:
             value = stdout.getvalue()
             err = await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
         else:
@@ -557,22 +549,22 @@ class Utility:
             if ret is None:
                 if value:
                     try:
-                        out = await ctx.send(f'```py\n{value}\n```')
+                        await ctx.send(f'```py\n{value}\n```')
                     except:
                         paginated_text = paginate(value)
                         for page in paginated_text:
                             if page == paginated_text[-1]:
-                                out = await ctx.send(f'```py\n{page}\n```')
+                                await ctx.send(f'```py\n{page}\n```')
                                 break
                             await ctx.send(f'```py\n{page}\n```')
             else:
                 try:
-                    out = await ctx.send(f'```py\n{value}{ret}\n```')
+                    await ctx.send(f'```py\n{value}{ret}\n```')
                 except:
                     paginated_text = paginate(f"{value}{ret}")
                     for page in paginated_text:
                         if page == paginated_text[-1]:
-                            out = await ctx.send(f'```py\n{page}\n```')
+                            await ctx.send(f'```py\n{page}\n```')
                             break
                         await ctx.send(f'```py\n{page}\n```')
 
