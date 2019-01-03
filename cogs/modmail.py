@@ -216,7 +216,7 @@ class Modmail:
             if current_day != new_day or index == len(logs) - 1:
                 embeds[-1].add_field(name=current_day, value=fmt)
                 current_day = new_day
-                    fmt = ''
+                fmt = ''
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
