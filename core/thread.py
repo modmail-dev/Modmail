@@ -207,10 +207,8 @@ class ThreadManager:
             color=discord.Color.green()
         )
 
-        if creator is not None:
-            em.description = f'{creator.mention} has started a modmail thread with you.'
-
-        asyncio.create_task(recipient.send(embed=em))
+        if creator is None:
+            asyncio.create_task(recipient.send(embed=em))
 
         self.cache[recipient.id] = thread = Thread(self, recipient)
 
