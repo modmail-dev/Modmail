@@ -24,12 +24,12 @@ class Modmail:
 
         categ = await self.bot.modmail_guild.create_category(
             name='Mod Mail', 
-            overwrites=self.bot.overwrites(ctx, modrole=modrole)
+            overwrites=self.bot.overwrites(ctx)
             )
 
         await categ.edit(position=0)
 
-        c = await self.bot.modmail_guild.create_text_channel(name='thread-logs', category=categ)
+        c = await self.bot.modmail_guild.create_text_channel(name='bot-logs', category=categ)
         await c.edit(topic='Manually add user id\'s to block users.\n\n'
                            'Blocked\n-------\n\n')
 

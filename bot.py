@@ -1,7 +1,7 @@
 '''
 MIT License
 
-Copyright (c) 2017 Kyb3r
+Copyright (c) 2017 kyb3r
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ line = Fore.BLACK + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
 
 class ModmailBot(commands.Bot):
 
-    mutable_config_keys = ['prefix', 'status', 'guild_id', 'mention']
+    mutable_config_keys = ['prefix', 'status', 'guild_id', 'mention', 'autoupdates', 'modmail_guild_id']
 
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
@@ -69,6 +69,7 @@ class ModmailBot(commands.Bot):
         self.config = ConfigManager(self)
         self.modmail_api = ModmailApiClient(self)
         self.data_task = self.loop.create_task(self.data_loop())
+        self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._add_commands()
 
     def _add_commands(self):
@@ -80,7 +81,7 @@ class ModmailBot(commands.Bot):
               '││││ │ │││││├─┤││',
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
-        print('Author: kyb3r' + Style.RESET_ALL)
+        print('Authors: kyb3r, fourjr' + Style.RESET_ALL)
         print(line + Fore.CYAN)
 
 
@@ -94,6 +95,7 @@ class ModmailBot(commands.Bot):
     async def logout(self):
         await self.session.close()
         self.data_task.cancel()
+        self.autoupdate_task.cancel()
         await super().logout()
     
     def run(self):
@@ -313,6 +315,41 @@ class ModmailBot(commands.Bot):
             await self.session.post('https://api.modmail.tk/metadata', json=data)
 
             await asyncio.sleep(3600)
+    
+    async def autoupdate_loop(self):
+        while True:
+            if not self.config.get('autoupdates'):
+                await asyncio.sleep(3600)
+                continue
+
+            metadata = await self.modmail_api.get_metadata()
+
+            if metadata[version] != self.bot.version:
+                data = await self.modmail_api.update_repository()
+
+                em = discord.Embed(title='Updating bot', color=discord.Color.green())
+
+                commit_data = data['data']
+                user = data['user']
+                em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+                em.set_footer(text=f"Updating modmail v{self.version} -> v{metadata['latest_version']}")  
+
+                if commit_data:
+                    em.description = 'Bot successfully updated, the bot will restart momentarily'
+                    message = commit_data['commit']['message']
+                    html_url = commit_data["html_url"]
+                    short_sha = commit_data['sha'][:6]
+                    em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
+                else:
+                    em.description = 'Already up to date with master repository.'
+                
+                em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
+
+                channel = self.main_category.channels[0]
+                await channel.send(embed=em)
+
+            await asyncio.sleep(3600)
+
 
     async def get_latest_updates(self, limit=3):
         latest_commits = ''

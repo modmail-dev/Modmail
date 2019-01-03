@@ -44,7 +44,7 @@ class ModmailApiClient(ApiClient):
         return self.request(self.github + '/userinfo')
     
     def update_repository(self):
-        return self.request(self.github + '/update-repository')
+        return self.request(self.github + '/update')
     
     def get_metadata(self):
         return self.request(self.base + '/metadata')
@@ -59,7 +59,7 @@ class ModmailApiClient(ApiClient):
         return self.request(self.config)
     
     def update_config(self, data):
-        valid_keys = ['prefix', 'status', 'guild_id', 'mention', 'snippets', 'aliases']
+        valid_keys = ['prefix', 'status', 'guild_id', 'mention', 'snippets', 'aliases', 'autoupdates', 'modmail_guild_id']
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 
