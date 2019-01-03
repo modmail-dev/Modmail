@@ -28,7 +28,7 @@
         "required": false
     },
     "MODMAIL_API_TOKEN": {
-        "description": "Api token from https://dashboard.modmail.tk",
+        "description": "API token from https://modmail.tk",
         "required": true
     }
   }
