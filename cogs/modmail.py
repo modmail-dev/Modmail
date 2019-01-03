@@ -386,7 +386,7 @@ class Modmail:
             await ctx.send(embed=em)
         else:
             em.title = 'Error'
-            em.description = f'{mention} is not already blocked'
+            em.description = f'{mention} is not blocked'
             em.color = discord.Color.red()
 
             await ctx.send(embed=em)
