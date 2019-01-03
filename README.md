@@ -29,9 +29,7 @@
 
 <img src='https://i.imgur.com/aHtn4C5.png' align='right' height=140>
 
-Assuming you got the bot setup (Read below on how to set it up), the first thing that you would do is type the command ```<prefix>setup [modrole]``` where `[modrole]` is an optional role you can specify which determines who can see the relayed messages. If a role is not specified, the bot will choose the first role that has `manage guild` permissions as the modrole. The bot will then set up a channel category named `Mod Mail`.
-
-When a user sends a direct message to the bot, a channel is created within this new category. This channel is where messages will be relayed. To reply to a message, simply type the command `<prefix>reply <message>` in the channel.
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#commands).
 
 ## What it looks like
 
@@ -49,21 +47,37 @@ If you are keen to stay updated with the latest features then follow the updatin
 
 ## Commands
 
-| Name         | Description                                                          |
-|--------------|----------------------------------------------------------------------|
-| setup        | Sets up the categories that will be used by the bot.                 |
-| about        | Shows some general information about the bot.                        |
-| contact      | Allows a moderator to initiate a thread with a given recipient.      |
-| reply        | Sends a message to the current thread's recipient.                   |
-| close        | Closes the current thread and deletes the channel.                   |
-| archive      | Closes the thread and moves the channel to the archive category.     | 
-| block        | Blocks a user from using modmail                                     |
-| blocked      | Shows a list of users that are currently blocked                     |
-| unblock      | Unblocks a user from using modmail                                   |
-| snippets     | Shows a list of snippets that are currently configured.              |
-| customstatus | Sets the bot playing status to a message of your choosin             |
-| disable      | Closes all threads and disables modmail for the server.              |
-| update       | Checks for new versions and updates the bot, follow the [updating guide](https://github.com/kyb3r/modmail/wiki/Updating) to use this command. |
+### Modmail related 
+
+| Name     | Command                                                    |
+|----------|------------------------------------------------------------|
+| setup    | Sets up a server for modmail                               |
+| reply    | Reply to users using this command.                         |
+| edit     | Edit a message that was sent using the reply command.      |
+| contact  | Create a thread with a specified member.                   |
+| close    | Close the current thread.                                  |
+| move     | Moves the thread channel to a specified category           |
+| logs     | Shows a list of previous modmail thread logs of a member.  |
+| block    | Block a user from using modmail.                           |
+| blocked  | Returns a list of blocked users                            |
+| unblock  | Unblocks a user from using modmail.                        |
+| nsfw     | Flags a modmail thread as nsfw.                            |
+| snippets | Returns a list of snippets that are currently set.         |
+| mention  | Changes what the bot mentions at the start of each thread. |
+
+### Utility commands
+| Name     | Command                                                    |
+|----------|------------------------------------------------------------|
+| help     | Shows the help message.                                    |
+| update   | Checks for new versions and updates the bot                |
+| github   | Shows the github user your modmail api token is linked to. |
+| prefix   | Changes the prefix for the bot.                            |
+| alias    | Returns a list of aliases that are currently set.          |
+| about    | Shows information about the bot.                           |
+| status   | Set a custom playing status for the bot.                   |
+| ping     | Pong! Returns your websocket latency.                      |
+| eval     | Evaluates python code (Bot owner only)                     |
+| config   | Manually change configuration for the bot.                 |
 
 ## Features
 
@@ -74,10 +88,13 @@ Snippets are shortcuts for predefined messages that you can send. You can add sn
 If you want the bot to mention a specific role instead of `@here`, you need to set a config variable `MENTION` and set the value to the mention of the role or user you want mentioned. To get the mention of a role or user, type `\@role` in chat and you will see something like `<@&515651147516608512>` use this string as the value for the config variable.
 
 ### Delete Linked Messages
-Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! 
+Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! This also works with message edits in reverse.
 
-## Thanks For Using This Bot!
+### Thread Logs
+Thread conversations are automatically logged and a log link (logs.modmail.tk) is provided with each thread.
 
-If you do use the bot, a star on this repository is appreciated!
+### Automatic Updates
+The bot checks for new updates every hour and automatically updates to a newer version if found. You can disable this functionality by adding a `disable_autoupdates` config variable.
 
+## Contributing
 This project is licenced under MIT. Feel free to contribute to the development of this bot.
