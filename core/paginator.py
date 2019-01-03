@@ -1,11 +1,9 @@
 import discord
-from discord.ext import commands
-from collections import OrderedDict
 import asyncio
-import inspect
+
 
 class PaginatorSession:
-    '''
+    """
     Class that interactively paginates a set of embeds
 
     Parameters
@@ -25,7 +23,7 @@ class PaginatorSession:
         Run the interactive session
     close:
         Forcefully destroy a session
-    '''
+    """
     def __init__(self, ctx, *embeds, **options):
         self.ctx = ctx
         self.timeout = options.get('timeout', 60)
@@ -39,16 +37,14 @@ class PaginatorSession:
             '▶': self.next_page,
             '⏭': self.last_page,
             # '⏹': self.close
-            }
-            
+        }
+
         if options.get('edit_footer', True) and len(self.embeds) > 1:
             for i, em in enumerate(self.embeds):
                 footer_text = f'Page {i+1} of {len(self.embeds)}'
-                em.footer.text = options.get('footer_text', em.footer.text)
                 if em.footer.text:
                     footer_text = footer_text + ' • ' + em.footer.text
                 em.set_footer(text=footer_text, icon_url=em.footer.icon_url)
-
 
     def add_page(self, embed):
         if isinstance(embed, discord.Embed):
@@ -61,7 +57,7 @@ class PaginatorSession:
 
         if len(self.embeds) == 1:
             self.running = False
-            return 
+            return
 
         self.running = True
         for reaction in self.reaction_map.keys():
@@ -82,7 +78,7 @@ class PaginatorSession:
             await self.create_base(page)
 
     def react_check(self, reaction, user):
-        return user.id == self.ctx.author.id and reaction.emoji in self.reaction_map.keys()
+        return reaction.message.id == self.base.id and user.id == self.ctx.author.id and reaction.emoji in self.reaction_map.keys()
 
     async def run(self):
         if not self.running:
@@ -100,18 +96,17 @@ class PaginatorSession:
                 await self.base.remove_reaction(reaction, user)
             except:
                 pass
-            
-            
+
     def previous_page(self):
-        '''Go to the previous page.'''
-        return self.show_page(self.current-1)
+        """Go to the previous page."""
+        return self.show_page(self.current - 1)
 
     def next_page(self):
-        '''Go to the next page'''
-        return self.show_page(self.current+1)
+        """Go to the next page"""
+        return self.show_page(self.current + 1)
 
     async def close(self, delete=True):
-        '''Delete this embed.'''
+        """Delete this embed."""
         self.running = False
 
         try:
@@ -121,16 +116,16 @@ class PaginatorSession:
 
         if delete:
             return await self.base.delete()
-            
+
         try:
             await self.base.clear_reactions()
         except:
             pass
 
     def first_page(self):
-        '''Go to immediately to the first page'''
+        """Go to immediately to the first page"""
         return self.show_page(0)
 
     def last_page(self):
-        '''Go to immediately to the last page'''
-        return self.show_page(len(self.embeds)-1)
+        """Go to immediately to the last page"""
+        return self.show_page(len(self.embeds) - 1)

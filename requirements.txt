@@ -1,2 +1,6 @@
 git+https://github.com/Rapptz/discord.py@rewrite
-yarl==1.1.1
+colorama
+cachetools
+python-dateutil
+python-box
+colorthief
