@@ -167,7 +167,7 @@ class Modmail:
         thread = self.bot.threads.find(channel=ctx.channel)
         if thread is None:
             return
-        await ctx.edit(nsfw=True)
+        await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
 
     @commands.command()
@@ -385,7 +385,7 @@ class Modmail:
             await ctx.send(embed=em)
         else:
             em.title = 'Error'
-            em.description = f'{mention} is not blocked'
+            em.description = f'{mention} is not already blocked'
             em.color = discord.Color.red()
 
             await ctx.send(embed=em)
