@@ -10,7 +10,7 @@
 </a>
 
 <a href="">
-  <img src="https://img.shields.io/badge/python-3.6-7289DA.svg?style=for-the-badge" alt="Travis" />
+  <img src="https://img.shields.io/badge/python-3.7-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
 
 <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
