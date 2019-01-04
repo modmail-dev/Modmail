@@ -171,6 +171,7 @@ class Modmail:
         await ctx.message.add_reaction('✅')
 
     @commands.command()
+    @commands.has_permissions(manage_messages=True)
     @trigger_typing
     async def logs(self, ctx, *, member: Union[discord.Member, discord.User]=None):
         """Shows a list of previous modmail thread logs of a member."""
