@@ -1,7 +1,6 @@
 {
     "TOKEN": "XXX.XXX.XXX",
-    "PREFIX": "m.",
-    "GUILD_ID": EDITTHIS,
-    "STATUS": "DM me for help!",
+    "MODMAIL_API_TOKEN": "XXX.XXX.XXX",
+    "GUILD_ID": 6969696969,
     "OWNERS": "comma,seperated,user_ids"
 }
