@@ -280,7 +280,8 @@ class ModmailBot(commands.Bot):
     def overwrites(self, ctx):
         """Permision overwrites for the guild."""
         overwrites = {
-            ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False)
+            ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            ctx.guild.me: discord.PermissionOverwrite(read_messages=True)
         }
 
         for role in ctx.guild.roles:
