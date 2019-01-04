@@ -287,6 +287,9 @@ class Modmail:
 
         await ctx.send(embed=em)
 
+    def obj(arg):
+        return discord.Object(int(arg))
+
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
@@ -319,28 +322,27 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def block(self, ctx, id=None):
+    async def block(self, ctx, *, user: Union[discord.Member, discord.User, obj]=None):
         """Block a user from using modmail."""
 
-        if id is None:
+        if user is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
             if thread:
-                id = str(thread.recipient.id)
+                user = thread.recipient
             else:
                 raise commands.UserInputError
 
         categ = self.bot.main_category
         top_chan = categ.channels[0]  # bot-info
         topic = str(top_chan.topic)
-        topic += '\n' + id
+        topic += '\n' + str(user.id)
 
-        user = self.bot.get_user(int(id))
-        mention = user.mention if user else f'`{id}`'
+        mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         em = discord.Embed()
         em.color = discord.Color.green()
 
-        if id not in top_chan.topic:
+        if str(user.id) not in top_chan.topic:
             await top_chan.edit(topic=topic)
 
             em.title = 'Success'
@@ -357,27 +359,27 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def unblock(self, ctx, id=None):
+    async def unblock(self, ctx, *, user: Union[discord.Member, discord.User, obj]=None):
         """Unblocks a user from using modmail."""
-        if id is None:
+
+        if user is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
             if thread:
-                id = str(thread.recipient.id)
+                user = thread.recipient
             else:
                 raise commands.UserInputError
 
         categ = self.bot.main_category
         top_chan = categ.channels[0]  # thread-logs
         topic = str(top_chan.topic)
-        topic = topic.replace('\n' + id, '')
+        topic = topic.replace('\n' + str(user.id), '')
 
-        user = self.bot.get_user(int(id))
-        mention = user.mention if user else f'`{id}`'
+        mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         em = discord.Embed()
         em.color = discord.Color.green()
 
-        if id in top_chan.topic:
+        if str(user.id) in top_chan.topic:
             await top_chan.edit(topic=topic)
 
             em.title = 'Success'
