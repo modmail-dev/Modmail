@@ -24,6 +24,9 @@
 
 </div>
 
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkyb3r%2Fmodmail.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkyb3r%2Fmodmail?ref=badge_large)
+
 ## How does it work?
 
 
@@ -34,6 +37,7 @@ When a user sends a direct message to the bot, a channel is created within an is
 ## What it looks like
 
 ![a](https://i.imgur.com/LZCHeaR.jpg)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkyb3r%2Fmodmail.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkyb3r%2Fmodmail?ref=badge_shield)
 
 <h1 align="center"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Installation</a></h1>
 
