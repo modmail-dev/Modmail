@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made the logs command require manage messages permissions to execute. 
     - Before this patch, anyone could use the logs commands.
 
-
 # v2.0.1
 
 Bug fixes and minor improvements.

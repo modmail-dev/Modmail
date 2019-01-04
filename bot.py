@@ -61,7 +61,7 @@ class ModmailBot(commands.Bot):
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._add_commands()
-
+    
     def _add_commands(self):
         """Adds commands automatically"""
         self.remove_command('help')
@@ -91,7 +91,7 @@ class ModmailBot(commands.Bot):
         try:
             super().run(self.token)
         finally:
-            print(Fore.CYAN + ' Shutting down bot' + Style.RESET_ALL)
+            print(Fore.RED + ' - Shutting down bot' + Style.RESET_ALL)
 
     @property
     def snippets(self):
@@ -142,12 +142,15 @@ class ModmailBot(commands.Bot):
         return [bot.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
     async def on_connect(self):
+        print(line + Fore.RED + Style.BRIGHT)
+        await self.validate_api_token()
         print(line)
         print(Fore.CYAN + 'Connected to gateway.')
         await self.config.refresh()
         status = self.config.get('status')
         if status:
             await self.change_presence(activity=discord.Game(status))
+        
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -290,6 +293,24 @@ class ModmailBot(commands.Bot):
 
         return overwrites
 
+    async def validate_api_token(self):
+        valid = True 
+        try:
+            token = self.config.modmail_api_token
+        except KeyError:
+            print('MODMAIL_API_TOKEN not found.')
+            print('Set a config variable called MODMAIL_API_TOKEN with a token from https://dashboard.modmail.tk')
+            valid = False
+        else:
+            valid = await self.modmail_api.validate_token()
+            if not valid:
+                print('Invalid MODMAIL_API_TOKEN - get one from https://dashboard.modmail.tk')
+        finally:
+            if not valid:
+                await self.logout()
+            else:
+                print(Style.RESET_ALL + Fore.CYAN + 'Validated API token.' + Style.RESET_ALL)
+        
     async def data_loop(self):
         await self.wait_until_ready()
 

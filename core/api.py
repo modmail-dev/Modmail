@@ -7,8 +7,10 @@ class ApiClient:
         self.session = app.session
         self.headers = None
 
-    async def request(self, url, method='GET', payload=None):
+    async def request(self, url, method='GET', payload=None, return_response=False):
         async with self.session.request(method, url, headers=self.headers, json=payload) as resp:
+            if return_response:
+                return resp
             try:
                 return await resp.json()
             except:
@@ -38,6 +40,10 @@ class ModmailApiClient(ApiClient):
             self.headers = {
                 'Authorization': 'Bearer ' + self.token
             }
+    
+    async def validate_token(self):
+        resp = await self.request(self.base + '/token/verify', return_response=True)
+        return resp.status == 200
 
     def get_user_info(self):
         return self.request(self.github + '/userinfo')
