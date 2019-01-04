@@ -93,7 +93,7 @@ class Thread:
         em.set_author(name=str(author), icon_url=author.avatar_url, url=f'https://{message.id}.id')  # store message id in hidden url
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
-        is_image_url = lambda u: any(urlparse(u).path.endswith(x) for x in image_types)
+        is_image_url = lambda u: any(urlparse(u.lower()).path.endswith(x) for x in image_types)
 
         delete_message = not bool(message.attachments)
         attachments = list(filter(lambda a: not is_image_url(a.url), message.attachments))
