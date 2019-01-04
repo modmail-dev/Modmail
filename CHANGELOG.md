@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.0.1
 
+Bug fixes and minor improvements.
+
 ### Changed
 - Improved block/unblock commands.
     - They now take a wider range of arguments: Usernames, nicknames, mentions and user IDs.
