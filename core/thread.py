@@ -49,8 +49,8 @@ class Thread:
             if not msg.embeds:
                 continue
             embed = msg.embeds[0]
-            if embed and embed.author:
-                if message_id == int(re.findall(r'\d+', embed.author.url)[0]):
+            if embed and embed.author and embed.author.url:
+                if str(message_id) == str(embed.author.url).split('/')[-1]:
                     if ' - (Edited)' not in embed.footer.text:
                         embed.set_footer(text=embed.footer.text + ' - (Edited)')
                     embed.description = message
@@ -90,7 +90,7 @@ class Thread:
             timestamp=message.created_at
         )
 
-        em.set_author(name=str(author), icon_url=author.avatar_url, url=f'https://{message.id}.id')  # store message id in hidden url
+        em.set_author(name=str(author), icon_url=author.avatar_url, url=message.jump_url)  # store message id in hidden url
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
         is_image_url = lambda u: any(urlparse(u.lower()).path.endswith(x) for x in image_types)
@@ -135,7 +135,10 @@ class ThreadManager:
 
     async def populate_cache(self):
         for channel in self.bot.modmail_guild.text_channels:
+            if not self.bot.using_multiple_server_setup and channel.category != self.main_category:
+                continue
             await self.find(channel=channel)
+
 
     def __len__(self):
         return len(self.cache)
@@ -176,16 +179,16 @@ class ThreadManager:
 
         if channel.topic and 'User ID: ' in channel.topic:
             user_id = int(re.findall(r'\d+', channel.topic)[0])
-        
-        # BUG: This wont work with multiple categories.
-        # elif channel.topic is None:
-        #     async for message in channel.history(limit=50):
-        #         if message.embeds:
-        #             em = message.embeds[0]
-        #             matches = re.findall(r'<@(\d+)>', str(em.description))
-        #             if matches:
-        #                 user_id = int(matches[-1])
-        #                 break
+
+        # BUG: When discord fails to create channel topic. search through message history
+        elif channel.topic is None:
+            async for message in channel.history(limit=50):
+                if message.embeds:
+                    em = message.embeds[0]
+                    matches = re.findall(r'User ID: (\d+)', str(em.footer.text))
+                    if matches:
+                        user_id = int(matches[0])
+                        break
 
         if user_id is not None:
             if user_id in self.cache:
@@ -221,14 +224,14 @@ class ThreadManager:
 
         thread.channel = channel
 
-        log_url, log_data, dc = await asyncio.gather(
+        log_url, log_data = await asyncio.gather(
             self.bot.modmail_api.get_log_url(recipient, channel, creator or recipient),
-            self.bot.modmail_api.get_user_logs(recipient.id),
-            self.get_dominant_color(recipient.avatar_url)
+            self.bot.modmail_api.get_user_logs(recipient.id)
+            # self.get_dominant_color(recipient.avatar_url)
         )
 
         log_count = sum(1 for log in log_data if not log['open'])
-        info_embed = self._format_info_embed(recipient, creator, log_url, log_count, dc)
+        info_embed = self._format_info_embed(recipient, creator, log_url, log_count, discord.Color.green())
 
         topic = f'User ID: {recipient.id}'
         mention = self.bot.config.get('mention', '@here') if not creator else None

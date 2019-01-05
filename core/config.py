@@ -1,4 +1,3 @@
-import asyncio
 import os
 import json
 import box
@@ -6,6 +5,15 @@ import box
 
 class ConfigManager:
     """Class that manages a cached configuration"""
+
+    valid_keys = {
+        'prefix', 'status', 'guild_id',
+        'mention', 'disable_autoupdates',
+        'modmail_guild_id', 'token', 'snippets',
+        'aliases', 'owners', 'modmail_api_token'
+    }
+
+    allowed_to_change_in_command = valid_keys - {'token', 'snippets', 'aliases', 'owners', 'modmail_api_token'}
 
     def __init__(self, bot):
         self.bot = bot
@@ -24,7 +32,7 @@ class ConfigManager:
             data = {}
         finally:
             data.update(os.environ)
-            data = {k.lower(): v for k, v in data.items()}
+            data = {k.lower(): v for k, v in data.items() if k.lower() in self.valid_keys}
             self.cache = data
 
         self.bot.loop.create_task(self.refresh())
@@ -52,14 +60,3 @@ class ConfigManager:
 
     def get(self, value, default=None):
         return self.cache.get(value) or default
-
-    @property
-    def modified(self):
-        return self._modified
-
-    @modified.setter
-    def modified(self, flag):
-        """If set to true, update() will be called"""
-        if flag is True:
-            asyncio.create_task(self.update())
-            self._modified = True
