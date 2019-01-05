@@ -139,7 +139,6 @@ class ThreadManager:
                 continue
             await self.find(channel=channel)
 
-
     def __len__(self):
         return len(self.cache)
 

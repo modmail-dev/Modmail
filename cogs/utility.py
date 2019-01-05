@@ -1,15 +1,16 @@
-import discord
-from discord.ext import commands
 import datetime
-import traceback
 import inspect
 import io
 import textwrap
+import traceback
 from contextlib import redirect_stdout
 from difflib import get_close_matches
 
-from core.paginator import PaginatorSession
+import discord
+from discord.ext import commands
+
 from core.decorators import auth_required, owner_only, trigger_typing
+from core.paginator import PaginatorSession
 
 
 class Utility:

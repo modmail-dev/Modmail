@@ -74,8 +74,8 @@ class ModmailApiClient(ApiClient):
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 
-    def get_log_url(self, recipient, channel, creator):
-        return self.request(self.logs + '/key', payload={
+    def get_log_url(self, recipient=None, channel=None, creator=None, *, payload=None):
+        return self.request(self.logs + '/key', payload=payload or {
             'channel_id': str(channel.id),
             'guild_id': str(self.app.guild_id),
             'recipient': {
@@ -94,9 +94,9 @@ class ModmailApiClient(ApiClient):
             }
         })
 
-    def append_log(self, message, channel_id=''):
+    def append_log(self, message=None, channel_id='', *, payload=None):
         channel_id = str(channel_id) or str(message.channel.id)
-        payload = {
+        payload = payload or {
             'payload': {
                 'timestamp': str(message.created_at),
                 'message_id': str(message.id),
@@ -115,5 +115,7 @@ class ModmailApiClient(ApiClient):
         }
         return self.request(self.logs + f'/{channel_id}', method='PATCH', payload=payload)
 
-    def post_log(self, channel_id, payload):
-        return self.request(self.logs + f'/{channel_id}', method='POST', payload=payload)
+    def post_log(self, channel_id, payload, *, force=False):
+        params = '?force=1' if force else ''
+
+        return self.request(self.logs + f'/{channel_id}' + params, method='POST', payload=payload)
