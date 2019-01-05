@@ -325,10 +325,11 @@ class ModmailBot(commands.Bot):
                 "guild_name": self.guild.name,
                 "member_count": len(self.guild.members),
                 "uptime": (datetime.datetime.utcnow() - self.start_time).total_seconds(),
+                "latency": f'{self.ws.latency * 1000:.4f}',
                 "version": __version__
             }
 
-            await self.session.post('https://api.modmail.tk/metadata', json=data)
+            await self.modmail_api.post_metadata(data)
 
             await asyncio.sleep(3600)
 

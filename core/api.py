@@ -29,6 +29,7 @@ class Github(ApiClient):
 class ModmailApiClient(ApiClient):
 
     base = 'https://api.modmail.tk'
+    metadata = base + '/metadata'
     github = base + '/github'
     logs = base + '/logs'
     config = base + '/config'
@@ -44,6 +45,9 @@ class ModmailApiClient(ApiClient):
     async def validate_token(self):
         resp = await self.request(self.base + '/token/verify', return_response=True)
         return resp.status == 200
+    
+    def post_metadata(self, data):
+        return self.request(self.metadata, method='POST', payload=data)
 
     def get_user_info(self):
         return self.request(self.github + '/userinfo')
