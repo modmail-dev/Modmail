@@ -228,7 +228,7 @@ class ThreadManager:
         )
 
         log_count = sum(1 for log in log_data if not log['open'])
-        info_embed = self._format_info_embed(recipient, creator, log_url, log_count, 0x00ffff)
+        info_embed = self._format_info_embed(recipient, creator, log_url, log_count, discord.Color.green())
 
         topic = f'User ID: {recipient.id}'
         mention = self.bot.config.get('mention', '@here') if not creator else None
