@@ -12,7 +12,7 @@
         "required": true
     },
     "MODMAIL_GUILD_ID": {
-        "description": "Operations center for the server you are serving for.",
+        "description": "Bot to have seperate server to serve as an operations center..",
         "required": false
     },
     "OWNERS": {
@@ -21,7 +21,7 @@
     },
     "PREFIX": {
         "description": "Beginning of command prefix.",
-        "required": true
+        "required": false
     },
     "MODMAIL_API_TOKEN": {
         "description": "API token from https://modmail.tk",
