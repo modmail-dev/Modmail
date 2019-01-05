@@ -33,7 +33,7 @@ When a user sends a direct message to the bot, a channel is created within an is
 
 ## What it looks like
 
-<img src='https://i.imgur.com/LZCHeaR.jpg' height=500>
+<img src='https://i.imgur.com/LZCHeaR.jpg' align='center' height=300>
 
 <h1 align="center"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Installation</a></h1>
 
