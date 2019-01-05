@@ -49,8 +49,6 @@ line = Fore.BLACK + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
 
 class ModmailBot(commands.Bot):
 
-    mutable_config_keys = ['prefix', 'status', 'guild_id', 'mention', 'autoupdates', 'modmail_guild_id']
-
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
         self.version = __version__

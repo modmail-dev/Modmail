@@ -355,11 +355,11 @@ class Utility:
             description=f'Set `{key}` to `{value}`'
         )
 
-        if key not in self.bot.mutable_config_keys:
+        if key not in self.bot.config.allowed_to_change_in_command:
             em.title = 'Error'
             em.color = discord.Color.green()
             em.description = f'{key} is an invalid key.'
-            valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
+            valid_keys = [f'`{k}`' for k in self.bot.config.allowed_to_change_in_command]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
         else:
             await self.bot.config.update({key: value})
@@ -375,11 +375,11 @@ class Utility:
             description=f'Set `{key}` to nothing.'
         )
 
-        if key not in self.bot.mutable_config_keys:
+        if key not in self.bot.config.allowed_to_change_in_command:
             em.title = 'Error'
             em.color = discord.Color.green()
             em.description = f'{key} is an invalid key.'
-            valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
+            valid_keys = [f'`{k}`' for k in self.bot.config.allowed_to_change_in_command]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
         else:
             self.bot.config.cache[key] = None
@@ -393,11 +393,11 @@ class Utility:
         em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Current config', icon_url=self.bot.user.avatar_url)
 
-        if key and key not in self.bot.mutable_config_keys:
+        if key and key not in self.bot.config.allowed_to_change_in_command:
             em.title = 'Error'
             em.color = discord.Color.green()
             em.description = f'`{key}` is an invalid key.'
-            valid_keys = [f'`{k}`' for k in self.bot.mutable_config_keys]
+            valid_keys = [f'`{k}`' for k in self.bot.config.allowed_to_change_in_command]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
         elif key:
             em.set_author(name='Config variable', icon_url=self.bot.user.avatar_url)
@@ -407,7 +407,7 @@ class Utility:
 
             config = {
                 k: v for k, v in self.bot.config.cache.items()
-                if v and k in self.bot.mutable_config_keys
+                if v and k in self.bot.config.allowed_to_change_in_command
             }
 
             for k, v in reversed(list(config.items())):
