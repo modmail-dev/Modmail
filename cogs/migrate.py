@@ -1,10 +1,11 @@
 import asyncio
 import sqlite3
 import re
+import os
 from datetime import datetime
 
 from discord.ext import commands
-from core.utility import owner_only
+from core.decorators import owner_only, trigger_typing
 
 
 class Thread:
@@ -23,9 +24,12 @@ class Thread:
         self.status = self.statuses[data[1]]
 
         user_id = data[3]
-        self.recipient = bot.get_user(int(user_id))
-        if self.recipient is None:
-            self.recipient = await bot.get_user_info(int(user_id))
+        if user_id:
+            self.recipient = bot.get_user(int(user_id))
+            if self.recipient is None:
+                self.recipient = await bot.get_user_info(int(user_id))
+        else:
+            self.recipient = None
 
         self.creator = self.recipient
         self.creator_mod = False
@@ -33,26 +37,26 @@ class Thread:
 
         self.channel_id = int(data[5])
         self.created_at = datetime.fromisoformat(data[6])
-        self.scheduled_close_at = datetime.fromisoformat(data[7])
+        self.scheduled_close_at = datetime.fromisoformat(data[7]) if data[7] else None
         self.scheduled_close_id = data[8]
         self.alert_id = data[9]
 
         self.messages = []
 
-        for i in cursor.execute("SELECT * FROM 'thread_messages' WHERE thread_id == '?'", self.id):
-            message = await ThreadMessage.from_data(i, bot, cursor)
-            if message.type == 'command' and 'close' in message.body:
-                self.closer = message.user
-            elif message.type == 'system' and message.body.startswith('Thread was opened by '):
-                # user used the newthread command
-                mod = message.body[:21]  # gets name#discrim
-                for i in bot.users:
-                    if str(i) == mod:
-                        self.creator = i
-                        self.creator_mod = True
-                        break
-
-            self.messages.append(message)
+        if self.id:
+            for i in cursor.execute("SELECT * FROM 'thread_messages' WHERE thread_id == ?", (self.id,)):
+                message = await ThreadMessage.from_data(bot, i)
+                if message.type == 'command' and 'close' in message.body:
+                    self.closer = message.author
+                elif message.type == 'system' and message.body.startswith('Thread was opened by '):
+                    # user used the newthread command
+                    mod = message.body[:21]  # gets name#discrim
+                    for i in bot.users:
+                        if str(i) == mod:
+                            self.creator = i
+                            self.creator_mod = True
+                            break
+                self.messages.append(message)
         return self
 
     def serialize(self):
@@ -75,9 +79,9 @@ class Thread:
                 'avatar_url': self.creator.avatar_url,
                 'mod': self.creator_mod
             },
-            'messages': [m.serialize() for m in self.messages]
+            'messages': [m.serialize() for m in self.messages if m.serialize()]
         }
-        if self.status == 'closed':
+        if self.closer:
             payload['closer'] = {
                 'id': str(self.closer.id),
                 'name': self.closer.name,
@@ -108,14 +112,17 @@ class ThreadMessage:
         self.type = self.types[data[2]]
 
         user_id = data[3]
-        self.user = bot.get_user(int(user_id))
-        if self.user is None:
-            self.user = await bot.get_user_info(int(user_id))
+        if user_id:
+            self.author = bot.get_user(int(user_id))
+            if self.author is None:
+                self.author = await bot.get_user_info(int(user_id))
+        else:
+            self.author = None
 
         self.body = data[5]
 
-        regex = re.compile(r'http:\/\/[\d.]+:\d+\/attachments\/\d+\/.*')
-        self.attachments = regex.findall(self.body)
+        pattern = re.compile(r'http:\/\/[\d.]+:\d+\/attachments\/\d+\/.*')
+        self.attachments = pattern.findall(str(self.body))
         if self.attachments:
             index = self.body.find(self.attachments[0])
             self.content = self.body[:index]
@@ -123,15 +130,15 @@ class ThreadMessage:
             self.content = self.body
 
         self.is_anonymous = data[6]
-        self.dm_message_id = data[6]
-        self.created_at = datetime.fromisoformat(data[7])
-        self.attachments = regex.findall(self.body)
+        self.dm_message_id = data[7]
+        self.created_at = datetime.fromisoformat(data[8])
+        self.attachments = pattern.findall(str(self.body))
         return self
 
     def serialize(self):
         if self.type in ('from_user', 'to_user'):
             return {
-                'timestamp': self.created_at,
+                'timestamp': str(self.created_at),
                 'message_id': self.dm_message_id,
                 'content': self.content,
                 'author': {
@@ -140,7 +147,7 @@ class ThreadMessage:
                     'discriminator': self.author.discriminator,
                     'avatar_url': self.author.avatar_url,
                     'mod': self.type == 'to_user'
-                },
+                } if self.author else None,
                 'attachments': self.attachments
             }
 
@@ -158,7 +165,7 @@ class Migrate:
             await ctx.send('Provide an sqlite file as the attachment.')
 
         async with self.bot.session.get(url) as resp:
-            with open('dragorydb.sqlite', 'w+') as f:
+            with open('dragorydb.sqlite', 'wb+') as f:
                 f.write(await resp.read())
 
         conn = sqlite3.connect('dragorydb.sqlite')
@@ -192,30 +199,34 @@ class Migrate:
                 self.bot.config['snippets'] = {}
 
             self.bot.config.snippets[name] = value
-            output += f'Snippet {name} added: {value}'
+            output += f'Snippet {name} added: {value}\n'
 
         tasks = []
 
         async def convert_thread_log(row):
             thread = await Thread.from_data(self.bot, row, c)
             converted = thread.serialize()
-            print(converted)
-            await self.bot.modmail_api.post_log(converted, force=True)
+            print(f'Converted thread log: {thread.id}')
+            await self.bot.modmail_api.post_log(thread.channel_id, converted, force=True)
+            print(f'Posted thread log: {thread.id}')
 
         # Threads
         for row in c.execute("SELECT * FROM 'threads'"):
             tasks.append(convert_thread_log(row))
-            output += f'Thread data added: {row[0]}'
+            output += f'Thread data added: {row[0]}\n'
 
-        await asyncio.gather(*tasks)
-        # TODO: Create channels for non-closed threads
+        with ctx.typing():
+            await asyncio.gather(*tasks)
+            # TODO: Create channels for non-closed threads
 
-        await self.bot.config.update()
+            await self.bot.config.update()
 
-        async with self.bot.session.post('https://hastebin.com/documents', data=output) as resp:
-            key = (await resp.json())['key']
+            async with self.bot.session.post('https://hastebin.com/documents', data=output) as resp:
+                key = (await resp.json())['key']
 
-        await ctx.send(f'Done. Logs: https://hastebin.com/{key}')
+            await ctx.send(f'Done. Logs: https://hastebin.com/{key}')
+            conn.close()
+            os.remove('dragorydb.sqlite')
 
 
 def setup(bot):

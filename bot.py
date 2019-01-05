@@ -167,7 +167,10 @@ class ModmailBot(commands.Bot):
         {line}
         """).strip())
 
-        await self.threads.populate_cache()
+        if not self.guild:
+            print(Fore.RED + Style.BRIGHT + 'WARNING - The GUILD_ID provided does not exist!' + Style.RESET_ALL)
+        else:
+            await self.threads.populate_cache()
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""

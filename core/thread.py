@@ -135,7 +135,7 @@ class ThreadManager:
 
     async def populate_cache(self):
         for channel in self.bot.modmail_guild.text_channels:
-            if not self.bot.using_multiple_server_setup and channel.category != self.main_category:
+            if not self.bot.using_multiple_server_setup and channel.category != self.bot.main_category:
                 continue
             await self.find(channel=channel)
 
