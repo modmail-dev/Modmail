@@ -50,7 +50,7 @@ class Thread:
                 continue
             embed = msg.embeds[0]
             if embed and embed.author:
-                if message_id == int(re.findall(r'\d+', embed.author.url)[0]):
+                if message_id == int(embed.author.url.split('/')[-1]):
                     if ' - (Edited)' not in embed.footer.text:
                         embed.set_footer(text=embed.footer.text + ' - (Edited)')
                     embed.description = message
@@ -90,7 +90,7 @@ class Thread:
             timestamp=message.created_at
         )
 
-        em.set_author(name=str(author), icon_url=author.avatar_url, url=f'https://{message.id}.id')  # store message id in hidden url
+        em.set_author(name=str(author), icon_url=author.avatar_url, url=message.jump_url)  # store message id in hidden url
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
         is_image_url = lambda u: any(urlparse(u.lower()).path.endswith(x) for x in image_types)
@@ -176,7 +176,7 @@ class ThreadManager:
 
         if channel.topic and 'User ID: ' in channel.topic:
             user_id = int(re.findall(r'\d+', channel.topic)[0])
-        
+
         # BUG: This wont work with multiple categories.
         # elif channel.topic is None:
         #     async for message in channel.history(limit=50):

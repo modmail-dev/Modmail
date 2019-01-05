@@ -41,11 +41,11 @@ class ModmailApiClient(ApiClient):
             self.headers = {
                 'Authorization': 'Bearer ' + self.token
             }
-    
+
     async def validate_token(self):
         resp = await self.request(self.base + '/token/verify', return_response=True)
         return resp.status == 200
-    
+
     def post_metadata(self, data):
         return self.request(self.metadata, method='POST', payload=data)
 

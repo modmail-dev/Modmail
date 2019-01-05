@@ -1,4 +1,3 @@
-import asyncio
 import os
 import json
 import box
@@ -8,15 +7,13 @@ class ConfigManager:
     """Class that manages a cached configuration"""
 
     valid_keys = {
-        'prefix', 'status', 'guild_id', 
-        'mention', 'disable_autoupdates', 
-        'modmail_guild_id', 'token', 'snippets', 
+        'prefix', 'status', 'guild_id',
+        'mention', 'disable_autoupdates',
+        'modmail_guild_id', 'token', 'snippets',
         'aliases', 'owners', 'modmail_api_token'
-        }
-    
-    
-    allowed_to_change_in_command = valid_keys - {'token', 'snippets', 'aliases', 'owners', 'modmail_api_token'}
+    }
 
+    allowed_to_change_in_command = valid_keys - {'token', 'snippets', 'aliases', 'owners', 'modmail_api_token'}
 
     def __init__(self, bot):
         self.bot = bot
