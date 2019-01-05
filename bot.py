@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.2'
+__version__ = '2.0.3'
 
 import asyncio
 import textwrap
@@ -36,12 +36,13 @@ from discord.ext import commands
 from discord.ext.commands.view import StringView
 from colorama import init, Fore, Style
 
+init()
+
 from core.api import Github, ModmailApiClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 
 
-init()
 
 line = Fore.BLACK + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
 
@@ -111,10 +112,12 @@ class ModmailBot(commands.Bot):
 
     @property
     def guild(self):
+        '''The guild that the bot is serving (the server where users message it from)'''
         return discord.utils.get(self.guilds, id=self.guild_id)
 
     @property
     def modmail_guild(self):
+        '''The guild that the bot is operating in (where the bot is creating threads)'''
         modmail_guild_id = self.config.get('modmail_guild_id')
         if not modmail_guild_id:
             return self.guild

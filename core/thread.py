@@ -65,7 +65,7 @@ class Thread:
 
     async def reply(self, message):
         if not message.content and not message.attachments:
-            raise commands.UserInputError('msg is a required argument.')
+            raise commands.UserInputError
         if not self.recipient:
             return await message.channel.send('This user does not share any servers with the bot and is thus unreachable.')
         await asyncio.gather(
@@ -227,7 +227,7 @@ class ThreadManager:
             self.get_dominant_color(recipient.avatar_url)
         )
 
-        log_count = len(log_data)
+        log_count = sum(1 for log in log_data if not log['open'])
         info_embed = self._format_info_embed(recipient, creator, log_url, log_count, dc)
 
         topic = f'User ID: {recipient.id}'
@@ -303,8 +303,9 @@ class ThreadManager:
         desc = f'{desc} [`{key}`]({log_url})'
 
         if member:
+            seperate_server = self.bot.guild != self.bot.modmail_guild
             roles = sorted(member.roles, key=lambda c: c.position)
-            rolenames = ' '.join([r.mention for r in roles if r.name != "@everyone"])
+            rolenames = ' '.join(r.mention if not seperate_server else r.name for r in roles if r.name != "@everyone")
 
         em = discord.Embed(colour=dc, description=desc, timestamp=time)
 
@@ -323,8 +324,8 @@ class ThreadManager:
                 em.add_field(name='Past logs', value=f'{log_count}')
             joined = str((time - member.joined_at).days)
             em.add_field(name='Joined', value=joined + days(joined))
-            # em.add_field(name='Member No.',value=str(member_number),inline = True)
-            em.add_field(name='Nickname', value=member.nick, inline=True)
+            if member.nick:
+                em.add_field(name='Nickname', value=member.nick, inline=True)
             if rolenames:
                 em.add_field(name='Roles', value=rolenames, inline=False)
         else:

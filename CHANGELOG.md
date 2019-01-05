@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.0.3
+
+Fixed some issues with how data is displayed in the info embed.
+
+### Fixed
+- Thread creation embed now shows the correct amount of past logs. 
+- If using a seperate server setup, roles in the info embed now are shown as names instead of mentions.
+    - This is due to the fact that you can't mention roles across servers.
+
 # v2.0.2
 
 ### Security
