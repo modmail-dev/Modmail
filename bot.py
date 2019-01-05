@@ -244,16 +244,15 @@ class ModmailBot(commands.Bot):
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
         if message.embeds and not isinstance(message.channel, discord.DMChannel):
-            matches = int(str(message.embeds[0].author.url).split('/')[-1])
+            message_id = str(message.embeds[0].author.url).split('/')[-1]
             if matches:
                 thread = await self.threads.find(channel=message.channel)
 
                 channel = thread.recipient.dm_channel
-                message_id = matches[0]
 
                 async for msg in channel.history():
                     if msg.embeds and msg.embeds[0].author:
-                        url = msg.embeds[0].author.url
+                        url = str(msg.embeds[0].author.url)
                         if message_id == url.split('/')[-1]:
                             return await msg.delete()
 
@@ -265,8 +264,8 @@ class ModmailBot(commands.Bot):
             async for msg in thread.channel.history():
                 if msg.embeds:
                     embed = msg.embeds[0]
-                    matches = embed.author.url.split('/')
-                    if matches and int(matches[-1]) == before.id:
+                    matches = str(embed.author.url)split('/')
+                    if matches and matches[-1] == str(before.id):
                         if ' - (Edited)' not in embed.footer.text:
                             embed.set_footer(text=embed.footer.text + ' - (Edited)')
                         embed.description = after.content

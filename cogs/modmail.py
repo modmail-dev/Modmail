@@ -254,11 +254,11 @@ class Modmail:
                 em = msg.embeds[0]
                 if 'Moderator' not in str(em.footer.text):
                     continue
-                linked_message_id = int(em.author.url.split('/')[-1])
+                linked_message_id = str(em.author.url).split('/')[-1]
                 break
             elif message_id and msg.id == message_id:
                 url = msg.embeds[0].author.url
-                linked_message_id = int(url.split('/')[-1])
+                linked_message_id = str(url).split('/')[-1]
                 break
 
         if not linked_message_id:

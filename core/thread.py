@@ -49,8 +49,8 @@ class Thread:
             if not msg.embeds:
                 continue
             embed = msg.embeds[0]
-            if embed and embed.author:
-                if message_id == int(embed.author.url.split('/')[-1]):
+            if embed and embed.author and embed.author.url:
+                if str(message_id) == str(embed.author.url).split('/')[-1]:
                     if ' - (Edited)' not in embed.footer.text:
                         embed.set_footer(text=embed.footer.text + ' - (Edited)')
                     embed.description = message
