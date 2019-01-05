@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 
 import asyncio
 import textwrap
@@ -120,10 +120,14 @@ class ModmailBot(commands.Bot):
             return self.guild
         else:
             return discord.utils.get(self.guilds, id=int(modmail_guild_id))
+    
+    @property
+    def using_multiple_server_setup(self):
+        return self.modmail_guild != self.guild
 
     @property
     def main_category(self):
-        if self.guild:
+        if self.modmail_guild:
             return discord.utils.get(self.modmail_guild.categories, name='Mod Mail')
 
     @property
@@ -245,7 +249,7 @@ class ModmailBot(commands.Bot):
         """Support for deleting linked messages"""
         if message.embeds and not isinstance(message.channel, discord.DMChannel):
             message_id = str(message.embeds[0].author.url).split('/')[-1]
-            if matches:
+            if message_id.isdigit():
                 thread = await self.threads.find(channel=message.channel)
 
                 channel = thread.recipient.dm_channel

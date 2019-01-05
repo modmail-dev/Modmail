@@ -135,7 +135,10 @@ class ThreadManager:
 
     async def populate_cache(self):
         for channel in self.bot.modmail_guild.text_channels:
+            if not self.bot.using_multiple_server_setup and channel.category != self.main_category:
+                continue
             await self.find(channel=channel)
+
 
     def __len__(self):
         return len(self.cache)
@@ -177,15 +180,15 @@ class ThreadManager:
         if channel.topic and 'User ID: ' in channel.topic:
             user_id = int(re.findall(r'\d+', channel.topic)[0])
 
-        # BUG: This wont work with multiple categories.
-        # elif channel.topic is None:
-        #     async for message in channel.history(limit=50):
-        #         if message.embeds:
-        #             em = message.embeds[0]
-        #             matches = re.findall(r'<@(\d+)>', str(em.description))
-        #             if matches:
-        #                 user_id = int(matches[-1])
-        #                 break
+        # BUG: When discord fails to create channel topic. search through message history
+        elif channel.topic is None:
+            async for message in channel.history(limit=50):
+                if message.embeds:
+                    em = message.embeds[0]
+                    matches = re.findall(r'User ID: (\d+)', str(em.footer.text))
+                    if matches:
+                        user_id = int(matches[0])
+                        break
 
         if user_id is not None:
             if user_id in self.cache:
