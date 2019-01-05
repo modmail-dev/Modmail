@@ -15,6 +15,10 @@
         "description": "Comma seperated user IDs of people that are allowed to use owner only commands. (eval and update)",
         "required": true
     },
+    "PREFIX": {
+        "description": "Beginning of command prefix.",
+        "required": true
+    },
     "MODMAIL_API_TOKEN": {
         "description": "API token from https://modmail.tk",
         "required": true
