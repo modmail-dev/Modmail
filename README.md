@@ -27,13 +27,13 @@
 ## How does it work?
 
 
-<img src='https://i.imgur.com/aHtn4C5.png' align='right' height=140>
+<img src='https://i.imgur.com/aHtn4C5.png' align='right' height=130>
 
 When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#commands).
 
 ## What it looks like
 
-![a](https://i.imgur.com/LZCHeaR.jpg)
+<img src='https://i.imgur.com/LZCHeaR.jpg' height=500>
 
 <h1 align="center"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Installation</a></h1>
 

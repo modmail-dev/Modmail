@@ -221,14 +221,14 @@ class ThreadManager:
 
         thread.channel = channel
 
-        log_url, log_data, dc = await asyncio.gather(
+        log_url, log_data = await asyncio.gather(
             self.bot.modmail_api.get_log_url(recipient, channel, creator or recipient),
-            self.bot.modmail_api.get_user_logs(recipient.id),
-            self.get_dominant_color(recipient.avatar_url)
+            self.bot.modmail_api.get_user_logs(recipient.id)
+            # self.get_dominant_color(recipient.avatar_url)
         )
 
         log_count = sum(1 for log in log_data if not log['open'])
-        info_embed = self._format_info_embed(recipient, creator, log_url, log_count, dc)
+        info_embed = self._format_info_embed(recipient, creator, log_url, log_count, 0x00ffff)
 
         topic = f'User ID: {recipient.id}'
         mention = self.bot.config.get('mention', '@here') if not creator else None
