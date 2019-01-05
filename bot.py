@@ -264,7 +264,7 @@ class ModmailBot(commands.Bot):
             async for msg in thread.channel.history():
                 if msg.embeds:
                     embed = msg.embeds[0]
-                    matches = str(embed.author.url)split('/')
+                    matches = str(embed.author.url).split('/')
                     if matches and matches[-1] == str(before.id):
                         if ' - (Edited)' not in embed.footer.text:
                             embed.set_footer(text=embed.footer.text + ' - (Edited)')
