@@ -27,7 +27,7 @@
 ## How does it work?
 
 
-<img src='https://i.imgur.com/MLlYpGt.png' align='right'>
+<img src='https://i.imgur.com/MLlYpGt.png' align='right' height=300>
 
 When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#commands).
 
