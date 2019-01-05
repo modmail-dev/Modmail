@@ -8,8 +8,12 @@
         "required": true
     },
     "GUILD_ID": {
-        "description": "The id for the server you are hosting this bot for.",
+        "description": "The id for the server you are serving this bot for.",
         "required": true
+    },
+    "MODMAIL_GUILD_ID": {
+        "description": "Operations center for the server you are serving for.",
+        "required": false
     },
     "OWNERS": {
         "description": "Comma seperated user IDs of people that are allowed to use owner only commands. (eval and update)",
