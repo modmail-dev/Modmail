@@ -29,6 +29,7 @@ class Github(ApiClient):
 class ModmailApiClient(ApiClient):
 
     base = 'https://api.modmail.tk'
+    metadata = base + '/metadata'
     github = base + '/github'
     logs = base + '/logs'
     config = base + '/config'
@@ -40,10 +41,13 @@ class ModmailApiClient(ApiClient):
             self.headers = {
                 'Authorization': 'Bearer ' + self.token
             }
-    
+
     async def validate_token(self):
         resp = await self.request(self.base + '/token/verify', return_response=True)
         return resp.status == 200
+
+    def post_metadata(self, data):
+        return self.request(self.metadata, method='POST', payload=data)
 
     def get_user_info(self):
         return self.request(self.github + '/userinfo')
@@ -64,7 +68,9 @@ class ModmailApiClient(ApiClient):
         return self.request(self.config)
 
     def update_config(self, data):
-        valid_keys = ['prefix', 'status', 'guild_id', 'mention', 'snippets', 'aliases', 'autoupdates', 'modmail_guild_id']
+
+        valid_keys = self.app.config.valid_keys - {'token', 'modmail_api_token', 'modmail_guild_id', 'guild_id'}
+
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 
 import asyncio
 import textwrap
@@ -36,20 +36,17 @@ from discord.ext import commands
 from discord.ext.commands.view import StringView
 from colorama import init, Fore, Style
 
-init()
-
 from core.api import Github, ModmailApiClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 
 
+init()
 
 line = Fore.BLACK + Style.BRIGHT + '-------------------------' + Style.RESET_ALL
 
 
 class ModmailBot(commands.Bot):
-
-    mutable_config_keys = ['prefix', 'status', 'guild_id', 'mention', 'autoupdates', 'modmail_guild_id']
 
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
@@ -62,7 +59,7 @@ class ModmailBot(commands.Bot):
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._add_commands()
-    
+
     def _add_commands(self):
         """Adds commands automatically"""
         self.remove_command('help')
@@ -123,10 +120,14 @@ class ModmailBot(commands.Bot):
             return self.guild
         else:
             return discord.utils.get(self.guilds, id=int(modmail_guild_id))
+    
+    @property
+    def using_multiple_server_setup(self):
+        return self.modmail_guild != self.guild
 
     @property
     def main_category(self):
-        if self.guild:
+        if self.modmail_guild:
             return discord.utils.get(self.modmail_guild.categories, name='Mod Mail')
 
     @property
@@ -153,7 +154,6 @@ class ModmailBot(commands.Bot):
         status = self.config.get('status')
         if status:
             await self.change_presence(activity=discord.Game(status))
-        
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -229,7 +229,7 @@ class ModmailBot(commands.Bot):
         return ctx
 
     async def on_message(self, message):
-        if message.type == discord.MessageType.pins_add and message.author == self.user: 
+        if message.type == discord.MessageType.pins_add and message.author == self.user:
             await message.delete()
         if message.author.bot:
             return
@@ -248,17 +248,16 @@ class ModmailBot(commands.Bot):
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
         if message.embeds and not isinstance(message.channel, discord.DMChannel):
-            matches = re.findall(r'\d+', str(message.embeds[0].author.url))
-            if matches:
+            message_id = str(message.embeds[0].author.url).split('/')[-1]
+            if message_id.isdigit():
                 thread = await self.threads.find(channel=message.channel)
 
                 channel = thread.recipient.dm_channel
-                message_id = matches[0]
 
                 async for msg in channel.history():
                     if msg.embeds and msg.embeds[0].author:
-                        url = msg.embeds[0].author.url
-                        if message_id == re.findall(r'\d+', url)[0]:
+                        url = str(msg.embeds[0].author.url)
+                        if message_id == url.split('/')[-1]:
                             return await msg.delete()
 
     async def on_message_edit(self, before, after):
@@ -269,8 +268,8 @@ class ModmailBot(commands.Bot):
             async for msg in thread.channel.history():
                 if msg.embeds:
                     embed = msg.embeds[0]
-                    matches = re.findall(r'\d+', str(embed.author.url))
-                    if matches and int(matches[0]) == before.id:
+                    matches = str(embed.author.url).split('/')
+                    if matches and matches[-1] == str(before.id):
                         if ' - (Edited)' not in embed.footer.text:
                             embed.set_footer(text=embed.footer.text + ' - (Edited)')
                         embed.description = after.content
@@ -297,9 +296,9 @@ class ModmailBot(commands.Bot):
         return overwrites
 
     async def validate_api_token(self):
-        valid = True 
+        valid = True
         try:
-            token = self.config.modmail_api_token
+            self.config.modmail_api_token
         except KeyError:
             print('MODMAIL_API_TOKEN not found.')
             print('Set a config variable called MODMAIL_API_TOKEN with a token from https://dashboard.modmail.tk')
@@ -313,7 +312,7 @@ class ModmailBot(commands.Bot):
                 await self.logout()
             else:
                 print(Style.RESET_ALL + Fore.CYAN + 'Validated API token.' + Style.RESET_ALL)
-        
+
     async def data_loop(self):
         await self.wait_until_ready()
 
@@ -325,10 +324,11 @@ class ModmailBot(commands.Bot):
                 "guild_name": self.guild.name,
                 "member_count": len(self.guild.members),
                 "uptime": (datetime.datetime.utcnow() - self.start_time).total_seconds(),
+                "latency": f'{self.ws.latency * 1000:.4f}',
                 "version": __version__
             }
 
-            await self.session.post('https://api.modmail.tk/metadata', json=data)
+            await self.modmail_api.post_metadata(data)
 
             await asyncio.sleep(3600)
 

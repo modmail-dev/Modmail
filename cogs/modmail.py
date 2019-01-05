@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 import datetime
 import dateutil.parser
-import re
 from typing import Optional, Union
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
@@ -255,11 +254,11 @@ class Modmail:
                 em = msg.embeds[0]
                 if 'Moderator' not in str(em.footer.text):
                     continue
-                linked_message_id = int(re.findall(r'\d+', em.author.url)[0])
+                linked_message_id = str(em.author.url).split('/')[-1]
                 break
             elif message_id and msg.id == message_id:
                 url = msg.embeds[0].author.url
-                linked_message_id = int(re.findall(r'\d+', url)[0])
+                linked_message_id = str(url).split('/')[-1]
                 break
 
         if not linked_message_id:

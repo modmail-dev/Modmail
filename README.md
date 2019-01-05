@@ -20,24 +20,21 @@
 </div>
 <br>
 <div align="center">
-    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! This bot enables server members to DM it, the messages then get relayed to the server moderators who can then respond through the bot. In essence this bot serves as a means for members to easily communicate with server leadership in an organised manner.
+    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! It enables server members to DM it, the messages then get relayed to the server moderators who can then respond through the bot. In essence this bot serves as a means for members to easily communicate with server leadership in an organised manner.
 
 </div>
 
 ## How does it work?
 
 
-<img src='https://i.imgur.com/aHtn4C5.png' align='right' height=140>
+<img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
 
 When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#commands).
 
-## What it looks like
 
-![a](https://i.imgur.com/LZCHeaR.jpg)
+## Installation
 
-<h1 align="center"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Installation</a></h1>
-
-You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone! Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation). If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
+You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation). If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
 
 ### What is Heroku?
 Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data on site (changing files). We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in any files, utilising discord channel topics for tracking and relaying conversations.

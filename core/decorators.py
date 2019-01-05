@@ -3,12 +3,14 @@ import discord
 from discord.ext import commands
 import asyncio
 
+
 def trigger_typing(func):
     @functools.wraps(func)
     async def wrapper(self, ctx, *args, **kwargs):
         await ctx.trigger_typing()
         return await func(self, ctx, *args, **kwargs)
     return wrapper
+
 
 def auth_required(func):
     @functools.wraps(func)
@@ -19,9 +21,10 @@ def auth_required(func):
             color=discord.Color.red(),
             title='Unauthorized',
             description='You can only use this command if you have a configured `MODMAIL_API_TOKEN`. Get your token from https://dashboard.modmail.tk'
-            )
+        )
         await ctx.send(embed=em)
-    return wrapper 
+    return wrapper
+
 
 def owner_only():
     async def predicate(ctx):
@@ -29,8 +32,10 @@ def owner_only():
         return ctx.author.id in allowed
     return commands.check(predicate)
 
+
 def asyncexecutor(loop=None, executor=None):
     loop = loop or asyncio.get_event_loop()
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
