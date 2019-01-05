@@ -32,7 +32,7 @@
 When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#commands).
 
 
-<h1 align="left"><a href="https://github.com/kyb3r/modmail/wiki/Installation">Installation</a></h1>
+## Installation
 
 You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation). If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
 
