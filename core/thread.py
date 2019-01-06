@@ -66,8 +66,8 @@ class Thread:
     async def reply(self, message):
         if not message.content and not message.attachments:
             raise commands.UserInputError
-        if not self.recipient:
-            return await message.channel.send('This user does not share any servers with the bot and is thus unreachable.')
+        if self.recipient not in self.bot.guild.members:
+            return await message.channel.send('This user is no longer in the server and is thus unreachable.')
         await asyncio.gather(
             self.send(message, self.channel, from_mod=True),  # in thread channel
             self.send(message, self.recipient, from_mod=True)  # to user
