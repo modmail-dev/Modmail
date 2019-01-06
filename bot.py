@@ -353,7 +353,9 @@ class ModmailBot(commands.Bot):
             if not valid:
                 await self.logout()
             else:
-                print(Style.RESET_ALL + Fore.CYAN + 'Validated API token.' + Style.RESET_ALL)
+                username = (await self.modmail_api.get_user_info())['user']['username']
+                print(Style.RESET_ALL + Fore.CYAN + 'Validated token.' )
+                print(f'GitHub user: {username}' + Style.RESET_ALL)
 
     async def data_loop(self):
         await self.wait_until_ready()
