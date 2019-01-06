@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.6'
+__version__ = '2.0.7'
 
 import asyncio
 import textwrap
@@ -39,6 +39,7 @@ from colorama import init, Fore, Style
 from core.api import Github, ModmailApiClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
+from core.changelog import ChangeLog
 
 
 init()
@@ -166,11 +167,12 @@ class ModmailBot(commands.Bot):
         {Fore.CYAN}Guild ID: {self.guild.id if self.guild else 0}
         {line}
         """).strip())
-
+        
         if not self.guild:
             print(Fore.RED + Style.BRIGHT + 'WARNING - The GUILD_ID provided does not exist!' + Style.RESET_ALL)
         else:
             await self.threads.populate_cache()
+
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
@@ -393,28 +395,27 @@ class ModmailBot(commands.Bot):
                 data = await self.modmail_api.update_repository()
                 
 
-                em = discord.Embed(title='Updating bot', color=discord.Color.green())
+                em = discord.Embed(color=discord.Color.green())
 
                 commit_data = data['data']
                 user = data['user']
-                em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
+                em.set_author(name=user['username'] + ' - Updating Bot', icon_url=user['avatar_url'], url=user['url'])
                 em.set_footer(text=f"Updating modmail v{self.version} -> v{metadata['latest_version']}")
 
+                changelog = await ChangeLog.from_repo(self)
+                latest = changelog.latest_version
+                em.description = latest.description
+                for name, value in latest.fields.items():
+                    em.add_field(name=name, value=value)
+
                 if commit_data:
-                    em.description = 'Bot successfully updated, the bot will restart momentarily'
                     message = commit_data['commit']['message']
                     html_url = commit_data["html_url"]
                     short_sha = commit_data['sha'][:6]
                     em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
                     print('Updating bot.')
-                else:
-                    await asyncio.sleep(3600)
-                    continue
-
-                em.add_field(name='Latest Commit', value=await self.get_latest_updates(limit=1), inline=False)
-
-                channel = self.main_category.channels[0]
-                await channel.send(embed=em)
+                    channel = self.main_category.channels[0]
+                    await channel.send(embed=em)
 
             await asyncio.sleep(3600)
 

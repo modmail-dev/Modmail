@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.0.7
+
+New command and improvements in bot update message interfaces. 
+
+### Added 
+- Added a changelog command to view the bot's changelog within discord.
+
+### Changed
+- Update command now shows latest changes directly from the [CHANGELOG.md](https://modmail.tk/) in the repo.
+- Auto update messages also show latest changes from repo.
+- Remove latest changes section from the `about` command.
+
 # v2.0.6
 
 ### Fixed
@@ -73,3 +85,5 @@ This release introduces the use of our centralized [API service](https://github.
 - Dynamic command aliases and snippets (#86)
 - Optional support for using a seperate guild as the operations center (#81)
 - NSFW Command to change channels to NSFW (#77)
+
+# v0.0.0
