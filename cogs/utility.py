@@ -10,6 +10,7 @@ from difflib import get_close_matches
 
 from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
+from core.changelog import ChangeLog
 
 
 class Utility:
@@ -151,6 +152,13 @@ class Utility:
         p_session = PaginatorSession(ctx, *pages)
 
         await p_session.run()
+    
+    @commands.command()
+    @trigger_typing
+    async def changelog(self, ctx):
+        changelog = await ChangeLog.from_repo(self.bot)
+        p = PaginatorSession(ctx, *changelog.embeds)
+        await p.run()
 
     @commands.command()
     @trigger_typing
@@ -176,10 +184,8 @@ class Utility:
         else:
             em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
 
-        em.add_field(name='Version', value=f'[`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
+        em.add_field(name='Version', value=f'[`{self.bot.version}`](https://modmail.tk/changelog)')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
-
-        em.add_field(name='Latest Updates', value=await self.bot.get_latest_updates())
 
         footer = f'Bot ID: {self.bot.user.id}'
 
@@ -240,21 +246,25 @@ class Utility:
 
             commit_data = data['data']
             user = data['user']
-            em.title = 'Success'
+            em.title = None
             em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
             em.set_footer(text=f"Updating modmail v{self.bot.version} -> v{metadata['latest_version']}")
 
             if commit_data:
-                em.description = 'Bot successfully updated, the bot will restart momentarily'
+                em.set_author(name=user['username'] + ' - Updating bot', icon_url=user['avatar_url'], url=user['url'])
+                changelog = await ChangeLog.from_repo(self.bot)
+                latest = changelog.latest_version
+                em.description = latest.description
+                for name, value in latest.fields.items():
+                    em.add_field(name=name, value=value)
                 message = commit_data['commit']['message']
                 html_url = commit_data["html_url"]
                 short_sha = commit_data['sha'][:6]
-                em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
+                em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url})")
             else:
                 em.description = 'Already up to date with master repository.'
 
-        em.add_field(name='Latest Commit', value=await self.bot.get_latest_updates(limit=1), inline=False)
-
+            
         await ctx.send(embed=em)
 
     @commands.command(name='status', aliases=['customstatus', 'presence'])
