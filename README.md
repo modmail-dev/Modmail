@@ -75,7 +75,7 @@ Heroku is a free hosting site that can host many web apps. However, the web apps
 
 ## Features
 
-### Snippets
+### Snippets and aliases
 Snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command.
 
 ### Custom Mentions
@@ -88,7 +88,7 @@ Did you accidentally send something you didnt mean to with the `reply` command? 
 Thread conversations are automatically logged and a log link (logs.modmail.tk) is provided with each thread.
 
 ### Automatic Updates
-The bot checks for new updates every hour and automatically updates to a newer version if found. You can disable this functionality by adding a `disable_autoupdates` config variable.
+The bot checks for new updates every hour and automatically updates to a newer version if found. You can disable this functionality by adding a `disable_autoupdates` config variable. This bot is under active development so you can always look forward to new, useful features!
 
 ## Contributing
 This project is licenced under MIT. Feel free to contribute to the development of this bot.
