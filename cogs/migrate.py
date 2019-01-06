@@ -37,7 +37,7 @@ class Thread:
 
         self.channel_id = int(data[5])
         self.created_at = datetime.fromisoformat(data[6])
-        self.scheduled_close_at = datetime.fromisoformat(data[7]) if data[7] else None
+        self.scheduled_close_at = datetime.fromisoformat(data[7]) if data[7] else datetime.utcnow()
         self.scheduled_close_id = data[8]
         self.alert_id = data[9]
 
@@ -65,6 +65,8 @@ class Thread:
             'open': self.status != 'closed',
             'channel_id': str(self.channel_id),
             'guild_id': str(self.bot.guild_id),
+            'created_at': str(self.created_at),
+            'closed_at': str(self.scheduled_close_at),
             'recipient': {
                 'id': str(self.recipient.id),
                 'name': self.recipient.name,
@@ -206,9 +208,8 @@ class Migrate:
         async def convert_thread_log(row):
             thread = await Thread.from_data(self.bot, row, c)
             converted = thread.serialize()
-            print(f'Converted thread log: {thread.id}')
-            await self.bot.modmail_api.post_log(thread.channel_id, converted, force=True)
-            print(f'Posted thread log: {thread.id}')
+            log_url = await self.bot.modmail_api.get_log_url(payload=converted)
+            print(f'Posted thread log: {log_url}')
 
         # Threads
         for row in c.execute("SELECT * FROM 'threads'"):

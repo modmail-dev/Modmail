@@ -314,8 +314,10 @@ class ModmailBot(commands.Bot):
             if not valid:
                 await self.logout()
             else:
-                print(Style.RESET_ALL + Fore.CYAN + 'Validated API token.' + Style.RESET_ALL)
-
+                username = (await self.modmail_api.get_user_info())['user']['username']
+                print(Style.RESET_ALL + Fore.CYAN + 'Validated token.' )
+                print(f'GitHub user: {username}' + Style.RESET_ALL)
+                
     async def data_loop(self):
         await self.wait_until_ready()
 
@@ -345,7 +347,6 @@ class ModmailBot(commands.Bot):
 
             if metadata['latest_version'] != self.version:
                 data = await self.modmail_api.update_repository()
-                print('Updating bot.')
 
                 em = discord.Embed(title='Updating bot', color=discord.Color.green())
 
@@ -360,6 +361,7 @@ class ModmailBot(commands.Bot):
                     html_url = commit_data["html_url"]
                     short_sha = commit_data['sha'][:6]
                     em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
+                    print('Updating bot.')
                 else:
                     await asyncio.sleep(3600)
                     continue
