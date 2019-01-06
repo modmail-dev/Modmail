@@ -36,8 +36,8 @@ When a user sends a direct message to the bot, a channel is created within an is
 
 You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation). If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
 
-### What is Heroku?
-Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data on site (changing files). We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in any files, utilising discord channel topics for tracking and relaying conversations.
+### What is heroku?
+Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](modmail.tk) hosted by us, so you don't need to worry about hosting anything.
 
 ## Commands
 
