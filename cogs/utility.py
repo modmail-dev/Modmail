@@ -10,6 +10,7 @@ from difflib import get_close_matches
 
 from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
+from core.changelog import ChangeLog
 
 
 class Utility:
@@ -151,6 +152,13 @@ class Utility:
         p_session = PaginatorSession(ctx, *pages)
 
         await p_session.run()
+    
+    @commands.command()
+    @trigger_typing
+    async def changelog(self, ctx):
+        changelog = await ChangeLog.from_repo(self.bot)
+        p = PaginatorSession(ctx, *changelog.embeds)
+        await p.run()
 
     @commands.command()
     @trigger_typing
