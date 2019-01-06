@@ -184,10 +184,8 @@ class Utility:
         else:
             em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
 
-        em.add_field(name='Version', value=f'[`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
+        em.add_field(name='Version', value=f'[`{self.bot.version}`](https://modmail.tk/changelog')
         em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
-
-        em.add_field(name='Latest Updates', value=await self.bot.get_latest_updates())
 
         footer = f'Bot ID: {self.bot.user.id}'
 

@@ -14,7 +14,7 @@ New command and improvements in bot update message interfaces.
 ### Changed
 - Update command now shows latest changes directly from the [CHANGELOG.md](https://modmail.tk/) in the repo.
 - Auto update messages also show latest changes from repo.
-
+- Remove latest changes section from the `about` command.
 
 # v2.0.6
 
