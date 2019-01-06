@@ -248,21 +248,25 @@ class Utility:
 
             commit_data = data['data']
             user = data['user']
-            em.title = 'Success'
+            em.title = None
             em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
             em.set_footer(text=f"Updating modmail v{self.bot.version} -> v{metadata['latest_version']}")
 
             if commit_data:
-                em.description = 'Bot successfully updated, the bot will restart momentarily'
+                em.set_author(name=user['username'] + ' - Updating bot', icon_url=user['avatar_url'], url=user['url'])
+                changelog = await ChangeLog.from_repo(self.bot)
+                latest = changelog.latest_version
+                em.description = latest.description
+                for name, value in latest.fields.items():
+                    em.add_field(name=name, value=value)
                 message = commit_data['commit']['message']
                 html_url = commit_data["html_url"]
                 short_sha = commit_data['sha'][:6]
-                em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
+                em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url})")
             else:
                 em.description = 'Already up to date with master repository.'
 
-        em.add_field(name='Latest Commit', value=await self.bot.get_latest_updates(limit=1), inline=False)
-
+            
         await ctx.send(embed=em)
 
     @commands.command(name='status', aliases=['customstatus', 'presence'])
