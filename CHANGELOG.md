@@ -73,3 +73,5 @@ This release introduces the use of our centralized [API service](https://github.
 - Dynamic command aliases and snippets (#86)
 - Optional support for using a seperate guild as the operations center (#81)
 - NSFW Command to change channels to NSFW (#77)
+
+# v0.0.0
