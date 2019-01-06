@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.5'
+__version__ = '2.0.6'
 
 import asyncio
 import textwrap
@@ -167,7 +167,10 @@ class ModmailBot(commands.Bot):
         {line}
         """).strip())
 
-        await self.threads.populate_cache()
+        if not self.guild:
+            print(Fore.RED + Style.BRIGHT + 'WARNING - The GUILD_ID provided does not exist!' + Style.RESET_ALL)
+        else:
+            await self.threads.populate_cache()
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
@@ -257,6 +260,8 @@ class ModmailBot(commands.Bot):
             audit_logs = self.modmail_guild.audit_logs()
             entry = await audit_logs.find(lambda e: e.target.id == channel.id)
             mod = entry.user
+            if mod.bot:
+                return
 
             log_data = await self.modmail_api.post_log(channel.id, {
                 'open': False,
@@ -353,7 +358,9 @@ class ModmailBot(commands.Bot):
             if not valid:
                 await self.logout()
             else:
-                print(Style.RESET_ALL + Fore.CYAN + 'Validated API token.' + Style.RESET_ALL)
+                username = (await self.modmail_api.get_user_info())['user']['username']
+                print(Style.RESET_ALL + Fore.CYAN + 'Validated token.' )
+                print(f'GitHub user: {username}' + Style.RESET_ALL)
 
     async def data_loop(self):
         await self.wait_until_ready()
