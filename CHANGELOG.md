@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-#v2.0.4
+# v2.0.5
+
+### Changed
+- Alias command now checks if you are adding a valid alias - command combo.
+- Deleting a channel manually will now correctly close the thread and post logs.
+
+# v2.0.4
 
 ### Fixed
 - Fixed a one off bug where the channel topic dissapears, but modmail operations should still continue

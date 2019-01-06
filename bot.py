@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.4'
+__version__ = '2.0.5'
 
 import asyncio
 import textwrap
@@ -244,6 +244,48 @@ class ModmailBot(commands.Bot):
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
 
         await self.process_commands(message)
+    
+    async def on_guild_channel_delete(self, channel):
+        if channel.guild != self.modmail_guild:
+            return 
+        thread = await self.threads.find(channel=channel)
+        if thread:
+            del self.threads.cache[thread.id]
+
+            mod = None 
+
+            audit_logs = self.modmail_guild.audit_logs()
+            entry = await audit_logs.find(lambda e: e.target.id == channel.id)
+            mod = entry.user
+
+            log_data = await self.modmail_api.post_log(channel.id, {
+                'open': False,
+                'closed_at': str(datetime.datetime.utcnow()),
+                'closer': {
+                    'id': str(mod.id),
+                    'name': mod.name,
+                    'discriminator': mod.discriminator,
+                    'avatar_url': mod.avatar_url,
+                    'mod': True
+                }})
+
+            em = discord.Embed(title='Thread Closed')
+            em.description = f'{mod.mention} has closed this modmail thread.'
+            em.color = discord.Color.red()
+
+            try:
+                await thread.recipient.send(embed=em)
+            except:
+                pass
+            
+            log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
+
+            user = thread.recipient.mention if thread.recipient else f'`{thread.id}`'
+
+            desc = f"[`{log_data['key']}`]({log_url}) {mod.mention} closed a thread with {user}"
+            em = discord.Embed(description=desc, color=em.color)
+            em.set_author(name='Thread closed', url=log_url)
+            await self.main_category.channels[0].send(embed=em)
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
@@ -342,7 +384,7 @@ class ModmailBot(commands.Bot):
 
             if metadata['latest_version'] != self.version:
                 data = await self.modmail_api.update_repository()
-                print('Updating bot.')
+                
 
                 em = discord.Embed(title='Updating bot', color=discord.Color.green())
 
@@ -357,6 +399,7 @@ class ModmailBot(commands.Bot):
                     html_url = commit_data["html_url"]
                     short_sha = commit_data['sha'][:6]
                     em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
+                    print('Updating bot.')
                 else:
                     await asyncio.sleep(3600)
                     continue
