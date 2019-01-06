@@ -453,6 +453,12 @@ class Utility:
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
 
+        if self.bot.get_command(name) or self.bot.config.aliases.get(name):
+            return await ctx.send(f'A command or alias already exists with the same name: `{name}`')
+        
+        if not self.bot.get_command(value.split()[0]):
+            return await ctx.send(f'The command you are attempting to point to does not exist: `{value.split()[0]}`')
+
         self.bot.config.aliases[name] = value
         await self.bot.config.update()
 
