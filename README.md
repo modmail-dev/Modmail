@@ -17,6 +17,10 @@
   <img src="https://img.shields.io/github/license/kyb3r/modmail.svg?style=for-the-badge&colorB=7289DA" alt="Travis" />
 </a>
 
+<a href="https://heroku.com/deploy">
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
+</a>
+
 </div>
 <br>
 <div align="center">
