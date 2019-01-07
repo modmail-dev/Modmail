@@ -8,7 +8,7 @@
 
 
 <a href="https://heroku.com/deploy">
-    <img src="https://img.shields.io/badge/deploy_to-heroku-7289DA.svg?style=for-the-badge" />
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
 </a>
 
 <a href="">
