@@ -6,14 +6,16 @@ import box
 class ConfigManager:
     """Class that manages a cached configuration"""
 
-    valid_keys = {
-        'prefix', 'status', 'guild_id',
-        'mention', 'disable_autoupdates',
-        'modmail_guild_id', 'token', 'snippets',
-        'aliases', 'owners', 'modmail_api_token'
-    }
+    allowed_to_change_in_command = {
+        'status', 'bot_log_channel_id', 'mention', 'disable_autoupdates', 'prefix'
+        }
+    
+    internal_keys = {
+        'token', 'snippets', 'aliases', 'owners', 'modmail_api_token',
+        'guild_id', 'modmail_guild_id', 'blocked'
+        }
 
-    allowed_to_change_in_command = valid_keys - {'token', 'snippets', 'aliases', 'owners', 'modmail_api_token'}
+    valid_keys = allowed_to_change_in_command.union(internal_keys)
 
     def __init__(self, bot):
         self.bot = bot
