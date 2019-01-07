@@ -8,15 +8,15 @@
 
 
 <a href="https://heroku.com/deploy">
-    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
+    <img src="https://img.shields.io/badge/deploy_to-heroku-7289DA.svg?style=for-the-badge" />
 </a>
 
 <a href="">
-  <img src="https://img.shields.io/badge/python-3.7-997FBC.svg?style=for-the-badge" alt="Travis" />
+  <img src="https://img.shields.io/badge/python-3.7-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
 
 <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-  <img src="https://img.shields.io/github/license/kyb3r/modmail.svg?style=for-the-badge" alt="Travis" />
+  <img src="https://img.shields.io/badge/license-mit-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
 
 
