@@ -138,8 +138,7 @@ class Modmail:
             pass
 
         # Logging
-        categ = self.bot.main_category
-        log_channel = categ.channels[0]
+        log_channel = self.bot.log_channel
 
         log_data = await self.bot.modmail_api.post_log(ctx.channel.id, {
             'open': False, 'closed_at': str(datetime.datetime.utcnow()), 'closer': {

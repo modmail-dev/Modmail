@@ -91,6 +91,14 @@ class ModmailBot(commands.Bot):
             super().run(self.token)
         finally:
             print(Fore.RED + ' - Shutting down bot' + Style.RESET_ALL)
+        
+    @property
+    def log_channel(self):
+        channel_id = self.config.get('bot_log_channel_id')
+        if channel_id is not None:
+            return self.get_channel(int(channel_id))
+        else:
+            return self.main_category.channels[0]
 
     @property
     def snippets(self):
@@ -167,7 +175,7 @@ class ModmailBot(commands.Bot):
         {Fore.CYAN}Guild ID: {self.guild.id if self.guild else 0}
         {line}
         """).strip())
-        
+
         if not self.guild:
             print(Fore.RED + Style.BRIGHT + 'WARNING - The GUILD_ID provided does not exist!' + Style.RESET_ALL)
         else:
@@ -292,7 +300,7 @@ class ModmailBot(commands.Bot):
             desc = f"[`{log_data['key']}`]({log_url}) {mod.mention} closed a thread with {user}"
             em = discord.Embed(description=desc, color=em.color)
             em.set_author(name='Thread closed', url=log_url)
-            await self.main_category.channels[0].send(embed=em)
+            await self.log_channel.send(embed=em)
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
