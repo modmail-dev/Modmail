@@ -23,6 +23,7 @@ class Thread:
         self.recipient = recipient
         self.channel = None
         self.ready_event = asyncio.Event()
+        self.close_task = None
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient}", channel={self.channel.id})'
@@ -39,10 +40,20 @@ class Thread:
     def ready(self, flag):
         if flag is True:
             self.ready_event.set()
+    
+    async def _close_after(self, after):
+        await asyncio.sleep(after)
+        await self.close()
 
-    def close(self):
-        del self.manager.cache[self.id]
-        return self.channel.delete()
+    async def close(self, *, after=0):
+        '''Close a thread now or after a set time in seconds'''
+        if after > 0:
+            if self.close_task is not None and not self.close_task.cancelled():
+                self.close_task.cancel()
+            self.close_task = asyncio.create_task(self._close_after(after))
+        else:
+            del self.manager.cache[self.id]
+            await self.channel.delete()
 
     async def _edit_thread_message(self, channel, message_id, message):
         async for msg in channel.history():
@@ -74,6 +85,8 @@ class Thread:
         )
 
     async def send(self, message, destination=None, from_mod=False, delete_message=True):
+        if self.close_task is not None and not self.close_task.cancelled():
+            self.close_task.cancel() # cancel closing if a thread message is sent.
         if not self.ready:
             await self.wait_until_ready()
 
