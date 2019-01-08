@@ -214,6 +214,8 @@ class ModmailBot(commands.Bot):
         view = StringView(message.content)
         ctx = cls(prefix=None, view=view, bot=self, message=message)
 
+        ctx.thread = await self.threads.find(channel=ctx.channel)
+
         if self._skip_check(message.author.id, self.user.id):
             return ctx
 
