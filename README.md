@@ -47,7 +47,7 @@ The bot comes with a plethora of useful functionality. Take a look at the [list 
 
 
 ### Automatic Updates
-The bot checks for new updates every hour and automatically updates to a newer version if found. You can disable this functionality by adding a `disable_autoupdates` config variable. This bot is under active development so you can always look forward to new, useful features!
+The bot checks for new updates every hour and automatically updates to a newer version if found. This bot is under active development so you can always look forward to new, useful features! If you do not want this functionality, for example if you want to make changes to your fork, you can do so by adding a `disable_autoupdates` config variable. 
 
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
