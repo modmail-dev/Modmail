@@ -7,7 +7,8 @@ class ConfigManager:
     """Class that manages a cached configuration"""
 
     allowed_to_change_in_command = {
-        'status', 'bot_log_channel_id', 'mention', 'disable_autoupdates', 'prefix'
+        'status', 'log_channel_id', 'mention', 'disable_autoupdates', 'prefix',
+        'main_category_id'
         }
     
     internal_keys = {
@@ -28,10 +29,15 @@ class ConfigManager:
         return self.bot.modmail_api
 
     def populate_cache(self):
+        data = {
+            'snippets': {},
+            'aliases': {},
+            'blocked': {}
+        }
         try:
-            data = json.load(open('config.json'))
+            data.update(json.load(open('config.json')))
         except FileNotFoundError:
-            data = {}
+            pass
         finally:
             data.update(os.environ)
             data = {k.lower(): v for k, v in data.items() if k.lower() in self.valid_keys}

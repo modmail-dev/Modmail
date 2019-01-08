@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.7'
+__version__ = '2.0.8'
 
 import asyncio
 import textwrap
@@ -94,7 +94,7 @@ class ModmailBot(commands.Bot):
         
     @property
     def log_channel(self):
-        channel_id = self.config.get('bot_log_channel_id')
+        channel_id = self.config.get('log_channel_id')
         if channel_id is not None:
             return self.get_channel(int(channel_id))
         else:
@@ -136,14 +136,15 @@ class ModmailBot(commands.Bot):
 
     @property
     def main_category(self):
+        category_id = self.config.get('main_category_id')
+        if category_id is not None:
+            return discord.utils.get(self.modmail_guild.categories, id=int(category_id))
         if self.modmail_guild:
             return discord.utils.get(self.modmail_guild.categories, name='Mod Mail')
 
     @property
     def blocked_users(self):
-        if self.modmail_guild:
-            top_chan = self.main_category.channels[0]
-            return [int(i) for i in re.findall(r'\d+', top_chan.topic)]
+        return self.config.get('blocked', {})
 
     @property
     def prefix(self):
@@ -422,7 +423,7 @@ class ModmailBot(commands.Bot):
                     short_sha = commit_data['sha'][:6]
                     em.add_field(name='Merge Commit', value=f"[`{short_sha}`]({html_url}) {message} - {user['username']}")
                     print('Updating bot.')
-                    channel = self.main_category.channels[0]
+                    channel = self.log_channel
                     await channel.send(embed=em)
 
             await asyncio.sleep(3600)

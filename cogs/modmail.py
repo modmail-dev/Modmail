@@ -30,8 +30,8 @@ class Modmail:
         await categ.edit(position=0)
 
         c = await self.bot.modmail_guild.create_text_channel(name='bot-logs', category=categ)
-        await c.edit(topic='Manually add user id\'s to block users.\n\n'
-                           'Blocked\n-------\n\n')
+        await c.edit(topic='You can delete this channel if you set up your own log channel.')
+        await c.send('Use the `config set log_channel_id` command to set up a custom log channel.')
 
         await ctx.send('Successfully set up server.')
 
@@ -149,6 +149,9 @@ class Modmail:
                 'mod': True
             }
         })
+
+        if isinstance(log_data, str):
+            print(log_data) # error
 
         log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
 
@@ -299,19 +302,19 @@ class Modmail:
         users = []
         not_reachable = []
 
-        for id in self.bot.blocked_users:
-            user = self.bot.get_user(id)
+        for id, reason in self.bot.blocked_users.items():
+            user = self.bot.get_user(int(id))
             if user:
-                users.append(user)
+                users.append((user, reason))
             else:
-                not_reachable.append(id)
+                not_reachable.append((id, reason))
 
         em.description = 'Here is a list of blocked users.'
 
         if users:
-            em.add_field(name='Currently Known', value=' '.join(u.mention for u in users))
+            em.add_field(name='Currently Known', value='\n'.join(u.mention + (f' - `{r}`' if r else '') for u, r in users))
         if not_reachable:
-            em.add_field(name='Unknown', value='\n'.join(f'`{i}`' for i in not_reachable), inline=False)
+            em.add_field(name='Unknown', value='\n'.join(f'`{i}`' + (f' - `{r}`' if r else '') for i, r in not_reachable), inline=False)
 
         if not users and not not_reachable:
             em.description = 'Currently there are no blocked users'
@@ -321,7 +324,7 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def block(self, ctx, *, user: Union[discord.Member, discord.User, obj]=None):
+    async def block(self, ctx, user: Union[discord.Member, discord.User, obj]=None, *, reason=None):
         """Block a user from using modmail."""
 
         if user is None:
@@ -331,21 +334,18 @@ class Modmail:
             else:
                 raise commands.UserInputError
 
-        categ = self.bot.main_category
-        top_chan = categ.channels[0]  # bot-info
-        topic = str(top_chan.topic)
-        topic += '\n' + str(user.id)
-
+        
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         em = discord.Embed()
         em.color = discord.Color.green()
 
-        if str(user.id) not in top_chan.topic:
-            await top_chan.edit(topic=topic)
+        if str(user.id) not in self.bot.blocked_users:
+            self.bot.config.blocked[str(user.id)] = reason
+            await self.bot.config.update()
 
             em.title = 'Success'
-            em.description = f'{mention} is now blocked'
+            em.description = f'{mention} is now blocked ' + f'for `{reason}`' if reason else ''
 
             await ctx.send(embed=em)
         else:
@@ -368,18 +368,14 @@ class Modmail:
             else:
                 raise commands.UserInputError
 
-        categ = self.bot.main_category
-        top_chan = categ.channels[0]  # thread-logs
-        topic = str(top_chan.topic)
-        topic = topic.replace('\n' + str(user.id), '')
-
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         em = discord.Embed()
         em.color = discord.Color.green()
 
-        if str(user.id) in top_chan.topic:
-            await top_chan.edit(topic=topic)
+        if str(user.id) in self.bot.blocked_users:
+            del self.bot.config.blocked[str(user.id)]
+            await self.bot.config.update()
 
             em.title = 'Success'
             em.description = f'{mention} is no longer blocked'

@@ -5,19 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-# [ unreleased ]
+# v2.0.8
 
-Improvements in commands and new config option available.
+Improvements in commands and new config options available.
 
 ### Added 
 - Added the ability to use your own log channel 
-    - You can do this by using the `config set log_channel_id <id>` command.
+    - You can do this via the `config set log_channel_id <id>` command.
+- Added the ability to use your own main inbox category.
+    - You can do this via the `config set main_category_id <id>` command.
 
 ### Changed
 - You now have the ability to supply a reason when blocking a user. 
 - Blocked users are now stored in the database instead of in the channel topic.
-- This means you can delete the top channel in the modmail category now.
-
+    - This means you can delete the top channel in the modmail category now. (Migrate first though.)
 
 # v2.0.7
 
