@@ -392,7 +392,7 @@ class Utility:
             valid_keys = [f'`{k}`' for k in self.bot.config.allowed_to_change_in_command]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
         else:
-            self.bot.config.cache[key] = None
+            del self.bot.config.cache[key]
             await self.bot.config.update()
 
         await ctx.send(embed=em)
@@ -498,7 +498,7 @@ class Utility:
             em.color = discord.Color.red()
             em.description = f'Alias `{name}` does not exist.'
         else:
-            self.bot.config['aliases'][name] = None
+            del self.bot.config['aliases'][name]
             await self.bot.config.update()
 
         await ctx.send(embed=em)
