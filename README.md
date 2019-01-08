@@ -5,8 +5,10 @@
     <br>
     <br>
 
-<a href="">
-  <img src="https://img.shields.io/badge/build-passing-7289DA.svg?style=for-the-badge" alt="Travis" />
+
+
+<a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
 </a>
 
 <a href="">
@@ -14,8 +16,9 @@
 </a>
 
 <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-  <img src="https://img.shields.io/github/license/kyb3r/modmail.svg?style=for-the-badge&colorB=7289DA" alt="Travis" />
+  <img src="https://img.shields.io/badge/license-mit-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
+
 
 </div>
 <br>
@@ -34,10 +37,10 @@ When a user sends a direct message to the bot, a channel is created within an is
 
 ## Installation
 
-You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation). If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
+You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation) or watch the **[video tutorial](https://youtu.be/TH_1QfKUl_k)**. If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
 
-### What is heroku?
-Heroku is a free hosting site that can host many web apps. However, these web apps cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](modmail.tk) hosted by us. This enables you to get started fast without having to worry about [anything](https://github.com/kyb3r/modmail/wiki/Installation#transparency).
+## What is heroku?
+Heroku is a free hosting site that can host many web apps. However, these web apps cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started fast without having to worry about [anything](https://github.com/kyb3r/modmail/wiki/Installation#transparency).
 
 ## Commands
 

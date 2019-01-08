@@ -36,6 +36,7 @@ class Version:
         for name, value in self.fields.items():
             em.add_field(name=name, value=value)
         em.set_footer(text=f'Current version: v{self.bot.version}')
+        em.set_thumbnail(url=self.bot.user.avatar_url)
         return em
 
 class ChangeLog:
