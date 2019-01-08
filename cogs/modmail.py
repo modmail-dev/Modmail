@@ -87,9 +87,6 @@ class Modmail:
     async def __del(self, ctx, *, name: str.lower):
         """Removes a snippet from bot config."""
 
-        if 'snippets' not in self.bot.config.cache:
-            self.bot.config['snippets'] = {}
-
         em = discord.Embed(
             title='Removed snippet',
             color=discord.Color.green(),
@@ -101,7 +98,7 @@ class Modmail:
             em.color = discord.Color.red()
             em.description = f'Snippet `{name}` does not exist.'
         else:
-            self.bot.config['snippets'][name] = None
+            del self.bot.config['snippets'][name]
             await self.bot.config.update()
 
         await ctx.send(embed=em)
