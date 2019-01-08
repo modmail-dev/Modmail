@@ -5,8 +5,10 @@
     <br>
     <br>
 
-<a href="">
-  <img src="https://img.shields.io/badge/build-passing-7289DA.svg?style=for-the-badge" alt="Travis" />
+
+
+<a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
 </a>
 
 <a href="">
@@ -14,8 +16,9 @@
 </a>
 
 <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-  <img src="https://img.shields.io/github/license/kyb3r/modmail.svg?style=for-the-badge&colorB=7289DA" alt="Travis" />
+  <img src="https://img.shields.io/badge/license-mit-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
+
 
 </div>
 <br>
@@ -34,61 +37,17 @@ When a user sends a direct message to the bot, a channel is created within an is
 
 ## Installation
 
-You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation). If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
+You have two options for using this bot, hosting on Heroku or self hosting the bot. If you choose to install the bot using Heroku, you do not need to download anything. Read the installation guide [here](https://github.com/kyb3r/modmail/wiki/Installation) or watch the **[video tutorial](https://youtu.be/TH_1QfKUl_k)**. If you have any problems join our discord server [here](https://discord.gg/etJNHCQ).
 
-### What is heroku?
-Heroku is a free hosting site that can host many web apps. However, these web apps cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](modmail.tk) hosted by us. This enables you to get started fast without having to worry about [anything](https://github.com/kyb3r/modmail/wiki/Installation#transparency).
+## What is heroku?
+Heroku is a free hosting site that can host many web apps. However, these web apps cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started fast without having to worry about [anything](https://github.com/kyb3r/modmail/wiki/Installation#transparency).
 
-## Commands
+## Features and Commands
+The bot comes with a plethora of useful functionality. Take a look at the [list of commands](https://github.com/kyb3r/modmail/wiki/Features-and-commands).
 
-### Modmail related 
-
-| Name     | Command                                                    |
-|----------|------------------------------------------------------------|
-| setup    | Sets up a server for modmail                               |
-| reply    | Reply to users using this command.                         |
-| edit     | Edit a message that was sent using the reply command.      |
-| contact  | Create a thread with a specified member.                   |
-| close    | Close the current thread.                                  |
-| move     | Moves the thread channel to a specified category           |
-| logs     | Shows a list of previous modmail thread logs of a member.  |
-| block    | Block a user from using modmail.                           |
-| blocked  | Returns a list of blocked users                            |
-| unblock  | Unblocks a user from using modmail.                        |
-| nsfw     | Flags a modmail thread as nsfw.                            |
-| snippets | Returns a list of snippets that are currently set.         |
-| mention  | Changes what the bot mentions at the start of each thread. |
-
-### Utility commands
-| Name     | Command                                                    |
-|----------|------------------------------------------------------------|
-| help     | Shows the help message.                                    |
-| update   | Checks for new versions and updates the bot                |
-| github   | Shows the github user your modmail api token is linked to. |
-| prefix   | Changes the prefix for the bot.                            |
-| alias    | Returns a list of aliases that are currently set.          |
-| about    | Shows information about the bot.                           |
-| status   | Set a custom playing status for the bot.                   |
-| ping     | Pong! Returns your websocket latency.                      |
-| eval     | Evaluates python code (Bot owner only)                     |
-| config   | Manually change configuration for the bot.                 |
-
-## Features
-
-### Snippets and aliases
-Snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command.
-
-### Custom Mentions
-If you want the bot to mention a specific role instead of `@here`, use the `mention` command.
-
-### Delete Linked Messages
-Did you accidentally send something you didnt mean to with the `reply` command? Dont fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! This also works with message edits in reverse.
-
-### Thread Logs
-Thread conversations are automatically logged and a log link (logs.modmail.tk) is provided with each thread.
 
 ### Automatic Updates
 The bot checks for new updates every hour and automatically updates to a newer version if found. You can disable this functionality by adding a `disable_autoupdates` config variable. This bot is under active development so you can always look forward to new, useful features!
 
 ## Contributing
-This project is licenced under MIT. Feel free to contribute to the development of this bot.
+This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.

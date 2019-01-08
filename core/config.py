@@ -6,14 +6,17 @@ import box
 class ConfigManager:
     """Class that manages a cached configuration"""
 
-    valid_keys = {
-        'prefix', 'status', 'guild_id',
-        'mention', 'disable_autoupdates',
-        'modmail_guild_id', 'token', 'snippets',
-        'aliases', 'owners', 'modmail_api_token'
-    }
+    allowed_to_change_in_command = {
+        'status', 'log_channel_id', 'mention', 'disable_autoupdates', 'prefix',
+        'main_category_id'
+        }
+    
+    internal_keys = {
+        'token', 'snippets', 'aliases', 'owners', 'modmail_api_token',
+        'guild_id', 'modmail_guild_id', 'blocked'
+        }
 
-    allowed_to_change_in_command = valid_keys - {'token', 'snippets', 'aliases', 'owners', 'modmail_api_token'}
+    valid_keys = allowed_to_change_in_command.union(internal_keys)
 
     def __init__(self, bot):
         self.bot = bot
@@ -26,10 +29,15 @@ class ConfigManager:
         return self.bot.modmail_api
 
     def populate_cache(self):
+        data = {
+            'snippets': {},
+            'aliases': {},
+            'blocked': {}
+        }
         try:
-            data = json.load(open('config.json'))
+            data.update(json.load(open('config.json')))
         except FileNotFoundError:
-            data = {}
+            pass
         finally:
             data.update(os.environ)
             data = {k.lower(): v for k, v in data.items() if k.lower() in self.valid_keys}
