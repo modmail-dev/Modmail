@@ -160,17 +160,17 @@ class Utility:
         p = PaginatorSession(ctx, *changelog.embeds)
         await p.run()
 
-    @commands.command()
+    @commands.command(aliases=['bot', 'info'])
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
         em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
-        em.set_author(name='Mod Mail - Information', icon_url=self.bot.user.avatar_url)
+        em.set_author(name='Mod Mail - About', icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
 
-        em.description = 'This is an open source discord bot made by kyb3r and '\
-                         'improved upon suggestions by the users! This bot serves as a means for members to '\
-                         'easily communicate with server leadership in an organised manner.'
+        em.description = 'This is an open source discord bot that serves'\
+                        ' as a means for members to easily communicate with'\
+                        ' server leadership in an organised manner.'
 
         try:
             async with self.bot.session.get('https://api.modmail.tk/metadata') as resp:

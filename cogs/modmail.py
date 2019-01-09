@@ -342,7 +342,7 @@ class Modmail:
             await self.bot.config.update()
 
             em.title = 'Success'
-            em.description = f'{mention} is now blocked ' + f'for `{reason}`' if reason else ''
+            em.description = f'{mention} is now blocked ' + (f'for `{reason}`' if reason else '')
 
             await ctx.send(embed=em)
         else:
