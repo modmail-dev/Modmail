@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.8'
+__version__ = '2.0.9'
 
 import asyncio
 import textwrap
@@ -182,11 +182,13 @@ class ModmailBot(commands.Bot):
         else:
             await self.threads.populate_cache()
 
-
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
 
-        reaction = '🚫' if message.author.id in self.blocked_users else '✅'
+        blocked_emoji = self.config.get('blocked_emoji', '🚫')
+        sent_emoji = self.config.get('sent_emoji', '✅')
+
+        reaction = blocked_emoji if message.author.id in self.blocked_users else sent_emoji
 
         try:
             await message.add_reaction(reaction)

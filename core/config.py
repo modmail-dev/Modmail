@@ -8,7 +8,7 @@ class ConfigManager:
 
     allowed_to_change_in_command = {
         'status', 'log_channel_id', 'mention', 'disable_autoupdates', 'prefix',
-        'main_category_id'
+        'main_category_id', 'sent_emoji', 'blocked_emoji'
         }
     
     internal_keys = {
