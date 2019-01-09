@@ -19,6 +19,10 @@
   <img src="https://img.shields.io/badge/license-mit-7289DA.svg?style=for-the-badge" alt="Travis" />
 </a>
 
+<a href="https://discord.gg/j5e9p8w">
+    <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Travis" />
+</a>
+
 
 </div>
 <br>
