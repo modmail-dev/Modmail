@@ -4,3 +4,4 @@ cachetools
 python-dateutil
 python-box
 colorthief
+emoji
