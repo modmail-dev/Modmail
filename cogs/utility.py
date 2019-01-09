@@ -156,6 +156,7 @@ class Utility:
     @commands.command()
     @trigger_typing
     async def changelog(self, ctx):
+        '''Show a paginated changelog of the bot.'''
         changelog = await ChangeLog.from_repo(self.bot)
         p = PaginatorSession(ctx, *changelog.embeds)
         await p.run()
