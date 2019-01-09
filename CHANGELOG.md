@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.0.9
 
+### Added 
+- Support for custom blocked emoji and sent emoji
+- Use the `config set blocked_emoji` or `sent_emoji` commands.
+
 ### Quick Fix
 - Support multiple image and file attachments in one message
 - This is only possible on mobile so its good to handle it in code.
