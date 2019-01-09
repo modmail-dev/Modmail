@@ -93,21 +93,39 @@ class Thread:
         em.set_author(name=str(author), icon_url=author.avatar_url, url=message.jump_url)  # store message id in hidden url
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
-        is_image_url = lambda u: any(urlparse(u.lower()).path.endswith(x) for x in image_types)
+        is_image_url = lambda u, _: any(urlparse(u.lower()).path.endswith(x) for x in image_types)
 
         delete_message = not bool(message.attachments)
-        attachments = list(filter(lambda a: not is_image_url(a.url), message.attachments))
 
-        image_urls = [a.url for a in message.attachments]
-        image_urls.extend(re.findall(r'(https?://[^\s]+)', message.content))
-        image_urls = list(filter(is_image_url, image_urls))
+        attachments = [(a.url, a.filename) for a in message.attachments]
+        
+        images = [x for x in attachments if is_image_url(*x)]
+        attachments = [x for x in attachments if not is_image_url(*x)]
 
-        if image_urls:
-            em.set_image(url=image_urls[0])
+        image_links = [(link, None) for link in re.findall(r'(https?://[^\s]+)', message.content)]
+        image_links = [x for x in image_links if is_image_url(*x)]
+        images.extend(image_links)
 
-        if attachments:
-            att = attachments[0]
-            em.add_field(name='File Attachment', value=f'[{att.filename}]({att.url})')
+        embedded_image = False
+
+        prioritize_uploads = any(i[1] is not None for i in images)
+
+        additional_count = 1
+
+        for att in images:
+            if is_image_url(*att) and not embedded_image and att[1] if prioritize_uploads else True:
+                em.set_image(url=att[0])
+                embedded_image = True
+            elif att[1] is not None:
+                link = f'[{att[1]}]({att[0]})'
+                em.add_field(name=f'Additional Image upload ({additional_count})', value=link, inline=False)
+                additional_count += 1
+        
+        file_upload_count = 1
+
+        for att in attachments:
+            em.add_field(name=f'File upload ({file_upload_count})', value=f'[{att[1]}]({att[0]})')
+            file_upload_count += 1
 
         if from_mod:
             em.color = discord.Color.green()
