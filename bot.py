@@ -22,19 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.9'
+__version__ = '2.0.10'
 
 import asyncio
 import textwrap
 import datetime
 import os
 import re
+from types import SimpleNamespace
 
 import discord
 import aiohttp
 from discord.ext import commands
 from discord.ext.commands.view import StringView
 from colorama import init, Fore, Style
+import emoji
 
 from core.api import Github, ModmailApiClient
 from core.thread import ThreadManager
@@ -182,13 +184,30 @@ class ModmailBot(commands.Bot):
         else:
             await self.threads.populate_cache()
 
+
+
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
+
+        ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
+        converter = commands.EmojiConverter()
 
         blocked_emoji = self.config.get('blocked_emoji', '🚫')
         sent_emoji = self.config.get('sent_emoji', '✅')
 
-        reaction = blocked_emoji if message.author.id in self.blocked_users else sent_emoji
+        if blocked_emoji not in emoji.UNICODE_EMOJI:
+            try:
+                blocked_emoji = await converter.convert(ctx, blocked_emoji.strip(':'))
+            except:
+                pass
+
+        if sent_emoji not in emoji.UNICODE_EMOJI:
+            try:
+                sent_emoji = await converter.convert(ctx, sent_emoji.strip(':'))
+            except:
+                pass
+
+        reaction = blocked_emoji if str(message.author.id) in self.blocked_users else sent_emoji
 
         try:
             await message.add_reaction(reaction)
@@ -201,7 +220,7 @@ class ModmailBot(commands.Bot):
             description='You have been blocked from using modmail.'
         )
 
-        if message.author.id in self.blocked_users:
+        if str(message.author.id) in self.blocked_users:
             await message.author.send(embed=blocked_em)
         else:
             thread = await self.threads.find_or_create(message.author)
