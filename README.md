@@ -24,7 +24,7 @@
 </a>
 
 <a href="https://github.com/kyb3r/modmail/">
-    <img src="https://img.shields.io/github/forks/kyb3r/modmail.svg?style=for-the-badge&colorB=7289DA" alt="GitHub forks" />
+    <img src="https://img.shields.io/github/stars/kyb3r/modmail.svg?style=for-the-badge&colorB=7289DA" alt="GitHub stars" />
 </a>
 
 </div>
