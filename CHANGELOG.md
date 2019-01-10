@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.0.11
+- Support for custom response message when a thread is created.
+- Use the `config set thread_creation_response <value>` command.
+
 # v2.0.10
 
 ### Security
