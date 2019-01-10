@@ -257,9 +257,9 @@ class ModmailBot(commands.Bot):
         ctx.invoked_with = invoker
         ctx.prefix = self.prefix  # Sane prefix (No mentions)
         ctx.command = self.all_commands.get(invoker)
-
-        # if hasattr(ctx, '_alias_invoked'):
-        #     ctx.command.checks = None # Let anyone use the command.
+        
+        if ctx.command is self.get_command('eval') and hasattr(ctx, '_alias_invoked'):
+            ctx.command.checks = None # Let anyone use the command.
 
         return ctx
 
