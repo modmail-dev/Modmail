@@ -1,5 +1,5 @@
-<h1 align="center">Discord Mod Mail Bot</h1>
 
+<img src='https://i.imgur.com/o558Qnq.png' align='center'>
 <div align="center">
     <strong><i>A simple and functional modmail bot.</i></strong>
     <br>
