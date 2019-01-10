@@ -291,7 +291,7 @@ class Utility:
             em.color = discord.Color.green()
             await ctx.send(embed=em)
         elif statusType == 'listening':
-            await self.bot.change_presence(activity=discord.Game(name = message, type = 2))
+            await self.bot.change_presence(activity=discord.Game(message, 2))
             self.bot.config['status'] = message
             await self.bot.config.update()
 
@@ -300,7 +300,7 @@ class Utility:
             em.color = discord.Color.green()
             await ctx.send(embed=em)
         elif statusType == 'watching':
-            await self.bot.change_presence(activity=discord.Game(name = message, type = 3))
+            await self.bot.change_presence(activity=discord.Game(message, 3))
             self.bot.config['status'] = message
             await self.bot.config.update()
 
