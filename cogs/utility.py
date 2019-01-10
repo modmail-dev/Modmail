@@ -270,18 +270,24 @@ class Utility:
 
     @commands.command(name='status', aliases=['customstatus', 'presence'])
     @commands.has_permissions(administrator=True)
-    async def _status(self, ctx, *, message):
+    async def _status(self, ctx, *, statusType, message):
         """Set a custom playing status for the bot.
 
         Set the message to `clear` if you want to remove the playing status.
         """
-
+                          
         if message == 'clear':
             self.bot.config['status'] = None
             await self.bot.config.update()
             return await self.bot.change_presence(activity=None)
+                          
+        if statusType == 'playing':
+            await self.bot.change_presence(activity=discord.Game(message))
+        elif statusType == 'listening':
+            await self.bot.change_presence(activity=discord.Game(name = message, type = 2))
+        elif statusType == 'watching':
+            await self.bot.change_presence(activity=discord.Game(name = message, type = 3)) 
 
-        await self.bot.change_presence(activity=discord.Game(message))
         self.bot.config['status'] = message
         await self.bot.config.update()
 
