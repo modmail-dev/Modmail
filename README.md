@@ -6,7 +6,6 @@
     <br>
 
 
-
 <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
     <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
 </a>
@@ -30,10 +29,6 @@
 
 </div>
 <br>
-<div align="center">
-    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! It enables server members to DM it, the messages then get relayed to the server moderators who can then respond through the bot. In essence this bot serves as a means for members to easily communicate with server leadership in an organised manner.
-
-</div>
 
 ## How does it work?
 
