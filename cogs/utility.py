@@ -282,7 +282,7 @@ class Utility:
             return await self.bot.change_presence(activity=None)
                           
         if statusType == 'playing':
-            await self.bot.change_presence(game = discord.Game(name = message, type = 2))
+            await self.bot.change_presence(discord.Game(message))
                           
         self.bot.config['status'] = message
         await self.bot.config.update()
