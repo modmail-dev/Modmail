@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.0.11
 - Support for custom response message when a thread is created.
-- Use the `config set thread_creation_response <value>` command.
+- Use the `config set thread_creation_response <value>` command to set a custom response.
 
 # v2.0.10
 
