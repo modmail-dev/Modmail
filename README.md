@@ -1,7 +1,7 @@
 <div align="center">
     <img src='https://i.imgur.com/o558Qnq.png' align='center'>
     <br>
-    <strong><i>A simple and functional modmail bot.</i></strong>
+    <strong><i>A simple and functional modmail bot for Discord.</i></strong>
     <br>
     <br>
 
