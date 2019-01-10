@@ -225,7 +225,7 @@ class ThreadManager:
 
         em = discord.Embed(
             title='Thread started' if creator else 'Thanks for the message!',
-            description=self.bot.config.get('response_thread_created', 'The moderation team will get back to you as soon as possible!'),
+            description=self.bot.config.get('thread_creation_response', 'The moderation team will get back to you as soon as possible!'),
             color=discord.Color.green()
         )
 
