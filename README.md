@@ -1,5 +1,6 @@
 <div align="center">
     <img src='https://i.imgur.com/o558Qnq.png' align='center'>
+    <br>
     <strong><i>A simple and functional modmail bot.</i></strong>
     <br>
     <br>
