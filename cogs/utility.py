@@ -283,18 +283,31 @@ class Utility:
                           
         if statusType == 'playing':
             await self.bot.change_presence(activity=discord.Game(message))
+            self.bot.config['status'] = message
+            await self.bot.config.update()
+
+            em = discord.Embed(title='Status Changed')
+            em.description = message
+            em.color = discord.Color.green()
+            await ctx.send(embed=em)
         elif statusType == 'listening':
             await self.bot.change_presence(activity=discord.Game(name = message, type = 2))
+            self.bot.config['status'] = message
+            await self.bot.config.update()
+
+            em = discord.Embed(title='Status Changed')
+            em.description = message
+            em.color = discord.Color.green()
+            await ctx.send(embed=em)
         elif statusType == 'watching':
-            await self.bot.change_presence(activity=discord.Game(name = message, type = 3)) 
+            await self.bot.change_presence(activity=discord.Game(name = message, type = 3))
+            self.bot.config['status'] = message
+            await self.bot.config.update()
 
-        self.bot.config['status'] = message
-        await self.bot.config.update()
-
-        em = discord.Embed(title='Status Changed')
-        em.description = message
-        em.color = discord.Color.green()
-        await ctx.send(embed=em)
+            em = discord.Embed(title='Status Changed')
+            em.description = message
+            em.color = discord.Color.green()
+            await ctx.send(embed=em)
 
     @commands.command()
     @trigger_typing
