@@ -56,8 +56,6 @@ The bot checks for new updates every hour and automatically updates to a newer v
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
 
-If you want to support the development and maintainance of the bot, you can do so via patreon: @everyone **Hey there!** 
-
-We are looking for contributors to help maintain and improve the wiki page of Modmail. This is where documentation for commands, config, and related information is held. If you have a good knowledge of how the bot works and are interested in helping out, message @Mail#4391
+We are looking for contributors to help maintain and improve the wiki page of Modmail. This is where documentation for commands, config, and related information is held. If you have a good knowledge of how the bot works and are interested in helping out, message the Modmail bot in the [support server](https://discord.gg/j5e9p8w).
 
 I have also set up a [Patreon](https://www.patreon.com/kyber), so if you want to support the development of Modmail, you now can :smile:
