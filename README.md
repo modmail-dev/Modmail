@@ -10,20 +10,24 @@
     <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
 </a>
 
-<a href="">
-  <img src="https://img.shields.io/badge/python-3.7-7289DA.svg?style=for-the-badge" alt="Python 3.7" />
-</a>
 
 <a href="https://discord.gg/j5e9p8w">
     <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support" />
 </a>
 
-<a href="https://github.com/kyb3r/modmail/">
-    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances" />
-</a>
 
 <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-  <img src="https://img.shields.io/badge/license-mit-7289DA.svg?style=for-the-badge" alt="MIT License" />
+  <img src="https://img.shields.io/badge/license-mit-green.svg?style=for-the-badge" alt="MIT License" />
+</a>
+
+
+<a href="https://patreon.com/kyber">
+  <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7" />
+</a>
+
+
+<a href="https://github.com/kyb3r/modmail/">
+    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances" />
 </a>
 
 
