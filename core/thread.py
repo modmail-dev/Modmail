@@ -24,6 +24,7 @@ class Thread:
         self.channel = None
         self.ready_event = asyncio.Event()
         self.close_task = None
+        self.close_after = 0 # seconds
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient}", channel={self.channel.id})'
@@ -45,7 +46,7 @@ class Thread:
         await asyncio.sleep(after)
         await self.close(**kwargs)
 
-    async def close(self, *, closer, after=0, silent=False):
+    async def close(self, *, closer, after=0, silent=False, delete_channel=True):
         '''Close a thread now or after a set time in seconds'''
         if after > 0:
             if self.close_task is not None and not self.close_task.cancelled():
@@ -53,13 +54,8 @@ class Thread:
             self.close_task = asyncio.create_task(self._close_after(after, closer=closer, silent=silent))
             return 
 
-        print(self.manager.cache)
-        print(self.id)
-        print(self.id in self.manager.cache)
-        del self.manager.cache[self.id]
-        print(self.manager.cache)
         
-        await self.channel.delete()
+        del self.manager.cache[self.id]
 
         # Logging
         log_data = await self.bot.modmail_api.post_log(self.channel.id, {
@@ -93,6 +89,9 @@ class Thread:
         if not silent:
             tasks.append(self.recipient.send(embed=em))
         
+        if delete_channel:
+            tasks.append(self.channel.delete())
+        
         await asyncio.gather(*tasks)
 
     async def _edit_thread_message(self, channel, message_id, message):
@@ -119,14 +118,22 @@ class Thread:
             raise commands.UserInputError
         if self.recipient not in self.bot.guild.members:
             return await message.channel.send('This user is no longer in the server and is thus unreachable.')
-        await asyncio.gather(
+
+        tasks = [
             self.send(message, self.channel, from_mod=True),  # in thread channel
             self.send(message, self.recipient, from_mod=True)  # to user
-        )
+            ]
+
+        if self.close_task is not None and not self.close_task.cancelled():
+            self.close_task.cancel() # cancel closing if a thread message is sent.
+            tasks.append(self.channel.send('Scheduled close canceled...'))
+
+        await asyncio.gather(*tasks)
 
     async def send(self, message, destination=None, from_mod=False, delete_message=True):
         if self.close_task is not None and not self.close_task.cancelled():
             self.close_task.cancel() # cancel closing if a thread message is sent.
+            await self.channel.send('Scheduled close canceled...')
         if not self.ready:
             await self.wait_until_ready()
 

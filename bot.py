@@ -235,8 +235,6 @@ class ModmailBot(commands.Bot):
         view = StringView(message.content)
         ctx = cls(prefix=None, view=view, bot=self, message=message)
 
-        ctx.thread = await self.threads.find(channel=ctx.channel)
-
         if self._skip_check(message.author.id, self.user.id):
             return ctx
 
@@ -287,10 +285,6 @@ class ModmailBot(commands.Bot):
         if channel.guild != self.modmail_guild:
             return 
 
-        thread = await self.threads.find(channel=channel)
-        if not thread:
-            return
-
         mod = None 
         audit_logs = self.modmail_guild.audit_logs()
         entry = await audit_logs.find(lambda e: e.target.id == channel.id)
@@ -299,7 +293,12 @@ class ModmailBot(commands.Bot):
         if mod.bot:
             return
         
-        await thread.close(closer=mod, silent=True)
+        thread = await self.threads.find(channel=channel)
+        if not thread:
+            return
+        
+        await thread.close(closer=mod, silent=True, delete_channel=False)
+
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
