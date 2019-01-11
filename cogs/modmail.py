@@ -13,6 +13,9 @@ class Modmail:
 
     def __init__(self, bot):
         self.bot = bot
+    
+    def obj(arg):
+        return discord.Object(int(arg))
 
     @commands.command()
     @trigger_typing
@@ -137,7 +140,7 @@ class Modmail:
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     @trigger_typing
-    async def logs(self, ctx, *, member: Union[discord.Member, discord.User]=None):
+    async def logs(self, ctx, *, member: Union[discord.Member, discord.User, obj]=None):
         """Shows a list of previous modmail thread logs of a member."""
 
         if not member:
@@ -147,13 +150,15 @@ class Modmail:
 
         user = member or thread.recipient
 
+        icon_url = getattr(user, 'avatar_url', 'https://cdn.discordapp.com/embed/avatars/0.png')
+
         logs = await self.bot.modmail_api.get_user_logs(user.id)
 
         if not any(not e['open'] for e in logs):
             return await ctx.send('This user has no previous logs.')
 
         em = discord.Embed(color=discord.Color.green())
-        em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+        em.set_author(name='Previous Logs', icon_url=icon_url)
 
         embeds = [em]
 
@@ -166,20 +171,31 @@ class Modmail:
         for index, entry in enumerate(closed_logs):
             if len(embeds[-1].fields) == 3:
                 em = discord.Embed(color=discord.Color.green())
-                em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+                em.set_author(name='Previous Logs', icon_url=icon_url)
                 embeds.append(em)
 
             date = dateutil.parser.parse(entry['created_at'])
+
             new_day = date.strftime(r'%d %b %Y')
+            time = date.strftime(r'%H:%M')
 
             key = entry['key']
             user_id = entry['user_id']
             log_url = f"https://logs.modmail.tk/{user_id}/{key}"
 
-            fmt += f"[`{key}`]({log_url})\n"
+            truncate = lambda c: c[:47] + '...' if len(c) > 50 else c
+
+            if entry['messages']:
+                short_desc = truncate(entry['messages'][0]['content']) or 'No content'
+            else:
+                short_desc = 'No content'
+
+            fmt += f"[`[{time}]{key}`]({log_url}) - {short_desc}\n"
+
+            print(fmt)
 
             if current_day != new_day or index == len(closed_logs) - 1:
-                embeds[-1].add_field(name=current_day, value=fmt)
+                embeds[-1].add_field(name=current_day, value=fmt, inline=False)
                 current_day = new_day
                 fmt = ''
 
@@ -252,9 +268,6 @@ class Modmail:
 
         await ctx.send(embed=em)
 
-    def obj(arg):
-        return discord.Object(int(arg))
-
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
@@ -308,7 +321,7 @@ class Modmail:
             await self.bot.config.update()
 
             em.title = 'Success'
-            em.description = f'{mention} is now blocked ' + f'for `{reason}`' if reason else ''
+            em.description = f'{mention} is now blocked ' + (f'for `{reason}`' if reason else '')
 
             await ctx.send(embed=em)
         else:
