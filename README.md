@@ -16,8 +16,9 @@
 </a>
 
 
-<a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-  <img src="https://img.shields.io/badge/license-mit-green.svg?style=for-the-badge" alt="MIT License" />
+
+<a href="https://github.com/kyb3r/modmail/">
+    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances" />
 </a>
 
 
@@ -26,8 +27,8 @@
 </a>
 
 
-<a href="https://github.com/kyb3r/modmail/">
-    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances" />
+<a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
+  <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License" />
 </a>
 
 
