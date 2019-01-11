@@ -41,19 +41,59 @@ class Thread:
         if flag is True:
             self.ready_event.set()
     
-    async def _close_after(self, after):
+    async def _close_after(self, after, **kwargs):
         await asyncio.sleep(after)
-        await self.close()
+        await self.close(**kwargs)
 
-    async def close(self, *, after=0):
+    async def close(self, *, closer, after=0, silent=False):
         '''Close a thread now or after a set time in seconds'''
         if after > 0:
             if self.close_task is not None and not self.close_task.cancelled():
                 self.close_task.cancel()
-            self.close_task = asyncio.create_task(self._close_after(after))
-        else:
-            del self.manager.cache[self.id]
-            await self.channel.delete()
+            self.close_task = asyncio.create_task(self._close_after(after, closer=closer, silent=silent))
+            return 
+
+        print(self.manager.cache)
+        print(self.id)
+        print(self.id in self.manager.cache)
+        del self.manager.cache[self.id]
+        print(self.manager.cache)
+        
+        await self.channel.delete()
+
+        # Logging
+        log_data = await self.bot.modmail_api.post_log(self.channel.id, {
+            'open': False, 'closed_at': str(datetime.datetime.utcnow()), 'closer': {
+                'id': str(closer.id),
+                'name': closer.name,
+                'discriminator': closer.discriminator,
+                'avatar_url': closer.avatar_url,
+                'mod': True
+            }
+        })
+
+        if isinstance(log_data, str):
+            print(log_data) # error
+
+        log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
+
+        user = self.recipient.mention if self.recipient else f'`{self.id}`'
+
+        desc = f"[`{log_data['key']}`]({log_url}) {closer.mention} closed a thread with {user}"
+
+        em = discord.Embed(description=desc, color=discord.Color.red())
+        em.set_author(name='Thread closed', url=log_url)
+
+        tasks = [self.bot.log_channel.send(embed=em)]
+
+        em = discord.Embed(title='Thread Closed')
+        em.description = f'{closer.mention} has closed this modmail thread.'
+        em.color = discord.Color.red()
+
+        if not silent:
+            tasks.append(self.recipient.send(embed=em))
+        
+        await asyncio.gather(*tasks)
 
     async def _edit_thread_message(self, channel, message_id, message):
         async for msg in channel.history():
