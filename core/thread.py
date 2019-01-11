@@ -183,6 +183,7 @@ class Thread:
         
         file_upload_count = 1
 
+
         for att in attachments:
             em.add_field(name=f'File upload ({file_upload_count})', value=f'[{att[1]}]({att[0]})')
             file_upload_count += 1
