@@ -224,10 +224,8 @@ class ThreadManager:
         if recipient is None and channel is not None:
             return await self._find_from_channel(channel)
         try:
-            print(self.cache)
             thread = self.cache[recipient.id]
         except KeyError:
-            print('Couldnt find from cache...')
             channel = discord.utils.get(
                 self.bot.modmail_guild.text_channels,
                 topic=f'User ID: {recipient.id}'
@@ -320,15 +318,7 @@ class ThreadManager:
         return thread
 
     async def find_or_create(self, recipient):
-        maybe = await self.find(recipient=recipient)
-        print(f'finding: {maybe}')
-        if maybe:
-            print('returning maybe')
-            return maybe
-        else:
-            thread = await self.create(recipient)
-            print('creating')
-            return thread 
+        return await self.find(recipient=recipient) or await self.create(recipient)
 
     @staticmethod
     def valid_image_url(url):
