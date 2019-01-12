@@ -75,7 +75,7 @@ class Thread:
         user = self.recipient.mention if self.recipient else f'`{self.id}`'
 
         if log_data['messages']:
-            msg = log_data['messages'][0]['content'] 
+            msg = str(log_data['messages'][0]['content'])
             sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
         else:
             sneak_peak = 'No content'
