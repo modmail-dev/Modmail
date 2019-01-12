@@ -1,31 +1,39 @@
-<h1 align="center">Discord Mod Mail Bot</h1>
-
 <div align="center">
-    <strong><i>A simple and functional modmail bot.</i></strong>
+    <img src='https://i.imgur.com/o558Qnq.png' align='center'>
+    <br>
+    <strong><i>A simple and functional modmail bot for Discord.</i></strong>
     <br>
     <br>
-
 
 
 <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
     <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
 </a>
 
-<a href="">
-  <img src="https://img.shields.io/badge/python-3.7-7289DA.svg?style=for-the-badge" alt="Travis" />
+
+<a href="https://discord.gg/j5e9p8w">
+    <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support" />
 </a>
 
+
+
+<a href="https://github.com/kyb3r/modmail/">
+    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances" />
+</a>
+
+
+<a href="https://patreon.com/kyber">
+  <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7" />
+</a>
+
+
 <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-  <img src="https://img.shields.io/badge/license-mit-7289DA.svg?style=for-the-badge" alt="Travis" />
+  <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License" />
 </a>
 
 
 </div>
 <br>
-<div align="center">
-    This is an open source discord bot made by kyb3r and improved upon suggestions by the users! It enables server members to DM it, the messages then get relayed to the server moderators who can then respond through the bot. In essence this bot serves as a means for members to easily communicate with server leadership in an organised manner.
-
-</div>
 
 ## How does it work?
 
@@ -52,3 +60,5 @@ The bot checks for new updates every hour and automatically updates to a newer v
 
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
+
+I have also set up a [Patreon](https://www.patreon.com/kyber), so if you want to support the development of Modmail, you now can :smile:
