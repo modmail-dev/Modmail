@@ -6,3 +6,5 @@ python-box
 colorthief
 emoji
 dhooks
+natural
+parsedatetime

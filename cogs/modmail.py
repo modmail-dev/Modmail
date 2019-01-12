@@ -1,11 +1,16 @@
 
+
+import datetime
+from typing import Optional, Union
+import re 
+
 import discord
 from discord.ext import commands
-import datetime
 import dateutil.parser
-from typing import Optional, Union
+
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
+from core.time import UserFriendlyTime, human_timedelta
 
 
 class Modmail:
@@ -117,50 +122,61 @@ class Modmail:
         await thread.channel.edit(category=category)
         await ctx.message.add_reaction('✅')
 
-    @commands.command(name='close')
-    @commands.has_permissions(manage_channels=True)
-    async def _close(self, ctx):
-        """Close the current thread."""
+    async def send_scheduled_close_message(self, ctx, after, silent=False):
+        human_delta = human_timedelta(after.dt)
+        
+        silent = '*silently* ' if silent else ''
+
+        em = discord.Embed(
+            title='Scheduled close',
+            description=f'This thread will close {silent}in {human_delta}.',
+            color=discord.Color.red()
+            )
+
+        if after.arg and not silent:
+            em.add_field(name='Message', value=after.arg)
+        
+        em.set_footer(text='Closing will be cancelled if a thread message is sent.')
+        em.timestamp = after.dt
+            
+        await ctx.send(embed=em)
+
+    @commands.command(name='close', usage='[after] [close message]')
+    async def _close(self, ctx, *, after: UserFriendlyTime=None):
+        """Close the current thread.
+        
+        Close after a period of time:
+        - `close in 5 hours`
+        - `close 2m30s`
+        
+        Custom close messages:
+        - `close 2 hours The issue has been resolved.`
+        - `close We will contact you once we find out more.`
+
+        Silently close a thread (no message)
+        - `close silently`
+        - `close in 10m silently`
+        """
 
         thread = await self.bot.threads.find(channel=ctx.channel)
         if not thread:
-            return await ctx.send('This is not a modmail thread.')
+            return
+        
+        now = datetime.datetime.utcnow()
 
-        await thread.close()
+        close_after = (after.dt - now).total_seconds() if after else 0
+        message = after.arg if after else None
+        silent = str(message).lower() in {'silent', 'silently'}
 
-        em = discord.Embed(title='Thread Closed')
-        em.description = f'{ctx.author.mention} has closed this modmail thread.'
-        em.color = discord.Color.red()
+        if after and after.dt > now:
+            await self.send_scheduled_close_message(ctx, after, silent)
 
-        try:
-            await thread.recipient.send(embed=em)
-        except:
-            pass
-
-        # Logging
-        log_channel = self.bot.log_channel
-
-        log_data = await self.bot.modmail_api.post_log(ctx.channel.id, {
-            'open': False, 'closed_at': str(datetime.datetime.utcnow()), 'closer': {
-                'id': str(ctx.author.id),
-                'name': ctx.author.name,
-                'discriminator': ctx.author.discriminator,
-                'avatar_url': ctx.author.avatar_url,
-                'mod': True
-            }
-        })
-
-        if isinstance(log_data, str):
-            print(log_data) # error
-
-        log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
-
-        user = thread.recipient.mention if thread.recipient else f'`{thread.id}`'
-
-        desc = f"[`{log_data['key']}`]({log_url}) {ctx.author.mention} closed a thread with {user}"
-        em = discord.Embed(description=desc, color=em.color)
-        em.set_author(name='Thread closed', url=log_url)
-        await log_channel.send(embed=em)
+        await thread.close(
+            closer=ctx.author, 
+            after=close_after,
+            message=message, 
+            silent=silent,
+            )
 
     @commands.command()
     async def nsfw(self, ctx):
