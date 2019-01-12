@@ -10,8 +10,7 @@ import dateutil.parser
 
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
-from core.time import UserFriendlyTime
-from natural.date import duration
+from core.time import UserFriendlyTime, human_timedelta
 
 
 class Modmail:
@@ -124,15 +123,13 @@ class Modmail:
         await ctx.message.add_reaction('✅')
 
     async def send_scheduled_close_message(self, ctx, after, silent=False):
-        human_delta = duration(after.dt, now=datetime.datetime.utcnow())
-        if human_delta == 'just now':
-            human_delta = 'momentarily'
+        human_delta = human_timedelta(after.dt)
         
         silent = '*silently* ' if silent else ''
 
         em = discord.Embed(
             title='Scheduled close',
-            description=f'This thread will close {silent}{human_delta}.',
+            description=f'This thread will close {silent}in {human_delta}.',
             color=discord.Color.red()
             )
 
@@ -151,7 +148,7 @@ class Modmail:
         
         Close after a period of time:
         - `close in 5 hours`
-        - `close 2m 30s`
+        - `close 2m30s`
         
         Custom close messages:
         - `close 2 hours The issue has been resolved.`
