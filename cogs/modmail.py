@@ -142,7 +142,6 @@ class Modmail:
         await ctx.send(embed=em)
 
     @commands.command(name='close', usage='[after] [close message]')
-    @commands.has_permissions(manage_channels=True)
     async def _close(self, ctx, *, after: UserFriendlyTime=None):
         """Close the current thread.
         
@@ -160,15 +159,14 @@ class Modmail:
         """
 
         thread = await self.bot.threads.find(channel=ctx.channel)
-
         if not thread:
-            return await ctx.send('This is not a modmail thread.')
+            return
         
         now = datetime.datetime.utcnow()
 
         close_after = (after.dt - now).total_seconds() if after else 0
         message = after.arg if after else None
-        silent = message.lower() in {'silent', 'silently'}
+        silent = str(message).lower() in {'silent', 'silently'}
 
         if after and after.dt > now:
             await self.send_scheduled_close_message(ctx, after, silent)

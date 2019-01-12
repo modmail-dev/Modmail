@@ -73,10 +73,18 @@ class Thread:
 
         log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
         user = self.recipient.mention if self.recipient else f'`{self.id}`'
-        desc = f"[`{log_data['key']}`]({log_url}) {closer.mention} closed a thread with {user}"
+
+        if log_data['messages']:
+            msg = log_data['messages'][0]['content'] 
+            sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
+        else:
+            sneak_peak = 'No content'
+
+        desc = f"[`{log_data['key']}`]({log_url}) {user}: {sneak_peak}"
 
         em = discord.Embed(description=desc, color=discord.Color.red())
         em.set_author(name='Thread closed', url=log_url)
+        em.set_footer(text=f'Closed by: {closer} ({closer.id})')
 
         tasks = [self.bot.log_channel.send(embed=em)]
 
@@ -283,8 +291,8 @@ class ThreadManager:
         """Creates a modmail thread"""
 
         em = discord.Embed(
-            title='Thread started' if creator else 'Thanks for the message!',
-            description='The moderation team will get back to you as soon as possible!',
+            title='Thanks for the message!',
+            description=self.bot.config.get('thread_creation_response', 'The moderation team will get back to you as soon as possible!'),
             color=discord.Color.green()
         )
 
