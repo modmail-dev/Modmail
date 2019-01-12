@@ -8,15 +8,18 @@ class ConfigManager:
 
     allowed_to_change_in_command = {
         'status', 'log_channel_id', 'mention', 'disable_autoupdates', 'prefix',
-        'main_category_id', 'sent_emoji', 'blocked_emoji'
+        'main_category_id', 'sent_emoji', 'blocked_emoji', 'thread_creation_response'
         }
     
     internal_keys = {
-        'token', 'snippets', 'aliases', 'owners', 'modmail_api_token',
-        'guild_id', 'modmail_guild_id', 'blocked'
+        'snippets', 'aliases', 'blocked'
+        }
+    
+    protected_keys = {
+        'token', 'owners', 'modmail_api_token', 'guild_id', 'modmail_guild_id',
         }
 
-    valid_keys = allowed_to_change_in_command.union(internal_keys)
+    valid_keys = allowed_to_change_in_command.union(internal_keys).union(protected_keys)
 
     def __init__(self, bot):
         self.bot = bot

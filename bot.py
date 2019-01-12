@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.0.10'
+__version__ = '2.1.1'
 
 import asyncio
 import textwrap
@@ -257,9 +257,10 @@ class ModmailBot(commands.Bot):
         ctx.invoked_with = invoker
         ctx.prefix = self.prefix  # Sane prefix (No mentions)
         ctx.command = self.all_commands.get(invoker)
-
-        # if hasattr(ctx, '_alias_invoked'):
-        #     ctx.command.checks = None # Let anyone use the command.
+        
+        if ctx.command is self.get_command('eval') and hasattr(ctx, '_alias_invoked'):
+            # ctx.command.checks = None # Let anyone use the command.
+            pass
 
         return ctx
 
@@ -283,46 +284,21 @@ class ModmailBot(commands.Bot):
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
             return 
+
+        mod = None 
+        audit_logs = self.modmail_guild.audit_logs()
+        entry = await audit_logs.find(lambda e: e.target.id == channel.id)
+        mod = entry.user
+
+        if mod.bot:
+            return
+        
         thread = await self.threads.find(channel=channel)
-        if thread:
-            del self.threads.cache[thread.id]
+        if not thread:
+            return
+        
+        await thread.close(closer=mod, silent=True, delete_channel=False)
 
-            mod = None 
-
-            audit_logs = self.modmail_guild.audit_logs()
-            entry = await audit_logs.find(lambda e: e.target.id == channel.id)
-            mod = entry.user
-            if mod.bot:
-                return
-
-            log_data = await self.modmail_api.post_log(channel.id, {
-                'open': False,
-                'closed_at': str(datetime.datetime.utcnow()),
-                'closer': {
-                    'id': str(mod.id),
-                    'name': mod.name,
-                    'discriminator': mod.discriminator,
-                    'avatar_url': mod.avatar_url,
-                    'mod': True
-                }})
-
-            em = discord.Embed(title='Thread Closed')
-            em.description = f'{mod.mention} has closed this modmail thread.'
-            em.color = discord.Color.red()
-
-            try:
-                await thread.recipient.send(embed=em)
-            except:
-                pass
-            
-            log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
-
-            user = thread.recipient.mention if thread.recipient else f'`{thread.id}`'
-
-            desc = f"[`{log_data['key']}`]({log_url}) {mod.mention} closed a thread with {user}"
-            em = discord.Embed(description=desc, color=em.color)
-            em.set_author(name='Thread closed', url=log_url)
-            await self.log_channel.send(embed=em)
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
@@ -396,9 +372,12 @@ class ModmailBot(commands.Bot):
 
     async def data_loop(self):
         await self.wait_until_ready()
+        self.owner = (await self.application_info()).owner
 
         while True:
             data = {
+                "owner_name": str(self.owner),
+                "owner_id": self.owner.id,
                 "bot_id": self.user.id,
                 "bot_name": str(self.user),
                 "guild_id": self.guild_id,

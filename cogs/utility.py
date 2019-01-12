@@ -156,6 +156,7 @@ class Utility:
     @commands.command()
     @trigger_typing
     async def changelog(self, ctx):
+        '''Show a paginated changelog of the bot.'''
         changelog = await ChangeLog.from_repo(self.bot)
         p = PaginatorSession(ctx, *changelog.embeds)
         await p.run()
@@ -164,7 +165,7 @@ class Utility:
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
-        em = discord.Embed(color=discord.Color.green(), timestamp=datetime.datetime.utcnow())
+        em = discord.Embed(color=0x36393F, timestamp=datetime.datetime.utcnow())
         em.set_author(name='Mod Mail - About', icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
 

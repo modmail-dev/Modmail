@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.1.1
+
+### Fixed
+- Small bug in close command.
+
+# v2.1.0
+
+### Added
+- Ability to set a custom thread creation response message.
+    - Do this via `config set thread_creation_response [message]`
+
+### Changed
+- Improve logs command format.
+- Improve thread log channel message to have more relevant info.
+- Improve close command.
+    - You now can close the thread after a delay and use a custom thread close message.
+    - You also now have the ability to close a thread silently.
+
 # v2.0.10
 
 ### Security

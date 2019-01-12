@@ -1,11 +1,16 @@
 
+
+import datetime
+from typing import Optional, Union
+import re 
+
 import discord
 from discord.ext import commands
-import datetime
 import dateutil.parser
-from typing import Optional, Union
+
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
+from core.time import UserFriendlyTime, human_timedelta
 
 
 class Modmail:
@@ -13,6 +18,9 @@ class Modmail:
 
     def __init__(self, bot):
         self.bot = bot
+    
+    def obj(arg):
+        return discord.Object(int(arg))
 
     @commands.command()
     @trigger_typing
@@ -114,50 +122,61 @@ class Modmail:
         await thread.channel.edit(category=category)
         await ctx.message.add_reaction('✅')
 
-    @commands.command(name='close')
-    @commands.has_permissions(manage_channels=True)
-    async def _close(self, ctx):
-        """Close the current thread."""
+    async def send_scheduled_close_message(self, ctx, after, silent=False):
+        human_delta = human_timedelta(after.dt)
+        
+        silent = '*silently* ' if silent else ''
+
+        em = discord.Embed(
+            title='Scheduled close',
+            description=f'This thread will close {silent}in {human_delta}.',
+            color=discord.Color.red()
+            )
+
+        if after.arg and not silent:
+            em.add_field(name='Message', value=after.arg)
+        
+        em.set_footer(text='Closing will be cancelled if a thread message is sent.')
+        em.timestamp = after.dt
+            
+        await ctx.send(embed=em)
+
+    @commands.command(name='close', usage='[after] [close message]')
+    async def _close(self, ctx, *, after: UserFriendlyTime=None):
+        """Close the current thread.
+        
+        Close after a period of time:
+        - `close in 5 hours`
+        - `close 2m30s`
+        
+        Custom close messages:
+        - `close 2 hours The issue has been resolved.`
+        - `close We will contact you once we find out more.`
+
+        Silently close a thread (no message)
+        - `close silently`
+        - `close in 10m silently`
+        """
 
         thread = await self.bot.threads.find(channel=ctx.channel)
         if not thread:
-            return await ctx.send('This is not a modmail thread.')
+            return
+        
+        now = datetime.datetime.utcnow()
 
-        await thread.close()
+        close_after = (after.dt - now).total_seconds() if after else 0
+        message = after.arg if after else None
+        silent = str(message).lower() in {'silent', 'silently'}
 
-        em = discord.Embed(title='Thread Closed')
-        em.description = f'{ctx.author.mention} has closed this modmail thread.'
-        em.color = discord.Color.red()
+        if after and after.dt > now:
+            await self.send_scheduled_close_message(ctx, after, silent)
 
-        try:
-            await thread.recipient.send(embed=em)
-        except:
-            pass
-
-        # Logging
-        log_channel = self.bot.log_channel
-
-        log_data = await self.bot.modmail_api.post_log(ctx.channel.id, {
-            'open': False, 'closed_at': str(datetime.datetime.utcnow()), 'closer': {
-                'id': str(ctx.author.id),
-                'name': ctx.author.name,
-                'discriminator': ctx.author.discriminator,
-                'avatar_url': ctx.author.avatar_url,
-                'mod': True
-            }
-        })
-
-        if isinstance(log_data, str):
-            print(log_data) # error
-
-        log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
-
-        user = thread.recipient.mention if thread.recipient else f'`{thread.id}`'
-
-        desc = f"[`{log_data['key']}`]({log_url}) {ctx.author.mention} closed a thread with {user}"
-        em = discord.Embed(description=desc, color=em.color)
-        em.set_author(name='Thread closed', url=log_url)
-        await log_channel.send(embed=em)
+        await thread.close(
+            closer=ctx.author, 
+            after=close_after,
+            message=message, 
+            silent=silent,
+            )
 
     @commands.command()
     async def nsfw(self, ctx):
@@ -171,7 +190,7 @@ class Modmail:
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     @trigger_typing
-    async def logs(self, ctx, *, member: Union[discord.Member, discord.User]=None):
+    async def logs(self, ctx, *, member: Union[discord.Member, discord.User, obj]=None):
         """Shows a list of previous modmail thread logs of a member."""
 
         if not member:
@@ -181,13 +200,15 @@ class Modmail:
 
         user = member or thread.recipient
 
+        icon_url = getattr(user, 'avatar_url', 'https://cdn.discordapp.com/embed/avatars/0.png')
+
         logs = await self.bot.modmail_api.get_user_logs(user.id)
 
         if not any(not e['open'] for e in logs):
             return await ctx.send('This user has no previous logs.')
 
         em = discord.Embed(color=discord.Color.green())
-        em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+        em.set_author(name='Previous Logs', icon_url=icon_url)
 
         embeds = [em]
 
@@ -200,20 +221,31 @@ class Modmail:
         for index, entry in enumerate(closed_logs):
             if len(embeds[-1].fields) == 3:
                 em = discord.Embed(color=discord.Color.green())
-                em.set_author(name='Previous Logs', icon_url=user.avatar_url)
+                em.set_author(name='Previous Logs', icon_url=icon_url)
                 embeds.append(em)
 
             date = dateutil.parser.parse(entry['created_at'])
+
             new_day = date.strftime(r'%d %b %Y')
+            time = date.strftime(r'%H:%M')
 
             key = entry['key']
             user_id = entry['user_id']
             log_url = f"https://logs.modmail.tk/{user_id}/{key}"
 
-            fmt += f"[`{key}`]({log_url})\n"
+            truncate = lambda c: c[:47] + '...' if len(c) > 50 else c
+
+            if entry['messages']:
+                short_desc = truncate(entry['messages'][0]['content']) or 'No content'
+            else:
+                short_desc = 'No content'
+
+            fmt += f"[`[{time}]{key}`]({log_url}) - {short_desc}\n"
+
+            print(fmt)
 
             if current_day != new_day or index == len(closed_logs) - 1:
-                embeds[-1].add_field(name=current_day, value=fmt)
+                embeds[-1].add_field(name=current_day, value=fmt, inline=False)
                 current_day = new_day
                 fmt = ''
 
@@ -285,9 +317,6 @@ class Modmail:
         )
 
         await ctx.send(embed=em)
-
-    def obj(arg):
-        return discord.Object(int(arg))
 
     @commands.command()
     @trigger_typing
