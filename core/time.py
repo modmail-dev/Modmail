@@ -64,7 +64,7 @@ class FutureTime(Time):
 
 class UserFriendlyTime(commands.Converter):
     """That way quotes aren't absolutely necessary."""
-    def __init__(self, converter=None, *, default=None):
+    def __init__(self, converter=None):
         if isinstance(converter, type) and issubclass(converter, commands.Converter):
             converter = converter()
 
@@ -72,16 +72,10 @@ class UserFriendlyTime(commands.Converter):
             raise TypeError('commands.Converter subclass necessary.')
 
         self.converter = converter
-        self.default = default
 
     async def check_constraints(self, ctx, now, remaining):
         if self.dt < now:
             raise commands.BadArgument('This time is in the past.')
-
-        if not remaining:
-            if self.default is None:
-                raise commands.BadArgument('Missing argument after the time.')
-            remaining = self.default
 
         if self.converter is not None:
             self.arg = await self.converter.convert(ctx, remaining)
