@@ -1,11 +1,17 @@
 
+
+import datetime
+from typing import Optional, Union
+import re 
+
 import discord
 from discord.ext import commands
-import datetime
 import dateutil.parser
-from typing import Optional, Union
+
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
+from core.time import UserFriendlyTime
+from natural.date import duration
 
 
 class Modmail:
@@ -117,16 +123,46 @@ class Modmail:
         await thread.channel.edit(category=category)
         await ctx.message.add_reaction('✅')
 
-    @commands.command(name='close')
+    @commands.command(name='close', usage='[after] [close message]')
     @commands.has_permissions(manage_channels=True)
-    async def _close(self, ctx, after: int=0):
-        """Close the current thread."""
+    async def _close(self, ctx, *, after: UserFriendlyTime=None):
+        """Close the current thread.
+        
+        Close after a period of time:
+        - `close in 5 hours`
+        - `close 2m 30s`
+        
+        Custom close messages:
+        - `close 2 hours The issue has been resolved.`
+        - `close We will contact you once we find out more.`
+        """
 
         thread = await self.bot.threads.find(channel=ctx.channel)
         if not thread:
             return await ctx.send('This is not a modmail thread.')
+        
+        now = datetime.datetime.utcnow()
 
-        await thread.close(closer=ctx.author, after=after)
+        if after and after.dt > now:
+            human_delta = duration(after.dt, now=now)
+            if human_delta == 'just now':
+                human_delta = 'momentarily'
+
+            em = discord.Embed(
+                title='Scheduled close',
+                description=f'This thread will close {human_delta}.',
+                color=discord.Color.red()
+                )
+            if after.arg:
+                em.add_field(name='Message', value=after.arg)
+            
+            em.set_footer(text='Closing will be cancelled if a thread message is sent.')
+            em.timestamp = after.dt
+                
+            await ctx.send(embed=em)
+
+        close_after = (after.dt - now).total_seconds() if after else 0
+        await thread.close(closer=ctx.author, after=close_after, message=after.arg if after else None)
 
     @commands.command()
     async def nsfw(self, ctx):
