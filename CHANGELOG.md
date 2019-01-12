@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
-# [unreleased]
+# v2.1.0
 
 ### Added
 - Ability to set a custom thread creation response message.
@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve thread log channel message to have more relevant info.
 - Improve close command.
     - You now can close the thread after a delay and use a custom thread close message.
+    - You also now have the ability to close a thread silently.
 
 # v2.0.10
 

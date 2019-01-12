@@ -291,7 +291,7 @@ class ThreadManager:
         """Creates a modmail thread"""
 
         em = discord.Embed(
-            title='Thanks for the message!',
+            title='Thread Created',
             description=self.bot.config.get('thread_creation_response', 'The moderation team will get back to you as soon as possible!'),
             color=discord.Color.green()
         )
