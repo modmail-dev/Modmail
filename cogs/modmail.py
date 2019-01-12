@@ -123,6 +123,27 @@ class Modmail:
         await thread.channel.edit(category=category)
         await ctx.message.add_reaction('✅')
 
+    async def send_scheduled_close_message(self, ctx, after, silent=False):
+        human_delta = duration(after.dt, now=datetime.datetime.utcnow())
+        if human_delta == 'just now':
+            human_delta = 'momentarily'
+        
+        silent = '*silently* ' if silent else ''
+
+        em = discord.Embed(
+            title='Scheduled close',
+            description=f'This thread will close {silent}{human_delta}.',
+            color=discord.Color.red()
+            )
+
+        if after.arg and not silent:
+            em.add_field(name='Message', value=after.arg)
+        
+        em.set_footer(text='Closing will be cancelled if a thread message is sent.')
+        em.timestamp = after.dt
+            
+        await ctx.send(embed=em)
+
     @commands.command(name='close', usage='[after] [close message]')
     @commands.has_permissions(manage_channels=True)
     async def _close(self, ctx, *, after: UserFriendlyTime=None):
@@ -135,34 +156,32 @@ class Modmail:
         Custom close messages:
         - `close 2 hours The issue has been resolved.`
         - `close We will contact you once we find out more.`
+
+        Silently close a thread (no message)
+        - `close silently`
+        - `close in 10m silently`
         """
 
         thread = await self.bot.threads.find(channel=ctx.channel)
+
         if not thread:
             return await ctx.send('This is not a modmail thread.')
         
         now = datetime.datetime.utcnow()
 
-        if after and after.dt > now:
-            human_delta = duration(after.dt, now=now)
-            if human_delta == 'just now':
-                human_delta = 'momentarily'
-
-            em = discord.Embed(
-                title='Scheduled close',
-                description=f'This thread will close {human_delta}.',
-                color=discord.Color.red()
-                )
-            if after.arg:
-                em.add_field(name='Message', value=after.arg)
-            
-            em.set_footer(text='Closing will be cancelled if a thread message is sent.')
-            em.timestamp = after.dt
-                
-            await ctx.send(embed=em)
-
         close_after = (after.dt - now).total_seconds() if after else 0
-        await thread.close(closer=ctx.author, after=close_after, message=after.arg if after else None)
+        message = after.arg if after else None
+        silent = message.lower() in {'silent', 'silently'}
+
+        if after and after.dt > now:
+            await self.send_scheduled_close_message(ctx, after, silent)
+
+        await thread.close(
+            closer=ctx.author, 
+            after=close_after,
+            message=message, 
+            silent=silent,
+            )
 
     @commands.command()
     async def nsfw(self, ctx):
