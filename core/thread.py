@@ -92,7 +92,7 @@ class Thread:
         em.description = message or f'{closer.mention} has closed this modmail thread.'
         em.color = discord.Color.red()
 
-        if not silent:
+        if not silent and self.recipient is not None:
             tasks.append(self.recipient.send(embed=em))
         
         if delete_channel:
