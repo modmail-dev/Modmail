@@ -46,12 +46,12 @@ class Thread:
         await asyncio.sleep(after)
         await self.close(**kwargs)
 
-    async def close(self, *, closer, after=0, silent=False, delete_channel=True):
+    async def close(self, *, closer, after=0, silent=False, delete_channel=True, message=None):
         '''Close a thread now or after a set time in seconds'''
         if after > 0:
             if self.close_task is not None and not self.close_task.cancelled():
                 self.close_task.cancel()
-            self.close_task = asyncio.create_task(self._close_after(after, closer=closer, silent=silent))
+            self.close_task = asyncio.create_task(self._close_after(after, closer=closer, silent=silent, message=message))
             return 
 
         
@@ -69,12 +69,10 @@ class Thread:
         })
 
         if isinstance(log_data, str):
-            print(log_data) # error
+            print(log_data) # errored somehow on server
 
         log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
-
         user = self.recipient.mention if self.recipient else f'`{self.id}`'
-
         desc = f"[`{log_data['key']}`]({log_url}) {closer.mention} closed a thread with {user}"
 
         em = discord.Embed(description=desc, color=discord.Color.red())
@@ -83,7 +81,7 @@ class Thread:
         tasks = [self.bot.log_channel.send(embed=em)]
 
         em = discord.Embed(title='Thread Closed')
-        em.description = f'{closer.mention} has closed this modmail thread.'
+        em.description = message or f'{closer.mention} has closed this modmail thread.'
         em.color = discord.Color.red()
 
         if not silent:
@@ -126,14 +124,14 @@ class Thread:
 
         if self.close_task is not None and not self.close_task.cancelled():
             self.close_task.cancel() # cancel closing if a thread message is sent.
-            tasks.append(self.channel.send('Scheduled close canceled...'))
+            tasks.append(self.channel.send(embed=discord.Embed(color=discord.Color.red(), description='Scheduled close has been cancelled.')))
 
         await asyncio.gather(*tasks)
 
     async def send(self, message, destination=None, from_mod=False, delete_message=True):
         if self.close_task is not None and not self.close_task.cancelled():
             self.close_task.cancel() # cancel closing if a thread message is sent.
-            await self.channel.send('Scheduled close canceled...')
+            await self.channel.send(embed=discord.Embed(color=discord.Color.red(), description='Scheduled close has been cancelled.'))
         if not self.ready:
             await self.wait_until_ready()
 
