@@ -372,7 +372,8 @@ class ModmailBot(commands.Bot):
 
     async def data_loop(self):
         await self.wait_until_ready()
-        self.owner = (await bot.application_info()).owner
+        self.owner = (await self.application_info()).owner
+        print(self.owner)
 
         while True:
             data = {
