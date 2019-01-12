@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.1.0'
+__version__ = '2.1.1'
 
 import asyncio
 import textwrap
@@ -372,9 +372,12 @@ class ModmailBot(commands.Bot):
 
     async def data_loop(self):
         await self.wait_until_ready()
+        self.owner = (await self.application_info()).owner
 
         while True:
             data = {
+                "owner_name": str(self.owner),
+                "owner_id": self.owner.id,
                 "bot_id": self.user.id,
                 "bot_name": str(self.user),
                 "guild_id": self.guild_id,
