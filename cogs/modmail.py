@@ -343,18 +343,17 @@ class Modmail:
 
             key = entry['key']
             user_id = entry['user_id']
+            closer = entry['closer']['name']
             log_url = f"https://logs.modmail.tk/{user_id}/{key}"
 
-            truncate = lambda c: c[:47] + '...' if len(c) > 50 else c
+            truncate = lambda c: c[:47].strip() + '...' if len(c) > 50 else c
 
             if entry['messages']:
                 short_desc = truncate(entry['messages'][0]['content']) or 'No content'
             else:
                 short_desc = 'No content'
 
-            fmt += f"[`[{time}]{key}`]({log_url}) - {short_desc}\n"
-
-            print(fmt)
+            fmt += f"[`[{time}][closed-by:{closer}]`]({log_url}) - {short_desc}\n"
 
             if current_day != new_day or index == len(closed_logs) - 1:
                 embeds[-1].add_field(name=current_day, value=fmt, inline=False)
