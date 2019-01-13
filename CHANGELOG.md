@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.2.0
+### Added
+- Added a notify command `notify [role]`
+    - Notify a given role or yourself to the next thread message received.
+    - Once a thread message is received you will be pinged once only.
+
+- Added a subscribe command `sub [role]` / `unsub [role]`
+    - Subscribes yourself or a given role to be notified when thread messages are received.
+    - You will be pinged for every thread message recieved until you unsubscribe.
+
+### Changed
+- Improve log channel message format slightly.
+
 # v2.1.1
 
 ### Fixed

@@ -40,6 +40,8 @@ class Modmail:
         c = await self.bot.modmail_guild.create_text_channel(name='bot-logs', category=categ)
         await c.edit(topic='You can delete this channel if you set up your own log channel.')
         await c.send('Use the `config set log_channel_id` command to set up a custom log channel.')
+        self.bot.config['main_category_id'] = categ.id 
+        await self.bot.config.update()
 
         await ctx.send('Successfully set up server.')
 
@@ -156,6 +158,9 @@ class Modmail:
         Silently close a thread (no message)
         - `close silently`
         - `close in 10m silently`
+
+        Cancel closing a thread:
+        - close cancel
         """
 
         thread = await self.bot.threads.find(channel=ctx.channel)
@@ -167,6 +172,14 @@ class Modmail:
         close_after = (after.dt - now).total_seconds() if after else 0
         message = after.arg if after else None
         silent = str(message).lower() in {'silent', 'silently'}
+        cancel = str(message).lower() == 'cancel'
+
+        if cancel and thread.close_task is not None and not thread.close_task.cancelled():
+            thread.close_task.cancel()
+            await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='Scheduled close has been cancelled.'))
+            return
+        elif cancel:
+            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='This thread has not already been scheduled to close.'))
 
         if after and after.dt > now:
             await self.send_scheduled_close_message(ctx, after, silent)
@@ -177,6 +190,105 @@ class Modmail:
             message=message, 
             silent=silent,
             )
+    
+    @commands.command(aliases=['alert'])
+    async def notify(self, ctx, *, role=None):
+        """Notify a given role or yourself to the next thread message received.
+        
+        Once a thread message is received you will be pinged once only.
+        """
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread is None:
+            return
+
+        if not role:
+            mention = ctx.author.mention
+        elif role.lower() in ('here', 'everyone'):
+            mention = '@' + role 
+        else:
+            converter = commands.RoleConverter()
+            role = await converter.convert(ctx, role)
+            mention = role.mention
+        
+        if str(thread.id) not in self.bot.config['notification_squad']:
+            self.bot.config['notification_squad'][str(thread.id)] = []
+        
+        mentions = self.bot.config['notification_squad'][str(thread.id)]
+        
+        if mention in mentions:
+            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description=f'{mention} is already going to be mentioned.'))
+
+        mentions.append(mention)
+        await self.bot.config.update()
+        
+        em = discord.Embed(color=discord.Color.green())
+        em.description = f'{mention} will be mentioned on the next message received.'
+        await ctx.send(embed=em)
+
+    @commands.command(aliases=['sub'])
+    async def subscribe(self, ctx, *, role=None):
+        """Notify yourself or a given role for every thread message recieved.
+        You will be pinged for every thread message recieved until you unsubscribe.
+        """
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread is None:
+            return
+
+        if not role:
+            mention = ctx.author.mention
+        elif role.lower() in ('here', 'everyone'):
+            mention = '@' + role 
+        else:
+            converter = commands.RoleConverter()
+            role = await converter.convert(ctx, role)
+            mention = role.mention
+        
+        if str(thread.id) not in self.bot.config['subscriptions']:
+            self.bot.config['subscriptions'][str(thread.id)] = []
+        
+        mentions = self.bot.config['subscriptions'][str(thread.id)]
+        
+        if mention in mentions:
+            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description=f'{mention} is already subscribed to this thread.'))
+
+        mentions.append(mention)
+        await self.bot.config.update()
+
+        em = discord.Embed(color=discord.Color.green())
+        em.description = f'{mention} is now subscribed to be notified of all messages received.'
+        await ctx.send(embed=em)
+
+    @commands.command(aliases=['unsub'])
+    async def unsubscribe(self, ctx, *, role=None):
+        """Unsubscribes a given role or yourself from a thread."""
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread is None:
+            return
+
+        if not role:
+            mention = ctx.author.mention
+        elif role.lower() in ('here', 'everyone'):
+            mention = '@' + role 
+        else:
+            converter = commands.RoleConverter()
+            role = await converter.convert(ctx, role)
+            mention = role.mention
+        
+        if str(thread.id) not in self.bot.config['subscriptions']:
+            self.bot.config['subscriptions'][str(thread.id)] = []
+        
+        mentions = self.bot.config['subscriptions'][str(thread.id)]
+
+        if mention not in mentions:
+            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description=f'{mention} is not already subscribed to this thread.'))
+        
+        mentions.remove(mention)
+        await self.bot.config.update()
+
+        em = discord.Embed(color=discord.Color.green())
+        em.description = f'{mention} is now unsubscribed to this thread.'
+        await ctx.send(embed=em)
+
 
     @commands.command()
     async def nsfw(self, ctx):
@@ -205,7 +317,7 @@ class Modmail:
         logs = await self.bot.modmail_api.get_user_logs(user.id)
 
         if not any(not e['open'] for e in logs):
-            return await ctx.send('This user has no previous logs.')
+            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='This user does not have any previous logs'))
 
         em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Previous Logs', icon_url=icon_url)
@@ -306,7 +418,7 @@ class Modmail:
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
-            return await ctx.send('Thread already exists.')
+            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='A thread for this user already exists.'))
         else:
             thread = await self.bot.threads.create(user, creator=ctx.author)
 
