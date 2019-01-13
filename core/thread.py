@@ -44,17 +44,19 @@ class Thread:
     
     async def _close_after(self, after, **kwargs):
         await asyncio.sleep(after)
+        kwargs['scheduled'] = True
         await self.close(**kwargs)
 
-    async def close(self, *, closer, after=0, silent=False, delete_channel=True, message=None):
+    async def close(self, *, closer, after=0, silent=False, delete_channel=True, message=None, scheduled=False):
         '''Close a thread now or after a set time in seconds'''
-        if after > 0:
-            if self.close_task is not None and not self.close_task.cancelled():
+        if self.close_task is not None and not self.close_task.cancelled():
+            if not scheduled or after > 0:
                 self.close_task.cancel()
+
+        if after > 0:
             self.close_task = asyncio.create_task(self._close_after(after, closer=closer, silent=silent, message=message))
             return 
 
-        
         del self.manager.cache[self.id]
 
         # Logging
@@ -83,10 +85,15 @@ class Thread:
         desc = f"[`{log_data['key']}`]({log_url}) {user}: {sneak_peak}"
 
         em = discord.Embed(description=desc, color=discord.Color.red())
-        em.set_author(name='Thread closed', url=log_url)
+
+        event = 'Scheduled thread close' if scheduled else 'Thread close'
+        em.set_author(name=f'Event: {event}', url=log_url)
         em.set_footer(text=f'Closed by: {closer} ({closer.id})')
+        em.timestamp = datetime.datetime.utcnow()
 
         tasks = [self.bot.log_channel.send(embed=em)]
+
+        # Thread closed message 
 
         em = discord.Embed(title='Thread Closed')
         em.description = message or f'{closer.mention} has closed this modmail thread.'
@@ -122,8 +129,8 @@ class Thread:
     async def reply(self, message):
         if not message.content and not message.attachments:
             raise commands.UserInputError
-        if self.recipient not in self.bot.guild.members:
-            return await message.channel.send('This user is no longer in the server and is thus unreachable.')
+        if all(not g.get_member(self.id) for g in self.bot.guilds):
+            return await message.channel.send(embed=discord.Embed(color=discord.Color.red(), description='This user shares no servers with me and is thus unreachable.'))
 
         tasks = [
             self.send(message, self.channel, from_mod=True),  # in thread channel
@@ -202,13 +209,33 @@ class Thread:
             em.set_footer(text=f'User')
 
         await destination.trigger_typing()
-        await destination.send(embed=em)
+
+        if not from_mod:
+            mentions = self.get_notifications()
+        else:
+            mentions = None
+            
+        await destination.send(mentions, embed=em)
 
         if delete_message:
             try:
                 await message.delete()
             except:
                 pass
+        
+    def get_notifications(self):
+        config = self.bot.config
+        key = str(self.id)
+
+        mentions = []
+        mentions.extend(config['subscriptions'].get(key, []))
+
+        if key in config['notification_squad']:
+            mentions.extend(config['notification_squad'][key])
+            del config['notification_squad'][key]
+            asyncio.create_task(config.update())
+        
+        return ' '.join(mentions)
 
 
 class ThreadManager:
