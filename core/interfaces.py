@@ -1,4 +1,6 @@
 import discord
+import secrets
+from datetime import datetime
 
 
 class ApiClient:
@@ -120,8 +122,64 @@ class ModmailApiClient(ApiClient):
 
 
 class SelfhostedApiInterface(ModmailApiClient):
+
     @property
     def db(self)
         return self.bot.db 
+    
+    @property 
+    def logs(self):
+        return self.db.logs
+
+    async def get_user_logs(self, user_id):
+        logs = []
+
+        async for entry in self.logs.find({'recipient.id': str(user_id)}):
+            logs.append(entry)
+
+        return logs
+
+    async def get_log(self, channel_id):
+        return await self.logs.find_one({'channel_id': str(channel_id)})
+
+    
+    async def get_log_url(self, recipient, channel, creator):
+        key = secrets.token_hex(6)
+
+        await self.logs.insert_one({
+            'key': key,
+            'open': True,
+            'created_at': str(datetime.utcnow()),
+            'closed_at': None,
+            'channel_id': str(channel.id),
+            'guild_id': str(channel.guild.id),
+            'recipient': {
+                'id': str(recipient.id),
+                'name': recipient.name,
+                'discriminator': recipient.discriminator,
+                'avatar_url': recipient.avatar_url,
+                'mod': False
+            },
+            'creator': {
+                'id': str(creator.id),
+                'name': creator.name,
+                'discriminator': creator.discriminator,
+                'avatar_url': creator.avatar_url,
+                'mod': isinstance(creator, discord.Member)
+            },
+            'closer': None,
+            'messages': []
+            })
+        
+        return f'https://{self.bot.config.log_domain}/logs/{key}'
+    
+    async def get_config(self):
+        return await self.db.config.find_one({})
+    
+    async def update_config(self, data):
+        valid_keys = self.app.config.valid_keys - {'token', 'modmail_api_token', 'modmail_guild_id', 'guild_id'}
+        data = {k: v for k, v in data.items() if k in valid_keys}
+        return await self.db.config.find_one_and_replace({}, data)
+
 
 
