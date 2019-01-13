@@ -313,6 +313,7 @@ class Modmail:
         user = member or thread.recipient
 
         icon_url = getattr(user, 'avatar_url', 'https://cdn.discordapp.com/embed/avatars/0.png')
+        username = str(user) if hasattr(user, 'name') else str(user.id)
 
         logs = await self.bot.modmail_api.get_user_logs(user.id)
 
@@ -320,7 +321,7 @@ class Modmail:
             return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='This user does not have any previous logs'))
 
         em = discord.Embed(color=discord.Color.green())
-        em.set_author(name='Previous Logs', icon_url=icon_url)
+        em.set_author(name=f'{username} - Previous Logs', icon_url=icon_url)
 
         embeds = [em]
 
