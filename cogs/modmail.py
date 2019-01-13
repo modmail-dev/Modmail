@@ -313,6 +313,7 @@ class Modmail:
         user = member or thread.recipient
 
         icon_url = getattr(user, 'avatar_url', 'https://cdn.discordapp.com/embed/avatars/0.png')
+        username = str(user) if hasattr(user, 'name') else str(user.id)
 
         logs = await self.bot.modmail_api.get_user_logs(user.id)
 
@@ -320,7 +321,7 @@ class Modmail:
             return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='This user does not have any previous logs'))
 
         em = discord.Embed(color=discord.Color.green())
-        em.set_author(name='Previous Logs', icon_url=icon_url)
+        em.set_author(name=f'{username} - Previous Logs', icon_url=icon_url)
 
         embeds = [em]
 
@@ -343,18 +344,17 @@ class Modmail:
 
             key = entry['key']
             user_id = entry['user_id']
+            closer = entry['closer']['name']
             log_url = f"https://logs.modmail.tk/{user_id}/{key}"
 
-            truncate = lambda c: c[:47] + '...' if len(c) > 50 else c
+            truncate = lambda c: c[:47].strip() + '...' if len(c) > 50 else c
 
             if entry['messages']:
                 short_desc = truncate(entry['messages'][0]['content']) or 'No content'
             else:
                 short_desc = 'No content'
 
-            fmt += f"[`[{time}]{key}`]({log_url}) - {short_desc}\n"
-
-            print(fmt)
+            fmt += f"[`[{time}][closed-by:{closer}]`]({log_url}) - {short_desc}\n"
 
             if current_day != new_day or index == len(closed_logs) - 1:
                 embeds[-1].add_field(name=current_day, value=fmt, inline=False)
