@@ -227,7 +227,7 @@ class Modmail:
 
     @commands.command(aliases=['sub'])
     async def subscribe(self, ctx, *, role=None):
-        """Subscribes yourself or a given role to be notified when thread messages are received.
+        """Notify yourself or a given role for every thread message recieved.
         You will be pinged for every thread message recieved until you unsubscribe.
         """
         thread = await self.bot.threads.find(channel=ctx.channel)
