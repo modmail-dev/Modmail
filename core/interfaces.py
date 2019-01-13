@@ -117,3 +117,11 @@ class ModmailApiClient(ApiClient):
 
     def post_log(self, channel_id, payload):
         return self.request(self.logs + f'/{channel_id}', method='POST', payload=payload)
+
+
+class SelfhostedApiInterface(ModmailApiClient):
+    @property
+    def db(self)
+        return self.bot.db 
+
+

@@ -38,7 +38,7 @@ from discord.ext.commands.view import StringView
 from colorama import init, Fore, Style
 import emoji
 
-from core.api import Github, ModmailApiClient
+from core.interfaces import Github, ModmailApiClient, SelfhostedApiInterface
 from core.thread import ThreadManager
 from core.config import ConfigManager
 from core.changelog import ChangeLog
