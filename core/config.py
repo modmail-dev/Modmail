@@ -12,7 +12,7 @@ class ConfigManager:
         }
     
     internal_keys = {
-        'snippets', 'aliases', 'blocked'
+        'snippets', 'aliases', 'blocked', 'notification_squad', 'subscriptions'
         }
     
     protected_keys = {
@@ -35,8 +35,11 @@ class ConfigManager:
         data = {
             'snippets': {},
             'aliases': {},
-            'blocked': {}
+            'blocked': {},
+            'notification_squad': {},
+            'subscriptions': {}
         }
+
         try:
             data.update(json.load(open('config.json')))
         except FileNotFoundError:
