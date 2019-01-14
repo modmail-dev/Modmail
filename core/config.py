@@ -16,7 +16,8 @@ class ConfigManager:
         }
     
     protected_keys = {
-        'token', 'owners', 'modmail_api_token', 'guild_id', 'modmail_guild_id',
+        'token', 'owners', 'modmail_api_token', 'guild_id', 'modmail_guild_id', 
+        'mongo_uri', 'github_access_token', 'log_domain'
         }
 
     valid_keys = allowed_to_change_in_command.union(internal_keys).union(protected_keys)

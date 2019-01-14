@@ -2,6 +2,8 @@ import discord
 import secrets
 from datetime import datetime
 
+from pymongo import ReturnDocument
+
 
 class ApiClient:
     def __init__(self, app):
@@ -18,14 +20,69 @@ class ApiClient:
             except:
                 return await resp.text()
 
-
 class Github(ApiClient):
-    commit_url = 'https://api.github.com/repos/kyb3r/modmail/commits'
+    BASE = 'https://api.github.com'
+    REPO = BASE + '/repos/kyb3r/modmail'
+    head = REPO + '/git/refs/heads/master'
+    merge_url = BASE + '/repos/{username}/modmail/merges'
+    fork_url = REPO + '/forks'
+    star_url = BASE + '/user/starred/kyb3r/modmail'
+
+    def __init__(self, app, access_token=None, username=None):
+        self.app = app
+        self.session = app.session
+        self.access_token = access_token
+        self.username = username
+        self.id = None
+        self.avatar_url = None
+        self.url = None
+        self.headers = None
+        if self.access_token:
+            self.headers = {'Authorization': 'token ' + str(access_token)}
+
+    async def update_repository(self, sha=None):
+        if sha is None:
+            resp = await self.request(self.head)
+            sha = resp['object']['sha']
+
+        payload = {
+            'base': 'master',
+            'head': sha,
+            'commit_message': 'Updating bot'
+        }
+
+        merge_url = self.merge_url.format(username=self.username)
+
+        resp = await self.request(merge_url, method='POST', payload=payload)
+        if isinstance(resp, dict):
+            return resp
+
+    async def fork_repository(self):
+        await self.request(self.fork_url, method='POST')
+    
+    async def has_starred(self):
+        resp = await self.request(self.star_url, return_response=True)
+        return resp.status == 204
+
+    async def star_repository(self):
+        await self.request(self.star_url, method='PUT', headers={'Content-Length':  '0'})
 
     async def get_latest_commits(self, limit=3):
         resp = await self.request(self.commit_url)
         for index in range(limit):
             yield resp[index]
+
+    @classmethod
+    async def login(cls, bot):
+        self = cls(bot, bot.config.get('github_access_token'))
+        resp = await self.request('https://api.github.com/user')
+        self.username = resp['login']
+        self.avatar_url = resp['avatar_url']
+        self.url = resp['html_url']
+        self.id = resp['id']
+        self.raw_data = resp
+        print(f'Logged in to: {self.username} - {self.id}')
+        return self
 
 
 class ModmailApiClient(ApiClient):
@@ -70,9 +127,7 @@ class ModmailApiClient(ApiClient):
         return self.request(self.config)
 
     def update_config(self, data):
-
-        valid_keys = self.app.config.valid_keys - {'token', 'modmail_api_token', 'modmail_guild_id', 'guild_id'}
-
+        valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 
@@ -121,7 +176,15 @@ class ModmailApiClient(ApiClient):
         return self.request(self.logs + f'/{channel_id}', method='POST', payload=payload)
 
 
-class SelfhostedApiInterface(ModmailApiClient):
+class SelfhostedClient(ModmailApiClient):
+
+    def __init__(self, bot):
+        super().__init__(bot)
+        self.token = bot.config.get('github_access_token')
+        if self.token:
+            self.headers = {
+                'Authorization': 'Bearer ' + self.token
+            }
 
     @property
     def db(self)
@@ -171,15 +234,54 @@ class SelfhostedApiInterface(ModmailApiClient):
             'messages': []
             })
         
-        return f'https://{self.bot.config.log_domain}/logs/{key}'
+        return f'https://{self.app.config.log_domain}/logs/{key}'
     
     async def get_config(self):
         return await self.db.config.find_one({})
     
     async def update_config(self, data):
-        valid_keys = self.app.config.valid_keys - {'token', 'modmail_api_token', 'modmail_guild_id', 'guild_id'}
+        valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
         return await self.db.config.find_one_and_replace({}, data)
 
+    async def append_log(self, message, channel_id=''):
+        channel_id = str(channel_id) or str(message.channel.id)
+        payload = {
+                'timestamp': str(message.created_at),
+                'message_id': str(message.id),
+                # author
+                'author': {
+                    'id': str(message.author.id),
+                    'name': message.author.name,
+                    'discriminator': message.author.discriminator,
+                    'avatar_url': message.author.avatar_url,
+                    'mod': not isinstance(message.channel, discord.DMChannel),
+                },
+                # message properties
+                'content': message.content,
+                'attachments': [i.url for i in message.attachments]
+            }
+        
+        return await self.logs.find_one_and_update(
+            {'channel_id': channel_id},
+            {'$push': {f'messages': payload}},
+            return_document=ReturnDocument.AFTER
+        )
 
+    async def post_log(self, channel_id, payload):
+        await self.logs.find_one_and_replace({'channel_id': channel_id}, payload)
+
+    async def update_repository(self):
+        user = await Github.login(self.app)
+        data = await user.update_repository()
+        return {'data': data}
+
+    def get_user_info(self):
+        user = await Github.login(self.app)
+        return {
+            'user': {
+                'username': user.username,
+                'avatar_url': user.avatar_url,
+                'url': user.url
+            }
 

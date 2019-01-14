@@ -38,7 +38,7 @@ from discord.ext.commands.view import StringView
 from colorama import init, Fore, Style
 import emoji
 
-from core.interfaces import Github, ModmailApiClient, SelfhostedApiInterface
+from core.clients import Github, ModmailApiClient, SelfhostedClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 from core.changelog import ChangeLog
@@ -58,7 +58,8 @@ class ModmailBot(commands.Bot):
         self.threads = ThreadManager(self)
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
-        self.modmail_api = ModmailApiClient(self)
+        self.selfhosted = bool(self.config.get('mongo_uri'))
+        self.modmail_api = SelfhostedClient(self) if self.selfhosted else ModmailApiClient(self)
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._add_commands()
@@ -159,8 +160,9 @@ class ModmailBot(commands.Bot):
 
     async def on_connect(self):
         print(line + Fore.RED + Style.BRIGHT)
-        await self.validate_api_token()
-        print(line)
+        if not self.selfhosted:
+            await self.validate_api_token()
+            print(line)
         print(Fore.CYAN + 'Connected to gateway.')
         await self.config.refresh()
         status = self.config.get('status')
@@ -393,11 +395,18 @@ class ModmailBot(commands.Bot):
             await asyncio.sleep(3600)
 
     async def autoupdate_loop(self):
-        while True:
-            if self.config.get('disable_autoupdates'):
-                await asyncio.sleep(3600)
-                continue
+        await self.wait_until_ready()
 
+        if self.config.get('disable_autoupdates'):
+            print('Autoupdates disabled.')
+            return 
+
+        if self.selfhosted and not self.config.get('github_access_token'):
+            print('Github access token not found.')
+            print('Autoupdates disabled.')
+            return 
+            
+        while True:
             metadata = await self.modmail_api.get_metadata()
 
             if metadata['latest_version'] != self.version:
