@@ -8,3 +8,5 @@ emoji
 dhooks
 natural
 parsedatetime
+motor
+sanic
