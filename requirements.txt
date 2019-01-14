@@ -10,3 +10,4 @@ natural
 parsedatetime
 motor
 sanic
+dnspython
