@@ -14,11 +14,11 @@ async def init(app, loop):
 
 @app.get('/')
 async def index(request):
-    return response.text('Welcome! This simple webserver is used to display your modmail logs.')
+    return response.text('Welcome! This simple website is used to display your modmail logs.')
 
 @app.get('/logs/<key>')
 async def getlogsfile(request, key):
-    '''Returned the plain text rendered log entry'''
+    """Returned the plain text rendered log entry"""
 
     log = await app.db.logs.find_one({'key': key})
 
