@@ -163,13 +163,16 @@ class ModmailBot(commands.Bot):
         return [bot.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
     async def on_connect(self):
-        print(line + Fore.RED + Style.BRIGHT)
+        print(line)
+        print(Fore.CYAN, end='')
         if not self.selfhosted:
-            print('Mode: using api.modmail.tk')
+            print('MODE: Using the Modmail API')
+            print(line)
             await self.validate_api_token()
             print(line)
         else:
-            print('Mode: selfhosting logs.')
+            print('Mode: Selfhosting logs.')
+            print(line)
         print(Fore.CYAN + 'Connected to gateway.')
         await self.config.refresh()
         status = self.config.get('status')
@@ -364,12 +367,16 @@ class ModmailBot(commands.Bot):
         try:
             self.config.modmail_api_token
         except KeyError:
+            print(Fore.RED + Style.BRIGHT, end='')
             print('MODMAIL_API_TOKEN not found.')
             print('Set a config variable called MODMAIL_API_TOKEN with a token from https://dashboard.modmail.tk')
+            print('If you want to selfhost logs, input a MONGO_URI config variable.')
+            print('A modmail api token is not needed if you are selfhosting logs.')
             valid = False
         else:
             valid = await self.modmail_api.validate_token()
             if not valid:
+                print(Fore.RED + Style.BRIGHT, end='')
                 print('Invalid MODMAIL_API_TOKEN - get one from https://dashboard.modmail.tk')
         finally:
             if not valid:
