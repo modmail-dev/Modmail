@@ -18,7 +18,7 @@ async def index(request):
 
 @app.get('/logs/<key>')
 async def getlogsfile(request, key):
-    print(key)
+    '''Returned the plain text rendered log entry'''
 
     log = await app.db.logs.find_one({'key': key})
 
