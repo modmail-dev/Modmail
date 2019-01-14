@@ -10,14 +10,16 @@ app = Sanic(__name__)
 
 @app.listener('before_server_start')
 async def init(app, loop):
-    app.db = AsyncIOMotorClient(os.getenv('MONGO_URI')).modmail
+    app.db = AsyncIOMotorClient(os.getenv('MONGO_URI')).modmail_bot
 
-app.get('/')
+@app.get('/')
 async def index(request):
-    return response.json('Welcome!')
+    return response.text('Welcome! This simple webserver is used to display your modmail logs.')
 
-@app.get('/<key>')
+@app.get('/logs/<key>')
 async def getlogsfile(request, key):
+    print(key)
+
     log = await app.db.logs.find_one({'key': key})
 
     if log is None:

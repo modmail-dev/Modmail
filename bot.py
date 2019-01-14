@@ -35,6 +35,8 @@ import discord
 import aiohttp
 from discord.ext import commands
 from discord.ext.commands.view import StringView
+from motor.motor_asyncio import AsyncIOMotorClient
+
 from colorama import init, Fore, Style
 import emoji
 
@@ -59,6 +61,8 @@ class ModmailBot(commands.Bot):
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
         self.selfhosted = bool(self.config.get('mongo_uri'))
+        if self.selfhosted:
+            self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
         self.modmail_api = SelfhostedClient(self) if self.selfhosted else ModmailApiClient(self)
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
@@ -161,8 +165,11 @@ class ModmailBot(commands.Bot):
     async def on_connect(self):
         print(line + Fore.RED + Style.BRIGHT)
         if not self.selfhosted:
+            print('Mode: using api.modmail.tk')
             await self.validate_api_token()
             print(line)
+        else:
+            print('Mode: selfhosting logs.')
         print(Fore.CYAN + 'Connected to gateway.')
         await self.config.refresh()
         status = self.config.get('status')
@@ -405,7 +412,7 @@ class ModmailBot(commands.Bot):
             print('Github access token not found.')
             print('Autoupdates disabled.')
             return 
-            
+
         while True:
             metadata = await self.modmail_api.get_metadata()
 

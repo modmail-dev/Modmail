@@ -17,7 +17,7 @@ class ConfigManager:
     
     protected_keys = {
         'token', 'owners', 'modmail_api_token', 'guild_id', 'modmail_guild_id', 
-        'mongo_uri', 'github_access_token', 'log_domain'
+        'mongo_uri', 'github_access_token', 'log_url'
         }
 
     valid_keys = allowed_to_change_in_command.union(internal_keys).union(protected_keys)
@@ -49,8 +49,6 @@ class ConfigManager:
             data.update(os.environ)
             data = {k.lower(): v for k, v in data.items() if k.lower() in self.valid_keys}
             self.cache = data
-
-        self.bot.loop.create_task(self.refresh())
 
     async def update(self, data=None):
         """Updates the config with data from the cache"""

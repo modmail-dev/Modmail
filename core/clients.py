@@ -187,8 +187,8 @@ class SelfhostedClient(ModmailApiClient):
             }
 
     @property
-    def db(self)
-        return self.bot.db 
+    def db(self):
+        return self.app.db 
     
     @property 
     def logs(self):
@@ -234,15 +234,19 @@ class SelfhostedClient(ModmailApiClient):
             'messages': []
             })
         
-        return f'https://{self.app.config.log_domain}/logs/{key}'
+        return f'{self.app.config.log_url}/logs/{key}'
     
     async def get_config(self):
-        return await self.db.config.find_one({})
+        conf = await self.db.config.find_one({'bot_id': self.app.user.id})
+        if conf is None:
+            await self.db.config.insert_one({'bot_id': self.app.user.id})
+            return {'bot_id': self.app.user.id}
+        return conf
     
     async def update_config(self, data):
         valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
-        return await self.db.config.find_one_and_replace({}, data)
+        return await self.db.config.update_one({'bot_id': self.app.user.id}, {'$set': data})
 
     async def append_log(self, message, channel_id=''):
         channel_id = str(channel_id) or str(message.channel.id)
@@ -269,14 +273,19 @@ class SelfhostedClient(ModmailApiClient):
         )
 
     async def post_log(self, channel_id, payload):
-        await self.logs.find_one_and_replace({'channel_id': channel_id}, payload)
+        log = await self.logs.find_one_and_update(
+            {'channel_id': str(channel_id)},
+            {'$set': {key: payload[key] for key in payload}},
+            return_document=ReturnDocument.AFTER
+        )
+        return log
 
     async def update_repository(self):
         user = await Github.login(self.app)
         data = await user.update_repository()
         return {'data': data}
 
-    def get_user_info(self):
+    async def get_user_info(self):
         user = await Github.login(self.app)
         return {
             'user': {
@@ -284,4 +293,4 @@ class SelfhostedClient(ModmailApiClient):
                 'avatar_url': user.avatar_url,
                 'url': user.url
             }
-
+        }
