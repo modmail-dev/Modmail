@@ -5,7 +5,6 @@ from typing import Optional, Union
 
 import discord
 from discord.ext import commands
-from discord.enums import ActivityType
 
 import dateutil.parser
 
@@ -124,19 +123,6 @@ class Modmail:
 
         await thread.channel.edit(category=category)
         await ctx.message.add_reaction('✅')
-
-    @commands.command()
-    async def status(self, ctx, activity_type: str, *, message: str):
-        activity_type = ActivityType[activity_type]
-        self.bot: commands.Bot
-        activity = discord.Activity(type=activity_type, name=message)
-        await self.bot.change_presence(activity=activity)
-        em = discord.Embed(
-            title='Status Changed',
-            description=f'{ActivityType(activity_type)}: {message}.',
-            color=discord.Color.green()
-        )
-        await ctx.send(embed=em)
 
     async def send_scheduled_close_message(self, ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)

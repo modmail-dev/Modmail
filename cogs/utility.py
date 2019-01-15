@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+from discord.enums import ActivityType
+
 import datetime
 import traceback
 import inspect
@@ -268,26 +270,36 @@ class Utility:
             
         await ctx.send(embed=em)
 
-    @commands.command(name='status', aliases=['customstatus', 'presence'])
+    @commands.command(aliases=['presence'])
     @commands.has_permissions(administrator=True)
-    async def _status(self, ctx, *, message):
-        """Set a custom playing status for the bot.
-
-        Set the message to `clear` if you want to remove the playing status.
+    async def status(self, ctx, activity_type: str, *, message: str = ''):
         """
+        Set a custom playing status for the bot.
 
-        if message == 'clear':
-            self.bot.config['status'] = None
+        [prefix]status activity message...
+
+        Set the message to `clear` if you want to remove the status.
+        """
+        if activity_type == 'clear':
+            await self.bot.change_presence(activity=None)
+            self.bot.config['activity_type'] = None
+            self.bot.config['activity_message'] = None
             await self.bot.config.update()
-            return await self.bot.change_presence(activity=None)
+            return
 
-        await self.bot.change_presence(activity=discord.Game(message))
-        self.bot.config['status'] = message
+        activity_type = ActivityType[activity_type]
+        self.bot: commands.Bot
+        activity = discord.Activity(type=activity_type, name=message)
+        await self.bot.change_presence(activity=activity)
+        self.bot.config['activity_type'] = activity_type
+        self.bot.config['activity_message'] = message
         await self.bot.config.update()
 
-        em = discord.Embed(title='Status Changed')
-        em.description = message
-        em.color = discord.Color.green()
+        em = discord.Embed(
+            title='Status Changed',
+            description=f'{ActivityType(activity_type)}: {message}.',
+            color=discord.Color.green()
+        )
         await ctx.send(embed=em)
 
     @commands.command()
