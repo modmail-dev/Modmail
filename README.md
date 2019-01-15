@@ -31,7 +31,6 @@
   <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License" />
 </a>
 
-
 </div>
 <br>
 
@@ -49,7 +48,14 @@ You have two options for using this bot, hosting on Heroku or self hosting the b
 
 ## What is heroku?
 
-Heroku is a container based cloud platform that offers free plans to host web applications. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started fast without having to worry about [anything](https://github.com/kyb3r/modmail/wiki/Installation#transparency).
+Heroku is a container based cloud platform that offers free plans to host web applications. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast.
+
+## Self hosted logs
+
+If you want complete control over your data and do not want to use the centralised API service, you can self host your logs. You can do this by adding two config variables: 
+
+* `MONGO_URI` - Mongodb connection URI, you can get a free 500mb cluster from [mongodb atlas](https://www.mongodb.com/cloud/atlas).
+* `LOG_URL` - The url of your heroku app (`https://yourappname.herokuapp.com`)
 
 ## Features and Commands
 The bot comes with a plethora of useful functionality. Take a look at the [list of commands](https://github.com/kyb3r/modmail/wiki/Features-and-commands).
