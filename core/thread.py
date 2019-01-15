@@ -58,6 +58,8 @@ class Thread:
             return 
 
         del self.manager.cache[self.id]
+        if str(self.id) in self.bot.config.subscriptions:
+            del self.bot.config.subscriptions[str(self.id)]
 
         # Logging
         log_data = await self.bot.modmail_api.post_log(self.channel.id, {
@@ -73,7 +75,11 @@ class Thread:
         if isinstance(log_data, str):
             print(log_data) # errored somehow on server
 
-        log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
+        if self.bot.selfhosted:
+            log_url = f'{self.bot.config.log_url}/logs/{log_data["key"]}'
+        else:
+            log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}" 
+
         user = self.recipient.mention if self.recipient else f'`{self.id}`'
 
         if log_data['messages']:
@@ -82,16 +88,19 @@ class Thread:
         else:
             sneak_peak = 'No content'
 
-        desc = f"[`{log_data['key']}`]({log_url}) {user}: {sneak_peak}"
+        desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
 
         em = discord.Embed(description=desc, color=discord.Color.red())
 
-        event = 'Scheduled thread close' if scheduled else 'Thread close'
-        em.set_author(name=f'Event: {event}', url=log_url)
-        em.set_footer(text=f'Closed by: {closer} ({closer.id})')
+        event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
+        # em.set_author(name=f'Event: {event}', url=log_url)
+        em.set_footer(text=f'{event} by {closer} ({closer.id})')
         em.timestamp = datetime.datetime.utcnow()
 
-        tasks = [self.bot.log_channel.send(embed=em)]
+        tasks = [
+            self.bot.log_channel.send(embed=em),
+            self.bot.config.update()
+        ]
 
         # Thread closed message 
 
@@ -419,7 +428,10 @@ class ThreadManager:
         if member:
             seperate_server = self.bot.guild != self.bot.modmail_guild
             roles = sorted(member.roles, key=lambda c: c.position)
-            rolenames = ' '.join(r.mention if not seperate_server else r.name for r in roles if r.name != "@everyone")
+            if seperate_server:
+                rolenames = ', '.join(r.name for r in roles if r.name != "@everyone")
+            else:
+                rolenames = ' '.join(r.mention for r in roles if r.name != "@everyone")
 
         em = discord.Embed(colour=dc, description=desc, timestamp=time)
 
