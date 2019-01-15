@@ -428,7 +428,10 @@ class ThreadManager:
         if member:
             seperate_server = self.bot.guild != self.bot.modmail_guild
             roles = sorted(member.roles, key=lambda c: c.position)
-            rolenames = ' '.join(r.mention if not seperate_server else r.name for r in roles if r.name != "@everyone")
+            if seperate_server:
+                rolenames = ', '.join(r.name for r in roles if r.name != "@everyone")
+            else:
+                rolenames = ' '.join(r.mention for r in roles if r.name != "@everyone")
 
         em = discord.Embed(colour=dc, description=desc, timestamp=time)
 
