@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.4.2
 
-### Added ability to set your own twitch url for streaming status.
+### Added 
+- Ability to set your own twitch url for streaming status.
 
 # v2.4.1
 
