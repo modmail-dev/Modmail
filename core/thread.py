@@ -88,13 +88,13 @@ class Thread:
         else:
             sneak_peak = 'No content'
 
-        desc = f"[`{log_data['key']}`]({log_url}) {user}: {sneak_peak}"
+        desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
 
         em = discord.Embed(description=desc, color=discord.Color.red())
 
-        event = 'Scheduled thread close' if scheduled else 'Thread close'
-        em.set_author(name=f'Event: {event}', url=log_url)
-        em.set_footer(text=f'Closed by: {closer} ({closer.id})')
+        event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
+        # em.set_author(name=f'Event: {event}', url=log_url)
+        em.set_footer(text=f'{event} by {closer} ({closer.id})')
         em.timestamp = datetime.datetime.utcnow()
 
         tasks = [
