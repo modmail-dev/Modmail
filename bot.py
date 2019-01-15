@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.4.1'
+__version__ = '2.4.2'
 
 import asyncio
 import textwrap
@@ -180,7 +180,7 @@ class ModmailBot(commands.Bot):
         activity_type = self.config.get('activity_type')
         message = self.config.get('activity_message')
         if activity_type and message:
-            url = 'https://www.twitch.tv/discord-modmail/' if activity_type == ActivityType.streaming else None
+            url = self.config.get('twitch_url', 'https://www.twitch.tv/discord-modmail/') if activity_type == ActivityType.streaming else None
             activity = discord.Activity(type=activity_type, name=message,
                                         url=url)
             await self.change_presence(activity=activity)

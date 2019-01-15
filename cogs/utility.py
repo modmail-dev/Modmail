@@ -298,7 +298,7 @@ class Utility:
         except KeyError:
             raise commands.UserInputError
 
-        url = 'https://www.twitch.tv/discord-modmail/' if activity_type == ActivityType.streaming else None
+        url = self.bot.config.get('twitch_url', 'https://www.twitch.tv/discord-modmail/') if activity_type == ActivityType.streaming else None
         activity = discord.Activity(type=activity_type, name=message, url=url)
         await self.bot.change_presence(activity=activity)
         self.bot.config['activity_type'] = activity_type
