@@ -175,9 +175,12 @@ class ModmailBot(commands.Bot):
             print(line)
         print(Fore.CYAN + 'Connected to gateway.')
         await self.config.refresh()
-        status = self.config.get('status')
-        if status:
-            await self.change_presence(activity=discord.Game(status))
+
+        activity_type = self.config.get('activity_type')
+        message = self.config.get('activity_message')
+        if activity_type and message:
+            activity = discord.Activity(type=activity_type, name=message)
+            await self.change_presence(activity=activity)
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
