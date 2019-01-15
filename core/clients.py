@@ -283,7 +283,14 @@ class SelfhostedClient(ModmailApiClient):
     async def update_repository(self):
         user = await Github.login(self.app)
         data = await user.update_repository()
-        return {'data': data}
+        return {
+            'data': data,
+            'user': {
+                'username': user.username,
+                'avatar_url': user.avatar_url,
+                'url': user.url
+            }
+        }
 
     async def get_user_info(self):
         user = await Github.login(self.app)

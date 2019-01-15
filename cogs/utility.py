@@ -241,7 +241,7 @@ class Utility:
 
         if metadata['latest_version'] == self.bot.version:
             data = await self.bot.modmail_api.get_user_info()
-            if not data['error']:
+            if not data.get('error'):
                 user = data['user']
                 em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
         else:
