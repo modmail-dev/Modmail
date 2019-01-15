@@ -8,7 +8,7 @@ class ConfigManager:
 
     allowed_to_change_in_command = {
         'activity_message', 'activity_type', 'log_channel_id', 'mention', 'disable_autoupdates', 'prefix',
-        'main_category_id', 'sent_emoji', 'blocked_emoji', 'thread_creation_response'
+        'main_category_id', 'sent_emoji', 'blocked_emoji', 'thread_creation_response', 'twitch_url'
         }
     
     internal_keys = {
