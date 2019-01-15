@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.4.1
+
+### Fixed 
+- Small bug in activity command. 
+
+# v2.4.0
+
+Breaking changes for bot status.
+
+### Added 
+- Added the `activity` command for setting the activity
+- [PR #131](https://github.com/kyb3r/modmail/pull/131#issue-244686818) this supports multiple activity types (playing, watching, listening and streaming).
+
+### Removed
+- Removed the deprecated `status` command. 
+- This also means you will have to reset your bot status with the `activity` command as it will break. 
 
 # v2.3.0
 

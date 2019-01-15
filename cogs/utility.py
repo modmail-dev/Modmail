@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+from discord.enums import ActivityType
+
 import datetime
 import traceback
 import inspect
@@ -265,30 +267,50 @@ class Utility:
             else:
                 em.description = 'Already up to date with master repository.'
 
-            
         await ctx.send(embed=em)
 
-    @commands.command(name='status', aliases=['customstatus', 'presence'])
+    @commands.command(aliases=['presence'])
     @commands.has_permissions(administrator=True)
-    async def _status(self, ctx, *, message):
-        """Set a custom playing status for the bot.
-
-        Set the message to `clear` if you want to remove the playing status.
+    async def activity(self, ctx, activity_type: str, *, message: str = ''):
         """
+        Set a custom activity for the bot.
 
-        if message == 'clear':
-            self.bot.config['status'] = None
+        Possible activity types: `playing`, `streaming`, `listening`, `watching`, `clear`
+
+        When activity type is set to `clear`, the current activity is removed.
+        """
+        if activity_type == 'clear':
+            await self.bot.change_presence(activity=None)
+            self.bot.config['activity_type'] = None
+            self.bot.config['activity_message'] = None
             await self.bot.config.update()
-            return await self.bot.change_presence(activity=None)
+            em = discord.Embed(
+                title='Activity Removed',
+                color=discord.Color.green()
+            )
+            return await ctx.send(embed=em)
 
-        await self.bot.change_presence(activity=discord.Game(message))
-        self.bot.config['status'] = message
+        if not message:
+            raise commands.UserInputError
+
+        try:
+            activity_type = ActivityType[activity_type]
+        except KeyError:
+            raise commands.UserInputError
+
+        url = 'https://www.twitch.tv/discord-modmail/' if activity_type == ActivityType.streaming else None
+        activity = discord.Activity(type=activity_type, name=message, url=url)
+        await self.bot.change_presence(activity=activity)
+        self.bot.config['activity_type'] = activity_type
+        self.bot.config['activity_message'] = message
         await self.bot.config.update()
 
-        em = discord.Embed(title='Status Changed')
-        em.description = message
-        em.color = discord.Color.green()
-        await ctx.send(embed=em)
+        em = discord.Embed(
+            title='Activity Changed',
+            description=f'Current activity is: {activity_type.name} {message}.',
+            color=discord.Color.green()
+        )
+        return await ctx.send(embed=em)
 
     @commands.command()
     @trigger_typing

@@ -100,6 +100,12 @@ ENV/
 # mypy
 .mypy_cache/
 *.json
+!app.json
 
+#Pycharm
+.idea/
+
+#MacOs
+.DS_Store
 
 config.json

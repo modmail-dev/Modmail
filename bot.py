@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.3.0'
+__version__ = '2.4.1'
 
 import asyncio
 import textwrap
@@ -33,6 +33,7 @@ from types import SimpleNamespace
 
 import discord
 import aiohttp
+from discord.enums import ActivityType
 from discord.ext import commands
 from discord.ext.commands.view import StringView
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -175,9 +176,14 @@ class ModmailBot(commands.Bot):
             print(line)
         print(Fore.CYAN + 'Connected to gateway.')
         await self.config.refresh()
-        status = self.config.get('status')
-        if status:
-            await self.change_presence(activity=discord.Game(status))
+
+        activity_type = self.config.get('activity_type')
+        message = self.config.get('activity_message')
+        if activity_type and message:
+            url = 'https://www.twitch.tv/discord-modmail/' if activity_type == ActivityType.streaming else None
+            activity = discord.Activity(type=activity_type, name=message,
+                                        url=url)
+            await self.change_presence(activity=activity)
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
