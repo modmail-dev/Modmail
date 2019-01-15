@@ -52,11 +52,6 @@ Heroku is a container based cloud platform that offers free plans to host web ap
 
 ## Self hosted logs
 
-
-<a href="https://www.mongodb.com/">
-  <img src="https://i.imgur.com/XoHWF2L.png" alt="Mongodb" align='right' height=180/>
-</a>
-
 If you want complete control over your data and do not want to use the centralised API service, you can self host your logs. You can do this by adding two config variables: 
 
 * `MONGO_URI` - Mongodb connection URI, you can get a free 500mb cluster from [mongodb atlas](https://www.mongodb.com/cloud/atlas).
