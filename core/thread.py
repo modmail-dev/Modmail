@@ -58,6 +58,8 @@ class Thread:
             return 
 
         del self.manager.cache[self.id]
+        if str(self.id) in self.bot.config.subscriptions:
+            del self.bot.config.subscriptions[str(self.id)]
 
         # Logging
         log_data = await self.bot.modmail_api.post_log(self.channel.id, {
@@ -91,7 +93,10 @@ class Thread:
         em.set_footer(text=f'Closed by: {closer} ({closer.id})')
         em.timestamp = datetime.datetime.utcnow()
 
-        tasks = [self.bot.log_channel.send(embed=em)]
+        tasks = [
+            self.bot.log_channel.send(embed=em),
+            self.bot.config.update()
+        ]
 
         # Thread closed message 
 
