@@ -55,7 +55,9 @@ Heroku is a container based cloud platform that offers free plans to host web ap
 If you want complete control over your data and do not want to use the centralised API service, you can self host your logs. You can do this by adding two config variables: 
 
 * `MONGO_URI` - Mongodb connection URI, you can get a free 500mb cluster from [mongodb atlas](https://www.mongodb.com/cloud/atlas).
-* `LOG_URL` - The url of your heroku app (`https://yourappname.herokuapp.com`)
+* `LOG_URL` - The url of your log viewer heroku app (`https://yourlogviewerappname.herokuapp.com`)
+
+You also need to create a seperate heroku app for the log viewer that you can deploy from [here](https://github.com/kyb3r/logviewer).
 
 ## Features and Commands
 The bot comes with a plethora of useful functionality. Take a look at the [list of commands](https://github.com/kyb3r/modmail/wiki/Features-and-commands).
