@@ -75,7 +75,11 @@ class Thread:
         if isinstance(log_data, str):
             print(log_data) # errored somehow on server
 
-        log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}"
+        if self.bot.selfhosted:
+            log_url = f'{self.bot.config.log_url}/logs/{log_data["key"]}'
+        else:
+            log_url = f"https://logs.modmail.tk/{log_data['user_id']}/{log_data['key']}" 
+
         user = self.recipient.mention if self.recipient else f'`{self.id}`'
 
         if log_data['messages']:

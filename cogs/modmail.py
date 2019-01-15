@@ -343,9 +343,9 @@ class Modmail:
             time = date.strftime(r'%H:%M')
 
             key = entry['key']
-            user_id = entry['user_id']
+            user_id = entry.get('user_id')
             closer = entry['closer']['name']
-            log_url = f"https://logs.modmail.tk/{user_id}/{key}"
+            log_url = f"https://logs.modmail.tk/{user_id}/{key}" if not self.bot.selfhosted else self.bot.config.log_url + f'/logs/{key}'
 
             truncate = lambda c: c[:47].strip() + '...' if len(c) > 50 else c
 
