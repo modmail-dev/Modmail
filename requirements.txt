@@ -8,3 +8,6 @@ emoji
 dhooks
 natural
 parsedatetime
+motor
+sanic
+dnspython
