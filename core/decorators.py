@@ -15,12 +15,14 @@ def trigger_typing(func):
 def auth_required(func):
     @functools.wraps(func)
     async def wrapper(self, ctx, *args, **kwargs):
-        if self.bot.config.get('modmail_api_token'):
+        if self.bot.selfhosted and self.bot.config.get('github_access_token') or self.bot.config.get('modmail_api_token'):
             return await func(self, ctx, *args, **kwargs)
+
+        
         em = discord.Embed(
             color=discord.Color.red(),
             title='Unauthorized',
-            description='You can only use this command if you have a configured `MODMAIL_API_TOKEN`. Get your token from https://dashboard.modmail.tk'
+            description='You can only use this command if you have a configured `MODMAIL_API_TOKEN`. Get your token from https://dashboard.modmail.tk' if not self.bot.selfhosted else 'You can only use this command if you have a configured `GITHUB_ACCESS_TOKEN`. Get a personal access token from developer settings.'
         )
         await ctx.send(embed=em)
     return wrapper
