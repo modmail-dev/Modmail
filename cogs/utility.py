@@ -308,7 +308,8 @@ class Utility:
             )
             return await ctx.send(embed=em)
 
-        activity = discord.Activity(type=activity_type, name=message)
+        url = 'https://www.twitch.tv/discord-modmail/' if activity_type == ActivityType.streaming else None
+        activity = discord.Activity(type=activity_type, name=message, url=url)
         await self.bot.change_presence(activity=activity)
         self.bot.config['activity_type'] = activity_type
         self.bot.config['activity_message'] = message
