@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Improved format for log channel embeds.
+- Roles are now comma seperated in info embed
+- This only applies to seperate server setups
 
 ### Fixed
 - Bug in subscribe command, it will now unsub after a thread is closed.
