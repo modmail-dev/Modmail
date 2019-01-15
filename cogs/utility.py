@@ -291,22 +291,12 @@ class Utility:
             return await ctx.send(embed=em)
 
         if not message:
-            em = discord.Embed(
-                title='Invalid Message',
-                description='You must set an activity message.',
-                color=discord.Color.red()
-            )
-            return await ctx.send(embed=em)
+            raise commands.UserInputError
 
         try:
             activity_type = ActivityType[activity_type]
         except KeyError:
-            em = discord.Embed(
-                title='Invalid Activity Type',
-                description=f'Cannot set activity to: {activity_type}.',
-                color=discord.Color.red()
-            )
-            return await ctx.send(embed=em)
+            raise commands.UserInputError
 
         url = 'https://www.twitch.tv/discord-modmail/' if activity_type == ActivityType.streaming else None
         activity = discord.Activity(type=activity_type, name=message, url=url)
