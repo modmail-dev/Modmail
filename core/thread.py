@@ -51,6 +51,7 @@ class Thread:
         """Close a thread now or after a set time in seconds"""
 
         if self.close_task is not None:
+            # restarts the after timer
             self.close_task.cancel()
 
         if after > 0:
@@ -164,7 +165,7 @@ class Thread:
             self.send(message, self.recipient, from_mod=True)
             ]
 
-        if self.close_task is not None and not self.close_task.cancelled():
+        if self.close_task is not None:
             # cancel closing if a thread message is sent.
             self.close_task.cancel()
             tasks.append(self.channel.send(
@@ -175,7 +176,7 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def send(self, message, destination=None, from_mod=False):
-        if self.close_task is not None and not self.close_task.cancelled():
+        if self.close_task is not None:
             # cancel closing if a thread message is sent.
             self.close_task.cancel()
             await self.channel.send(embed=discord.Embed(
@@ -282,7 +283,7 @@ class Thread:
         if key in config['notification_squad']:
             mentions.extend(config['notification_squad'][key])
             del config['notification_squad'][key]
-            asyncio.create_task(config.update())
+            self.bot.loop.create_task(config.update())
         
         return ' '.join(mentions)
 
