@@ -40,7 +40,7 @@ class Thread:
         if flag is True:
             self.ready_event.set()
     
-    async def _close_after(self, closer, silent, delete_channel, message):
+    def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(self._close(closer, silent, delete_channel, message, True))
 
     async def close(self, *, closer, after=0, silent=False, delete_channel=True, message=None):
