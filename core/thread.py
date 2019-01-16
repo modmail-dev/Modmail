@@ -69,7 +69,7 @@ class Thread:
                 'message': message
             }
             closures[self.id] = items
-            self.bot.config['closure'] = closures
+            self.bot.config['closures'] = closures
             await self.bot.config.update()
 
             self.close_task = self.bot.loop.call_later(
