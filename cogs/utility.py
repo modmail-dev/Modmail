@@ -370,7 +370,7 @@ class Utility:
         """Change configuration for the bot.
 
         You shouldn't have to use these commands as other commands such
-        as `prefix` and `status` should change config vars for you.
+        as `prefix` and `activity` should change config vars for you.
         """
         if ctx.invoked_subcommand is None:
             cmd = self.bot.get_command('help')
