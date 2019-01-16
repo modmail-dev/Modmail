@@ -42,7 +42,8 @@ class ConfigManager:
             'aliases': {},
             'blocked': {},
             'notification_squad': {},
-            'subscriptions': {}
+            'subscriptions': {},
+            'closures': {}
         }
 
         try:
