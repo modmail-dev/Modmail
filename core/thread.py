@@ -23,8 +23,6 @@ class Thread:
         self.recipient = recipient
         self.channel = None
         self.ready_event = asyncio.Event()
-        self.close_task = None
-        self.close_after = 0 # seconds
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient}", channel={self.channel.id})'
@@ -42,21 +40,18 @@ class Thread:
         if flag is True:
             self.ready_event.set()
     
-    async def _close_after(self, after, **kwargs):
-        await asyncio.sleep(after)
-        kwargs['scheduled'] = True
-        await self.close(**kwargs)
+    async def _close_after(self, closer, silent, delete_channel, message):
+        return self.bot.loop.create_task(self._close(closer, silent, delete_channel, message, True))
 
-    async def close(self, *, closer, after=0, silent=False, delete_channel=True, message=None, scheduled=False):
+    async def close(self, *, closer, after=0, silent=False, delete_channel=True, message=None):
         '''Close a thread now or after a set time in seconds'''
-        if self.close_task is not None and not self.close_task.cancelled():
-            if not scheduled or after > 0:
-                self.close_task.cancel()
 
         if after > 0:
-            self.close_task = asyncio.create_task(self._close_after(after, closer=closer, silent=silent, message=message))
-            return 
+            return await self.bot.loop.call_later(after, silent, delete_channel, message)
 
+        return await self._close(closer, silent, delete_channel, message)
+
+    async def _close(self, closer, silent=False, delete_channel=True, message=None, scheduled=False):
         del self.manager.cache[self.id]
         if str(self.id) in self.bot.config.subscriptions:
             del self.bot.config.subscriptions[str(self.id)]
@@ -73,7 +68,8 @@ class Thread:
         })
 
         if isinstance(log_data, str):
-            print(log_data) # errored somehow on server
+            print(log_data)  # errored somehow on server
+            return
 
         if self.bot.selfhosted:
             log_url = f'{self.bot.config.log_url}/logs/{log_data["key"]}'
