@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.4.3'
+__version__ = '2.4.5'
 
 import asyncio
 import textwrap
@@ -179,7 +179,8 @@ class ModmailBot(commands.Bot):
 
         activity_type = self.config.get('activity_type')
         message = self.config.get('activity_message')
-        if activity_type and message:
+
+        if activity_type is not None and message:
             url = self.config.get('twitch_url', 'https://www.twitch.tv/discord-modmail/') if activity_type == ActivityType.streaming else None
             activity = discord.Activity(type=activity_type, name=message,
                                         url=url)
@@ -407,7 +408,8 @@ class ModmailBot(commands.Bot):
                 "member_count": len(self.guild.members),
                 "uptime": (datetime.datetime.utcnow() - self.start_time).total_seconds(),
                 "latency": f'{self.ws.latency * 1000:.4f}',
-                "version": __version__
+                "version": __version__,
+                "selfhosted": self.selfhosted
             }
 
             await self.modmail_api.post_metadata(data)
