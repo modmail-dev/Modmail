@@ -51,7 +51,7 @@ class Thread:
             self.close_task.cancel()
 
         if after > 0:
-            self.close_task = self.bot.loop.call_later(after, self._close_after, silent, delete_channel, message)
+            self.close_task = self.bot.loop.call_later(after, self._close_after, closer, silent, delete_channel, message)
             return
 
         return await self._close(closer, silent, delete_channel, message)
