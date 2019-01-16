@@ -47,7 +47,7 @@ class Thread:
         '''Close a thread now or after a set time in seconds'''
 
         if after > 0:
-            return await self.bot.loop.call_later(after, silent, delete_channel, message)
+            return self.bot.loop.call_later(after, silent, delete_channel, message)
 
         return await self._close(closer, silent, delete_channel, message)
 
