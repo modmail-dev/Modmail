@@ -23,8 +23,6 @@ class Thread:
         self.recipient = recipient
         self.channel = None
         self.ready_event = asyncio.Event()
-        self.close_task = None
-        self.close_after = 0 # seconds
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient}", channel={self.channel.id})'
