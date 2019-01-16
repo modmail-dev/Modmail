@@ -407,7 +407,8 @@ class ModmailBot(commands.Bot):
                 "member_count": len(self.guild.members),
                 "uptime": (datetime.datetime.utcnow() - self.start_time).total_seconds(),
                 "latency": f'{self.ws.latency * 1000:.4f}',
-                "version": __version__
+                "version": __version__,
+                "selfhosted": self.selfhosted
             }
 
             await self.modmail_api.post_metadata(data)
