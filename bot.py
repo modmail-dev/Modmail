@@ -204,6 +204,7 @@ class ModmailBot(commands.Bot):
             await self.threads.populate_cache()
 
         closures = self.config.get('closures', {})
+        print(closures)  # for debugging
         for recipient_id, items in closures.items():
             after = (datetime.datetime.fromisoformat(items['time']) -
                      datetime.datetime.utcnow()).total_seconds()
