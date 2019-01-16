@@ -211,9 +211,11 @@ class ModmailBot(commands.Bot):
                      datetime.datetime.utcnow()).total_seconds()
             if after < 0:
                 after = 0
+            recipient = self.get_user(recipient_id)
+            print(recipient)
             thread = await self.threads.find(
-                recipient=self.get_user(recipient_id))
-
+                recipient=recipient)
+            print(thread)
             # TODO: Retrieve messages/replies when bot is down, from history?
             await thread.close(closer=self.get_user(items['closer_id']),
                                after=after,
