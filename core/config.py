@@ -75,4 +75,4 @@ class ConfigManager:
         return self.cache[key]
 
     def get(self, value, default=None):
-        return self.cache.get(value) or default
+        return self.cache.get(value, default)
