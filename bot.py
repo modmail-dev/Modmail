@@ -204,7 +204,7 @@ class ModmailBot(commands.Bot):
             await self.threads.populate_cache()
         await self.config.update()
 
-        closures = self.config.get('closures', {})
+        closures = self.config.get('closures', {}).copy()
         print(closures)  # for debugging
         for recipient_id, items in closures.items():
             after = (datetime.datetime.fromisoformat(items['time']) -
@@ -212,10 +212,18 @@ class ModmailBot(commands.Bot):
             if after < 0:
                 after = 0
             recipient = self.get_user(int(recipient_id))
-            print(recipient)
+
             thread = await self.threads.find(
                 recipient=recipient)
-            print(thread)
+
+            if not thread:
+                # If the recipient is gone or channel is deleted
+                closures = self.config.get('closures', {})
+                closures.pop(str(recipient_id))
+                self.config['closures'] = closures
+                await self.config.update()
+                continue
+
             # TODO: Retrieve messages/replies when bot is down, from history?
             await thread.close(closer=self.get_user(items['closer_id']),
                                after=after,
