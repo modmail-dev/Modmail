@@ -211,7 +211,7 @@ class ModmailBot(commands.Bot):
                      datetime.datetime.utcnow()).total_seconds()
             if after < 0:
                 after = 0
-            recipient = self.get_user(recipient_id)
+            recipient = self.get_user(int(recipient_id))
             print(recipient)
             thread = await self.threads.find(
                 recipient=recipient)

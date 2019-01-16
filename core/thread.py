@@ -69,7 +69,7 @@ class Thread:
                 'delete_channel': delete_channel,
                 'message': message
             }
-            closures[self.id] = items
+            closures[str(self.id)] = items
             self.bot.config['closures'] = closures
             await self.bot.config.update()
 
@@ -83,6 +83,12 @@ class Thread:
     async def _close(self, closer, silent=False, delete_channel=True,
                      message=None, scheduled=False):
         del self.manager.cache[self.id]
+
+        closures = self.bot.config.get('closures', {})
+        closures.pop(str(self.id))
+        self.bot.config['closures'] = closures
+        await self.bot.config.update()
+
         if str(self.id) in self.bot.config.subscriptions:
             del self.bot.config.subscriptions[str(self.id)]
 
