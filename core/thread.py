@@ -23,6 +23,7 @@ class Thread:
         self.recipient = recipient
         self.channel = None
         self.ready_event = asyncio.Event()
+        self.close_task = None
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient}", channel={self.channel.id})'
@@ -46,8 +47,12 @@ class Thread:
     async def close(self, *, closer, after=0, silent=False, delete_channel=True, message=None):
         '''Close a thread now or after a set time in seconds'''
 
+        if self.close_task is not None:
+            self.close_task.cancel()
+
         if after > 0:
-            return self.bot.loop.call_later(after, silent, delete_channel, message)
+            self.close_task = self.bot.loop.call_later(after, self._close_after, silent, delete_channel, message)
+            return
 
         return await self._close(closer, silent, delete_channel, message)
 
