@@ -53,6 +53,7 @@ class Thread:
         if self.close_task is not None:
             # restarts the after timer
             self.close_task.cancel()
+            self.close_task = None
 
         if after > 0:
             # TODO: Add somewhere to clean up broken closures
@@ -184,6 +185,7 @@ class Thread:
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             self.close_task.cancel()
+            self.close_task = None
             tasks.append(self.channel.send(
                 embed=discord.Embed(color=discord.Color.red(),
                                     description='Scheduled close has '
@@ -195,6 +197,7 @@ class Thread:
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             self.close_task.cancel()
+            self.close_task = None
             await self.channel.send(embed=discord.Embed(
                 color=discord.Color.red(),
                 description='Scheduled close has been cancelled.'))
