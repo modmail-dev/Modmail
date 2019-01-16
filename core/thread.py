@@ -58,6 +58,7 @@ class Thread:
         if after > 0:
             # TODO: Add somewhere to clean up broken closures
             #  (when channel is already deleted)
+            await self.bot.config.update()
             closures = self.bot.config.get('closures', {})
             now = datetime.datetime.utcnow()
             items = {

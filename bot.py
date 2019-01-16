@@ -202,6 +202,7 @@ class ModmailBot(commands.Bot):
             print(Fore.RED + Style.BRIGHT + 'WARNING - The GUILD_ID provided does not exist!' + Style.RESET_ALL)
         else:
             await self.threads.populate_cache()
+        await self.config.update()
 
         closures = self.config.get('closures', {})
         print(closures)  # for debugging
