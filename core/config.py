@@ -14,7 +14,9 @@ class ConfigManager:
         }
     
     internal_keys = {
-        'snippets', 'aliases', 'blocked', 'notification_squad', 'subscriptions'
+        'snippets', 'aliases', 'blocked',
+        'notification_squad', 'subscriptions',
+        'closures'
         }
     
     protected_keys = {

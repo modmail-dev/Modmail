@@ -203,7 +203,21 @@ class ModmailBot(commands.Bot):
         else:
             await self.threads.populate_cache()
 
+        closures = self.config.get('closures', {})
+        for recipient_id, items in closures.items():
+            after = (datetime.datetime.fromisoformat(items['time']) -
+                     datetime.datetime.utcnow()).total_seconds()
+            if after < 0:
+                after = 0
+            thread = await self.threads.find(
+                recipient=self.get_user(recipient_id))
 
+            # TODO: Retrieve messages/replies when bot is down, from history?
+            await thread.close(closer=self.get_user(items['closer_id']),
+                               after=after,
+                               silent=items['silent'],
+                               delete_channel=items['delete_channel'],
+                               message=items['message'])
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""

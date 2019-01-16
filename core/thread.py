@@ -55,6 +55,22 @@ class Thread:
             self.close_task.cancel()
 
         if after > 0:
+            # TODO: Add somewhere to clean up broken closures
+            #  (when channel is already deleted)
+            closures = self.bot.config.get('closures', {})
+            now = datetime.datetime.utcnow()
+            items = {
+                # 'initiation_time': now.isoformat(),
+                'time': (now + datetime.timedelta(seconds=after)).isoformat(),
+                'closer_id': closer.id,
+                'silent': silent,
+                'delete_channel': delete_channel,
+                'message': message
+            }
+            closures[self.id] = items
+            self.bot.config['closure'] = closures
+            await self.bot.config.update()
+
             self.close_task = self.bot.loop.call_later(
                 after, self._close_after, closer,
                 silent, delete_channel, message)
@@ -326,6 +342,7 @@ class ThreadManager:
             )
             if channel:
                 self.cache[recipient.id] = thread = Thread(self, recipient)
+                # TODO: Fix this:
                 thread.channel = channel
                 thread.ready = True
         finally:
