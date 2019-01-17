@@ -24,21 +24,21 @@ SOFTWARE.
 
 __version__ = '2.5.0'
 
-import asyncio
-import textwrap
-import datetime
-import os
-from types import SimpleNamespace
-
 import discord
-import aiohttp
 from discord.enums import ActivityType
 from discord.ext import commands
 from discord.ext.commands.view import StringView
-from motor.motor_asyncio import AsyncIOMotorClient
 
+from os import listdir
+from asyncio import sleep
+from textwrap import dedent
+from datetime import datetime
+from types import SimpleNamespace
+
+from aiohttp import ClientSession
+from motor.motor_asyncio import AsyncIOMotorClient
 from colorama import init, Fore, Style
-import emoji
+from emoji import UNICODE_EMOJI
 
 from core.clients import Github, ModmailApiClient, SelfHostedClient
 from core.thread import ThreadManager
@@ -57,9 +57,9 @@ class ModmailBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=self.get_pre)
         self.version = __version__
-        self.start_time = datetime.datetime.utcnow()
+        self.start_time = datetime.utcnow()
         self.threads = ThreadManager(self)
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.session = ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
         # TODO: rename selfhosted -> self_hosting, as it's not a word.
         self.selfhosted = self.config.get('mongo_uri') is not None
@@ -87,7 +87,7 @@ class ModmailBot(commands.Bot):
         print('Authors: kyb3r, fourjr' + Style.RESET_ALL)
         print(line + Fore.CYAN)
 
-        for file in os.listdir('cogs'):
+        for file in listdir('cogs'):
             if not file.endswith('.py'):
                 continue
             cog = f'cogs.{file[:-3]}'
@@ -209,7 +209,7 @@ class ModmailBot(commands.Bot):
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
-        print(textwrap.dedent(f"""
+        print(dedent(f"""
         {line}
         {Fore.CYAN}Client ready.
         {line}
@@ -229,8 +229,8 @@ class ModmailBot(commands.Bot):
         closures = self.config.closures.copy()
 
         for recipient_id, items in closures.items():
-            after = (datetime.datetime.fromisoformat(items['time']) -
-                     datetime.datetime.utcnow()).total_seconds()
+            after = (datetime.fromisoformat(items['time']) -
+                     datetime.utcnow()).total_seconds()
             if after < 0:
                 after = 0
             recipient = self.get_user(int(recipient_id))
@@ -264,7 +264,7 @@ class ModmailBot(commands.Bot):
         blocked_emoji = self.config.get('blocked_emoji', '🚫')
         sent_emoji = self.config.get('sent_emoji', '✅')
 
-        if blocked_emoji not in emoji.UNICODE_EMOJI:
+        if blocked_emoji not in UNICODE_EMOJI:
             try:
                 blocked_emoji = await converter.convert(
                     ctx, blocked_emoji.strip(':')
@@ -272,7 +272,7 @@ class ModmailBot(commands.Bot):
             except commands.BadArgument:
                 pass
 
-        if sent_emoji not in emoji.UNICODE_EMOJI:
+        if sent_emoji not in UNICODE_EMOJI:
             try:
                 sent_emoji = await converter.convert(
                     ctx, sent_emoji.strip(':')
@@ -483,7 +483,7 @@ class ModmailBot(commands.Bot):
                 "guild_id": self.guild_id,
                 "guild_name": self.guild.name,
                 "member_count": len(self.guild.members),
-                "uptime": (datetime.datetime.utcnow() -
+                "uptime": (datetime.utcnow() -
                            self.start_time).total_seconds(),
                 "latency": f'{self.ws.latency * 1000:.4f}',
                 "version": __version__,
@@ -492,7 +492,7 @@ class ModmailBot(commands.Bot):
 
             await self.modmail_api.post_metadata(data)
 
-            await asyncio.sleep(3600)
+            await sleep(3600)
 
     async def autoupdate_loop(self):
         await self.wait_until_ready()
@@ -539,7 +539,7 @@ class ModmailBot(commands.Bot):
                     channel = self.log_channel
                     await channel.send(embed=em)
 
-            await asyncio.sleep(3600)
+            await sleep(3600)
 
     async def get_latest_updates(self, limit=3):
         latest_commits = ''
@@ -556,7 +556,7 @@ class ModmailBot(commands.Bot):
 
     @property
     def uptime(self):
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
         delta = now - self.start_time
         hours, remainder = divmod(int(delta.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)

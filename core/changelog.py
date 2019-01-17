@@ -1,7 +1,7 @@
-from collections import defaultdict
-import re 
-
 from discord import Embed, Color
+
+import re
+from collections import defaultdict
 
 
 class Version:

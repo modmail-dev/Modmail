@@ -1,10 +1,10 @@
-from datetime import datetime
-from typing import Optional, Union
-
 import discord
 from discord.ext import commands
 
-import dateutil.parser
+from datetime import datetime
+from typing import Optional, Union
+
+from dateutil import parser
 
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
@@ -356,7 +356,7 @@ class Modmail:
 
         embeds = [em]
 
-        current_day = dateutil.parser.parse(logs[0]['created_at'])
+        current_day = parser.parse(logs[0]['created_at'])
         current_day = current_day.strftime(r'%d %b %Y')
 
         fmt = ''
@@ -369,7 +369,7 @@ class Modmail:
                 em.set_author(name='Previous Logs', icon_url=icon_url)
                 embeds.append(em)
 
-            date = dateutil.parser.parse(entry['created_at'])
+            date = parser.parse(entry['created_at'])
 
             new_day = date.strftime(r'%d %b %Y')
             time = date.strftime(r'%H:%M')

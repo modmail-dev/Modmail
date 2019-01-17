@@ -3,12 +3,13 @@ UserFriendlyTime by Rapptz
 Source:
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 """
+from discord.ext.commands import BadArgument, Converter
 
+import re
 from datetime import datetime
+
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
-from discord.ext.commands import BadArgument, Converter
-import re
 
 
 class ShortTime:

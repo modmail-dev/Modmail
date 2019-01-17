@@ -1,7 +1,8 @@
-import functools
 from discord import Embed, Color
-from discord.ext.commands import check
+from discord.ext import commands
+
 import asyncio
+import functools
 
 
 def trigger_typing(func):
@@ -40,7 +41,7 @@ def owner_only():
         allowed = [int(x) for x in
                    str(ctx.bot.config.get('owners', '0')).split(',')]
         return ctx.author.id in allowed
-    return check(predicate)
+    return commands.check(predicate)
 
 
 def async_executor(loop=None, executor=None):
