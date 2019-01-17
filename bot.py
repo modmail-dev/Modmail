@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.4.5'
+__version__ = '2.5.0'
 
 import asyncio
 import textwrap
@@ -202,8 +202,37 @@ class ModmailBot(commands.Bot):
             print(Fore.RED + Style.BRIGHT + 'WARNING - The GUILD_ID provided does not exist!' + Style.RESET_ALL)
         else:
             await self.threads.populate_cache()
+        await self.config.update()
 
+        closures = self.config.closures.copy()
 
+        for recipient_id, items in closures.items():
+            after = (datetime.datetime.fromisoformat(items['time']) -
+                     datetime.datetime.utcnow()).total_seconds()
+            if after < 0:
+                after = 0
+            recipient = self.get_user(int(recipient_id))
+
+            thread = await self.threads.find(
+                recipient=recipient)
+
+            if not thread:
+                # If the recipient is gone or channel is deleted
+                self.config.closures.pop(str(recipient_id))
+                await self.config.update()
+                continue
+
+            # TODO: Low priority,
+            #  Retrieve messages/replies when bot is down, from history?
+            self.loop.create_task(
+                thread.close(
+                    closer=self.get_user(items['closer_id']),
+                    after=after,
+                    silent=items['silent'],
+                    delete_channel=items['delete_channel'],
+                    message=items['message']
+                )
+            )
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
@@ -257,7 +286,7 @@ class ModmailBot(commands.Bot):
         if self._skip_check(message.author.id, self.user.id):
             return ctx
 
-        prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}>']
+        prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
         invoked_prefix = discord.utils.find(view.skip_string, prefixes)
         if invoked_prefix is None:

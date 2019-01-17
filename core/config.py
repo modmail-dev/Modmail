@@ -7,12 +7,16 @@ class ConfigManager:
     """Class that manages a cached configuration"""
 
     allowed_to_change_in_command = {
-        'activity_message', 'activity_type', 'log_channel_id', 'mention', 'disable_autoupdates', 'prefix',
-        'main_category_id', 'sent_emoji', 'blocked_emoji', 'thread_creation_response', 'twitch_url'
+        'activity_message', 'activity_type', 'log_channel_id',
+        'mention', 'disable_autoupdates', 'prefix',
+        'main_category_id', 'sent_emoji', 'blocked_emoji',
+        'thread_creation_response', 'twitch_url'
         }
     
     internal_keys = {
-        'snippets', 'aliases', 'blocked', 'notification_squad', 'subscriptions'
+        'snippets', 'aliases', 'blocked',
+        'notification_squad', 'subscriptions',
+        'closures'
         }
     
     protected_keys = {
@@ -20,7 +24,7 @@ class ConfigManager:
         'mongo_uri', 'github_access_token', 'log_url'
         }
 
-    valid_keys = allowed_to_change_in_command.union(internal_keys).union(protected_keys)
+    valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
 
     def __init__(self, bot):
         self.bot = bot
@@ -38,7 +42,8 @@ class ConfigManager:
             'aliases': {},
             'blocked': {},
             'notification_squad': {},
-            'subscriptions': {}
+            'subscriptions': {},
+            'closures': {},
         }
 
         try:
@@ -47,7 +52,8 @@ class ConfigManager:
             pass
         finally:
             data.update(os.environ)
-            data = {k.lower(): v for k, v in data.items() if k.lower() in self.valid_keys}
+            data = {k.lower(): v for k, v in data.items()
+                    if k.lower() in self.valid_keys}
             self.cache = data
 
     async def update(self, data=None):
