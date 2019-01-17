@@ -61,11 +61,15 @@ class ModmailBot(commands.Bot):
         self.threads = ThreadManager(self)
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
-        self.selfhosted = bool(self.config.get('mongo_uri'))
+        # TODO: rename selfhosted -> self_hosting, as it's not a word.
+        self.selfhosted = self.config.get('mongo_uri') is not None
+
         if self.selfhosted:
             self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
-        self.modmail_api = SelfHostedClient(self) if \
-            self.selfhosted else ModmailApiClient(self)
+            self.modmail_api = SelfHostedClient(self)
+        else:
+            self.modmail_api = ModmailApiClient(self)
+
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._add_commands()
@@ -154,11 +158,12 @@ class ModmailBot(commands.Bot):
     def main_category(self):
         category_id = self.config.get('main_category_id')
         if category_id is not None:
-            return discord.utils.get(
-                self.modmail_guild.categories, id=int(category_id))
+            return discord.utils.get(self.modmail_guild.categories,
+                                     id=int(category_id))
+
         if self.modmail_guild:
-            return discord.utils.get(
-                self.modmail_guild.categories, name='Mod Mail')
+            return discord.utils.get(self.modmail_guild.categories,
+                                     name='Mod Mail')
 
     @property
     def blocked_users(self):
@@ -191,9 +196,12 @@ class ModmailBot(commands.Bot):
         message = self.config.get('activity_message')
 
         if activity_type is not None and message:
-            url = self.config.get('twitch_url',
-                                  'https://www.twitch.tv/discord-modmail/') \
-                if activity_type == ActivityType.streaming else None
+            if activity_type == ActivityType.streaming:
+
+                url = self.config.get('twitch_url',
+                                      'https://www.twitch.tv/discord-modmail/')
+            else:
+                url = None
 
             activity = discord.Activity(type=activity_type, name=message,
                                         url=url)
@@ -227,8 +235,7 @@ class ModmailBot(commands.Bot):
                 after = 0
             recipient = self.get_user(int(recipient_id))
 
-            thread = await self.threads.find(
-                recipient=recipient)
+            thread = await self.threads.find(recipient=recipient)
 
             if not thread:
                 # If the recipient is gone or channel is deleted
@@ -260,7 +267,8 @@ class ModmailBot(commands.Bot):
         if blocked_emoji not in emoji.UNICODE_EMOJI:
             try:
                 blocked_emoji = await converter.convert(
-                    ctx, blocked_emoji.strip(':'))
+                    ctx, blocked_emoji.strip(':')
+                )
             except commands.BadArgument:
                 pass
 
@@ -272,8 +280,10 @@ class ModmailBot(commands.Bot):
             except commands.BadArgument:
                 pass
 
-        reaction = blocked_emoji if \
-            str(message.author.id) in self.blocked_users else sent_emoji
+        if str(message.author.id) in self.blocked_users:
+            reaction = blocked_emoji
+        else:
+            reaction = sent_emoji
 
         try:
             await message.add_reaction(reaction)
@@ -304,7 +314,7 @@ class ModmailBot(commands.Bot):
         if self._skip_check(message.author.id, self.user.id):
             return ctx
 
-        # TODO: Can be replaced with await `self.get_pre(self, '')`?
+        # TODO: Can be replaced with await `self.get_pre(self, None)`?
         prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
         invoked_prefix = discord.utils.find(view.skip_string, prefixes)
@@ -318,16 +328,16 @@ class ModmailBot(commands.Bot):
         if alias is not None:
             ctx._alias_invoked = True
             _len = len(f'{invoked_prefix}{invoker}')
-            ctx.view = view = StringView(
-                f'{alias}{ctx.message.content[_len:]}')
+            view = StringView(f'{alias}{ctx.message.content[_len:]}')
+            ctx.view = view
             invoker = view.get_word()
 
         ctx.invoked_with = invoker
         ctx.prefix = self.prefix  # Sane prefix (No mentions)
         ctx.command = self.all_commands.get(invoker)
-        
-        if ctx.command is self.get_command('eval') and hasattr(
-                ctx, '_alias_invoked'):
+
+        has_ai = hasattr(ctx, '_alias_invoked')
+        if ctx.command is self.get_command('eval') and has_ai:
             # ctx.command.checks = None # Let anyone use the command.
             pass
 
@@ -335,10 +345,12 @@ class ModmailBot(commands.Bot):
 
     async def on_message(self, message):
         if message.type == discord.MessageType.pins_add and \
-                message.author == self.user:
+           message.author == self.user:
             await message.delete()
+
         if message.author.bot:
             return
+
         if isinstance(message.channel, discord.DMChannel):
             return await self.process_modmail(message)
 
@@ -453,9 +465,8 @@ class ModmailBot(commands.Bot):
             if not valid:
                 await self.logout()
             else:
-                username = (
-                    await self.modmail_api.get_user_info()
-                )['user']['username']
+                user = await self.modmail_api.get_user_info()
+                username = user['user']['username']
                 print(Style.RESET_ALL + Fore.CYAN + 'Validated token.')
                 print('GitHub user: ' + username + Style.RESET_ALL)
 

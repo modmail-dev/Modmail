@@ -16,21 +16,21 @@ def auth_required(func):
     @functools.wraps(func)
     async def wrapper(self, ctx, *args, **kwargs):
         if self.bot.selfhosted and \
-                self.bot.config.get('github_access_token') or \
-                self.bot.config.get('modmail_api_token'):
+           self.bot.config.get('github_access_token') or \
+           self.bot.config.get('modmail_api_token'):
             return await func(self, ctx, *args, **kwargs)
 
-        em = Embed(
-            color=Color.red(),
-            title='Unauthorized',
-            description='You can only use this command if you have a '
-                        'configured `MODMAIL_API_TOKEN`. Get your '
-                        'token from https://dashboard.modmail.tk'
-            if not self.bot.selfhosted else
-            'You can only use this command if you have a '
-            'configured `GITHUB_ACCESS_TOKEN`. Get a personal '
-            'access token from developer settings.'
-        )
+        if not self.bot.selfhosted:
+            desc = ('You can only use this command if you have a '
+                    'configured `MODMAIL_API_TOKEN`. Get your '
+                    'token from https://dashboard.modmail.tk')
+        else:
+            desc = ('You can only use this command if you have a '
+                    'configured `GITHUB_ACCESS_TOKEN`. Get a '
+                    'personal access token from developer settings.')
+        em = Embed(color=Color.red(),
+                   title='Unauthorized',
+                   description=desc)
         await ctx.send(embed=em)
     return wrapper
 

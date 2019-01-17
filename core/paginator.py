@@ -37,6 +37,7 @@ class PaginatorSession:
             '▶': self.next_page,
             '⏭': self.last_page,
             # '⏹': self.close
+            # TODO: implement self.close
         }
 
         if options.get('edit_footer', True) and len(self.embeds) > 1:

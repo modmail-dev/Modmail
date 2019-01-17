@@ -138,8 +138,10 @@ class ModmailApiClient(ApiClient):
         return self.request(self.config)
 
     def update_config(self, data):
-        valid_keys = self.app.config.valid_keys - \
-                     self.app.config.protected_keys
+        valid_keys = self.app.config.valid_keys.difference(
+            self.app.config.protected_keys
+        )
+
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 
@@ -259,8 +261,9 @@ class SelfHostedClient(ModmailApiClient):
         return conf
     
     async def update_config(self, data):
-        valid_keys = self.app.config.valid_keys - \
-                     self.app.config.protected_keys
+        valid_keys = self.app.config.valid_keys.difference(
+            self.app.config.protected_keys
+        )
         data = {k: v for k, v in data.items() if k in valid_keys}
         return await self.db.config.update_one({'bot_id': self.app.user.id},
                                                {'$set': data})
