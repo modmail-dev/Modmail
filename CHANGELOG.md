@@ -11,9 +11,7 @@ Non-Breaking Changes:
 
 ### Background
 Bots hosted by Heroku restart at least once every 27 hours.
-During this period, local caches are deleted, which results in the inability to 
-set the scheduled close time to longer than 24 hours. This update
-resolves this issue.
+During this period, local caches are deleted, which results in the inability to set the scheduled close time to longer than 24 hours. This update resolves this issue.
 [PR #135](https://github.com/kyb3r/modmail/pull/135)
 
 
