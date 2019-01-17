@@ -169,7 +169,7 @@ class ModmailBot(commands.Bot):
         return self.config.get('prefix', '?')
 
     @staticmethod
-    async def get_pre(bot, message):
+    async def get_pre(bot, message):  # TODO: there gotta be a better way
         """Returns the prefix."""
         return [bot.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
@@ -410,7 +410,7 @@ class ModmailBot(commands.Bot):
         else:
             raise error
 
-    def overwrites(self, ctx):
+    def overwrites(self, ctx):  # TODO: can this be static?
         """Permission overwrites for the guild."""
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(

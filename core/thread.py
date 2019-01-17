@@ -296,7 +296,7 @@ class Thread:
         if delete_message:
             try:
                 await message.delete()
-            except:
+            except discord.HTTPException:
                 pass
         
     def get_notifications(self):
@@ -477,7 +477,7 @@ class ThreadManager:
             async with self.bot.session.get(url) as resp:
                 image = await resp.read()
                 color = await self._do_get_dc(image, quality)
-        except:
+        except Exception:
             traceback.print_exc()
             return discord.Color.blurple()
         else:
