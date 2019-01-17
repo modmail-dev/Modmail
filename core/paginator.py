@@ -1,5 +1,5 @@
-import discord
-import asyncio
+from discord import Embed, HTTPException, InvalidArgument
+from asyncio import TimeoutError
 
 
 class PaginatorSession:
@@ -12,7 +12,7 @@ class PaginatorSession:
         The context of the command.
     timeout:
         How long to wait for before the session closes
-    embeds: List[discord.Embed]
+    embeds: List[Embed]
         A list of entries to paginate.
 
     Methods
@@ -27,7 +27,7 @@ class PaginatorSession:
     def __init__(self, ctx, *embeds, **options):
         self.ctx = ctx
         self.timeout = options.get('timeout', 60)
-        self.embeds = embeds
+        self.embeds: list = embeds
         self.running = False
         self.base = None
         self.current = 0
@@ -47,7 +47,7 @@ class PaginatorSession:
                 em.set_footer(text=footer_text, icon_url=em.footer.icon_url)
 
     def add_page(self, embed):
-        if isinstance(embed, discord.Embed):
+        if isinstance(embed, Embed):
             self.embeds.append(embed)
         else:
             raise TypeError('Page must be an Embed object.')
@@ -78,23 +78,29 @@ class PaginatorSession:
             await self.create_base(page)
 
     def react_check(self, reaction, user):
-        return reaction.message.id == self.base.id and user.id == self.ctx.author.id and reaction.emoji in self.reaction_map.keys()
+        return reaction.message.id == self.base.id and \
+               user.id == self.ctx.author.id and \
+               reaction.emoji in self.reaction_map.keys()
 
     async def run(self):
         if not self.running:
             await self.show_page(0)
         while self.running:
             try:
-                reaction, user = await self.ctx.bot.wait_for('reaction_add', check=self.react_check, timeout=self.timeout)
-            except asyncio.TimeoutError:
-                self.paginating = False
-                await self.close(delete=False)
+                reaction, user = await self.ctx.bot.wait_for(
+                    'reaction_add',
+                    check=self.react_check,
+                    timeout=self.timeout
+                )
+            except TimeoutError:
+                self.paginating = False  # TODO: What is this??
+                return await self.close(delete=False)
             else:
                 action = self.reaction_map.get(reaction.emoji)
                 await action()
             try:
                 await self.base.remove_reaction(reaction, user)
-            except:
+            except (HTTPException, InvalidArgument):
                 pass
 
     def previous_page(self):
@@ -111,7 +117,7 @@ class PaginatorSession:
 
         try:
             await self.ctx.message.add_reaction('✅')
-        except:
+        except (HTTPException, InvalidArgument):
             pass
 
         if delete:
@@ -119,7 +125,7 @@ class PaginatorSession:
 
         try:
             await self.base.clear_reactions()
-        except:
+        except HTTPException:
             pass
 
     def first_page(self):
