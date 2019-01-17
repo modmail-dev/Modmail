@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+# v2.5.0
+
+Non-Breaking Changes:
+
+### Background
+Bots hosted by Heroku restart at least once every 27 hours.
+During this period, local caches are deleted, which results in the inability to 
+set the scheduled close time to longer than 24 hours. This update
+resolves this issue.
+[PR #135](https://github.com/kyb3r/modmail/pull/135)
+
+
+### Changed
+ - Created a new internal config var: `closures`.
+ - Store closure details into `closures` when the scheduled time isn't "now".
+   - Loaded upon bot restart.
+   - Deleted when a thread is closed.
+ - Use `call_later()` instead of `sleep()` for scheduling.
+ 
 # v2.4.5
 
 ### Fixed
