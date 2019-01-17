@@ -11,3 +11,4 @@ parsedatetime
 motor
 sanic
 dnspython
+aiohttp
