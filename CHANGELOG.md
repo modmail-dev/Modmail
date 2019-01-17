@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.5.0
 
-Non-Breaking Changes:
+Non-Breaking Internal Changes: (This shouldn't affect anyone.)
 
 ### Background
 Bots hosted by Heroku restart at least once every 27 hours.
