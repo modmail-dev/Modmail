@@ -205,7 +205,7 @@ class ModmailBot(commands.Bot):
         await self.config.update()
 
         closures = self.config.get('closures', {}).copy()
-        print(closures)  # for debugging
+
         for recipient_id, items in closures.items():
             after = (datetime.datetime.fromisoformat(items['time']) -
                      datetime.datetime.utcnow()).total_seconds()
