@@ -59,7 +59,6 @@ class Thread:
             # TODO: Add somewhere to clean up broken closures
             #  (when channel is already deleted)
             await self.bot.config.update()
-            closures = self.bot.config.get('closures', {})
             now = datetime.datetime.utcnow()
             items = {
                 # 'initiation_time': now.isoformat(),
@@ -69,8 +68,7 @@ class Thread:
                 'delete_channel': delete_channel,
                 'message': message
             }
-            closures[str(self.id)] = items
-            self.bot.config['closures'] = closures
+            self.bot.config.closures[str(self.id)] = items
             await self.bot.config.update()
 
             self.close_task = self.bot.loop.call_later(
@@ -84,10 +82,9 @@ class Thread:
                      message=None, scheduled=False):
         del self.manager.cache[self.id]
 
-        closures = self.bot.config.get('closures', {})
-        closures.pop(str(self.id))
-        self.bot.config['closures'] = closures
-        await self.bot.config.update()
+        if scheduled:
+            self.bot.config.closures.pop(str(self.id), None)
+            await self.bot.config.update()
 
         if str(self.id) in self.bot.config.subscriptions:
             del self.bot.config.subscriptions[str(self.id)]

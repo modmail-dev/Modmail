@@ -43,6 +43,7 @@ class ConfigManager:
             'blocked': {},
             'notification_squad': {},
             'subscriptions': {},
+            'closures': {},
         }
 
         try:

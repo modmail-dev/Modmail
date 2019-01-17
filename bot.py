@@ -204,7 +204,7 @@ class ModmailBot(commands.Bot):
             await self.threads.populate_cache()
         await self.config.update()
 
-        closures = self.config.get('closures', {}).copy()
+        closures = self.config.closures.copy()
 
         for recipient_id, items in closures.items():
             after = (datetime.datetime.fromisoformat(items['time']) -
@@ -218,9 +218,7 @@ class ModmailBot(commands.Bot):
 
             if not thread:
                 # If the recipient is gone or channel is deleted
-                closures = self.config.get('closures', {})
-                closures.pop(str(recipient_id))
-                self.config['closures'] = closures
+                self.config.closures.pop(str(recipient_id))
                 await self.config.update()
                 continue
 
