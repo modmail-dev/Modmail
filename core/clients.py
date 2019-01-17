@@ -1,5 +1,5 @@
 from discord import Member, DMChannel
-from secrets import token_hex
+import secrets
 from aiohttp import ClientResponseError
 from json import JSONDecodeError
 from datetime import datetime
@@ -222,7 +222,7 @@ class SelfHostedClient(ModmailApiClient):
         return await self.logs.find_one({'channel_id': str(channel_id)})
 
     async def get_log_url(self, recipient, channel, creator):
-        key = token_hex(6)
+        key = secrets.token_hex(6)
 
         await self.logs.insert_one({
             'key': key,

@@ -1,13 +1,13 @@
 from urllib.parse import urlparse
-import traceback
-import datetime
+from traceback import print_exc
+from datetime import datetime, timedelta
 import asyncio
 import string
 import re
-import io
+from io import BytesIO
 
 import discord
-from discord.ext import commands
+from discord.ext.commands import UserInputError
 
 from core.decorators import async_executor
 from colorthief import ColorThief
@@ -57,10 +57,10 @@ class Thread:
             # TODO: Add somewhere to clean up broken closures
             #  (when channel is already deleted)
             await self.bot.config.update()
-            now = datetime.datetime.utcnow()
+            now = datetime.utcnow()
             items = {
                 # 'initiation_time': now.isoformat(),
-                'time': (now + datetime.timedelta(seconds=after)).isoformat(),
+                'time': (now + timedelta(seconds=after)).isoformat(),
                 'closer_id': closer.id,
                 'silent': silent,
                 'delete_channel': delete_channel,
@@ -88,7 +88,7 @@ class Thread:
         # Logging
         log_data = await self.bot.modmail_api.post_log(self.channel.id, {
             'open': False,
-            'closed_at': str(datetime.datetime.utcnow()),
+            'closed_at': str(datetime.utcnow()),
             'closer': {
                 'id': str(closer.id),
                 'name': closer.name,
@@ -123,7 +123,7 @@ class Thread:
         event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
         # em.set_author(name=f'Event: {event}', url=log_url)
         em.set_footer(text=f'{event} by {closer} ({closer.id})')
-        em.timestamp = datetime.datetime.utcnow()
+        em.timestamp = datetime.utcnow()
 
         tasks = [
             self.bot.log_channel.send(embed=em),
@@ -176,7 +176,7 @@ class Thread:
 
     async def reply(self, message):
         if not message.content and not message.attachments:
-            raise commands.UserInputError
+            raise UserInputError
         if all(not g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
                 embed=discord.Embed(
@@ -461,7 +461,7 @@ class ThreadManager:
 
     @async_executor()
     def _do_get_dc(self, image, quality):
-        with io.BytesIO(image) as f:
+        with BytesIO(image) as f:
             return ColorThief(f).get_color(quality=quality)
 
     async def get_dominant_color(self, url=None, quality=10):
@@ -478,7 +478,7 @@ class ThreadManager:
                 image = await resp.read()
                 color = await self._do_get_dc(image, quality)
         except Exception:
-            traceback.print_exc()
+            print_exc()
             return discord.Color.blurple()
         else:
             return discord.Color.from_rgb(*color)
@@ -501,7 +501,7 @@ class ThreadManager:
         supports users from the guild or not."""
         member = self.bot.guild.get_member(user.id)
         avi = user.avatar_url
-        time = datetime.datetime.utcnow()
+        time = datetime.utcnow()
         desc = f'{creator.mention} has created a thread with {user.mention}' \
             if creator else f'{user.mention} has started a thread'
         key = log_url.split('/')[-1]

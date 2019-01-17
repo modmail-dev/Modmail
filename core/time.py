@@ -4,10 +4,10 @@ Source:
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 """
 
-import datetime
+from datetime import datetime
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
-from discord.ext import commands
+from discord.ext.commands import BadArgument, Converter
 import re
 
 
@@ -25,10 +25,10 @@ class ShortTime:
     def __init__(self, argument):
         match = self.compiled.fullmatch(argument)
         if match is None or not match.group(0):
-            raise commands.BadArgument('invalid time provided')
+            raise BadArgument('invalid time provided')
 
         data = {k: int(v) for k, v in match.groupdict(default='0').items()}
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
         self.dt = now + relativedelta(**data)
 
 
@@ -36,10 +36,10 @@ class HumanTime:
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)
 
     def __init__(self, argument):
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
         if not status.hasDateOrTime:
-            raise commands.BadArgument(
+            raise BadArgument(
                 'invalid time provided, try e.g. "tomorrow" or "3 days"'
             )
 
@@ -70,25 +70,23 @@ class FutureTime(Time):
         super().__init__(argument)
 
         if self._past:
-            raise commands.BadArgument('this time is in the past')
+            raise BadArgument('this time is in the past')
 
 
-class UserFriendlyTime(commands.Converter):
+class UserFriendlyTime(Converter):
     """That way quotes aren't absolutely necessary."""
     def __init__(self, converter=None):
-        if isinstance(converter, type) and issubclass(converter,
-                                                      commands.Converter):
+        if isinstance(converter, type) and issubclass(converter, Converter):
             converter = converter()
 
-        if converter is not None and not isinstance(converter,
-                                                    commands.Converter):
+        if converter is not None and not isinstance(converter, Converter):
             raise TypeError('commands.Converter subclass necessary.')
         self.dt = self.arg = None
         self.converter = converter
 
     async def check_constraints(self, ctx, now, remaining):
         if self.dt < now:
-            raise commands.BadArgument('This time is in the past.')
+            raise BadArgument('This time is in the past.')
 
         if self.converter is not None:
             self.arg = await self.converter.convert(ctx, remaining)
@@ -101,7 +99,7 @@ class UserFriendlyTime(commands.Converter):
         try:
             calendar = HumanTime.calendar
             regex = ShortTime.compiled
-            self.dt = now = datetime.datetime.utcnow()
+            self.dt = now = datetime.utcnow()
 
             match = regex.match(argument)
             if match is not None and match.group(0):
@@ -138,7 +136,7 @@ class UserFriendlyTime(commands.Converter):
                 return await self.check_constraints(ctx, now, argument)
 
             if begin not in (0, 1) and end != len(argument):
-                raise commands.BadArgument(
+                raise BadArgument(
                     'Time is either in an inappropriate location, which must '
                     'be either at the end or beginning of your input, or I '
                     'just flat out did not understand what you meant. Sorry.')
@@ -160,12 +158,12 @@ class UserFriendlyTime(commands.Converter):
                 if begin == 1:
                     # check if it's quoted:
                     if argument[0] != '"':
-                        raise commands.BadArgument(
+                        raise BadArgument(
                             'Expected quote before time input...'
                         )
 
                     if not (end < len(argument) and argument[end] == '"'):
-                        raise commands.BadArgument(
+                        raise BadArgument(
                             'If the time is quoted, you must unquote it.'
                         )
 
@@ -183,7 +181,7 @@ class UserFriendlyTime(commands.Converter):
 
 
 def human_timedelta(dt, *, source=None):
-    now = source or datetime.datetime.utcnow()
+    now = source or datetime.utcnow()
     if dt > now:
         delta = relativedelta(dt, now)
         suffix = ''
