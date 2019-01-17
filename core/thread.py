@@ -50,10 +50,8 @@ class Thread:
                     delete_channel=True, message=None):
         """Close a thread now or after a set time in seconds"""
 
-        if self.close_task is not None:
-            # restarts the after timer
-            self.close_task.cancel()
-            self.close_task = None
+        # restarts the after timer
+        await self.cancel_closure()
 
         if after > 0:
             # TODO: Add somewhere to clean up broken closures
@@ -82,9 +80,7 @@ class Thread:
                      message=None, scheduled=False):
         del self.manager.cache[self.id]
 
-        if scheduled:
-            self.bot.config.closures.pop(str(self.id), None)
-            await self.bot.config.update()
+        await self.cancel_closure()
 
         if str(self.id) in self.bot.config.subscriptions:
             del self.bot.config.subscriptions[str(self.id)]
@@ -112,7 +108,7 @@ class Thread:
             log_url = f"https://logs.modmail.tk/" \
                       f"{log_data['user_id']}/{log_data['key']}"
 
-        user = self.recipient.mention if self.recipient else str(self.id)
+        user = self.recipient.mention if self.recipient else f'`{self.id}`'
 
         if log_data['messages']:
             msg = str(log_data['messages'][0]['content'])
@@ -147,6 +143,15 @@ class Thread:
             tasks.append(self.channel.delete())
         
         await asyncio.gather(*tasks)
+
+    async def cancel_closure(self):
+        if self.close_task is not None:
+            self.close_task.cancel()
+            self.close_task = None
+
+        to_update = self.bot.config.closures.pop(str(self.id), None)
+        if to_update is not None:
+            await self.bot.config.update()
 
     @staticmethod
     async def _edit_thread_message(channel, message_id, message):
@@ -188,8 +193,7 @@ class Thread:
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
-            self.close_task.cancel()
-            self.close_task = None
+            await self.cancel_closure()
             tasks.append(self.channel.send(
                 embed=discord.Embed(color=discord.Color.red(),
                                     description='Scheduled close has '
@@ -200,8 +204,7 @@ class Thread:
     async def send(self, message, destination=None, from_mod=False):
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
-            self.close_task.cancel()
-            self.close_task = None
+            await self.cancel_closure()
             await self.channel.send(embed=discord.Embed(
                 color=discord.Color.red(),
                 description='Scheduled close has been cancelled.'))

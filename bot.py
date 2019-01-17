@@ -222,7 +222,8 @@ class ModmailBot(commands.Bot):
                 await self.config.update()
                 continue
 
-            # TODO: Retrieve messages/replies when bot is down, from history?
+            # TODO: Low priority,
+            #  Retrieve messages/replies when bot is down, from history?
             await thread.close(closer=self.get_user(items['closer_id']),
                                after=after,
                                silent=items['silent'],

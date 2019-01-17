@@ -174,11 +174,11 @@ class Modmail:
         silent = str(message).lower() in {'silent', 'silently'}
         cancel = str(message).lower() == 'cancel'
 
-        if cancel and thread.close_task is not None and not thread.close_task.cancelled():
-            thread.close_task.cancel()
-            await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='Scheduled close has been cancelled.'))
-            return
-        elif cancel:
+        if cancel:
+            if thread.close_task is not None:
+                await thread.cancel_closure()
+                await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='Scheduled close has been cancelled.'))
+                return
             return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='This thread has not already been scheduled to close.'))
 
         if after and after.dt > now:
