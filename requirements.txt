@@ -12,3 +12,4 @@ motor
 sanic
 dnspython
 aiohttp
+pymongo

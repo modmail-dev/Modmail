@@ -1,5 +1,7 @@
-import discord
-import secrets
+from discord import Member, DMChannel
+from secrets import token_hex
+from aiohttp import ClientResponseError
+from json import JSONDecodeError
 from datetime import datetime
 
 from pymongo import ReturnDocument
@@ -11,14 +13,21 @@ class ApiClient:
         self.session = app.session
         self.headers = None
 
-    async def request(self, url, method='GET', payload=None, return_response=False):
-        async with self.session.request(method, url, headers=self.headers, json=payload) as resp:
+    async def request(self, url, method='GET',
+                      payload=None, return_response=False, headers=None):
+        if headers is not None:
+            headers.update(self.headers)
+        else:
+            headers = self.headers
+        async with self.session.request(method, url, headers=headers,
+                                        json=payload) as resp:
             if return_response:
                 return resp
             try:
                 return await resp.json()
-            except:
+            except (JSONDecodeError, ClientResponseError):
                 return await resp.text()
+
 
 class Github(ApiClient):
     BASE = 'https://api.github.com'
@@ -29,14 +38,12 @@ class Github(ApiClient):
     star_url = BASE + '/user/starred/kyb3r/modmail'
 
     def __init__(self, app, access_token=None, username=None):
-        self.app = app
-        self.session = app.session
+        super().__init__(app)
         self.access_token = access_token
         self.username = username
         self.id = None
         self.avatar_url = None
         self.url = None
-        self.headers = None
         if self.access_token:
             self.headers = {'Authorization': 'token ' + str(access_token)}
 
@@ -65,12 +72,15 @@ class Github(ApiClient):
         return resp.status == 204
 
     async def star_repository(self):
-        await self.request(self.star_url, method='PUT', headers={'Content-Length':  '0'})
+        await self.request(self.star_url, method='PUT',
+                           headers={'Content-Length':  '0'})
 
     async def get_latest_commits(self, limit=3):
-        resp = await self.request(self.commit_url)
-        for index in range(limit):
-            yield resp[index]
+        # TODO: Broken.
+        # resp = await self.request(self.commit_url)
+        # for index in range(limit):
+        #     yield resp[index]
+        ...
 
     @classmethod
     async def login(cls, bot):
@@ -102,7 +112,8 @@ class ModmailApiClient(ApiClient):
             }
 
     async def validate_token(self):
-        resp = await self.request(self.base + '/token/verify', return_response=True)
+        resp = await self.request(self.base + '/token/verify',
+                                  return_response=True)
         return resp.status == 200
 
     def post_metadata(self, data):
@@ -127,7 +138,8 @@ class ModmailApiClient(ApiClient):
         return self.request(self.config)
 
     def update_config(self, data):
-        valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
+        valid_keys = self.app.config.valid_keys - \
+                     self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 
@@ -147,7 +159,7 @@ class ModmailApiClient(ApiClient):
                 'name': creator.name,
                 'discriminator': creator.discriminator,
                 'avatar_url': creator.avatar_url,
-                'mod': isinstance(creator, discord.Member)
+                'mod': isinstance(creator, Member)
             }
         })
 
@@ -163,20 +175,24 @@ class ModmailApiClient(ApiClient):
                     'name': message.author.name,
                     'discriminator': message.author.discriminator,
                     'avatar_url': message.author.avatar_url,
-                    'mod': not isinstance(message.channel, discord.DMChannel),
+                    'mod': not isinstance(message.channel, DMChannel),
                 },
                 # message properties
                 'content': message.content,
                 'attachments': [i.url for i in message.attachments]
             }
         }
-        return self.request(self.logs + f'/{channel_id}', method='PATCH', payload=payload)
+        return self.request(self.logs + f'/{channel_id}',
+                            method='PATCH',
+                            payload=payload)
 
     def post_log(self, channel_id, payload):
-        return self.request(self.logs + f'/{channel_id}', method='POST', payload=payload)
+        return self.request(self.logs + f'/{channel_id}',
+                            method='POST',
+                            payload=payload)
 
 
-class SelfhostedClient(ModmailApiClient):
+class SelfHostedClient(ModmailApiClient):
 
     def __init__(self, bot):
         super().__init__(bot)
@@ -205,9 +221,8 @@ class SelfhostedClient(ModmailApiClient):
     async def get_log(self, channel_id):
         return await self.logs.find_one({'channel_id': str(channel_id)})
 
-    
     async def get_log_url(self, recipient, channel, creator):
-        key = secrets.token_hex(6)
+        key = token_hex(6)
 
         await self.logs.insert_one({
             'key': key,
@@ -228,7 +243,7 @@ class SelfhostedClient(ModmailApiClient):
                 'name': creator.name,
                 'discriminator': creator.discriminator,
                 'avatar_url': creator.avatar_url,
-                'mod': isinstance(creator, discord.Member)
+                'mod': isinstance(creator, Member)
             },
             'closer': None,
             'messages': []
@@ -244,9 +259,11 @@ class SelfhostedClient(ModmailApiClient):
         return conf
     
     async def update_config(self, data):
-        valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
+        valid_keys = self.app.config.valid_keys - \
+                     self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
-        return await self.db.config.update_one({'bot_id': self.app.user.id}, {'$set': data})
+        return await self.db.config.update_one({'bot_id': self.app.user.id},
+                                               {'$set': data})
 
     async def append_log(self, message, channel_id=''):
         channel_id = str(channel_id) or str(message.channel.id)
@@ -259,7 +276,7 @@ class SelfhostedClient(ModmailApiClient):
                     'name': message.author.name,
                     'discriminator': message.author.discriminator,
                     'avatar_url': message.author.avatar_url,
-                    'mod': not isinstance(message.channel, discord.DMChannel),
+                    'mod': not isinstance(message.channel, DMChannel),
                 },
                 # message properties
                 'content': message.content,

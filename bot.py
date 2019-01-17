@@ -40,7 +40,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from colorama import init, Fore, Style
 import emoji
 
-from core.clients import Github, ModmailApiClient, SelfhostedClient
+from core.clients import Github, ModmailApiClient, SelfHostedClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 from core.changelog import ChangeLog
@@ -64,7 +64,7 @@ class ModmailBot(commands.Bot):
         self.selfhosted = bool(self.config.get('mongo_uri'))
         if self.selfhosted:
             self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
-        self.modmail_api = SelfhostedClient(self) if \
+        self.modmail_api = SelfHostedClient(self) if \
             self.selfhosted else ModmailApiClient(self)
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
