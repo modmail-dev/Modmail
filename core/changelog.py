@@ -1,7 +1,8 @@
 from collections import defaultdict
 import re 
 
-import discord
+from discord import Embed, Color
+
 
 class Version:
     def __init__(self, bot, version, lines):
@@ -27,7 +28,7 @@ class Version:
     
     @property
     def embed(self):
-        em = discord.Embed(color=discord.Color.green(), description=self.description)
+        em = Embed(color=Color.green(), description=self.description)
         em.set_author(
             name=f'{self.version} - Changelog', 
             icon_url=self.bot.user.avatar_url, 
@@ -39,9 +40,11 @@ class Version:
         em.set_thumbnail(url=self.bot.user.avatar_url)
         return em
 
+
 class ChangeLog:
 
-    changelog_url = 'https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md'
+    changelog_url = \
+        'https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md'
     regex = re.compile(r'# (v\d+\.\d+\.\d+)([\S\s]*?(?=# v|$))')
 
     def __init__(self, bot, text):
@@ -62,8 +65,9 @@ class ChangeLog:
         url = url or cls.changelog_url
         resp = await bot.session.get(url)
         return cls(bot, await resp.text())
-    
+
+
 if __name__ == '__main__':
     with open('../CHANGELOG.md') as f:
-        changelog = ChangeLog(f.read())
+        changelog = ChangeLog(None, f.read())
         print(changelog.latest_version)
