@@ -257,7 +257,7 @@ class ModmailBot(commands.Bot):
         if self._skip_check(message.author.id, self.user.id):
             return ctx
 
-        prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}>']
+        prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
         invoked_prefix = discord.utils.find(view.skip_string, prefixes)
         if invoked_prefix is None:
