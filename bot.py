@@ -224,11 +224,15 @@ class ModmailBot(commands.Bot):
 
             # TODO: Low priority,
             #  Retrieve messages/replies when bot is down, from history?
-            await thread.close(closer=self.get_user(items['closer_id']),
-                               after=after,
-                               silent=items['silent'],
-                               delete_channel=items['delete_channel'],
-                               message=items['message'])
+            self.loop.create_task(
+                thread.close(
+                    closer=self.get_user(items['closer_id']),
+                    after=after,
+                    silent=items['silent'],
+                    delete_channel=items['delete_channel'],
+                    message=items['message']
+                )
+            )
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
