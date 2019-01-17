@@ -1,6 +1,6 @@
 import functools
-import discord
-from discord.ext import commands
+from discord import Embed, Color
+from discord.ext.commands import check
 import asyncio
 
 
@@ -15,14 +15,21 @@ def trigger_typing(func):
 def auth_required(func):
     @functools.wraps(func)
     async def wrapper(self, ctx, *args, **kwargs):
-        if self.bot.selfhosted and self.bot.config.get('github_access_token') or self.bot.config.get('modmail_api_token'):
+        if self.bot.selfhosted and \
+                self.bot.config.get('github_access_token') or \
+                self.bot.config.get('modmail_api_token'):
             return await func(self, ctx, *args, **kwargs)
 
-        
-        em = discord.Embed(
-            color=discord.Color.red(),
+        em = Embed(
+            color=Color.red(),
             title='Unauthorized',
-            description='You can only use this command if you have a configured `MODMAIL_API_TOKEN`. Get your token from https://dashboard.modmail.tk' if not self.bot.selfhosted else 'You can only use this command if you have a configured `GITHUB_ACCESS_TOKEN`. Get a personal access token from developer settings.'
+            description='You can only use this command if you have a '
+                        'configured `MODMAIL_API_TOKEN`. Get your '
+                        'token from https://dashboard.modmail.tk'
+            if not self.bot.selfhosted else
+            'You can only use this command if you have a '
+            'configured `GITHUB_ACCESS_TOKEN`. Get a personal '
+            'access token from developer settings.'
         )
         await ctx.send(embed=em)
     return wrapper
@@ -30,12 +37,13 @@ def auth_required(func):
 
 def owner_only():
     async def predicate(ctx):
-        allowed = [int(x) for x in str(ctx.bot.config.get('owners', '0')).split(',')]
+        allowed = [int(x) for x in
+                   str(ctx.bot.config.get('owners', '0')).split(',')]
         return ctx.author.id in allowed
-    return commands.check(predicate)
+    return check(predicate)
 
 
-def asyncexecutor(loop=None, executor=None):
+def async_executor(loop=None, executor=None):
     loop = loop or asyncio.get_event_loop()
 
     def decorator(func):

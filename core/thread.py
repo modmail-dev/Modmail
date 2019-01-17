@@ -9,7 +9,7 @@ import io
 import discord
 from discord.ext import commands
 
-from core.decorators import asyncexecutor
+from core.decorators import async_executor
 from colorthief import ColorThief
 
 
@@ -459,7 +459,7 @@ class ThreadManager:
             return url.replace(parsed.query, 'size=128')
         return False
 
-    @asyncexecutor()
+    @async_executor()
     def _do_get_dc(self, image, quality):
         with io.BytesIO(image) as f:
             return ColorThief(f).get_color(quality=quality)
