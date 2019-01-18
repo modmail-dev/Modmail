@@ -214,7 +214,7 @@ Read the updated installation guide [here](https://github.com/kyb3r/modmail/wiki
     - `log` command added.
 - Automatic updates (#73).
 - Dynamic command aliases and snippets (#86).
-- Optional support for using a seperate guild as the operations center (#81).
+- Optional support for using a separate guild as the operations center (#81).
 - NSFW Command to change channels to NSFW (#77).
 
 ### Removed
