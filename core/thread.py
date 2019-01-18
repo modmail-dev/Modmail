@@ -509,9 +509,9 @@ class ThreadManager:
 
         role_names = ''
         if member:
-            seperate_server = self.bot.guild != self.bot.modmail_guild
+            separate_server = self.bot.guild != self.bot.modmail_guild
             roles = sorted(member.roles, key=lambda c: c.position)
-            if seperate_server:
+            if separate_server:
                 role_names = ', '.join(r.name for r in roles
                                        if r.name != "@everyone")
             else:

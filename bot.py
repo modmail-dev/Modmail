@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.5.0'
+__version__ = '2.5.1'
 
 import asyncio
 import textwrap
@@ -175,6 +175,7 @@ class ModmailBot(commands.Bot):
             print('Mode: Selfhosting logs.')
             print(line)
         print(Fore.CYAN + 'Connected to gateway.')
+        
         await self.config.refresh()
 
         activity_type = self.config.get('activity_type')
@@ -202,7 +203,6 @@ class ModmailBot(commands.Bot):
             print(Fore.RED + Style.BRIGHT + 'WARNING - The GUILD_ID provided does not exist!' + Style.RESET_ALL)
         else:
             await self.threads.populate_cache()
-        await self.config.update()
 
         closures = self.config.closures.copy()
 
@@ -233,6 +233,7 @@ class ModmailBot(commands.Bot):
                     message=items['message']
                 )
             )
+
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
@@ -338,7 +339,7 @@ class ModmailBot(commands.Bot):
         entry = await audit_logs.find(lambda e: e.target.id == channel.id)
         mod = entry.user
 
-        if mod.bot:
+        if mod == self.user:
             return
         
         thread = await self.threads.find(channel=channel)
@@ -437,8 +438,9 @@ class ModmailBot(commands.Bot):
                 "member_count": len(self.guild.members),
                 "uptime": (datetime.datetime.utcnow() - self.start_time).total_seconds(),
                 "latency": f'{self.ws.latency * 1000:.4f}',
-                "version": __version__,
-                "selfhosted": self.selfhosted
+                "version": self.version,
+                "selfhosted": self.selfhosted,
+                "last_updated": str(datetime.datetime.utcnow())
             }
 
             await self.modmail_api.post_metadata(data)
