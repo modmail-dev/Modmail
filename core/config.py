@@ -1,7 +1,7 @@
+import asyncio
 import os
 import json
 import box
-
 
 class ConfigManager:
     """Class that manages a cached configuration"""
@@ -29,8 +29,11 @@ class ConfigManager:
     def __init__(self, bot):
         self.bot = bot
         self.cache = box.Box()
-        self._modified = True
+        self.ready_event = asyncio.Event()
         self.populate_cache()
+    
+    def __repr__(self):
+        return repr(self.cache)
 
     @property
     def api(self):
@@ -58,7 +61,6 @@ class ConfigManager:
 
     async def update(self, data=None):
         """Updates the config with data from the cache"""
-        self._modified = False
         if data is not None:
             self.cache.update(data)
         await self.api.update_config(self.cache)
@@ -67,6 +69,10 @@ class ConfigManager:
         """Refreshes internal cache with data from database"""
         data = await self.api.get_config()
         self.cache.update(data)
+        self.ready_event.set()
+    
+    async def wait_until_ready(self):
+        await self.ready_event.wait()
 
     def __getattr__(self, value):
         return self.cache[value]
