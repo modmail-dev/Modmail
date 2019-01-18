@@ -48,7 +48,7 @@ You have two options for using this bot, hosting on Heroku or self hosting the b
 
 ## What is heroku?
 
-Heroku is a container based cloud platform that offers free plans to host web applications. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast.
+Heroku is a container based cloud platform that currently offers a free plan to host web apps. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast.
 
 ## Self hosted logs
 
