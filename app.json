@@ -12,7 +12,7 @@
         "required": true
     },
     "OWNERS": {
-        "description": "Comma seperated user IDs of people that are allowed to use owner only commands. (eval and update)",
+        "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval and update)",
         "required": true
     },
     "MODMAIL_API_TOKEN": {

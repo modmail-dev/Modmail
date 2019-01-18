@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.5.0
 
-Non-Breaking Internal Changes: (This shouldn't affect anyone.)
+Non-Breaking Internal Changes. (This shouldn't affect anyone.)
 
 ### Background
 Bots hosted by Heroku restart at least once every 27 hours.
@@ -29,15 +29,15 @@ Fixed activity setting due to flawed logic in `config.get()` function.
 # v2.4.4
 
 ### Fixed
-Fixed a bug in activity command where it would fail to 
-set the activity on bot restart if the activity type was `playing`.
+Fixed a bug in activity command where it would fail to set the activity on bot restart if the activity type was `playing`.
 
 # v2.4.3
 
-### Changed
- - Moved self-hosted log viewer to a separate repo. 
 This update shouldn't affect anyone.
 
+### Changed
+ - Moved self-hosted log viewer to a separate repo. 
+ 
 # v2.4.2
 
 ### Added 
@@ -50,17 +50,15 @@ This update shouldn't affect anyone.
 
 # v2.4.0
 
-Breaking changes:
+Breaking changes.
 
 ### Added 
 - Added the `activity` command for setting the activity
-- [PR #131](https://github.com/kyb3r/modmail/pull/131#issue-244686818) 
-this supports multiple activity types (`playing`, `watching`, `listening` and `streaming`).
+- [PR #131](https://github.com/kyb3r/modmail/pull/131#issue-244686818) this supports multiple activity types (`playing`, `watching`, `listening` and `streaming`).
 
 ### Removed
 - Removed the deprecated `status` command. 
-- This also means you will have to reset your bot status with the 
-`activity` command, as `status` command is removed. 
+- This also means you will have to reset your bot status with the `activity` command, as `status` command is removed. 
 
 # v2.3.0
 
@@ -196,10 +194,8 @@ Bug fixes and minor improvements.
 
 # v2.0.0
 
-This release introduces the use of our centralized 
-[API service](https://github.com/kyb3r/webserver) to enable dynamic 
-configuration, auto-updates, and thread logs. 
-To use this release you must acquire an API token from https://www.modmail.tk. 
+This release introduces the use of our centralized [API service](https://github.com/kyb3r/webserver) to enable dynamic configuration, auto-updates, and thread logs. 
+To use this release you must acquire an API token from https://modmail.tk. 
 Read the updated installation guide [here](https://github.com/kyb3r/modmail/wiki/installation).
 
 ### Changed
@@ -218,7 +214,7 @@ Read the updated installation guide [here](https://github.com/kyb3r/modmail/wiki
     - `log` command added.
 - Automatic updates (#73).
 - Dynamic command aliases and snippets (#86).
-- Optional support for using a seperate guild as the operations center (#81).
+- Optional support for using a separate guild as the operations center (#81).
 - NSFW Command to change channels to NSFW (#77).
 
 ### Removed
