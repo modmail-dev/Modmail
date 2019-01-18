@@ -22,13 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.5.2'
+__version__ = '2.6.1'
 
 import asyncio
 import textwrap
 import datetime
 import os
-import re
 from types import SimpleNamespace
 
 import discord
