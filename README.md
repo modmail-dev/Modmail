@@ -69,4 +69,4 @@ The bot checks for new updates every hour and automatically updates to a newer v
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
 
-I have also set up a [Patreon](https://www.patreon.com/kyber), so if you want to support the development of Modmail, you now can :smile:
+If you use Modmail and love it, consider supporting me on [Patreon](https://www.patreon.com/kyber) :heart:
