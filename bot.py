@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.5.0'
+__version__ = '2.5.1'
 
 import asyncio
 import textwrap
@@ -233,7 +233,7 @@ class ModmailBot(commands.Bot):
                     message=items['message']
                 )
             )
-            
+
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
