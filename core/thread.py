@@ -103,10 +103,10 @@ class Thread:
             return
 
         if self.bot.selfhosted:
-            log_url = f'{self.bot.config.log_url}/logs/{log_data["key"]}'
+            log_url = f'{self.bot.config.log_url}/logs/{log_data["_id"]}'
         else:
             log_url = f"https://logs.modmail.tk/" \
-                      f"{log_data['user_id']}/{log_data['key']}"
+                      f"{log_data['_id']}"
 
         user = self.recipient.mention if self.recipient else f'`{self.id}`'
 
@@ -116,7 +116,7 @@ class Thread:
         else:
             sneak_peak = 'No content'
 
-        desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
+        desc = f"{user} [`{log_data['_id']}`]({log_url}): {sneak_peak}"
 
         em = discord.Embed(description=desc, color=discord.Color.red())
 

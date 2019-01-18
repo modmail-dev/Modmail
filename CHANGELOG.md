@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.6.1
+
+### Fixed
+- API BASE URL
+
+# v2.6.0
+
+Mostly internal changes. Some are slightly breaking. Keep a lookout for broken features and report them on our server.
+
+### Added
+- `threads` is now a default alias to `logs`
+
+### Changed
+- Log URLs are moved to their own collection.
+- Log URLs are now `https://logs.modmail.tk/LOGKEY`, no more numbers before the logkey.
+- We still support the numbers so as to not break everyone's urls so quickly but both work atm :p
+- This is a huge change to the backend logging and there might be migration errors. If so, please contact us at our [discord server](https://discord.gg/2fMbf2N)
+
 # v2.5.2
 
 Non-Breaking Internal Changes. (This shouldn't affect anyone.)

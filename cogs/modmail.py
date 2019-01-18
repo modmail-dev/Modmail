@@ -18,7 +18,7 @@ class Modmail:
 
     def __init__(self, bot):
         self.bot = bot
-    
+
     def obj(arg):
         return discord.Object(int(arg))
 
@@ -299,7 +299,7 @@ class Modmail:
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
 
-    @commands.command()
+    @commands.command(aliases=['threads'])
     @commands.has_permissions(manage_messages=True)
     @trigger_typing
     async def logs(self, ctx, *, member: Union[discord.Member, discord.User, obj]=None):
@@ -342,10 +342,9 @@ class Modmail:
             new_day = date.strftime(r'%d %b %Y')
             time = date.strftime(r'%H:%M')
 
-            key = entry['key']
-            user_id = entry.get('user_id')
+            key = entry['_id']
             closer = entry['closer']['name']
-            log_url = f"https://logs.modmail.tk/{user_id}/{key}" if not self.bot.selfhosted else self.bot.config.log_url + f'/logs/{key}'
+            log_url = f"https://logs.modmail.tk/{key}" if not self.bot.selfhosted else self.bot.config.log_url + f'/logs/{key}'
 
             truncate = lambda c: c[:47].strip() + '...' if len(c) > 50 else c
 

@@ -22,13 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.5.2'
+__version__ = '2.6.1'
 
 import asyncio
 import textwrap
 import datetime
 import os
-import re
 from types import SimpleNamespace
 
 import discord
@@ -61,7 +60,6 @@ class ModmailBot(commands.Bot):
         self.threads = ThreadManager(self)
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
-        self.config_ready = asyncio.Event()
         self.selfhosted = bool(self.config.get('mongo_uri'))
         if self.selfhosted:
             self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
@@ -178,7 +176,6 @@ class ModmailBot(commands.Bot):
         print(Fore.CYAN + 'Connected to gateway.')
         
         await self.config.refresh()
-        self.config_ready.set()
 
         activity_type = self.config.get('activity_type')
         message = self.config.get('activity_message')
@@ -206,7 +203,7 @@ class ModmailBot(commands.Bot):
         else:
             await self.threads.populate_cache()
         
-        await self.config_ready.wait() # Wait until config cache is popluated with stuff from db
+        await self.config.wait_until_ready() # Wait until config cache is popluated with stuff from db
 
         closures = self.config.closures.copy()
 
