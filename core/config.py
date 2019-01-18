@@ -55,9 +55,10 @@ class ConfigManager:
             pass
         finally:
             data.update(os.environ)
-            data = {k.lower(): v for k, v in data.items()
-                    if k.lower() in self.valid_keys}
-            self.cache = data
+            self.cache = {
+                k.lower(): v for k, v in data.items()
+                if k.lower() in self.valid_keys
+                }
 
     async def update(self, data=None):
         """Updates the config with data from the cache"""
