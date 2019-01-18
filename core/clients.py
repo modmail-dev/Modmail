@@ -205,7 +205,6 @@ class SelfhostedClient(ModmailApiClient):
     async def get_log(self, channel_id):
         return await self.logs.find_one({'channel_id': str(channel_id)})
 
-    
     async def get_log_url(self, recipient, channel, creator):
         key = secrets.token_hex(6)
 
@@ -232,17 +231,17 @@ class SelfhostedClient(ModmailApiClient):
             },
             'closer': None,
             'messages': []
-            })
-        
+        })
+
         return f'{self.app.config.log_url}/logs/{key}'
-    
+
     async def get_config(self):
         conf = await self.db.config.find_one({'bot_id': self.app.user.id})
         if conf is None:
             await self.db.config.insert_one({'bot_id': self.app.user.id})
             return {'bot_id': self.app.user.id}
         return conf
-    
+
     async def update_config(self, data):
         valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
