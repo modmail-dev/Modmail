@@ -66,4 +66,3 @@ class ChangeLog:
 if __name__ == '__main__':
     with open('../CHANGELOG.md') as f:
         changelog = ChangeLog(f.read())
-        print(changelog.latest_version)
