@@ -486,8 +486,9 @@ class ModmailBot(commands.Bot):
                 "uptime": (datetime.utcnow() -
                            self.start_time).total_seconds(),
                 "latency": f'{self.ws.latency * 1000:.4f}',
-                "version": __version__,
-                "selfhosted": self.selfhosted
+                "version": self.version,
+                "selfhosted": self.selfhosted,
+                "last_updated": str(datetime.datetime.utcnow())
             }
 
             await self.modmail_api.post_metadata(data)
