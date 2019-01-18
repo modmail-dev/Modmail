@@ -39,7 +39,7 @@
 
 <img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
 
-When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#commands).
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#features-and-commands).
 
 
 ## Installation
@@ -48,7 +48,7 @@ You have two options for using this bot, hosting on Heroku or self hosting the b
 
 ## What is heroku?
 
-Heroku is a container based cloud platform that offers free plans to host web applications. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast.
+Heroku is a container based cloud platform that currently offers a free plan to host web apps. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Mod Mail to be accessible to anyone while still being feature rich, it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Config and logs are stored in a [centralised web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast.
 
 ## Self hosted logs
 
@@ -57,7 +57,7 @@ If you want complete control over your data and do not want to use the centralis
 * `MONGO_URI` - Mongodb connection URI, you can get a free 500mb cluster from [mongodb atlas](https://www.mongodb.com/cloud/atlas).
 * `LOG_URL` - The url of your log viewer heroku app (`https://yourlogviewerappname.herokuapp.com`)
 
-You also need to create a seperate heroku app for the log viewer that you can deploy from [here](https://github.com/kyb3r/logviewer).
+You also need to create a separate heroku app for the log viewer that you can deploy from [here](https://github.com/kyb3r/logviewer).
 
 ## Features and Commands
 The bot comes with a plethora of useful functionality. Take a look at the [list of commands](https://github.com/kyb3r/modmail/wiki/Features-and-commands).
@@ -69,4 +69,4 @@ The bot checks for new updates every hour and automatically updates to a newer v
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
 
-I have also set up a [Patreon](https://www.patreon.com/kyber), so if you want to support the development of Modmail, you now can :smile:
+If you use Modmail and love it, consider supporting me on [Patreon](https://www.patreon.com/kyber) :heart:
