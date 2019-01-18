@@ -39,7 +39,7 @@
 
 <img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
 
-When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#commands).
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#Features and Commands).
 
 
 ## Installation
@@ -57,7 +57,7 @@ If you want complete control over your data and do not want to use the centralis
 * `MONGO_URI` - Mongodb connection URI, you can get a free 500mb cluster from [mongodb atlas](https://www.mongodb.com/cloud/atlas).
 * `LOG_URL` - The url of your log viewer heroku app (`https://yourlogviewerappname.herokuapp.com`)
 
-You also need to create a seperate heroku app for the log viewer that you can deploy from [here](https://github.com/kyb3r/logviewer).
+You also need to create a separate heroku app for the log viewer that you can deploy from [here](https://github.com/kyb3r/logviewer).
 
 ## Features and Commands
 The bot comes with a plethora of useful functionality. Take a look at the [list of commands](https://github.com/kyb3r/modmail/wiki/Features-and-commands).
