@@ -377,7 +377,7 @@ class ThreadManager:
                 if message.embeds:
                     em = message.embeds[0]
                     # TODO: use re.search instead
-                    matches = re.findall(r'User ID: (\d+)', em.footer.text)
+                    matches = re.findall(r'User ID: (\d+)', str(em.footer.text))
                     if matches:
                         user_id = int(matches[0])
                         break
