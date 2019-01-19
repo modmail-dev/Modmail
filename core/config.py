@@ -1,3 +1,4 @@
+import asyncio
 import os
 import json
 from typing import Optional, Any
@@ -34,8 +35,11 @@ class ConfigManager:
     def __init__(self, bot: ModmailBot):
         self.bot = bot
         self.cache = box.Box()
-        self._modified = True
+        self.ready_event = asyncio.Event()
         self.populate_cache()
+    
+    def __repr__(self):
+        return repr(self.cache)
 
     @property
     def api(self):
@@ -58,13 +62,14 @@ class ConfigManager:
                 # Config json should override env vars
                 data.update(json.load(f))
 
-        self.cache = {k.lower(): v for k, v in data.items()
-                      if k.lower() in self.valid_keys}
+        self.cache = {
+            k.lower(): v for k, v in data.items()
+            if k.lower() in self.valid_keys
+        }
         return self.cache
 
     async def update(self, data: Optional[dict] = None) -> dict:
         """Updates the config with data from the cache"""
-        self._modified = False
         if data is not None:
             self.cache.update(data)
         await self.api.update_config(self.cache)
@@ -74,7 +79,11 @@ class ConfigManager:
         """Refreshes internal cache with data from database"""
         data = await self.api.get_config()
         self.cache.update(data)
+        self.ready_event.set()
         return self.cache
+    
+    async def wait_until_ready(self) -> None:
+        await self.ready_event.wait()
 
     def __getattr__(self, value: str):
         return self.cache[value]

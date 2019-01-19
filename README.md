@@ -39,7 +39,7 @@
 
 <img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
 
-When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#Features and Commands).
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to a message, simply use the command `reply` in the channel. See a full list of commands [below](#features-and-commands).
 
 
 ## Installation
@@ -69,4 +69,4 @@ The bot checks for new updates every hour and automatically updates to a newer v
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
 
-I have also set up a [Patreon](https://www.patreon.com/kyber), so if you want to support the development of Modmail, you now can :smile:
+If you use Modmail and love it, consider supporting me on [Patreon](https://www.patreon.com/kyber) :heart:

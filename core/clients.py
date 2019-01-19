@@ -272,7 +272,7 @@ class SelfHostedClient(ModmailApiClient):
             await self.db.config.insert_one({'bot_id': self.bot.user.id})
             return {'bot_id': self.bot.user.id}
         return conf
-    
+
     async def update_config(self, data: dict) -> dict:
         data = self.filter_valid(data)
         return await self.db.config.update_one({'bot_id': self.bot.user.id},

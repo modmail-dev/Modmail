@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.5.0'
+__version__ = '2.6.1'
 
 import discord
 from discord.enums import ActivityType
@@ -190,6 +190,7 @@ class ModmailBot(commands.Bot):
             print('Mode: Self-hosting logs.')
             print(line)
         print(Fore.CYAN + 'Connected to gateway.')
+        
         await self.config.refresh()
 
         activity_type = self.config.get('activity_type')
@@ -224,7 +225,9 @@ class ModmailBot(commands.Bot):
                   f'provided does not exist!{Style.RESET_ALL}')
         else:
             await self.threads.populate_cache()
-        await self.config.update()
+
+        # Wait until config cache is popluated with stuff from db
+        await self.config.wait_until_ready()
 
         closures = self.config.closures.copy()
 
@@ -371,7 +374,7 @@ class ModmailBot(commands.Bot):
         entry = await audit_logs.find(lambda e: e.target.id == channel.id)
         mod = entry.user
 
-        if mod.bot:
+        if mod == self.user:
             return
         
         thread = await self.threads.find(channel=channel)
