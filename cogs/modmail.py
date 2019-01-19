@@ -121,7 +121,7 @@ class Modmail:
         if not thread:
             return await ctx.send('This is not a modmail thread.')
 
-        await thread.channel.edit(category=category)
+        await thread.channel.edit(category=category, sync_permissions=True)
         await ctx.message.add_reaction('✅')
 
     async def send_scheduled_close_message(self, ctx, after, silent=False):
