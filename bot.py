@@ -434,6 +434,7 @@ class ModmailBot(commands.Bot):
                 "owner_id": self.owner.id,
                 "bot_id": self.user.id,
                 "bot_name": str(self.user),
+                "avatar_url": self.user.avatar_url,
                 "guild_id": self.guild_id,
                 "guild_name": self.guild.name,
                 "member_count": len(self.guild.members),
