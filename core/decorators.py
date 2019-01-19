@@ -15,7 +15,7 @@ def trigger_typing(func):
 def auth_required(func):
     @functools.wraps(func)
     async def wrapper(self, ctx, *args, **kwargs):
-        if self.bot.selfhosted and self.bot.config.get('github_access_token') or self.bot.config.get('modmail_api_token'):
+        if (self.bot.selfhosted and self.bot.config.get('github_access_token')) or self.bot.config.get('modmail_api_token'):
             return await func(self, ctx, *args, **kwargs)
 
         
