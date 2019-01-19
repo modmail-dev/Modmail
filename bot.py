@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.6.1'
+__version__ = '2.6.3'
 
 import discord
 from discord.enums import ActivityType
@@ -483,6 +483,7 @@ class ModmailBot(commands.Bot):
                 "owner_id": self.owner.id,
                 "bot_id": self.user.id,
                 "bot_name": str(self.user),
+                "avatar_url": self.user.avatar_url,
                 "guild_id": self.guild_id,
                 "guild_name": self.guild.name,
                 "member_count": len(self.guild.members),
@@ -491,7 +492,7 @@ class ModmailBot(commands.Bot):
                 "latency": f'{self.ws.latency * 1000:.4f}',
                 "version": self.version,
                 "selfhosted": self.selfhosted,
-                "last_updated": str(datetime.datetime.utcnow())
+                "last_updated": str(datetime.utcnow())
             }
 
             await self.modmail_api.post_metadata(data)
