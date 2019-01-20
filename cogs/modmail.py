@@ -26,12 +26,12 @@ class Modmail:
     @trigger_typing
     @commands.has_permissions(administrator=True)
     async def setup(self, ctx):
-        """Sets up a server for modmail"""
+        """Sets up a server for Modmail"""
         if self.bot.main_category:
             return await ctx.send(f'{self.bot.modmail_guild} is already set up.')
 
         categ = await self.bot.modmail_guild.create_category(
-            name='Mod Mail',
+            name='Modmail',
             overwrites=self.bot.overwrites(ctx)
         )
 
@@ -295,7 +295,7 @@ class Modmail:
 
     @commands.command()
     async def nsfw(self, ctx):
-        """Flags a modmail thread as nsfw."""
+        """Flags a Modmail thread as nsfw."""
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread is None:
             return
@@ -306,7 +306,7 @@ class Modmail:
     @commands.has_permissions(manage_messages=True)
     @trigger_typing
     async def logs(self, ctx, *, member: Union[discord.Member, discord.User, obj]=None):
-        """Shows a list of previous modmail thread logs of a member."""
+        """Shows a list of previous Modmail thread logs of a member."""
 
         if not member:
             thread = await self.bot.threads.find(channel=ctx.channel)
@@ -465,7 +465,7 @@ class Modmail:
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def block(self, ctx, user: Union[discord.Member, discord.User, obj]=None, *, reason=None):
-        """Block a user from using modmail."""
+        """Block a user from using Modmail."""
 
         if user is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
@@ -499,7 +499,7 @@ class Modmail:
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def unblock(self, ctx, *, user: Union[discord.Member, discord.User, obj]=None):
-        """Unblocks a user from using modmail."""
+        """Unblocks a user from using Modmail."""
 
         if user is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
