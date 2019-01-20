@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - All reference to "modmail"/"Mod Mail"/"ModMail" are changed to "Modmail".
-
+- `log_channel_id` is now part of the config upon `setup`.
 # v2.7.0
 
 ### Changed
