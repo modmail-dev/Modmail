@@ -412,14 +412,14 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def contact(self, ctx, *, user: Union[discord.Member, discord.User]):
+    async def contact(self, ctx, user: Union[discord.Member, discord.User], *, category: Optional[discord.CategoryChannel]=None):
         """Create a thread with a specified member."""
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
             return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='A thread for this user already exists.'))
         else:
-            thread = await self.bot.threads.create(user, creator=ctx.author)
+            thread = await self.bot.threads.create(user, creator=ctx.author, category=category)
 
         em = discord.Embed(
             title='Created thread',
