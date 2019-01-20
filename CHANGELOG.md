@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.7.0
+
+### Changed
+
+- `move` command now syncs thread channel permissions with the category that it was moved to.
+- `contact` command now supports an optional category argument (where the thread channel will be created).
+
 # v2.6.3
 
 Fixed small issue in thread finding.
