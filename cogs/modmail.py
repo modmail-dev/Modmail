@@ -37,10 +37,13 @@ class Modmail:
 
         await categ.edit(position=0)
 
-        c = await self.bot.modmail_guild.create_text_channel(name='bot-logs', category=categ)
-        await c.edit(topic='You can delete this channel if you set up your own log channel.')
-        await c.send('Use the `config set log_channel_id` command to set up a custom log channel.')
+        log_channel = await self.bot.modmail_guild.create_text_channel(name='bot-logs', category=categ)
+        await log_channel.edit(topic='You can delete this channel if you set up your own log channel.')
+        await log_channel.send('Use the `config set log_channel_id` command to set up a custom log channel.')
+
         self.bot.config['main_category_id'] = categ.id 
+        self.bot.config['log_channel_id'] = log_channel.id
+        
         await self.bot.config.update()
 
         await ctx.send('Successfully set up server.')
