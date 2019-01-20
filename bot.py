@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.7.0'
+__version__ = '2.7.1'
 
 import asyncio
 import textwrap
@@ -147,7 +147,7 @@ class ModmailBot(commands.Bot):
         if category_id is not None:
             return discord.utils.get(self.modmail_guild.categories, id=int(category_id))
         if self.modmail_guild:
-            return discord.utils.get(self.modmail_guild.categories, name='Mod Mail')
+            return discord.utils.get(self.modmail_guild.categories, name='Modmail')
 
     @property
     def blocked_users(self):
