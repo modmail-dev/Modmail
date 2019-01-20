@@ -233,7 +233,7 @@ class SelfhostedClient(ModmailApiClient):
             'messages': []
         })
 
-        return f'{self.app.config.log_url}/logs/{key}'
+        return f"{self.app.config.log_url.strip('/')}/logs/{key}"
 
     async def get_config(self):
         conf = await self.db.config.find_one({'bot_id': self.app.user.id})

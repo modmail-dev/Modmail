@@ -347,7 +347,7 @@ class Modmail:
 
             key = entry['_id']
             closer = entry['closer']['name']
-            log_url = f"https://logs.modmail.tk/{key}" if not self.bot.selfhosted else self.bot.config.log_url + f'/logs/{key}'
+            log_url = f"https://logs.modmail.tk/{key}" if not self.bot.selfhosted else self.bot.config.log_url.strip('/') + f'/logs/{key}'
 
             truncate = lambda c: c[:47].strip() + '...' if len(c) > 50 else c
 
