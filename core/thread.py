@@ -103,7 +103,7 @@ class Thread:
             return
 
         if self.bot.selfhosted:
-            log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data["key"]}"
+            log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
         else:
             log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
