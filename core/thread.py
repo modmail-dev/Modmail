@@ -395,7 +395,7 @@ class ThreadManager:
 
             return thread
 
-    async def create(self, recipient, *, creator=None):
+    async def create(self, recipient, *, creator=None, category=None):
         """Creates a modmail thread"""
 
         em = discord.Embed(
@@ -414,7 +414,7 @@ class ThreadManager:
 
         channel = await self.bot.modmail_guild.create_text_channel(
             name=self._format_channel_name(recipient),
-            category=self.bot.main_category
+            category=category or self.bot.main_category
         )
 
         thread.channel = channel
