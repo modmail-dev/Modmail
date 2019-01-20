@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.7.1
+
+### Changed
+
+- All reference to "modmail"/"Mod Mail"/"ModMail" are changed to "Modmail".
+- `log_channel_id` is now part of the config upon `setup`.
 # v2.7.0
 
 ### Changed
@@ -13,11 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.6.3
 
-Fixed small issue in thread finding.
+Fixed small issue with finding thread.
 
 # v2.6.2
 
-Fixed log urls for selfhosting users. (This shouldn't affect anyone)
+Fixed log URLs for self-hosting users. 
+(This shouldn't affect anyone.)
 
 # v2.6.1
 
@@ -33,17 +40,19 @@ Mostly internal changes. Some are slightly breaking. Keep a lookout for broken f
 
 ### Changed
 - Log URLs are moved to their own collection.
-- Log URLs are now `https://logs.modmail.tk/LOGKEY`, no more numbers before the logkey.
-- We still support the numbers so as to not break everyone's urls so quickly but both work atm :p
+- Log URLs are now `https://logs.modmail.tk/LOGKEY`, no more numbers before the log key.
+- We still support the numbers so as to not break everyone's URLs so quickly but both work atm :p
 - This is a huge change to the backend logging and there might be migration errors. If so, please contact us at our [discord server](https://discord.gg/2fMbf2N)
 
 # v2.5.2
 
-Non-Breaking Internal Changes. (This shouldn't affect anyone.)
+Non breaking internal changes. 
+(This shouldn't affect anyone.)
 
 # v2.5.0
 
-Non-Breaking Internal Changes. (This shouldn't affect anyone.)
+Non breaking internal changes. 
+(This shouldn't affect anyone.)
 
 ### Background
 Bots hosted by Heroku restart at least once every 27 hours.
@@ -103,11 +112,11 @@ Breaking changes.
 
 ### Changed
 - Improved format for log channel embeds.
-- Roles are now comma separated in info embed.
+- Roles are now comma-separated in info embed.
 - This only applies to separate server setups.
 
 ### Fixed
-- Bug in subscribe command, it will now unsubscribe after a thread is closed.
+- Bug in subscribe command; it will now unsubscribe after a thread is closed.
 
 # v2.2.0
 
@@ -153,7 +162,7 @@ Breaking changes.
 - Use the `config set blocked_emoji` or `sent_emoji` commands.
 
 ### Quick Fix
-- Support multiple image and file attachments in one message.
+- Support multiple images and file attachments in one message.
 - This is only possible on mobile so its good to handle it in code.
 
 # v2.0.8
@@ -179,16 +188,16 @@ New command and improvements in bot update message interfaces.
 - Added a `changelog` command to view the bot's changelog within discord.
 
 ### Changed
-- Update command now shows latest changes directly from the [CHANGELOG.md](https://modmail.tk/) in the repo.
-- Auto update messages also show latest changes from repo.
-- Remove latest changes section from the `about` command.
+- `update` command now shows the latest changes directly from the [CHANGELOG.md](https://modmail.tk/) in the repo.
+- Auto update messages also show the latest changes from the GitHub repo.
+- Removed "latest changes" section from the `about` command.
 
 # v2.0.6
 
 ### Fixed
 - Fix logs sending duplicated thread close logs.
 - The bot will now tell you that a user is no longer in the server when you try to reply to a thread.
-    - Before this, it looked like you replied to the thread but in reality the message didnt get sent.
+    - Before this, it looked like you replied to the thread, but in reality, the message didn't get sent.
 
 # v2.0.5
 
@@ -199,7 +208,7 @@ New command and improvements in bot update message interfaces.
 # v2.0.4
 
 ### Fixed
-- Fixed a one off bug where the channel topic disappears, but modmail operations should still continue.
+- Fixed a one-off bug where the channel topic disappears, but modmail operations should still continue.
 - Fixed `linked_message_id` issues.
 
 # v2.0.3
@@ -207,7 +216,7 @@ New command and improvements in bot update message interfaces.
 Fixed some issues with how data is displayed in the info embed.
 
 ### Fixed
-- Thread creation embed now shows the correct amount of past logs. 
+- Thread creation embed now shows the correct number of past logs. 
 - If using a separate server setup, roles in the info embed now are shown as names instead of mentions.
     - This is due to the fact that you can't mention roles across servers.
 

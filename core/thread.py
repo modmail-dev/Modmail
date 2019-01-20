@@ -103,10 +103,9 @@ class Thread:
             return
 
         if self.bot.selfhosted:
-            log_url = f'{self.bot.config.log_url}/logs/{log_data["key"]}'
+            log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data["key"]}"
         else:
-            log_url = f"https://logs.modmail.tk/" \
-                      f"{log_data['key']}"
+            log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
         user = self.recipient.mention if self.recipient else f'`{self.id}`'
 
@@ -134,7 +133,7 @@ class Thread:
 
         em = discord.Embed(title='Thread Closed', color=discord.Color.red())
         em.description = message or \
-            f'{closer.mention} has closed this modmail thread.'
+            f'{closer.mention} has closed this Modmail thread.'
 
         if not silent and self.recipient is not None:
             tasks.append(self.recipient.send(embed=em))
@@ -315,7 +314,7 @@ class Thread:
 
 
 class ThreadManager:
-    """Class that handles storing, finding and creating modmail threads."""
+    """Class that handles storing, finding and creating Modmail threads."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -396,7 +395,7 @@ class ThreadManager:
             return thread
 
     async def create(self, recipient, *, creator=None, category=None):
-        """Creates a modmail thread"""
+        """Creates a Modmail thread"""
 
         em = discord.Embed(
             title='Thread created!',
