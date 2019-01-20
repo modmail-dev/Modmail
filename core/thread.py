@@ -189,6 +189,10 @@ class Thread:
             # to user
             self.send(message, self.recipient, from_mod=True)
             ]
+        
+        self.bot.loop.create_task(
+            self.bot.modmail_api.append_log(message, self.channel.id)
+            )
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
@@ -207,17 +211,16 @@ class Thread:
             await self.channel.send(embed=discord.Embed(
                 color=discord.Color.red(),
                 description='Scheduled close has been cancelled.'))
+        
+        if not from_mod:
+            self.bot.loop.create_task(
+                self.bot.modmail_api.append_log(message, self.channel.id)
+                )
 
         if not self.ready:
             await self.wait_until_ready()
 
         destination = destination or self.channel
-        if from_mod and not isinstance(destination, discord.User):
-            self.bot.loop.create_task(
-                self.bot.modmail_api.append_log(message))
-        elif not from_mod:
-            self.bot.loop.create_task(
-                self.bot.modmail_api.append_log(message, destination.id))
 
         author = message.author
 
@@ -431,8 +434,7 @@ class ThreadManager:
         thread.channel = channel
 
         log_url, log_data = await asyncio.gather(
-            self.bot.modmail_api.get_log_url(recipient, channel,
-                                             creator or recipient),
+            self.bot.modmail_api.get_log_url(recipient, channel, creator or recipient),
             self.bot.modmail_api.get_user_logs(recipient.id)
             # self.get_dominant_color(recipient.avatar_url)
         )
