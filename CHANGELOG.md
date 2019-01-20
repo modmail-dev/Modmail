@@ -13,9 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - An oversight from [commit 1ba74d9](https://github.com/kyb3r/modmail/commit/1ba74d97900236a00ce937bdfb0fbb3a061baf1b).
 
 # v2.8.0
+
 ### Changed
-- Major improvement in viewing thread logs. 
-- Log links are now rendered in HTML instead of plain text. 
+- Major improvement in viewing thread logs.
+- Log links are now rendered in HTML instead of plain text.
 
 # v2.7.2
 
@@ -24,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 Thread channels will now default to being private (`@everyone`'s read message perms set to `false`).
-  - If the thread creation category could not be resolved. 
+  - If the thread creation category could not be resolved.
   - This will save you from some trouble if for whatever reason your configuration gets messed up.
 
 # v2.7.1
@@ -58,19 +59,19 @@ Fixed log URLs for self-hosting users.
 # v2.6.1
 
 ### Fixed
-- API BASE URL
+- Replaced the testing `API_BASE_URL` with the actual URL.
 
 # v2.6.0
 
 Mostly internal changes. Some are slightly breaking. Keep a lookout for broken features and report them on our server.
 
 ### Added
-- `threads` is now a default alias to `logs`
+- `threads` is now a default alias to `logs`.
 
 ### Changed
 - Log URLs are moved to their own collection.
 - Log URLs are now `https://logs.modmail.tk/LOGKEY`, no more numbers before the log key.
-- We still support the numbers so as to not break everyone's URLs so quickly but both work atm :p
+- We still support the numbers so as to not break everyone's URLs so quickly but both work at the moment.
 - This is a huge change to the backend logging and there might be migration errors. If so, please contact us at our [discord server](https://discord.gg/2fMbf2N)
 
 # v2.5.2
@@ -85,7 +86,8 @@ Non breaking internal changes.
 
 ### Background
 Bots hosted by Heroku restart at least once every 27 hours.
-During this period, local caches are deleted, which results in the inability to set the scheduled close time to longer than 24 hours. This update resolves this issue. [PR #135](https://github.com/kyb3r/modmail/pull/135)
+During this period, local caches are deleted, which results in the inability to set the scheduled close time to longer than 24 hours. This update resolves this issue. 
+ - [PR #135](https://github.com/kyb3r/modmail/pull/135)
 
 
 ### Changed
