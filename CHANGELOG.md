@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All reference to "modmail"/"Mod Mail"/"ModMail" are changed to "Modmail".
 - `log_channel_id` is now part of the config upon `setup`.
+- Added the ability to set where tickets are created using the `main_category_id` configuration option.
 # v2.7.0
 
 ### Changed
@@ -23,7 +24,7 @@ Fixed small issue with finding thread.
 
 # v2.6.2
 
-Fixed log URLs for self-hosting users. 
+Fixed log URLs for self-hosting users.
 (This shouldn't affect anyone.)
 
 # v2.6.1
@@ -46,12 +47,12 @@ Mostly internal changes. Some are slightly breaking. Keep a lookout for broken f
 
 # v2.5.2
 
-Non breaking internal changes. 
+Non breaking internal changes.
 (This shouldn't affect anyone.)
 
 # v2.5.0
 
-Non breaking internal changes. 
+Non breaking internal changes.
 (This shouldn't affect anyone.)
 
 ### Background
@@ -65,7 +66,7 @@ During this period, local caches are deleted, which results in the inability to 
    - Loaded upon bot restart.
    - Deleted when a thread is closed.
  - Use `call_later()` instead of `sleep()` for scheduling.
- 
+
 # v2.4.5
 
 ### Fixed
@@ -81,33 +82,33 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 This update shouldn't affect anyone.
 
 ### Changed
- - Moved self-hosted log viewer to a separate repo. 
- 
+ - Moved self-hosted log viewer to a separate repo.
+
 # v2.4.2
 
-### Added 
+### Added
 - Ability to set your own Twitch URL for `streaming` activity status.
 
 # v2.4.1
 
-### Fixed 
-- Small bug in `activity` command. 
+### Fixed
+- Small bug in `activity` command.
 
 # v2.4.0
 
 Breaking changes.
 
-### Added 
+### Added
 - Added the `activity` command for setting the activity
 - [PR #131](https://github.com/kyb3r/modmail/pull/131#issue-244686818) this supports multiple activity types (`playing`, `watching`, `listening` and `streaming`).
 
 ### Removed
-- Removed the deprecated `status` command. 
-- This also means you will have to reset your bot status with the `activity` command, as `status` command is removed. 
+- Removed the deprecated `status` command.
+- This also means you will have to reset your bot status with the `activity` command, as `status` command is removed.
 
 # v2.3.0
 
-### Added 
+### Added
 - Ability to self-host logs.
 
 ### Changed
@@ -157,7 +158,7 @@ Breaking changes.
 
 # v2.0.9
 
-### Added 
+### Added
 - Support for custom blocked emoji and sent emoji.
 - Use the `config set blocked_emoji` or `sent_emoji` commands.
 
@@ -169,22 +170,22 @@ Breaking changes.
 
 Improvements to commands and new config options available.
 
-### Added 
+### Added
 - Added the ability to use your own log channel.
     - You can do this via the `config set log_channel_id <id>` command.
 - Added the ability to use your own main inbox category.
     - You can do this via the `config set main_category_id <id>` command.
 
 ### Changed
-- You now have the ability to supply a reason when blocking a user. 
+- You now have the ability to supply a reason when blocking a user.
 - Blocked users are now stored in the database instead of in the channel topic.
     - This means you can delete the top channel in the modmail category now. (Migrate first though.)
 
 # v2.0.7
 
-New command and improvements in bot update message interfaces. 
+New command and improvements in bot update message interfaces.
 
-### Added 
+### Added
 - Added a `changelog` command to view the bot's changelog within discord.
 
 ### Changed
@@ -216,14 +217,14 @@ New command and improvements in bot update message interfaces.
 Fixed some issues with how data is displayed in the info embed.
 
 ### Fixed
-- Thread creation embed now shows the correct number of past logs. 
+- Thread creation embed now shows the correct number of past logs.
 - If using a separate server setup, roles in the info embed now are shown as names instead of mentions.
     - This is due to the fact that you can't mention roles across servers.
 
 # v2.0.2
 
 ### Security
-- Made the `logs` command require "manage messages" permissions to execute. 
+- Made the `logs` command require "manage messages" permissions to execute.
     - Before this patch, anyone could use the `logs` commands.
 
 # v2.0.1
@@ -239,15 +240,15 @@ Bug fixes and minor improvements.
 
 # v2.0.0
 
-This release introduces the use of our centralized [API service](https://github.com/kyb3r/webserver) to enable dynamic configuration, auto-updates, and thread logs. 
-To use this release you must acquire an API token from https://modmail.tk. 
+This release introduces the use of our centralized [API service](https://github.com/kyb3r/webserver) to enable dynamic configuration, auto-updates, and thread logs.
+To use this release you must acquire an API token from https://modmail.tk.
 Read the updated installation guide [here](https://github.com/kyb3r/modmail/wiki/installation).
 
 ### Changed
 - Stability improvements through synchronization primitives.
 - Refactor thread management and code.
 - Update command now uses `api.modmail.tk`.
-- `contact` command no longer tells the user you messaged them 👻 
+- `contact` command no longer tells the user you messaged them 👻
 
 ### Fixed
 - `status` command now changes playing status indefinitely.
