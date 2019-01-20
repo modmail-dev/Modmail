@@ -168,10 +168,10 @@ class Utility:
     async def about(self, ctx):
         """Shows information about the bot."""
         em = discord.Embed(color=0x36393F, timestamp=datetime.datetime.utcnow())
-        em.set_author(name='Mod Mail - About', icon_url=self.bot.user.avatar_url)
+        em.set_author(name='Modmail - About', icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
 
-        em.description = 'This is an open source discord bot that serves'\
+        em.description = 'This is an open source Discord bot that serves'\
                         ' as a means for members to easily communicate with'\
                         ' server leadership in an organised manner.'
 
