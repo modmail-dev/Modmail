@@ -16,8 +16,8 @@ class ShortTime:
                              (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?        # e.g. 10w
                              (?:(?P<days>[0-9]{1,5})(?:days?|d))?          # e.g. 14d
                              (?:(?P<hours>[0-9]{1,5})(?:hours?|h))?        # e.g. 12h
-                             (?:(?P<minutes>[0-9]{1,5})(?:minutes?|m))?    # e.g. 10m
-                             (?:(?P<seconds>[0-9]{1,5})(?:seconds?|s))?    # e.g. 15s
+                             (?:(?P<minutes>[0-9]{1,5})(?:min(?:ute)?s?|m))?    # e.g. 10m
+                             (?:(?P<seconds>[0-9]{1,5})(?:sec(?:ond)s?|s))?    # e.g. 15s
                           """, re.VERBOSE)
 
     def __init__(self, argument):

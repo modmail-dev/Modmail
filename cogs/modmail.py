@@ -345,7 +345,7 @@ class Modmail:
             new_day = date.strftime(r'%d %b %Y')
             time = date.strftime(r'%H:%M')
 
-            key = entry['_id']
+            key = entry['key']
             closer = entry['closer']['name']
             log_url = f"https://logs.modmail.tk/{key}" if not self.bot.selfhosted else self.bot.config.log_url.strip('/') + f'/logs/{key}'
 

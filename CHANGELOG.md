@@ -6,13 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 # v2.8.1
+
 ### Fixed
-- Fixed bug where thread logs were getting duplicated when using the contact command.
+- Fixed bug where thread logs were getting duplicated when using the `contact` command.
+- Fixed bug where the wrong key was used for logs which caused some `log` command log links to point to an HTTP 404 Not Found.
+  - A minor oversight from commit 1ba74d9.
 
 # v2.8.0
+
 ### Changed
-- Major improvement in thread log viewing. 
-- Log links are now rendered in html instead of plain text. 
+- Major improvement in viewing thread logs.
+- Log links are now rendered in HTML instead of plain text.
 
 # v2.7.2
 
@@ -20,15 +24,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `config options` command to see a list of valid config variables that you can modify.
 
 ### Security
-Thread channels will now default to being private (@everyone's read message perms set to false) if the thread creation category could not be resolved. This will save you from some trouble if for whatever reason your configuration gets messed up 🌚
+Thread channels will now default to being private (`@everyone`'s read message perms set to `false`).
+  - If the thread creation category could not be resolved.
+  - This will save you from some trouble if for whatever reason your configuration gets messed up.
 
 # v2.7.1
 
 ### Changed
 
-- All reference to "modmail"/"Mod Mail"/"ModMail" are changed to "Modmail".
+- All reference to "modmail" / "Mod Mail" / "ModMail" are changed to "Modmail".
 - `log_channel_id` is now part of the config upon `setup`.
-- Added the ability to set where tickets are created using the `main_category_id` configuration option.
+- Added the ability to set where threads are created using the `main_category_id` configuration option.
+
+### Important Note
+
+- If your Modmail bot was set up a long time ago, you may experience an issue where messages were sent outside of the category.
+  - To fix this, set `main_category_id` to the ID of the Modmail category.
+  
 # v2.7.0
 
 ### Changed
@@ -48,19 +60,19 @@ Fixed log URLs for self-hosting users.
 # v2.6.1
 
 ### Fixed
-- API BASE URL
+- Replaced the testing `API_BASE_URL` with the actual URL.
 
 # v2.6.0
 
 Mostly internal changes. Some are slightly breaking. Keep a lookout for broken features and report them on our server.
 
 ### Added
-- `threads` is now a default alias to `logs`
+- `threads` is now a default alias to `logs`.
 
 ### Changed
 - Log URLs are moved to their own collection.
 - Log URLs are now `https://logs.modmail.tk/LOGKEY`, no more numbers before the log key.
-- We still support the numbers so as to not break everyone's URLs so quickly but both work atm :p
+- We still support the numbers so as to not break everyone's URLs so quickly but both work at the moment.
 - This is a huge change to the backend logging and there might be migration errors. If so, please contact us at our [discord server](https://discord.gg/2fMbf2N)
 
 # v2.5.2
@@ -75,7 +87,8 @@ Non breaking internal changes.
 
 ### Background
 Bots hosted by Heroku restart at least once every 27 hours.
-During this period, local caches are deleted, which results in the inability to set the scheduled close time to longer than 24 hours. This update resolves this issue. [PR #135](https://github.com/kyb3r/modmail/pull/135)
+During this period, local caches are deleted, which results in the inability to set the scheduled close time to longer than 24 hours. This update resolves this issue. 
+ - [PR #135](https://github.com/kyb3r/modmail/pull/135)
 
 
 ### Changed
