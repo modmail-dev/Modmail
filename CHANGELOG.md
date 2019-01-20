@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed bug where thread logs were getting duplicated when using the contact command.
 - Fixed bug where the wrong key was used for logs which caused some `log` command log links point to a HTTP 404 Not Found.
-  - An oversight from [commit 1ba74d9](https://github.com/kyb3r/modmail/commit/1ba74d97900236a00ce937bdfb0fbb3a061baf1b).
+  - A minor oversight from commit 1ba74d9.
 
 # v2.8.0
 
@@ -34,12 +34,13 @@ Thread channels will now default to being private (`@everyone`'s read message pe
 
 - All reference to "modmail" / "Mod Mail" / "ModMail" are changed to "Modmail".
 - `log_channel_id` is now part of the config upon `setup`.
-- Added the ability to set where tickets are created using the `main_category_id` configuration option.
+- Added the ability to set where threads are created using the `main_category_id` configuration option.
 
 ### Important Note
 
-- If your Modmail bot was setup a long time ago, you may experience a issue where messages were sent outside of the category.
+- If your Modmail bot was set up a long time ago, you may experience an issue where messages were sent outside of the category.
   - To fix this, set `main_category_id` to the ID of the Modmail category.
+  
 # v2.7.0
 
 ### Changed
