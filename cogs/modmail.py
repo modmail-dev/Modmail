@@ -377,6 +377,15 @@ class Modmail:
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
             await thread.reply(ctx.message)
+    
+    @commands.command()
+    @trigger_typing
+    async def note(self, ctx, *, msg=''):
+        """Take a note about the current thread, useful for noting context."""
+        ctx.message.content = msg 
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread:
+            await thread.note(ctx.message)
 
     @commands.command()
     async def edit(self, ctx, message_id: Optional[int]=None, *, new_message):
