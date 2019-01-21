@@ -52,7 +52,7 @@ Heroku is a container based cloud platform that currently offers a free plan to 
 
 ## Self-hosted logs
 
-If you want complete control over your data and do not want to use the centralized API service, you can self host your logs. You can do this by adding two config variables: 
+If you want complete control over your data and do not want to use the centralized API service, you can self host your logs. We recommed this if you want stability and security for your bot. You can do this by adding two config variables: 
 
 * `MONGO_URI` - MongoDB connection URI, you can get a free 500 MB cluster from [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
 * `LOG_URL` - The URL of your log viewer Heroku app (`https://yourlogviewerappname.herokuapp.com`)
