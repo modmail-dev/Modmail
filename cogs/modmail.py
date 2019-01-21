@@ -323,7 +323,7 @@ class Modmail:
         if not any(not e['open'] for e in logs):
             return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description='This user does not have any previous logs'))
 
-        em = discord.Embed(color=discord.Color.green())
+        em = discord.Embed(color=discord.Color.blurple())
         em.set_author(name=f'{username} - Previous Logs', icon_url=icon_url)
 
         embeds = [em]
