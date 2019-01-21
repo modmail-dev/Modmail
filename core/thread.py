@@ -89,7 +89,7 @@ class Thread:
         log_data = await self.bot.modmail_api.post_log(self.channel.id, {
             'open': False,
             'closed_at': str(datetime.datetime.utcnow()),
-            'close_message': message,
+            'close_message': message if not silent else None,
             'closer': {
                 'id': str(closer.id),
                 'name': closer.name,
