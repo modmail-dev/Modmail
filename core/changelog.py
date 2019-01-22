@@ -4,11 +4,9 @@ import re
 from typing import List
 from collections import defaultdict
 
-from bot import ModmailBot
-
 
 class Version:
-    def __init__(self, bot: ModmailBot, version: str, lines: str):
+    def __init__(self, bot, version: str, lines: str):
         self.bot = bot 
         self.version = version
         self.lines = [x for x in lines.splitlines() if x]
@@ -52,7 +50,7 @@ class ChangeLog:
                      'kyb3r/modmail/master/CHANGELOG.md')
     regex = re.compile(r'# (v\d+\.\d+\.\d+)([\S\s]*?(?=# v|$))')
 
-    def __init__(self, bot: ModmailBot, text: str):
+    def __init__(self, bot, text: str):
         self.bot = bot
         self.text = text 
         self.versions = [Version(bot, *m) for m in self.regex.findall(text)]
@@ -66,7 +64,7 @@ class ChangeLog:
         return [v.embed for v in self.versions]
     
     @classmethod
-    async def from_repo(cls, bot: ModmailBot, url: str = ''):
+    async def from_repo(cls, bot, url: str = ''):
         url = url or cls.changelog_url
         resp = await bot.session.get(url)
         return cls(bot, await resp.text())

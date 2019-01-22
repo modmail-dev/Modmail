@@ -8,11 +8,9 @@ from typing import Union, Optional
 from json import JSONDecodeError
 from pymongo import ReturnDocument
 
-from bot import ModmailBot
-
 
 class ApiClient:
-    def __init__(self, bot: ModmailBot):
+    def __init__(self, bot):
         self.bot = bot
         self.session = bot.session
         self.headers: dict = None
@@ -45,7 +43,7 @@ class Github(ApiClient):
     FORK_URL = REPO + '/forks'
     STAR_URL = BASE + '/user/starred/kyb3r/modmail'
 
-    def __init__(self, bot: ModmailBot,
+    def __init__(self, bot,
                  access_token: str = None,
                  username: str = None):
         super().__init__(bot)
@@ -94,7 +92,7 @@ class Github(ApiClient):
         ...
 
     @classmethod
-    async def login(cls, bot: ModmailBot) -> 'Github':
+    async def login(cls, bot) -> 'Github':
         self = cls(bot, bot.config.get('github_access_token'))
         resp: dict = await self.request('https://api.github.com/user')
         self.username: str = resp['login']
@@ -113,7 +111,7 @@ class ModmailApiClient(ApiClient):
     LOGS = BASE + '/logs'
     CONFIG = BASE + '/config'
 
-    def __init__(self, bot: ModmailBot):
+    def __init__(self, bot):
         super().__init__(bot)
         self.token: Optional[str] = bot.config.get('modmail_api_token')
         if self.token:
@@ -213,7 +211,7 @@ class ModmailApiClient(ApiClient):
 
 class SelfHostedClient(ModmailApiClient):
 
-    def __init__(self, bot: ModmailBot):
+    def __init__(self, bot):
         super().__init__(bot)
         self.token: Optional[str] = bot.config.get('github_access_token')
         if self.token:

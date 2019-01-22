@@ -5,8 +5,6 @@ from typing import Optional, Any
 
 import box
 
-from bot import ModmailBot
-
 
 class ConfigManager:
     """Class that manages a cached configuration"""
@@ -32,7 +30,7 @@ class ConfigManager:
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
 
-    def __init__(self, bot: ModmailBot):
+    def __init__(self, bot):
         self.bot = bot
         self.cache = box.Box()
         self.ready_event = asyncio.Event()
