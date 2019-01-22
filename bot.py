@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.6.3'
+__version__ = '2.9.1'
 
 import discord
 from discord.enums import ActivityType
@@ -163,7 +163,7 @@ class ModmailBot(commands.Bot):
 
         if self.modmail_guild:
             return discord.utils.get(self.modmail_guild.categories,
-                                     name='Mod Mail')
+                                     name='Modmail')
 
     @property
     def blocked_users(self):

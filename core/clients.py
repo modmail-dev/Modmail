@@ -179,7 +179,9 @@ class ModmailApiClient(ApiClient):
             }
         })
 
-    def append_log(self, message: Message, channel_id: Union[str, int] = ''):
+    def append_log(self, message: Message, channel_id: Union[str, int] = '',
+                   type_: str = 'thread_message'):
+
         channel_id = str(channel_id) or str(message.channel.id)
         payload = {
             'payload': {
@@ -195,7 +197,8 @@ class ModmailApiClient(ApiClient):
                 },
                 # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments]
+                'attachments': [i.url for i in message.attachments],
+                'type': type_
             }
         }
         return self.request(self.LOGS + f'/{channel_id}',
@@ -263,9 +266,9 @@ class SelfHostedClient(ModmailApiClient):
             'closer': None,
             'messages': []
             })
-        
-        return f'{self.bot.config.log_url}/logs/{key}'
-    
+
+        return f"{self.bot.config.log_url.strip('/')}/logs/{key}"
+
     async def get_config(self) -> dict:
         conf = await self.db.config.find_one({'bot_id': self.bot.user.id})
         if conf is None:
@@ -279,7 +282,9 @@ class SelfHostedClient(ModmailApiClient):
                                                {'$set': data})
 
     async def append_log(self, message: Message,
-                         channel_id: Union[int, str] = ''):
+                         channel_id: Union[int, str] = '',
+                         type_: str = 'thread_message'):
+
         channel_id = str(channel_id) or str(message.channel.id)
         payload = {
                 'timestamp': str(message.created_at),
@@ -294,7 +299,8 @@ class SelfHostedClient(ModmailApiClient):
                 },
                 # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments]
+                'attachments': [i.url for i in message.attachments],
+                'type': type_
             }
         
         return await self.logs.find_one_and_update(

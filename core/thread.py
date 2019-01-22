@@ -91,6 +91,7 @@ class Thread:
         log_data = await self.bot.modmail_api.post_log(self.channel.id, {
             'open': False,
             'closed_at': str(datetime.utcnow()),
+            'close_message': message if not silent else None,
             'closer': {
                 'id': str(closer.id),
                 'name': closer.name,
@@ -100,24 +101,24 @@ class Thread:
             }
         })
 
-        if isinstance(log_data, str):
-            print(log_data)  # errored somehow on server
-            return
+        if not isinstance(log_data, str) or log_data is not None:
+            if self.bot.selfhosted:
+                log_url = f"{self.bot.config.log_url.strip('/')}/" \
+                          f"logs/{log_data['key']}"
+            else:
+                log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
-        if self.bot.selfhosted:
-            log_url = f"{self.bot.config.log_url}/logs/{log_data['key']}"
+            user = self.recipient.mention if self.recipient else f'`{self.id}`'
+
+            if log_data['messages']:
+                msg = str(log_data['messages'][0]['content'])
+                sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
+            else:
+                sneak_peak = 'No content'
+            
+            desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
         else:
-            log_url = f"https://logs.modmail.tk/{log_data['key']}"
-
-        user = self.recipient.mention if self.recipient else f'`{self.id}`'
-
-        if log_data['messages']:
-            msg = str(log_data['messages'][0]['content'])
-            sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
-        else:
-            sneak_peak = 'No content'
-
-        desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
+            desc = "Could not resolve log url."
 
         em = discord.Embed(description=desc, color=discord.Color.red())
 
@@ -136,15 +137,15 @@ class Thread:
         em = discord.Embed(title='Thread Closed', color=discord.Color.red())
 
         if not message:
-            message = f'{closer.mention} has closed this modmail thread.'
+            message = f'{closer.mention} has closed this Modmail thread.'
         em.description = message
 
         if not silent and self.recipient is not None:
             tasks.append(self.recipient.send(embed=em))
-        
+
         if delete_channel:
             tasks.append(self.channel.delete())
-        
+
         await asyncio.gather(*tasks)
 
     async def cancel_closure(self):
@@ -175,6 +176,17 @@ class Thread:
             self._edit_thread_message(self.recipient, message_id, message),
             self._edit_thread_message(self.channel, message_id, message)
         )
+    
+    async def note(self, message):
+        if not message.content and not message.attachments:
+            raise UserInputError
+            
+        await asyncio.gather(
+            self.bot.modmail_api.append_log(message,
+                                            self.channel.id,
+                                            type='system'),
+            self.send(message, self.channel, note=True)
+        )
 
     async def reply(self, message):
         if not message.content and not message.attachments:
@@ -194,6 +206,8 @@ class Thread:
             # to user
             self.send(message, self.recipient, from_mod=True),
             ]
+        
+        await self.bot.modmail_api.append_log(message, self.channel.id)
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
@@ -209,38 +223,38 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def send(self, message, destination=None, from_mod=False):
+    async def send(self, message, destination=None,
+                   from_mod=False, note=False):
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             await self.cancel_closure()
-            await self.channel.send(
-                embed=discord.Embed(
+            await self.channel.send(embed=discord.Embed(
                     color=discord.Color.red(),
                     description='Scheduled close has been cancelled.'
                 )
             )
 
+        if not from_mod and not note:
+            await self.bot.modmail_api.append_log(message, self.channel.id)
+
         if not self.ready:
             await self.wait_until_ready()
 
         destination = destination or self.channel
-        if from_mod and not isinstance(destination, discord.User):
-            self.bot.loop.create_task(
-                self.bot.modmail_api.append_log(message)
-            )
-        elif not from_mod:
-            self.bot.loop.create_task(
-                self.bot.modmail_api.append_log(message, destination.id)
-            )
 
         author = message.author
 
         em = discord.Embed(description=message.content,
                            timestamp=message.created_at)
 
+        system_avatar_url = 'https://discordapp.com/assets/' \
+                            'f78426a064bc9dd24847519259bc42af.png'
+
         # store message id in hidden url
-        em.set_author(name=str(author),
-                      icon_url=author.avatar_url,
+        avatar_url = author.avatar_url if not note else system_avatar_url
+
+        em.set_author(name=str(author) if not note else 'Note',
+                      icon_url=avatar_url,
                       url=message.jump_url)
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
@@ -295,17 +309,23 @@ class Thread:
                          value=f'[{att[1]}]({att[0]})')
             file_upload_count += 1
 
+        if from_mod:
+            em.color = discord.Color.green()
+            em.set_footer(text=f'Moderator')
+        elif note:
+            em.color = discord.Color.blurple()
+            em.set_footer(text=f'System ({author.name})')
+        else:
+            em.color = discord.Color.gold()
+            em.set_footer(text=f'User')
+
         await destination.trigger_typing()
 
         if not from_mod:
             mentions = self.get_notifications()
-            em.color = discord.Color.gold()
-            em.set_footer(text=f'User')
         else:
             mentions = None
-            em.color = discord.Color.green()
-            em.set_footer(text=f'Moderator')
-            
+
         await destination.send(mentions, embed=em)
 
         if delete_message:
@@ -330,7 +350,7 @@ class Thread:
 
 
 class ThreadManager:
-    """Class that handles storing, finding and creating modmail threads."""
+    """Class that handles storing, finding and creating Modmail threads."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -411,8 +431,8 @@ class ThreadManager:
 
             return thread
 
-    async def create(self, recipient, *, creator=None):
-        """Creates a modmail thread"""
+    async def create(self, recipient, *, creator=None, category=None):
+        """Creates a Modmail thread"""
 
         em = discord.Embed(
             title='Thread created!',
@@ -428,9 +448,22 @@ class ThreadManager:
 
         self.cache[recipient.id] = thread = Thread(self, recipient)
 
+        overwrites = { 
+            self.bot.modmail_guild.default_role:
+                discord.PermissionOverwrite(read_messages=False)
+            }
+        # in case it creates a channel outside of category
+
+        category = category or self.bot.main_category
+
+        if category is not None:
+            overwrites = None 
+
         channel = await self.bot.modmail_guild.create_text_channel(
             name=self._format_channel_name(recipient),
-            category=self.bot.main_category
+            category=category,
+            overwrites=overwrites,
+            reason='Creating a thread channel'
         )
 
         thread.channel = channel

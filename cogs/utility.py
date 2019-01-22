@@ -182,11 +182,11 @@ class Utility:
         """Shows information about the bot."""
         em = Embed(color=0x36393F,
                    timestamp=datetime.utcnow())
-        em.set_author(name='Mod Mail - About',
+        em.set_author(name='Modmail - About',
                       icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
 
-        em.description = ('This is an open source discord bot that serves '
+        em.description = ('This is an open source Discord bot that serves '
                           'as a means for members to easily communicate with '
                           'server leadership in an organised manner.')
 
@@ -419,15 +419,19 @@ class Utility:
     @commands.group()
     @owner_only()
     async def config(self, ctx):
-        """
-        Change configuration for the bot.
+        """Change config vars for the bot."""
 
-        You shouldn't have to use these commands as other commands such
-        as `prefix` and `activity` should change config vars for you.
-        """
         if ctx.invoked_subcommand is None:
             cmd = self.bot.get_command('help')
             await ctx.invoke(cmd, command='config')
+    
+    @config.command()
+    async def options(self, ctx):
+        """Return a list of valid config keys you can change."""
+        allowed = self.bot.config.allowed_to_change_in_command
+        valid = ', '.join(f'`{k}`' for k in allowed)
+        em = Embed(title='Valid Keys', description=valid, color=Color.green())
+        return await ctx.send(embed=em)
 
     @config.command()
     async def set(self, ctx, key: str.lower, *, value):

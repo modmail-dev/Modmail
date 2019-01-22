@@ -24,28 +24,35 @@ class Modmail:
     @trigger_typing
     @commands.has_permissions(administrator=True)
     async def setup(self, ctx):
-        """Sets up a server for modmail"""
+        """Sets up a server for Modmail"""
         if self.bot.main_category:
-            return await ctx.send(self.bot.modmail_guild +
-                                  ' is already set up.')
+            return await ctx.send(
+                f'{self.bot.modmail_guild} is already set up.')
 
         category = await self.bot.modmail_guild.create_category(
-            name='Mod Mail',
+            name='Modmail',
             overwrites=self.bot.overwrites(ctx)
         )
 
         await category.edit(position=0)
 
-        c = await self.bot.modmail_guild.create_text_channel(
+        log_channel = await self.bot.modmail_guild.create_text_channel(
             name='bot-logs', category=category
         )
-        await c.edit(topic='You can delete this channel if '
-                           'you set up your own log channel.')
-        await c.send('Use the `config set log_channel_id` '
-                     'command to set up a custom log channel.')
-        self.bot.config['main_category_id'] = category.id
-        await self.bot.config.update()
 
+        await log_channel.edit(
+            topic='You can delete this channel '
+                  'if you set up your own log channel.'
+        )
+        await log_channel.send(
+            'Use the `config set log_channel_id` '
+            'command to set up a custom log channel.'
+        )
+
+        self.bot.config['main_category_id'] = category.id
+        self.bot.config['log_channel_id'] = log_channel.id
+
+        await self.bot.config.update()
         await ctx.send('Successfully set up server.')
 
     @commands.group()
@@ -317,7 +324,7 @@ class Modmail:
 
     @commands.command()
     async def nsfw(self, ctx):
-        """Flags a modmail thread as nsfw."""
+        """Flags a Modmail thread as nsfw."""
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread is None:
             return
@@ -329,7 +336,7 @@ class Modmail:
     @trigger_typing
     async def logs(self, ctx, *,
                    member: Union[discord.Member, discord.User, obj] = None):
-        """Shows a list of previous modmail thread logs of a member."""
+        """Shows a list of previous Modmail thread logs of a member."""
         # TODO: find a better way of that Union ^
         if not member:
             thread = await self.bot.threads.find(channel=ctx.channel)
@@ -351,7 +358,7 @@ class Modmail:
                                            'have any previous logs.')
             return await ctx.send(embed=em)
 
-        em = discord.Embed(color=discord.Color.green())
+        em = discord.Embed(color=discord.Color.blurple())
         em.set_author(name=f'{username} - Previous Logs', icon_url=icon_url)
 
         embeds = [em]
@@ -374,13 +381,13 @@ class Modmail:
             new_day = date.strftime(r'%d %b %Y')
             time = date.strftime(r'%H:%M')
 
-            key = entry['_id']
+            key = entry['key']
             closer = entry['closer']['name']
 
             if not self.bot.selfhosted:
                 log_url = f"https://logs.modmail.tk/{key}"
             else:
-                log_url = self.bot.config.log_url + f'/logs/{key}'
+                log_url = self.bot.config.log_url.strip('/') + f'/logs/{key}'
 
             # TODO: Move all the lambda-like functions to a utils.py
             def truncate(c):
@@ -416,6 +423,15 @@ class Modmail:
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
             await thread.reply(ctx.message)
+    
+    @commands.command()
+    @trigger_typing
+    async def note(self, ctx, *, msg=''):
+        """Take a note about the current thread, useful for noting context."""
+        ctx.message.content = msg 
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread:
+            await thread.note(ctx.message)
 
     @commands.command()
     async def edit(self, ctx, message_id: Optional[int] = None,
@@ -456,21 +472,26 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def contact(self, ctx, *, user: Union[discord.Member, discord.User]):
+    async def contact(self, ctx,
+                      category: Optional[discord.CategoryChannel] = None, *,
+                      user: Union[discord.Member, discord.User]):
         """Create a thread with a specified member."""
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
-            em = discord.Embed(color=discord.Color.red(),
-                               description='A thread for this '
-                                           'user already exists.')
-        else:
-            thread = await self.bot.threads.create(user, creator=ctx.author)
+            em = discord.Embed(
+                color=discord.Color.red(),
+                description='A thread for this user already '
+                            f'exists in {exists.channel.mention}.'
+            )
 
+        else:
+            thread = await self.bot.threads.create(user, creator=ctx.author,
+                                                   category=category)
             em = discord.Embed(
                 title='Created thread',
-                description='Thread started in '
-                            f'{thread.channel.mention} for {user.mention}',
+                description=f'Thread started in {thread.channel.mention} '
+                            f'for {user.mention}',
                 color=discord.Color.green()
             )
 
@@ -488,12 +509,12 @@ class Modmail:
         users = []
         not_reachable = []
 
-        for id, reason in self.bot.blocked_users.items():
-            user = self.bot.get_user(int(id))
+        for id_, reason in self.bot.blocked_users.items():
+            user = self.bot.get_user(int(id_))
             if user:
                 users.append((user, reason))
             else:
-                not_reachable.append((id, reason))
+                not_reachable.append((id_, reason))
 
         em.description = 'Here is a list of blocked users.'
 
@@ -517,7 +538,7 @@ class Modmail:
     async def block(self, ctx,
                     user: Union[discord.Member, discord.User, obj] = None,
                     *, reason=None):
-        """Block a user from using modmail."""
+        """Block a user from using Modmail."""
 
         if user is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
@@ -549,7 +570,7 @@ class Modmail:
     @commands.has_permissions(manage_channels=True)
     async def unblock(self, ctx, *,
                       user: Union[discord.Member, discord.User, obj] = None):
-        """Unblocks a user from using modmail."""
+        """Unblocks a user from using Modmail."""
 
         if user is None:
             thread = await self.bot.threads.find(channel=ctx.channel)
