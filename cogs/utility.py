@@ -71,7 +71,7 @@ class Utility:
 
         em = Embed(
             description='*' + inspect.getdoc(cog) + '*',
-            color=Color.green()
+            color=Color.blurple()
         )
         em.set_author(name=cog.__class__.__name__ + ' - Help',
                       icon_url=ctx.bot.user.avatar_url)
@@ -89,7 +89,7 @@ class Utility:
         """Formats command help."""
         prefix = self.bot.prefix
         em = Embed(
-            color=Color.green(),
+            color=Color.blurple(),
             description=cmd.help
         )
 
@@ -240,7 +240,7 @@ class Utility:
         em = Embed(
             title='Github',
             description='Current User',
-            color=Color.green()
+            color=Color.blurple()
         )
         user = data['user']
         em.set_author(name=user['username'],
@@ -263,7 +263,7 @@ class Utility:
         em = Embed(
             title='Already up to date',
             description=desc,
-            color=Color.green()
+            color=Color.blurple()
         )
 
         if metadata['latest_version'] == self.bot.version:
@@ -327,7 +327,7 @@ class Utility:
             await self.bot.config.update()
             em = Embed(
                 title='Activity Removed',
-                color=Color.green()
+                color=Color.blurple()
             )
             return await ctx.send(embed=em)
 
@@ -355,7 +355,7 @@ class Utility:
         em = Embed(
             title='Activity Changed',
             description=desc,
-            color=Color.green()
+            color=Color.blurple()
         )
         return await ctx.send(embed=em)
 
@@ -380,7 +380,7 @@ class Utility:
         if mention is None:
             em = Embed(
                 title='Current text',
-                color=Color.green(),
+                color=Color.blurple(),
                 description=f'{current}'
             )
 
@@ -388,7 +388,7 @@ class Utility:
             em = Embed(
                 title='Changed mention!',
                 description=f'On thread creation the bot now says {mention}',
-                color=Color.green()
+                color=Color.blurple()
             )
             self.bot.config['mention'] = mention
             await self.bot.config.update()
@@ -403,7 +403,7 @@ class Utility:
         current = self.bot.prefix
         em = Embed(
             title='Current prefix',
-            color=Color.green(),
+            color=Color.blurple(),
             description=f'{current}'
         )
 
@@ -430,7 +430,9 @@ class Utility:
         """Return a list of valid config keys you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
         valid = ', '.join(f'`{k}`' for k in allowed)
-        em = Embed(title='Valid Keys', description=valid, color=Color.green())
+        em = Embed(title='Valid Keys',
+                   description=valid,
+                   color=Color.blurple())
         return await ctx.send(embed=em)
 
     @config.command()
@@ -444,7 +446,7 @@ class Utility:
         if key in keys:
             em = Embed(
                 title='Success',
-                color=Color.green(),
+                color=Color.blurple(),
                 description=f'Set `{key}` to `{value}`'
             )
             await self.bot.config.update({key: value})
@@ -466,7 +468,7 @@ class Utility:
         if key in keys:
             em = Embed(
                 title='Success',
-                color=Color.green(),
+                color=Color.blurple(),
                 description=f'Set `{key}` to nothing.'
             )
             del self.bot.config.cache[key]
@@ -491,7 +493,7 @@ class Utility:
             if key in keys:
                 desc = f'`{key}` is set to `{self.bot.config.get(key)}`'
                 em = Embed(
-                    color=Color.green(),
+                    color=Color.blurple(),
                     description=desc
                 )
                 em.set_author(name='Config variable',
@@ -508,7 +510,7 @@ class Utility:
 
         else:
             em = Embed(
-                color=Color.green(),
+                color=Color.blurple(),
                 description='Here is a list of currently '
                             'set configuration variables.'
             )
@@ -537,12 +539,12 @@ class Utility:
 
         if self.bot.aliases:
             em = Embed(
-                color=Color.green(),
+                color=Color.blurple(),
                 description=desc
             )
         else:
             em = Embed(
-                color=Color.red(),
+                color=Color.blurple(),
                 description='You dont have any aliases at the moment.'
             )
         em.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
@@ -552,11 +554,12 @@ class Utility:
 
         for name, value in self.bot.aliases.items():
             if len(em.fields) == 5:
-                em = Embed(color=Color.green(), description=desc)
+                em = Embed(color=Color.blurple(), description=desc)
                 em.set_author(name='Command aliases',
                               icon_url=ctx.guild.icon_url)
                 em.set_footer(text=f'Do {self.bot.prefix}help '
                                    'aliases for more commands.')
+
                 embeds.append(em)
             em.add_field(name=name, value=value, inline=False)
 
@@ -583,7 +586,7 @@ class Utility:
 
         em = Embed(
             title='Added alias',
-            color=Color.green(),
+            color=Color.blurple(),
             description=f'`{name}` points to: {value}'
         )
 
@@ -603,7 +606,7 @@ class Utility:
             
             em = Embed(
                 title='Removed alias',
-                color=Color.green(),
+                color=Color.blurple(),
                 description=f'`{name}` no longer exists.'
             )
             

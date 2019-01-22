@@ -64,24 +64,25 @@ class Modmail:
 
         embeds = []
 
-        em = discord.Embed(color=discord.Color.green())
-        em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
-
-        embeds.append(em)
-
-        em.description = ('Here is a list of snippets '
-                          'that are currently configured.')
-
-        if not self.bot.snippets:
-            em.color = discord.Color.red()
-            em.description = f'You dont have any snippets at the moment.'
+        if self.bot.snippets:
+            em = discord.Embed(color=discord.Color.blurple(),
+                               description='Here is a list of snippets '
+                                           'that are currently configured.')
+        else:
+            em = discord.Embed(
+                color=discord.Color.red(),
+                description='You dont have any snippets at the moment.'
+            )
             em.set_footer(
                 text=f'Do {self.bot.prefix}help snippets for more commands.'
             )
 
+        em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
+        embeds.append(em)
+
         for name, value in self.bot.snippets.items():
             if len(em.fields) == 5:
-                em = discord.Embed(color=discord.Color.green(),
+                em = discord.Embed(color=discord.Color.blurple(),
                                    description=em.description)
                 em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
                 embeds.append(em)
@@ -101,7 +102,7 @@ class Modmail:
 
         em = discord.Embed(
             title='Added snippet',
-            color=discord.Color.green(),
+            color=discord.Color.blurple(),
             description=f'`{name}` points to: {value}'
         )
 
@@ -111,19 +112,21 @@ class Modmail:
     async def del_(self, ctx, *, name: str.lower):
         """Removes a snippet from bot config."""
 
-        em = discord.Embed(
-            title='Removed snippet',
-            color=discord.Color.green(),
-            description=f'`{name}` no longer exists.'
-        )
-
-        if not self.bot.config.snippets.get(name):
-            em.title = 'Error'
-            em.color = discord.Color.red()
-            em.description = f'Snippet `{name}` does not exist.'
-        else:
+        if self.bot.config.snippets.get(name):
+            em = discord.Embed(
+                title='Removed snippet',
+                color=discord.Color.blurple(),
+                description=f'`{name}` no longer exists.'
+            )
             del self.bot.config['snippets'][name]
             await self.bot.config.update()
+
+        else:
+            em = discord.Embed(
+                title='Error',
+                color=discord.Color.red(),
+                description=f'Snippet `{name}` does not exist.'
+            )
 
         await ctx.send(embed=em)
 
@@ -246,7 +249,7 @@ class Modmail:
         else:
             mentions.append(mention)
             await self.bot.config.update()
-            em = discord.Embed(color=discord.Color.green(),
+            em = discord.Embed(color=discord.Color.blurple(),
                                description=f'{mention} will be mentioned '
                                            'on the next message received.')
         return await ctx.send(embed=em)
@@ -284,7 +287,7 @@ class Modmail:
         else:
             mentions.append(mention)
             await self.bot.config.update()
-            em = discord.Embed(color=discord.Color.green(),
+            em = discord.Embed(color=discord.Color.blurple(),
                                description=f'{mention} will now be notified '
                                            'of all messages received.')
         return await ctx.send(embed=em)
@@ -317,7 +320,7 @@ class Modmail:
         else:
             mentions.remove(mention)
             await self.bot.config.update()
-            em = discord.Embed(color=discord.Color.green(),
+            em = discord.Embed(color=discord.Color.blurple(),
                                description=f'{mention} is now unsubscribed '
                                            'to this thread.')
         return await ctx.send(embed=em)
@@ -372,7 +375,7 @@ class Modmail:
 
         for index, entry in enumerate(closed_logs):
             if len(embeds[-1].fields) == 3:
-                em = discord.Embed(color=discord.Color.green())
+                em = discord.Embed(color=discord.Color.blurple())
                 em.set_author(name='Previous Logs', icon_url=icon_url)
                 embeds.append(em)
 
@@ -454,7 +457,7 @@ class Modmail:
         async for msg in ctx.channel.history():
             if message_id is None and msg.embeds:
                 em = msg.embeds[0]
-                if 'Moderator' not in str(em.footer.text):
+                if em.color != discord.Color.green() or not em.author.url:
                     continue
                 linked_message_id = str(em.author.url).split('/')[-1]
                 break
@@ -492,7 +495,7 @@ class Modmail:
                 title='Created thread',
                 description=f'Thread started in {thread.channel.mention} '
                             f'for {user.mention}',
-                color=discord.Color.green()
+                color=discord.Color.blurple()
             )
 
         return await ctx.send(embed=em)
@@ -503,8 +506,8 @@ class Modmail:
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
         em = discord.Embed(title='Blocked Users',
-                           color=discord.Color.green(),
-                           description='')
+                           color=discord.Color.blurple(),
+                           description='Here is a list of blocked users.')
 
         users = []
         not_reachable = []
@@ -515,8 +518,6 @@ class Modmail:
                 users.append((user, reason))
             else:
                 not_reachable.append((id_, reason))
-
-        em.description = 'Here is a list of blocked users.'
 
         if users:
             val = '\n'.join(u.mention + (f' - `{r}`' if r else '')
@@ -549,19 +550,21 @@ class Modmail:
         
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
-        em = discord.Embed(color=discord.Color.green())
-
         if str(user.id) not in self.bot.blocked_users:
             self.bot.config.blocked[str(user.id)] = reason
             await self.bot.config.update()
-
-            em.title = 'Success'
             extend = f'for `{reason}`' if reason else ''
-            em.description = f'{mention} is now blocked ' + extend
+            em = discord.Embed(
+                title='Success',
+                color=discord.Color.blurple(),
+                description=f'{mention} is now blocked ' + extend
+            )
         else:
-            em.title = 'Error'
-            em.description = f'{mention} is already blocked'
-            em.color = discord.Color.red()
+            em = discord.Embed(
+                title='Error',
+                color=discord.Color.red(),
+                description=f'{mention} is already blocked'
+            )
 
         return await ctx.send(embed=em)
 
@@ -581,18 +584,20 @@ class Modmail:
 
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
-        em = discord.Embed(color=discord.Color.green())
-
         if str(user.id) in self.bot.blocked_users:
             del self.bot.config.blocked[str(user.id)]
             await self.bot.config.update()
-
-            em.title = 'Success'
-            em.description = f'{mention} is no longer blocked'
+            em = discord.Embed(
+                title='Success',
+                color=discord.Color.blurple(),
+                description=f'{mention} is no longer blocked'
+            )
         else:
-            em.title = 'Error'
-            em.description = f'{mention} is not blocked'
-            em.color = discord.Color.red()
+            em = discord.Embed(
+                title='Error',
+                description=f'{mention} is not blocked',
+                color=discord.Color.red()
+            )
 
         return await ctx.send(embed=em)
 

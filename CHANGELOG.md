@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+### Changed
+- Improve format of thread message embeds. Slightly cleaner and simpler now.
+- All commands are now blurple instead of green.
+
+### Added
+- Ability to set your own custom `mod_color` and `recipient_color` for the thread message embeds.
+
 # v2.9.1
+
 Changed order of arguments for the contact command. This is so that you can use aliases to their full potential. 
 For example: 
 - `contact "Recruitment Category" @somedude` 
