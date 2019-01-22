@@ -462,7 +462,7 @@ class Utility:
         return await ctx.send(embed=em)
 
     @config.command(name='del')
-    async def del__config(self, ctx, key: str.lower):
+    async def del_config(self, ctx, key: str.lower):
         """Sets a specified key from the config to nothing."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
