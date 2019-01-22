@@ -25,6 +25,7 @@ SOFTWARE.
 __version__ = '2.9.1'
 
 import asyncio
+import uvloop
 import textwrap
 import datetime
 import os
@@ -545,5 +546,6 @@ class ModmailBot(commands.Bot):
 
 
 if __name__ == '__main__':
+    uvloop.install()
     bot = ModmailBot()
     bot.run()
