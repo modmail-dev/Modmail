@@ -180,7 +180,7 @@ class Utility:
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
-        em = Embed(color=0x36393F,
+        em = Embed(color=Color.blurple(),
                    timestamp=datetime.utcnow())
         em.set_author(name='Modmail - About',
                       icon_url=self.bot.user.avatar_url)
@@ -295,7 +295,7 @@ class Utility:
                 for name, value in latest.fields.items():
                     em.add_field(name=name, value=value)
                 # TODO: message unused?
-                message = commit_data['commit']['message']
+                # message = commit_data['commit']['message']
                 html_url = commit_data["html_url"]
                 short_sha = commit_data['sha'][:6]
                 em.add_field(name='Merge Commit',
@@ -367,7 +367,7 @@ class Utility:
         em = Embed(
             title='Pong! Websocket Latency:',
             description=f'{self.bot.ws.latency * 1000:.4f} ms',
-            color=0x00FF00
+            color=Color.blurple()
         )
         return await ctx.send(embed=em)
 

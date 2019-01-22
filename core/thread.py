@@ -250,7 +250,7 @@ class Thread:
 
         em = discord.Embed(
             description=message.content,
-            # timestamp=message.created_at
+            timestamp=message.created_at
         )
 
         system_avatar_url = 'https://discordapp.com/assets/' \
@@ -258,7 +258,7 @@ class Thread:
 
         # store message id in hidden url
         if not note:
-            em.set_author(name=author.name,
+            em.set_author(name=author,
                           icon_url=author.avatar_url,
                           url=message.jump_url)
         else:
@@ -322,9 +322,11 @@ class Thread:
 
         if from_mod:
             em.color = self.bot.mod_color
+            em.set_footer(text=f'Moderator')
         elif note:
             em.color = discord.Color.blurple()
         else:
+            em.set_footer(text=f'Recipient')
             em.color = self.bot.recipient_color
 
         await destination.trigger_typing()
@@ -450,11 +452,11 @@ class ThreadManager:
         em = discord.Embed(
             color=self.bot.mod_color,
             description=thread_creation_response,
-            title='Thread Created',
             timestamp=datetime.utcnow(),
         )
         em.set_footer(text='Your message has been sent',
                       icon_url=self.bot.guild.icon_url)
+        em.set_author(name='Thread Created')
 
         if creator is None:
             self.bot.loop.create_task(recipient.send(embed=em))
@@ -566,14 +568,8 @@ class ThreadManager:
         member = self.bot.guild.get_member(user.id)
         avi = user.avatar_url
         time = datetime.utcnow()
-        if creator:
-            desc = f'{creator.mention} has created ' \
-                   f'a thread with {user.mention}'
-        else:
-            desc = f'{user.mention} has started a thread'
 
-        key = log_url.split('/')[-1]
-        desc = f'{desc} [`{key}`]({log_url})'
+        # key = log_url.split('/')[-1]
 
         role_names = ''
         if member:
@@ -586,30 +582,42 @@ class ThreadManager:
                 role_names = ' '.join(r.mention for r in roles
                                       if r.name != "@everyone")
 
-        em = discord.Embed(colour=dc, description=desc, timestamp=time)
+        em = discord.Embed(colour=dc, description=user.mention, timestamp=time)
 
         def days(d):
-            return ' day ago.' if d == '1' else ' days ago.'
+            if d == '0':
+                return '**today**'
+            return f'{d} day ago' if d == '1' else f'{d} days ago'
 
         created = str((time - user.created_at).days)
-        # em.add_field(name='Mention', value=user.mention)
-        em.add_field(name='Registered', value=created + days(created))
+        # if not role_names:
+        #     em.add_field(name='Mention', value=user.mention)
+        # em.add_field(name='Registered', value=created + days(created))
+        em.description += f' was created {days(created)}'
+
         footer = 'User ID: ' + str(user.id)
         em.set_footer(text=footer)
-        em.set_author(name=str(user), icon_url=avi)
-        em.set_thumbnail(url=avi)
+        em.set_author(name=str(user), icon_url=avi, url=log_url)
+        # em.set_thumbnail(url=avi)
 
         if member:
-            if log_count:
-                em.add_field(name='Past logs', value=f'{log_count}')
             joined = str((time - member.joined_at).days)
-            em.add_field(name='Joined', value=joined + days(joined))
+            # em.add_field(name='Joined', value=joined + days(joined))
+            em.description += f', joined {days(joined)}'
+
             if member.nick:
                 em.add_field(name='Nickname', value=member.nick, inline=True)
             if role_names:
-                em.add_field(name='Roles', value=role_names, inline=False)
+                em.add_field(name='Roles', value=role_names, inline=True)
         else:
             em.set_footer(text=f'{footer} | Note: this member'
                                ' is not part of this server.')
+
+        if log_count:
+            # em.add_field(name='Past logs', value=f'{log_count}')
+            t = 'thread' if log_count == 1 else 'threads'
+            em.description += f" with **{log_count}** past {t}."
+        else:
+            em.description += '.'
 
         return em

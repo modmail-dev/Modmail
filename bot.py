@@ -35,9 +35,11 @@ from textwrap import dedent
 from datetime import datetime
 from types import SimpleNamespace
 
+import uvloop
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient
-from colorama import init, Fore, Style
+import colorama
+from colorama import Fore, Style
 from emoji import UNICODE_EMOJI
 
 from core.clients import Github, ModmailApiClient, SelfHostedClient
@@ -46,7 +48,7 @@ from core.config import ConfigManager
 from core.changelog import ChangeLog
 
 
-init()
+colorama.init()
 
 line = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
        Style.RESET_ALL
@@ -594,5 +596,6 @@ class ModmailBot(commands.Bot):
 
 
 if __name__ == '__main__':
+    uvloop.install()
     bot = ModmailBot()
     bot.run()
