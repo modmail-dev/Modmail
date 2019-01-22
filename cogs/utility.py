@@ -463,13 +463,13 @@ class Utility:
 
     @config.command(name='del')
     async def del_config(self, ctx, key: str.lower):
-        """Sets a specified key from the config to nothing."""
+        """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
             em = Embed(
                 title='Success',
                 color=Color.blurple(),
-                description=f'Set `{key}` to nothing.'
+                description=f'`{key}` had been deleted from the config.'
             )
             del self.bot.config.cache[key]
             await self.bot.config.update()
