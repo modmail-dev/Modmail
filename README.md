@@ -57,6 +57,9 @@ If you want complete control over your data and do not want to use the centraliz
 * `MONGO_URI` - MongoDB connection URI, you can get a free 500 MB cluster from [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
 * `LOG_URL` - The URL of your log viewer Heroku app (`https://yourlogviewerappname.herokuapp.com`)
 
+Optionally if you want autoupdates (bot syncs your fork with origin) you can add another config var:
+* `GITHUB_ACCESS_TOKEN` - Personal access token you can get from your GitHub developer settings.
+
 You also need to create a separate Heroku app for the log viewer that you can deploy from [here](https://github.com/kyb3r/logviewer).
 
 ## Features and Commands
