@@ -462,7 +462,7 @@ class Utility:
         return await ctx.send(embed=em)
 
     @config.command(name='del')
-    async def del_(self, ctx, key: str.lower):
+    async def del__config(self, ctx, key: str.lower):
         """Sets a specified key from the config to nothing."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
@@ -593,8 +593,7 @@ class Utility:
         return await ctx.send(embed=em)
 
     @alias.command(name='del')
-    # TODO: Potential Bug. Does functions override in discord??
-    async def del_(self, ctx, *, name: str.lower):
+    async def del_alias(self, ctx, *, name: str.lower):
         """Removes a alias from bot config."""
 
         if 'aliases' not in self.bot.config.cache:
