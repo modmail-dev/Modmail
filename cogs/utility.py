@@ -404,11 +404,11 @@ class Utility:
 
     @config.command(name='del')
     async def _del(self, ctx, key: str.lower):
-        """Sets a specified key from the config to nothing."""
+        """Deletes a key from the config."""
         em = discord.Embed(
             title='Success',
             color=discord.Color.blurple(),
-            description=f'Set `{key}` to nothing.'
+            description=f'`{key}` had been deleted from the config.'
         )
 
         if key not in self.bot.config.allowed_to_change_in_command:
