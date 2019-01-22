@@ -55,7 +55,7 @@ line = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
 class ModmailBot(commands.Bot):
 
     def __init__(self):
-        super().__init__(command_prefix=self.get_pre)
+        super().__init__(command_prefix=None)  # implemented in `get_prefix`
         self.version = __version__
         self.start_time = datetime.utcnow()
         self.threads = ThreadManager(self)
@@ -74,6 +74,9 @@ class ModmailBot(commands.Bot):
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._add_commands()
         self.owner = None
+
+    async def get_prefix(self, message=None):
+        return [self.prefix, f'<@{self.user.id}> ', f'<@!{self.user.id}> ']
 
     def _add_commands(self):
         """Adds commands automatically"""
@@ -198,11 +201,6 @@ class ModmailBot(commands.Bot):
             return discord.Color.gold()
         else:
             return color
-
-    @staticmethod
-    async def get_pre(bot, message):  # TODO: there gotta be a better way
-        """Returns the prefix."""
-        return [bot.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
 
     async def on_connect(self):
         print(line)
@@ -343,8 +341,7 @@ class ModmailBot(commands.Bot):
         if self._skip_check(message.author.id, self.user.id):
             return ctx
 
-        # TODO: Can be replaced with await `self.get_pre(self, None)`?
-        prefixes = [self.prefix, f'<@{bot.user.id}> ', f'<@!{bot.user.id}> ']
+        prefixes = await self.get_prefix()
 
         invoked_prefix = discord.utils.find(view.skip_string, prefixes)
         if invoked_prefix is None:

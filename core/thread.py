@@ -14,12 +14,14 @@ from colorthief import ColorThief
 
 
 class Thread:
-    """Represents a discord modmail thread"""
+    """Represents a discord Modmail thread"""
 
     def __init__(self, manager, recipient):
         self.manager = manager
         self.bot = manager.bot
+        # TODO: Why wouldn't there be recipient?
         self.id = recipient.id if recipient else None
+        # TODO: recipient should not be bot
         self.recipient = recipient
         self.channel = None
         self.ready_event = asyncio.Event()
