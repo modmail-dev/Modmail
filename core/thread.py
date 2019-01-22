@@ -89,6 +89,7 @@ class Thread:
         log_data = await self.bot.modmail_api.post_log(self.channel.id, {
             'open': False,
             'closed_at': str(datetime.datetime.utcnow()),
+            'close_message': message if not silent else None,
             'closer': {
                 'id': str(closer.id),
                 'name': closer.name,
@@ -98,24 +99,23 @@ class Thread:
             }
         })
 
-        if isinstance(log_data, str):
-            print(log_data)  # errored somehow on server
-            return
+        if log_data is not None and isinstance(log_data, dict):
+            if self.bot.selfhosted:
+                log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
+            else:
+                log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
-        if self.bot.selfhosted:
-            log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
+            user = self.recipient.mention if self.recipient else f'`{self.id}`'
+
+            if log_data['messages']:
+                msg = str(log_data['messages'][0]['content'])
+                sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
+            else:
+                sneak_peak = 'No content'
+            
+            desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
         else:
-            log_url = f"https://logs.modmail.tk/{log_data['key']}"
-
-        user = self.recipient.mention if self.recipient else f'`{self.id}`'
-
-        if log_data['messages']:
-            msg = str(log_data['messages'][0]['content'])
-            sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
-        else:
-            sneak_peak = 'No content'
-
-        desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
+            desc = "Could not resolve log url."
 
         em = discord.Embed(description=desc, color=discord.Color.red())
 
@@ -134,6 +134,8 @@ class Thread:
         em = discord.Embed(title='Thread Closed', color=discord.Color.red())
         em.description = message or \
             f'{closer.mention} has closed this Modmail thread.'
+        em.set_footer(text='Replying will create a new thread', icon_url=self.bot.guild.icon_url)
+        em.timestamp = datetime.datetime.utcnow()
 
         if not silent and self.recipient is not None:
             tasks.append(self.recipient.send(embed=em))
@@ -160,9 +162,6 @@ class Thread:
             embed = msg.embeds[0]
             if embed and embed.author and embed.author.url:
                 if str(message_id) == str(embed.author.url).split('/')[-1]:
-                    if ' - (Edited)' not in embed.footer.text:
-                        embed.set_footer(
-                            text=embed.footer.text + ' - (Edited)')
                     embed.description = message
                     await msg.edit(embed=embed)
                     break
@@ -172,6 +171,16 @@ class Thread:
             self._edit_thread_message(self.recipient, message_id, message),
             self._edit_thread_message(self.channel, message_id, message)
         )
+    
+    async def note(self, message):
+        if not message.content and not message.attachments:
+            raise commands.UserInputError
+            
+        await asyncio.gather(
+            self.bot.modmail_api.append_log(message, self.channel.id, type='system'),
+            self.send(message, self.channel, note=True)
+        )
+        
 
     async def reply(self, message):
         if not message.content and not message.attachments:
@@ -204,7 +213,7 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def send(self, message, destination=None, from_mod=False):
+    async def send(self, message, destination=None, from_mod=False, note=False):
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             await self.cancel_closure()
@@ -212,7 +221,7 @@ class Thread:
                 color=discord.Color.red(),
                 description='Scheduled close has been cancelled.'))
         
-        if not from_mod:
+        if not from_mod and not note:
             self.bot.loop.create_task(
                 self.bot.modmail_api.append_log(message, self.channel.id)
                 )
@@ -226,13 +235,22 @@ class Thread:
 
         em = discord.Embed(
             description=message.content,
-            timestamp=message.created_at
+            # timestamp=message.created_at
         )
 
+        system_avatar_url = 'https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png'
+
         # store message id in hidden url
-        em.set_author(name=str(author),
+        if not note:
+            em.set_author(name=author.name,
                       icon_url=author.avatar_url,
                       url=message.jump_url)
+        else:
+            em.set_author(
+                name=f'Note ({author.name})',
+                icon_url=system_avatar_url,
+                url=message.jump_url
+            )
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
 
@@ -280,11 +298,11 @@ class Thread:
             file_upload_count += 1
 
         if from_mod:
-            em.color = discord.Color.green()
-            em.set_footer(text=f'Moderator')
+            em.color = self.bot.mod_color
+        elif note:
+            em.color = discord.Color.blurple()
         else:
-            em.color = discord.Color.gold()
-            em.set_footer(text=f'User')
+            em.color = self.bot.recipient_color
 
         await destination.trigger_typing()
 
@@ -400,14 +418,16 @@ class ThreadManager:
     async def create(self, recipient, *, creator=None, category=None):
         """Creates a Modmail thread"""
 
-        em = discord.Embed(
-            title='Thread created!',
-            description=self.bot.config.get(
+        thread_creation_response = self.bot.config.get(
                 'thread_creation_response',
                 'The moderation team will get back to you as soon as possible!'
-            ),
-            color=discord.Color.green()
-        )
+            )
+
+        em = discord.Embed(color=self.bot.mod_color)
+        em.description = thread_creation_response
+        em.title = 'Thread Created'
+        em.timestamp = datetime.datetime.utcnow()
+        em.set_footer(text='Your message has been sent', icon_url=self.bot.guild.icon_url)
 
         if creator is None:
             self.bot.loop.create_task(recipient.send(embed=em))

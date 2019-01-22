@@ -151,7 +151,7 @@ class ModmailApiClient(ApiClient):
             }
         })
 
-    def append_log(self, message, channel_id=''):
+    def append_log(self, message, channel_id='', type='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
         payload = {
             'payload': {
@@ -167,7 +167,8 @@ class ModmailApiClient(ApiClient):
                 },
                 # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments]
+                'attachments': [i.url for i in message.attachments],
+                'type': type
             }
         }
         return self.request(self.logs + f'/{channel_id}', method='PATCH', payload=payload)
@@ -247,7 +248,7 @@ class SelfhostedClient(ModmailApiClient):
         data = {k: v for k, v in data.items() if k in valid_keys}
         return await self.db.config.update_one({'bot_id': self.app.user.id}, {'$set': data})
 
-    async def append_log(self, message, channel_id=''):
+    async def append_log(self, message, channel_id='', type='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
         payload = {
                 'timestamp': str(message.created_at),
@@ -262,7 +263,8 @@ class SelfhostedClient(ModmailApiClient):
                 },
                 # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments]
+                'attachments': [i.url for i in message.attachments],
+                'type': type
             }
         
         return await self.logs.find_one_and_update(

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.8.1'
+__version__ = '2.9.1'
 
 import asyncio
 import textwrap
@@ -156,6 +156,32 @@ class ModmailBot(commands.Bot):
     @property
     def prefix(self):
         return self.config.get('prefix', '?')
+    
+    @property
+    def mod_color(self):
+        color = self.config.get('mod_color')
+        if not color:
+            return discord.Color.green()
+        try:
+            color = int(color.strip('#'), base=16)
+        except:
+            print('Invalid mod_color provided')
+            return discord.Color.green()
+        else:
+            return color
+
+    @property
+    def recipient_color(self):
+        color = self.config.get('recipient_color')
+        if not color:
+            return discord.Color.gold()
+        try:
+            color = int(color.strip('#'), base=16)
+        except:
+            print('Invalid recipient_color provided')
+            return discord.Color.gold()
+        else:
+            return color
 
     @staticmethod
     async def get_pre(bot, message):
@@ -375,8 +401,6 @@ class ModmailBot(commands.Bot):
                     embed = msg.embeds[0]
                     matches = str(embed.author.url).split('/')
                     if matches and matches[-1] == str(before.id):
-                        if ' - (Edited)' not in embed.footer.text:
-                            embed.set_footer(text=embed.footer.text + ' - (Edited)')
                         embed.description = after.content
                         await msg.edit(embed=embed)
                         break
