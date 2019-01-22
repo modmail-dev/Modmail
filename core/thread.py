@@ -186,7 +186,7 @@ class Thread:
         await asyncio.gather(
             self.bot.modmail_api.append_log(message,
                                             self.channel.id,
-                                            type='system'),
+                                            type_='system'),
             self.send(message, self.channel, note=True)
         )
 
