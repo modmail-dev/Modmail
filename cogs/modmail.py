@@ -57,7 +57,7 @@ class Modmail:
 
         embeds = []
 
-        em = discord.Embed(color=discord.Color.green())
+        em = discord.Embed(color=discord.Color.blurple())
         em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
 
         embeds.append(em)
@@ -71,7 +71,7 @@ class Modmail:
 
         for name, value in self.bot.snippets.items():
             if len(em.fields) == 5:
-                em = discord.Embed(color=discord.Color.green(), description=em.description)
+                em = discord.Embed(color=discord.Color.blurple(), description=em.description)
                 em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
                 embeds.append(em)
             em.add_field(name=name, value=value, inline=False)
@@ -90,7 +90,7 @@ class Modmail:
 
         em = discord.Embed(
             title='Added snippet',
-            color=discord.Color.green(),
+            color=discord.Color.blurple(),
             description=f'`{name}` points to: {value}'
         )
 
@@ -102,7 +102,7 @@ class Modmail:
 
         em = discord.Embed(
             title='Removed snippet',
-            color=discord.Color.green(),
+            color=discord.Color.blurple(),
             description=f'`{name}` no longer exists.'
         )
 
@@ -224,7 +224,7 @@ class Modmail:
         mentions.append(mention)
         await self.bot.config.update()
         
-        em = discord.Embed(color=discord.Color.green())
+        em = discord.Embed(color=discord.Color.blurple())
         em.description = f'{mention} will be mentioned on the next message received.'
         await ctx.send(embed=em)
 
@@ -257,7 +257,7 @@ class Modmail:
         mentions.append(mention)
         await self.bot.config.update()
 
-        em = discord.Embed(color=discord.Color.green())
+        em = discord.Embed(color=discord.Color.blurple())
         em.description = f'{mention} is now subscribed to be notified of all messages received.'
         await ctx.send(embed=em)
 
@@ -288,7 +288,7 @@ class Modmail:
         mentions.remove(mention)
         await self.bot.config.update()
 
-        em = discord.Embed(color=discord.Color.green())
+        em = discord.Embed(color=discord.Color.blurple())
         em.description = f'{mention} is now unsubscribed to this thread.'
         await ctx.send(embed=em)
 
@@ -336,7 +336,7 @@ class Modmail:
 
         for index, entry in enumerate(closed_logs):
             if len(embeds[-1].fields) == 3:
-                em = discord.Embed(color=discord.Color.green())
+                em = discord.Embed(color=discord.Color.blurple())
                 em.set_author(name='Previous Logs', icon_url=icon_url)
                 embeds.append(em)
 
@@ -406,7 +406,7 @@ class Modmail:
         async for msg in ctx.channel.history():
             if message_id is None and msg.embeds:
                 em = msg.embeds[0]
-                if 'Moderator' not in str(em.footer.text):
+                if em.color != discord.Color.green() or not em.author.url:
                     continue
                 linked_message_id = str(em.author.url).split('/')[-1]
                 break
@@ -417,7 +417,7 @@ class Modmail:
 
         if not linked_message_id:
             raise commands.UserInputError
-
+        
         await thread.edit_message(linked_message_id, new_message)
         await ctx.message.add_reaction('✅')
 
@@ -436,7 +436,7 @@ class Modmail:
         em = discord.Embed(
             title='Created thread',
             description=f'Thread started in {thread.channel.mention} for {user.mention}',
-            color=discord.Color.green()
+            color=discord.Color.blurple()
         )
 
         await ctx.send(embed=em)
@@ -446,7 +446,7 @@ class Modmail:
     @commands.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
-        em = discord.Embed(title='Blocked Users', color=discord.Color.green(), description='')
+        em = discord.Embed(title='Blocked Users', color=discord.Color.blurple(), description='')
 
         users = []
         not_reachable = []
@@ -487,7 +487,7 @@ class Modmail:
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         em = discord.Embed()
-        em.color = discord.Color.green()
+        em.color = discord.Color.blurple()
 
         if str(user.id) not in self.bot.blocked_users:
             self.bot.config.blocked[str(user.id)] = reason
@@ -520,7 +520,7 @@ class Modmail:
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         em = discord.Embed()
-        em.color = discord.Color.green()
+        em.color = discord.Color.blurple()
 
         if str(user.id) in self.bot.blocked_users:
             del self.bot.config.blocked[str(user.id)]
