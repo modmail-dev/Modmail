@@ -99,7 +99,7 @@ class Thread:
             }
         })
 
-        if not isinstance(log_data, str) or log_data is not None:
+        if log_data is not None and isinstance(log_data, dict):
             if self.bot.selfhosted:
                 log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
             else:
@@ -160,9 +160,6 @@ class Thread:
             embed = msg.embeds[0]
             if embed and embed.author and embed.author.url:
                 if str(message_id) == str(embed.author.url).split('/')[-1]:
-                    if ' - (Edited)' not in embed.footer.text:
-                        embed.set_footer(
-                            text=embed.footer.text + ' - (Edited)')
                     embed.description = message
                     await msg.edit(embed=embed)
                     break
@@ -236,15 +233,22 @@ class Thread:
 
         em = discord.Embed(
             description=message.content,
-            timestamp=message.created_at
+            # timestamp=message.created_at
         )
 
         system_avatar_url = 'https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png'
 
         # store message id in hidden url
-        em.set_author(name=str(author) if not note else 'Note',
-                      icon_url=author.avatar_url if not note else system_avatar_url,
+        if not note:
+            em.set_author(name=author.name,
+                      icon_url=author.avatar_url,
                       url=message.jump_url)
+        else:
+            em.set_author(
+                name=f'Note ({author.name})',
+                icon_url=system_avatar_url,
+                url=message.jump_url
+            )
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
 
@@ -292,14 +296,11 @@ class Thread:
             file_upload_count += 1
 
         if from_mod:
-            em.color = discord.Color.green()
-            em.set_footer(text=f'Moderator')
+            em.color = self.bot.mod_color
         elif note:
             em.color = discord.Color.blurple()
-            em.set_footer(text=f'System ({author.name})')
         else:
-            em.color = discord.Color.gold()
-            em.set_footer(text=f'User')
+            em.color = self.bot.recipient_color
 
         await destination.trigger_typing()
 
