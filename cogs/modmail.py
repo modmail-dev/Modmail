@@ -429,7 +429,7 @@ class Modmail:
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
-            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description=f'A thread for this user already exists in {exists.channel}'))
+            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description=f'A thread for this user already exists in {exists.channel.mention}'))
         else:
             thread = await self.bot.threads.create(user, creator=ctx.author, category=category)
 
