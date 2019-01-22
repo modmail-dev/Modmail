@@ -134,6 +134,8 @@ class Thread:
         em = discord.Embed(title='Thread Closed', color=discord.Color.red())
         em.description = message or \
             f'{closer.mention} has closed this Modmail thread.'
+        em.set_footer(text='Replying will create a new thread', icon_url=self.bot.guild.icon_url)
+        em.timestamp = datetime.datetime.utcnow()
 
         if not silent and self.recipient is not None:
             tasks.append(self.recipient.send(embed=em))
@@ -416,14 +418,16 @@ class ThreadManager:
     async def create(self, recipient, *, creator=None, category=None):
         """Creates a Modmail thread"""
 
-        em = discord.Embed(
-            title='Thread created!',
-            description=self.bot.config.get(
+        thread_creation_response = self.bot.config.get(
                 'thread_creation_response',
                 'The moderation team will get back to you as soon as possible!'
-            ),
-            color=discord.Color.green()
-        )
+            )
+
+        em = discord.Embed(color=self.bot.mod_color)
+        em.description = thread_creation_response
+        em.title = 'Thread Created'
+        em.timestamp = datetime.datetime.utcnow()
+        em.set_footer(text='Your message has been sent', icon_url=self.bot.guild.icon_url)
 
         if creator is None:
             self.bot.loop.create_task(recipient.send(embed=em))
