@@ -16,12 +16,12 @@ def trigger_typing(func):
 def auth_required(func):
     @functools.wraps(func)
     async def wrapper(self, ctx, *args, **kwargs):
-        if (self.bot.selfhosted and
+        if (self.bot.self_hosted and
            self.bot.config.get('github_access_token')) or \
            self.bot.config.get('modmail_api_token'):
             return await func(self, ctx, *args, **kwargs)
 
-        if not self.bot.selfhosted:
+        if not self.bot.self_hosted:
             desc = ('You can only use this command if you have a '
                     'configured `MODMAIL_API_TOKEN`. Get your '
                     'token from https://dashboard.modmail.tk')

@@ -104,7 +104,7 @@ class Thread:
         })
 
         if log_data is not None and isinstance(log_data, dict):
-            if self.bot.selfhosted:
+            if self.bot.self_hosted:
                 log_url = f"{self.bot.config.log_url.strip('/')}/" \
                           f"logs/{log_data['key']}"
             else:

@@ -61,10 +61,9 @@ class ModmailBot(commands.Bot):
         self.threads = ThreadManager(self)
         self.session = ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
-        # TODO: rename selfhosted -> self_hosting, as it's not a word.
-        self.selfhosted = self.config.get('mongo_uri') is not None
+        self.self_hosted = self.config.get('mongo_uri') is not None
 
-        if self.selfhosted:
+        if self.self_hosted:
             self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
             self.modmail_api = SelfHostedClient(self)
         else:
@@ -205,7 +204,7 @@ class ModmailBot(commands.Bot):
     async def on_connect(self):
         print(line)
         print(Fore.CYAN, end='')
-        if not self.selfhosted:
+        if not self.self_hosted:
             print('MODE: Using the Modmail API')
             print(line)
             await self.validate_api_token()
@@ -510,7 +509,8 @@ class ModmailBot(commands.Bot):
                            self.start_time).total_seconds(),
                 "latency": f'{self.ws.latency * 1000:.4f}',
                 "version": self.version,
-                "selfhosted": self.selfhosted,
+                # TODO: change to `self_hosted`
+                "selfhosted": self.self_hosted,
                 "last_updated": str(datetime.utcnow())
             }
 
@@ -525,7 +525,7 @@ class ModmailBot(commands.Bot):
             print('Autoupdates disabled.')
             return 
 
-        if self.selfhosted and not self.config.get('github_access_token'):
+        if self.self_hosted and not self.config.get('github_access_token'):
             print('Github access token not found.')
             print('Autoupdates disabled.')
             return 

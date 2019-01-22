@@ -387,7 +387,7 @@ class Modmail:
             key = entry['key']
             closer = entry['closer']['name']
 
-            if not self.bot.selfhosted:
+            if not self.bot.self_hosted:
                 log_url = f"https://logs.modmail.tk/{key}"
             else:
                 log_url = self.bot.config.log_url.strip('/') + f'/logs/{key}'
