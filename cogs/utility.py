@@ -91,7 +91,7 @@ class Utility:
             fmt += f"{c.short_doc:<{maxlen}}\n"
 
         em.add_field(name='Subcommands', value=fmt)
-        em.set_footer(text=f'Type "{prefix}help {cmd}" for more info on a command.')
+        em.set_footer(text=f'Type "{prefix}help {cmd} command" for more info on a command.')
 
         return em
 
