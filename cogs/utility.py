@@ -60,7 +60,7 @@ class Utility:
 
         em.add_field(name='Commands', value=fmt)
 
-        em.set_footer(text=f'Type "{prefix}command" '
+        em.set_footer(text=f'Type "{prefix}help command" '
                            'for more info on a command.')
         return em
 

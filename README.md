@@ -39,7 +39,7 @@
 
 <img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
 
-When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `reply` in the channel. See a full list of commands [below](#features-and-commands).
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `reply` in the channel. See a full list of commands in the [wiki](https://github.com/kyb3r/modmail/wiki).
 
 
 ## Installation
@@ -50,8 +50,20 @@ Currently the easiest and fastest way to set up the bot is using Heroku. If you 
 
 Heroku is a container based cloud platform that currently offers a free plan to host web apps. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Modmail be accessible to anyone while still being feature-rich; it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Configs and logs are stored in a [centralized web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast. However, you do also have the option to self-host your data, check the installation guide for more info.
 
-## Features and Commands
-The bot comes with a plethora of useful functionality. Take a look at the [list of commands](https://github.com/kyb3r/modmail/wiki/Features-and-commands).
+## Notable Features
+
+
+### Customizability
+There is a range of config variables you can dynamically change with the `config` command to change the appearance of the bot. For example embed color, responses, reactions, status etc. Snippets and custom command aliases are also supported, snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command. The list of things you can change is ever growing thanks to the community for code contributions.
+
+### Linked Messages
+<img src='https://i.imgur.com/eo3CwLm.png' height=300 align='right'></img>
+
+Did you accidentally send something you didn't mean to with the `reply` command? Don't fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread!  This also works when you use the `edit` command to edit a message you have sent.
+
+### Thread Logs
+
+Thread conversations are automatically logged and a log link is provided with each thread. Logs are rendered with HTML and are presented in an aesthetically pleasing way, exactly like on discord, this especially integrates seamlessly with the mobile version of discord.
 
 ### Automatic Updates
 The bot checks for new updates every hour and automatically updates to a newer version if found. This bot is under active development so you can always look forward to new, useful features! If you do not want this functionality, for example, if you want to make changes to your fork, you can do so by adding a `disable_autoupdates` config variable. 
@@ -59,4 +71,4 @@ The bot checks for new updates every hour and automatically updates to a newer v
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
 
-If you use Modmail and love it, consider supporting me on [Patreon](https://www.patreon.com/kyber) :heart:
+If you use Modmail and love it, consider supporting me on **[Patreon](https://www.patreon.com/kyber)** :heart:
