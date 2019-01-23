@@ -94,7 +94,8 @@ class Utility:
 
         em.add_field(name='Sub-commands', value=fmt)
         em.set_footer(
-            text=f'Type "{prefix}help {cmd}" for more info on a command.'
+            text=f'Type "{prefix}help {cmd} command" '
+                 'for more info on a command.'
         )
         return em
 
