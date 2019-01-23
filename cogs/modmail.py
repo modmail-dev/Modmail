@@ -457,7 +457,10 @@ class Modmail:
         async for msg in ctx.channel.history():
             if message_id is None and msg.embeds:
                 em = msg.embeds[0]
-                mod_color = self.bot.mod_color.value if isinstance(self.bot.mod_color, discord.Color) else self.bot.mod_color
+                if isinstance(self.bot.mod_color, discord.Color):
+                    mod_color = self.bot.mod_color.value
+                else:
+                    mod_color = self.bot.mod_color
                 if em.color.value != mod_color or not em.author.url:
                     continue
                 linked_message_id = str(em.author.url).split('/')[-1]
