@@ -59,12 +59,13 @@ Snippets are shortcuts for predefined messages that you can send. Add and remove
 There is a range of configuration variables you can dynamically change with the `config` command to change the appearance of the bot. For example embed color, responses, reactions etc. The list of things you can change is ever growing thanks to the community for code contributions.
 
 ### Linked Messages
+<img src='https://i.imgur.com/eo3CwLm.png' height=320 align='right'></img>
+
 Did you accidentally send something you didn't mean to with the `reply` command? Don't fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! This is due to the bot having linked messages, this also works when you use the `edit` command to edit a message you have sent.
 
 ### Thread Logs
-Thread conversations are automatically logged and a log link ([logs.modmail.tk](logs.modmail.tk)) is provided with each thread. Logs are rendered with HTML and are presented in an aesthetically pleasing way, exactly like on discord, this especially integrates seamlessly with the mobile version of discord.
 
-<img src='https://i.imgur.com/eo3CwLm.png' height=350 align='center'></img>
+Thread conversations are automatically logged and a log link is provided with each thread. Logs are rendered with HTML and are presented in an aesthetically pleasing way, exactly like on discord, this especially integrates seamlessly with the mobile version of discord.
 
 
 ### Automatic Updates
