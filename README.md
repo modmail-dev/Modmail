@@ -44,7 +44,7 @@ When a user sends a direct message to the bot, a channel is created within an is
 
 ## Installation
 
-You have two options for using this bot, host on Heroku or self-host the bot. If you choose to install the bot using Heroku, you will not need to download anything. Read the **[installation guide](https://github.com/kyb3r/modmail/wiki/Installation)**. If you ran into any problems, join our [discord server](https://discord.gg/etJNHCQ) for help and support. Even if you don't have any issues, you should come and check out our awesome Discord community! :wink:
+Currently the easiest and fastest way to set up the bot is using Heroku. If you choose to install the bot using Heroku, you will not need to download anything. Read the **[installation guide](https://github.com/kyb3r/modmail/wiki/Installation)**. If you ran into any problems, join our [discord server](https://discord.gg/etJNHCQ) for help and support. Even if you don't have any issues, you should come and check out our awesome Discord community! :wink:
 
 ## What is Heroku?
 
