@@ -1,6 +1,6 @@
 {
-    "TOKEN": "XXX.XXX.XXX",
-    "MODMAIL_API_TOKEN": "XXX.XXX.XXX",
-    "GUILD_ID": 6969696969,
-    "OWNERS": "comma,separated,user_ids"
+  "TOKEN": "MyBotToken",
+  "MODMAIL_API_TOKEN": "MyApiToken",
+  "GUILD_ID": 1234567890,
+  "OWNERS": "Owner1ID,Owner2ID,Owner3ID",
 }
