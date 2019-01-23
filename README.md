@@ -39,7 +39,7 @@
 
 <img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
 
-When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `reply` in the channel. See a full list of commands [below](#features-and-commands).
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `reply` in the channel. See a full list of commands in the [wiki](https://github.com/kyb3r/modmail/wiki).
 
 
 ## Installation
@@ -51,8 +51,6 @@ Currently the easiest and fastest way to set up the bot is using Heroku. If you 
 Heroku is a container based cloud platform that currently offers a free plan to host web apps. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Modmail be accessible to anyone while still being feature-rich; it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Configs and logs are stored in a [centralized web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast. However, you do also have the option to self-host your data, check the installation guide for more info.
 
 ## Notable Features
-
-For a full list of commands check the [wiki](https://github.com/kyb3r/modmail/wiki).
 
 ### Snippets and aliases
 Snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command. Custom command aliases are also supported with the `alias` command.
