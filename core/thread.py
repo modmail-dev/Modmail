@@ -301,7 +301,7 @@ class Thread:
 
         if from_mod:
             em.color = self.bot.mod_color
-            em.set_footer(text=f'Moderator')
+            em.set_footer(text=self.config.get('mod_tag', 'Moderator'))
         elif note:
             em.color = discord.Color.blurple()
         else:
