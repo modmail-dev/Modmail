@@ -56,17 +56,16 @@ Heroku is a container based cloud platform that currently offers a free plan to 
 Snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command. Custom command aliases are also supported with the `alias` command.
 
 ### Customizability
-There is a range of configuration variables you can dynamically change with the `config` command to change the appearance of the bot. For example embed color, responses, reactions etc. The list of things you can change is ever growing thanks to the community for code contributions.
+There is a range of configuration variables you can dynamically change with the `config` command to change the appearance of the bot. For example embed color, responses, reactions, status etc. The list of things you can change is ever growing thanks to the community for code contributions.
 
 ### Linked Messages
 <img src='https://i.imgur.com/eo3CwLm.png' height=320 align='right'></img>
 
-Did you accidentally send something you didn't mean to with the `reply` command? Don't fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread! This is due to the bot having linked messages, this also works when you use the `edit` command to edit a message you have sent.
+Did you accidentally send something you didn't mean to with the `reply` command? Don't fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread!  This also works when you use the `edit` command to edit a message you have sent.
 
 ### Thread Logs
 
 Thread conversations are automatically logged and a log link is provided with each thread. Logs are rendered with HTML and are presented in an aesthetically pleasing way, exactly like on discord, this especially integrates seamlessly with the mobile version of discord.
-
 
 ### Automatic Updates
 The bot checks for new updates every hour and automatically updates to a newer version if found. This bot is under active development so you can always look forward to new, useful features! If you do not want this functionality, for example, if you want to make changes to your fork, you can do so by adding a `disable_autoupdates` config variable. 
@@ -74,4 +73,4 @@ The bot checks for new updates every hour and automatically updates to a newer v
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
 
-If you use Modmail and love it, consider supporting me on [Patreon](https://www.patreon.com/kyber) :heart:
+If you use Modmail and love it, consider supporting me on **[Patreon](https://www.patreon.com/kyber)** :heart:
