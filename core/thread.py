@@ -130,9 +130,11 @@ class Thread:
         em.timestamp = datetime.utcnow()
 
         tasks = [
-            self.bot.log_channel.send(embed=em),
             self.bot.config.update()
         ]
+
+        if self.bot.log_channel:
+            tasks.append(self.bot.log_channel.send(embed=em))
 
         # Thread closed message 
 
@@ -322,7 +324,7 @@ class Thread:
 
         if from_mod:
             em.color = self.bot.mod_color
-            em.set_footer(text=f'Moderator')
+            em.set_footer(text=self.bot.config.get('mod_tag', 'Moderator'))
         elif note:
             em.color = discord.Color.blurple()
         else:
