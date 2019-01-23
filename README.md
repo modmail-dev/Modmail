@@ -52,11 +52,9 @@ Heroku is a container based cloud platform that currently offers a free plan to 
 
 ## Notable Features
 
-### Snippets and aliases
-
 
 ### Customizability
-There is a range of configuration variables you can dynamically change with the `config` command to change the appearance of the bot. For example embed color, responses, reactions, status etc. Snippets and custom command aliases are also supported, snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command. The list of things you can change is ever growing thanks to the community for code contributions.
+There is a range of configuration variables you can dynamically alter with the `config` command to change the appearance of the bot. For example embed color, responses, reactions, status etc. Snippets and custom command aliases are also supported, snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command. The list of things you can change is ever growing thanks to the community for code contributions.
 
 ### Linked Messages
 <img src='https://i.imgur.com/eo3CwLm.png' height=310 align='right'></img>
