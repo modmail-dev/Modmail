@@ -365,7 +365,7 @@ class Modmail:
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-
+        
     @commands.command()
     @trigger_typing
     async def reply(self, ctx, *, msg=''):
@@ -406,7 +406,8 @@ class Modmail:
         async for msg in ctx.channel.history():
             if message_id is None and msg.embeds:
                 em = msg.embeds[0]
-                if em.color != discord.Color.green() or not em.author.url:
+                mod_color = self.bot.mod_color.value if isinstance(self.bot.mod_color, discord.Color) else self.bot.mod_color
+                if em.color.value != mod_color or not em.author.url:
                     continue
                 linked_message_id = str(em.author.url).split('/')[-1]
                 break
