@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Forgot to enable custom embed colors.
 
+### Added
+- Ability to set a custom `mod_tag` (the text in the footer of the mod reply embed, which by default says "Moderator")
+
 # v2.9.2
 
 ### Changed
