@@ -88,7 +88,7 @@ class ModmailBot(commands.Bot):
               '││││ │ │││││├─┤││',
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
-        print('Authors: kyb3r, fourjr' + Style.RESET_ALL)
+        print('Authors: kyb3r, fourjr, Taaku18' + Style.RESET_ALL)
         print(line + Fore.CYAN)
 
         for file in listdir('cogs'):
