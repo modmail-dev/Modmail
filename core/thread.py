@@ -125,9 +125,11 @@ class Thread:
         em.timestamp = datetime.datetime.utcnow()
 
         tasks = [
-            self.bot.log_channel.send(embed=em),
             self.bot.config.update()
         ]
+
+        if self.bot.log_channel:
+            tasks.append(self.bot.log_channel.send(embed=em))
 
         # Thread closed message 
 

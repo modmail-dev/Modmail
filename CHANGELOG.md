@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased]
+# v2.9.2
 
 ### Changed
-- Improve format of thread message embeds. Slightly cleaner and simpler now.
+- Improve format of thread info embed. Slightly cleaner and simpler now.
 - All commands are now blurple instead of green.
+
+### Fixed
+- Bug where the close command wouldn't work if you didnt configure a log channel. 
 
 ### Added
 - Ability to set your own custom `mod_color` and `recipient_color` for the thread message embeds.
