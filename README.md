@@ -57,7 +57,7 @@ Heroku is a container based cloud platform that currently offers a free plan to 
 There is a range of config variables you can dynamically change with the `config` command to change the appearance of the bot. For example embed color, responses, reactions, status etc. Snippets and custom command aliases are also supported, snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command. The list of things you can change is ever growing thanks to the community for code contributions.
 
 ### Linked Messages
-<img src='https://i.imgur.com/eo3CwLm.png' height=310 align='right'></img>
+<img src='https://i.imgur.com/eo3CwLm.png' height=300 align='right'></img>
 
 Did you accidentally send something you didn't mean to with the `reply` command? Don't fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread!  This also works when you use the `edit` command to edit a message you have sent.
 
