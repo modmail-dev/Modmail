@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 from traceback import print_exc
 
 from core.decorators import async_executor
+from core.utils import is_image_url, days
+
 from colorthief import ColorThief
 
 
@@ -270,14 +272,6 @@ class Thread:
                 url=message.jump_url
             )
 
-        image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
-
-        def is_image_url(u, _):
-            for x in image_types:
-                if urlparse(u.lower()).path.endswith(x):
-                    return True
-            return False
-
         delete_message = not bool(message.attachments)
 
         attachments = [(a.url, a.filename) for a in message.attachments]
@@ -521,9 +515,10 @@ class ThreadManager:
     @staticmethod
     def valid_image_url(url):
         """Checks if a url leads to an image."""
-        types = ['.png', '.jpg', '.gif', '.webp']
+        types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
         parsed = urlparse(url)
         if any(parsed.path.endswith(i) for i in types):
+            # TODO: Replace this logic with urlsplit/urlunsplit
             return url.replace(parsed.query, 'size=128')
         return False
 
@@ -587,11 +582,6 @@ class ThreadManager:
         embed = discord.Embed(colour=dc,
                               description=user.mention,
                               timestamp=time)
-
-        def days(d):
-            if d == '0':
-                return '**today**'
-            return f'{d} day ago' if d == '1' else f'{d} days ago'
 
         created = str((time - user.created_at).days)
         # if not role_names:

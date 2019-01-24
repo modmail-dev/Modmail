@@ -9,6 +9,7 @@ from dateutil import parser
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
+from core.utils import User, truncate
 
 
 class Modmail:
@@ -16,9 +17,6 @@ class Modmail:
 
     def __init__(self, bot):
         self.bot = bot
-
-    def obj(arg):
-        return discord.Object(int(arg))
 
     @commands.command()
     @trigger_typing
@@ -342,10 +340,8 @@ class Modmail:
     @commands.command(aliases=['threads'])
     @commands.has_permissions(manage_messages=True)
     @trigger_typing
-    async def logs(self, ctx, *,
-                   member: Union[discord.Member, discord.User, obj] = None):
+    async def logs(self, ctx, *, member: User = None):
         """Shows a list of previous Modmail thread logs of a member."""
-        # TODO: find a better way of that Union ^
         if not member:
             thread = await self.bot.threads.find(channel=ctx.channel)
             if not thread:
@@ -396,10 +392,6 @@ class Modmail:
                 log_url = f"https://logs.modmail.tk/{key}"
             else:
                 log_url = self.bot.config.log_url.strip('/') + f'/logs/{key}'
-
-            # TODO: Move all the lambda-like functions to a utils.py
-            def truncate(c):
-                return c[:47].strip() + '...' if len(c) > 50 else c
 
             if entry['messages']:
                 short_desc = truncate(entry['messages'][0]['content'])
@@ -545,9 +537,7 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def block(self, ctx,
-                    user: Union[discord.Member, discord.User, obj] = None,
-                    *, reason=None):
+    async def block(self, ctx, user: User = None, *, reason=None):
         """Block a user from using Modmail."""
 
         if user is None:
@@ -580,8 +570,7 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
-    async def unblock(self, ctx, *,
-                      user: Union[discord.Member, discord.User, obj] = None):
+    async def unblock(self, ctx, *, user: User = None):
         """Unblocks a user from using Modmail."""
 
         if user is None:

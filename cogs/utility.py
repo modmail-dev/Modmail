@@ -17,6 +17,7 @@ from aiohttp import ClientResponseError
 from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
 from core.changelog import ChangeLog
+from core.utils import cleanup_code
 
 
 class Utility:
@@ -598,15 +599,6 @@ class Utility:
         }
 
         env.update(globals())
-
-        def cleanup_code(content):
-            """Automatically removes code blocks from the code."""
-            # remove ```py\n```
-            if content.startswith('```') and content.endswith('```'):
-                return '\n'.join(content.split('\n')[1:-1])
-
-            # remove `foo`
-            return content.strip('` \n')
 
         body = cleanup_code(body)
         stdout = StringIO()
