@@ -122,34 +122,34 @@ class Thread:
         else:
             desc = "Could not resolve log url."
 
-        em = discord.Embed(description=desc, color=discord.Color.red())
+        embed = discord.Embed(description=desc, color=discord.Color.red())
 
         event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
-        # em.set_author(name=f'Event: {event}', url=log_url)
-        em.set_footer(text=f'{event} by {closer} ({closer.id})')
-        em.timestamp = datetime.utcnow()
+        # embed.set_author(name=f'Event: {event}', url=log_url)
+        embed.set_footer(text=f'{event} by {closer} ({closer.id})')
+        embed.timestamp = datetime.utcnow()
 
         tasks = [
             self.bot.config.update()
         ]
 
         if self.bot.log_channel:
-            tasks.append(self.bot.log_channel.send(embed=em))
+            tasks.append(self.bot.log_channel.send(embed=embed))
 
-        # Thread closed message 
+        # Thread closed message
 
-        em = discord.Embed(title='Thread Closed',
-                           color=discord.Color.red(),
-                           timestamp=datetime.utcnow())
+        embed = discord.Embed(title='Thread Closed',
+                              color=discord.Color.red(),
+                              timestamp=datetime.utcnow())
 
         if not message:
             message = f'{closer.mention} has closed this Modmail thread.'
-        em.description = message
-        em.set_footer(text='Replying will create a new thread',
-                      icon_url=self.bot.guild.icon_url)
+        embed.description = message
+        embed.set_footer(text='Replying will create a new thread',
+                         icon_url=self.bot.guild.icon_url)
 
         if not silent and self.recipient is not None:
-            tasks.append(self.recipient.send(embed=em))
+            tasks.append(self.recipient.send(embed=embed))
 
         if delete_channel:
             tasks.append(self.channel.delete())
@@ -182,11 +182,11 @@ class Thread:
             self._edit_thread_message(self.recipient, message_id, message),
             self._edit_thread_message(self.channel, message_id, message)
         )
-    
+
     async def note(self, message):
         if not message.content and not message.attachments:
             raise UserInputError
-            
+
         await asyncio.gather(
             self.bot.modmail_api.append_log(message,
                                             self.channel.id,
@@ -212,7 +212,7 @@ class Thread:
             # to user
             self.send(message, self.recipient, from_mod=True),
             ]
-        
+
         await self.bot.modmail_api.append_log(message, self.channel.id)
 
         if self.close_task is not None:
@@ -250,7 +250,7 @@ class Thread:
 
         author = message.author
 
-        em = discord.Embed(
+        embed = discord.Embed(
             description=message.content,
             timestamp=message.created_at
         )
@@ -260,11 +260,11 @@ class Thread:
 
         # store message id in hidden url
         if not note:
-            em.set_author(name=author,
-                          icon_url=author.avatar_url,
-                          url=message.jump_url)
+            embed.set_author(name=author,
+                             icon_url=author.avatar_url,
+                             url=message.jump_url)
         else:
-            em.set_author(
+            embed.set_author(
                 name=f'Note ({author.name})',
                 icon_url=system_avatar_url,
                 url=message.jump_url
@@ -281,7 +281,7 @@ class Thread:
         delete_message = not bool(message.attachments)
 
         attachments = [(a.url, a.filename) for a in message.attachments]
-        
+
         images = [x for x in attachments if is_image_url(*x)]
         attachments = [x for x in attachments if not is_image_url(*x)]
 
@@ -304,32 +304,32 @@ class Thread:
                     embedded_image and
                     att[1]
             ):
-                em.set_image(url=att[0])
+                embed.set_image(url=att[0])
                 embedded_image = True
             elif att[1] is not None:
                 link = f'[{att[1]}]({att[0]})'
-                em.add_field(
+                embed.add_field(
                     name=f'Additional Image upload ({additional_count})',
                     value=link,
                     inline=False
                 )
                 additional_count += 1
-        
+
         file_upload_count = 1
 
         for att in attachments:
-            em.add_field(name=f'File upload ({file_upload_count})',
-                         value=f'[{att[1]}]({att[0]})')
+            embed.add_field(name=f'File upload ({file_upload_count})',
+                            value=f'[{att[1]}]({att[0]})')
             file_upload_count += 1
 
         if from_mod:
-            em.color = self.bot.mod_color
-            em.set_footer(text=self.bot.config.get('mod_tag', 'Moderator'))
+            embed.color = self.bot.mod_color
+            embed.set_footer(text=self.bot.config.get('mod_tag', 'Moderator'))
         elif note:
-            em.color = discord.Color.blurple()
+            embed.color = discord.Color.blurple()
         else:
-            em.set_footer(text=f'Recipient')
-            em.color = self.bot.recipient_color
+            embed.set_footer(text=f'Recipient')
+            embed.color = self.bot.recipient_color
 
         await destination.trigger_typing()
 
@@ -338,14 +338,14 @@ class Thread:
         else:
             mentions = None
 
-        await destination.send(mentions, embed=em)
+        await destination.send(mentions, embed=embed)
 
         if delete_message:
             try:
                 await message.delete()
             except discord.HTTPException:
                 pass
-        
+
     def get_notifications(self):
         config = self.bot.config
         key = str(self.id)
@@ -357,7 +357,7 @@ class Thread:
             mentions.extend(config['notification_squad'][key])
             del config['notification_squad'][key]
             self.bot.loop.create_task(config.update())
-        
+
         return ' '.join(mentions)
 
 
@@ -422,10 +422,10 @@ class ThreadManager:
         elif channel.topic is None:
             async for message in channel.history(limit=50):
                 if message.embeds:
-                    em = message.embeds[0]
+                    embed = message.embeds[0]
                     # TODO: use re.search instead
                     matches = re.findall(r'User ID: (\d+)',
-                                         str(em.footer.text))
+                                         str(embed.footer.text))
                     if matches:
                         user_id = int(matches[0])
                         break
@@ -451,21 +451,21 @@ class ThreadManager:
                 'The moderation team will get back to you as soon as possible!'
             )
 
-        em = discord.Embed(
+        embed = discord.Embed(
             color=self.bot.mod_color,
             description=thread_creation_response,
             timestamp=datetime.utcnow(),
         )
-        em.set_footer(text='Your message has been sent',
-                      icon_url=self.bot.guild.icon_url)
-        em.set_author(name='Thread Created')
+        embed.set_footer(text='Your message has been sent',
+                         icon_url=self.bot.guild.icon_url)
+        embed.set_author(name='Thread Created')
 
         if creator is None:
-            self.bot.loop.create_task(recipient.send(embed=em))
+            self.bot.loop.create_task(recipient.send(embed=embed))
 
         self.cache[recipient.id] = thread = Thread(self, recipient)
 
-        overwrites = { 
+        overwrites = {
             self.bot.modmail_guild.default_role:
                 discord.PermissionOverwrite(read_messages=False)
             }
@@ -474,7 +474,7 @@ class ThreadManager:
         category = category or self.bot.main_category
 
         if category is not None:
-            overwrites = None 
+            overwrites = None
 
         channel = await self.bot.modmail_guild.create_text_channel(
             name=self._format_channel_name(recipient),
@@ -584,7 +584,9 @@ class ThreadManager:
                 role_names = ' '.join(r.mention for r in roles
                                       if r.name != "@everyone")
 
-        em = discord.Embed(colour=dc, description=user.mention, timestamp=time)
+        embed = discord.Embed(colour=dc,
+                              description=user.mention,
+                              timestamp=time)
 
         def days(d):
             if d == '0':
@@ -593,33 +595,37 @@ class ThreadManager:
 
         created = str((time - user.created_at).days)
         # if not role_names:
-        #     em.add_field(name='Mention', value=user.mention)
-        # em.add_field(name='Registered', value=created + days(created))
-        em.description += f' was created {days(created)}'
+        #     embed.add_field(name='Mention', value=user.mention)
+        # embed.add_field(name='Registered', value=created + days(created))
+        embed.description += f' was created {days(created)}'
 
         footer = 'User ID: ' + str(user.id)
-        em.set_footer(text=footer)
-        em.set_author(name=str(user), icon_url=avi, url=log_url)
-        # em.set_thumbnail(url=avi)
+        embed.set_footer(text=footer)
+        embed.set_author(name=str(user), icon_url=avi, url=log_url)
+        # embed.set_thumbnail(url=avi)
 
         if member:
             joined = str((time - member.joined_at).days)
-            # em.add_field(name='Joined', value=joined + days(joined))
-            em.description += f', joined {days(joined)}'
+            # embed.add_field(name='Joined', value=joined + days(joined))
+            embed.description += f', joined {days(joined)}'
 
             if member.nick:
-                em.add_field(name='Nickname', value=member.nick, inline=True)
+                embed.add_field(name='Nickname',
+                                value=member.nick,
+                                inline=True)
             if role_names:
-                em.add_field(name='Roles', value=role_names, inline=True)
+                embed.add_field(name='Roles',
+                                value=role_names,
+                                inline=True)
         else:
-            em.set_footer(text=f'{footer} | Note: this member'
-                               ' is not part of this server.')
+            embed.set_footer(text=f'{footer} | Note: this member'
+                                  ' is not part of this server.')
 
         if log_count:
-            # em.add_field(name='Past logs', value=f'{log_count}')
+            # embed.add_field(name='Past logs', value=f'{log_count}')
             t = 'thread' if log_count == 1 else 'threads'
-            em.description += f" with **{log_count}** past {t}."
+            embed.description += f" with **{log_count}** past {t}."
         else:
-            em.description += '.'
+            embed.description += '.'
 
-        return em
+        return embed

@@ -538,32 +538,32 @@ class ModmailBot(commands.Bot):
             if metadata['latest_version'] != self.version:
                 data = await self.modmail_api.update_repository()
 
-                em = discord.Embed(color=discord.Color.green())
+                embed = discord.Embed(color=discord.Color.green())
 
                 commit_data = data['data']
                 user = data['user']
-                em.set_author(name=user['username'] + ' - Updating Bot',
-                              icon_url=user['avatar_url'],
-                              url=user['url'])
-                em.set_footer(text=f"Updating modmail v{self.version} "
-                                   f"-> v{metadata['latest_version']}")
+                embed.set_author(name=user['username'] + ' - Updating Bot',
+                                 icon_url=user['avatar_url'],
+                                 url=user['url'])
+                embed.set_footer(text=f"Updating modmail v{self.version} "
+                                      f"-> v{metadata['latest_version']}")
 
                 changelog = await ChangeLog.from_repo(self)
                 latest = changelog.latest_version
-                em.description = latest.description
+                embed.description = latest.description
                 for name, value in latest.fields.items():
-                    em.add_field(name=name, value=value)
+                    embed.add_field(name=name, value=value)
 
                 if commit_data:
                     message = commit_data['commit']['message']
                     html_url = commit_data["html_url"]
                     short_sha = commit_data['sha'][:6]
-                    em.add_field(name='Merge Commit',
-                                 value=f"[`{short_sha}`]({html_url}) "
-                                       f"{message} - {user['username']}")
+                    embed.add_field(name='Merge Commit',
+                                    value=f"[`{short_sha}`]({html_url}) "
+                                          f"{message} - {user['username']}")
                     print('Updating bot.')
                     channel = self.log_channel
-                    await channel.send(embed=em)
+                    await channel.send(embed=embed)
 
             await sleep(3600)
 

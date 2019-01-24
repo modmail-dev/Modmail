@@ -22,8 +22,7 @@ class Version:
 
         for line in self.lines:
             if line.startswith('### '):
-                # TODO: replace with `curr_action = line[4:]`?
-                curr_action = line.split('### ')[1]
+                curr_action = line[4:]
             elif curr_action is None:
                 self.description += line + '\n'
             else:
@@ -31,18 +30,18 @@ class Version:
     
     @property
     def embed(self) -> Embed:
-        em = Embed(color=Color.green(), description=self.description)
-        em.set_author(
+        embed = Embed(color=Color.green(), description=self.description)
+        embed.set_author(
             name=f'{self.version} - Changelog', 
             icon_url=self.bot.user.avatar_url, 
             url='https://modmail.tk/changelog'
             )
 
         for name, value in self.fields.items():
-            em.add_field(name=name, value=value)
-        em.set_footer(text=f'Current version: v{self.bot.version}')
-        em.set_thumbnail(url=self.bot.user.avatar_url)
-        return em
+            embed.add_field(name=name, value=value)
+        embed.set_footer(text=f'Current version: v{self.bot.version}')
+        embed.set_thumbnail(url=self.bot.user.avatar_url)
+        return embed
 
 
 class ChangeLog:

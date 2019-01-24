@@ -42,11 +42,12 @@ class PaginatorSession:
         }
 
         if options.get('edit_footer', True) and len(self.embeds) > 1:
-            for i, em in enumerate(self.embeds):
+            for i, embed in enumerate(self.embeds):
                 footer_text = f'Page {i+1} of {len(self.embeds)}'
-                if em.footer.text:
-                    footer_text = footer_text + ' • ' + em.footer.text
-                em.set_footer(text=footer_text, icon_url=em.footer.icon_url)
+                if embed.footer.text:
+                    footer_text = footer_text + ' • ' + embed.footer.text
+                embed.set_footer(text=footer_text,
+                                 icon_url=embed.footer.icon_url)
 
     def add_page(self, embed):
         if isinstance(embed, Embed):

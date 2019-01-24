@@ -44,6 +44,7 @@ class Modmail:
             topic='You can delete this channel '
                   'if you set up your own log channel.'
         )
+
         await log_channel.send(
             'Use the `config set log_channel_id` '
             'command to set up a custom log channel.'
@@ -65,28 +66,28 @@ class Modmail:
         embeds = []
 
         if self.bot.snippets:
-            em = discord.Embed(color=discord.Color.blurple(),
-                               description='Here is a list of snippets '
-                                           'that are currently configured.')
+            embed = discord.Embed(color=discord.Color.blurple(),
+                                  description='Here is a list of snippets '
+                                              'that are currently configured.')
         else:
-            em = discord.Embed(
+            embed = discord.Embed(
                 color=discord.Color.red(),
                 description='You dont have any snippets at the moment.'
             )
-            em.set_footer(
+            embed.set_footer(
                 text=f'Do {self.bot.prefix}help snippets for more commands.'
             )
 
-        em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
-        embeds.append(em)
+        embed.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
+        embeds.append(embed)
 
         for name, value in self.bot.snippets.items():
-            if len(em.fields) == 5:
-                em = discord.Embed(color=discord.Color.blurple(),
-                                   description=em.description)
-                em.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
-                embeds.append(em)
-            em.add_field(name=name, value=value, inline=False)
+            if len(embed.fields) == 5:
+                embed = discord.Embed(color=discord.Color.blurple(),
+                                      description=embed.description)
+                embed.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
+                embeds.append(embed)
+            embed.add_field(name=name, value=value, inline=False)
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
@@ -100,20 +101,20 @@ class Modmail:
         self.bot.config.snippets[name] = value
         await self.bot.config.update()
 
-        em = discord.Embed(
+        embed = discord.Embed(
             title='Added snippet',
             color=discord.Color.blurple(),
             description=f'`{name}` points to: {value}'
         )
 
-        await ctx.send(embed=em)
+        await ctx.send(embed=embed)
 
     @snippets.command(name='del')
     async def del_(self, ctx, *, name: str.lower):
         """Removes a snippet from bot config."""
 
         if self.bot.config.snippets.get(name):
-            em = discord.Embed(
+            embed = discord.Embed(
                 title='Removed snippet',
                 color=discord.Color.blurple(),
                 description=f'`{name}` no longer exists.'
@@ -122,13 +123,13 @@ class Modmail:
             await self.bot.config.update()
 
         else:
-            em = discord.Embed(
+            embed = discord.Embed(
                 title='Error',
                 color=discord.Color.red(),
                 description=f'Snippet `{name}` does not exist.'
             )
 
-        await ctx.send(embed=em)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.has_permissions(manage_channels=True)
@@ -146,20 +147,20 @@ class Modmail:
         
         silent = '*silently* ' if silent else ''
 
-        em = discord.Embed(
+        embed = discord.Embed(
             title='Scheduled close',
             description=f'This thread will close {silent}in {human_delta}.',
             color=discord.Color.red()
         )
 
         if after.arg and not silent:
-            em.add_field(name='Message', value=after.arg)
+            embed.add_field(name='Message', value=after.arg)
         
-        em.set_footer(text='Closing will be cancelled '
-                           'if a thread message is sent.')
-        em.timestamp = after.dt
+        embed.set_footer(text='Closing will be cancelled '
+                              'if a thread message is sent.')
+        embed.timestamp = after.dt
 
-        await ctx.send(embed=em)
+        await ctx.send(embed=embed)
 
     @commands.command(usage='[after] [close message]')
     async def close(self, ctx, *, after: UserFriendlyTime = None):
@@ -197,15 +198,17 @@ class Modmail:
 
             if thread.close_task is not None:
                 await thread.cancel_closure()
-                em = discord.Embed(color=discord.Color.red(),
-                                   description='Scheduled close '
-                                               'has been cancelled.')
+                embed = discord.Embed(color=discord.Color.red(),
+                                      description='Scheduled close '
+                                                  'has been cancelled.')
             else:
-                em = discord.Embed(color=discord.Color.red(),
-                                   description='This thread has not already '
-                                               'been scheduled to close.')
+                embed = discord.Embed(
+                    color=discord.Color.red(),
+                    description='This thread has not already '
+                                'been scheduled to close.'
+                )
 
-            return await ctx.send(embed=em)
+            return await ctx.send(embed=embed)
 
         if after and after.dt > now:
             await self.send_scheduled_close_message(ctx, after, silent)
@@ -243,16 +246,16 @@ class Modmail:
         mentions = self.bot.config['notification_squad'][str(thread.id)]
         
         if mention in mentions:
-            em = discord.Embed(color=discord.Color.red(),
-                               description=f'{mention} is already '
-                                           'going to be mentioned.')
+            embed = discord.Embed(color=discord.Color.red(),
+                                  description=f'{mention} is already '
+                                              'going to be mentioned.')
         else:
             mentions.append(mention)
             await self.bot.config.update()
-            em = discord.Embed(color=discord.Color.blurple(),
-                               description=f'{mention} will be mentioned '
-                                           'on the next message received.')
-        return await ctx.send(embed=em)
+            embed = discord.Embed(color=discord.Color.blurple(),
+                                  description=f'{mention} will be mentioned '
+                                              'on the next message received.')
+        return await ctx.send(embed=embed)
 
     @commands.command(aliases=['sub'])
     async def subscribe(self, ctx, *, role=None):
@@ -281,16 +284,18 @@ class Modmail:
         mentions = self.bot.config['subscriptions'][str(thread.id)]
         
         if mention in mentions:
-            em = discord.Embed(color=discord.Color.red(),
-                               description=f'{mention} is already '
-                                           'subscribed to this thread.')
+            embed = discord.Embed(color=discord.Color.red(),
+                                  description=f'{mention} is already '
+                                              'subscribed to this thread.')
         else:
             mentions.append(mention)
             await self.bot.config.update()
-            em = discord.Embed(color=discord.Color.blurple(),
-                               description=f'{mention} will now be notified '
-                                           'of all messages received.')
-        return await ctx.send(embed=em)
+            embed = discord.Embed(
+                color=discord.Color.blurple(),
+                description=f'{mention} will now be '            
+                            'notified of all messages received.'
+            )
+        return await ctx.send(embed=embed)
 
     @commands.command(aliases=['unsub'])
     async def unsubscribe(self, ctx, *, role=None):
@@ -314,16 +319,16 @@ class Modmail:
         mentions = self.bot.config['subscriptions'][str(thread.id)]
 
         if mention not in mentions:
-            em = discord.Embed(color=discord.Color.red(),
-                               description=f'{mention} is not already '
-                                           'subscribed to this thread.')
+            embed = discord.Embed(color=discord.Color.red(),
+                                  description=f'{mention} is not already '
+                                              'subscribed to this thread.')
         else:
             mentions.remove(mention)
             await self.bot.config.update()
-            em = discord.Embed(color=discord.Color.blurple(),
-                               description=f'{mention} is now unsubscribed '
-                                           'to this thread.')
-        return await ctx.send(embed=em)
+            embed = discord.Embed(color=discord.Color.blurple(),
+                                  description=f'{mention} is now unsubscribed '
+                                              'to this thread.')
+        return await ctx.send(embed=embed)
 
     @commands.command()
     async def nsfw(self, ctx):
@@ -355,16 +360,16 @@ class Modmail:
 
         logs = await self.bot.modmail_api.get_user_logs(user.id)
 
-        if not any(not e['open'] for e in logs):
-            em = discord.Embed(color=discord.Color.red(),
-                               description='This user does not '
-                                           'have any previous logs.')
-            return await ctx.send(embed=em)
+        if not any(not log['open'] for log in logs):
+            embed = discord.Embed(color=discord.Color.red(),
+                                  description='This user does not '
+                                              'have any previous logs.')
+            return await ctx.send(embed=embed)
 
-        em = discord.Embed(color=discord.Color.blurple())
-        em.set_author(name=f'{username} - Previous Logs', icon_url=icon_url)
+        embed = discord.Embed(color=discord.Color.blurple())
+        embed.set_author(name=f'{username} - Previous Logs', icon_url=icon_url)
 
-        embeds = [em]
+        embeds = [embed]
 
         current_day = parser.parse(logs[0]['created_at'])
         current_day = current_day.strftime(r'%d %b %Y')
@@ -375,9 +380,9 @@ class Modmail:
 
         for index, entry in enumerate(closed_logs):
             if len(embeds[-1].fields) == 3:
-                em = discord.Embed(color=discord.Color.blurple())
-                em.set_author(name='Previous Logs', icon_url=icon_url)
-                embeds.append(em)
+                embed = discord.Embed(color=discord.Color.blurple())
+                embed.set_author(name='Previous Logs', icon_url=icon_url)
+                embeds.append(embed)
 
             date = parser.parse(entry['created_at'])
 
@@ -456,14 +461,14 @@ class Modmail:
 
         async for msg in ctx.channel.history():
             if message_id is None and msg.embeds:
-                em = msg.embeds[0]
+                embed = msg.embeds[0]
                 if isinstance(self.bot.mod_color, discord.Color):
                     mod_color = self.bot.mod_color.value
                 else:
                     mod_color = self.bot.mod_color
-                if em.color.value != mod_color or not em.author.url:
+                if embed.color.value != mod_color or not embed.author.url:
                     continue
-                linked_message_id = str(em.author.url).split('/')[-1]
+                linked_message_id = str(embed.author.url).split('/')[-1]
                 break
             elif message_id and msg.id == message_id:
                 url = msg.embeds[0].author.url
@@ -486,7 +491,7 @@ class Modmail:
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
-            em = discord.Embed(
+            embed = discord.Embed(
                 color=discord.Color.red(),
                 description='A thread for this user already '
                             f'exists in {exists.channel.mention}.'
@@ -495,23 +500,23 @@ class Modmail:
         else:
             thread = await self.bot.threads.create(user, creator=ctx.author,
                                                    category=category)
-            em = discord.Embed(
+            embed = discord.Embed(
                 title='Created thread',
                 description=f'Thread started in {thread.channel.mention} '
                             f'for {user.mention}',
                 color=discord.Color.blurple()
             )
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.command()
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
-        em = discord.Embed(title='Blocked Users',
-                           color=discord.Color.blurple(),
-                           description='Here is a list of blocked users.')
+        embed = discord.Embed(title='Blocked Users',
+                              color=discord.Color.blurple(),
+                              description='Here is a list of blocked users.')
 
         users = []
         not_reachable = []
@@ -526,16 +531,16 @@ class Modmail:
         if users:
             val = '\n'.join(u.mention + (f' - `{r}`' if r else '')
                             for u, r in users)
-            em.add_field(name='Currently Known', value=val)
+            embed.add_field(name='Currently Known', value=val)
         if not_reachable:
             val = '\n'.join(f'`{i}`' + (f' - `{r}`' if r else '')
                             for i, r in not_reachable)
-            em.add_field(name='Unknown', value=val, inline=False)
+            embed.add_field(name='Unknown', value=val, inline=False)
 
         if not users and not not_reachable:
-            em.description = 'Currently there are no blocked users'
+            embed.description = 'Currently there are no blocked users'
 
-        await ctx.send(embed=em)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @trigger_typing
@@ -558,19 +563,19 @@ class Modmail:
             self.bot.config.blocked[str(user.id)] = reason
             await self.bot.config.update()
             extend = f'for `{reason}`' if reason else ''
-            em = discord.Embed(
+            embed = discord.Embed(
                 title='Success',
                 color=discord.Color.blurple(),
                 description=f'{mention} is now blocked ' + extend
             )
         else:
-            em = discord.Embed(
+            embed = discord.Embed(
                 title='Error',
                 color=discord.Color.red(),
                 description=f'{mention} is already blocked'
             )
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.command()
     @trigger_typing
@@ -591,19 +596,19 @@ class Modmail:
         if str(user.id) in self.bot.blocked_users:
             del self.bot.config.blocked[str(user.id)]
             await self.bot.config.update()
-            em = discord.Embed(
+            embed = discord.Embed(
                 title='Success',
                 color=discord.Color.blurple(),
                 description=f'{mention} is no longer blocked'
             )
         else:
-            em = discord.Embed(
+            embed = discord.Embed(
                 title='Error',
                 description=f'{mention} is not blocked',
                 color=discord.Color.red()
             )
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
 
 def setup(bot):

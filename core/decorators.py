@@ -29,10 +29,10 @@ def auth_required(func):
             desc = ('You can only use this command if you have a '
                     'configured `GITHUB_ACCESS_TOKEN`. Get a '
                     'personal access token from developer settings.')
-        em = Embed(color=Color.red(),
-                   title='Unauthorized',
-                   description=desc)
-        await ctx.send(embed=em)
+        embed = Embed(color=Color.red(),
+                      title='Unauthorized',
+                      description=desc)
+        await ctx.send(embed=embed)
     return wrapper
 
 

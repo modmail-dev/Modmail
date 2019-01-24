@@ -42,32 +42,32 @@ class Utility:
 
         embeds = []
         for fmt in fmts:
-            em = Embed(
+            embed = Embed(
                 description='*' + inspect.getdoc(cog) + '*',
                 color=Color.blurple()
             )
 
-            em.add_field(name='Commands', value=fmt)
-            em.set_author(name=cog.__class__.__name__ + ' - Help',
-                          icon_url=ctx.bot.user.avatar_url)
+            embed.add_field(name='Commands', value=fmt)
+            embed.set_author(name=cog.__class__.__name__ + ' - Help',
+                             icon_url=ctx.bot.user.avatar_url)
 
-            em.set_footer(text=f'Type "{prefix}help command" '
-                               'for more info on a command.')
-            embeds.append(em)
+            embed.set_footer(text=f'Type "{prefix}help command" '
+                                  'for more info on a command.')
+            embeds.append(embed)
         return embeds
 
     def format_command_help(self, ctx, cmd):
         """Formats command help."""
         prefix = self.bot.prefix
-        em = Embed(
+        embed = Embed(
             color=Color.blurple(),
             description=cmd.help
         )
 
-        em.title = f'`{prefix}{cmd.signature}`'
+        embed.title = f'`{prefix}{cmd.signature}`'
 
         if not isinstance(cmd, commands.Group):
-            return em
+            return embed
 
         fmt = ''
         length = len(cmd.all_commands)
@@ -79,27 +79,30 @@ class Utility:
                 branch = '├─'
             fmt += f"`{branch} {name}` - {c.short_doc}\n"
 
-        em.add_field(name='Sub Commands', value=fmt)
-        em.set_footer(
+        embed.add_field(name='Sub Commands', value=fmt)
+        embed.set_footer(
             text=f'Type "{prefix}help {cmd} command" '
                  'for more info on a command.'
         )
-        return em
+        return embed
 
     def format_not_found(self, ctx, command):
         prefix = ctx.prefix
-        em = Embed(
+        embed = Embed(
             title='Unable to Find Command or Category',
             color=Color.red()
         )
-        em.set_footer(text=f'Type "{prefix}help" to get '
-                           'a full list of commands.')
+        embed.set_footer(text=f'Type "{prefix}help" to get '
+                              'a full list of commands.')
 
         choices = set(self.bot.cogs.keys()) | set(self.bot.all_commands.keys())
         closest = get_close_matches(command, choices, n=1, cutoff=0.45)
         if closest:
-            em.description = f'**Perhaps you meant:**\n\u2000- `{closest[0]}`'
-        return em
+            # Perhaps you meant:
+            #  - `item`
+            embed.description = (f'**Perhaps you meant:**\n'
+                                 f'\u2000- `{closest[0]}`')
+        return embed
 
     @commands.command()
     @trigger_typing
@@ -138,15 +141,16 @@ class Utility:
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
-        em = Embed(color=Color.blurple(),
-                   timestamp=datetime.utcnow())
-        em.set_author(name='Modmail - About',
-                      icon_url=self.bot.user.avatar_url)
-        em.set_thumbnail(url=self.bot.user.avatar_url)
+        embed = Embed(color=Color.blurple(),
+                      timestamp=datetime.utcnow())
+        embed.set_author(name='Modmail - About',
+                         icon_url=self.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.bot.user.avatar_url)
 
-        em.description = ('This is an open source Discord bot that serves '
-                          'as a means for members to easily communicate with '
-                          'server leadership in an organised manner.')
+        desc = 'This is an open source Discord bot that serves as a means for '
+        desc += 'members to easily communicate with server administrators in '
+        desc += 'an organised manner.'
+        embed.description = desc
 
         url = 'https://api.modmail.tk/metadata'
         async with self.bot.session.get(url) as resp:
@@ -155,18 +159,18 @@ class Utility:
             except (JSONDecodeError, ClientResponseError):
                 meta = None
 
-        em.add_field(name='Uptime', value=self.bot.uptime)
+        embed.add_field(name='Uptime', value=self.bot.uptime)
         if meta:
-            em.add_field(name='Instances', value=meta['instances'])
+            embed.add_field(name='Instances', value=meta['instances'])
         else:
-            em.add_field(name='Latency',
-                         value=f'{self.bot.latency*1000:.2f} ms')
+            embed.add_field(name='Latency',
+                            value=f'{self.bot.latency*1000:.2f} ms')
 
-        em.add_field(name='Version',
-                     value=f'[`{self.bot.version}`]'
-                           '(https://modmail.tk/changelog)')
-        em.add_field(name='Author',
-                     value='[`kyb3r`](https://github.com/kyb3r)')
+        embed.add_field(name='Version',
+                        value=f'[`{self.bot.version}`]'
+                              '(https://modmail.tk/changelog)')
+        embed.add_field(name='Author',
+                        value='[`kyb3r`](https://github.com/kyb3r)')
 
         footer = f'Bot ID: {self.bot.user.id}'
 
@@ -177,12 +181,12 @@ class Utility:
             else:
                 footer = 'You are up to date with the latest version.'
 
-        em.add_field(name='Github',
-                     value='https://github.com/kyb3r/modmail',
-                     inline=False)
+        embed.add_field(name='Github',
+                        value='https://github.com/kyb3r/modmail',
+                        inline=False)
 
-        em.set_footer(text=footer)
-        await ctx.send(embed=em)
+        embed.set_footer(text=footer)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @owner_only()
@@ -195,17 +199,17 @@ class Utility:
 
         data = await self.bot.modmail_api.get_user_info()
 
-        em = Embed(
+        embed = Embed(
             title='Github',
             description='Current User',
             color=Color.blurple()
         )
         user = data['user']
-        em.set_author(name=user['username'],
-                      icon_url=user['avatar_url'],
-                      url=user['url'])
-        em.set_thumbnail(url=user['avatar_url'])
-        await ctx.send(embed=em)
+        embed.set_author(name=user['username'],
+                         icon_url=user['avatar_url'],
+                         url=user['url'])
+        embed.set_thumbnail(url=user['avatar_url'])
+        await ctx.send(embed=embed)
 
     @commands.command()
     @owner_only()
@@ -218,7 +222,7 @@ class Utility:
         desc = (f'The latest version is [`{self.bot.version}`]'
                 '(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
 
-        em = Embed(
+        embed = Embed(
             title='Already up to date',
             description=desc,
             color=Color.blurple()
@@ -228,40 +232,41 @@ class Utility:
             data = await self.bot.modmail_api.get_user_info()
             if not data.get('error'):
                 user = data['user']
-                em.set_author(name=user['username'],
-                              icon_url=user['avatar_url'],
-                              url=user['url'])
+                embed.set_author(name=user['username'],
+                                 icon_url=user['avatar_url'],
+                                 url=user['url'])
         else:
             data = await self.bot.modmail_api.update_repository()
 
             commit_data = data['data']
             user = data['user']
-            em.title = None
-            em.set_author(name=user['username'],
-                          icon_url=user['avatar_url'],
-                          url=user['url'])
-            em.set_footer(text=f'Updating modmail v{self.bot.version} '
-                               f"-> v{metadata['latest_version']}")
+            embed.title = None
+            embed.set_author(name=user['username'],
+                             icon_url=user['avatar_url'],
+                             url=user['url'])
+            embed.set_footer(text=f'Updating modmail v{self.bot.version} '
+                                  f"-> v{metadata['latest_version']}")
 
             if commit_data:
-                em.set_author(name=user['username'] + ' - Updating bot',
-                              icon_url=user['avatar_url'],
-                              url=user['url'])
+                embed.set_author(name=user['username'] + ' - Updating bot',
+                                 icon_url=user['avatar_url'],
+                                 url=user['url'])
                 changelog = await ChangeLog.from_repo(self.bot)
                 latest = changelog.latest_version
-                em.description = latest.description
+                embed.description = latest.description
                 for name, value in latest.fields.items():
-                    em.add_field(name=name, value=value)
+                    embed.add_field(name=name, value=value)
                 # TODO: message unused?
                 # message = commit_data['commit']['message']
                 html_url = commit_data["html_url"]
                 short_sha = commit_data['sha'][:6]
-                em.add_field(name='Merge Commit',
-                             value=f'[`{short_sha}`]({html_url})')
+                embed.add_field(name='Merge Commit',
+                                value=f'[`{short_sha}`]({html_url})')
             else:
-                em.description = 'Already up to date with master repository.'
+                embed.description = ('Already up to date '
+                                     'with master repository.')
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.command(aliases=['presence'])
     @commands.has_permissions(administrator=True)
@@ -283,11 +288,11 @@ class Utility:
             self.bot.config['activity_type'] = None
             self.bot.config['activity_message'] = None
             await self.bot.config.update()
-            em = Embed(
+            embed = Embed(
                 title='Activity Removed',
                 color=Color.blurple()
             )
-            return await ctx.send(embed=em)
+            return await ctx.send(embed=embed)
 
         if not message:
             raise commands.UserInputError
@@ -310,24 +315,24 @@ class Utility:
         await self.bot.config.update()
 
         desc = f'Current activity is: {activity_type.name} {message}.'
-        em = Embed(
+        embed = Embed(
             title='Activity Changed',
             description=desc,
             color=Color.blurple()
         )
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.command()
     @trigger_typing
     @commands.has_permissions(administrator=True)
     async def ping(self, ctx):
         """Pong! Returns your websocket latency."""
-        em = Embed(
+        embed = Embed(
             title='Pong! Websocket Latency:',
             description=f'{self.bot.ws.latency * 1000:.4f} ms',
             color=Color.blurple()
         )
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -336,14 +341,14 @@ class Utility:
         current = self.bot.config.get('mention', '@here')
 
         if mention is None:
-            em = Embed(
+            embed = Embed(
                 title='Current text',
                 color=Color.blurple(),
                 description=f'{current}'
             )
 
         else:
-            em = Embed(
+            embed = Embed(
                 title='Changed mention!',
                 description=f'On thread creation the bot now says {mention}',
                 color=Color.blurple()
@@ -351,7 +356,7 @@ class Utility:
             self.bot.config['mention'] = mention
             await self.bot.config.update()
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -359,20 +364,20 @@ class Utility:
         """Changes the prefix for the bot."""
 
         current = self.bot.prefix
-        em = Embed(
+        embed = Embed(
             title='Current prefix',
             color=Color.blurple(),
             description=f'{current}'
         )
 
         if prefix is None:
-            await ctx.send(embed=em)
+            await ctx.send(embed=embed)
         else:
-            em.title = 'Changed prefix!'
-            em.description = f'Set prefix to `{prefix}`'
+            embed.title = 'Changed prefix!'
+            embed.description = f'Set prefix to `{prefix}`'
             self.bot.config['prefix'] = prefix
             await self.bot.config.update()
-            await ctx.send(embed=em)
+            await ctx.send(embed=embed)
 
     @commands.group()
     @owner_only()
@@ -388,10 +393,10 @@ class Utility:
         """Return a list of valid config keys you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
         valid = ', '.join(f'`{k}`' for k in allowed)
-        em = Embed(title='Valid Keys',
-                   description=valid,
-                   color=Color.blurple())
-        return await ctx.send(embed=em)
+        embed = Embed(title='Valid Keys',
+                      description=valid,
+                      color=Color.blurple())
+        return await ctx.send(embed=embed)
 
     @config.command()
     async def set(self, ctx, key: str.lower, *, value):
@@ -402,29 +407,29 @@ class Utility:
         keys = self.bot.config.allowed_to_change_in_command
 
         if key in keys:
-            em = Embed(
+            embed = Embed(
                 title='Success',
                 color=Color.blurple(),
                 description=f'Set `{key}` to `{value}`'
             )
             await self.bot.config.update({key: value})
         else:
-            em = Embed(
+            embed = Embed(
                 title='Error',
                 color=Color.red(),
                 description=f'{key} is an invalid key.'
             )
             valid_keys = [f'`{k}`' for k in keys]
-            em.add_field(name='Valid keys', value=', '.join(valid_keys))
+            embed.add_field(name='Valid keys', value=', '.join(valid_keys))
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @config.command(name='del')
     async def del_config(self, ctx, key: str.lower):
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
-            em = Embed(
+            embed = Embed(
                 title='Success',
                 color=Color.blurple(),
                 description=f'`{key}` had been deleted from the config.'
@@ -432,15 +437,15 @@ class Utility:
             del self.bot.config.cache[key]
             await self.bot.config.update()
         else:
-            em = Embed(
+            embed = Embed(
                 title='Error',
                 color=Color.red(),
                 description=f'{key} is an invalid key.'
             )
             valid_keys = [f'`{k}`' for k in keys]
-            em.add_field(name='Valid keys', value=', '.join(valid_keys))
+            embed.add_field(name='Valid keys', value=', '.join(valid_keys))
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @config.command()
     async def get(self, ctx, key=None):
@@ -450,30 +455,30 @@ class Utility:
         if key:
             if key in keys:
                 desc = f'`{key}` is set to `{self.bot.config.get(key)}`'
-                em = Embed(
+                embed = Embed(
                     color=Color.blurple(),
                     description=desc
                 )
-                em.set_author(name='Config variable',
-                              icon_url=self.bot.user.avatar_url)
+                embed.set_author(name='Config variable',
+                                 icon_url=self.bot.user.avatar_url)
 
             else:
-                em = Embed(
+                embed = Embed(
                     title='Error',
                     color=Color.red(),
                     description=f'`{key}` is an invalid key.'
                 )
                 valid_keys = [f'`{k}`' for k in keys]
-                em.add_field(name='Valid keys', value=', '.join(valid_keys))
+                embed.add_field(name='Valid keys', value=', '.join(valid_keys))
 
         else:
-            em = Embed(
+            embed = Embed(
                 color=Color.blurple(),
                 description='Here is a list of currently '
                             'set configuration variables.'
             )
-            em.set_author(name='Current config',
-                          icon_url=self.bot.user.avatar_url)
+            embed.set_author(name='Current config',
+                             icon_url=self.bot.user.avatar_url)
 
             config = {
                 k: v for k, v in self.bot.config.cache.items()
@@ -481,9 +486,9 @@ class Utility:
             }
 
             for k, v in reversed(list(config.items())):
-                em.add_field(name=k, value=f'`{v}`', inline=False)
+                embed.add_field(name=k, value=f'`{v}`', inline=False)
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.group(aliases=['aliases'])
     @commands.has_permissions(manage_messages=True)
@@ -496,30 +501,30 @@ class Utility:
         desc = 'Here is a list of aliases that are currently configured.'
 
         if self.bot.aliases:
-            em = Embed(
+            embed = Embed(
                 color=Color.blurple(),
                 description=desc
             )
         else:
-            em = Embed(
+            embed = Embed(
                 color=Color.blurple(),
                 description='You dont have any aliases at the moment.'
             )
-        em.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
-        em.set_footer(text=f'Do {self.bot.prefix}'
-                           'help aliases for more commands.')
-        embeds.append(em)
+        embed.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
+        embed.set_footer(text=f'Do {self.bot.prefix}'
+                              'help aliases for more commands.')
+        embeds.append(embed)
 
         for name, value in self.bot.aliases.items():
-            if len(em.fields) == 5:
-                em = Embed(color=Color.blurple(), description=desc)
-                em.set_author(name='Command aliases',
-                              icon_url=ctx.guild.icon_url)
-                em.set_footer(text=f'Do {self.bot.prefix}help '
-                                   'aliases for more commands.')
+            if len(embed.fields) == 5:
+                embed = Embed(color=Color.blurple(), description=desc)
+                embed.set_author(name='Command aliases',
+                                 icon_url=ctx.guild.icon_url)
+                embed.set_footer(text=f'Do {self.bot.prefix}help '
+                                      'aliases for more commands.')
 
-                embeds.append(em)
-            em.add_field(name=name, value=value, inline=False)
+                embeds.append(embed)
+            embed.add_field(name=name, value=value, inline=False)
 
         session = PaginatorSession(ctx, *embeds)
         return await session.run()
@@ -542,13 +547,13 @@ class Utility:
         self.bot.config.aliases[name] = value
         await self.bot.config.update()
 
-        em = Embed(
+        embed = Embed(
             title='Added alias',
             color=Color.blurple(),
             description=f'`{name}` points to: {value}'
         )
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @alias.command(name='del')
     async def del_alias(self, ctx, *, name: str.lower):
@@ -561,20 +566,20 @@ class Utility:
             del self.bot.config['aliases'][name]
             await self.bot.config.update()
             
-            em = Embed(
+            embed = Embed(
                 title='Removed alias',
                 color=Color.blurple(),
                 description=f'`{name}` no longer exists.'
             )
             
         else:
-            em = Embed(
+            embed = Embed(
                 title='Error',
                 color=Color.red(),
                 description=f'Alias `{name}` does not exist.'
             )
 
-        return await ctx.send(embed=em)
+        return await ctx.send(embed=embed)
 
     @commands.command(hidden=True, name='eval')
     @owner_only()
