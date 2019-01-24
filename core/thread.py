@@ -557,14 +557,14 @@ class ThreadManager:
 
         def days(d):
             if d == '0':
-                return '**today**'
-            return f'{d} day ago' if d == '1' else f'{d} days ago'
+                return '**сегодня**'
+            return f'{d} день назад' if d == '1' else f'{d} дней назад'
 
         created = str((time - user.created_at).days)
         # if not role_names:
         #     em.add_field(name='Mention', value=user.mention)
         # em.add_field(name='Registered', value=created + days(created))
-        em.description += f' был создан {days(created)}'
+        em.description += f' аккаунт создан {days(created)}'
 
         footer = 'User ID: ' + str(user.id)
         em.set_footer(text=footer)
@@ -574,7 +574,7 @@ class ThreadManager:
         if member:
             joined = str((time - member.joined_at).days)
             # em.add_field(name='Joined', value=joined + days(joined))
-            em.description += f', присоединился {days(joined)}'
+            em.description += f', присоединился к серверу {days(joined)},'
 
             if member.nick:
                 em.add_field(name='Nickname', value=member.nick, inline=True)
@@ -587,7 +587,7 @@ class ThreadManager:
 
         if log_count:
             # em.add_field(name='Past logs', value=f'{log_count}')
-            em.description += f" с **{log_count}** {'прошлым потоком' if log_count == 1 else 'прошлыми потоками'}."
+            em.description += f" имеет **{log_count}** {'закрытый поток' if log_count == 1 else 'закрытых поток(ов/а)'}."
         else:
             em.description += '.'
 
