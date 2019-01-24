@@ -96,7 +96,6 @@ class PaginatorSession:
                     timeout=self.timeout
                 )
             except TimeoutError:
-                self.paginating = False  # TODO: What is this??
                 return await self.close(delete=False)
             else:
                 action = self.reaction_map.get(reaction.emoji)
