@@ -135,8 +135,8 @@ class Thread:
 
         em = discord.Embed(title='Поток закрыт', color=discord.Color.red())
         em.description = message or \
-            f'{closer.mention} закрыл этот поток.'
-        em.set_footer(text='Повторный ответ создаст новый поток', icon_url=self.bot.guild.icon_url)
+            f'{closer.mention} закрыл действующую ветку.'
+        em.set_footer(text='Повторное сообщение создаст новый поток', icon_url=self.bot.guild.icon_url)
         em.timestamp = datetime.datetime.utcnow()
 
         if not silent and self.recipient is not None:
@@ -431,7 +431,7 @@ class ThreadManager:
         em.description = thread_creation_response
         em.set_author(name='Поток открыт')
         em.timestamp = datetime.datetime.utcnow()
-        em.set_footer(text='Ваше сообщение отправлено', icon_url=self.bot.guild.icon_url)
+        em.set_footer(text='Ваше обращение отправлено', icon_url=self.bot.guild.icon_url)
 
         if creator is None:
             self.bot.loop.create_task(recipient.send(embed=em))
