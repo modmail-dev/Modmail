@@ -497,7 +497,7 @@ class ModmailBot(commands.Bot):
         await self.wait_until_ready()
         self.owner = (await self.application_info()).owner
 
-        while True:
+        while not self.is_closed():
             data = {
                 "owner_name": str(self.owner),
                 "owner_id": self.owner.id,
@@ -517,7 +517,6 @@ class ModmailBot(commands.Bot):
             }
 
             await self.modmail_api.post_metadata(data)
-
             await sleep(3600)
 
     async def autoupdate_loop(self):
