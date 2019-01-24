@@ -167,8 +167,15 @@ class ModmailApiClient(ApiClient):
                 },
                 # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments],
-                'type': type
+                'type': type,
+                'attachments': [
+                    {   
+                        'id': a.id,
+                        'filename': a.filename,
+                        'is_image': a.width is not None,
+                        'size': a.size,
+                        'url': a.url 
+                    } for a in message.attachments ]
             }
         }
         return self.request(self.logs + f'/{channel_id}', method='PATCH', payload=payload)
@@ -253,7 +260,6 @@ class SelfhostedClient(ModmailApiClient):
         payload = {
                 'timestamp': str(message.created_at),
                 'message_id': str(message.id),
-                # author
                 'author': {
                     'id': str(message.author.id),
                     'name': message.author.name,
@@ -261,10 +267,16 @@ class SelfhostedClient(ModmailApiClient):
                     'avatar_url': message.author.avatar_url,
                     'mod': not isinstance(message.channel, discord.DMChannel),
                 },
-                # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments],
-                'type': type
+                'type': type,
+                'attachments': [
+                    {   
+                        'id': a.id,
+                        'filename': a.filename,
+                        'is_image': a.width is not None,
+                        'size': a.size,
+                        'url': a.url 
+                    } for a in message.attachments ]
             }
         
         return await self.logs.find_one_and_update(
