@@ -133,10 +133,10 @@ class Thread:
 
         # Thread closed message 
 
-        em = discord.Embed(title='Thread Closed', color=discord.Color.red())
+        em = discord.Embed(title='Поток закрыт', color=discord.Color.red())
         em.description = message or \
-            f'{closer.mention} has closed this Modmail thread.'
-        em.set_footer(text='Replying will create a new thread', icon_url=self.bot.guild.icon_url)
+            f'{closer.mention} закрыл этот поток.'
+        em.set_footer(text='Повторный ответ создаст новый поток', icon_url=self.bot.guild.icon_url)
         em.timestamp = datetime.datetime.utcnow()
 
         if not silent and self.recipient is not None:
@@ -305,7 +305,7 @@ class Thread:
         elif note:
             em.color = discord.Color.blurple()
         else:
-            em.set_footer(text=f'Recipient')
+            em.set_footer(text=f'User')
             em.color = self.bot.recipient_color
 
         await destination.trigger_typing()
@@ -424,14 +424,14 @@ class ThreadManager:
 
         thread_creation_response = self.bot.config.get(
                 'thread_creation_response',
-                'The moderation team will get back to you as soon as possible!'
+                'Персонал сервера в скором времени даст свой ответ.'
             )
 
         em = discord.Embed(color=self.bot.mod_color)
         em.description = thread_creation_response
-        em.set_author(name='Thread Created')
+        em.set_author(name='Поток открыт')
         em.timestamp = datetime.datetime.utcnow()
-        em.set_footer(text='Your message has been sent', icon_url=self.bot.guild.icon_url)
+        em.set_footer(text='Ваше сообщение отправлено', icon_url=self.bot.guild.icon_url)
 
         if creator is None:
             self.bot.loop.create_task(recipient.send(embed=em))
