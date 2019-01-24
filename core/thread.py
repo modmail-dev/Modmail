@@ -564,7 +564,7 @@ class ThreadManager:
         # if not role_names:
         #     em.add_field(name='Mention', value=user.mention)
         # em.add_field(name='Registered', value=created + days(created))
-        em.description += f' was created {days(created)}'
+        em.description += f' был создан {days(created)}'
 
         footer = 'User ID: ' + str(user.id)
         em.set_footer(text=footer)
@@ -574,7 +574,7 @@ class ThreadManager:
         if member:
             joined = str((time - member.joined_at).days)
             # em.add_field(name='Joined', value=joined + days(joined))
-            em.description += f', joined {days(joined)}'
+            em.description += f', присоединился {days(joined)}'
 
             if member.nick:
                 em.add_field(name='Nickname', value=member.nick, inline=True)
@@ -587,7 +587,7 @@ class ThreadManager:
 
         if log_count:
             # em.add_field(name='Past logs', value=f'{log_count}')
-            em.description += f" with **{log_count}** past {'thread' if log_count == 1 else 'threads'}."
+            em.description += f" с **{log_count}** {'прошлым потоком' if log_count == 1 else 'прошлыми потоками'}."
         else:
             em.description += '.'
 
