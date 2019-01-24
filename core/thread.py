@@ -182,7 +182,6 @@ class Thread:
             self.bot.modmail_api.append_log(message, self.channel.id, type='system'),
             self.send(message, self.channel, note=True)
         )
-        
 
     async def reply(self, message, anonymous=False):
         if not message.content and not message.attachments:
