@@ -195,9 +195,9 @@ class Thread:
 
         tasks = [
             # in thread channel
-            self.send(message, destination=self.channel, from_mod=True, anonymous=True),
+            self.send(message, destination=self.channel, from_mod=True, anonymous=anonymous),
             # to user
-            self.send(message, destination=self.recipient, from_mod=True, anonymous=True)
+            self.send(message, destination=self.recipient, from_mod=True, anonymous=anonymous)
             ]
         
 
@@ -317,7 +317,7 @@ class Thread:
             elif not anonymous:
                 em.set_footer(text=self.bot.config.get('mod_tag', 'Moderator')) # Normal messages
             else:
-                em.set_footer(text='\u200b') # Anonymous reply sent to user
+                em.set_footer(text=self.bot.config.get('anon_tag', 'Response')) # Anonymous reply sent to user
                 
         elif note:
             em.color = discord.Color.blurple()
