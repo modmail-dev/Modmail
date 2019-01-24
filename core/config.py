@@ -11,7 +11,8 @@ class ConfigManager:
         'mention', 'disable_autoupdates', 'prefix',
         'main_category_id', 'sent_emoji', 'blocked_emoji',
         'thread_creation_response', 'twitch_url', 'mod_color', 
-        'recipient_color', 'mod_tag'
+        'recipient_color', 'mod_tag', 'anon_username', 'anon_avatar_url',
+        'anon_tag'
         }
     
     internal_keys = {

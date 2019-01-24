@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+# v2.10.0
+
+### Added
+- `anonreply` command to anonymously reply to the recipient. 
+The username of the anonymous user defaults to the `mod_tag` (the footer text of a mod reply). The avatar defaults the guild icon url. However you can change both of these via the `anon_username`, `anon_avatar_url` and `anon_tag` config variables. 
+
+### Changed
+Your bot now logs all messages sent in a thread channel, including discussions that take place. You can now toggle to view them in the log viewer app.
+
 # v2.9.4
 Fixed a small bug due to a typo.
 
