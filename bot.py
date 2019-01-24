@@ -362,8 +362,15 @@ class ModmailBot(commands.Bot):
             cmd = message.content[len(prefix):].strip()
             if cmd in self.snippets:
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
+    
+        ctx = await self.get_context(message)
+        if ctx.command:
+            return await self.invoke(ctx)
 
-        await self.process_commands(message)
+        thread = await self.threads.find(channel=ctx.channel)
+
+        if thread is not None:
+            await self.modmail_api.append_log(message, type='internal')
     
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
