@@ -166,23 +166,9 @@ class Utility:
             meta = None
 
         em.add_field(name='Uptime', value=self.bot.uptime)
-        if meta:
-            em.add_field(name='Instances', value=meta['instances'])
-        else:
-            em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
-
-        em.add_field(name='Version', value=f'[`{self.bot.version}`](https://modmail.tk/changelog)')
-        em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
 
         footer = f'Bot ID: {self.bot.user.id}'
 
-        if meta:
-            if self.bot.version != meta['latest_version']:
-                footer = f"A newer version is available v{meta['latest_version']}"
-            else:
-                footer = 'You are up to date with the latest version.'
-
-        em.add_field(name='Github', value='https://github.com/kyb3r/modmail', inline=False)
 
         em.set_footer(text=footer)
 
