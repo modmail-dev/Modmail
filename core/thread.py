@@ -135,7 +135,7 @@ class Thread:
 
         em = discord.Embed(title='Поток закрыт', color=discord.Color.red())
         em.description = message or \
-            f'{closer.mention} закрыл действующую ветку.'
+            f'{closer.mention} закрыл действующую сессию modmail.'
         em.set_footer(text='Повторное сообщение создаст новый поток', icon_url=self.bot.guild.icon_url)
         em.timestamp = datetime.datetime.utcnow()
 
@@ -564,7 +564,7 @@ class ThreadManager:
         # if not role_names:
         #     em.add_field(name='Mention', value=user.mention)
         # em.add_field(name='Registered', value=created + days(created))
-        em.description += f' аккаунт создан {days(created)}'
+        em.description += f' создан {days(created)}'
 
         footer = 'User ID: ' + str(user.id)
         em.set_footer(text=footer)
