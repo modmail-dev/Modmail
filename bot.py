@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.9.4'
+__version__ = '2.10.0'
 
 import discord
 from discord.enums import ActivityType
@@ -30,7 +30,7 @@ from discord.ext import commands
 from discord.ext.commands.view import StringView
 
 from os import listdir
-from asyncio import sleep
+from asyncio import sleep, Event
 from textwrap import dedent
 from datetime import datetime
 from types import SimpleNamespace
@@ -63,7 +63,8 @@ class ModmailBot(commands.Bot):
         self.threads = ThreadManager(self)
         self.session = ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
-        self.self_hosted = self.config.get('mongo_uri') is not None
+        self.self_hosted = bool(self.config.get('mongo_uri', ''))
+        self._connected = Event()
 
         if self.self_hosted:
             self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
@@ -213,6 +214,7 @@ class ModmailBot(commands.Bot):
             print(line)
         else:
             print('Mode: Self-hosting logs.')
+            await self.validate_database_connection()
             print(line)
         print(Fore.CYAN + 'Connected to gateway.')
         
@@ -232,18 +234,19 @@ class ModmailBot(commands.Bot):
             activity = discord.Activity(type=activity_type, name=message,
                                         url=url)
             await self.change_presence(activity=activity)
+        self._connected.set()
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
+        await self._connected.wait()
         print(dedent(f"""
-        {line}
-        {Fore.CYAN}Client ready.
-        {line}
-        {Fore.CYAN}Logged in as: {self.user}
-        {Fore.CYAN}User ID: {self.user.id}
-        {Fore.CYAN}Guild ID: {self.guild.id if self.guild else 0}
-        {line}
-        """).strip())
+            {line}
+            {Fore.CYAN}Client ready.
+            {line}
+            {Fore.CYAN}Logged in as: {self.user}
+            {Fore.CYAN}User ID: {self.user.id}
+            {Fore.CYAN}Guild ID: {self.guild.id if self.guild else 0}
+            {line}""").strip())
 
         if not self.guild:
             print(f'{Fore.RED}{Style.BRIGHT}WARNING - The GUILD_ID '
@@ -388,7 +391,13 @@ class ModmailBot(commands.Bot):
             if cmd in self.snippets:
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
 
-        await self.process_commands(message)
+        ctx = await self.get_context(message)
+        if ctx.command:
+            return await self.invoke(ctx)
+
+        thread = await self.threads.find(channel=ctx.channel)
+        if thread is not None:
+            await self.modmail_api.append_log(message, type_='internal')
     
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
@@ -461,11 +470,9 @@ class ModmailBot(commands.Bot):
                 overwrites[role] = discord.PermissionOverwrite(
                     read_messages=True
                 )
-
         return overwrites
 
     async def validate_api_token(self):
-        valid = True
         try:
             self.config.modmail_api_token
         except KeyError:
@@ -477,21 +484,31 @@ class ModmailBot(commands.Bot):
                   'input a MONGO_URI config variable.')
             print('A modmail api token is not needed '
                   'if you are self-hosting logs.')
-            valid = False
+            return await self.logout()
         else:
             valid = await self.modmail_api.validate_token()
             if not valid:
-                print(Fore.RED + Style.BRIGHT, end='')
+                print(Fore.RED, end='')
                 print('Invalid MODMAIL_API_TOKEN - get one '
                       'from https://dashboard.modmail.tk')
-        finally:
-            if not valid:
-                await self.logout()
-            else:
-                user = await self.modmail_api.get_user_info()
-                username = user['user']['username']
-                print(Style.RESET_ALL + Fore.CYAN + 'Validated token.')
-                print('GitHub user: ' + username + Style.RESET_ALL)
+                return await self.logout()
+
+        user = await self.modmail_api.get_user_info()
+        username = user['user']['username']
+        print(Style.RESET_ALL + Fore.CYAN + 'Validated token.')
+        print('GitHub user: ' + username + Style.RESET_ALL)
+
+    async def validate_database_connection(self):
+        try:
+            await self.db.command('buildinfo')
+        except Exception as e:
+            print(Fore.RED, end='')
+            print('Something went wrong while connecting to the database.')
+            print(type(e).__name__, e, sep=': ')
+            return await self.logout()
+        else:
+            print(Style.RESET_ALL + Fore.CYAN +
+                  'Successfully connected to the database.')
 
     async def data_loop(self):
         await self.wait_until_ready()
@@ -524,11 +541,13 @@ class ModmailBot(commands.Bot):
 
         if self.config.get('disable_autoupdates'):
             print('Autoupdates disabled.')
+            print(line)
             return 
 
         if self.self_hosted and not self.config.get('github_access_token'):
             print('Github access token not found.')
             print('Autoupdates disabled.')
+            print(line)
             return 
 
         while True:

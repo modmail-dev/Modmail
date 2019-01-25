@@ -196,7 +196,7 @@ class Thread:
             self.send(message, self.channel, note=True)
         )
 
-    async def reply(self, message):
+    async def reply(self, message, anonymous=False):
         if not message.content and not message.attachments:
             raise UserInputError
         if all(not g.get_member(self.id) for g in self.bot.guilds):
@@ -210,12 +210,22 @@ class Thread:
 
         tasks = [
             # in thread channel
-            self.send(message, self.channel, from_mod=True),
+            self.send(message,
+                      destination=self.channel,
+                      from_mod=True,
+                      anonymous=anonymous),
             # to user
-            self.send(message, self.recipient, from_mod=True),
+            self.send(message,
+                      destination=self.recipient,
+                      from_mod=True,
+                      anonymous=anonymous)
             ]
 
-        await self.bot.modmail_api.append_log(message, self.channel.id)
+        await self.bot.modmail_api.append_log(
+            message,
+            self.channel.id,
+            type_='anonymous' if anonymous else 'thread_message'
+        )
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
@@ -232,7 +242,7 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def send(self, message, destination=None,
-                   from_mod=False, note=False):
+                   from_mod=False, note=False, anonymous=False):
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             await self.cancel_closure()
@@ -260,17 +270,31 @@ class Thread:
         system_avatar_url = 'https://discordapp.com/assets/' \
                             'f78426a064bc9dd24847519259bc42af.png'
 
-        # store message id in hidden url
         if not note:
-            embed.set_author(name=author,
-                             icon_url=author.avatar_url,
+            if anonymous and from_mod and \
+               not isinstance(destination, discord.TextChannel):
+                # Anonymously sending to the user.
+                name = self.bot.config.get(
+                    'anon_username',
+                    self.bot.config.get('mod_tag', 'Moderator')
+                )
+                avatar_url = self.bot.config.get(
+                    'anon_avatar_url',
+                    self.bot.guild.icon_url
+                )
+            else:
+                # Normal message
+                name = str(author)
+                avatar_url = author.avatar_url
+
+            embed.set_author(name=name,
+                             icon_url=avatar_url,
                              url=message.jump_url)
         else:
-            embed.set_author(
-                name=f'Note ({author.name})',
-                icon_url=system_avatar_url,
-                url=message.jump_url
-            )
+            # Special note messages
+            embed.set_author(name=f'Note ({author.name})',
+                             icon_url=system_avatar_url,
+                             url=message.jump_url)
 
         delete_message = not bool(message.attachments)
 
@@ -318,7 +342,19 @@ class Thread:
 
         if from_mod:
             embed.color = self.bot.mod_color
-            embed.set_footer(text=self.bot.config.get('mod_tag', 'Moderator'))
+            # Anonymous reply sent in thread channel
+            if anonymous and isinstance(destination, discord.TextChannel):
+                embed.set_footer(text='Anonymous Reply')
+            # Normal messages
+            elif not anonymous:
+                embed.set_footer(
+                    text=self.bot.config.get('mod_tag', 'Moderator')
+                )
+            # Anonymous reply sent to user
+            else:
+                embed.set_footer(
+                    text=self.bot.config.get('anon_tag', 'Response')
+                )
         elif note:
             embed.color = discord.Color.blurple()
         else:
