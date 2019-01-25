@@ -247,7 +247,8 @@ class Thread:
 
             if anonymous and from_mod and not isinstance(destination, discord.TextChannel):
                 # Anonymously sending to the user.
-                name = self.bot.config.get('anon_username', self.bot.config.get('mod_tag', 'Moderator'))
+                tag = self.bot.config.get('mod_tag', str(message.author.top_role)) 
+                name = self.bot.config.get('anon_username', tag)
                 avatar_url = self.bot.config.get('anon_avatar_url', self.bot.guild.icon_url)
             else:
                 # Normal message
@@ -315,7 +316,8 @@ class Thread:
             if anonymous and isinstance(destination, discord.TextChannel): # Anonymous reply sent in thread channel
                 em.set_footer(text='Anonymous Reply')
             elif not anonymous:
-                em.set_footer(text=self.bot.config.get('mod_tag', 'Moderator')) # Normal messages
+                tag = self.bot.config.get('mod_tag', str(message.author.top_role))
+                em.set_footer(text=tag) # Normal messages
             else:
                 em.set_footer(text=self.bot.config.get('anon_tag', 'Response')) # Anonymous reply sent to user
                 
