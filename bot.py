@@ -25,7 +25,6 @@ SOFTWARE.
 __version__ = '2.11.0'
 
 import asyncio
-import uvloop
 import textwrap
 import datetime
 import os
@@ -46,6 +45,8 @@ from core.thread import ThreadManager
 from core.config import ConfigManager
 from core.changelog import ChangeLog
 
+if os.name != 'nt':
+    import uvloop
 
 init()
 
@@ -80,13 +81,13 @@ class ModmailBot(commands.Bot):
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
         print('Authors: kyb3r, fourjr' + Style.RESET_ALL)
-        print(line + Fore.CYAN)
+        print(line)
 
         for file in os.listdir('cogs'):
             if not file.endswith('.py'):
                 continue
             cog = f'cogs.{file[:-3]}'
-            print(f'Loading {cog}')
+            print(Fore.CYAN + f'Loading {cog}' + Style.RESET_ALL)
             self.load_extension(cog)
 
     async def logout(self):
@@ -100,7 +101,7 @@ class ModmailBot(commands.Bot):
             super().run(self.token)
         finally:
             print(Fore.RED + ' - Shutting down bot' + Style.RESET_ALL)
-        
+
     @property
     def log_channel(self):
         channel_id = self.config.get('log_channel_id')
@@ -203,7 +204,7 @@ class ModmailBot(commands.Bot):
             print('Mode: Selfhosting logs.')
             print(line)
         print(Fore.CYAN + 'Connected to gateway.')
-        
+
         await self.config.refresh()
 
         activity_type = self.config.get('activity_type')
@@ -214,7 +215,7 @@ class ModmailBot(commands.Bot):
             activity = discord.Activity(type=activity_type, name=message,
                                         url=url)
             await self.change_presence(activity=activity)
-        
+
         self._connected.set()
 
     async def on_ready(self):
@@ -507,15 +508,15 @@ class ModmailBot(commands.Bot):
         await self.wait_until_ready()
 
         if self.config.get('disable_autoupdates'):
-            print('Autoupdates disabled.')
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
             print(line)
-            return 
+            return
 
         if self.selfhosted and not self.config.get('github_access_token'):
             print('Github access token not found.')
-            print('Autoupdates disabled.')
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
             print(line)
-            return 
+            return
 
         while True:
             metadata = await self.modmail_api.get_metadata()
@@ -577,6 +578,7 @@ class ModmailBot(commands.Bot):
 
 
 if __name__ == '__main__':
-    uvloop.install()
+    if os.name != 'nt':
+        uvloop.install()
     bot = ModmailBot()
     bot.run()

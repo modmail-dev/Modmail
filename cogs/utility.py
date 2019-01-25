@@ -42,14 +42,14 @@ class Utility:
             if cmd.instance is cog:
                 if cmd.hidden:
                     continue
-                if len(fmt[index] + f'`{prefix+cmd.qualified_name:<{maxlen}}` - ' + f'{cmd.short_doc:<{maxlen}}\n') > 1024:
+                if len(fmt[index] + f'`{prefix+cmd.qualified_name:<{maxlen}}` - ' + f'{cmd.short_doc or "No description":<{maxlen}}\n') > 1024:
                     index += 1
                     fmt.append('')
                 fmt[index] += f'`{prefix+cmd.qualified_name:<{maxlen}}` - '
-                fmt[index] += f'{cmd.short_doc:<{maxlen}}\n'
+                fmt[index] += f'{cmd.short_doc or "No description":<{maxlen}}\n'
 
         em = discord.Embed(
-            description='*' + inspect.getdoc(cog) + '*',
+            description=f"*{inspect.getdoc(cog) or 'No description'}*",
             color=discord.Colour.blurple()
         )
         em.set_author(name=cog.__class__.__name__ + ' - Help', icon_url=ctx.bot.user.avatar_url)
@@ -88,7 +88,7 @@ class Utility:
             else:
                 branch = '├─ ' + c.name
             fmt += f"`{branch:<{maxlen+1}}` - "
-            fmt += f"{c.short_doc:<{maxlen}}\n"
+            fmt += f"{c.short_doc or 'No description':<{maxlen}}\n"
 
         em.add_field(name='Subcommands', value=fmt)
         em.set_footer(text=f'Type "{prefix}help {cmd} command" for more info on a command.')

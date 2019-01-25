@@ -293,7 +293,6 @@ class Modmail:
         em.description = f'{mention} is now unsubscribed to this thread.'
         await ctx.send(embed=em)
 
-
     @commands.command()
     async def nsfw(self, ctx):
         """Flags a Modmail thread as nsfw."""
@@ -302,16 +301,19 @@ class Modmail:
             return
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
-    
+
     @commands.command()
     async def loglink(self, ctx):
+        """Returns the log lnk of the current thread"""
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
             log_link = await self.bot.modmail_api.get_log_link(ctx.channel.id)
-            await ctx.send(embed=discord.Embed(
+            await ctx.send(
+                embed=discord.Embed(
                     color=discord.Color.blurple(), 
-                    description=log_link)
-                    )
+                    description=log_link
+                )
+            )
 
     @commands.command(aliases=['threads'])
     @commands.has_permissions(manage_messages=True)
@@ -388,19 +390,20 @@ class Modmail:
         if thread:
             await ctx.trigger_typing()
             await thread.reply(ctx.message)
-    
+
     @commands.command()
     async def anonreply(self, ctx, *, msg=''):
+        """Anonymously reply to threads"""
         ctx.message.content = msg
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
             await ctx.trigger_typing()
             await thread.reply(ctx.message, anonymous=True)
-    
+
     @commands.command()
     async def note(self, ctx, *, msg=''):
         """Take a note about the current thread, useful for noting context."""
-        ctx.message.content = msg 
+        ctx.message.content = msg
         thread = await self.bot.threads.find(channel=ctx.channel)
 
         if thread:

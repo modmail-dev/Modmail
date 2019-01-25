@@ -3,6 +3,7 @@ import os
 import json
 import box
 
+
 class ConfigManager:
     """Class that manages a cached configuration"""
 
@@ -12,18 +13,21 @@ class ConfigManager:
         'thread_creation_response', 'twitch_url', 'mod_color', 
         'recipient_color', 'mod_tag', 'anon_username', 'anon_avatar_url',
         'anon_tag'
-        }
-    
+    }
+
     internal_keys = {
         'snippets', 'aliases', 'blocked',
         'notification_squad', 'subscriptions',
-        'closures', 'activity_message', 'activity_type'
-        }
-    
+        'closures', 'activity_message', 'activity_type',
+        'plugins'
+    }
+
     protected_keys = {
         'token', 'owners', 'modmail_api_token', 'guild_id', 'modmail_guild_id', 
         'mongo_uri', 'github_access_token', 'log_url'
-        }
+    }
+
+    # plugins is internal as its a list and i dont want weird issues
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
 
@@ -43,6 +47,7 @@ class ConfigManager:
     def populate_cache(self):
         data = {
             'snippets': {},
+            'plugins': [],
             'aliases': {},
             'blocked': {},
             'notification_squad': {},
@@ -59,7 +64,7 @@ class ConfigManager:
             self.cache = {
                 k.lower(): v for k, v in data.items()
                 if k.lower() in self.valid_keys
-                }
+            }
 
     async def update(self, data=None):
         """Updates the config with data from the cache"""
@@ -72,7 +77,7 @@ class ConfigManager:
         data = await self.api.get_config()
         self.cache.update(data)
         self.ready_event.set()
-    
+
     async def wait_until_ready(self):
         await self.ready_event.wait()
 
