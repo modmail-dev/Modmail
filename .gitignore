@@ -108,4 +108,6 @@ ENV/
 #MacOs
 .DS_Store
 
+# custom
 config.json
+plugins/
