@@ -418,6 +418,7 @@ class ModmailBot(commands.Bot):
                     if matches and matches[-1] == str(before.id):
                         embed.description = after.content
                         await msg.edit(embed=embed)
+                        await self.modmail_api.edit_message(str(after.id), after.content)
                         break
 
     async def on_command_error(self, ctx, error):

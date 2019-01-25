@@ -151,6 +151,12 @@ class ModmailApiClient(ApiClient):
             }
         })
 
+    async def edit_message(self, message_id, new_content):
+        return await self.request(self.logs + '/edit', method='PATCH', payload={
+            'message_id': str(message_id),
+            'new_content':  new_content
+        })
+
     def append_log(self, message, channel_id='', type='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
         payload = {
@@ -254,6 +260,15 @@ class SelfhostedClient(ModmailApiClient):
         valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
         return await self.db.config.update_one({'bot_id': self.app.user.id}, {'$set': data})
+    
+    async def edit_message(self, message_id, new_content):
+        await self.logs.update_one(
+            {'messages.message_id': str(message_id)},
+            {'$set': {
+                'messages.$.content': new_content,
+                'messages.$.edited': True
+                }
+            })
 
     async def append_log(self, message, channel_id='', type='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
