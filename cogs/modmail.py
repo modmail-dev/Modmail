@@ -2,6 +2,7 @@
 
 import datetime
 from typing import Optional, Union
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -428,8 +429,12 @@ class Modmail:
         if not linked_message_id:
             raise commands.UserInputError
         
-        await thread.edit_message(linked_message_id, new_message)
+        await asyncio.gather(
+            thread.edit_message(linked_message_id, new_message),
+            self.bot.modmail_api.edit_message(linked_message_id, new_message)
+        ) 
         await ctx.message.add_reaction('✅')
+        
 
     @commands.command()
     @trigger_typing
