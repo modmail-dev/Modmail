@@ -7,8 +7,7 @@ class ConfigManager:
     """Class that manages a cached configuration"""
 
     allowed_to_change_in_command = {
-        'activity_message', 'activity_type', 'log_channel_id',
-        'mention', 'disable_autoupdates', 'prefix',
+        'log_channel_id', 'mention', 'disable_autoupdates', 'prefix',
         'main_category_id', 'sent_emoji', 'blocked_emoji',
         'thread_creation_response', 'twitch_url', 'mod_color', 
         'recipient_color', 'mod_tag', 'anon_username', 'anon_avatar_url',
@@ -18,7 +17,7 @@ class ConfigManager:
     internal_keys = {
         'snippets', 'aliases', 'blocked',
         'notification_squad', 'subscriptions',
-        'closures'
+        'closures', 'activity_message', 'activity_type'
         }
     
     protected_keys = {

@@ -477,7 +477,7 @@ class ThreadManager:
         thread.channel = channel
 
         log_url, log_data = await asyncio.gather(
-            self.bot.modmail_api.get_log_url(recipient, channel, creator or recipient),
+            self.bot.modmail_api.create_log_entry(recipient, channel, creator or recipient),
             self.bot.modmail_api.get_user_logs(recipient.id)
             # self.get_dominant_color(recipient.avatar_url)
         )
