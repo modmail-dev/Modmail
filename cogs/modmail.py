@@ -120,7 +120,7 @@ class Modmail:
     @commands.command()
     @commands.has_permissions(manage_channels=True)
     async def move(self, ctx, *, category: discord.CategoryChannel):
-        """Moves a thread to a specified cateogry."""
+        """Moves a thread to a specified category."""
         thread = await self.bot.threads.find(channel=ctx.channel)
         if not thread:
             return await ctx.send('This is not a modmail thread.')
@@ -302,6 +302,16 @@ class Modmail:
             return
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
+    
+    @commands.command()
+    async def loglink(self, ctx):
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread:
+            log_link = await self.bot.modmail_api.get_log_link(ctx.channel.id)
+            await ctx.send(embed=discord.Embed(
+                    color=discord.Color.blurple(), 
+                    description=log_link)
+                    )
 
     @commands.command(aliases=['threads'])
     @commands.has_permissions(manage_messages=True)

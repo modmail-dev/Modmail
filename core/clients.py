@@ -122,6 +122,10 @@ class ModmailApiClient(ApiClient):
 
     def get_log(self, channel_id):
         return self.request(self.logs + '/' + str(channel_id))
+    
+    async def get_log_link(self, channel_id):
+        doc = await self.get_log(channel_id)
+        return f'https://logs.modmail.tk/{doc["key"]}'
 
     def get_config(self):
         return self.request(self.config)
@@ -131,7 +135,7 @@ class ModmailApiClient(ApiClient):
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 
-    def get_log_url(self, recipient, channel, creator):
+    def create_log_entry(self, recipient, channel, creator):
         return self.request(self.logs + '/key', payload={
             'channel_id': str(channel.id),
             'guild_id': str(self.app.guild_id),
@@ -218,8 +222,13 @@ class SelfhostedClient(ModmailApiClient):
 
     async def get_log(self, channel_id):
         return await self.logs.find_one({'channel_id': str(channel_id)})
+    
+    async def get_log_link(self, channel_id):
+        doc = await self.get_log(channel_id)
+        key = doc['key']
+        return f"{self.app.config.log_url.strip('/')}/logs/{key}"
 
-    async def get_log_url(self, recipient, channel, creator):
+    async def create_log_entry(self, recipient, channel, creator):
         key = secrets.token_hex(6)
 
         await self.logs.insert_one({
