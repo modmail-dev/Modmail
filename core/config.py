@@ -21,19 +21,19 @@ class ConfigManager(ConfigManagerABC):
         'recipient_color', 'mod_tag', 'mod_color',
         # anonymous message
         'anon_username', 'anon_avatar_url', 'anon_tag'
-        }
-    
+    }
+
     internal_keys = {
         'snippets', 'aliases', 'blocked',
         'notification_squad', 'subscriptions',
         'closures', 'activity_message', 'activity_type'
-        }
-    
+    }
+
     protected_keys = {
         'token', 'owners', 'modmail_api_token',
         'guild_id', 'modmail_guild_id',
         'mongo_uri', 'github_access_token', 'log_url'
-        }
+    }
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
 
@@ -42,7 +42,7 @@ class ConfigManager(ConfigManagerABC):
         self._cache = {}
         self._ready_event = asyncio.Event()
         self.populate_cache()
-    
+
     def __repr__(self):
         return repr(self.cache)
 
@@ -98,7 +98,7 @@ class ConfigManager(ConfigManagerABC):
         self.cache.update(data)
         self.ready_event.set()
         return self.cache
-    
+
     async def wait_until_ready(self):
         await self.ready_event.wait()
 

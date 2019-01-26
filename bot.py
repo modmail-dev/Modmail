@@ -24,16 +24,16 @@ SOFTWARE.
 
 __version__ = '2.11.0'
 
-import discord
-from discord.enums import ActivityType
-from discord.ext import commands
-from discord.ext.commands.view import StringView
-
 from os import listdir
 import asyncio
 from textwrap import dedent
 from datetime import datetime
 from types import SimpleNamespace
+
+import discord
+from discord.enums import ActivityType
+from discord.ext import commands
+from discord.ext.commands.view import StringView
 
 import uvloop
 from aiohttp import ClientSession
@@ -48,10 +48,9 @@ from core.config import ConfigManager
 from core.changelog import ChangeLog
 from core.objects import Bot
 
-
 colorama.init()
 
-line = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
+LINE = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
        Style.RESET_ALL
 
 
@@ -117,13 +116,13 @@ class ModmailBot(Bot):
         """Adds commands automatically"""
         self.remove_command('help')
 
-        print(line + Fore.CYAN)
+        print(LINE + Fore.CYAN)
         print('┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬',
               '││││ │ │││││├─┤││',
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
         print('Authors: kyb3r, fourjr, Taaku18' + Style.RESET_ALL)
-        print(line + Fore.CYAN)
+        print(LINE + Fore.CYAN)
 
         for file in listdir('cogs'):
             if not file.endswith('.py'):
@@ -138,19 +137,18 @@ class ModmailBot(Bot):
         self.autoupdate_task.cancel()
         await super().logout()
 
-    def run(self):
+    def run(self, *args, **kwargs):
         try:
-            super().run(self.token)
+            super().run(self.token, *args, **kwargs)
         finally:
             print(Fore.RED + ' - Shutting down bot' + Style.RESET_ALL)
-        
+
     @property
     def log_channel(self):
         channel_id = self.config.get('log_channel_id')
         if channel_id is not None:
             return self.get_channel(int(channel_id))
-        else:
-            return self.main_category.channels[0]
+        return self.main_category.channels[0]
 
     @property
     def snippets(self):
@@ -185,9 +183,8 @@ class ModmailBot(Bot):
         modmail_guild_id = self.config.get('modmail_guild_id')
         if not modmail_guild_id:
             return self.guild
-        else:
-            return discord.utils.get(self.guilds, id=int(modmail_guild_id))
-    
+        return discord.utils.get(self.guilds, id=int(modmail_guild_id))
+
     @property
     def using_multiple_server_setup(self):
         return self.modmail_guild != self.guild
@@ -202,6 +199,7 @@ class ModmailBot(Bot):
         if self.modmail_guild:
             return discord.utils.get(self.modmail_guild.categories,
                                      name='Modmail')
+        return None
 
     @property
     def blocked_users(self):
@@ -210,7 +208,7 @@ class ModmailBot(Bot):
     @property
     def prefix(self):
         return self.config.get('prefix', '?')
-    
+
     @property
     def mod_color(self):
         color = self.config.get('mod_color')
@@ -238,19 +236,19 @@ class ModmailBot(Bot):
             return color
 
     async def on_connect(self):
-        print(line)
+        print(LINE)
         print(Fore.CYAN, end='')
         if not self.self_hosted:
             print('MODE: Using the Modmail API')
-            print(line)
+            print(LINE)
             await self.validate_api_token()
-            print(line)
+            print(LINE)
         else:
             print('Mode: Self-hosting logs.')
             await self.validate_database_connection()
-            print(line)
+            print(LINE)
         print(Fore.CYAN + 'Connected to gateway.')
-        
+
         await self.config.refresh()
 
         activity_type = self.config.get('activity_type')
@@ -273,13 +271,13 @@ class ModmailBot(Bot):
         """Bot startup, sets uptime."""
         await self._connected.wait()
         print(dedent(f"""
-            {line}
+            {LINE}
             {Fore.CYAN}Client ready.
-            {line}
+            {LINE}
             {Fore.CYAN}Logged in as: {self.user}
             {Fore.CYAN}User ID: {self.user.id}
             {Fore.CYAN}Guild ID: {self.guild.id if self.guild else 0}
-            {line}""").strip())
+            {LINE}""").strip())
 
         if not self.guild:
             print(f'{Fore.RED}{Style.BRIGHT}WARNING - The GUILD_ID '
@@ -309,14 +307,12 @@ class ModmailBot(Bot):
 
             # TODO: Low priority,
             #  Retrieve messages/replies when bot is down, from history?
-            self.loop.create_task(
-                thread.close(
-                    closer=self.get_user(items['closer_id']),
-                    after=after,
-                    silent=items['silent'],
-                    delete_channel=items['delete_channel'],
-                    message=items['message']
-                )
+            await thread.close(
+                closer=self.get_user(items['closer_id']),
+                after=after,
+                silent=items['silent'],
+                delete_channel=items['delete_channel'],
+                message=items['message']
             )
 
     async def process_modmail(self, message):
@@ -390,8 +386,8 @@ class ModmailBot(Bot):
         alias = self.config.get('aliases', {}).get(invoker)
         if alias is not None:
             ctx._alias_invoked = True
-            _len = len(f'{invoked_prefix}{invoker}')
-            view = StringView(f'{alias}{ctx.message.content[_len:]}')
+            len_ = len(f'{invoked_prefix}{invoker}')
+            view = StringView(f'{alias}{ctx.message.content[len_:]}')
             ctx.view = view
             invoker = view.get_word()
 
@@ -408,7 +404,7 @@ class ModmailBot(Bot):
 
     async def on_message(self, message):
         if message.type == discord.MessageType.pins_add and \
-           message.author == self.user:
+                message.author == self.user:
             await message.delete()
 
         if message.author.bot:
@@ -431,10 +427,10 @@ class ModmailBot(Bot):
         thread = await self.threads.find(channel=ctx.channel)
         if thread is not None:
             await self.api.append_log(message, type_='internal')
-    
+
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
-            return 
+            return
 
         audit_logs = self.modmail_guild.audit_logs()
         entry = await audit_logs.find(lambda e: e.target.id == channel.id)
@@ -442,11 +438,11 @@ class ModmailBot(Bot):
 
         if mod == self.user:
             return
-        
+
         thread = await self.threads.find(channel=channel)
         if not thread:
             return
-        
+
         await thread.close(closer=mod, silent=True, delete_channel=False)
 
     async def on_message_delete(self, message):
@@ -577,14 +573,14 @@ class ModmailBot(Bot):
 
         if self.config.get('disable_autoupdates'):
             print('Autoupdates disabled.')
-            print(line)
-            return 
+            print(LINE)
+            return
 
         if self.self_hosted and not self.config.get('github_access_token'):
             print('Github access token not found.')
             print('Autoupdates disabled.')
-            print(line)
-            return 
+            print(LINE)
+            return
 
         while True:
             metadata = await self.api.get_metadata()
@@ -614,7 +610,7 @@ class ModmailBot(Bot):
                     short_sha = commit_data['sha'][:6]
                     embed.add_field(name='Merge Commit',
                                     value=f"[`{short_sha}`]({html_url}) "
-                                          f"{message} - {user['username']}")
+                                    f"{message} - {user['username']}")
                     print('Updating bot.')
                     channel = self.log_channel
                     await channel.send(embed=embed)
@@ -625,7 +621,6 @@ class ModmailBot(Bot):
         latest_commits = ''
 
         async for commit in Github(self).get_latest_commits(limit=limit):
-
             short_sha = commit['sha'][:6]
             html_url = commit['html_url']
             message = commit['commit']['message'].splitlines()[0]
@@ -637,5 +632,5 @@ class ModmailBot(Bot):
 
 if __name__ == '__main__':
     uvloop.install()
-    bot = ModmailBot()
+    bot = ModmailBot()  # pylint: disable=invalid-name
     bot.run()

@@ -3,11 +3,10 @@ UserFriendlyTime by Rapptz
 Source:
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 """
-from discord.ext.commands import BadArgument, Converter
-
 import re
 from datetime import datetime
 
+from discord.ext.commands import BadArgument, Converter
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 
@@ -58,11 +57,11 @@ class HumanTime:
 class Time(HumanTime):
     def __init__(self, argument):
         try:
-            o = ShortTime(argument)
+            short_time = ShortTime(argument)
         except Exception:
             super().__init__(argument)
         else:
-            self.dt = o.dt
+            self.dt = short_time.dt
             self._past = False
 
 
@@ -76,6 +75,7 @@ class FutureTime(Time):
 
 class UserFriendlyTime(Converter):
     """That way quotes aren't absolutely necessary."""
+
     def __init__(self, converter=None):
         if isinstance(converter, type) and issubclass(converter, Converter):
             converter = converter()
@@ -122,7 +122,7 @@ class UserFriendlyTime(Converter):
                     argument = argument[6:]
 
             elements = calendar.nlp(argument, sourceTime=now)
-            if elements is None or len(elements) == 0:
+            if elements is None or not elements:
                 return await self.check_constraints(ctx, now, argument)
 
             # handle the following cases:
@@ -131,7 +131,7 @@ class UserFriendlyTime(Converter):
             # foo date time
 
             # first the first two cases:
-            dt, status, begin, end, dt_string = elements[0]
+            dt, status, begin, end, _ = elements[0]
 
             if not status.hasDateOrTime:
                 return await self.check_constraints(ctx, now, argument)
@@ -206,11 +206,10 @@ def human_timedelta(dt, *, source=None):
         else:
             output.append(f'{elem} {attr[:-1]}')
 
-    if len(output) == 0:
+    if not output:
         return 'now'
-    elif len(output) == 1:
+    if len(output) == 1:
         return output[0] + suffix
-    elif len(output) == 2:
+    if len(output) == 2:
         return f'{output[0]} and {output[1]}{suffix}'
-    else:
-        return f'{output[0]}, {output[1]} and {output[2]}{suffix}'
+    return f'{output[0]}, {output[1]} and {output[2]}{suffix}'

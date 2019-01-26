@@ -1,9 +1,9 @@
-from discord import Object
-from discord.ext import commands
-
 import re
 import typing
 from urllib import parse
+
+from discord import Object
+from discord.ext import commands
 
 
 class User(commands.IDConverter):
@@ -22,8 +22,8 @@ class User(commands.IDConverter):
         return Object(int(match.group(1)))
 
 
-def truncate(c: str) -> str:
-    return c[:47].strip() + '...' if len(c) > 50 else c
+def truncate(text: str) -> str:
+    return text[:47].strip() + '...' if len(text) > 50 else text
 
 
 def is_image_url(url: str, _=None) -> bool:
@@ -40,11 +40,11 @@ def parse_image_url(url: str) -> str:
     return ''
 
 
-def days(d: typing.Union[str, int]) -> str:
-    d = int(d)
-    if d == 0:
+def days(day: typing.Union[str, int]) -> str:
+    day = int(day)
+    if day == 0:
         return '**today**'
-    return f'{d} day ago' if d == 1 else f'{d} days ago'
+    return f'{day} day ago' if day == 1 else f'{day} days ago'
 
 
 def cleanup_code(content: str) -> str:
@@ -57,7 +57,8 @@ def cleanup_code(content: str) -> str:
     return content.strip('` \n')
 
 
-def match_user_id(s: str) -> typing.Optional[int]:
-    match = re.match(r'^User ID: (\d+)$', s)
+def match_user_id(text: str) -> int:
+    match = re.match(r'^User ID: (\d+)$', text)
     if match is not None:
         return int(match.group(1))
+    return -1

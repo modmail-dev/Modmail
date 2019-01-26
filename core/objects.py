@@ -1,11 +1,11 @@
+import abc
+import asyncio
+import typing
+from datetime import datetime
+
 from discord import Message, TextChannel, Guild
 from discord import Color, Member, User, CategoryChannel, DMChannel
 from discord.ext import commands
-
-import abc
-import asyncio
-from typing import *
-from datetime import datetime
 
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -37,7 +37,7 @@ class Bot(abc.ABC, commands.Bot):
 
     @property
     @abc.abstractmethod
-    def db(self) -> Optional[AsyncIOMotorClient]:
+    def db(self) -> typing.Optional[AsyncIOMotorClient]:
         raise NotImplementedError
 
     @property
@@ -67,17 +67,17 @@ class Bot(abc.ABC, commands.Bot):
 
     @property
     @abc.abstractmethod
-    def log_channel(self) -> Optional[TextChannel]:
+    def log_channel(self) -> typing.Optional[TextChannel]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def snippets(self) -> Dict[str, str]:
+    def snippets(self) -> typing.Dict[str, str]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def aliases(self) -> Dict[str, str]:
+    def aliases(self) -> typing.Dict[str, str]:
         raise NotImplementedError
 
     @property
@@ -92,12 +92,12 @@ class Bot(abc.ABC, commands.Bot):
 
     @property
     @abc.abstractmethod
-    def guild(self) -> Optional[Guild]:
+    def guild(self) -> typing.Optional[Guild]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def modmail_guild(self) -> Optional[Guild]:
+    def modmail_guild(self) -> typing.Optional[Guild]:
         raise NotImplementedError
 
     @property
@@ -107,12 +107,12 @@ class Bot(abc.ABC, commands.Bot):
 
     @property
     @abc.abstractmethod
-    def main_category(self) -> Optional[TextChannel]:
+    def main_category(self) -> typing.Optional[TextChannel]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def blocked_users(self) -> Dict[str, str]:
+    def blocked_users(self) -> typing.Dict[str, str]:
         raise NotImplementedError
 
     @property
@@ -122,12 +122,12 @@ class Bot(abc.ABC, commands.Bot):
 
     @property
     @abc.abstractmethod
-    def mod_color(self) -> Union[Color, int]:
+    def mod_color(self) -> typing.Union[Color, int]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def recipient_color(self) -> Union[Color, int]:
+    def recipient_color(self) -> typing.Union[Color, int]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -141,14 +141,14 @@ class Bot(abc.ABC, commands.Bot):
 
     # Broken.
     @abc.abstractmethod
-    async def get_latest_updates(self, limit: int = 3) -> NoReturn:
+    async def get_latest_updates(self, limit: int = 3) -> typing.NoReturn:
         raise NotImplementedError
 
 
 class UserClient(abc.ABC):
     @property
     @abc.abstractmethod
-    def token(self) -> Optional[str]:
+    def token(self) -> typing.Optional[str]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -160,7 +160,7 @@ class UserClient(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_user_logs(self, user_id: Union[str, int]) -> list:
+    async def get_user_logs(self, user_id: typing.Union[str, int]) -> list:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -168,11 +168,11 @@ class UserClient(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_log(self, channel_id: Union[str, int]) -> dict:
+    async def get_log(self, channel_id: typing.Union[str, int]) -> dict:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_log_link(self, channel_id: Union[str, int]) -> str:
+    async def get_log_link(self, channel_id: typing.Union[str, int]) -> str:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -193,13 +193,13 @@ class UserClient(abc.ABC):
     @abc.abstractmethod
     async def append_log(self,
                          message: Message,
-                         channel_id: Union[str, int] = '',
+                         channel_id: typing.Union[str, int] = '',
                          type_: str = 'thread_message') -> dict:
         raise NotImplementedError
 
     @abc.abstractmethod
     async def post_log(self,
-                       channel_id: Union[int, str],
+                       channel_id: typing.Union[int, str],
                        data: dict) -> dict:
         raise NotImplementedError
 
@@ -212,7 +212,7 @@ class UserClient(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def edit_message(self, message_id: Union[int, str],
+    async def edit_message(self, message_id: typing.Union[int, str],
                            new_content: str) -> None:
         raise NotImplementedError
 
@@ -243,7 +243,7 @@ class ConfigManagerABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def update(self, data: Optional[dict] = None) -> dict:
+    async def update(self, data: typing.Optional[dict] = None) -> dict:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -255,19 +255,19 @@ class ConfigManagerABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get(self, key: str, default: Any = None):
+    def get(self, key: str, default: typing.Any = None):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __getattr__(self, value: str) -> Any:
+    def __getattr__(self, value: str) -> typing.Any:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __setitem__(self, key: str, item: Any) -> None:
+    def __setitem__(self, key: str, item: typing.Any) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> typing.Any:
         raise NotImplementedError
 
 
@@ -283,12 +283,12 @@ class ThreadABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel(self) -> Union[TextChannel, DMChannel]:
+    def channel(self) -> typing.Union[TextChannel, DMChannel]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def recipient(self) -> Union[User, Member]:
+    def recipient(self) -> typing.Union[User, Member]:
         raise NotImplementedError
 
     @property
@@ -311,7 +311,7 @@ class ThreadABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def close(self, *, closer: Union[Member, User],
+    async def close(self, *, closer: typing.Union[Member, User],
                     after: int = 0,
                     silent: bool = False,
                     delete_channel: bool = True,
@@ -323,7 +323,7 @@ class ThreadABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def edit_message(self, message_id: Union[int, str],
+    async def edit_message(self, message_id: typing.Union[int, str],
                            message: str) -> None:
         raise NotImplementedError
 
@@ -338,8 +338,8 @@ class ThreadABC(abc.ABC):
 
     @abc.abstractmethod
     async def send(self, message: Message,
-                   destination: Union[TextChannel, DMChannel,
-                                      User, Member] = None,
+                   destination: typing.Union[TextChannel, DMChannel,
+                                             User, Member] = None,
                    from_mod: bool = False,
                    note: bool = False,
                    anonymous: bool = False) -> None:
@@ -360,7 +360,7 @@ class ThreadManagerABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> typing.Iterator:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -369,20 +369,21 @@ class ThreadManagerABC(abc.ABC):
 
     @abc.abstractmethod
     async def find(self, *,
-                   recipient: Union[Member, User] = None,
+                   recipient: typing.Union[Member, User] = None,
                    channel: TextChannel = None) -> \
-            Optional['ThreadABC']:
+            typing.Optional['ThreadABC']:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def create(self, recipient: Union[Member, User], *,
-                     creator: Union[Member, User] = None,
+    async def create(self, recipient: typing.Union[Member, User], *,
+                     creator: typing.Union[Member, User] = None,
                      category: CategoryChannel = None) -> 'ThreadABC':
         raise NotImplementedError
 
     @abc.abstractmethod
     async def find_or_create(self,
-                             recipient: Union[Member, User]) -> 'ThreadABC':
+                             recipient: typing.Union[Member, User]) \
+            -> 'ThreadABC':
         raise NotImplementedError
 
     @abc.abstractmethod

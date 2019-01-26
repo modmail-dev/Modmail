@@ -1,11 +1,11 @@
-from discord import Member, DMChannel
-
 import secrets
 from datetime import datetime
-
-from aiohttp import ClientResponseError, ClientResponse
 from typing import Union, Optional
 from json import JSONDecodeError
+
+from discord import Member, DMChannel
+
+from aiohttp import ClientResponseError, ClientResponse
 from pymongo import ReturnDocument
 
 from core.objects import Bot, UserClient
@@ -53,13 +53,14 @@ class Github(ApiClient):
 
     def __init__(self, bot: Bot,
                  access_token: str = None,
-                 username: str = None):
+                 username: str = None,
+                 **kwargs):
         super().__init__(bot)
         self.access_token = access_token
         self.username = username
-        self.id: str = None
-        self.avatar_url: str = None
-        self.url: str = None
+        self.id: str = kwargs.pop('id')
+        self.avatar_url: str = kwargs.pop('avatar_url')
+        self.url: str = kwargs.pop('url')
         if self.access_token:
             self.headers = {'Authorization': 'token ' + str(access_token)}
 
@@ -100,13 +101,12 @@ class Github(ApiClient):
 
     @classmethod
     async def login(cls, bot) -> 'Github':
-        self = cls(bot, bot.config.get('github_access_token'))
+        self = cls(bot, bot.config.get('github_access_token'), )
         resp: dict = await self.request('https://api.github.com/user')
         self.username: str = resp['login']
         self.avatar_url: str = resp['avatar_url']
         self.url: str = resp['html_url']
         self.id: str = str(resp['id'])
-        self.raw_data = resp
         print(f'Logged in to: {self.username} - {self.id}')
         return self
 

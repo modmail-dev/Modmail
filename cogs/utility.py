@@ -1,17 +1,16 @@
-from discord import Embed, Color, Activity
-from discord.ext import commands
-from discord.enums import ActivityType
-
 import traceback
 import inspect
 from io import StringIO
-
+from json import JSONDecodeError
 from datetime import datetime
 from textwrap import indent
 from contextlib import redirect_stdout
 from difflib import get_close_matches
 
-from json import JSONDecodeError
+from discord import Embed, Color, Activity
+from discord.ext import commands
+from discord.enums import ActivityType
+
 from aiohttp import ClientResponseError
 
 from core.paginator import PaginatorSession
@@ -36,7 +35,8 @@ class Utility:
         for cmd in sorted(self.bot.commands,
                           key=lambda cmd: cmd.qualified_name):
             if cmd.instance is cog and not cmd.hidden:
-                new_fmt = f'`{prefix+cmd.qualified_name}` - {cmd.short_doc}\n'
+                new_fmt = f'`{prefix + cmd.qualified_name}` - '
+                new_fmt += f'{cmd.short_doc}\n'
                 if len(new_fmt) + len(fmts[-1]) >= 1024:
                     fmts.append(new_fmt)
                 else:
@@ -84,7 +84,7 @@ class Utility:
         embed.add_field(name='Sub Commands', value=fmt)
         embed.set_footer(
             text=f'Type "{prefix}help {cmd} command" '
-                 'for more info on a command.'
+            'for more info on a command.'
         )
         return embed
 
@@ -130,14 +130,14 @@ class Utility:
 
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
-    
+
     @commands.command()
     @trigger_typing
     async def changelog(self, ctx):
         """Show a paginated changelog of the bot."""
         changelog = await ChangeLog.from_repo(self.bot)
-        p = PaginatorSession(ctx, *changelog.embeds)
-        await p.run()
+        paginator = PaginatorSession(ctx, *changelog.embeds)
+        await paginator.run()
 
     @commands.command(aliases=['bot', 'info'])
     @trigger_typing
@@ -166,11 +166,11 @@ class Utility:
             embed.add_field(name='Instances', value=meta['instances'])
         else:
             embed.add_field(name='Latency',
-                            value=f'{self.bot.latency*1000:.2f} ms')
+                            value=f'{self.bot.latency * 1000:.2f} ms')
 
         embed.add_field(name='Version',
                         value=f'[`{self.bot.version}`]'
-                              '(https://modmail.tk/changelog)')
+                        '(https://modmail.tk/changelog)')
         embed.add_field(name='Author',
                         value='[`kyb3r`](https://github.com/kyb3r)')
 
@@ -388,7 +388,7 @@ class Utility:
         if ctx.invoked_subcommand is None:
             cmd = self.bot.get_command('help')
             await ctx.invoke(cmd, command='config')
-    
+
     @config.command()
     async def options(self, ctx):
         """Return a list of valid config keys you can change."""
@@ -535,22 +535,22 @@ class Utility:
         """Add an alias to the bot config."""
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
-        
+
         if self.bot.get_command(name) or self.bot.config.aliases.get(name):
             embed = Embed(
                 title='Error',
                 color=Color.red(),
                 description='A command or alias already exists '
-                            f'with the same name: `{name}`.'
+                f'with the same name: `{name}`.'
             )
             return await ctx.send(embed=embed)
-        
+
         if not self.bot.get_command(value.split()[0]):
             embed = Embed(
                 title='Error',
                 color=Color.red(),
                 description='The command you are attempting to point '
-                            f'to does not exist: `{value.split()[0]}`.'
+                f'to does not exist: `{value.split()[0]}`.'
             )
             return await ctx.send(embed=embed)
 
@@ -575,13 +575,13 @@ class Utility:
         if self.bot.config.aliases.get(name):
             del self.bot.config['aliases'][name]
             await self.bot.config.update()
-            
+
             embed = Embed(
                 title='Removed alias',
                 color=Color.blurple(),
                 description=f'`{name}` no longer exists.'
             )
-            
+
         else:
             embed = Embed(
                 title='Error',
@@ -595,7 +595,7 @@ class Utility:
     @owner_only()
     async def eval_(self, ctx, *, body):
         """Evaluates Python code"""
-        
+
         env = {
             'ctx': ctx,
             'bot': self.bot,
@@ -629,16 +629,16 @@ class Utility:
             return list(filter(lambda a: a != '', pages))
 
         try:
-            exec(to_compile, env)
-        except Exception as e:
-            await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+            exec(to_compile, env)  # pylint: disable=exec-used
+        except Exception as exc:  # pylint: disable=broad-except
+            await ctx.send(f'```py\n{exc.__class__.__name__}: {exc}\n```')
             return await ctx.message.add_reaction('\u2049')
 
         func = env['func']
         try:
             with redirect_stdout(stdout):
                 ret = await func()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             value = stdout.getvalue()
             await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
             return await ctx.message.add_reaction('\u2049')
@@ -649,7 +649,7 @@ class Utility:
                 if value:
                     try:
                         await ctx.send(f'```py\n{value}\n```')
-                    except Exception:
+                    except Exception:  # pylint: disable=broad-except
                         paginated_text = paginate(value)
                         for page in paginated_text:
                             if page == paginated_text[-1]:
@@ -659,7 +659,7 @@ class Utility:
             else:
                 try:
                     await ctx.send(f'```py\n{value}{ret}\n```')
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     paginated_text = paginate(f"{value}{ret}")
                     for page in paginated_text:
                         if page == paginated_text[-1]:

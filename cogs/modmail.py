@@ -1,8 +1,8 @@
-import discord
-from discord.ext import commands
-
 from datetime import datetime
 from typing import Optional, Union
+
+import discord
+from discord.ext import commands
 
 from dateutil import parser
 
@@ -149,7 +149,7 @@ class Modmail:
     @staticmethod
     async def send_scheduled_close_message(ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
-        
+
         silent = '*silently* ' if silent else ''
 
         embed = discord.Embed(
@@ -160,7 +160,7 @@ class Modmail:
 
         if after.arg and not silent:
             embed.add_field(name='Message', value=after.arg)
-        
+
         embed.set_footer(text='Closing will be cancelled '
                               'if a thread message is sent.')
         embed.timestamp = after.dt
@@ -171,11 +171,11 @@ class Modmail:
     async def close(self, ctx, *, after: UserFriendlyTime = None):
         """
         Close the current thread.
-        
+
         Close after a period of time:
         - `close in 5 hours`
         - `close 2m30s`
-        
+
         Custom close messages:
         - `close 2 hours The issue has been resolved.`
         - `close We will contact you once we find out more.`
@@ -191,7 +191,7 @@ class Modmail:
         thread = await self.bot.threads.find(channel=ctx.channel)
         if not thread:
             return
-        
+
         now = datetime.utcnow()
 
         close_after = (after.dt - now).total_seconds() if after else 0
@@ -219,17 +219,17 @@ class Modmail:
             await self.send_scheduled_close_message(ctx, after, silent)
 
         await thread.close(
-            closer=ctx.author, 
+            closer=ctx.author,
             after=close_after,
-            message=message, 
+            message=message,
             silent=silent,
         )
-    
+
     @commands.command(aliases=['alert'])
     async def notify(self, ctx, *, role=None):
         """
         Notify a given role or yourself to the next thread message received.
-        
+
         Once a thread message is received you will be pinged once only.
         """
         thread = await self.bot.threads.find(channel=ctx.channel)
@@ -239,27 +239,27 @@ class Modmail:
         if not role:
             mention = ctx.author.mention
         elif role.lower() in ('here', 'everyone'):
-            mention = '@' + role 
+            mention = '@' + role
         else:
             converter = commands.RoleConverter()
             role = await converter.convert(ctx, role)
             mention = role.mention
-        
+
         if str(thread.id) not in self.bot.config['notification_squad']:
             self.bot.config['notification_squad'][str(thread.id)] = []
-        
+
         mentions = self.bot.config['notification_squad'][str(thread.id)]
-        
+
         if mention in mentions:
             embed = discord.Embed(color=discord.Color.red(),
                                   description=f'{mention} is already '
-                                              'going to be mentioned.')
+                                  'going to be mentioned.')
         else:
             mentions.append(mention)
             await self.bot.config.update()
             embed = discord.Embed(color=discord.Color.blurple(),
                                   description=f'{mention} will be mentioned '
-                                              'on the next message received.')
+                                  'on the next message received.')
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['sub'])
@@ -277,28 +277,28 @@ class Modmail:
         if not role:
             mention = ctx.author.mention
         elif role.lower() in ('here', 'everyone'):
-            mention = '@' + role 
+            mention = '@' + role
         else:
             converter = commands.RoleConverter()
             role = await converter.convert(ctx, role)
             mention = role.mention
-        
+
         if str(thread.id) not in self.bot.config['subscriptions']:
             self.bot.config['subscriptions'][str(thread.id)] = []
-        
+
         mentions = self.bot.config['subscriptions'][str(thread.id)]
-        
+
         if mention in mentions:
             embed = discord.Embed(color=discord.Color.red(),
                                   description=f'{mention} is already '
-                                              'subscribed to this thread.')
+                                  'subscribed to this thread.')
         else:
             mentions.append(mention)
             await self.bot.config.update()
             embed = discord.Embed(
                 color=discord.Color.blurple(),
-                description=f'{mention} will now be '            
-                            'notified of all messages received.'
+                description=f'{mention} will now be '
+                'notified of all messages received.'
             )
         return await ctx.send(embed=embed)
 
@@ -312,27 +312,27 @@ class Modmail:
         if not role:
             mention = ctx.author.mention
         elif role.lower() in ('here', 'everyone'):
-            mention = '@' + role 
+            mention = '@' + role
         else:
             converter = commands.RoleConverter()
             role = await converter.convert(ctx, role)
             mention = role.mention
-        
+
         if str(thread.id) not in self.bot.config['subscriptions']:
             self.bot.config['subscriptions'][str(thread.id)] = []
-        
+
         mentions = self.bot.config['subscriptions'][str(thread.id)]
 
         if mention not in mentions:
             embed = discord.Embed(color=discord.Color.red(),
                                   description=f'{mention} is not already '
-                                              'subscribed to this thread.')
+                                  'subscribed to this thread.')
         else:
             mentions.remove(mention)
             await self.bot.config.update()
             embed = discord.Embed(color=discord.Color.blurple(),
                                   description=f'{mention} is now unsubscribed '
-                                              'to this thread.')
+                                  'to this thread.')
         return await ctx.send(embed=embed)
 
     @commands.command()
@@ -343,16 +343,18 @@ class Modmail:
             return
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
-    
+
     @commands.command()
     async def loglink(self, ctx):
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
             log_link = await self.bot.api.get_log_link(ctx.channel.id)
-            await ctx.send(embed=discord.Embed(
-                    color=discord.Color.blurple(), 
-                    description=log_link)
-                    )
+            await ctx.send(
+                embed=discord.Embed(
+                    color=discord.Color.blurple(),
+                    description=log_link
+                )
+            )
 
     @commands.command(aliases=['threads'])
     @commands.has_permissions(manage_messages=True)
@@ -427,7 +429,7 @@ class Modmail:
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-        
+
     @commands.command()
     async def reply(self, ctx, *, msg=''):
         """Reply to users using this command.
@@ -440,7 +442,7 @@ class Modmail:
         if thread:
             await ctx.trigger_typing()
             await thread.reply(ctx.message)
-    
+
     @commands.command()
     async def anonreply(self, ctx, *, msg=''):
         ctx.message.content = msg
@@ -448,11 +450,11 @@ class Modmail:
         if thread:
             await ctx.trigger_typing()
             await thread.reply(ctx.message, anonymous=True)
-    
+
     @commands.command()
     async def note(self, ctx, *, msg=''):
         """Take a note about the current thread, useful for noting context."""
-        ctx.message.content = msg 
+        ctx.message.content = msg
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
             await ctx.trigger_typing()
@@ -495,7 +497,7 @@ class Modmail:
         if not linked_message_id:
             raise commands.UserInputError
 
-        await thread.edit_message(linked_message_id, new_message),
+        await thread.edit_message(linked_message_id, new_message)
         await self.bot.api.edit_message(linked_message_id, new_message)
 
         await ctx.message.add_reaction('✅')
@@ -513,7 +515,7 @@ class Modmail:
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description='A thread for this user already '
-                            f'exists in {exists.channel.mention}.'
+                f'exists in {exists.channel.mention}.'
             )
 
         else:
@@ -522,7 +524,7 @@ class Modmail:
             embed = discord.Embed(
                 title='Created thread',
                 description=f'Thread started in {thread.channel.mention} '
-                            f'for {user.mention}',
+                f'for {user.mention}',
                 color=discord.Color.blurple()
             )
 
@@ -573,7 +575,7 @@ class Modmail:
                 user = thread.recipient
             else:
                 raise commands.UserInputError
-        
+
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         if str(user.id) not in self.bot.blocked_users:

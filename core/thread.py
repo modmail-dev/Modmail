@@ -1,6 +1,3 @@
-import discord
-from discord.ext.commands import UserInputError, CommandError
-
 import re
 import string
 import asyncio
@@ -9,11 +6,14 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from traceback import print_exc
 
+import discord
+from discord.ext.commands import UserInputError, CommandError
+from colorthief import ColorThief
+
+
 from core.decorators import async_executor
 from core.utils import is_image_url, days, match_user_id, parse_image_url
 from core.objects import Bot, ThreadManagerABC, ThreadABC
-
-from colorthief import ColorThief
 
 
 class Thread(ThreadABC):
@@ -70,7 +70,7 @@ class Thread(ThreadABC):
     def ready(self, flag):
         if flag:
             self._ready_event.set()
-    
+
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
             self._close(closer, silent, delete_channel, message, True)
@@ -132,7 +132,7 @@ class Thread(ThreadABC):
         if log_data is not None and isinstance(log_data, dict):
             if self.bot.self_hosted:
                 log_url = f"{self.bot.config.log_url.strip('/')}/" \
-                          f"logs/{log_data['key']}"
+                    f"logs/{log_data['key']}"
             else:
                 log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
@@ -143,7 +143,7 @@ class Thread(ThreadABC):
                 sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
             else:
                 sneak_peak = 'No content'
-            
+
             desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
         else:
             desc = "Could not resolve log url."
@@ -244,7 +244,7 @@ class Thread(ThreadABC):
                       destination=self.recipient,
                       from_mod=True,
                       anonymous=anonymous)
-            ]
+        ]
 
         await self.bot.api.append_log(
             message,
@@ -272,10 +272,9 @@ class Thread(ThreadABC):
             # cancel closing if a thread message is sent.
             await self.cancel_closure()
             await self.channel.send(embed=discord.Embed(
-                    color=discord.Color.red(),
-                    description='Scheduled close has been cancelled.'
-                )
-            )
+                color=discord.Color.red(),
+                description='Scheduled close has been cancelled.'
+            ))
 
         if not from_mod and not note:
             await self.bot.api.append_log(message, self.channel.id)
@@ -297,7 +296,7 @@ class Thread(ThreadABC):
 
         if not note:
             if anonymous and from_mod and \
-               not isinstance(destination, discord.TextChannel):
+                    not isinstance(destination, discord.TextChannel):
                 # Anonymously sending to the user.
                 tag = self.bot.config.get('mod_tag',
                                           str(message.author.top_role))
@@ -364,7 +363,7 @@ class Thread(ThreadABC):
 
         if from_mod:
             # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = self.bot.mod_color
+            embed.color = self.bot.mod_color  # pylint: disable=E0237
             # Anonymous reply sent in thread channel
             if anonymous and isinstance(destination, discord.TextChannel):
                 embed.set_footer(text='Anonymous Reply')
@@ -379,11 +378,11 @@ class Thread(ThreadABC):
                 )
         elif note:
             # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = discord.Color.blurple()
+            embed.color = discord.Color.blurple()  # pylint: disable=E0237
         else:
             embed.set_footer(text=f'Recipient')
             # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = self.bot.recipient_color
+            embed.color = self.bot.recipient_color  # pylint: disable=E0237
 
         await destination.trigger_typing()
 
@@ -425,7 +424,7 @@ class ThreadManager(ThreadManagerABC):
     async def populate_cache(self):
         for channel in self.bot.modmail_guild.text_channels:
             if channel.category != self.bot.main_category and not \
-               self.bot.using_multiple_server_setup:
+                    self.bot.using_multiple_server_setup:
                 continue
             await self.find(channel=channel)
 
@@ -464,7 +463,7 @@ class ThreadManager(ThreadManagerABC):
         searching channel history for genesis embed and
         extracts user_id from that.
         """
-        user_id = None
+        user_id = -1
 
         if channel.topic:
             user_id = match_user_id(channel.topic)
@@ -477,10 +476,10 @@ class ThreadManager(ThreadManagerABC):
                     embed = message.embeds[0]
                     if embed.footer.text:
                         user_id = match_user_id(embed.footer.text)
-                        if user_id is not None:
+                        if user_id != -1:
                             break
 
-        if user_id is not None:
+        if user_id != -1:
             if user_id in self.cache:
                 return self.cache[user_id]
 
@@ -497,9 +496,9 @@ class ThreadManager(ThreadManagerABC):
         """Creates a Modmail thread"""
 
         thread_creation_response = self.bot.config.get(
-                'thread_creation_response',
-                'The moderation team will get back to you as soon as possible!'
-            )
+            'thread_creation_response',
+            'The moderation team will get back to you as soon as possible!'
+        )
 
         embed = discord.Embed(
             color=self.bot.mod_color,
@@ -517,7 +516,7 @@ class ThreadManager(ThreadManagerABC):
         overwrites = {
             self.bot.modmail_guild.default_role:
                 discord.PermissionOverwrite(read_messages=False)
-            }
+        }
 
         category = category or self.bot.main_category
 
@@ -541,8 +540,7 @@ class ThreadManager(ThreadManagerABC):
         # await self.get_dominant_color(recipient.avatar_url)
 
         log_count = sum(1 for log in log_data if not log['open'])
-        info_embed = self._format_info_embed(recipient, creator,
-                                             log_url, log_count,
+        info_embed = self._format_info_embed(recipient, log_url, log_count,
                                              discord.Color.green())
 
         topic = f'User ID: {recipient.id}'
@@ -564,8 +562,9 @@ class ThreadManager(ThreadManagerABC):
         return await self.find(recipient=recipient) or \
                await self.create(recipient)
 
+    @staticmethod
     @async_executor()
-    def _do_get_dc(self, image, quality):
+    def _do_get_dc(image, quality):
         with BytesIO(image) as f:
             return ColorThief(f).get_color(quality=quality)
 
@@ -601,7 +600,7 @@ class ThreadManager(ThreadManagerABC):
 
         return new_name
 
-    def _format_info_embed(self, user, creator, log_url, log_count, dc):
+    def _format_info_embed(self, user, log_url, log_count, color):
         """Get information about a member of a server
         supports users from the guild or not."""
         member = self.bot.guild.get_member(user.id)
@@ -621,7 +620,7 @@ class ThreadManager(ThreadManagerABC):
                 role_names = ' '.join(r.mention for r in roles
                                       if r.name != "@everyone")
 
-        embed = discord.Embed(colour=dc,
+        embed = discord.Embed(color=color,
                               description=user.mention,
                               timestamp=time)
 
@@ -650,13 +649,13 @@ class ThreadManager(ThreadManagerABC):
                                 value=role_names,
                                 inline=True)
         else:
-            embed.set_footer(text=f'{footer} | Note: this member'
-                                  ' is not part of this server.')
+            embed.set_footer(text=f'{footer} | Note: this member '
+                                  'is not part of this server.')
 
         if log_count:
             # embed.add_field(name='Past logs', value=f'{log_count}')
-            t = 'thread' if log_count == 1 else 'threads'
-            embed.description += f" with **{log_count}** past {t}."
+            thread = 'thread' if log_count == 1 else 'threads'
+            embed.description += f" with **{log_count}** past {thread}."
         else:
             embed.description += '.'
 

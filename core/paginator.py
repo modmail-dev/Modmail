@@ -1,8 +1,8 @@
-from discord import Embed, Message, HTTPException, InvalidArgument
-from discord.ext import commands
-
 import typing
 from asyncio import TimeoutError
+
+from discord import Embed, Message, HTTPException, InvalidArgument
+from discord.ext import commands
 
 
 class PaginatorSession:
@@ -27,10 +27,11 @@ class PaginatorSession:
     close:
         Forcefully destroy a session
     """
+
     def __init__(self, ctx: commands.Context, *embeds, **options):
         self.ctx = ctx
         self.timeout: int = options.get('timeout', 60)
-        self.embeds: typing.List[Embed] = embeds
+        self.embeds: typing.List[Embed] = list(embeds)
         self.running = False
         self.base: Message = None
         self.current = 0
@@ -44,7 +45,7 @@ class PaginatorSession:
 
         if options.get('edit_footer', True) and len(self.embeds) > 1:
             for i, embed in enumerate(self.embeds):
-                footer_text = f'Page {i+1} of {len(self.embeds)}'
+                footer_text = f'Page {i + 1} of {len(self.embeds)}'
                 if embed.footer.text:
                     footer_text = footer_text + ' • ' + embed.footer.text
                 embed.set_footer(text=footer_text,
@@ -64,7 +65,7 @@ class PaginatorSession:
             return
 
         self.running = True
-        for reaction in self.reaction_map.keys():
+        for reaction in self.reaction_map:
             if len(self.embeds) == 2 and reaction in '⏮⏭':
                 continue
             await self.base.add_reaction(reaction)
