@@ -533,10 +533,11 @@ class ThreadManager(ThreadManagerABC):
         thread = Thread(self, recipient, channel)
         self.cache[recipient.id] = thread
 
-        log_url = await self.bot.api.create_log_entry(recipient, channel,
-                                                      creator or recipient)
-
-        log_data = await self.bot.api.get_user_logs(recipient.id)
+        log_url, log_data = await asyncio.gather(
+            self.bot.api.create_log_entry(recipient, channel,
+                                          creator or recipient),
+            self.bot.api.get_user_logs(recipient.id)
+        )
         # await self.get_dominant_color(recipient.avatar_url)
 
         log_count = sum(1 for log in log_data if not log['open'])

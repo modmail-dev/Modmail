@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional, Union
+from asyncio import gather
 
 import discord
 from discord.ext import commands
@@ -497,9 +498,10 @@ class Modmail:
         if not linked_message_id:
             raise commands.UserInputError
 
-        await thread.edit_message(linked_message_id, new_message)
-        await self.bot.api.edit_message(linked_message_id, new_message)
-
+        await gather(
+            thread.edit_message(linked_message_id, new_message),
+            self.bot.api.edit_message(linked_message_id, new_message)
+        )
         await ctx.message.add_reaction('✅')
 
     @commands.command()
