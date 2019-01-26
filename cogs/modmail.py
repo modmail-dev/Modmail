@@ -305,6 +305,7 @@ class Modmail:
     
     @commands.command()
     async def loglink(self, ctx):
+        """Return the link to the current thread's logs."""
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
             log_link = await self.bot.modmail_api.get_log_link(ctx.channel.id)
@@ -391,6 +392,11 @@ class Modmail:
     
     @commands.command()
     async def anonreply(self, ctx, *, msg=''):
+        """Reply to a thread anonymously. 
+        
+        You can edit the anonymous user's name, avatar and tag using the config command.
+        Edit the `anon_username`, `anon_avatar_url` and `anon_tag` config variables to do so.
+        """
         ctx.message.content = msg
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
