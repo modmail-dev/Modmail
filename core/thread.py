@@ -41,6 +41,8 @@ class Thread:
     def ready(self, flag):
         if flag is True:
             self.ready_event.set()
+        else:
+            self.ready_event.clear()
     
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -288,6 +290,7 @@ class Thread:
 
         prioritize_uploads = any(i[1] is not None for i in images)
 
+        additional_images = []
         additional_count = 1
 
         for att in images:
@@ -296,12 +299,12 @@ class Thread:
                 em.set_image(url=att[0])
                 embedded_image = True
             elif att[1] is not None:
-                link = f'[{att[1]}]({att[0]})'
-                em.add_field(
-                    name=f'Additional Image upload ({additional_count})',
-                    value=link,
-                    inline=False
-                )
+                color = discord.Color.blurple() if note else self.bot.mod_color if from_mod else self.bot.recipient_color
+                img = discord.Embed(color=color)
+                img.set_image(url=att[0])
+                img.set_footer(text=f'Additional Image Upload ({additional_count})')
+                img.timestamp = message.created_at
+                additional_images.append(destination.send(embed=img))
                 additional_count += 1
         
         file_upload_count = 1
@@ -335,6 +338,10 @@ class Thread:
             mentions = None
             
         await destination.send(mentions, embed=em)
+        if additional_images:
+            self.ready = False 
+            await asyncio.gather(*additional_images)
+            self.ready = True
 
         if delete_message:
             try:
