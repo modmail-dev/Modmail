@@ -1,5 +1,7 @@
-from discord import Embed, HTTPException, InvalidArgument
+from discord import Embed, Message, HTTPException, InvalidArgument
+from discord.ext import commands
 
+import typing
 from asyncio import TimeoutError
 
 
@@ -25,12 +27,12 @@ class PaginatorSession:
     close:
         Forcefully destroy a session
     """
-    def __init__(self, ctx, *embeds, **options):
+    def __init__(self, ctx: commands.Context, *embeds, **options):
         self.ctx = ctx
-        self.timeout = options.get('timeout', 60)
-        self.embeds: list = embeds
+        self.timeout: int = options.get('timeout', 60)
+        self.embeds: typing.List[Embed] = embeds
         self.running = False
-        self.base = None
+        self.base: Message = None
         self.current = 0
         self.reaction_map = {
             '⏮': self.first_page,
@@ -49,13 +51,13 @@ class PaginatorSession:
                 embed.set_footer(text=footer_text,
                                  icon_url=embed.footer.icon_url)
 
-    def add_page(self, embed):
+    def add_page(self, embed: Embed) -> None:
         if isinstance(embed, Embed):
             self.embeds.append(embed)
         else:
             raise TypeError('Page must be an Embed object.')
 
-    async def create_base(self, embed):
+    async def create_base(self, embed: Embed) -> None:
         self.base = await self.ctx.send(embed=embed)
 
         if len(self.embeds) == 1:
@@ -68,7 +70,7 @@ class PaginatorSession:
                 continue
             await self.base.add_reaction(reaction)
 
-    async def show_page(self, index: int):
+    async def show_page(self, index: int) -> None:
         if not 0 <= index < len(self.embeds):
             return
 
@@ -80,12 +82,12 @@ class PaginatorSession:
         else:
             await self.create_base(page)
 
-    def react_check(self, reaction, user):
+    def react_check(self, reaction, user) -> bool:
         return reaction.message.id == self.base.id and \
                user.id == self.ctx.author.id and \
                reaction.emoji in self.reaction_map.keys()
 
-    async def run(self):
+    async def run(self) -> typing.Optional[Message]:
         if not self.running:
             await self.show_page(0)
         while self.running:
@@ -105,15 +107,15 @@ class PaginatorSession:
             except (HTTPException, InvalidArgument):
                 pass
 
-    def previous_page(self):
+    def previous_page(self) -> None:
         """Go to the previous page."""
-        return self.show_page(self.current - 1)
+        self.show_page(self.current - 1)
 
-    def next_page(self):
+    def next_page(self) -> None:
         """Go to the next page"""
-        return self.show_page(self.current + 1)
+        self.show_page(self.current + 1)
 
-    async def close(self, delete=True):
+    async def close(self, delete: bool = True) -> typing.Optional[Message]:
         """Delete this embed."""
         self.running = False
 
@@ -130,10 +132,10 @@ class PaginatorSession:
         except HTTPException:
             pass
 
-    def first_page(self):
+    def first_page(self) -> None:
         """Go to immediately to the first page"""
-        return self.show_page(0)
+        self.show_page(0)
 
-    def last_page(self):
+    def last_page(self) -> None:
         """Go to immediately to the last page"""
-        return self.show_page(len(self.embeds) - 1)
+        self.show_page(len(self.embeds) - 1)

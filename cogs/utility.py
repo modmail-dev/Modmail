@@ -18,12 +18,13 @@ from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
 from core.changelog import ChangeLog
 from core.utils import cleanup_code
+from core.objects import Bot
 
 
 class Utility:
     """General commands that provide utility"""
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
     def format_cog_help(self, ctx, cog):
@@ -57,7 +58,7 @@ class Utility:
             embeds.append(embed)
         return embeds
 
-    def format_command_help(self, ctx, cmd):
+    def format_command_help(self, cmd):
         """Formats command help."""
         prefix = self.bot.prefix
         embed = Embed(
@@ -114,7 +115,7 @@ class Utility:
             cmd = self.bot.get_command(command)
             cog = self.bot.cogs.get(command)
             if cmd is not None:
-                embeds = [self.format_command_help(ctx, cmd)]
+                embeds = [self.format_command_help(cmd)]
             elif cog is not None:
                 embeds = self.format_cog_help(ctx, cog)
             else:
@@ -198,7 +199,7 @@ class Utility:
         if ctx.invoked_subcommand:
             return
 
-        data = await self.bot.modmail_api.get_user_info()
+        data = await self.bot.api.get_user_info()
 
         embed = Embed(
             title='Github',
@@ -218,7 +219,8 @@ class Utility:
     @trigger_typing
     async def update(self, ctx):
         """Updates the bot, this only works with heroku users."""
-        metadata = await self.bot.modmail_api.get_metadata()
+        # TODO: Should return if user is self hosting
+        metadata = await self.bot.api.get_metadata()
 
         desc = (f'The latest version is [`{self.bot.version}`]'
                 '(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
@@ -230,14 +232,14 @@ class Utility:
         )
 
         if metadata['latest_version'] == self.bot.version:
-            data = await self.bot.modmail_api.get_user_info()
+            data = await self.bot.api.get_user_info()
             if not data.get('error'):
                 user = data['user']
                 embed.set_author(name=user['username'],
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
         else:
-            data = await self.bot.modmail_api.update_repository()
+            data = await self.bot.api.update_repository()
 
             commit_data = data['data']
             user = data['user']

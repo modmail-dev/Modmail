@@ -7,7 +7,7 @@ import functools
 
 def trigger_typing(func):
     @functools.wraps(func)
-    async def wrapper(self, ctx, *args, **kwargs):
+    async def wrapper(self, ctx: commands.Context, *args, **kwargs):
         await ctx.trigger_typing()
         return await func(self, ctx, *args, **kwargs)
     return wrapper
@@ -15,7 +15,7 @@ def trigger_typing(func):
 
 def auth_required(func):
     @functools.wraps(func)
-    async def wrapper(self, ctx, *args, **kwargs):
+    async def wrapper(self, ctx: commands.Context, *args, **kwargs):
         if (self.bot.self_hosted and
            self.bot.config.get('github_access_token')) or \
            self.bot.config.get('modmail_api_token'):
@@ -37,7 +37,7 @@ def auth_required(func):
 
 
 def owner_only():
-    async def predicate(ctx):
+    async def predicate(ctx: commands.Context) -> bool:
         allowed = [int(x) for x in
                    str(ctx.bot.config.get('owners', '0')).split(',')]
         return ctx.author.id in allowed

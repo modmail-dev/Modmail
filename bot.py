@@ -46,6 +46,7 @@ from core.clients import Github, ModmailApiClient, SelfHostedClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 from core.changelog import ChangeLog
+from core.objects import Bot
 
 
 colorama.init()
@@ -54,33 +55,65 @@ line = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
        Style.RESET_ALL
 
 
-class ModmailBot(commands.Bot):
+class ModmailBot(Bot):
 
     def __init__(self):
         super().__init__(command_prefix=None)  # implemented in `get_prefix`
-        self.version = __version__
-        self.start_time = datetime.utcnow()
-        self.threads = ThreadManager(self)
-        self.session = ClientSession(loop=self.loop)
-        self.config = ConfigManager(self)
-        self.self_hosted = bool(self.config.get('mongo_uri', ''))
+        self._threads = None
+        self._session = None
+        self._config = None
         self._connected = Event()
+        self._db = None
 
         if self.self_hosted:
-            self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
-            self.modmail_api = SelfHostedClient(self)
+            self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
+            self._api = SelfHostedClient(self)
         else:
-            self.modmail_api = ModmailApiClient(self)
+            self._api = ModmailApiClient(self)
 
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
-        self._add_commands()
+        self._load_extensions()
         self.owner = None
+
+    @property
+    def version(self):
+        return __version__
+
+    @property
+    def db(self):
+        return self._db
+
+    @property
+    def self_hosted(self):
+        return bool(self.config.get('mongo_uri', ''))
+
+    @property
+    def api(self):
+        return self._api
+
+    @property
+    def config(self):
+        if self._config is None:
+            self._config = ConfigManager(self)
+        return self._config
+
+    @property
+    def session(self):
+        if self._session is None:
+            self._session = ClientSession(loop=self.loop)
+        return self._session
+
+    @property
+    def threads(self):
+        if self._threads is None:
+            self._threads = ThreadManager(self)
+        return self._threads
 
     async def get_prefix(self, message=None):
         return [self.prefix, f'<@{self.user.id}> ', f'<@!{self.user.id}> ']
 
-    def _add_commands(self):
+    def _load_extensions(self):
         """Adds commands automatically"""
         self.remove_command('help')
 
@@ -397,7 +430,7 @@ class ModmailBot(commands.Bot):
 
         thread = await self.threads.find(channel=ctx.channel)
         if thread is not None:
-            await self.modmail_api.append_log(message, type_='internal')
+            await self.api.append_log(message, type_='internal')
     
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
@@ -454,7 +487,8 @@ class ModmailBot(commands.Bot):
         else:
             raise error
 
-    def overwrites(self, ctx):  # TODO: can this be static?
+    @staticmethod
+    def overwrites(ctx):
         """Permission overwrites for the guild."""
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(
@@ -486,14 +520,14 @@ class ModmailBot(commands.Bot):
                   'if you are self-hosting logs.')
             return await self.logout()
         else:
-            valid = await self.modmail_api.validate_token()
+            valid = await self.api.validate_token()
             if not valid:
                 print(Fore.RED, end='')
                 print('Invalid MODMAIL_API_TOKEN - get one '
                       'from https://dashboard.modmail.tk')
                 return await self.logout()
 
-        user = await self.modmail_api.get_user_info()
+        user = await self.api.get_user_info()
         username = user['user']['username']
         print(Style.RESET_ALL + Fore.CYAN + 'Validated token.')
         print('GitHub user: ' + username + Style.RESET_ALL)
@@ -533,7 +567,7 @@ class ModmailBot(commands.Bot):
                 "last_updated": str(datetime.utcnow())
             }
 
-            await self.modmail_api.post_metadata(data)
+            await self.api.post_metadata(data)
             await sleep(3600)
 
     async def autoupdate_loop(self):
@@ -551,10 +585,10 @@ class ModmailBot(commands.Bot):
             return 
 
         while True:
-            metadata = await self.modmail_api.get_metadata()
+            metadata = await self.api.get_metadata()
 
             if metadata['latest_version'] != self.version:
-                data = await self.modmail_api.update_repository()
+                data = await self.api.update_repository()
 
                 embed = discord.Embed(color=discord.Color.green())
 
@@ -597,20 +631,6 @@ class ModmailBot(commands.Bot):
             latest_commits += f'[`{short_sha}`]({html_url}) {message}\n'
 
         return latest_commits
-
-    @property
-    def uptime(self):
-        now = datetime.utcnow()
-        delta = now - self.start_time
-        hours, remainder = divmod(int(delta.total_seconds()), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        days, hours = divmod(hours, 24)
-
-        fmt = '{h}h {m}m {s}s'
-        if days:
-            fmt = '{d}d ' + fmt
-
-        return fmt.format(d=days, h=hours, m=minutes, s=seconds)
 
 
 if __name__ == '__main__':

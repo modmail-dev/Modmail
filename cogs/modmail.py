@@ -9,13 +9,14 @@ from dateutil import parser
 from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import User, truncate
+from core.utils import truncate, User
+from core.objects import Bot
 
 
 class Modmail:
     """Commands directly related to Modmail functionality."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
     @commands.command()
@@ -140,7 +141,8 @@ class Modmail:
         await thread.channel.edit(category=category, sync_permissions=True)
         await ctx.message.add_reaction('✅')
 
-    async def send_scheduled_close_message(self, ctx, after, silent=False):
+    @staticmethod
+    async def send_scheduled_close_message(ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
         
         silent = '*silently* ' if silent else ''
@@ -354,7 +356,7 @@ class Modmail:
         icon_url = getattr(user, 'avatar_url', default_avatar)
         username = str(user) if hasattr(user, 'name') else str(user.id)
 
-        logs = await self.bot.modmail_api.get_user_logs(user.id)
+        logs = await self.bot.api.get_user_logs(user.id)
 
         if not any(not log['open'] for log in logs):
             embed = discord.Embed(color=discord.Color.red(),

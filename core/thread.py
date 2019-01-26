@@ -4,6 +4,7 @@ from discord.ext.commands import UserInputError
 import re
 import string
 import asyncio
+import typing
 from io import BytesIO
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
@@ -11,40 +12,63 @@ from traceback import print_exc
 
 from core.decorators import async_executor
 from core.utils import is_image_url, days
+from core.objects import Bot, ThreadManagerABC, ThreadABC
 
 from colorthief import ColorThief
 
 
-class Thread:
+class Thread(ThreadABC):
     """Represents a discord Modmail thread"""
 
-    def __init__(self, manager, recipient):
+    def __init__(self, manager: 'ThreadManager',
+                 recipient: typing.Union[discord.Member, discord.User],
+                 channel: typing.Union[discord.DMChannel,
+                                       discord.TextChannel]):
         self.manager = manager
         self.bot = manager.bot
-        # TODO: Why wouldn't there be recipient?
-        self.id = recipient.id if recipient else None
+        self._id = recipient.id
         # TODO: recipient should not be bot
-        self.recipient = recipient
-        self.channel = None
-        self.ready_event = asyncio.Event()
-        self.close_task = None
+        self._recipient = recipient
+        self._channel = channel
+        self._ready_event = asyncio.Event()
+        self._close_task = None
 
     def __repr__(self):
         return (f'Thread(recipient="{self.recipient}", '
                 f'channel={self.channel.id})')
 
-    def wait_until_ready(self):
+    async def wait_until_ready(self):
         """Blocks execution until the thread is fully set up."""
-        return self.ready_event.wait()
+        await self._ready_event.wait()
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def close_task(self):
+        return self._close_task
+
+    @close_task.setter
+    def close_task(self, val):
+        self._close_task = val
+
+    @property
+    def channel(self):
+        return self._channel
+
+    @property
+    def recipient(self):
+        return self._recipient
 
     @property
     def ready(self):
-        return self.ready_event.is_set()
+        return self._ready_event.is_set()
 
     @ready.setter
     def ready(self, flag):
-        if flag is True:
-            self.ready_event.set()
+        if flag:
+            self._ready_event.set()
     
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -78,9 +102,8 @@ class Thread:
                 after, self._close_after, closer,
                 silent, delete_channel, message
             )
-            return
-
-        return await self._close(closer, silent, delete_channel, message)
+        else:
+            await self._close(closer, silent, delete_channel, message)
 
     async def _close(self, closer, silent=False, delete_channel=True,
                      message=None, scheduled=False):
@@ -92,7 +115,7 @@ class Thread:
             del self.bot.config.subscriptions[str(self.id)]
 
         # Logging
-        log_data = await self.bot.modmail_api.post_log(self.channel.id, {
+        log_data = await self.bot.api.post_log(self.channel.id, {
             'open': False,
             'closed_at': str(datetime.utcnow()),
             'close_message': message if not silent else None,
@@ -180,7 +203,7 @@ class Thread:
                     break
 
     def edit_message(self, message_id, message):
-        return asyncio.gather(
+        asyncio.gather(
             self._edit_thread_message(self.recipient, message_id, message),
             self._edit_thread_message(self.channel, message_id, message)
         )
@@ -190,9 +213,9 @@ class Thread:
             raise UserInputError
 
         await asyncio.gather(
-            self.bot.modmail_api.append_log(message,
-                                            self.channel.id,
-                                            type_='system'),
+            self.bot.api.append_log(message,
+                                    self.channel.id,
+                                    type_='system'),
             self.send(message, self.channel, note=True)
         )
 
@@ -200,13 +223,14 @@ class Thread:
         if not message.content and not message.attachments:
             raise UserInputError
         if all(not g.get_member(self.id) for g in self.bot.guilds):
-            return await message.channel.send(
+            await message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
                     description='This user shares no servers with '
                                 'me and is thus unreachable.'
                 )
             )
+            return
 
         tasks = [
             # in thread channel
@@ -221,7 +245,7 @@ class Thread:
                       anonymous=anonymous)
             ]
 
-        await self.bot.modmail_api.append_log(
+        await self.bot.api.append_log(
             message,
             self.channel.id,
             type_='anonymous' if anonymous else 'thread_message'
@@ -253,7 +277,7 @@ class Thread:
             )
 
         if not from_mod and not note:
-            await self.bot.modmail_api.append_log(message, self.channel.id)
+            await self.bot.api.append_log(message, self.channel.id)
 
         if not self.ready:
             await self.wait_until_ready()
@@ -341,6 +365,7 @@ class Thread:
             file_upload_count += 1
 
         if from_mod:
+            # noinspection PyUnresolvedReferences,PyDunderSlots
             embed.color = self.bot.mod_color
             # Anonymous reply sent in thread channel
             if anonymous and isinstance(destination, discord.TextChannel):
@@ -356,9 +381,11 @@ class Thread:
                     text=self.bot.config.get('anon_tag', 'Response')
                 )
         elif note:
+            # noinspection PyUnresolvedReferences,PyDunderSlots
             embed.color = discord.Color.blurple()
         else:
             embed.set_footer(text=f'Recipient')
+            # noinspection PyUnresolvedReferences,PyDunderSlots
             embed.color = self.bot.recipient_color
 
         await destination.trigger_typing()
@@ -391,10 +418,10 @@ class Thread:
         return ' '.join(mentions)
 
 
-class ThreadManager:
+class ThreadManager(ThreadManagerABC):
     """Class that handles storing, finding and creating Modmail threads."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
         self.cache = {}
 
@@ -428,12 +455,10 @@ class ThreadManager:
                 topic=f'User ID: {recipient.id}'
             )
             if channel:
-                self.cache[recipient.id] = thread = Thread(self, recipient)
-                # TODO: Fix this:
-                thread.channel = channel
+                thread = Thread(self, recipient, channel)
+                self.cache[recipient.id] = thread
                 thread.ready = True
-        finally:
-            return thread
+        return thread
 
     async def _find_from_channel(self, channel):
         """
@@ -465,11 +490,11 @@ class ThreadManager:
                 return self.cache[user_id]
 
             recipient = self.bot.get_user(user_id)  # this could be None
+            if recipient is None:
+                raise ValueError('Recipient not found.')
 
-            self.cache[user_id] = thread = Thread(self, recipient)
+            self.cache[user_id] = thread = Thread(self, recipient, channel)
             thread.ready = True
-            thread.channel = channel
-            thread.id = user_id
 
             return thread
 
@@ -493,13 +518,11 @@ class ThreadManager:
         if creator is None:
             self.bot.loop.create_task(recipient.send(embed=embed))
 
-        self.cache[recipient.id] = thread = Thread(self, recipient)
-
+        # in case it creates a channel outside of category
         overwrites = {
             self.bot.modmail_guild.default_role:
                 discord.PermissionOverwrite(read_messages=False)
             }
-        # in case it creates a channel outside of category
 
         category = category or self.bot.main_category
 
@@ -513,13 +536,14 @@ class ThreadManager:
             reason='Creating a thread channel'
         )
 
-        thread.channel = channel
+        thread = Thread(self, recipient, channel)
+        self.cache[recipient.id] = thread
 
         log_url, log_data = await asyncio.gather(
-            self.bot.modmail_api.get_log_url(recipient,
-                                             channel,
-                                             creator or recipient),
-            self.bot.modmail_api.get_user_logs(recipient.id),
+            self.bot.api.get_log_url(recipient,
+                                     channel,
+                                     creator or recipient),
+            self.bot.api.get_user_logs(recipient.id),
             # self.get_dominant_color(recipient.avatar_url),
         )
 
@@ -541,7 +565,6 @@ class ThreadManager:
 
         thread.ready = True
         await msg.pin()
-
         return thread
 
     async def find_or_create(self, recipient):
@@ -556,7 +579,7 @@ class ThreadManager:
         if any(parsed.path.endswith(i) for i in types):
             # TODO: Replace this logic with urlsplit/urlunsplit
             return url.replace(parsed.query, 'size=128')
-        return False
+        return ''
 
     @async_executor()
     def _do_get_dc(self, image, quality):

@@ -1,6 +1,7 @@
 from discord import Object
 from discord.ext import commands
 
+import typing
 from urllib.parse import urlparse
 
 
@@ -20,24 +21,25 @@ class User(commands.IDConverter):
         return Object(int(match.group(1)))
 
 
-def truncate(c):
+def truncate(c: str) -> str:
     return c[:47].strip() + '...' if len(c) > 50 else c
 
 
-def is_image_url(u, _):
+def is_image_url(u: str, _=None) -> bool:
     for x in {'.png', '.jpg', '.gif', '.jpeg', '.webp'}:
         if urlparse(u.lower()).path.endswith(x):
             return True
     return False
 
 
-def days(d):
-    if d == '0':
+def days(d: typing.Union[str, int]) -> str:
+    d = int(d)
+    if d == 0:
         return '**today**'
-    return f'{d} day ago' if d == '1' else f'{d} days ago'
+    return f'{d} day ago' if d == 1 else f'{d} days ago'
 
 
-def cleanup_code(content):
+def cleanup_code(content: str) -> str:
     """Automatically removes code blocks from the code."""
     # remove ```py\n```
     if content.startswith('```') and content.endswith('```'):
