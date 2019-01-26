@@ -283,7 +283,7 @@ class ThreadABC(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def recipient(self) -> typing.Union[User, Member]:
+    def recipient(self) -> typing.Optional[typing.Union[User, Member]]:
         raise NotImplementedError
 
     @property

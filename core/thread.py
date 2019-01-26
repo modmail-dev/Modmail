@@ -16,7 +16,8 @@ class Thread(ThreadABC):
     """Represents a discord Modmail thread"""
 
     def __init__(self, manager: 'ThreadManager',
-                 recipient: typing.Union[discord.Member, discord.User],
+                 recipient: typing.Union[discord.Member, discord.User,
+                                         int],
                  channel: typing.Union[discord.DMChannel,
                                        discord.TextChannel]):
         if recipient.bot:
@@ -24,14 +25,18 @@ class Thread(ThreadABC):
 
         self.manager = manager
         self.bot = manager.bot
-        self._id = recipient.id
-        self._recipient = recipient
+        if isinstance(recipient, int):
+            self._id = recipient
+            self._recipient = None
+        else:
+            self._id = recipient.id
+            self._recipient = recipient
         self._channel = channel
         self._ready_event = asyncio.Event()
         self._close_task = None
 
     def __repr__(self):
-        return (f'Thread(recipient="{self.recipient}", '
+        return (f'Thread(recipient="{self.recipient or self.id}", '
                 f'channel={self.channel.id})')
 
     async def wait_until_ready(self):
@@ -134,7 +139,10 @@ class Thread(ThreadABC):
             else:
                 log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
-            user = self.recipient.mention if self.recipient else f'`{self.id}`'
+            if self.recipient is not None:
+                user = self.recipient.mention
+            else:
+                user = f'`{self.id}`'
 
             if log_data['messages']:
                 msg = str(log_data['messages'][0]['content'])
@@ -497,9 +505,9 @@ class ThreadManager(ThreadManagerABC):
 
             recipient = self.bot.get_user(user_id)  # this could be None
             if recipient is None:
-                raise ValueError('Recipient not found.')
-
-            self.cache[user_id] = thread = Thread(self, recipient, channel)
+                self.cache[user_id] = thread = Thread(self, user_id, channel)
+            else:
+                self.cache[user_id] = thread = Thread(self, recipient, channel)
             thread.ready = True
 
             return thread
