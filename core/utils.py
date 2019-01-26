@@ -7,6 +7,7 @@ from discord.ext import commands
 
 
 class User(commands.IDConverter):
+    # noinspection PyCallByClass,PyTypeChecker
     async def convert(self, ctx, argument):
         try:
             return await commands.MemberConverter.convert(self, ctx, argument)

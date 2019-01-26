@@ -139,11 +139,6 @@ class Bot(abc.ABC, commands.Bot):
     def overwrites(ctx: commands.Context) -> dict:
         raise NotImplementedError
 
-    # Broken.
-    @abc.abstractmethod
-    async def get_latest_updates(self, limit: int = 3) -> typing.NoReturn:
-        raise NotImplementedError
-
 
 class UserClient(abc.ABC):
     @property
@@ -384,10 +379,4 @@ class ThreadManagerABC(abc.ABC):
     async def find_or_create(self,
                              recipient: typing.Union[Member, User]) \
             -> 'ThreadABC':
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def get_dominant_color(self,
-                                 url: str = None,
-                                 quality: float = 10) -> Color:
         raise NotImplementedError

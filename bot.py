@@ -41,7 +41,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 
-from core.clients import Github, ModmailApiClient, SelfHostedClient
+from core.clients import ModmailApiClient, SelfHostedClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 from core.changelog import ChangeLog
@@ -615,18 +615,6 @@ class ModmailBot(Bot):
                     await channel.send(embed=embed)
 
             await asyncio.sleep(3600)
-
-    async def get_latest_updates(self, limit=3):
-        latest_commits = ''
-
-        async for commit in Github(self).get_latest_commits(limit=limit):
-            short_sha = commit['sha'][:6]
-            html_url = commit['html_url']
-            message = commit['commit']['message'].splitlines()[0]
-
-            latest_commits += f'[`{short_sha}`]({html_url}) {message}\n'
-
-        return latest_commits
 
 
 if __name__ == '__main__':

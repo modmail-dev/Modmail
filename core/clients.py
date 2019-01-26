@@ -92,13 +92,6 @@ class Github(ApiClient):
         await self.request(self.STAR_URL, method='PUT',
                            headers={'Content-Length': '0'})
 
-    # TODO: Broken.
-    async def get_latest_commits(self, limit: int = 3) -> None:
-        # resp = await self.request(self.commit_url)
-        # for index in range(limit):
-        #     yield resp[index]
-        ...
-
     @classmethod
     async def login(cls, bot) -> 'Github':
         self = cls(bot, bot.config.get('github_access_token'), )

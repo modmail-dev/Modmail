@@ -2,17 +2,13 @@ import re
 import string
 import asyncio
 import typing
-from io import BytesIO
 from datetime import datetime, timedelta
-from traceback import print_exc
 
 import discord
 from discord.ext.commands import UserInputError, CommandError
 
-from colorthief import ColorThief
 
-from core.decorators import async_executor
-from core.utils import is_image_url, days, match_user_id, parse_image_url
+from core.utils import is_image_url, days, match_user_id
 from core.models import Bot, ThreadManagerABC, ThreadABC
 
 
@@ -578,31 +574,6 @@ class ThreadManager(ThreadManagerABC):
     async def find_or_create(self, recipient):
         return await self.find(recipient=recipient) or \
                await self.create(recipient)
-
-    @staticmethod
-    @async_executor()
-    def _do_get_dc(image, quality):
-        with BytesIO(image) as f:
-            return ColorThief(f).get_color(quality=quality)
-
-    async def get_dominant_color(self, url=None, quality=10):
-        """
-        Returns the dominant color of an image from a URL
-        (misc)
-        """
-        url = parse_image_url(url)
-
-        if not url:
-            raise ValueError('Invalid image url passed.')
-        try:
-            async with self.bot.session.get(url) as resp:
-                image = await resp.read()
-                color = await self._do_get_dc(image, quality)
-        except Exception:
-            print_exc()
-            return discord.Color.blurple()
-        else:
-            return discord.Color.from_rgb(*color)
 
     def _format_channel_name(self, author):
         """Sanitises a username for use with text channel names"""

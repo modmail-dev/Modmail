@@ -1,4 +1,3 @@
-import asyncio
 import functools
 
 from discord import Embed, Color
@@ -45,17 +44,3 @@ def owner_only():
         return ctx.author.id in allowed
 
     return commands.check(predicate)
-
-
-def async_executor(loop=None, executor=None):
-    loop = loop or asyncio.get_event_loop()
-
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            partial = functools.partial(func, *args, **kwargs)
-            return loop.run_in_executor(executor, partial)
-
-        return wrapper
-
-    return decorator
