@@ -357,7 +357,7 @@ class ModmailBot(Bot):
         blocked_em = discord.Embed(
             title='Message not sent!',
             color=discord.Color.red(),
-            description='You have been blocked from using modmail.'
+            description='You have been blocked from using Modmail.'
         )
 
         if str(message.author.id) in self.blocked_users:
@@ -518,7 +518,7 @@ class ModmailBot(Bot):
                   'with a token from https://dashboard.modmail.tk')
             print('If you want to self-host logs, '
                   'input a MONGO_URI config variable.')
-            print('A modmail api token is not needed '
+            print('A Modmail api token is not needed '
                   'if you are self-hosting logs.')
             return await self.logout()
         else:
@@ -599,7 +599,7 @@ class ModmailBot(Bot):
                 embed.set_author(name=user['username'] + ' - Updating Bot',
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
-                embed.set_footer(text=f"Updating modmail v{self.version} "
+                embed.set_footer(text=f"Updating Modmail v{self.version} "
                                       f"-> v{metadata['latest_version']}")
 
                 changelog = await ChangeLog.from_repo(self)

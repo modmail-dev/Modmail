@@ -246,7 +246,7 @@ class Utility:
             embed.set_author(name=user['username'],
                              icon_url=user['avatar_url'],
                              url=user['url'])
-            embed.set_footer(text=f'Updating modmail v{self.bot.version} '
+            embed.set_footer(text=f'Updating Modmail v{self.bot.version} '
                                   f"-> v{metadata['latest_version']}")
 
             if commit_data:
@@ -258,7 +258,6 @@ class Utility:
                 embed.description = latest.description
                 for name, value in latest.fields.items():
                     embed.add_field(name=name, value=value)
-                # TODO: message unused?
                 # message = commit_data['commit']['message']
                 html_url = commit_data["html_url"]
                 short_sha = commit_data['sha'][:6]
@@ -306,7 +305,7 @@ class Utility:
 
         if activity_type == ActivityType.streaming:
             url = self.bot.config.get('twitch_url',
-                                      'https://www.twitch.tv/discord-modmail/')
+                                      'https://www.twitch.tv/discord-Modmail/')
         else:
             url = None
         activity = Activity(type=activity_type, name=message, url=url)
@@ -537,14 +536,23 @@ class Utility:
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
         
-        # TODO: Make embed
         if self.bot.get_command(name) or self.bot.config.aliases.get(name):
-            return await ctx.send('A command or alias already exists '
-                                  f'with the same name: `{name}`')
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='A command or alias already exists '
+                            f'with the same name: `{name}`.'
+            )
+            return await ctx.send(embed=embed)
         
         if not self.bot.get_command(value.split()[0]):
-            return await ctx.send('The command you are attempting to point '
-                                  f'to does not exist: `{value.split()[0]}`')
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='The command you are attempting to point '
+                            f'to does not exist: `{value.split()[0]}`.'
+            )
+            return await ctx.send(embed=embed)
 
         self.bot.config.aliases[name] = value
         await self.bot.config.update()

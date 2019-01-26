@@ -248,7 +248,7 @@ Breaking changes.
 # v2.0.10
 
 ### Security
-- Fix a bug where blocked users were still able to message modmail.
+- Fix a bug where blocked users were still able to message Modmail.
 
 # v2.0.9
 
@@ -273,7 +273,7 @@ Improvements to commands and new config options available.
 ### Changed
 - You now have the ability to supply a reason when blocking a user.
 - Blocked users are now stored in the database instead of in the channel topic.
-    - This means you can delete the top channel in the modmail category now. (Migrate first though.)
+    - This means you can delete the top channel in the Modmail category now. (Migrate first though.)
 
 # v2.0.7
 
@@ -303,7 +303,7 @@ New command and improvements in bot update message interfaces.
 # v2.0.4
 
 ### Fixed
-- Fixed a one-off bug where the channel topic disappears, but modmail operations should still continue.
+- Fixed a one-off bug where the channel topic disappears, but Modmail operations should still continue.
 - Fixed `linked_message_id` issues.
 
 # v2.0.3

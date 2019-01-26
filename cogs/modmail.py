@@ -136,7 +136,12 @@ class Modmail:
         """Moves a thread to a specified category."""
         thread = await self.bot.threads.find(channel=ctx.channel)
         if not thread:
-            return await ctx.send('This is not a modmail thread.')
+            embed = discord.Embed(
+                title='Error',
+                description='This is not a Modmail thread.',
+                color=discord.Color.red()
+            )
+            return await ctx.send(embed=embed)
 
         await thread.channel.edit(category=category, sync_permissions=True)
         await ctx.message.add_reaction('✅')
