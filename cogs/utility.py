@@ -219,7 +219,6 @@ class Utility:
     @trigger_typing
     async def update(self, ctx):
         """Updates the bot, this only works with heroku users."""
-        # TODO: Should return if user is self hosting
         metadata = await self.bot.api.get_metadata()
 
         desc = (f'The latest version is [`{self.bot.version}`]'
