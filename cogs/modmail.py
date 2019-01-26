@@ -338,6 +338,16 @@ class Modmail:
             return
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
+    
+    @commands.command()
+    async def loglink(self, ctx):
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread:
+            log_link = await self.bot.api.get_log_link(ctx.channel.id)
+            await ctx.send(embed=discord.Embed(
+                    color=discord.Color.blurple(), 
+                    description=log_link)
+                    )
 
     @commands.command(aliases=['threads'])
     @commands.has_permissions(manage_messages=True)
@@ -480,7 +490,9 @@ class Modmail:
         if not linked_message_id:
             raise commands.UserInputError
 
-        await thread.edit_message(linked_message_id, new_message)
+        await thread.edit_message(linked_message_id, new_message),
+        await self.bot.api.edit_message(linked_message_id, new_message)
+
         await ctx.message.add_reaction('✅')
 
     @commands.command()

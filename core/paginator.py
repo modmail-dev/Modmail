@@ -107,13 +107,13 @@ class PaginatorSession:
             except (HTTPException, InvalidArgument):
                 pass
 
-    def previous_page(self) -> None:
+    async def previous_page(self) -> None:
         """Go to the previous page."""
-        self.show_page(self.current - 1)
+        await self.show_page(self.current - 1)
 
-    def next_page(self) -> None:
+    async def next_page(self) -> None:
         """Go to the next page"""
-        self.show_page(self.current + 1)
+        await self.show_page(self.current + 1)
 
     async def close(self, delete: bool = True) -> typing.Optional[Message]:
         """Delete this embed."""
@@ -132,10 +132,10 @@ class PaginatorSession:
         except HTTPException:
             pass
 
-    def first_page(self) -> None:
+    async def first_page(self) -> None:
         """Go to immediately to the first page"""
-        self.show_page(0)
+        await self.show_page(0)
 
-    def last_page(self) -> None:
+    async def last_page(self) -> None:
         """Go to immediately to the last page"""
-        self.show_page(len(self.embeds) - 1)
+        await self.show_page(len(self.embeds) - 1)

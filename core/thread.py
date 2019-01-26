@@ -202,8 +202,8 @@ class Thread(ThreadABC):
                     await msg.edit(embed=embed)
                     break
 
-    def edit_message(self, message_id, message):
-        asyncio.gather(
+    async def edit_message(self, message_id, message):
+        await asyncio.gather(
             self._edit_thread_message(self.recipient, message_id, message),
             self._edit_thread_message(self.channel, message_id, message)
         )
@@ -298,14 +298,11 @@ class Thread(ThreadABC):
             if anonymous and from_mod and \
                not isinstance(destination, discord.TextChannel):
                 # Anonymously sending to the user.
-                name = self.bot.config.get(
-                    'anon_username',
-                    self.bot.config.get('mod_tag', 'Moderator')
-                )
-                avatar_url = self.bot.config.get(
-                    'anon_avatar_url',
-                    self.bot.guild.icon_url
-                )
+                tag = self.bot.config.get('mod_tag',
+                                          str(message.author.top_role))
+                name = self.bot.config.get('anon_username', tag)
+                avatar_url = self.bot.config.get('anon_avatar_url',
+                                                 self.bot.guild.icon_url)
             else:
                 # Normal message
                 name = str(author)
@@ -372,10 +369,9 @@ class Thread(ThreadABC):
                 embed.set_footer(text='Anonymous Reply')
             # Normal messages
             elif not anonymous:
-                embed.set_footer(
-                    text=self.bot.config.get('mod_tag', 'Moderator')
-                )
-            # Anonymous reply sent to user
+                tag = self.bot.config.get('mod_tag',
+                                          str(message.author.top_role))
+                embed.set_footer(text=tag)  # Normal messages
             else:
                 embed.set_footer(
                     text=self.bot.config.get('anon_tag', 'Response')
@@ -539,13 +535,11 @@ class ThreadManager(ThreadManagerABC):
         thread = Thread(self, recipient, channel)
         self.cache[recipient.id] = thread
 
-        log_url, log_data = await asyncio.gather(
-            self.bot.api.get_log_url(recipient,
-                                     channel,
-                                     creator or recipient),
-            self.bot.api.get_user_logs(recipient.id),
-            # self.get_dominant_color(recipient.avatar_url),
-        )
+        log_url = await self.bot.api.create_log_entry(recipient, channel,
+                                                      creator or recipient),
+
+        log_data = await self.bot.api.get_user_logs(recipient.id)
+        # await self.get_dominant_color(recipient.avatar_url)
 
         log_count = sum(1 for log in log_data if not log['open'])
         info_embed = self._format_info_embed(recipient, creator,

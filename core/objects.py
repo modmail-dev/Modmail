@@ -172,6 +172,10 @@ class UserClient(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    async def get_log_link(self, channel_id: Union[str, int]) -> str:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     async def get_config(self) -> dict:
         raise NotImplementedError
 
@@ -180,10 +184,10 @@ class UserClient(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_log_url(self,
-                          recipient: Member,
-                          channel: TextChannel,
-                          creator: Member) -> str:
+    async def create_log_entry(self,
+                               recipient: Member,
+                               channel: TextChannel,
+                               creator: Member) -> str:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -205,6 +209,11 @@ class UserClient(abc.ABC):
 
     @abc.abstractmethod
     async def post_metadata(self, data: dict) -> dict:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def edit_message(self, message_id: Union[int, str],
+                           new_content: str) -> None:
         raise NotImplementedError
 
 
@@ -314,7 +323,8 @@ class ThreadABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def edit_message(self, message_id: Union[int, str], message: str) -> None:
+    async def edit_message(self, message_id: Union[int, str],
+                           message: str) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod

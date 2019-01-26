@@ -10,7 +10,7 @@ class ConfigManager(ConfigManagerABC):
 
     allowed_to_change_in_command = {
         # activity
-        'activity_message', 'activity_type', 'twitch_url',
+        'twitch_url',
         # bot settings
         'main_category_id', 'disable_autoupdates', 'prefix', 'mention',
         # logging
@@ -26,7 +26,7 @@ class ConfigManager(ConfigManagerABC):
     internal_keys = {
         'snippets', 'aliases', 'blocked',
         'notification_squad', 'subscriptions',
-        'closures'
+        'closures', 'activity_message', 'activity_type'
         }
     
     protected_keys = {

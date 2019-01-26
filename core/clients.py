@@ -83,14 +83,14 @@ class Github(ApiClient):
 
     async def fork_repository(self) -> None:
         await self.request(self.FORK_URL, method='POST')
-    
+
     async def has_starred(self) -> bool:
         resp = await self.request(self.STAR_URL, return_response=True)
         return resp.status == 204
 
     async def star_repository(self) -> None:
         await self.request(self.STAR_URL, method='PUT',
-                           headers={'Content-Length':  '0'})
+                           headers={'Content-Length': '0'})
 
     # TODO: Broken.
     async def get_latest_commits(self, limit: int = 3) -> None:
@@ -153,6 +153,10 @@ class ModmailApiClient(UserClient, ApiClient):
     async def get_log(self, channel_id):
         return await self.request(self.LOGS + '/' + str(channel_id))
 
+    async def get_log_link(self, channel_id):
+        doc = await self.get_log(channel_id)
+        return f'https://logs.modmail.tk/{doc["key"]}'
+
     async def get_config(self):
         return await self.request(self.CONFIG)
 
@@ -160,7 +164,7 @@ class ModmailApiClient(UserClient, ApiClient):
         data = self.filter_valid(data)
         return await self.request(self.CONFIG, method='PATCH', payload=data)
 
-    async def get_log_url(self, recipient, channel, creator):
+    async def create_log_entry(self, recipient, channel, creator):
         return await self.request(self.LOGS + '/key', payload={
             'channel_id': str(channel.id),
             'guild_id': str(self.bot.guild_id),
@@ -180,8 +184,14 @@ class ModmailApiClient(UserClient, ApiClient):
             }
         })
 
-    async def append_log(self, message, channel_id='', type_='thread_message'):
+    async def edit_message(self, message_id, new_content):
+        await self.request(self.LOGS + '/edit', method='PATCH',
+                           payload={
+                               'message_id': str(message_id),
+                               'new_content': new_content
+                           })
 
+    async def append_log(self, message, channel_id='', type_='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
         data = {
             'payload': {
@@ -199,12 +209,12 @@ class ModmailApiClient(UserClient, ApiClient):
                 'content': message.content,
                 'type': type_,
                 'attachments': [
-                    {   
+                    {
                         'id': a.id,
                         'filename': a.filename,
                         'is_image': a.width is not None,
                         'size': a.size,
-                        'url': a.url 
+                        'url': a.url
                     } for a in message.attachments]
             }
         }
@@ -261,7 +271,11 @@ class SelfHostedClient(UserClient, ApiClient):
     async def get_log(self, channel_id):
         return await self.logs.find_one({'channel_id': str(channel_id)})
 
-    async def get_log_url(self, recipient, channel, creator):
+    async def get_log_link(self, channel_id):
+        doc = await self.get_log(channel_id)
+        return f"{self.bot.config.log_url.strip('/')}/logs/{doc['key']}"
+
+    async def create_log_entry(self, recipient, channel, creator):
         key = secrets.token_hex(6)
 
         await self.logs.insert_one({
@@ -287,7 +301,7 @@ class SelfHostedClient(UserClient, ApiClient):
             },
             'closer': None,
             'messages': []
-            })
+        })
 
         return f"{self.bot.config.log_url.strip('/')}/logs/{key}"
 
@@ -303,31 +317,41 @@ class SelfHostedClient(UserClient, ApiClient):
         return await self.db.config.update_one({'bot_id': self.bot.user.id},
                                                {'$set': data})
 
-    async def append_log(self, message, channel_id='', type_='thread_message'):
+    async def edit_message(self, message_id, new_content):
+        await self.logs.update_one({
+            'messages.message_id': str(message_id)
+        }, {
+            '$set': {
+                'messages.$.content': new_content,
+                'messages.$.edited': True
+            }
+        })
 
+    async def append_log(self, message, channel_id='', type_='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
         data = {
-                'timestamp': str(message.created_at),
-                'message_id': str(message.id),
-                'author': {
-                    'id': str(message.author.id),
-                    'name': message.author.name,
-                    'discriminator': message.author.discriminator,
-                    'avatar_url': message.author.avatar_url,
-                    'mod': not isinstance(message.channel, DMChannel),
-                },
-                'content': message.content,
-                'type': type_,
-                'attachments': [
-                    {   
-                        'id': a.id,
-                        'filename': a.filename,
-                        'is_image': a.width is not None,
-                        'size': a.size,
-                        'url': a.url 
-                    } for a in message.attachments]
-            }
-        
+            'timestamp': str(message.created_at),
+            'message_id': str(message.id),
+            'author': {
+                'id': str(message.author.id),
+                'name': message.author.name,
+                'discriminator': message.author.discriminator,
+                'avatar_url': message.author.avatar_url,
+                'mod': not isinstance(message.channel, DMChannel),
+            },
+            'content': message.content,
+            'type': type_,
+            'attachments': [
+                {
+                    'id': a.id,
+                    'filename': a.filename,
+                    'is_image': a.width is not None,
+                    'size': a.size,
+                    'url': a.url
+                } for a in message.attachments
+            ]
+        }
+
         return await self.logs.find_one_and_update(
             {'channel_id': channel_id},
             {'$push': {f'messages': data}},
