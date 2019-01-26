@@ -2,7 +2,7 @@ import asyncio
 import os
 import json
 
-from core.objects import Bot, ConfigManagerABC
+from core.models import Bot, ConfigManagerABC
 
 
 class ConfigManager(ConfigManagerABC):

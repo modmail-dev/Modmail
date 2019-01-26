@@ -8,12 +8,12 @@ from traceback import print_exc
 
 import discord
 from discord.ext.commands import UserInputError, CommandError
-from colorthief import ColorThief
 
+from colorthief import ColorThief
 
 from core.decorators import async_executor
 from core.utils import is_image_url, days, match_user_id, parse_image_url
-from core.objects import Bot, ThreadManagerABC, ThreadABC
+from core.models import Bot, ThreadManagerABC, ThreadABC
 
 
 class Thread(ThreadABC):

@@ -8,7 +8,7 @@ from discord import Member, DMChannel
 from aiohttp import ClientResponseError, ClientResponse
 from pymongo import ReturnDocument
 
-from core.objects import Bot, UserClient
+from core.models import Bot, UserClient
 
 
 class ApiClient:

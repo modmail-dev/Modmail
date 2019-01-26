@@ -17,7 +17,7 @@ from core.paginator import PaginatorSession
 from core.decorators import auth_required, owner_only, trigger_typing
 from core.changelog import ChangeLog
 from core.utils import cleanup_code
-from core.objects import Bot
+from core.models import Bot
 
 
 class Utility:

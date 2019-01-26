@@ -24,8 +24,8 @@ SOFTWARE.
 
 __version__ = '2.11.0'
 
-from os import listdir
 import asyncio
+from os import listdir
 from textwrap import dedent
 from datetime import datetime
 from types import SimpleNamespace
@@ -38,17 +38,16 @@ from discord.ext.commands.view import StringView
 import uvloop
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient
-import colorama
-from colorama import Fore, Style
+from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 
 from core.clients import Github, ModmailApiClient, SelfHostedClient
 from core.thread import ThreadManager
 from core.config import ConfigManager
 from core.changelog import ChangeLog
-from core.objects import Bot
+from core.models import Bot
 
-colorama.init()
+init()
 
 LINE = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
        Style.RESET_ALL

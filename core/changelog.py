@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from discord import Embed, Color
 
-from core.objects import Bot
+from core.models import Bot
 
 
 class Version:

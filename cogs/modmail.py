@@ -10,7 +10,7 @@ from core.decorators import trigger_typing
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import truncate, User
-from core.objects import Bot
+from core.models import Bot
 
 
 class Modmail:
