@@ -121,7 +121,7 @@ never-returning-functions=sys.exit
 
 # Format style used to check logging format string. `old` means using %
 # formatting, while `new` is for `{}` formatting.
-logging-format-style=old
+logging-format-style=new
 
 # Logging modules to check that the string format arguments are in logging
 # function parameter format.
@@ -152,8 +152,8 @@ spelling-store-unknown-words=no
 
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,
-      XXX,
-      TODO
+      TODO,
+      BUG
 
 
 [TYPECHECK]
@@ -351,11 +351,15 @@ good-names=i,
            j,
            k,
            ex,
-           Run,
-           _
+           _,
+           v,
+           id,
+           db,
+           f,
+           dt
 
 # Include a hint for the correct naming format with invalid-name.
-include-naming-hint=no
+include-naming-hint=yes
 
 # Naming style matching correct inline iteration names.
 inlinevar-naming-style=any

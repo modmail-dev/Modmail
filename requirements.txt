@@ -14,4 +14,3 @@ dnspython==1.16.0
 aiohttp==3.4.4
 pymongo==3.7.2
 uvloop==0.12.0
-pylint==2.2.2

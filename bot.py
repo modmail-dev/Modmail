@@ -477,13 +477,13 @@ class ModmailBot(Bot):
                                                     after.content)
                         break
 
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, (commands.MissingRequiredArgument,
-                              commands.UserInputError)):
-            await ctx.invoke(self.get_command('help'),
-                             command=str(ctx.command))
+    async def on_command_error(self, context, exception):
+        if isinstance(exception, (commands.MissingRequiredArgument,
+                                  commands.UserInputError)):
+            await context.invoke(self.get_command('help'),
+                                 command=str(context.command))
         else:
-            raise error
+            raise exception
 
     @staticmethod
     def overwrites(ctx):
@@ -533,10 +533,10 @@ class ModmailBot(Bot):
     async def validate_database_connection(self):
         try:
             await self.db.command('buildinfo')
-        except Exception as e:
+        except Exception as exc:
             print(Fore.RED, end='')
             print('Something went wrong while connecting to the database.')
-            print(type(e).__name__, e, sep=': ')
+            print(type(exc).__name__, exc, sep=': ')
             return await self.logout()
         else:
             print(Style.RESET_ALL + Fore.CYAN +
