@@ -30,7 +30,7 @@ from discord.ext import commands
 from discord.ext.commands.view import StringView
 
 from os import listdir
-from asyncio import sleep, Event
+import asyncio
 from textwrap import dedent
 from datetime import datetime
 from types import SimpleNamespace
@@ -62,7 +62,7 @@ class ModmailBot(Bot):
         self._threads = None
         self._session = None
         self._config = None
-        self._connected = Event()
+        self._connected = asyncio.Event()
         self._db = None
 
         if self.self_hosted:
@@ -570,7 +570,7 @@ class ModmailBot(Bot):
             }
 
             await self.api.post_metadata(data)
-            await sleep(3600)
+            await asyncio.sleep(3600)
 
     async def autoupdate_loop(self):
         await self.wait_until_ready()
@@ -619,7 +619,7 @@ class ModmailBot(Bot):
                     channel = self.log_channel
                     await channel.send(embed=embed)
 
-            await sleep(3600)
+            await asyncio.sleep(3600)
 
     async def get_latest_updates(self, limit=3):
         latest_commits = ''

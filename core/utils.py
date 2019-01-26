@@ -1,8 +1,9 @@
 from discord import Object
 from discord.ext import commands
 
+import re
 import typing
-from urllib.parse import urlparse
+from urllib import parse
 
 
 class User(commands.IDConverter):
@@ -25,11 +26,18 @@ def truncate(c: str) -> str:
     return c[:47].strip() + '...' if len(c) > 50 else c
 
 
-def is_image_url(u: str, _=None) -> bool:
-    for x in {'.png', '.jpg', '.gif', '.jpeg', '.webp'}:
-        if urlparse(u.lower()).path.endswith(x):
-            return True
-    return False
+def is_image_url(url: str, _=None) -> bool:
+    return bool(parse_image_url(url))
+
+
+def parse_image_url(url: str) -> str:
+    """Checks if a url leads to an image."""
+    types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
+    url = parse.urlsplit(url)
+
+    if any(url.path.lower().endswith(i) for i in types):
+        return parse.urlunsplit((*url[:3], 'size=128', url[-1]))
+    return ''
 
 
 def days(d: typing.Union[str, int]) -> str:
@@ -47,3 +55,9 @@ def cleanup_code(content: str) -> str:
 
     # remove `foo`
     return content.strip('` \n')
+
+
+def match_user_id(s: str) -> typing.Optional[int]:
+    match = re.match(r'^User ID: (\d+)$', s)
+    if match is not None:
+        return int(match.group(1))

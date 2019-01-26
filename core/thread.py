@@ -1,17 +1,16 @@
 import discord
-from discord.ext.commands import UserInputError
+from discord.ext.commands import UserInputError, CommandError
 
 import re
 import string
 import asyncio
 import typing
 from io import BytesIO
-from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from traceback import print_exc
 
 from core.decorators import async_executor
-from core.utils import is_image_url, days
+from core.utils import is_image_url, days, match_user_id, parse_image_url
 from core.objects import Bot, ThreadManagerABC, ThreadABC
 
 from colorthief import ColorThief
@@ -24,10 +23,12 @@ class Thread(ThreadABC):
                  recipient: typing.Union[discord.Member, discord.User],
                  channel: typing.Union[discord.DMChannel,
                                        discord.TextChannel]):
+        if recipient.bot:
+            raise CommandError('Recipient cannot be a bot.')
+
         self.manager = manager
         self.bot = manager.bot
         self._id = recipient.id
-        # TODO: recipient should not be bot
         self._recipient = recipient
         self._channel = channel
         self._ready_event = asyncio.Event()
@@ -465,21 +466,19 @@ class ThreadManager(ThreadManagerABC):
         """
         user_id = None
 
-        if channel.topic and 'User ID: ' in channel.topic:
-            user_id = int(re.findall(r'\d+', channel.topic)[0])
+        if channel.topic:
+            user_id = match_user_id(channel.topic)
 
         # BUG: When discord fails to create channel topic.
         # search through message history
         elif channel.topic is None:
-            async for message in channel.history(limit=50):
+            async for message in channel.history(limit=100):
                 if message.embeds:
                     embed = message.embeds[0]
-                    # TODO: use re.search instead
-                    matches = re.findall(r'User ID: (\d+)',
-                                         str(embed.footer.text))
-                    if matches:
-                        user_id = int(matches[0])
-                        break
+                    if embed.footer.text:
+                        user_id = match_user_id(embed.footer.text)
+                        if user_id is not None:
+                            break
 
         if user_id is not None:
             if user_id in self.cache:
@@ -536,7 +535,7 @@ class ThreadManager(ThreadManagerABC):
         self.cache[recipient.id] = thread
 
         log_url = await self.bot.api.create_log_entry(recipient, channel,
-                                                      creator or recipient),
+                                                      creator or recipient)
 
         log_data = await self.bot.api.get_user_logs(recipient.id)
         # await self.get_dominant_color(recipient.avatar_url)
@@ -565,16 +564,6 @@ class ThreadManager(ThreadManagerABC):
         return await self.find(recipient=recipient) or \
                await self.create(recipient)
 
-    @staticmethod
-    def valid_image_url(url):
-        """Checks if a url leads to an image."""
-        types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
-        parsed = urlparse(url)
-        if any(parsed.path.endswith(i) for i in types):
-            # TODO: Replace this logic with urlsplit/urlunsplit
-            return url.replace(parsed.query, 'size=128')
-        return ''
-
     @async_executor()
     def _do_get_dc(self, image, quality):
         with BytesIO(image) as f:
@@ -582,10 +571,10 @@ class ThreadManager(ThreadManagerABC):
 
     async def get_dominant_color(self, url=None, quality=10):
         """
-        Returns the dominant color of an image from a url
+        Returns the dominant color of an image from a URL
         (misc)
         """
-        url = self.valid_image_url(url)
+        url = parse_image_url(url)
 
         if not url:
             raise ValueError('Invalid image url passed.')
