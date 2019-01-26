@@ -57,8 +57,7 @@ class Github(ApiClient):
         super().__init__(bot)
         self.access_token = access_token
         self.username = username
-        # TODO: Find out type for id:
-        self.id = None
+        self.id: str = None
         self.avatar_url: str = None
         self.url: str = None
         if self.access_token:
@@ -106,7 +105,7 @@ class Github(ApiClient):
         self.username: str = resp['login']
         self.avatar_url: str = resp['avatar_url']
         self.url: str = resp['html_url']
-        self.id = resp['id']
+        self.id: str = str(resp['id'])
         self.raw_data = resp
         print(f'Logged in to: {self.username} - {self.id}')
         return self
