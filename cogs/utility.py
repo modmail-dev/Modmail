@@ -594,9 +594,8 @@ class Utility:
     @commands.command(hidden=True, name='eval')
     @owner_only()
     async def eval_(self, ctx, *, body):
-        """Evaluates python code"""
+        """Evaluates Python code"""
         
-        # TODO: Ugly func, fix.
         env = {
             'ctx': ctx,
             'bot': self.bot,
@@ -605,6 +604,7 @@ class Utility:
             'guild': ctx.guild,
             'message': ctx.message,
             'source': inspect.getsource,
+            'discord': __import__('discord')
         }
 
         env.update(globals())
