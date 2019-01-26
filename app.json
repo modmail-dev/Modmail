@@ -17,7 +17,15 @@
     },
     "MODMAIL_API_TOKEN": {
         "description": "API token from https://modmail.tk",
-        "required": true
+        "required": false
+    },
+    "MONGO_URI": {
+        "description": "Mongo DB connection URI for selfhosting your data.",
+        "required": false
+    },
+    "LOG_URL": {
+        "description": "The url of the logviewer app for viewing selfhosted logs",
+        "required": false
     }
   }
 }

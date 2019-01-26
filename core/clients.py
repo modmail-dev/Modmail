@@ -122,6 +122,10 @@ class ModmailApiClient(ApiClient):
 
     def get_log(self, channel_id):
         return self.request(self.logs + '/' + str(channel_id))
+    
+    async def get_log_link(self, channel_id):
+        doc = await self.get_log(channel_id)
+        return f'https://logs.modmail.tk/{doc["key"]}'
 
     def get_config(self):
         return self.request(self.config)
@@ -131,7 +135,7 @@ class ModmailApiClient(ApiClient):
         data = {k: v for k, v in data.items() if k in valid_keys}
         return self.request(self.config, method='PATCH', payload=data)
 
-    def get_log_url(self, recipient, channel, creator):
+    def create_log_entry(self, recipient, channel, creator):
         return self.request(self.logs + '/key', payload={
             'channel_id': str(channel.id),
             'guild_id': str(self.app.guild_id),
@@ -151,6 +155,12 @@ class ModmailApiClient(ApiClient):
             }
         })
 
+    async def edit_message(self, message_id, new_content):
+        return await self.request(self.logs + '/edit', method='PATCH', payload={
+            'message_id': str(message_id),
+            'new_content':  new_content
+        })
+
     def append_log(self, message, channel_id='', type='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
         payload = {
@@ -167,8 +177,15 @@ class ModmailApiClient(ApiClient):
                 },
                 # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments],
-                'type': type
+                'type': type,
+                'attachments': [
+                    {   
+                        'id': a.id,
+                        'filename': a.filename,
+                        'is_image': a.width is not None,
+                        'size': a.size,
+                        'url': a.url 
+                    } for a in message.attachments ]
             }
         }
         return self.request(self.logs + f'/{channel_id}', method='PATCH', payload=payload)
@@ -205,8 +222,13 @@ class SelfhostedClient(ModmailApiClient):
 
     async def get_log(self, channel_id):
         return await self.logs.find_one({'channel_id': str(channel_id)})
+    
+    async def get_log_link(self, channel_id):
+        doc = await self.get_log(channel_id)
+        key = doc['key']
+        return f"{self.app.config.log_url.strip('/')}/logs/{key}"
 
-    async def get_log_url(self, recipient, channel, creator):
+    async def create_log_entry(self, recipient, channel, creator):
         key = secrets.token_hex(6)
 
         await self.logs.insert_one({
@@ -247,13 +269,21 @@ class SelfhostedClient(ModmailApiClient):
         valid_keys = self.app.config.valid_keys - self.app.config.protected_keys
         data = {k: v for k, v in data.items() if k in valid_keys}
         return await self.db.config.update_one({'bot_id': self.app.user.id}, {'$set': data})
+    
+    async def edit_message(self, message_id, new_content):
+        await self.logs.update_one(
+            {'messages.message_id': str(message_id)},
+            {'$set': {
+                'messages.$.content': new_content,
+                'messages.$.edited': True
+                }
+            })
 
     async def append_log(self, message, channel_id='', type='thread_message'):
         channel_id = str(channel_id) or str(message.channel.id)
         payload = {
                 'timestamp': str(message.created_at),
                 'message_id': str(message.id),
-                # author
                 'author': {
                     'id': str(message.author.id),
                     'name': message.author.name,
@@ -261,10 +291,16 @@ class SelfhostedClient(ModmailApiClient):
                     'avatar_url': message.author.avatar_url,
                     'mod': not isinstance(message.channel, discord.DMChannel),
                 },
-                # message properties
                 'content': message.content,
-                'attachments': [i.url for i in message.attachments],
-                'type': type
+                'type': type,
+                'attachments': [
+                    {   
+                        'id': a.id,
+                        'filename': a.filename,
+                        'is_image': a.width is not None,
+                        'size': a.size,
+                        'url': a.url 
+                    } for a in message.attachments ]
             }
         
         return await self.logs.find_one_and_update(

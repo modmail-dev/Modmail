@@ -23,22 +23,18 @@ class Utility:
 
     def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
-        sigs = []
+        maxlen = 0
         prefix = self.bot.prefix
-
         for cmd in self.bot.commands:
             if cmd.hidden:
                 continue
             if cmd.instance is cog:
-                sigs.append(len(cmd.qualified_name) + len(prefix))
-                if hasattr(cmd, 'all_commands'):
-                    for c in cmd.all_commands.values():
-                        sigs.append(len('\u200b  └─ ' + c.name) + 1)
+                len_ = len(cmd.qualified_name) + len(prefix)
+                if len_ > maxlen:
+                    maxlen = len_
 
-        if not sigs:
+        if maxlen == 0:
             return
-
-        maxlen = max(sigs)
 
         fmt = ['']
         index = 0
@@ -51,17 +47,6 @@ class Utility:
                     fmt.append('')
                 fmt[index] += f'`{prefix+cmd.qualified_name:<{maxlen}}` - '
                 fmt[index] += f'{cmd.short_doc:<{maxlen}}\n'
-                if hasattr(cmd, 'commands'):
-                    for i, c in enumerate(cmd.commands):
-                        if len(cmd.commands) == i + 1:  # last
-                            branch = '\u200b  └─ ' + c.name
-                        else:
-                            branch = '\u200b  ├─ ' + c.name
-                        if len(fmt[index] + f"`{branch:<{maxlen+1}}` - " + f"{c.short_doc:<{maxlen}}\n") > 1024:
-                            index += 1
-                            fmt.append('')
-                        fmt[index] += f"`{branch:<{maxlen+1}}` - "
-                        fmt[index] += f"{c.short_doc:<{maxlen}}\n"
 
         em = discord.Embed(
             description='*' + inspect.getdoc(cog) + '*',
@@ -75,7 +60,7 @@ class Utility:
             else:
                 em.add_field(name=u'\u200b', value=i)
 
-        em.set_footer(text=f'Type {prefix}command for more info on a command.')
+        em.set_footer(text=f'Type "{prefix}help command" for more info on a command.')
         return em
 
     def format_command_help(self, ctx, cmd):
@@ -106,7 +91,7 @@ class Utility:
             fmt += f"{c.short_doc:<{maxlen}}\n"
 
         em.add_field(name='Subcommands', value=fmt)
-        em.set_footer(text=f'Type {prefix}help {cmd} command for more info on a command.')
+        em.set_footer(text=f'Type "{prefix}help {cmd} command" for more info on a command.')
 
         return em
 
@@ -115,7 +100,7 @@ class Utility:
         em = discord.Embed()
         em.title = 'Could not find a cog or command by that name.'
         em.color = discord.Color.red()
-        em.set_footer(text=f'Type {prefix}help to get a full list of commands.')
+        em.set_footer(text=f'Type "{prefix}help" to get a full list of commands.')
         cogs = get_close_matches(command, self.bot.cogs.keys())
         cmds = get_close_matches(command, self.bot.all_commands.keys())
         if cogs or cmds:
@@ -127,10 +112,9 @@ class Utility:
         return em
 
     @commands.command()
+    @trigger_typing
     async def help(self, ctx, *, command: str=None):
         """Shows the help message."""
-
-        await ctx.trigger_typing()
 
         if command is not None:
             cog = self.bot.cogs.get(command)
@@ -167,7 +151,7 @@ class Utility:
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
-        em = discord.Embed(color=0x36393F, timestamp=datetime.datetime.utcnow())
+        em = discord.Embed(color=discord.Color.blurple(), timestamp=datetime.datetime.utcnow())
         em.set_author(name='Modmail - About', icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
 
@@ -404,11 +388,11 @@ class Utility:
 
     @config.command(name='del')
     async def _del(self, ctx, key: str.lower):
-        """Sets a specified key from the config to nothing."""
+        """Deletes a key from the config."""
         em = discord.Embed(
             title='Success',
             color=discord.Color.blurple(),
-            description=f'Set `{key}` to nothing.'
+            description=f'`{key}` had been deleted from the config.'
         )
 
         if key not in self.bot.config.allowed_to_change_in_command:

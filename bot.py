@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.9.1'
+__version__ = '2.11.0'
 
 import asyncio
+import uvloop
 import textwrap
 import datetime
 import os
@@ -61,6 +62,7 @@ class ModmailBot(commands.Bot):
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.config = ConfigManager(self)
         self.selfhosted = bool(self.config.get('mongo_uri'))
+        self._connected = asyncio.Event()
         if self.selfhosted:
             self.db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
         self.modmail_api = SelfhostedClient(self) if self.selfhosted else ModmailApiClient(self)
@@ -197,6 +199,7 @@ class ModmailBot(commands.Bot):
             await self.validate_api_token()
             print(line)
         else:
+            await self.validate_database_connection()
             print('Mode: Selfhosting logs.')
             print(line)
         print(Fore.CYAN + 'Connected to gateway.')
@@ -211,9 +214,14 @@ class ModmailBot(commands.Bot):
             activity = discord.Activity(type=activity_type, name=message,
                                         url=url)
             await self.change_presence(activity=activity)
+        
+        self._connected.set()
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
+
+        await self._connected.wait()
+
         print(textwrap.dedent(f"""
         {line}
         {Fore.CYAN}Client ready.
@@ -354,8 +362,15 @@ class ModmailBot(commands.Bot):
             cmd = message.content[len(prefix):].strip()
             if cmd in self.snippets:
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
+    
+        ctx = await self.get_context(message)
+        if ctx.command:
+            return await self.invoke(ctx)
 
-        await self.process_commands(message)
+        thread = await self.threads.find(channel=ctx.channel)
+
+        if thread is not None:
+            await self.modmail_api.append_log(message, type='internal')
     
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
@@ -403,6 +418,7 @@ class ModmailBot(commands.Bot):
                     if matches and matches[-1] == str(before.id):
                         embed.description = after.content
                         await msg.edit(embed=embed)
+                        await self.modmail_api.edit_message(str(after.id), after.content)
                         break
 
     async def on_command_error(self, ctx, error):
@@ -425,7 +441,6 @@ class ModmailBot(commands.Bot):
         return overwrites
 
     async def validate_api_token(self):
-        valid = True
         try:
             self.config.modmail_api_token
         except KeyError:
@@ -438,7 +453,7 @@ class ModmailBot(commands.Bot):
         else:
             valid = await self.modmail_api.validate_token()
             if not valid:
-                print(Fore.RED + Style.BRIGHT, end='')
+                print(Fore.RED, end='')
                 print('Invalid MODMAIL_API_TOKEN - get one from https://dashboard.modmail.tk')
         finally:
             if not valid:
@@ -447,6 +462,21 @@ class ModmailBot(commands.Bot):
                 username = (await self.modmail_api.get_user_info())['user']['username']
                 print(Style.RESET_ALL + Fore.CYAN + 'Validated token.' )
                 print(f'GitHub user: {username}' + Style.RESET_ALL)
+    
+    async def validate_database_connection(self):
+        try:
+            doc = await self.db.command('buildinfo')
+        except Exception as e:
+            valid = False
+            print(Fore.RED, end='')
+            print('Something went wrong while connecting to the database.')
+            print(type(e).__name__, e, sep=': ')
+        else:
+            valid = True
+            print(Style.RESET_ALL + Fore.CYAN + 'Successfully connected to the database.' )
+        finally:
+            if not valid:
+                await self.logout()
 
     async def data_loop(self):
         await self.wait_until_ready()
@@ -478,11 +508,13 @@ class ModmailBot(commands.Bot):
 
         if self.config.get('disable_autoupdates'):
             print('Autoupdates disabled.')
+            print(line)
             return 
 
         if self.selfhosted and not self.config.get('github_access_token'):
             print('Github access token not found.')
             print('Autoupdates disabled.')
+            print(line)
             return 
 
         while True:
@@ -545,5 +577,6 @@ class ModmailBot(commands.Bot):
 
 
 if __name__ == '__main__':
+    uvloop.install()
     bot = ModmailBot()
     bot.run()
