@@ -27,7 +27,8 @@ class Modmail:
         """Sets up a server for Modmail"""
         if self.bot.main_category:
             return await ctx.send(
-                f'{self.bot.modmail_guild} is already set up.')
+                f'{self.bot.modmail_guild} is already set up.'
+            )
 
         category = await self.bot.modmail_guild.create_category(
             name='Modmail',
@@ -40,15 +41,18 @@ class Modmail:
             name='bot-logs', category=category
         )
 
-        await log_channel.edit(
-            topic='You can delete this channel '
-                  'if you set up your own log channel.'
+        embed = discord.Embed(
+            title='Friendly Reminder:',
+            description='You may use the `config set log_channel_id '
+                        '<channel-id>` command to set up a custom log channel'
+                        ', then you can delete the default '
+                        f'{log_channel.mention} channel.',
+            color=discord.Color.blurple()
         )
 
-        await log_channel.send(
-            'Use the `config set log_channel_id` '
-            'command to set up a custom log channel.'
-        )
+        embed.set_footer(text=f'Type "{self.bot.prefix}help" '
+                              'for a complete list of commands.')
+        await log_channel.send(embed=embed)
 
         self.bot.config['main_category_id'] = category.id
         self.bot.config['log_channel_id'] = log_channel.id

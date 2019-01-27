@@ -491,13 +491,17 @@ class ThreadManager(ThreadManagerABC):
         # BUG: When discord fails to create channel topic.
         # search through message history
         elif channel.topic is None:
-            async for message in channel.history(limit=100):
-                if message.embeds:
-                    embed = message.embeds[0]
-                    if embed.footer.text:
-                        user_id = match_user_id(embed.footer.text)
-                        if user_id != -1:
-                            break
+            try:
+                async for message in channel.history(limit=100):
+                    if message.embeds:
+                        embed = message.embeds[0]
+                        if embed.footer.text:
+                            user_id = match_user_id(embed.footer.text)
+                            if user_id != -1:
+                                break
+            except discord.NotFound:
+                # When the channel's deleted.
+                pass
 
         if user_id != -1:
             if user_id in self.cache:

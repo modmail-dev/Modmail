@@ -147,7 +147,9 @@ class ModmailBot(Bot):
         channel_id = self.config.get('log_channel_id')
         if channel_id is not None:
             return self.get_channel(int(channel_id))
-        return self.main_category.channels[0]
+        if self.main_category is not None:
+            return self.main_category.channels[0]
+        return None
 
     @property
     def snippets(self):
@@ -463,6 +465,16 @@ class ModmailBot(Bot):
             return
 
         if not isinstance(channel, discord.TextChannel):
+            if self.config.get('main_category_id') == channel.id:
+                await self.config.update({
+                    'main_category_id': None
+                })
+            return
+
+        if self.config.get('log_channel_id') == channel.id:
+            await self.config.update({
+                'log_channel_id': None
+            })
             return
 
         thread = await self.threads.find(channel=channel)
