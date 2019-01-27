@@ -503,7 +503,7 @@ class ThreadManager(ThreadManagerABC):
             if user_id in self.cache:
                 return self.cache[user_id]
 
-            recipient = self.bot.get_user(user_id)  # this could be None
+            recipient = self.bot.get_user(user_id)
             if recipient is None:
                 self.cache[user_id] = thread = Thread(self, user_id, channel)
             else:

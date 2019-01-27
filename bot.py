@@ -438,6 +438,9 @@ class ModmailBot(Bot):
         if mod == self.user:
             return
 
+        if not isinstance(channel, discord.TextChannel):
+            return
+
         thread = await self.threads.find(channel=channel)
         if not thread:
             return
