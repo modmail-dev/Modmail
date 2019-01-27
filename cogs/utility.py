@@ -283,6 +283,9 @@ class Utility:
             - `clear`
 
         When activity type is set to `clear`, the current activity is removed.
+
+        When activity type is set to `listening`,
+        it must be followed by a "to": "listening to..."
         """
         if activity_type == 'clear':
             await self.bot.change_presence(activity=None)
@@ -299,16 +302,28 @@ class Utility:
             raise commands.UserInputError
 
         try:
-            activity_type = ActivityType[activity_type]
+            activity_type = ActivityType[activity_type.lower()]
         except KeyError:
             raise commands.UserInputError
+
+        if activity_type == ActivityType.listening:
+            if not message.lower().startswith('to '):
+                # Must be listening to...
+                raise commands.UserInputError
+            normalized_message = message[3:].strip()
+        else:
+            # Discord does not allow leading/trailing spaces anyways
+            normalized_message = message.strip()
 
         if activity_type == ActivityType.streaming:
             url = self.bot.config.get('twitch_url',
                                       'https://www.twitch.tv/discord-Modmail/')
         else:
             url = None
-        activity = Activity(type=activity_type, name=message, url=url)
+
+        activity = Activity(type=activity_type,
+                            name=normalized_message,
+                            url=url)
         await self.bot.change_presence(activity=activity)
 
         self.bot.config['activity_type'] = activity_type
