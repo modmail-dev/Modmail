@@ -277,19 +277,19 @@ class ModmailBot(Bot):
         activity_type = self.config.get('activity_type', -1)
         message = self.config.get('activity_message', '')
 
-        normalized_message = ''
         try:
             activity_type = ActivityType(activity_type)
         except ValueError:
             activity_type = -1
 
         if activity_type >= 0 and message:
+            normalized_message = message.strip()
             if activity_type == ActivityType.listening:
                 if message.lower().startswith('to '):
                     # Must be listening to...
                     normalized_message = message[3:].strip()
-            else:
-                normalized_message = message.strip()
+        else:
+            normalized_message = ''
 
         if normalized_message:
             if activity_type == ActivityType.streaming:
