@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `?activity listening to music` no longer result in two "to"s ("listening to to music").
   - This may require you to change your activity message to accommodate this fix.
+- A problem where `main_category_id` and `log_channel_id` weren't updated when their corresponding channel or category get deleted. 
 
 # v2.11.0
 
