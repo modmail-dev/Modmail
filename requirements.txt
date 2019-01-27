@@ -11,3 +11,4 @@ parsedatetime==2.4
 motor==2.0.0
 sanic==18.12.0
 dnspython==1.16.0
+uvloop==0.12.0

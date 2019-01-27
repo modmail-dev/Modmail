@@ -39,29 +39,27 @@
 
 <img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
 
-When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `reply` in the channel. See a full list of commands [below](#features-and-commands).
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `reply` in the channel. See a full list of commands in the [wiki](https://github.com/kyb3r/modmail/wiki).
 
 
 ## Installation
 
-You have two options for using this bot, host on Heroku or self-host the bot. If you choose to install the bot using Heroku, you will not need to download anything. Read the **[installation guide](https://github.com/kyb3r/modmail/wiki/Installation)** or watch the **[video tutorial](https://youtu.be/TH_1QfKUl_k)**. If you ran into any problems, join our [discord server](https://discord.gg/etJNHCQ) for help and support. Even if you don't have any issues, you should come and check out our awesome Discord community! :wink:
+Currently the easiest and fastest way to set up the bot is using Heroku which is a service that offers a free plan for hosting applications. If you choose to install the bot using Heroku, you will not need to download anything. Read the **[installation guide](https://github.com/kyb3r/modmail/wiki/Installation)**. If you ran into any problems, join our [discord server](https://discord.gg/etJNHCQ) for help and support. Even if you don't have any issues, you should come and check out our awesome Discord community! :wink:
 
-## What is Heroku?
+## Notable Features
 
-Heroku is a container based cloud platform that currently offers a free plan to host web apps. However, these apps have an ephemeral file system and thus cannot store any data on site. We have made Modmail be accessible to anyone while still being feature-rich; it's a community run project that lets anyone get it up and running 24/7 for free. So how does our bot store data? Configs and logs are stored in a [centralized web service](https://modmail.tk) hosted by us. This enables you to get started easily and fast.
 
-## Self-hosted logs
+### Customizability
+There is a range of config variables you can dynamically change with the `config` command to change the appearance of the bot. For example embed color, responses, reactions, status etc. Snippets and custom command aliases are also supported, snippets are shortcuts for predefined messages that you can send. Add and remove snippets with the `snippets` command. The list of things you can change is ever growing thanks to the community for code contributions.
 
-If you want complete control over your data and do not want to use the centralized API service, you can self-host your logs. We recommend this if you want stability and security for your bot. You can do this by adding two config variables: 
+### Linked Messages
+<img src='https://i.imgur.com/6L9aaNw.png' height=300 align='right'></img>
 
-* `MONGO_URI` - MongoDB connection URI, you can get a free 500 MB cluster from [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-* `LOG_URL` - The URL of your log viewer Heroku app (`https://yourlogviewerappname.herokuapp.com`)
+Did you accidentally send something you didn't mean to with the `reply` command? Don't fret, if you delete the original message on your side, this bot automatically deletes the corresponding message that was sent to the recipient of the thread!  This also works when you use the `edit` command to edit a message you have sent.
 
-You also need to create a separate Heroku app for the log viewer that you can deploy from [here](https://github.com/kyb3r/logviewer).
+### Thread Logs
 
-## Features and Commands
-The bot comes with a plethora of useful functionality. Take a look at the [list of commands](https://github.com/kyb3r/modmail/wiki/Features-and-commands).
-
+Thread conversations are automatically logged and a log link is provided with each thread. Logs are rendered with HTML and are presented in an aesthetically pleasing way, exactly like on discord, this especially integrates seamlessly with the mobile version of discord. Heres a link to an [example](https://logs.modmail.tk/02032d65a6f3).
 
 ### Automatic Updates
 The bot checks for new updates every hour and automatically updates to a newer version if found. This bot is under active development so you can always look forward to new, useful features! If you do not want this functionality, for example, if you want to make changes to your fork, you can do so by adding a `disable_autoupdates` config variable. 
@@ -69,4 +67,4 @@ The bot checks for new updates every hour and automatically updates to a newer v
 ## Contributing
 This project is licenced under MIT. If you have ideas for commands create an issue or pull request. Contributions are always welcome, whether it be documentation improvements or new functionality, please feel free to create a pull request.
 
-If you use Modmail and love it, consider supporting me on [Patreon](https://www.patreon.com/kyber) :heart:
+If you use Modmail and love it, consider supporting me on **[Patreon](https://www.patreon.com/kyber)** :heart:

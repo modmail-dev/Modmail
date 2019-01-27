@@ -2,6 +2,7 @@
 
 import datetime
 from typing import Optional, Union
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -119,7 +120,7 @@ class Modmail:
     @commands.command()
     @commands.has_permissions(manage_channels=True)
     async def move(self, ctx, *, category: discord.CategoryChannel):
-        """Moves a thread to a specified cateogry."""
+        """Moves a thread to a specified category."""
         thread = await self.bot.threads.find(channel=ctx.channel)
         if not thread:
             return await ctx.send('This is not a modmail thread.')
@@ -301,6 +302,17 @@ class Modmail:
             return
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
+    
+    @commands.command()
+    async def loglink(self, ctx):
+        """Return the link to the current thread's logs."""
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread:
+            log_link = await self.bot.modmail_api.get_log_link(ctx.channel.id)
+            await ctx.send(embed=discord.Embed(
+                    color=discord.Color.blurple(), 
+                    description=log_link)
+                    )
 
     @commands.command(aliases=['threads'])
     @commands.has_permissions(manage_messages=True)
@@ -365,9 +377,8 @@ class Modmail:
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-
+        
     @commands.command()
-    @trigger_typing
     async def reply(self, ctx, *, msg=''):
         """Reply to users using this command.
 
@@ -376,15 +387,30 @@ class Modmail:
         ctx.message.content = msg
         thread = await self.bot.threads.find(channel=ctx.channel)
         if thread:
+            await ctx.trigger_typing()
             await thread.reply(ctx.message)
     
     @commands.command()
-    @trigger_typing
+    async def anonreply(self, ctx, *, msg=''):
+        """Reply to a thread anonymously. 
+        
+        You can edit the anonymous user's name, avatar and tag using the config command.
+        Edit the `anon_username`, `anon_avatar_url` and `anon_tag` config variables to do so.
+        """
+        ctx.message.content = msg
+        thread = await self.bot.threads.find(channel=ctx.channel)
+        if thread:
+            await ctx.trigger_typing()
+            await thread.reply(ctx.message, anonymous=True)
+    
+    @commands.command()
     async def note(self, ctx, *, msg=''):
         """Take a note about the current thread, useful for noting context."""
         ctx.message.content = msg 
         thread = await self.bot.threads.find(channel=ctx.channel)
+
         if thread:
+            await ctx.trigger_typing()
             await thread.note(ctx.message)
 
     @commands.command()
@@ -406,7 +432,8 @@ class Modmail:
         async for msg in ctx.channel.history():
             if message_id is None and msg.embeds:
                 em = msg.embeds[0]
-                if em.color != discord.Color.green() or not em.author.url:
+                mod_color = self.bot.mod_color.value if isinstance(self.bot.mod_color, discord.Color) else self.bot.mod_color
+                if em.color.value != mod_color or not em.author.url:
                     continue
                 linked_message_id = str(em.author.url).split('/')[-1]
                 break
@@ -418,8 +445,12 @@ class Modmail:
         if not linked_message_id:
             raise commands.UserInputError
         
-        await thread.edit_message(linked_message_id, new_message)
+        await asyncio.gather(
+            thread.edit_message(linked_message_id, new_message),
+            self.bot.modmail_api.edit_message(linked_message_id, new_message)
+        ) 
         await ctx.message.add_reaction('✅')
+        
 
     @commands.command()
     @trigger_typing

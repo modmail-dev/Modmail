@@ -41,6 +41,8 @@ class Thread:
     def ready(self, flag):
         if flag is True:
             self.ready_event.set()
+        else:
+            self.ready_event.clear()
     
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -125,9 +127,11 @@ class Thread:
         em.timestamp = datetime.datetime.utcnow()
 
         tasks = [
-            self.bot.log_channel.send(embed=em),
             self.bot.config.update()
         ]
+
+        if self.bot.log_channel:
+            tasks.append(self.bot.log_channel.send(embed=em))
 
         # Thread closed message 
 
@@ -180,9 +184,8 @@ class Thread:
             self.bot.modmail_api.append_log(message, self.channel.id, type='system'),
             self.send(message, self.channel, note=True)
         )
-        
 
-    async def reply(self, message):
+    async def reply(self, message, anonymous=False):
         if not message.content and not message.attachments:
             raise commands.UserInputError
         if all(not g.get_member(self.id) for g in self.bot.guilds):
@@ -194,13 +197,14 @@ class Thread:
 
         tasks = [
             # in thread channel
-            self.send(message, self.channel, from_mod=True),
+            self.send(message, destination=self.channel, from_mod=True, anonymous=anonymous),
             # to user
-            self.send(message, self.recipient, from_mod=True)
+            self.send(message, destination=self.recipient, from_mod=True, anonymous=anonymous)
             ]
         
+
         self.bot.loop.create_task(
-            self.bot.modmail_api.append_log(message, self.channel.id)
+            self.bot.modmail_api.append_log(message, self.channel.id, type='anonymous' if anonymous else 'thread_message')
             )
 
         if self.close_task is not None:
@@ -213,7 +217,7 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def send(self, message, destination=None, from_mod=False, note=False):
+    async def send(self, message, destination=None, from_mod=False, note=False, anonymous=False):
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             await self.cancel_closure()
@@ -235,17 +239,29 @@ class Thread:
 
         em = discord.Embed(
             description=message.content,
-            # timestamp=message.created_at
+            timestamp=message.created_at
         )
 
         system_avatar_url = 'https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png'
 
         # store message id in hidden url
         if not note:
-            em.set_author(name=author.name,
-                      icon_url=author.avatar_url,
+
+            if anonymous and from_mod and not isinstance(destination, discord.TextChannel):
+                # Anonymously sending to the user.
+                tag = self.bot.config.get('mod_tag', str(message.author.top_role)) 
+                name = self.bot.config.get('anon_username', tag)
+                avatar_url = self.bot.config.get('anon_avatar_url', self.bot.guild.icon_url)
+            else:
+                # Normal message
+                name = str(author)
+                avatar_url = author.avatar_url
+
+            em.set_author(name=name,
+                      icon_url=avatar_url,
                       url=message.jump_url)
         else:
+            # Special note messages
             em.set_author(
                 name=f'Note ({author.name})',
                 icon_url=system_avatar_url,
@@ -274,6 +290,7 @@ class Thread:
 
         prioritize_uploads = any(i[1] is not None for i in images)
 
+        additional_images = []
         additional_count = 1
 
         for att in images:
@@ -282,12 +299,12 @@ class Thread:
                 em.set_image(url=att[0])
                 embedded_image = True
             elif att[1] is not None:
-                link = f'[{att[1]}]({att[0]})'
-                em.add_field(
-                    name=f'Additional Image upload ({additional_count})',
-                    value=link,
-                    inline=False
-                )
+                color = discord.Color.blurple() if note else self.bot.mod_color if from_mod else self.bot.recipient_color
+                img = discord.Embed(color=color)
+                img.set_image(url=att[0])
+                img.set_footer(text=f'Additional Image Upload ({additional_count})')
+                img.timestamp = message.created_at
+                additional_images.append(destination.send(embed=img))
                 additional_count += 1
         
         file_upload_count = 1
@@ -299,9 +316,18 @@ class Thread:
 
         if from_mod:
             em.color = self.bot.mod_color
+            if anonymous and isinstance(destination, discord.TextChannel): # Anonymous reply sent in thread channel
+                em.set_footer(text='Anonymous Reply')
+            elif not anonymous:
+                tag = self.bot.config.get('mod_tag', str(message.author.top_role))
+                em.set_footer(text=tag) # Normal messages
+            else:
+                em.set_footer(text=self.bot.config.get('anon_tag', 'Response')) # Anonymous reply sent to user
+                
         elif note:
             em.color = discord.Color.blurple()
         else:
+            em.set_footer(text=f'Recipient')
             em.color = self.bot.recipient_color
 
         await destination.trigger_typing()
@@ -312,6 +338,10 @@ class Thread:
             mentions = None
             
         await destination.send(mentions, embed=em)
+        if additional_images:
+            self.ready = False 
+            await asyncio.gather(*additional_images)
+            self.ready = True
 
         if delete_message:
             try:
@@ -425,7 +455,7 @@ class ThreadManager:
 
         em = discord.Embed(color=self.bot.mod_color)
         em.description = thread_creation_response
-        em.title = 'Thread Created'
+        em.set_author(name='Thread Created')
         em.timestamp = datetime.datetime.utcnow()
         em.set_footer(text='Your message has been sent', icon_url=self.bot.guild.icon_url)
 
@@ -454,7 +484,7 @@ class ThreadManager:
         thread.channel = channel
 
         log_url, log_data = await asyncio.gather(
-            self.bot.modmail_api.get_log_url(recipient, channel, creator or recipient),
+            self.bot.modmail_api.create_log_entry(recipient, channel, creator or recipient),
             self.bot.modmail_api.get_user_logs(recipient.id)
             # self.get_dominant_color(recipient.avatar_url)
         )
@@ -535,10 +565,8 @@ class ThreadManager:
         member = self.bot.guild.get_member(user.id)
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
-        desc = f'{creator.mention} has created a thread with {user.mention}' \
-            if creator else f'{user.mention} has started a thread'
+
         key = log_url.split('/')[-1]
-        desc = f'{desc} [`{key}`]({log_url})'
 
         role_names = ''
         if member:
@@ -551,31 +579,42 @@ class ThreadManager:
                 role_names = ' '.join(r.mention for r in roles
                                       if r.name != "@everyone")
 
-        em = discord.Embed(colour=dc, description=desc, timestamp=time)
+        em = discord.Embed(colour=dc, description=user.mention, timestamp=time)
 
         def days(d):
-            return ' day ago.' if d == '1' else ' days ago.'
+            if d == '0':
+                return '**today**'
+            return f'{d} day ago' if d == '1' else f'{d} days ago'
 
         created = str((time - user.created_at).days)
-        # em.add_field(name='Mention', value=user.mention)
-        em.add_field(name='Registered', value=created + days(created))
+        # if not role_names:
+        #     em.add_field(name='Mention', value=user.mention)
+        # em.add_field(name='Registered', value=created + days(created))
+        em.description += f' was created {days(created)}'
+
         footer = 'User ID: ' + str(user.id)
         em.set_footer(text=footer)
-        em.set_author(name=str(user), icon_url=avi)
-        em.set_thumbnail(url=avi)
+        em.set_author(name=str(user), icon_url=avi, url=log_url)
+        # em.set_thumbnail(url=avi)
 
         if member:
-            if log_count:
-                em.add_field(name='Past logs', value=f'{log_count}')
             joined = str((time - member.joined_at).days)
-            em.add_field(name='Joined', value=joined + days(joined))
+            # em.add_field(name='Joined', value=joined + days(joined))
+            em.description += f', joined {days(joined)}'
+
             if member.nick:
                 em.add_field(name='Nickname', value=member.nick, inline=True)
             if role_names:
-                em.add_field(name='Roles', value=role_names, inline=False)
+                em.add_field(name='Roles', value=role_names, inline=True)
         else:
             em.set_footer(
                 text=f'{footer} | Note: this member'
                      f' is not part of this server.')
+
+        if log_count:
+            # em.add_field(name='Past logs', value=f'{log_count}')
+            em.description += f" with **{log_count}** past {'thread' if log_count == 1 else 'threads'}."
+        else:
+            em.description += '.'
 
         return em
