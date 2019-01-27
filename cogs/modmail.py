@@ -1,17 +1,16 @@
+from asyncio import gather
 from datetime import datetime
 from typing import Optional, Union
-from asyncio import gather
 
 import discord
+from dateutil import parser
 from discord.ext import commands
 
-from dateutil import parser
-
 from core.decorators import trigger_typing
+from core.models import Bot
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import truncate, User
-from core.models import Bot
 
 
 class Modmail:

@@ -1,23 +1,22 @@
-import traceback
 import inspect
+import traceback
+from contextlib import redirect_stdout
+from datetime import datetime
+from difflib import get_close_matches
 from io import StringIO
 from json import JSONDecodeError
-from datetime import datetime
 from textwrap import indent
-from contextlib import redirect_stdout
-from difflib import get_close_matches
-
-from discord import Embed, Color, Activity
-from discord.ext import commands
-from discord.enums import ActivityType
 
 from aiohttp import ClientResponseError
+from discord import Embed, Color, Activity
+from discord.enums import ActivityType
+from discord.ext import commands
 
-from core.paginator import PaginatorSession
-from core.decorators import auth_required, owner_only, trigger_typing
 from core.changelog import ChangeLog
-from core.utils import cleanup_code
+from core.decorators import auth_required, owner_only, trigger_typing
 from core.models import Bot
+from core.paginator import PaginatorSession
+from core.utils import cleanup_code
 
 
 class Utility:

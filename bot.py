@@ -25,27 +25,26 @@ SOFTWARE.
 __version__ = '2.11.0'
 
 import asyncio
+from datetime import datetime
 from os import listdir
 from textwrap import dedent
-from datetime import datetime
 from types import SimpleNamespace
 
 import discord
+import uvloop
+from aiohttp import ClientSession
+from colorama import init, Fore, Style
 from discord.enums import ActivityType
 from discord.ext import commands
 from discord.ext.commands.view import StringView
-
-import uvloop
-from aiohttp import ClientSession
-from motor.motor_asyncio import AsyncIOMotorClient
-from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
+from motor.motor_asyncio import AsyncIOMotorClient
 
-from core.clients import ModmailApiClient, SelfHostedClient
-from core.thread import ThreadManager
-from core.config import ConfigManager
 from core.changelog import ChangeLog
+from core.clients import ModmailApiClient, SelfHostedClient
+from core.config import ConfigManager
 from core.models import Bot
+from core.thread import ThreadManager
 
 init()
 
