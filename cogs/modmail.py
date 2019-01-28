@@ -1,16 +1,19 @@
-from asyncio import gather
+import asyncio
 from datetime import datetime
 from typing import Optional, Union
 
 import discord
 from dateutil import parser
+from natural.date import duration
 from discord.ext import commands
+
+from core import checks 
 
 from core.decorators import trigger_typing
 from core.models import Bot
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import truncate, User
+from core.utils import truncate, format_preview, User
 
 
 class Modmail:
@@ -21,7 +24,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @commands.has_permissions(administrator=True)
+    @checks.has_permissions(administrator=True)
     async def setup(self, ctx):
         """Sets up a server for Modmail"""
         if self.bot.main_category:
@@ -60,7 +63,7 @@ class Modmail:
         await ctx.send('Successfully set up server.')
 
     @commands.group()
-    @commands.has_permissions(manage_messages=True)
+    @checks.has_permissions(manage_messages=True)
     async def snippets(self, ctx):
         """Returns a list of snippets that are currently set."""
         if ctx.invoked_subcommand is not None:
@@ -135,10 +138,10 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.has_permissions(manage_channels=True)
+    @checks.has_permissions(manage_channels=True)
     async def move(self, ctx, *, category: discord.CategoryChannel):
         """Moves a thread to a specified category."""
-        thread = await self.bot.threads.find(channel=ctx.channel)
+        thread = ctx.thread
         if not thread:
             embed = discord.Embed(
                 title='Error',
@@ -172,6 +175,7 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @commands.command(usage='[after] [close message]')
+    @checks.thread_only()
     async def close(self, ctx, *, after: UserFriendlyTime = None):
         """
         Close the current thread.
@@ -192,9 +196,7 @@ class Modmail:
         - close cancel
         """
 
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if not thread:
-            return
+        thread = ctx.thread
 
         now = datetime.utcnow()
 
@@ -230,15 +232,14 @@ class Modmail:
         )
 
     @commands.command(aliases=['alert'])
+    @checks.thread_only()
     async def notify(self, ctx, *, role=None):
         """
         Notify a given role or yourself to the next thread message received.
 
         Once a thread message is received you will be pinged once only.
         """
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread is None:
-            return
+        thread = ctx.thread
 
         if not role:
             mention = ctx.author.mention
@@ -267,6 +268,7 @@ class Modmail:
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['sub'])
+    @checks.thread_only()
     async def subscribe(self, ctx, *, role=None):
         """
         Notify yourself or a given role for every thread message received.
@@ -274,9 +276,7 @@ class Modmail:
         You will be pinged for every thread message
         received until you unsubscribe.
         """
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread is None:
-            return
+        thread = ctx.thread
 
         if not role:
             mention = ctx.author.mention
@@ -307,11 +307,10 @@ class Modmail:
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['unsub'])
+    @checks.thread_only()
     async def unsubscribe(self, ctx, *, role=None):
         """Unsubscribe yourself or a given role from a thread."""
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread is None:
-            return
+        thread = ctx.thread
 
         if not role:
             mention = ctx.author.mention
@@ -340,34 +339,62 @@ class Modmail:
         return await ctx.send(embed=embed)
 
     @commands.command()
+    @checks.thread_only()
     async def nsfw(self, ctx):
         """Flags a Modmail thread as nsfw."""
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread is None:
-            return
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
 
     @commands.command()
+    @checks.thread_only()
     async def loglink(self, ctx):
         """Return the link to the current thread's logs."""
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread:
-            log_link = await self.bot.api.get_log_link(ctx.channel.id)
-            await ctx.send(
-                embed=discord.Embed(
-                    color=discord.Color.blurple(),
-                    description=log_link
-                )
+        log_link = await self.bot.api.get_log_link(ctx.channel.id)
+        await ctx.send(
+            embed=discord.Embed(
+                color=discord.Color.blurple(),
+                description=log_link
             )
+        )
 
-    @commands.command(aliases=['threads'])
-    @commands.has_permissions(manage_messages=True)
-    @trigger_typing
+    def format_log_embeds(self, logs, avatar_url, title='Previous Logs'):
+        embeds = []
+        for index, entry in enumerate(logs, start=1):
+
+            key = entry['key']
+
+            created_at = parser.parse(entry['created_at'])
+
+            log_url = (
+                f"https://logs.modmail.tk/{key}" 
+                if not self.bot.self_hosted else 
+                self.bot.config.log_url.strip('/') + f'/logs/{key}'
+                )
+            
+            username = entry['recipient']['name'] + '#' + entry['recipient']['discriminator']
+
+            em = discord.Embed(color=discord.Color.blurple(), timestamp=created_at)
+            em.set_author(name=f'{title} ({index}) - {username}', icon_url=avatar_url, url=log_url)
+            em.url = log_url
+            em.add_field(name='Created', value=duration(created_at, now=datetime.utcnow()))
+            em.add_field(name='Closed By', value=f"<@{entry['closer']['id']}>")
+            if entry['recipient']['id'] != entry['creator']['id']:
+                em.add_field(name='Created by', value=f"<@{entry['creator']['id']}>")
+            em.add_field(name='Link', value=log_url)
+            em.add_field(name='Preview', value=format_preview(entry['messages']))
+
+            embeds.append(em)
+        return embeds
+
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(manage_messages=True)
     async def logs(self, ctx, *, member: User = None):
         """Shows a list of previous Modmail thread logs of a member."""
+
+        await ctx.trigger_typing()
+        
         if not member:
-            thread = await self.bot.threads.find(channel=ctx.channel)
+            thread = ctx.thread
             if not thread:
                 raise commands.UserInputError
             user = thread.recipient
@@ -376,7 +403,6 @@ class Modmail:
 
         default_avatar = 'https://cdn.discordapp.com/embed/avatars/0.png'
         icon_url = getattr(user, 'avatar_url', default_avatar)
-        username = str(user) if hasattr(user, 'name') else str(user.id)
 
         logs = await self.bot.api.get_user_logs(user.id)
 
@@ -386,56 +412,90 @@ class Modmail:
                                               'have any previous logs.')
             return await ctx.send(embed=embed)
 
-        embed = discord.Embed(color=discord.Color.blurple())
-        embed.set_author(name=f'{username} - Previous Logs', icon_url=icon_url)
+        logs = reversed([e for e in logs if not e['open']])
 
-        embeds = [embed]
-
-        current_day = parser.parse(logs[0]['created_at'])
-        current_day = current_day.strftime(r'%d %b %Y')
-
-        fmt = ''
-
-        closed_logs = [l for l in logs if not l['open']]
-
-        for index, entry in enumerate(closed_logs):
-            if len(embeds[-1].fields) == 3:
-                embed = discord.Embed(color=discord.Color.blurple())
-                embed.set_author(name='Previous Logs', icon_url=icon_url)
-                embeds.append(embed)
-
-            date = parser.parse(entry['created_at'])
-
-            new_day = date.strftime(r'%d %b %Y')
-            time = date.strftime(r'%H:%M')
-
-            key = entry['key']
-            closer = entry['closer']['name']
-
-            if not self.bot.self_hosted:
-                log_url = f"https://logs.modmail.tk/{key}"
-            else:
-                log_url = self.bot.config.log_url.strip('/') + f'/logs/{key}'
-
-            if entry['messages']:
-                short_desc = truncate(entry['messages'][0]['content'])
-                if not short_desc:
-                    short_desc = 'No content'
-            else:
-                short_desc = 'No content'
-
-            fmt += (f'[`[{time}][closed-by:{closer}]`]'
-                    f'({log_url}) - {short_desc}\n')
-
-            if current_day != new_day or index == len(closed_logs) - 1:
-                embeds[-1].add_field(name=current_day, value=fmt, inline=False)
-                current_day = new_day
-                fmt = ''
+        embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
+    
+    @logs.command(name='closed-by')
+    async def closed_by(self, ctx, *, user: User=None):
+        """Returns all logs closed by a user."""
+        if not self.bot.self_hosted:
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                description='This command only works if you are self-hosting your logs.'
+                )
+            return await ctx.send(embed=embed)
 
+        user = user or ctx.author
+
+        query = {
+            'guild_id': str(self.bot.guild_id),
+            'open': False,
+            'closer.id': str(user.id)
+        }
+
+        projection = {
+            'messages': {'$slice': 5}
+        }
+
+        entries = await self.bot.db.logs.find(query, projection).to_list(None)
+
+        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url, title='Search Results')
+
+        if not embeds:
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                description='No log entries have been found for that query'
+                )
+            return await ctx.send(embed=embed)
+
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
+    
+    @logs.command(name='search')
+    async def search(self, ctx, limit: Optional[int]=None, *, query):
+        '''Searches all logs for a message that contains your query.'''
+
+        await ctx.trigger_typing()
+
+        if not self.bot.self_hosted:
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                description='This command only works if you are self-hosting your logs.'
+                )
+            return await ctx.send(embed=embed)
+
+        query = {
+            'guild_id': str(self.bot.guild_id),
+            'open': False,
+            '$text': {
+                '$search': f'"{query}"'
+                }
+        }
+
+        projection = {
+            'messages': {'$slice': 5}
+        }
+
+        entries = await self.bot.db.logs.find(query, projection).to_list(limit)
+
+        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url, title='Search Results')
+
+        if not embeds:
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                description='No log entries have been found for that query'
+                )
+            return await ctx.send(embed=embed)
+
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
+        
     @commands.command()
+    @checks.thread_only()
     async def reply(self, ctx, *, msg=''):
         """Reply to users using this command.
 
@@ -443,12 +503,11 @@ class Modmail:
         automatically embedding image URLs.
         """
         ctx.message.content = msg
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread:
-            await ctx.trigger_typing()
-            await thread.reply(ctx.message)
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message)
 
     @commands.command()
+    @checks.thread_only()
     async def anonreply(self, ctx, *, msg=''):
         """Reply to a thread anonymously. 
         
@@ -459,35 +518,30 @@ class Modmail:
         and `anon_tag` config variables to do so.
         """
         ctx.message.content = msg
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread:
-            await ctx.trigger_typing()
-            await thread.reply(ctx.message, anonymous=True)
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message, anonymous=True)
 
     @commands.command()
+    @checks.thread_only()
     async def note(self, ctx, *, msg=''):
         """Take a note about the current thread, useful for noting context."""
         ctx.message.content = msg
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread:
-            await ctx.trigger_typing()
-            await thread.note(ctx.message)
+        async with ctx.typing():
+            await ctx.thread.note(ctx.message)
 
     @commands.command()
+    @checks.thread_only()
     async def edit(self, ctx, message_id: Optional[int] = None,
                    *, new_message):
         """Edit a message that was sent using the reply command.
 
-        If no `message_id` is provided, that
+        If no `message_id` is provided, the
         last message sent by a mod will be edited.
 
         `[message_id]` the id of the message that you want to edit.
         `new_message` is the new message that will be edited in.
         """
-        thread = await self.bot.threads.find(channel=ctx.channel)
-
-        if thread is None:
-            return
+        thread = ctx.thread
 
         linked_message_id = None
 
@@ -500,6 +554,7 @@ class Modmail:
                     mod_color = self.bot.mod_color
                 if embed.color.value != mod_color or not embed.author.url:
                     continue
+                # TODO: use regex to find the linked message id
                 linked_message_id = str(embed.author.url).split('/')[-1]
                 break
             elif message_id and msg.id == message_id:
@@ -510,15 +565,16 @@ class Modmail:
         if not linked_message_id:
             raise commands.UserInputError
 
-        await gather(
+        await asyncio.gather(
             thread.edit_message(linked_message_id, new_message),
             self.bot.api.edit_message(linked_message_id, new_message)
         )
+        
         await ctx.message.add_reaction('✅')
 
     @commands.command()
     @trigger_typing
-    @commands.has_permissions(manage_channels=True)
+    @checks.has_permissions(manage_channels=True)
     async def contact(self, ctx,
                       category: Optional[discord.CategoryChannel] = None, *,
                       user: Union[discord.Member, discord.User]):
@@ -546,7 +602,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @commands.has_permissions(manage_channels=True)
+    @checks.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
         embed = discord.Embed(title='Blocked Users',
@@ -579,12 +635,12 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @commands.has_permissions(manage_channels=True)
+    @checks.has_permissions(manage_channels=True)
     async def block(self, ctx, user: User = None, *, reason=None):
         """Block a user from using Modmail."""
 
         if user is None:
-            thread = await self.bot.threads.find(channel=ctx.channel)
+            thread = ctx.thread
             if thread:
                 user = thread.recipient
             else:
@@ -612,12 +668,12 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @commands.has_permissions(manage_channels=True)
+    @checks.has_permissions(manage_channels=True)
     async def unblock(self, ctx, *, user: User = None):
         """Unblocks a user from using Modmail."""
 
         if user is None:
-            thread = await self.bot.threads.find(channel=ctx.channel)
+            thread = ctx.thread
             if thread:
                 user = thread.recipient
             else:
