@@ -1,7 +1,7 @@
 <div align="center">
     <img src='https://i.imgur.com/o558Qnq.png' align='center'>
     <br>
-    <strong><i>A simple and functional modmail bot for Discord.</i></strong>
+    <strong><i>A simple and functional Modmail bot for Discord.</i></strong>
     <br>
     <br>
 
@@ -59,7 +59,7 @@ Did you accidentally send something you didn't mean to with the `reply` command?
 
 ### Thread Logs
 
-Thread conversations are automatically logged and a log link is provided with each thread. Logs are rendered with HTML and are presented in an aesthetically pleasing way, exactly like on discord, this especially integrates seamlessly with the mobile version of discord. Heres a link to an [example](https://logs.modmail.tk/02032d65a6f3).
+Thread conversations are automatically logged and a log link is provided with each thread. Logs are rendered with HTML and are presented in an aesthetically pleasing way, exactly like on discord, this especially integrates seamlessly with the mobile version of discord. Here's a link to an [example](https://logs.modmail.tk/02032d65a6f3).
 
 ### Automatic Updates
 The bot checks for new updates every hour and automatically updates to a newer version if found. This bot is under active development so you can always look forward to new, useful features! If you do not want this functionality, for example, if you want to make changes to your fork, you can do so by adding a `disable_autoupdates` config variable. 
