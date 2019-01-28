@@ -358,7 +358,7 @@ class Modmail:
 
     def format_log_embeds(self, logs, avatar_url, title='Previous Logs'):
         embeds = []
-        for index, entry in enumerate(logs, start=1):
+        for entry in logs:
 
             key = entry['key']
 
@@ -375,7 +375,7 @@ class Modmail:
 
             embed = discord.Embed(color=discord.Color.blurple(),
                                   timestamp=created_at)
-            embed.set_author(name=f'{title} ({index}) - {username}',
+            embed.set_author(name=f'{title} - {username}',
                              icon_url=avatar_url,
                              url=log_url)
             embed.url = log_url
