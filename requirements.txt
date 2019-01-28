@@ -1,14 +1,10 @@
-git+https://github.com/Rapptz/discord.py@rewrite
-colorama==0.4.1
-cachetools==3.0.0
-python-dateutil==2.7.5
-python-box==3.2.3
-colorthief==0.2.1
-emoji==0.5.1
-dhooks==1.1.0
-natural==0.2.0
-parsedatetime==2.4
-motor==2.0.0
-sanic==18.12.0
-dnspython==1.16.0
-uvloop==0.12.0
+git+https://github.com/Rapptz/discord.py@7f4c57dd5ad20b7fa10aea485f674a4bc24b9547
+colorama>=0.4.0
+python-dateutil>=2.7.0
+emoji>=0.2
+uvloop>=0.12.0
+motor>=2.0.0
+natural
+dnspython~=1.16.0   # required by motor
+parsedatetime==2.4  # to be replaced by dateparser
+aiohttp<3.5         # to comply with discord.py
