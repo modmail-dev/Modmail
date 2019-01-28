@@ -382,6 +382,7 @@ class Modmail:
                 em.add_field(name='Created by', value=f"<@{entry['creator']['id']}>")
             em.add_field(name='Preview', value=format_preview(entry['messages']), inline=False)
             em.add_field(name='Link', value=log_url)
+            em.set_footer(text='Recipient ID: ' + str(entry['recipient']['id']))
             
             embeds.append(em)
         return embeds
