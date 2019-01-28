@@ -253,10 +253,15 @@ class SelfHostedClient(UserClient, ApiClient):
         return await self.request(self.METADATA, method='POST', payload=data)
 
     async def get_user_logs(self, user_id):
-        logs = []
-        async for entry in self.logs.find({'recipient.id': str(user_id)}):
-            logs.append(entry)
-        return logs
+        query = {
+            'recipient.id': str(user_id), 
+            'guild_id': str(self.bot.guild_id)
+            }
+        
+        projection = {
+            'messages': {'$slice': 5}
+        }
+        return await self.logs.find(query, projection).to_list(None)
 
     async def get_log(self, channel_id):
         return await self.logs.find_one({'channel_id': str(channel_id)})
@@ -274,7 +279,7 @@ class SelfHostedClient(UserClient, ApiClient):
             'created_at': str(datetime.utcnow()),
             'closed_at': None,
             'channel_id': str(channel.id),
-            'guild_id': str(channel.guild.id),
+            'guild_id': str(self.bot.guild_id),
             'recipient': {
                 'id': str(recipient.id),
                 'name': recipient.name,
