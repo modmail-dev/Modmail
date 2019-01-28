@@ -144,7 +144,7 @@ class Thread(ThreadABC):
                 sneak_peak = 'No content'
 
             desc = f"[`{log_data['key']}`]({log_url}): "
-            desc += '**' + truncate(sneak_peak, max=75-13) + '**'
+            desc += truncate(sneak_peak, max=75-13)
         else:
             desc = "Could not resolve log url."
 
