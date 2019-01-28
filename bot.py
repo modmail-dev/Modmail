@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.12.0'
+__version__ = '2.12.1'
 
 import asyncio
 from datetime import datetime
@@ -259,10 +259,25 @@ class ModmailBot(Bot):
         self._connected.set()
     
     async def setup_indexes(self):
+        """Setup text indexes so we can use the $search operator"""
         coll = self.db.logs 
-        if 'messages.content_text' not in await coll.index_information():
-            print('Creating "text" index for "messages.content"')
-            await coll.create_index([('messages.content', 'text')])
+        index_name = 'messages.content_text_messages.author.name_text'
+
+        index_info = await coll.index_information()
+        
+        # Backwards compatibility
+        old_index = 'messages.content_text'
+        if old_index in index_info:
+            print('Dropping old index:', old_index)
+            await coll.drop_index(old_index)
+
+        if index_name not in index_info:
+            print('Creating "text" index for logs collection.')
+            print('Name:', index_name)
+            await coll.create_index([
+                ('messages.content', 'text'),
+                ('messages.author.name', 'text')
+                ])
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
