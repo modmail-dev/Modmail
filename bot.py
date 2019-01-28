@@ -262,7 +262,7 @@ class ModmailBot(Bot):
         coll = self.db.logs 
         if 'messages.content_text' not in await coll.index_information():
             print('Creating "text" index for "messages.content"')
-            await coll.create_index([('messages.content', 'text')], sparse=True)
+            await coll.create_index([('messages.content', 'text')])
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
