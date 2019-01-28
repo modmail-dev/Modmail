@@ -12,8 +12,9 @@ from discord import Embed, Color, Activity
 from discord.enums import ActivityType
 from discord.ext import commands
 
+from core import checks
 from core.changelog import ChangeLog
-from core.decorators import auth_required, owner_only, trigger_typing
+from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot
 from core.paginator import PaginatorSession
 from core.utils import cleanup_code
@@ -190,8 +191,8 @@ class Utility:
         await ctx.send(embed=embed)
 
     @commands.command()
-    @owner_only()
-    @auth_required
+    @commands.is_owner()
+    @github_access_token_required
     @trigger_typing
     async def github(self, ctx):
         """Shows the github user your access token is linked to."""
@@ -213,8 +214,8 @@ class Utility:
         await ctx.send(embed=embed)
 
     @commands.command()
-    @owner_only()
-    @auth_required
+    @commands.is_owner()
+    @github_access_token_required
     @trigger_typing
     async def update(self, ctx):
         """Updates the bot, this only works with heroku users."""
@@ -269,7 +270,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['presence'])
-    @commands.has_permissions(administrator=True)
+    @checks.has_permissions(administrator=True)
     async def activity(self, ctx, activity_type: str, *, message: str = ''):
         """
         Set a custom activity for the bot.
@@ -339,7 +340,7 @@ class Utility:
 
     @commands.command()
     @trigger_typing
-    @commands.has_permissions(administrator=True)
+    @checks.has_permissions(administrator=True)
     async def ping(self, ctx):
         """Pong! Returns your websocket latency."""
         embed = Embed(
@@ -350,7 +351,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    @checks.has_permissions(administrator=True)
     async def mention(self, ctx, *, mention=None):
         """Changes what the bot mentions at the start of each thread."""
         current = self.bot.config.get('mention', '@here')
@@ -374,7 +375,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    @checks.has_permissions(administrator=True)
     async def prefix(self, ctx, *, prefix=None):
         """Changes the prefix for the bot."""
 
@@ -395,7 +396,7 @@ class Utility:
             await ctx.send(embed=embed)
 
     @commands.group()
-    @owner_only()
+    @commands.is_owner()
     async def config(self, ctx):
         """Change config vars for the bot."""
 
@@ -506,7 +507,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.group(aliases=['aliases'])
-    @commands.has_permissions(manage_messages=True)
+    @checks.has_permissions(manage_messages=True)
     async def alias(self, ctx):
         """Returns a list of aliases that are currently set."""
         if ctx.invoked_subcommand is not None:
@@ -606,7 +607,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command(hidden=True, name='eval')
-    @owner_only()
+    @commands.is_owner()
     async def eval_(self, ctx, *, body):
         """Evaluates Python code"""
 
