@@ -50,15 +50,15 @@ class Github(ApiClient):
     STAR_URL = BASE + '/user/starred/kyb3r/modmail'
 
     def __init__(self, bot: Bot,
-                 access_token: str = None,
-                 username: str = None,
+                 access_token: str = '',
+                 username: str = '',
                  **kwargs):
         super().__init__(bot)
         self.access_token = access_token
         self.username = username
-        self.id: str = kwargs.pop('id')
-        self.avatar_url: str = kwargs.pop('avatar_url')
-        self.url: str = kwargs.pop('url')
+        self.id: str = kwargs.pop('id', '')
+        self.avatar_url: str = kwargs.pop('avatar_url', '')
+        self.url: str = kwargs.pop('url', '')
         if self.access_token:
             self.headers = {'Authorization': 'token ' + str(access_token)}
 
@@ -254,10 +254,10 @@ class SelfHostedClient(UserClient, ApiClient):
 
     async def get_user_logs(self, user_id):
         query = {
-            'recipient.id': str(user_id), 
+            'recipient.id': str(user_id),
             'guild_id': str(self.bot.guild_id)
             }
-        
+
         projection = {
             'messages': {'$slice': 5}
         }

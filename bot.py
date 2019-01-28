@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.12.1'
+__version__ = '2.12.2'
 
 import asyncio
 from datetime import datetime
@@ -128,7 +128,7 @@ class ModmailBot(Bot):
             cog = f'cogs.{file[:-3]}'
             print(f'Loading {cog}')
             self.load_extension(cog)
-    
+
     async def is_owner(self, user):
         allowed = [int(x) for x in str(self.config.get('owners', '0')).split(',')]
         return user.id in allowed
@@ -257,14 +257,14 @@ class ModmailBot(Bot):
         if self.db:
             await self.setup_indexes()
         self._connected.set()
-    
+
     async def setup_indexes(self):
         """Setup text indexes so we can use the $search operator"""
-        coll = self.db.logs 
+        coll = self.db.logs
         index_name = 'messages.content_text_messages.author.name_text'
 
         index_info = await coll.index_information()
-        
+
         # Backwards compatibility
         old_index = 'messages.content_text'
         if old_index in index_info:
@@ -416,7 +416,7 @@ class ModmailBot(Bot):
 
         if self._skip_check(message.author.id, self.user.id):
             return ctx
-        
+
         ctx.thread = await self.threads.find(channel=ctx.channel)
 
         prefixes = await self.get_prefix()
