@@ -254,10 +254,10 @@ class SelfHostedClient(UserClient, ApiClient):
 
     async def get_user_logs(self, user_id):
         query = {
-            'recipient.id': str(user_id), 
+            'recipient.id': str(user_id),
             'guild_id': str(self.bot.guild_id)
             }
-        
+
         projection = {
             'messages': {'$slice': 5}
         }
