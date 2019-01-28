@@ -5,7 +5,6 @@ from typing import Union, Optional
 
 from aiohttp import ClientResponseError, ClientResponse
 from discord import Member, DMChannel
-from pymongo import ReturnDocument
 
 from core.models import Bot, UserClient
 
@@ -346,14 +345,14 @@ class SelfHostedClient(UserClient, ApiClient):
         return await self.logs.find_one_and_update(
             {'channel_id': channel_id},
             {'$push': {f'messages': data}},
-            return_document=ReturnDocument.AFTER
+            return_document=True
         )
 
     async def post_log(self, channel_id, data):
         return await self.logs.find_one_and_update(
             {'channel_id': str(channel_id)},
             {'$set': {k: v for k, v in data.items()}},
-            return_document=ReturnDocument.AFTER
+            return_document=True
         )
 
     async def update_repository(self):
