@@ -386,15 +386,7 @@ class ModmailBot(Bot):
         except (discord.HTTPException, discord.InvalidArgument):
             pass
 
-        blocked_em = discord.Embed(
-            title='Message not sent!',
-            color=discord.Color.red(),
-            description='You have been blocked from using Modmail.'
-        )
-
-        if str(message.author.id) in self.blocked_users:
-            await message.author.send(embed=blocked_em)
-        else:
+        if str(message.author.id) not in self.blocked_users:
             thread = await self.threads.find_or_create(message.author)
             await thread.send(message)
 
