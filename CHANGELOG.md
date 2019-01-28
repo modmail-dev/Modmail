@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [UNRELEASED]
+# v2.12.0
+
+### Important 
+
+In the future, the Modmail API (https://modmail.tk) will be deprecated. This is due to the fact that we are providing a free service without getting anything in return, and thus we do not have the resources to scale to accomodate for more users. We recommend using your own database for logs. In the future you will soon get a `backup` command so you can download all your pre-existing data and migrate to your own database. 
+
+### Changed
+- A lot of painful code cleanup, which is good for us (the devs), but shouldn't affect you.
+- The appearance of the `logs` command. Should be clearer with better info now.
+
+### Added
+
+**Note:** The following commands only work if you are selfhosting your logs. We recommend you to use your own database.
+
+- Log search queries, in the form of two new commands. 
+- `logs search [query]` - this searches all log messages for a query string.
+- `logs closed-by [user]` this returns all logs closed by a certain user
 
 ### Fixed
 - `?activity listening to music` no longer result in two "to"s ("listening to to music").
