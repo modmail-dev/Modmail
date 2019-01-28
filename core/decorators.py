@@ -13,7 +13,7 @@ def trigger_typing(func):
     return wrapper
 
 
-def auth_required(func):
+def github_access_token_required(func):
     @functools.wraps(func)
     async def wrapper(self, ctx: commands.Context, *args, **kwargs):
         if (self.bot.self_hosted and
