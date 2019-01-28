@@ -139,20 +139,22 @@ class Thread(ThreadABC):
                 log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
             if log_data['messages']:
-                sneak_peak = str(log_data['messages'][0]['content'])
+                sneak_peak = str(log_data['messages'][0]['content']).replace('\n', '')
             else:
                 sneak_peak = 'No content'
 
             desc = f"[`{log_data['key']}`]({log_url}): "
-            desc += truncate(sneak_peak, max=75-13)
+            desc += '**' + truncate(sneak_peak, max=75-13) + '**'
         else:
             desc = "Could not resolve log url."
 
         embed = discord.Embed(description=desc, color=discord.Color.red())
+
         if self.recipient is not None:
             user = f"{self.recipient} (`{self.id}`)"
         else:
             user = f'`{self.id}`'
+
         embed.title = user
 
         event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
