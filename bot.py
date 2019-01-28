@@ -128,6 +128,10 @@ class ModmailBot(Bot):
             cog = f'cogs.{file[:-3]}'
             print(f'Loading {cog}')
             self.load_extension(cog)
+    
+    async def is_owner(self, user):
+        allowed = [int(x) for x in str(self.config.get('owners', '0')).split(',')]
+        return user.id in allowed
 
     async def logout(self):
         await self.session.close()
@@ -250,7 +254,15 @@ class ModmailBot(Bot):
         print(Fore.CYAN + 'Connected to gateway.')
 
         await self.config.refresh()
+        if self.db:
+            await self.setup_indexes()
         self._connected.set()
+    
+    async def setup_indexes(self):
+        coll = self.db.logs 
+        if 'messages.content_text' not in await coll.index_information():
+            print('Creating "text" index for "messages.content"')
+            await coll.create_index([('messages.content', 'text')], sparse=True)
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -397,6 +409,8 @@ class ModmailBot(Bot):
 
         if self._skip_check(message.author.id, self.user.id):
             return ctx
+        
+        ctx.thread = await self.threads.find(channel=ctx.channel)
 
         prefixes = await self.get_prefix()
 
