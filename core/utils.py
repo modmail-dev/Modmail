@@ -23,13 +23,14 @@ class User(commands.IDConverter):
         return Object(int(match.group(1)))
 
 
-def truncate(text: str, max: int=50) -> str:
+def truncate(text: str, max: int = 50) -> str:
     return text[:max-3].strip() + '...' if len(text) > max else text
+
 
 def format_preview(messages):
     messages = messages[:3]
     out = ''
-    for message in messages: 
+    for message in messages:
         if message.get('type') in ('note', 'internal'):
             continue
         author = message['author']
@@ -37,8 +38,9 @@ def format_preview(messages):
         name = author['name'] + '#' + str(author['discriminator'])
         prefix = '[M]' if author['mod'] else '[R]'
         out += truncate(f'`{prefix} {name}:` {content}', max=75) + '\n'
-    
+
     return out or 'No Messages'
+
 
 def is_image_url(url: str, _=None) -> bool:
     return bool(parse_image_url(url))

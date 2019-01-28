@@ -139,7 +139,8 @@ class Thread(ThreadABC):
                 log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
             if log_data['messages']:
-                sneak_peak = str(log_data['messages'][0]['content']).replace('\n', '')
+                content = str(log_data['messages'][0]['content'])
+                sneak_peak = content.replace('\n', '')
             else:
                 sneak_peak = 'No content'
 
@@ -410,7 +411,7 @@ class Thread(ThreadABC):
         await destination.send(mentions, embed=embed)
 
         if additional_images:
-            self.ready = False 
+            self.ready = False
             await asyncio.gather(*additional_images)
             self.ready = True
 

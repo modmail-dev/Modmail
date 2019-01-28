@@ -4,16 +4,15 @@ from typing import Optional, Union
 
 import discord
 from dateutil import parser
-from natural.date import duration
 from discord.ext import commands
+from natural.date import duration
 
-from core import checks 
-
+from core import checks
 from core.decorators import trigger_typing
 from core.models import Bot
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import truncate, format_preview, User
+from core.utils import format_preview, User
 
 
 class Modmail:
@@ -366,25 +365,37 @@ class Modmail:
             created_at = parser.parse(entry['created_at'])
 
             log_url = (
-                f"https://logs.modmail.tk/{key}" 
-                if not self.bot.self_hosted else 
+                f"https://logs.modmail.tk/{key}"
+                if not self.bot.self_hosted else
                 self.bot.config.log_url.strip('/') + f'/logs/{key}'
-                )
-            
-            username = entry['recipient']['name'] + '#' + entry['recipient']['discriminator']
+            )
 
-            em = discord.Embed(color=discord.Color.blurple(), timestamp=created_at)
-            em.set_author(name=f'{title} ({index}) - {username}', icon_url=avatar_url, url=log_url)
-            em.url = log_url
-            em.add_field(name='Created', value=duration(created_at, now=datetime.utcnow()))
-            em.add_field(name='Closed By', value=f"<@{entry['closer']['id']}>")
+            username = entry['recipient']['name'] + '#'
+            username += entry['recipient']['discriminator']
+
+            embed = discord.Embed(color=discord.Color.blurple(),
+                                  timestamp=created_at)
+            embed.set_author(name=f'{title} ({index}) - {username}',
+                             icon_url=avatar_url,
+                             url=log_url)
+            embed.url = log_url
+            embed.add_field(name='Created',
+                            value=duration(created_at, now=datetime.utcnow()))
+            embed.add_field(name='Closed By',
+                            value=f"<@{entry['closer']['id']}>")
+
             if entry['recipient']['id'] != entry['creator']['id']:
-                em.add_field(name='Created by', value=f"<@{entry['creator']['id']}>")
-            em.add_field(name='Preview', value=format_preview(entry['messages']), inline=False)
-            em.add_field(name='Link', value=log_url)
-            em.set_footer(text='Recipient ID: ' + str(entry['recipient']['id']))
-            
-            embeds.append(em)
+                embed.add_field(name='Created by',
+                                value=f"<@{entry['creator']['id']}>")
+
+            embed.add_field(name='Preview',
+                            value=format_preview(entry['messages']),
+                            inline=False)
+            embed.add_field(name='Link', value=log_url)
+            embed.set_footer(
+                text='Recipient ID: ' + str(entry['recipient']['id'])
+            )
+            embeds.append(embed)
         return embeds
 
     @commands.group(invoke_without_command=True)
@@ -393,7 +404,7 @@ class Modmail:
         """Shows a list of previous Modmail thread logs of a member."""
 
         await ctx.trigger_typing()
-        
+
         if not member:
             thread = ctx.thread
             if not thread:
@@ -419,14 +430,15 @@ class Modmail:
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-    
+
     @logs.command(name='closed-by')
-    async def closed_by(self, ctx, *, user: User=None):
+    async def closed_by(self, ctx, *, user: User = None):
         """Returns all logs closed by a user."""
         if not self.bot.self_hosted:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='This command only works if you are self-hosting your logs.'
+                description='This command only works if '
+                            'you are self-hosting your logs.'
                 )
             return await ctx.send(embed=embed)
 
@@ -444,7 +456,9 @@ class Modmail:
 
         entries = await self.bot.db.logs.find(query, projection).to_list(None)
 
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url, title='Search Results')
+        embeds = self.format_log_embeds(entries,
+                                        avatar_url=self.bot.guild.icon_url,
+                                        title='Search Results')
 
         if not embeds:
             embed = discord.Embed(
@@ -455,17 +469,18 @@ class Modmail:
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-    
+
     @logs.command(name='search')
-    async def search(self, ctx, limit: Optional[int]=None, *, query):
-        '''Searches all logs for a message that contains your query.'''
+    async def search(self, ctx, limit: Optional[int] = None, *, query):
+        """Searches all logs for a message that contains your query."""
 
         await ctx.trigger_typing()
 
         if not self.bot.self_hosted:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='This command only works if you are self-hosting your logs.'
+                description='This command only works if you '
+                            'are self-hosting your logs.'
                 )
             return await ctx.send(embed=embed)
 
@@ -483,7 +498,9 @@ class Modmail:
 
         entries = await self.bot.db.logs.find(query, projection).to_list(limit)
 
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url, title='Search Results')
+        embeds = self.format_log_embeds(entries,
+                                        avatar_url=self.bot.guild.icon_url,
+                                        title='Search Results')
 
         if not embeds:
             embed = discord.Embed(
@@ -494,7 +511,7 @@ class Modmail:
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
-        
+
     @commands.command()
     @checks.thread_only()
     async def reply(self, ctx, *, msg=''):
@@ -510,8 +527,8 @@ class Modmail:
     @commands.command()
     @checks.thread_only()
     async def anonreply(self, ctx, *, msg=''):
-        """Reply to a thread anonymously. 
-        
+        """Reply to a thread anonymously.
+
         You can edit the anonymous user's name,
         avatar and tag using the config command.
 
@@ -570,7 +587,7 @@ class Modmail:
             thread.edit_message(linked_message_id, new_message),
             self.bot.api.edit_message(linked_message_id, new_message)
         )
-        
+
         await ctx.message.add_reaction('✅')
 
     @commands.command()

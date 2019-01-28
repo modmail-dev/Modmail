@@ -12,10 +12,12 @@ def has_permissions(**perms):
         resolved = ctx.channel.permissions_for(ctx.author)
 
         return resolved.administrator or all(
-            getattr(resolved, name, None) == value for name, value in perms.items()
+            getattr(resolved, name, None) == value
+            for name, value in perms.items()
         )
-    
+
     return commands.check(predicate)
+
 
 def thread_only():
     """Checks if the command is being run in a modmail thread"""
