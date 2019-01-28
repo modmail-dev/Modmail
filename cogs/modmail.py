@@ -356,8 +356,11 @@ class Modmail:
             )
         )
 
-    def format_log_embeds(self, logs, avatar_url, title='Previous Logs'):
+    def format_log_embeds(self, logs, avatar_url):
         embeds = []
+        logs = tuple(logs)
+        title = f'Total Results Found ({len(logs)})'
+
         for entry in logs:
 
             key = entry['key']
@@ -457,8 +460,7 @@ class Modmail:
         entries = await self.bot.db.logs.find(query, projection).to_list(None)
 
         embeds = self.format_log_embeds(entries,
-                                        avatar_url=self.bot.guild.icon_url,
-                                        title='Search Results')
+                                        avatar_url=self.bot.guild.icon_url)
 
         if not embeds:
             embed = discord.Embed(
@@ -499,8 +501,7 @@ class Modmail:
         entries = await self.bot.db.logs.find(query, projection).to_list(limit)
 
         embeds = self.format_log_embeds(entries,
-                                        avatar_url=self.bot.guild.icon_url,
-                                        title='Search Results')
+                                        avatar_url=self.bot.guild.icon_url)
 
         if not embeds:
             embed = discord.Embed(
