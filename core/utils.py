@@ -27,7 +27,7 @@ def truncate(text: str, max: int=50) -> str:
     return text[:max-3].strip() + '...' if len(text) > max else text
 
 def format_preview(messages):
-    messages = messages[:5]
+    messages = messages[:3]
     out = ''
     for message in messages: 
         if message.get('type') in ('note', 'internal'):
