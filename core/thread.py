@@ -8,7 +8,7 @@ import discord
 from discord.ext.commands import UserInputError, CommandError
 
 from core.models import Bot, ThreadManagerABC, ThreadABC
-from core.utils import is_image_url, days, match_user_id
+from core.utils import is_image_url, days, match_user_id, truncate
 
 
 class Thread(ThreadABC):
@@ -138,22 +138,22 @@ class Thread(ThreadABC):
             else:
                 log_url = f"https://logs.modmail.tk/{log_data['key']}"
 
-            if self.recipient is not None:
-                user = self.recipient.mention
-            else:
-                user = f'`{self.id}`'
-
             if log_data['messages']:
-                msg = str(log_data['messages'][0]['content'])
-                sneak_peak = msg if len(msg) < 50 else msg[:48] + '...'
+                sneak_peak = str(log_data['messages'][0]['content'])
             else:
                 sneak_peak = 'No content'
 
-            desc = f"{user} [`{log_data['key']}`]({log_url}): {sneak_peak}"
+            desc = f"[`{log_data['key']}`]({log_url}): "
+            desc += truncate(sneak_peak, max=75-13)
         else:
             desc = "Could not resolve log url."
 
         embed = discord.Embed(description=desc, color=discord.Color.red())
+        if self.recipient is not None:
+            user = f"{self.recipient} (`{self.id}`)"
+        else:
+            user = f'`{self.id}`'
+        embed.title = user
 
         event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
         # embed.set_author(name=f'Event: {event}', url=log_url)
