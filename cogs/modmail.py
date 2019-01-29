@@ -144,7 +144,7 @@ class Modmail:
         if not thread:
             embed = discord.Embed(
                 title='Error',
-                description='This is not a Modmail thread.',
+                description='This is not a thread.',
                 color=discord.Color.red()
             )
             return await ctx.send(embed=embed)
