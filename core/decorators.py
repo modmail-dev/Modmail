@@ -39,8 +39,8 @@ def github_access_token_required(func):
 
 def owner_only():
     async def predicate(ctx: commands.Context) -> bool:
-        allowed = [int(x) for x in
-                   str(ctx.bot.config.get('owners', '0')).split(',')]
+        allowed = {int(x) for x in
+                   str(ctx.bot.config.get('owners', '0')).split(',')}
         return ctx.author.id in allowed
 
     return commands.check(predicate)
