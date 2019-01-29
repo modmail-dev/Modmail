@@ -25,13 +25,12 @@ SOFTWARE.
 __version__ = '2.12.2'
 
 import asyncio
+import os
 from datetime import datetime
-from os import listdir
 from textwrap import dedent
 from types import SimpleNamespace
 
 import discord
-import uvloop
 from aiohttp import ClientSession
 from colorama import init, Fore, Style
 from discord.enums import ActivityType
@@ -59,7 +58,6 @@ class ModmailBot(Bot):
         self._threads = None
         self._session = None
         self._config = None
-        self._connected = asyncio.Event()
         self._db = None
 
         if self.self_hosted:
@@ -120,9 +118,9 @@ class ModmailBot(Bot):
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
         print('Authors: kyb3r, fourjr, Taaku18' + Style.RESET_ALL)
-        print(LINE + Fore.CYAN)
+        print(LINE)
 
-        for file in listdir('cogs'):
+        for file in os.listdir('cogs'):
             if not file.endswith('.py'):
                 continue
             cog = f'cogs.{file[:-3]}'
@@ -631,13 +629,13 @@ class ModmailBot(Bot):
         await self.wait_until_ready()
 
         if self.config.get('disable_autoupdates'):
-            print('Autoupdates disabled.')
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
             print(LINE)
             return
 
         if self.self_hosted and not self.config.get('github_access_token'):
             print('Github access token not found.')
-            print('Autoupdates disabled.')
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
             print(LINE)
             return
 
@@ -678,6 +676,8 @@ class ModmailBot(Bot):
 
 
 if __name__ == '__main__':
-    uvloop.install()
+    if os.name != 'nt':
+        import uvloop
+        uvloop.install()
     bot = ModmailBot()  # pylint: disable=invalid-name
     bot.run()

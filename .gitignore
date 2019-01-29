@@ -105,9 +105,9 @@ ENV/
 #Pycharm
 .idea/
 
-#MacOs
+#MacOS
 .DS_Store
 
-# custom
+# Modmail
 config.json
 plugins/

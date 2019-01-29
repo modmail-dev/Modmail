@@ -26,7 +26,8 @@ class ConfigManager(ConfigManagerABC):
     internal_keys = {
         'snippets', 'aliases', 'blocked',
         'notification_squad', 'subscriptions',
-        'closures', 'activity_message', 'activity_type'
+        'closures', 'activity_message', 'activity_type',
+        'plugins'
     }
 
     protected_keys = {
