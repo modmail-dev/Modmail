@@ -130,7 +130,8 @@ class ModmailBot(Bot):
             self.load_extension(cog)
 
     async def is_owner(self, user):
-        allowed = [int(x) for x in str(self.config.get('owners', '0')).split(',')]
+        allowed = {int(x) for x in
+                   str(self.config.get('owners', '0')).split(',')}
         return user.id in allowed
 
     async def logout(self):
