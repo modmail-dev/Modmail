@@ -1,43 +1,37 @@
 <div align="center">
-    <img src='https://i.imgur.com/o558Qnq.png' align='center'>
-    <br>
-    <strong><i>A simple and functional Modmail bot for Discord.</i></strong>
-    <br>
-    <br>
-
-
-<a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
-    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge" />
-</a>
-
-
-<a href="https://discord.gg/j5e9p8w">
-    <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support" />
-</a>
-
-
-
-<a href="https://github.com/kyb3r/modmail/">
-    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances" />
-</a>
-
-
-<a href="https://patreon.com/kyber">
-  <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7" />
-</a>
-
-
-<a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-  <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License" />
-</a>
-
+  <img src="https://i.imgur.com/o558Qnq.png" style="vertical-align: middle;">
+  <br>
+  <strong><i>A simple and functional Modmail bot for Discord.</i></strong>
+  <br>
+  <br>
+    
+  <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge">
+  </a>
+  
+  <a href="https://discord.gg/j5e9p8w">
+    <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support">
+  </a>
+  
+  <a href="https://github.com/kyb3r/modmail/">
+    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances">
+  </a>
+  
+  <a href="https://patreon.com/kyber">
+    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7">
+  </a>
+  
+  <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
+  </a>
 </div>
-<br>
+
+---
 
 ## How does it work?
 
 
-<img src='https://i.imgur.com/GGukNDs.png' align='right' height=300>
+<img src="https://i.imgur.com/GGukNDs.png" align="right" height=350>
 
 When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `reply` in the channel. See a full list of commands in the [wiki](https://github.com/kyb3r/modmail/wiki).
 
