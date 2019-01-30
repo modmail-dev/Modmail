@@ -435,6 +435,7 @@ class Modmail:
         await session.run()
 
     @logs.command(name='closed-by')
+    @checks.has_permissions(manage_messages=True)
     async def closed_by(self, ctx, *, user: User = None):
         """Returns all logs closed by a user."""
         if not self.bot.self_hosted:
@@ -473,6 +474,7 @@ class Modmail:
         await session.run()
 
     @logs.command(name='search')
+    @checks.has_permissions(manage_messages=True)
     async def search(self, ctx, limit: Optional[int] = None, *, query):
         """Searches all logs for a message that contains your query."""
 

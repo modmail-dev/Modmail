@@ -19,15 +19,14 @@ class Thread(ThreadABC):
                                          int],
                  channel: typing.Union[discord.DMChannel,
                                        discord.TextChannel]):
-        if recipient.bot:
-            raise CommandError('Recipient cannot be a bot.')
-
         self.manager = manager
         self.bot = manager.bot
         if isinstance(recipient, int):
             self._id = recipient
             self._recipient = None
         else:
+            if recipient.bot:
+                raise CommandError('Recipient cannot be a bot.')
             self._id = recipient.id
             self._recipient = recipient
         self._channel = channel
