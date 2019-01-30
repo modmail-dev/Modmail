@@ -5,7 +5,7 @@ emoji>=0.2
 uvloop>=0.12.0
 motor>=2.0.0
 natural==0.2.0
-dateparser~=0.7.0
 dnspython~=1.16.0   # required by motor
+dateparser~=0.7.0
 aiohttp<3.5         # to comply with discord.py
 pylint              # for style
