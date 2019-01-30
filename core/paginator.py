@@ -1,31 +1,44 @@
 import typing
 from asyncio import TimeoutError
 
-from discord import Embed, Message, HTTPException, InvalidArgument
+from discord import User, Reaction, Message, Embed
+from discord import HTTPException, InvalidArgument
 from discord.ext import commands
 
 
 class PaginatorSession:
     """
-    Class that interactively paginates a set of embeds
+    Class that interactively paginates a list of `Embed`.
 
     Parameters
-    ------------
-    ctx: Context
+    ----------
+    ctx : Context
         The context of the command.
-    timeout:
-        How long to wait for before the session closes
-    embeds: List[Embed]
+    timeout : float
+        How long to wait for before the session closes.
+    embeds : List[Embed]
         A list of entries to paginate.
+    edit_footer : bool, optional
+        Whether to set the footer.
+        Defaults to `True`.
 
-    Methods
-    -------
-    add_page:
-        Add an embed to paginate
-    run:
-        Run the interactive session
-    close:
-        Forcefully destroy a session
+    Attributes
+    ----------
+    ctx : Context
+        The context of the command.
+    timeout : float
+        How long to wait for before the session closes.
+    embeds : List[Embed]
+        A list of entries to paginate.
+    running : bool
+        Whether the paginate session is running.
+    base : Message
+        The `Message` of the `Embed`.
+    current : int
+        The current page number.
+    reaction_map : Dict[str, meth]
+        A mapping for reaction to method.
+
     """
 
     def __init__(self, ctx: commands.Context, *embeds, **options):
@@ -52,12 +65,28 @@ class PaginatorSession:
                                  icon_url=embed.footer.icon_url)
 
     def add_page(self, embed: Embed) -> None:
+        """
+        Add a `Embed` page.
+
+        Parameters
+        ----------
+        embed : Embed
+            The `Embed` to add.
+        """
         if isinstance(embed, Embed):
             self.embeds.append(embed)
         else:
             raise TypeError('Page must be an Embed object.')
 
     async def create_base(self, embed: Embed) -> None:
+        """
+        Create a base `Message`.
+
+        Parameters
+        ----------
+        embed : Embed
+            The `Embed` to fill the base `Message`.
+        """
         self.base = await self.ctx.send(embed=embed)
 
         if len(self.embeds) == 1:
@@ -71,6 +100,14 @@ class PaginatorSession:
             await self.base.add_reaction(reaction)
 
     async def show_page(self, index: int) -> None:
+        """
+        Show a page by page number.
+
+        Parameters
+        ----------
+        index : int
+            The index of the page.
+        """
         if not 0 <= index < len(self.embeds):
             return
 
@@ -82,12 +119,33 @@ class PaginatorSession:
         else:
             await self.create_base(page)
 
-    def react_check(self, reaction, user) -> bool:
-        return reaction.message.id == self.base.id and \
-               user.id == self.ctx.author.id and \
-               reaction.emoji in self.reaction_map.keys()
+    def react_check(self, reaction: Reaction, user: User) -> bool:
+        """
+
+        Parameters
+        ----------
+        reaction : Reaction
+            The `Reaction` object of the reaction.
+        user : User
+            The `User` or `Member` object of who sent the reaction.
+
+        Returns
+        -------
+        bool
+        """
+        return (reaction.message.id == self.base.id and
+                user.id == self.ctx.author.id and
+                reaction.emoji in self.reaction_map.keys())
 
     async def run(self) -> typing.Optional[Message]:
+        """
+        Starts the pagination session.
+
+        Returns
+        -------
+        Optional[Message]
+            If it's closed before running ends.
+        """
         if not self.running:
             await self.show_page(0)
         while self.running:
@@ -108,15 +166,32 @@ class PaginatorSession:
                 pass
 
     async def previous_page(self) -> None:
-        """Go to the previous page."""
+        """
+        Go to the previous page.
+        """
         await self.show_page(self.current - 1)
 
     async def next_page(self) -> None:
-        """Go to the next page"""
+        """
+        Go to the next page.
+        """
         await self.show_page(self.current + 1)
 
     async def close(self, delete: bool = True) -> typing.Optional[Message]:
-        """Delete this embed."""
+        """
+        Closes the pagination session.
+
+        Parameters
+        ----------
+        delete : bool, optional
+            Whether or delete the message upon closure.
+            Defaults to `True`.
+
+        Returns
+        -------
+        Optional[Message]
+            If `delete` is `True`.
+        """
         self.running = False
 
         try:
@@ -133,9 +208,13 @@ class PaginatorSession:
             pass
 
     async def first_page(self) -> None:
-        """Go to immediately to the first page"""
+        """
+        Go to the first page.
+        """
         await self.show_page(0)
 
     async def last_page(self) -> None:
-        """Go to immediately to the last page"""
+        """
+        Go to the last page.
+        """
         await self.show_page(len(self.embeds) - 1)
