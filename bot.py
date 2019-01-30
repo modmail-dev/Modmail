@@ -40,7 +40,7 @@ from discord.ext.commands.view import StringView
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from core.changelog import ChangeLog
+from core.changelog import Changelog
 from core.clients import ModmailApiClient, SelfHostedClient
 from core.config import ConfigManager
 from core.models import Bot
@@ -657,7 +657,7 @@ class ModmailBot(Bot):
                 embed.set_footer(text=f"Updating Modmail v{self.version} "
                                       f"-> v{metadata['latest_version']}")
 
-                changelog = await ChangeLog.from_repo(self)
+                changelog = await Changelog.from_url(self)
                 latest = changelog.latest_version
                 embed.description = latest.description
                 for name, value in latest.fields.items():
