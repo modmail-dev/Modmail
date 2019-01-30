@@ -35,12 +35,3 @@ def github_access_token_required(func):
         await ctx.send(embed=embed)
 
     return wrapper
-
-
-def owner_only():
-    async def predicate(ctx: commands.Context) -> bool:
-        allowed = [int(x) for x in
-                   str(ctx.bot.config.get('owners', '0')).split(',')]
-        return ctx.author.id in allowed
-
-    return commands.check(predicate)

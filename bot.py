@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.12.2'
+__version__ = '2.12.3'
 
 import asyncio
 from datetime import datetime
@@ -40,7 +40,7 @@ from discord.ext.commands.view import StringView
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from core.changelog import ChangeLog
+from core.changelog import Changelog
 from core.clients import ModmailApiClient, SelfHostedClient
 from core.config import ConfigManager
 from core.models import Bot
@@ -130,7 +130,8 @@ class ModmailBot(Bot):
             self.load_extension(cog)
 
     async def is_owner(self, user):
-        allowed = [int(x) for x in str(self.config.get('owners', '0')).split(',')]
+        allowed = {int(x) for x in
+                   str(self.config.get('owners', '0')).split(',')}
         return user.id in allowed
 
     async def logout(self):
@@ -635,7 +636,7 @@ class ModmailBot(Bot):
             return
 
         if self.self_hosted and not self.config.get('github_access_token'):
-            print('Github access token not found.')
+            print('GitHub access token not found.')
             print('Autoupdates disabled.')
             print(LINE)
             return
@@ -656,7 +657,7 @@ class ModmailBot(Bot):
                 embed.set_footer(text=f"Updating Modmail v{self.version} "
                                       f"-> v{metadata['latest_version']}")
 
-                changelog = await ChangeLog.from_repo(self)
+                changelog = await Changelog.from_url(self)
                 latest = changelog.latest_version
                 embed.description = latest.description
                 for name, value in latest.fields.items():

@@ -13,7 +13,7 @@ from discord.enums import ActivityType
 from discord.ext import commands
 
 from core import checks
-from core.changelog import ChangeLog
+from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot
 from core.paginator import PaginatorSession
@@ -135,7 +135,7 @@ class Utility:
     @trigger_typing
     async def changelog(self, ctx):
         """Show a paginated changelog of the bot."""
-        changelog = await ChangeLog.from_repo(self.bot)
+        changelog = await Changelog.from_url(self.bot)
         paginator = PaginatorSession(ctx, *changelog.embeds)
         await paginator.run()
 
@@ -183,7 +183,7 @@ class Utility:
             else:
                 footer = 'You are up to date with the latest version.'
 
-        embed.add_field(name='Github',
+        embed.add_field(name='GitHub',
                         value='https://github.com/kyb3r/modmail',
                         inline=False)
 
@@ -202,7 +202,7 @@ class Utility:
         data = await self.bot.api.get_user_info()
 
         embed = Embed(
-            title='Github',
+            title='GitHub',
             description='Current User',
             color=Color.blurple()
         )
@@ -253,7 +253,7 @@ class Utility:
                 embed.set_author(name=user['username'] + ' - Updating bot',
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
-                changelog = await ChangeLog.from_repo(self.bot)
+                changelog = await Changelog.from_url(self.bot)
                 latest = changelog.latest_version
                 embed.description = latest.description
                 for name, value in latest.fields.items():

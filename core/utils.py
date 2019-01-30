@@ -7,6 +7,11 @@ from discord.ext import commands
 
 
 class User(commands.IDConverter):
+    """
+    A custom discord.py `Converter` that
+    supports `Member`, `User`, and string ID's.
+    """
+
     # noinspection PyCallByClass,PyTypeChecker
     async def convert(self, ctx, argument):
         try:
@@ -24,10 +29,39 @@ class User(commands.IDConverter):
 
 
 def truncate(text: str, max: int = 50) -> str:
+    """
+    Reduces the string to `max` length, by trimming the message into "...".
+
+    Parameters
+    ----------
+    text : str
+        The text to trim.
+    max : int, optional
+        The max length of the text.
+        Defaults to 50.
+
+    Returns
+    -------
+    str
+        The truncated text.
+    """
     return text[:max-3].strip() + '...' if len(text) > max else text
 
 
-def format_preview(messages):
+def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
+    """
+    Used to format previews.
+
+    Parameters
+    ----------
+    messages : List[Dict[str, Any]]
+        A list of messages.
+
+    Returns
+    -------
+    str
+        A formatted string preview.
+    """
     messages = messages[:3]
     out = ''
     for message in messages:
@@ -43,11 +77,36 @@ def format_preview(messages):
 
 
 def is_image_url(url: str, _=None) -> bool:
+    """
+    Check if the URL is pointing to an image.
+
+    Parameters
+    ----------
+    url : str
+        The URL to check.
+
+    Returns
+    -------
+    bool
+        Whether the URL is a valid image URL.
+    """
     return bool(parse_image_url(url))
 
 
 def parse_image_url(url: str) -> str:
-    """Checks if a url leads to an image."""
+    """
+    Convert the image URL into a sized Discord avatar.
+
+    Parameters
+    ----------
+    url : str
+        The URL to convert.
+
+    Returns
+    -------
+    str
+        The converted URL, or '' if the URL isn't in the proper format.
+    """
     types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
     url = parse.urlsplit(url)
 
@@ -57,6 +116,19 @@ def parse_image_url(url: str) -> str:
 
 
 def days(day: typing.Union[str, int]) -> str:
+    """
+    Humanize the number of days.
+
+    Parameters
+    ----------
+    day: Union[int, str]
+        The number of days passed.
+
+    Returns
+    -------
+    str
+        A formatted string of the number of days passed.
+    """
     day = int(day)
     if day == 0:
         return '**today**'
@@ -64,7 +136,19 @@ def days(day: typing.Union[str, int]) -> str:
 
 
 def cleanup_code(content: str) -> str:
-    """Automatically removes code blocks from the code."""
+    """
+    Automatically removes code blocks from the code.
+
+    Parameters
+    ----------
+    content : str
+        The content to be cleaned.
+
+    Returns
+    -------
+    str
+        The cleaned content.
+    """
     # remove ```py\n```
     if content.startswith('```') and content.endswith('```'):
         return '\n'.join(content.split('\n')[1:-1])
@@ -74,6 +158,19 @@ def cleanup_code(content: str) -> str:
 
 
 def match_user_id(text: str) -> int:
+    """
+    Matches a user ID in the format of "User ID: 12345".
+
+    Parameters
+    ----------
+    text : str
+        The text of the user ID.
+
+    Returns
+    -------
+    int
+        The user ID if found. Otherwise, -1.
+    """
     match = re.match(r'^User ID: (\d+)$', text)
     if match is not None:
         return int(match.group(1))
