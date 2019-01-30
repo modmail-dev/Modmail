@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # v2.12.3
 
 ### Fixed
-- Patched a bug where `?logs` subcommands were accessible by anyone (thanks to Sasiko for reporting this issue).
+- Patched a bug where `?logs` sub-commands were accessible by anyone.
+- Patched a bug where an error was raised if there was an open thread where the recipient had left the server.
+
+Huge thanks to Sasiko for reporting these issues.
 
 # v2.12.2
 
