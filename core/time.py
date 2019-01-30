@@ -6,7 +6,6 @@ https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 import re
 from datetime import datetime
 
-import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 from discord.ext.commands import BadArgument, Converter
 

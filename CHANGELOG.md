@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # v2.12.3
 
 ### Fixed
-- A loophole where `?logs` subcommands were accessible by anyone.
+- Patched a bug where `?logs` subcommands were accessible by anyone (thanks to Sasiko for reporting this issue).
 
 # v2.12.2
 
