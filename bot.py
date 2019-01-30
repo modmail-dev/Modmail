@@ -636,7 +636,7 @@ class ModmailBot(Bot):
             return
 
         if self.self_hosted and not self.config.get('github_access_token'):
-            print('Github access token not found.')
+            print('GitHub access token not found.')
             print('Autoupdates disabled.')
             print(LINE)
             return

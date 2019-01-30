@@ -48,10 +48,6 @@ class Version:
     def parse(self) -> None:
         """
         Parse the lines and split them into `description` and `fields`.
-.
-        Returns
-        -------
-        None
         """
         curr_action = None
 

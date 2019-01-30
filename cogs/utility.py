@@ -183,7 +183,7 @@ class Utility:
             else:
                 footer = 'You are up to date with the latest version.'
 
-        embed.add_field(name='Github',
+        embed.add_field(name='GitHub',
                         value='https://github.com/kyb3r/modmail',
                         inline=False)
 
@@ -202,7 +202,7 @@ class Utility:
         data = await self.bot.api.get_user_info()
 
         embed = Embed(
-            title='Github',
+            title='GitHub',
             description='Current User',
             color=Color.blurple()
         )

@@ -7,6 +7,7 @@ def has_permissions(**perms):
 
     Examples
     --------
+    ::
         @has_permissions(administrator=True)
         async def setup(ctx):
             print("Success")
@@ -21,8 +22,8 @@ def has_permissions(**perms):
 
         Returns
         -------
-        True
-            If the author is a bot owner, or
+        bool
+            `True` if the author is a bot owner, or
             has the ``administrator`` permission.
             Or if the author has all of the required permissions.
             Otherwise, `False`.
@@ -55,8 +56,8 @@ def thread_only():
 
         Returns
         -------
-        True
-            if the current `Context` is within a Modmail thread.
+        Bool
+            `True` if the current `Context` is within a Modmail thread.
             Otherwise, `False`.
         """
         return ctx.thread is not None
