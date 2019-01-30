@@ -6,7 +6,6 @@ from core.models import Bot, ConfigManagerABC
 
 
 class ConfigManager(ConfigManagerABC):
-    """Class that manages a cached configuration"""
 
     allowed_to_change_in_command = {
         # activity
@@ -24,15 +23,27 @@ class ConfigManager(ConfigManagerABC):
     }
 
     internal_keys = {
-        'snippets', 'aliases', 'blocked',
-        'notification_squad', 'subscriptions',
-        'closures', 'activity_message', 'activity_type'
+        # activity
+        'activity_message', 'activity_type',
+        # moderation
+        'blocked',
+        # threads
+        'snippets', 'notification_squad', 'subscriptions', 'closures',
+        # commands
+        'aliases'
     }
 
     protected_keys = {
-        'token', 'owners', 'modmail_api_token',
-        'guild_id', 'modmail_guild_id',
-        'mongo_uri', 'github_access_token', 'log_url'
+        # Modmail
+        'modmail_api_token', 'modmail_guild_id', 'guild_id', 'owners',
+        # logs
+        'log_url',
+        # database
+        'mongo_uri',
+        # bot
+        'token',
+        # GitHub
+        'github_access_token'
     }
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
