@@ -1,10 +1,9 @@
 import typing
 from asyncio import TimeoutError
 
-from discord import Embed, Message, HTTPException, InvalidArgument, Reaction
+from discord import User, Reaction, Message, Embed
+from discord import HTTPException, InvalidArgument
 from discord.ext import commands
-
-from core.models import User
 
 
 class PaginatorSession:
