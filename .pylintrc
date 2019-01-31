@@ -71,6 +71,15 @@ disable=raw-checker-failed,
         metaclass-assignment,
         missing-docstring,   # No doc-string
         no-name-in-module,   # No name 'file' in module 'core'
+        fixme,
+        too-many-public-methods,
+        too-many-locals,
+        too-many-statements,
+        too-many-branches,
+        too-many-instance-attributes,
+        too-many-arguments,
+        too-few-public-methods,
+        too-many-lines
 
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -356,7 +365,8 @@ good-names=i,
            id,
            db,
            f,
-           dt
+           dt,
+           c
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=yes
