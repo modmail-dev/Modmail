@@ -102,29 +102,30 @@ class ConfigManager(ConfigManagerABC):
         }
         return self.cache
 
-    def clean_data(self, key, value):
-        value_text = value
-        clean_value = value
+    def clean_data(self, key, val):
+        value_text = val
+        clean_value = val
+
         # when setting a color
         if key in self.colors:
-            hex_ = ALL_COLORS.get(value)
+            hex_ = ALL_COLORS.get(val)
 
             if hex_ is None:
-                if not isinstance(value, str):
+                if not isinstance(val, str):
                     raise InvalidConfigError('Invalid color name or hex.')
-                if value.startswith('#'):
-                    value = value[1:]
-                if len(value) != 6:
+                if val.startswith('#'):
+                    val = val[1:]
+                if len(val) != 6:
                     raise InvalidConfigError('Invalid color name or hex.')
-                for v in value:
+                for v in val:
                     if v not in {'0', '1', '2', '3', '4', '5', '6', '7',
                                  '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}:
                         raise InvalidConfigError('Invalid color name or hex.')
-                clean_value = '#' + value
+                clean_value = '#' + val
                 value_text = clean_value
             else:
                 clean_value = hex_
-                value_text = f'{value} ({clean_value})'
+                value_text = f'{val} ({clean_value})'
 
         return clean_value, value_text
 

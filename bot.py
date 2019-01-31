@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.12.3'
+__version__ = '2.12.4'
 
 import asyncio
 from datetime import datetime
@@ -127,7 +127,10 @@ class ModmailBot(Bot):
                 continue
             cog = f'cogs.{file[:-3]}'
             print(f'Loading {cog}')
-            self.load_extension(cog)
+            try:
+                self.load_extension(cog)
+            except Exception:
+                print(f'Failed to load {cog}')
 
     async def is_owner(self, user):
         allowed = {int(x) for x in
