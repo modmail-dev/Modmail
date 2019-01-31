@@ -1,82 +1,69 @@
-# Mod Mail for Discord
-This is an open source discord bot made by kyb3r and improved upon suggestions by the users!
+<div align="center">
+  <img src="https://i.imgur.com/o558Qnq.png" align="center">
+  <br>
+  <strong><i>A simple and functional Modmail bot for Discord.</i></strong>
+  <br>
+  <br>
+    
+  <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge">
+  </a>
+  
+  <a href="https://discord.gg/j5e9p8w">
+    <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support">
+  </a>
+  
+  <a href="https://github.com/kyb3r/modmail/">
+    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances">
+  </a>
+  
+  <a href="https://patreon.com/kyber">
+    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7">
+  </a>
+  
+  <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
+  </a>
+</div>
 
-## Hosting on Heroku
-### What is Heroku?
-Heroku is a free hosting site that can host many web apps. However, the web apps cannot store any data.    
-We have made Mod Mail to do exactly that. It was made to be *stateless* and not store any data in json files or any other storage files.
+---
 
-### How do I do it? 
-If you choose to install the bot using Heroku, you do not need to download anything. In fact, you can set it all up on a phone!    
+## How Does Modmail Work?
 
-### Heroku Account
+<img src="https://i.imgur.com/GGukNDs.png" align="right" height="350">
 
-You need to make a Heroku account. Make one at [Heroku's Website](https://heroku.com/) and then follow the steps below: 
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `?reply` in the channel. A full list of commands can be found in the [wiki](https://github.com/kyb3r/modmail/wiki) or by using the `?help` command.
 
-### Setting it up
+## Installation
 
-1. Create a Bot Application for Discord
-2. Head over to the [applicatons page](https://discordapp.com/developers/applications/me).
-3. Click “new application”. Give it a name, picture and description.
-4. Click “Create Bot User” and click “Yes, Do It!” when the dialog pops up.
-5. Copy down the bot token. This is what is used to login to your bot and will be used at Step 8, or 11 if you are setting up on your PC.
+Currently, the easiest and fastest way to set up the bot is by using Heroku, which is a service that offers a free plan for hosting applications. If you choose to install the bot using Heroku, you will not need to download anything. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join our [Discord server](https://discord.gg/etJNHCQ) for help and support. Even if you don't have any issues, you should come and check out our awesome Discord community! :wink:
 
-[*Here's a GIF to explain the first 5 steps*](https://i.imgur.com/Y2ouW7I.gif)
+---
 
-6. Click this button: [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-7. Input some random name for your app, the heroku app name is not important.
-8. Input your bot token from step 5 into the `TOKEN` field.
-7. Put the [ID of your Server](https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-) into the `GUILD_ID` field.
-10. Put the command prefix you want in the `PREFIX` field. e.g `?` The default prefix is `m.`
-11. Click the `deploy app` button and wait for it to finish.
-12. Click `manage app` and go into the `resources` tab. 
-13. Now turn on the worker by clicking the pencil icon.
-14. If you want, you can go over and check the application logs to see if everything is running smoothly.
-15. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
-You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
+# Notable Features
 
-Now you should be done. Go over to discord and try it out!
+## Customizability
 
-Make sure to give the bot manage channel permissions!
+Modmail has a range of configuration variables that you can dynamically alter with the `?config` command. You can use them to change the different aspects of the bot, for example, the embed color, responses, reactions, status, etc. Snippets and custom command aliases are also supported. Snippets are shortcuts for predefined messages that you can send. Add or remove snippets with the `?snippets` command. The level of customization is ever growing thanks to our exceptional contributors.
 
-## Self-Hosting on your own PC or VPS    
-### Installing Python
+## Linked Messages
 
-This is a bot written in the python programming language. So if you don't already have python correctly installed, you must [install it](http://www.ics.uci.edu/~pattis/common/handouts/pythoneclipsejava/python.html).
+<img src="https://i.imgur.com/6L9aaNw.png" align="right" height="350">
 
-### Installing the Bot
+Have you sent something with the `?reply` command by accident? Don't fret, you can delete your original message, and the bot will automatically delete the corresponding message sent to the recipient of the thread!  You can also use the `?edit` command to edit a message you sent.
 
-Now that you have python installed, you are good to go. Follow the steps below for a successful installation.
+## Thread Logs
 
-1. Look at [Steps 1 to 5 of Setting up on Heroku](https://github.com/kyb3r/modmail/blob/master/README.md#setting-it-up)
-6. Download the bot from the [github page](https://github.com/kyb3r/modmail/archive/master.zip).
-7. Extract the zip file to the desktop or wherever you want.
-8. Open your terminal or cmd.
-9. Navigate to the bot folder. i.e `cd desktop/modmail-master`
-10. Install all the requirements: `pip install -r requirements.txt`
-11. Run the bot with `python bot.py` or on mac or linux `python3.6 bot.py`
-12. Enter your token and server ID in the wizard.
-13. Once the bot is online in your server, do `[your prefix]setup` and you are good to go!    
-You can add the bot to your server with [this tool](https://finitereality.github.io/permissions-calculator/?v=0). Your Client ID is retrived from the [applicatons page](https://discordapp.com/developers/applications/me)
+Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. An example of a logged conversation: https://logs.modmail.tk/02032d65a6f3
 
-## Updating your ModMail (Heroku)
-1. Go to `https://github.com/<YOUR GITHUB USERNAME>/modmail/compare/master...kyb3r:master?quick_pull=1&title=Updating`
-2. Click `Create pull request`    
-![image representation](https://i.imgur.com/iMpMxWF.png)    
-*It should look exactly like the image*
-3. Scroll all the way down till you see the following image    
-![this](https://i.imgur.com/UbODNga.png)
-4. Click `Merge pull request`
-5. Go back to Heroku and click `Deploy`
-6. Click `Deploy Branch`
+## Automatic Updates
 
-**Create an issue if you need help**
+The bot checks for new updates every hour and will automatically update to the newest version. Modmail is under active development, which means that you can always look forward to new and useful features! To disable this functionality, for example, when you customized your fork, you can do so by adding a `disable_autoupdates` config variable and set it to `yes` or `true`. 
 
-#### IF STEP ONE GIVES A 404 ERROR
-You would have to redo from step 6 of [this](https://github.com/kyb3r/modmail/#setting-it-up)
+---
 
-## Thanks For Using This Bot!
+# Contributing
 
-If you do use the bot, a star on this repository is appreciated ;)
+This project is licenced under MIT. If you have any new ideas, create an issue or a pull request. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change.
 
-Dont copy this code or incorporate the code into your own bot without permission and/or credit.
+If you use Modmail and love it, consider supporting me on **[Patreon](https://www.patreon.com/kyber)** :heart:
