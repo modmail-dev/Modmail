@@ -2,7 +2,8 @@ import asyncio
 import json
 import os
 
-from core.models import Bot, ConfigManagerABC
+from core._color_data import ALL_COLORS
+from core.models import Bot, ConfigManagerABC, InvalidConfigError
 
 
 class ConfigManager(ConfigManagerABC):
@@ -44,6 +45,10 @@ class ConfigManager(ConfigManagerABC):
         'token',
         # GitHub
         'github_access_token'
+    }
+
+    colors = {
+        'mod_color', 'recipient_color'
     }
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
@@ -95,6 +100,32 @@ class ConfigManager(ConfigManagerABC):
             if k.lower() in self.valid_keys
         }
         return self.cache
+
+    def clean_data(self, key, value):
+        value_text = value
+        clean_value = value
+        # when setting a color
+        if key in self.colors:
+            hex_ = ALL_COLORS.get(value)
+
+            if hex_ is None:
+                if not isinstance(value, str):
+                    raise InvalidConfigError('Invalid color name or hex.')
+                if value.startswith('#'):
+                    value = value[1:]
+                if len(value) != 6:
+                    raise InvalidConfigError('Invalid color name or hex.')
+                for v in value:
+                    if v not in {'0', '1', '2', '3', '4', '5', '6', '7',
+                                 '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}:
+                        raise InvalidConfigError('Invalid color name or hex.')
+                clean_value = '#' + value
+                value_text = clean_value
+            else:
+                clean_value = hex_
+                value_text = f'{value} ({clean_value})'
+
+        return clean_value, value_text
 
     async def update(self, data=None):
         """Updates the config with data from the cache"""

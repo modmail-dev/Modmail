@@ -15,7 +15,7 @@ from discord.ext import commands
 from core import checks
 from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
-from core.models import Bot
+from core.models import Bot, InvalidConfigError
 from core.paginator import PaginatorSession
 from core.utils import cleanup_code
 
@@ -423,12 +423,17 @@ class Utility:
         keys = self.bot.config.allowed_to_change_in_command
 
         if key in keys:
-            embed = Embed(
-                title='Success',
-                color=Color.blurple(),
-                description=f'Set `{key}` to `{value}`'
-            )
-            await self.bot.config.update({key: value})
+            try:
+                value, value_text = self.bot.config.clean_data(key, value)
+            except InvalidConfigError as exc:
+                embed = exc.embed
+            else:
+                embed = Embed(
+                    title='Success',
+                    color=Color.blurple(),
+                    description=f'Set `{key}` to `{value_text}`'
+                )
+                await self.bot.config.update({key: value})
         else:
             embed = Embed(
                 title='Error',
@@ -450,8 +455,12 @@ class Utility:
                 color=Color.blurple(),
                 description=f'`{key}` had been deleted from the config.'
             )
-            del self.bot.config.cache[key]
-            await self.bot.config.update()
+            try:
+                del self.bot.config.cache[key]
+                await self.bot.config.update()
+            except KeyError:
+                # when no values were set
+                pass
         else:
             embed = Embed(
                 title='Error',

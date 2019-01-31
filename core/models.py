@@ -4,7 +4,7 @@ import typing
 from datetime import datetime
 
 from aiohttp import ClientSession
-from discord import Color, Member, User, CategoryChannel, DMChannel
+from discord import Color, Member, User, CategoryChannel, DMChannel, Embed
 from discord import Message, TextChannel, Guild
 from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -237,6 +237,11 @@ class ConfigManagerABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def clean_data(self, key: str,
+                   val: typing.Any) -> typing.Tuple[str, str]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     async def update(self, data: typing.Optional[dict] = None) -> dict:
         raise NotImplementedError
 
@@ -379,3 +384,14 @@ class ThreadManagerABC(abc.ABC):
                              recipient: typing.Union[Member, User]) \
             -> 'ThreadABC':
         raise NotImplementedError
+
+
+class InvalidConfigError(commands.BadArgument):
+    def __init__(self, msg):
+        self.msg = msg
+
+    @property
+    def embed(self):
+        return Embed(title="Error",
+                     description=self.msg,
+                     color=Color.red())
