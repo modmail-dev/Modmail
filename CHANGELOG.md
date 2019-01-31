@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # v2.12.4
 
 ### Added
-- Named colors are now supported! Over 900 different common colors names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
+- Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
   - Named colors can be set the same way as hex. But this can only be done through `?config set`, which means database modifications will not work.
   - For example: `?config set main_color yellowish green`.
 - New config var `main_color` allows you to customize the main Modmail color (as requested by many). Defaults to Discord `blurple`.
