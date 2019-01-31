@@ -4,10 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.12.4
+
+### Added
+- Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
+  - Named colors can be set the same way as hex. But this can only be done through `?config set`, which means database modifications will not work.
+  - For example: `?config set main_color yellowish green`.
+- New config var `main_color` allows you to customize the main Modmail color (as requested by many). Defaults to Discord `blurple`.
+
 # v2.12.3
 
 ### Fixed
-- Patched a bug where `?logs` subcommands were accessible by anyone (thanks to Sasiko for reporting this issue).
+- Patched a bug where `?logs` sub-commands were accessible by anyone.
+- Patched a bug where an error was raised if there was an open thread where the recipient had left the server.
+
+Huge thanks to Sasiko for reporting these issues.
 
 # v2.12.2
 
@@ -30,6 +41,7 @@ In the future, the Modmail API (https://modmail.tk) will be deprecated. This is 
 - A lot of painful code cleanup, which is good for us (the devs), but shouldn't affect you.
 - The appearance of the `logs` command. Should be clearer with better info now.
 - Bot owners get access to all commands regardless of server permissions.
+- Blocked users no longer receive a message, only the blocked emoji will be sent.
 
 ### Added
 
