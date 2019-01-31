@@ -240,6 +240,19 @@ class ModmailBot(Bot):
         else:
             return color
 
+    @property
+    def main_color(self):
+        color = self.config.get('main_color')
+        if not color:
+            return discord.Color.blurple()
+        try:
+            color = int(color.lstrip('#'), base=16)
+        except ValueError:
+            print('Invalid main_color provided')
+            return discord.Color.blurple()
+        else:
+            return color
+
     async def on_connect(self):
         print(LINE)
         print(Fore.CYAN, end='')

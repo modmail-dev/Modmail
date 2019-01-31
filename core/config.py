@@ -13,12 +13,13 @@ class ConfigManager(ConfigManagerABC):
         'twitch_url',
         # bot settings
         'main_category_id', 'disable_autoupdates', 'prefix', 'mention',
+        'main_color',
         # logging
         'log_channel_id',
         # threads
         'sent_emoji', 'blocked_emoji', 'thread_creation_response',
         # moderation
-        'recipient_color', 'mod_tag', 'mod_color',
+        'recipient_color', 'mod_tag', 'mod_color'
         # anonymous message
         'anon_username', 'anon_avatar_url', 'anon_tag'
     }
@@ -48,7 +49,7 @@ class ConfigManager(ConfigManagerABC):
     }
 
     colors = {
-        'mod_color', 'recipient_color'
+        'mod_color', 'recipient_color', 'main_color'
     }
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys

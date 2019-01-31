@@ -129,6 +129,11 @@ class Bot(abc.ABC, commands.Bot):
     def recipient_color(self) -> typing.Union[Color, int]:
         raise NotImplementedError
 
+    @property
+    @abc.abstractmethod
+    def main_color(self) -> typing.Union[Color, int]:
+        raise NotImplementedError
+
     @abc.abstractmethod
     async def process_modmail(self, message: Message) -> None:
         raise NotImplementedError
