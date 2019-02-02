@@ -9,6 +9,7 @@ from discord.ext.commands import UserInputError, CommandError
 
 from core.models import Bot, ThreadManagerABC, ThreadABC
 from core.utils import is_image_url, days, match_user_id, truncate
+from core.decorators import ignore, queued
 
 
 class Thread(ThreadABC):
@@ -18,7 +19,7 @@ class Thread(ThreadABC):
                  recipient: typing.Union[discord.Member, discord.User,
                                          int],
                  channel: typing.Union[discord.DMChannel,
-                                       discord.TextChannel]):
+                                       discord.TextChannel]=None):
         self.manager = manager
         self.bot = manager.bot
         if isinstance(recipient, int):
@@ -31,7 +32,9 @@ class Thread(ThreadABC):
             self._recipient = recipient
         self._channel = channel
         self._ready_event = asyncio.Event()
+        self._message_queue = asyncio.Queue()
         self._close_task = None
+        self.bot.loop.create_task(self.process_messages())
 
     def __repr__(self):
         return (f'Thread(recipient="{self.recipient or self.id}", '
@@ -71,6 +74,80 @@ class Thread(ThreadABC):
             self._ready_event.set()
         else:
             self._ready_event.clear()
+    
+    async def process_messages(self):
+        """Guarantees order of thread messages sent"""
+        while True:
+            task = await self._message_queue.get()
+            await task 
+
+    async def setup(self, *, creator=None, category=None):
+        """Create the thread channel and other io related initilisation tasks"""
+
+        recipient = self.recipient
+
+        # in case it creates a channel outside of category
+        overwrites = {
+            self.bot.modmail_guild.default_role:
+                discord.PermissionOverwrite(read_messages=False)
+        }
+
+        category = category or self.bot.main_category
+
+        if category is not None:
+            overwrites = None
+
+        channel = await self.bot.modmail_guild.create_text_channel(
+            name=self.manager._format_channel_name(recipient),
+            category=category,
+            overwrites=overwrites,
+            reason='Creating a thread channel'
+        )
+
+        self._channel = channel
+
+        log_url, log_data = await asyncio.gather(
+            self.bot.api.create_log_entry(recipient, channel,
+                                          creator or recipient),
+            self.bot.api.get_user_logs(recipient.id)
+        )
+
+        log_count = sum(1 for log in log_data if not log['open'])
+        info_embed = self.manager._format_info_embed(recipient, log_url, log_count,
+                                             discord.Color.green())
+
+        topic = f'User ID: {recipient.id}'
+        if creator:
+            mention = None
+        else:
+            mention = self.bot.config.get('mention', '@here')
+
+        _, msg = await asyncio.gather(
+            channel.edit(topic=topic),
+            channel.send(mention, embed=info_embed)
+        )
+        
+        self.ready = True
+
+        # Once thread is ready, tell the recipient.
+        thread_creation_response = self.bot.config.get(
+            'thread_creation_response',
+            'The moderation team will get back to you as soon as possible!'
+        )
+
+        embed = discord.Embed(
+            color=self.bot.mod_color,
+            description=thread_creation_response,
+            timestamp=datetime.utcnow(),
+        )
+        embed.set_footer(text='Your message has been sent',
+                         icon_url=self.bot.guild.icon_url)
+        embed.set_author(name='Thread Created')
+
+        if creator is None:
+            self.bot.loop.create_task(recipient.send(embed=embed))
+
+        await msg.pin()
 
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -231,33 +308,45 @@ class Thread(ThreadABC):
         if not message.content and not message.attachments:
             raise UserInputError
         if all(not g.get_member(self.id) for g in self.bot.guilds):
-            await message.channel.send(
+            return await message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
-                    description='This user shares no servers with '
-                                'me and is thus unreachable.'
+                    description='Your message could not be delivered since'
+                                'the recipient shares no servers with the bot'
+                ))
+            
+        tasks = []
+        
+        try:
+            await self.send(message,
+                destination=self.recipient,
+                from_mod=True,
+                anonymous=anonymous)
+        except Exception as e:
+            print(e)
+            tasks.append(message.channel.send(
+                embed=discord.Embed(
+                    color=discord.Color.red(),
+                    description='Your message could not be delivered because '
+                                'the recipient is only accepting direct '
+                                'messages from friends, or the bot was '
+                                'blocked by the recipient.'
                 )
-            )
-            return
+            ))
+        else:
+            # Send the same thing in the thread channel.
+            tasks.append(
+                self.send(message,
+                destination=self.channel,
+                from_mod=True,
+                anonymous=anonymous)
+                )
 
-        tasks = [
-            # in thread channel
-            self.send(message,
-                      destination=self.channel,
-                      from_mod=True,
-                      anonymous=anonymous),
-            # to user
-            self.send(message,
-                      destination=self.recipient,
-                      from_mod=True,
-                      anonymous=anonymous)
-        ]
-
-        await self.bot.api.append_log(
-            message,
-            self.channel.id,
-            type_='anonymous' if anonymous else 'thread_message'
-        )
+            tasks.append(
+                self.bot.api.append_log(message,
+                self.channel.id,
+                type_='anonymous' if anonymous else 'thread_message'
+            ))
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
@@ -273,21 +362,23 @@ class Thread(ThreadABC):
 
         await asyncio.gather(*tasks)
 
+    @queued()
     async def send(self, message, destination=None,
                    from_mod=False, note=False, anonymous=False):
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
-            await self.cancel_closure()
-            await self.channel.send(embed=discord.Embed(
-                color=discord.Color.red(),
-                description='Scheduled close has been cancelled.'
-            ))
+            tasks = asyncio.gather(
+                self.cancel_closure(),
+                self.channel.send(embed=discord.Embed(
+                    color=discord.Color.red(),
+                    description='Scheduled close has been cancelled.'
+                    )))
+            self.bot.loop.create_task(tasks)
 
         if not from_mod and not note:
-            await self.bot.api.append_log(message, self.channel.id)
-
-        if not self.ready:
-            await self.wait_until_ready()
+            self.bot.loop.create_task(
+                self.bot.api.append_log(message, self.channel.id)
+            )
 
         destination = destination or self.channel
 
@@ -408,17 +499,11 @@ class Thread(ThreadABC):
             mentions = None
 
         await destination.send(mentions, embed=embed)
-
         if additional_images:
-            self.ready = False
             await asyncio.gather(*additional_images)
-            self.ready = True
 
         if delete_message:
-            try:
-                await message.delete()
-            except discord.HTTPException:
-                pass
+            self.bot.loop.create_task(ignore(message.delete()))
 
     def get_notifications(self):
         config = self.bot.config
@@ -517,75 +602,21 @@ class ThreadManager(ThreadManagerABC):
 
             return thread
 
-    async def create(self, recipient, *, creator=None, category=None):
+    def create(self, recipient, *, creator=None, category=None):
         """Creates a Modmail thread"""
-
-        thread_creation_response = self.bot.config.get(
-            'thread_creation_response',
-            'The moderation team will get back to you as soon as possible!'
-        )
-
-        embed = discord.Embed(
-            color=self.bot.mod_color,
-            description=thread_creation_response,
-            timestamp=datetime.utcnow(),
-        )
-        embed.set_footer(text='Your message has been sent',
-                         icon_url=self.bot.guild.icon_url)
-        embed.set_author(name='Thread Created')
-
-        if creator is None:
-            self.bot.loop.create_task(recipient.send(embed=embed))
-
-        # in case it creates a channel outside of category
-        overwrites = {
-            self.bot.modmail_guild.default_role:
-                discord.PermissionOverwrite(read_messages=False)
-        }
-
-        category = category or self.bot.main_category
-
-        if category is not None:
-            overwrites = None
-
-        channel = await self.bot.modmail_guild.create_text_channel(
-            name=self._format_channel_name(recipient),
-            category=category,
-            overwrites=overwrites,
-            reason='Creating a thread channel'
-        )
-
-        thread = Thread(self, recipient, channel)
+        # create thread immediately so messages can be processed
+        thread = Thread(self, recipient)
         self.cache[recipient.id] = thread
 
-        log_url, log_data = await asyncio.gather(
-            self.bot.api.create_log_entry(recipient, channel,
-                                          creator or recipient),
-            self.bot.api.get_user_logs(recipient.id)
-        )
-
-        log_count = sum(1 for log in log_data if not log['open'])
-        info_embed = self._format_info_embed(recipient, log_url, log_count,
-                                             discord.Color.green())
-
-        topic = f'User ID: {recipient.id}'
-        if creator:
-            mention = None
-        else:
-            mention = self.bot.config.get('mention', '@here')
-
-        _, msg = await asyncio.gather(
-            channel.edit(topic=topic),
-            channel.send(mention, embed=info_embed)
-        )
-
-        thread.ready = True
-        await msg.pin()
+        # Schedule thread setup for later
+        self.bot.loop.create_task(thread.setup(
+            creator=creator,
+            category=category
+        ))
         return thread
 
     async def find_or_create(self, recipient):
-        return await self.find(recipient=recipient) or \
-               await self.create(recipient)
+        return await self.find(recipient=recipient) or self.create(recipient)
 
     def _format_channel_name(self, author):
         """Sanitises a username for use with text channel names"""
