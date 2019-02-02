@@ -502,13 +502,13 @@ class ModmailBot(Bot):
             return
 
         if not isinstance(channel, discord.TextChannel):
-            if self.config.get('main_category_id') == channel.id:
+            if int(self.config.get('main_category_id')) == channel.id:
                 await self.config.update({
                     'main_category_id': None
                 })
             return
 
-        if self.config.get('log_channel_id') == channel.id:
+        if int(self.config.get('log_channel_id')) == channel.id:
             await self.config.update({
                 'log_channel_id': None
             })
