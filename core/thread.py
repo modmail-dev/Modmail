@@ -9,7 +9,7 @@ from discord.ext.commands import UserInputError, CommandError
 
 from core.models import Bot, ThreadManagerABC, ThreadABC
 from core.utils import is_image_url, days, match_user_id, truncate
-from core.decorators import ignore, queued
+from core.decorators import ignore
 
 
 class Thread(ThreadABC):
@@ -32,9 +32,7 @@ class Thread(ThreadABC):
             self._recipient = recipient
         self._channel = channel
         self._ready_event = asyncio.Event()
-        self._message_queue = asyncio.Queue()
         self._close_task = None
-        self.bot.loop.create_task(self.process_messages())
 
     def __repr__(self):
         return (f'Thread(recipient="{self.recipient or self.id}", '
@@ -75,12 +73,6 @@ class Thread(ThreadABC):
         else:
             self._ready_event.clear()
     
-    async def process_messages(self):
-        """Guarantees order of thread messages sent"""
-        while True:
-            task = await self._message_queue.get()
-            await task 
-
     async def setup(self, *, creator=None, category=None):
         """Create the thread channel and other io related initilisation tasks"""
 
@@ -362,7 +354,6 @@ class Thread(ThreadABC):
 
         await asyncio.gather(*tasks)
 
-    @queued()
     async def send(self, message, destination=None,
                    from_mod=False, note=False, anonymous=False):
         if self.close_task is not None:
@@ -379,6 +370,9 @@ class Thread(ThreadABC):
             self.bot.loop.create_task(
                 self.bot.api.append_log(message, self.channel.id)
             )
+
+        if not self.ready:
+            self.wait_until_ready()
 
         destination = destination or self.channel
 
@@ -500,7 +494,9 @@ class Thread(ThreadABC):
 
         await destination.send(mentions, embed=embed)
         if additional_images:
+            self.ready = True
             await asyncio.gather(*additional_images)
+            self.ready = False
 
         if delete_message:
             self.bot.loop.create_task(ignore(message.delete()))

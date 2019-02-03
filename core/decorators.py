@@ -3,15 +3,6 @@ import functools
 from discord import Embed, Color
 from discord.ext import commands
 
-def queued():
-    def decorator(coro):
-        @functools.wraps(coro)
-        async def wrapper(self, *args, **kwargs):
-            await self.wait_until_ready()
-            task = coro(self, *args, **kwargs)
-            self._message_queue.put_nowait(task)
-        return wrapper
-    return decorator
 
 async def ignore(coro):
     try:
