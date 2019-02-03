@@ -363,6 +363,8 @@ class Thread(ThreadABC):
 
                 img_embed = discord.Embed(color=color)
                 img_embed.set_image(url=att[0])
+                img_embed.title = att[1]
+                img_embed.url = att[0]
                 img_embed.set_footer(
                     text=f'Additional Image Upload ({additional_count})'
                 )
@@ -563,7 +565,6 @@ class ThreadManager(ThreadManagerABC):
                                           creator or recipient),
             self.bot.api.get_user_logs(recipient.id)
         )
-        # await self.get_dominant_color(recipient.avatar_url)
 
         log_count = sum(1 for log in log_data if not log['open'])
         info_embed = self._format_info_embed(recipient, log_url, log_count,
