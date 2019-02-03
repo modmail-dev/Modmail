@@ -363,6 +363,8 @@ class Thread(ThreadABC):
 
                 img_embed = discord.Embed(color=color)
                 img_embed.set_image(url=att[0])
+                img_embed.title = att[1]
+                img_embed.url = att[0]
                 img_embed.set_footer(
                     text=f'Additional Image Upload ({additional_count})'
                 )

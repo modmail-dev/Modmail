@@ -452,9 +452,17 @@ class SelfHostedClient(UserClient, ApiClient):
         return conf
 
     async def update_config(self, data):
-        data = self.filter_valid(data)
-        return await self.db.config.update_one({'bot_id': self.bot.user.id},
-                                               {'$set': data})
+        valid_keys = self.bot.config.valid_keys.difference(
+            self.bot.config.protected_keys
+        )
+
+        toset = {k: v for k, v in data.items() if k in valid_keys}
+        unset = {k: 1 for k in valid_keys if k not in data}
+
+        return await self.db.config.update_one(
+            {'bot_id': self.bot.user.id},
+            {'$set': toset, '$unset': unset}
+            )
 
     async def edit_message(self, message_id, new_content):
         await self.logs.update_one({
