@@ -405,6 +405,7 @@ class Utility:
             await ctx.invoke(cmd, command='config')
 
     @config.command()
+    @commands.is_owner()
     async def options(self, ctx):
         """Return a list of valid config keys you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
@@ -415,6 +416,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command()
+    @commands.is_owner()
     async def set(self, ctx, key: str.lower, *, value):
         """
         Sets a configuration variable and its value
@@ -446,6 +448,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command(name='del')
+    @commands.is_owner()
     async def del_config(self, ctx, key: str.lower):
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
@@ -473,6 +476,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command()
+    @commands.is_owner()
     async def get(self, ctx, key=None):
         """Shows the config variables that are currently set."""
         keys = self.bot.config.allowed_to_change_in_command
@@ -555,6 +559,7 @@ class Utility:
         return await session.run()
 
     @alias.command(name='add')
+    @checks.has_permissions(manage_messages=True)
     async def add_(self, ctx, name: str.lower, *, value):
         """Add an alias to the bot config."""
         if 'aliases' not in self.bot.config.cache:
@@ -590,6 +595,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @alias.command(name='del')
+    @checks.has_permissions(manage_messages=True)
     async def del_alias(self, ctx, *, name: str.lower):
         """Removes a alias from bot config."""
 
