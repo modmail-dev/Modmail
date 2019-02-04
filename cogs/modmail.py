@@ -98,6 +98,7 @@ class Modmail:
         await session.run()
 
     @snippets.command(name='add')
+    @checks.has_permissions(manage_messages=True)
     async def add_(self, ctx, name: str.lower, *, value):
         """Add a snippet to the bot config."""
         if 'snippets' not in self.bot.config.cache:
@@ -115,6 +116,7 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @snippets.command(name='del')
+    @checks.has_permissions(manage_messages=True)
     async def del_(self, ctx, *, name: str.lower):
         """Removes a snippet from bot config."""
 
