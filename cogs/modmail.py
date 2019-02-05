@@ -48,7 +48,7 @@ class Modmail:
                         '<channel-id>` command to set up a custom log channel'
                         ', then you can delete the default '
                         f'{log_channel.mention} channel.',
-            color=discord.Color.blurple()
+            color=self.bot.main_color
         )
 
         embed.set_footer(text=f'Type "{self.bot.prefix}help" '
@@ -71,7 +71,7 @@ class Modmail:
         embeds = []
 
         if self.bot.snippets:
-            embed = discord.Embed(color=discord.Color.blurple(),
+            embed = discord.Embed(color=self.bot.main_color,
                                   description='Here is a list of snippets '
                                               'that are currently configured.')
         else:
@@ -88,7 +88,7 @@ class Modmail:
 
         for name, value in self.bot.snippets.items():
             if len(embed.fields) == 5:
-                embed = discord.Embed(color=discord.Color.blurple(),
+                embed = discord.Embed(color=self.bot.main_color,
                                       description=embed.description)
                 embed.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
                 embeds.append(embed)
@@ -98,6 +98,7 @@ class Modmail:
         await session.run()
 
     @snippets.command(name='add')
+    @checks.has_permissions(manage_messages=True)
     async def add_(self, ctx, name: str.lower, *, value):
         """Add a snippet to the bot config."""
         if 'snippets' not in self.bot.config.cache:
@@ -108,20 +109,21 @@ class Modmail:
 
         embed = discord.Embed(
             title='Added snippet',
-            color=discord.Color.blurple(),
+            color=self.bot.main_color,
             description=f'`{name}` points to: {value}'
         )
 
         await ctx.send(embed=embed)
 
     @snippets.command(name='del')
+    @checks.has_permissions(manage_messages=True)
     async def del_(self, ctx, *, name: str.lower):
         """Removes a snippet from bot config."""
 
         if self.bot.config.snippets.get(name):
             embed = discord.Embed(
                 title='Removed snippet',
-                color=discord.Color.blurple(),
+                color=self.bot.main_color,
                 description=f'`{name}` no longer exists.'
             )
             del self.bot.config['snippets'][name]
@@ -261,7 +263,7 @@ class Modmail:
         else:
             mentions.append(mention)
             await self.bot.config.update()
-            embed = discord.Embed(color=discord.Color.blurple(),
+            embed = discord.Embed(color=self.bot.main_color,
                                   description=f'{mention} will be mentioned '
                                   'on the next message received.')
         return await ctx.send(embed=embed)
@@ -299,7 +301,7 @@ class Modmail:
             mentions.append(mention)
             await self.bot.config.update()
             embed = discord.Embed(
-                color=discord.Color.blurple(),
+                color=self.bot.main_color,
                 description=f'{mention} will now be '
                 'notified of all messages received.'
             )
@@ -332,7 +334,7 @@ class Modmail:
         else:
             mentions.remove(mention)
             await self.bot.config.update()
-            embed = discord.Embed(color=discord.Color.blurple(),
+            embed = discord.Embed(color=self.bot.main_color,
                                   description=f'{mention} is now unsubscribed '
                                   'to this thread.')
         return await ctx.send(embed=embed)
@@ -351,7 +353,7 @@ class Modmail:
         log_link = await self.bot.api.get_log_link(ctx.channel.id)
         await ctx.send(
             embed=discord.Embed(
-                color=discord.Color.blurple(),
+                color=self.bot.main_color,
                 description=log_link
             )
         )
@@ -376,7 +378,7 @@ class Modmail:
             username = entry['recipient']['name'] + '#'
             username += entry['recipient']['discriminator']
 
-            embed = discord.Embed(color=discord.Color.blurple(),
+            embed = discord.Embed(color=self.bot.main_color,
                                   timestamp=created_at)
             embed.set_author(name=f'{title} - {username}',
                              icon_url=avatar_url,
@@ -435,6 +437,7 @@ class Modmail:
         await session.run()
 
     @logs.command(name='closed-by')
+    @checks.has_permissions(manage_messages=True)
     async def closed_by(self, ctx, *, user: User = None):
         """Returns all logs closed by a user."""
         if not self.bot.self_hosted:
@@ -473,6 +476,7 @@ class Modmail:
         await session.run()
 
     @logs.command(name='search')
+    @checks.has_permissions(manage_messages=True)
     async def search(self, ctx, limit: Optional[int] = None, *, query):
         """Searches all logs for a message that contains your query."""
 
@@ -614,7 +618,7 @@ class Modmail:
                 title='Created thread',
                 description=f'Thread started in {thread.channel.mention} '
                 f'for {user.mention}',
-                color=discord.Color.blurple()
+                color=self.bot.main_color
             )
 
         return await ctx.send(embed=embed)
@@ -625,7 +629,7 @@ class Modmail:
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
         embed = discord.Embed(title='Blocked Users',
-                              color=discord.Color.blurple(),
+                              color=self.bot.main_color,
                               description='Here is a list of blocked users.')
 
         users = []
@@ -673,7 +677,7 @@ class Modmail:
             extend = f'for `{reason}`' if reason else ''
             embed = discord.Embed(
                 title='Success',
-                color=discord.Color.blurple(),
+                color=self.bot.main_color,
                 description=f'{mention} is now blocked ' + extend
             )
         else:
@@ -705,7 +709,7 @@ class Modmail:
             await self.bot.config.update()
             embed = discord.Embed(
                 title='Success',
-                color=discord.Color.blurple(),
+                color=self.bot.main_color,
                 description=f'{mention} is no longer blocked'
             )
         else:

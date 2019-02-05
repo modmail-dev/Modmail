@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.12.2'
+__version__ = '2.12.5'
 
 import asyncio
 import os
@@ -126,7 +126,10 @@ class ModmailBot(Bot):
                 continue
             cog = f'cogs.{file[:-3]}'
             print(Fore.CYAN + f'Loading {cog}' + Style.RESET_ALL)
-            self.load_extension(cog)
+            try:
+                self.load_extension(cog)
+            except Exception:
+                print(f'Failed to load {cog}')
 
     async def is_owner(self, user):
         allowed = {int(x) for x in
@@ -236,6 +239,19 @@ class ModmailBot(Bot):
         except ValueError:
             print('Invalid recipient_color provided')
             return discord.Color.gold()
+        else:
+            return color
+
+    @property
+    def main_color(self):
+        color = self.config.get('main_color')
+        if not color:
+            return discord.Color.blurple()
+        try:
+            color = int(color.lstrip('#'), base=16)
+        except ValueError:
+            print('Invalid main_color provided')
+            return discord.Color.blurple()
         else:
             return color
 
@@ -485,13 +501,13 @@ class ModmailBot(Bot):
             return
 
         if not isinstance(channel, discord.TextChannel):
-            if self.config.get('main_category_id') == channel.id:
+            if int(self.config.get('main_category_id')) == channel.id:
                 await self.config.update({
                     'main_category_id': None
                 })
             return
 
-        if self.config.get('log_channel_id') == channel.id:
+        if int(self.config.get('log_channel_id')) == channel.id:
             await self.config.update({
                 'log_channel_id': None
             })
@@ -637,6 +653,8 @@ class ModmailBot(Bot):
         if self.self_hosted and not self.config.get('github_access_token'):
             print('Github access token not found.')
             print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
+            print('GitHub access token not found.')
+            print('Autoupdates disabled.')
             print(LINE)
             return
 
@@ -656,7 +674,7 @@ class ModmailBot(Bot):
                 embed.set_footer(text=f"Updating Modmail v{self.version} "
                                       f"-> v{metadata['latest_version']}")
 
-                changelog = await ChangeLog.from_repo(self)
+                changelog = await Changelog.from_url(self)
                 latest = changelog.latest_version
                 embed.description = latest.description
                 for name, value in latest.fields.items():

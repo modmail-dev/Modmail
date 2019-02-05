@@ -13,9 +13,9 @@ from discord.enums import ActivityType
 from discord.ext import commands
 
 from core import checks
-from core.changelog import ChangeLog
+from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
-from core.models import Bot
+from core.models import Bot, InvalidConfigError
 from core.paginator import PaginatorSession
 from core.utils import cleanup_code
 
@@ -46,7 +46,7 @@ class Utility:
         for fmt in fmts:
             embed = Embed(
                 description='*' + inspect.getdoc(cog) + '*',
-                color=Color.blurple()
+                color=self.bot.main_color
             )
 
             embed.add_field(name='Commands', value=fmt)
@@ -62,7 +62,7 @@ class Utility:
         """Formats command help."""
         prefix = self.bot.prefix
         embed = Embed(
-            color=Color.blurple(),
+            color=self.bot.main_color,
             description=cmd.help
         )
 
@@ -135,7 +135,7 @@ class Utility:
     @trigger_typing
     async def changelog(self, ctx):
         """Show a paginated changelog of the bot."""
-        changelog = await ChangeLog.from_repo(self.bot)
+        changelog = await Changelog.from_url(self.bot)
         paginator = PaginatorSession(ctx, *changelog.embeds)
         await paginator.run()
 
@@ -143,7 +143,7 @@ class Utility:
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
-        embed = Embed(color=Color.blurple(),
+        embed = Embed(color=self.bot.main_color,
                       timestamp=datetime.utcnow())
         embed.set_author(name='Modmail - About',
                          icon_url=self.bot.user.avatar_url)
@@ -183,7 +183,7 @@ class Utility:
             else:
                 footer = 'You are up to date with the latest version.'
 
-        embed.add_field(name='Github',
+        embed.add_field(name='GitHub',
                         value='https://github.com/kyb3r/modmail',
                         inline=False)
 
@@ -202,9 +202,9 @@ class Utility:
         data = await self.bot.api.get_user_info()
 
         embed = Embed(
-            title='Github',
+            title='GitHub',
             description='Current User',
-            color=Color.blurple()
+            color=self.bot.main_color
         )
         user = data['user']
         embed.set_author(name=user['username'],
@@ -227,7 +227,7 @@ class Utility:
         embed = Embed(
             title='Already up to date',
             description=desc,
-            color=Color.blurple()
+            color=self.bot.main_color
         )
 
         if metadata['latest_version'] == self.bot.version:
@@ -253,7 +253,7 @@ class Utility:
                 embed.set_author(name=user['username'] + ' - Updating bot',
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
-                changelog = await ChangeLog.from_repo(self.bot)
+                changelog = await Changelog.from_url(self.bot)
                 latest = changelog.latest_version
                 embed.description = latest.description
                 for name, value in latest.fields.items():
@@ -294,7 +294,7 @@ class Utility:
             await self.bot.config.update()
             embed = Embed(
                 title='Activity Removed',
-                color=Color.blurple()
+                color=self.bot.main_color
             )
             return await ctx.send(embed=embed)
 
@@ -334,7 +334,7 @@ class Utility:
         embed = Embed(
             title='Activity Changed',
             description=desc,
-            color=Color.blurple()
+            color=self.bot.main_color
         )
         return await ctx.send(embed=embed)
 
@@ -346,7 +346,7 @@ class Utility:
         embed = Embed(
             title='Pong! Websocket Latency:',
             description=f'{self.bot.ws.latency * 1000:.4f} ms',
-            color=Color.blurple()
+            color=self.bot.main_color
         )
         return await ctx.send(embed=embed)
 
@@ -359,7 +359,7 @@ class Utility:
         if mention is None:
             embed = Embed(
                 title='Current text',
-                color=Color.blurple(),
+                color=self.bot.main_color,
                 description=f'{current}'
             )
 
@@ -367,7 +367,7 @@ class Utility:
             embed = Embed(
                 title='Changed mention!',
                 description=f'On thread creation the bot now says {mention}',
-                color=Color.blurple()
+                color=self.bot.main_color
             )
             self.bot.config['mention'] = mention
             await self.bot.config.update()
@@ -382,7 +382,7 @@ class Utility:
         current = self.bot.prefix
         embed = Embed(
             title='Current prefix',
-            color=Color.blurple(),
+            color=self.bot.main_color,
             description=f'{current}'
         )
 
@@ -405,16 +405,18 @@ class Utility:
             await ctx.invoke(cmd, command='config')
 
     @config.command()
+    @commands.is_owner()
     async def options(self, ctx):
         """Return a list of valid config keys you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
         valid = ', '.join(f'`{k}`' for k in allowed)
         embed = Embed(title='Valid Keys',
                       description=valid,
-                      color=Color.blurple())
+                      color=self.bot.main_color)
         return await ctx.send(embed=embed)
 
     @config.command()
+    @commands.is_owner()
     async def set(self, ctx, key: str.lower, *, value):
         """
         Sets a configuration variable and its value
@@ -423,12 +425,17 @@ class Utility:
         keys = self.bot.config.allowed_to_change_in_command
 
         if key in keys:
-            embed = Embed(
-                title='Success',
-                color=Color.blurple(),
-                description=f'Set `{key}` to `{value}`'
-            )
-            await self.bot.config.update({key: value})
+            try:
+                value, value_text = self.bot.config.clean_data(key, value)
+            except InvalidConfigError as exc:
+                embed = exc.embed
+            else:
+                embed = Embed(
+                    title='Success',
+                    color=self.bot.main_color,
+                    description=f'Set `{key}` to `{value_text}`'
+                )
+                await self.bot.config.update({key: value})
         else:
             embed = Embed(
                 title='Error',
@@ -441,17 +448,22 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command(name='del')
+    @commands.is_owner()
     async def del_config(self, ctx, key: str.lower):
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
             embed = Embed(
                 title='Success',
-                color=Color.blurple(),
+                color=self.bot.main_color,
                 description=f'`{key}` had been deleted from the config.'
             )
-            del self.bot.config.cache[key]
-            await self.bot.config.update()
+            try:
+                del self.bot.config.cache[key]
+                await self.bot.config.update()
+            except KeyError:
+                # when no values were set
+                pass
         else:
             embed = Embed(
                 title='Error',
@@ -464,6 +476,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command()
+    @commands.is_owner()
     async def get(self, ctx, key=None):
         """Shows the config variables that are currently set."""
         keys = self.bot.config.allowed_to_change_in_command
@@ -472,7 +485,7 @@ class Utility:
             if key in keys:
                 desc = f'`{key}` is set to `{self.bot.config.get(key)}`'
                 embed = Embed(
-                    color=Color.blurple(),
+                    color=self.bot.main_color,
                     description=desc
                 )
                 embed.set_author(name='Config variable',
@@ -489,7 +502,7 @@ class Utility:
 
         else:
             embed = Embed(
-                color=Color.blurple(),
+                color=self.bot.main_color,
                 description='Here is a list of currently '
                             'set configuration variables.'
             )
@@ -518,12 +531,12 @@ class Utility:
 
         if self.bot.aliases:
             embed = Embed(
-                color=Color.blurple(),
+                color=self.bot.main_color,
                 description=desc
             )
         else:
             embed = Embed(
-                color=Color.blurple(),
+                color=self.bot.main_color,
                 description='You dont have any aliases at the moment.'
             )
         embed.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
@@ -533,7 +546,7 @@ class Utility:
 
         for name, value in self.bot.aliases.items():
             if len(embed.fields) == 5:
-                embed = Embed(color=Color.blurple(), description=desc)
+                embed = Embed(color=self.bot.main_color, description=desc)
                 embed.set_author(name='Command aliases',
                                  icon_url=ctx.guild.icon_url)
                 embed.set_footer(text=f'Do {self.bot.prefix}help '
@@ -546,6 +559,7 @@ class Utility:
         return await session.run()
 
     @alias.command(name='add')
+    @checks.has_permissions(manage_messages=True)
     async def add_(self, ctx, name: str.lower, *, value):
         """Add an alias to the bot config."""
         if 'aliases' not in self.bot.config.cache:
@@ -574,13 +588,14 @@ class Utility:
 
         embed = Embed(
             title='Added alias',
-            color=Color.blurple(),
+            color=self.bot.main_color,
             description=f'`{name}` points to: {value}'
         )
 
         return await ctx.send(embed=embed)
 
     @alias.command(name='del')
+    @checks.has_permissions(manage_messages=True)
     async def del_alias(self, ctx, *, name: str.lower):
         """Removes a alias from bot config."""
 
@@ -593,7 +608,7 @@ class Utility:
 
             embed = Embed(
                 title='Removed alias',
-                color=Color.blurple(),
+                color=self.bot.main_color,
                 description=f'`{name}` no longer exists.'
             )
 
