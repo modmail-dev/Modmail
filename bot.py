@@ -40,7 +40,7 @@ from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import ChangeLog
-from core.clients import ModmailApiClient, SelfHostedClient
+from core.clients import ModmailApiClient, SelfHostedClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.models import Bot
 from core.thread import ThreadManager
@@ -65,6 +65,7 @@ class ModmailBot(Bot):
             self._api = SelfHostedClient(self)
         else:
             self._api = ModmailApiClient(self)
+        self.plugin_db = PluginDatabaseClient(self)
 
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())

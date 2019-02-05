@@ -1,5 +1,6 @@
 from discord.ext import commands
 
+
 def has_permissions(**perms):
     """Check if the author has required permissions.
     This will always return ``True`` if the author is a bot owner, or

@@ -108,6 +108,9 @@ ENV/
 #MacOS
 .DS_Store
 
+# custom
+.vscode/
+
 # Modmail
 config.json
 plugins/

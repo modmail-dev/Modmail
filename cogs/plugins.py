@@ -52,7 +52,7 @@ class Plugins:
     async def download_plugin_repo(username, repo):
         try:
             cmd = f'git clone https://github.com/{username}/{repo} '
-            cmd += 'plugins/{username}-{repo} -q'
+            cmd += f'plugins/{username}-{repo} -q'
             subprocess.run(cmd, check=True, capture_output=True)
             # -q (quiet) so there's no terminal output unless there's an error
         except subprocess.CalledProcessError as exc:
