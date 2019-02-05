@@ -32,7 +32,7 @@ class ConfigManager(ConfigManagerABC):
         # threads
         'snippets', 'notification_squad', 'subscriptions', 'closures',
         # misc
-        'aliases', 'plugins
+        'aliases', 'plugins'
     }
 
     protected_keys = {

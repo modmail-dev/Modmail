@@ -1,11 +1,13 @@
+import asyncio
 import importlib
-import subprocess
+import os
 import shutil
+import stat
+import subprocess
 
 from colorama import Fore, Style
 from discord.ext import commands
 
-from core.decorators import owner_only
 from core.models import Bot
 
 
@@ -23,6 +25,10 @@ class Plugins:
     def __init__(self, bot: Bot):
         self.bot = bot
         self.bot.loop.create_task(self.download_initial_plugins())
+
+    def _asubprocess_run(self, cmd):
+        return subprocess.run(cmd, shell=True, check=True,
+                              capture_output=True)
 
     @staticmethod
     def parse_plugin(name):
@@ -42,18 +48,20 @@ class Plugins:
             try:
                 await self.download_plugin_repo(*parsed_plugin[:-1])
             except DownloadError as exc:
-                msg = 'Unable to download plugin '
-                msg += f'({parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
+                msg = f'{exc} ({parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
                 print(Fore.RED + msg + Style.RESET_ALL)
 
             await self.load_plugin(*parsed_plugin)
 
-    @staticmethod
-    async def download_plugin_repo(username, repo):
+    async def download_plugin_repo(self, username, repo):
         try:
             cmd = f'git clone https://github.com/{username}/{repo} '
             cmd += f'plugins/{username}-{repo} -q'
-            subprocess.run(cmd, check=True, capture_output=True)
+            await self.bot.loop.run_in_executor(
+                None,
+                self._asubprocess_run,
+                cmd
+            )
             # -q (quiet) so there's no terminal output unless there's an error
         except subprocess.CalledProcessError as exc:
             error = exc.stderr.decode('utf-8').strip()
@@ -63,17 +71,17 @@ class Plugins:
                 raise DownloadError(error) from exc
 
     async def load_plugin(self, username, repo, plugin_name):
+        ext = f'plugins.{username}-{repo}.{plugin_name}.{plugin_name}'
         try:
-            ext = f'plugins.{username}-{repo}.{plugin_name}.{plugin_name}'
             self.bot.load_extension(ext)
         except ModuleNotFoundError as exc:
             raise DownloadError('Invalid plugin structure') from exc
         else:
-            msg = f'Loading plugins.{username}-{repo}.{plugin_name}'
+            msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
             print(Fore.LIGHTCYAN_EX + msg + Style.RESET_ALL)
 
     @commands.group(aliases=['plugins'])
-    @owner_only()
+    @commands.is_owner()
     async def plugin(self, ctx):
         """Plugin handler. Controls the plugins in the bot."""
         if ctx.invoked_subcommand is None:
@@ -83,7 +91,7 @@ class Plugins:
     @plugin.command()
     async def add(self, ctx, *, plugin_name):
         """Adds a plugin"""
-        # parsing plugin_name
+        message = await ctx.send('Downloading plugin...')
         async with ctx.typing():
             if len(plugin_name.split('/')) >= 3:
                 parsed_plugin = self.parse_plugin(plugin_name)
@@ -95,6 +103,7 @@ class Plugins:
                         f'Unable to fetch plugin from Github: {exc}'
                     )
 
+                importlib.invalidate_caches()
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
@@ -106,11 +115,11 @@ class Plugins:
                 self.bot.config.plugins.append(plugin_name)
                 await self.bot.config.update()
 
-                await ctx.send('Plugin installed. Any plugin that '
-                               'you install is of your OWN RISK.')
+                await message.edit(content='Plugin installed. Any plugin that '
+                                   'you install is of your OWN RISK.')
             else:
-                await ctx.send('Invalid plugin name format. '
-                               'Use username/repo/plugin.')
+                await message.edit(content='Invalid plugin name format. '
+                                   'Use username/repo/plugin.')
 
     @plugin.command()
     async def remove(self, ctx, *, plugin_name):
@@ -127,9 +136,13 @@ class Plugins:
                 if not any(i.startswith(f'{username}/{repo}')
                            for i in self.bot.config.plugins):
                     # if there are no more of such repos, delete the folder
-                    shutil.rmtree(f'plugins/{username}-{repo}',
-                                  ignore_errors=True)
-                    await ctx.send('')
+                    def onerror(func, path, exc_info):
+                        if not os.access(path, os.W_OK):
+                            # Is the error an access error ?
+                            os.chmod(path, stat.S_IWUSR)
+                            func(path)
+
+                    shutil.rmtree(f'plugins/{username}-{repo}', onerror=onerror)
             except Exception as exc:
                 print(exc)
                 self.bot.config.plugins.append(plugin_name)
@@ -143,12 +156,16 @@ class Plugins:
 
     @plugin.command()
     async def update(self, ctx, *, plugin_name):
+        """Updates a certain plugin"""
         async with ctx.typing():
             username, repo, name = self.parse_plugin(plugin_name)
             try:
                 cmd = f'cd plugins/{username}-{repo} && git pull'
-                cmd = subprocess.run(cmd, shell=True, check=True,
-                                     capture_output=True)
+                cmd = await self.bot.loop.run_in_executor(
+                    None,
+                    self._asubprocess_run,
+                    cmd
+                )
             except subprocess.CalledProcessError as exc:
                 error = exc.stdout.decode('utf8').strip()
                 await ctx.send(f'Error when updating: {error}')
@@ -159,15 +176,17 @@ class Plugins:
                     # repo was updated locally, now perform the cog reload
                     ext = f'plugins.{username}-{repo}.{name}.{name}'
                     importlib.reload(importlib.import_module(ext))
-                    self.bot.unload_extension(ext)
-                    self.bot.load_extension(ext)
+                    self.load_plugin(username, repo, name)
 
                 await ctx.send(f'```\n{output}\n```')
 
     @plugin.command(name='list')
     async def list_(self, ctx):
         """Shows a list of currently enabled plugins"""
-        await ctx.send('```\n' + '\n'.join(self.bot.config.plugins) + '\n```')
+        if self.bot.config.plugins:
+            await ctx.send('```\n' + '\n'.join(self.bot.config.plugins) + '\n```')
+        else:
+            await ctx.send('No plugins installed')
 
 
 def setup(bot):

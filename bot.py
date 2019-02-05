@@ -25,6 +25,7 @@ SOFTWARE.
 __version__ = '2.12.5'
 
 import asyncio
+import traceback
 import os
 from datetime import datetime
 from textwrap import dedent
@@ -39,7 +40,7 @@ from discord.ext.commands.view import StringView
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from core.changelog import ChangeLog
+from core.changelog import Changelog
 from core.clients import ModmailApiClient, SelfHostedClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.models import Bot
@@ -130,6 +131,7 @@ class ModmailBot(Bot):
                 self.load_extension(cog)
             except Exception:
                 print(f'Failed to load {cog}')
+                traceback.print_exc()
 
     async def is_owner(self, user):
         allowed = {int(x) for x in
@@ -144,8 +146,21 @@ class ModmailBot(Bot):
 
     def run(self, *args, **kwargs):
         try:
-            super().run(self.token, *args, **kwargs)
+            self.loop.run_until_complete(self.start(self.token))
+        except discord.LoginFailure:
+            print('Invalid token')
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            print('Fatal exception')
+            traceback.print_exc()
         finally:
+            self.data_task.cancel()
+            self.autoupdate_task.cancel()
+
+            self.loop.run_until_complete(self.logout())
+            self.loop.run_until_complete(self.session.close())
+            self.loop.close()
             print(Fore.RED + ' - Shutting down bot' + Style.RESET_ALL)
 
     @property
@@ -293,7 +308,7 @@ class ModmailBot(Bot):
             await coll.create_index([
                 ('messages.content', 'text'),
                 ('messages.author.name', 'text')
-                ])
+            ])
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -658,7 +673,7 @@ class ModmailBot(Bot):
             print(LINE)
             return
 
-        while True:
+        while not self.is_closed():
             metadata = await self.api.get_metadata()
 
             if metadata['latest_version'] != self.version:
