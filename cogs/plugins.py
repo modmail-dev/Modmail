@@ -20,7 +20,7 @@ class Plugins:
 
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
-    Learn how to create a plugin yourself here: https://link.com
+    Learn how to create a plugin yourself here: https://github.com/kyb3r/modmail/wiki/Plugins
     """
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -110,6 +110,9 @@ class Plugins:
         """Adds a plugin"""
         if plugin_name in self.bot.config.plugins:
             return await ctx.send('Plugin already installed')
+        if plugin_name in self.bot.cogs.keys():
+            # another class with the same name
+            return await ctx.send('Another cog exists with the same name')
 
         message = await ctx.send('Downloading plugin...')
         async with ctx.typing():
