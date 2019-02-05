@@ -48,10 +48,14 @@ class Plugins:
             try:
                 await self.download_plugin_repo(*parsed_plugin[:-1])
             except DownloadError as exc:
-                msg = f'{exc} ({parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
+                msg = f'{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
                 print(Fore.RED + msg + Style.RESET_ALL)
-
-            await self.load_plugin(*parsed_plugin)
+            else:
+                try:
+                    await self.load_plugin(*parsed_plugin)
+                except DownloadError as exc:
+                    msg = f'{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
+                    print(Fore.RED + msg + Style.RESET_ALL)
 
     async def download_plugin_repo(self, username, repo):
         try:
@@ -72,6 +76,19 @@ class Plugins:
 
     async def load_plugin(self, username, repo, plugin_name):
         ext = f'plugins.{username}-{repo}.{plugin_name}.{plugin_name}'
+        if 'requirements.txt' in os.listdir(f'plugins/{username}-{repo}/{plugin_name}'):
+            # Install PIP requirements
+            try:
+                await self.bot.loop.run_in_executor(
+                    None, self._asubprocess_run,
+                    f'python3 -m pip install -U -r plugins/{username}-{repo}/{plugin_name}/requirements.txt --user -q -q'
+                )
+                # -q -q (quiet) so there's no terminal output unless there's an error
+            except subprocess.CalledProcessError as exc:
+                error = exc.stderr.decode('utf8').strip()
+                if error:
+                    raise DownloadError(f'Unable to download requirements: ```\n{error}\n```') from exc
+
         try:
             self.bot.load_extension(ext)
         except ModuleNotFoundError as exc:
@@ -91,6 +108,9 @@ class Plugins:
     @plugin.command()
     async def add(self, ctx, *, plugin_name):
         """Adds a plugin"""
+        if plugin_name in self.bot.config.plugins:
+            return await ctx.send('Plugin already installed')
+
         message = await ctx.send('Downloading plugin...')
         async with ctx.typing():
             if len(plugin_name.split('/')) >= 3:
@@ -107,7 +127,7 @@ class Plugins:
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
-                    return await ctx.send(f'Unable to start plugin: {exc}')
+                    return await ctx.send(f'Unable to load plugin: `{exc}`')
 
                 # if it makes it here, it has passed all checks and should
                 # be entered into the config
@@ -157,6 +177,9 @@ class Plugins:
     @plugin.command()
     async def update(self, ctx, *, plugin_name):
         """Updates a certain plugin"""
+        if plugin_name not in self.bot.config.plugins:
+            return await ctx.send('Plugin not installed')
+
         async with ctx.typing():
             username, repo, name = self.parse_plugin(plugin_name)
             try:
@@ -167,18 +190,21 @@ class Plugins:
                     cmd
                 )
             except subprocess.CalledProcessError as exc:
-                error = exc.stdout.decode('utf8').strip()
-                await ctx.send(f'Error when updating: {error}')
+                error = exc.stderr.decode('utf8').strip()
+                await ctx.send(f'Error while updating: {error}')
             else:
                 output = cmd.stdout.decode('utf8').strip()
+                await ctx.send(f'```\n{output}\n```')
 
                 if output != 'Already up to date.':
                     # repo was updated locally, now perform the cog reload
                     ext = f'plugins.{username}-{repo}.{name}.{name}'
                     importlib.reload(importlib.import_module(ext))
-                    self.load_plugin(username, repo, name)
 
-                await ctx.send(f'```\n{output}\n```')
+                    try:
+                        self.load_plugin(username, repo, name)
+                    except DownloadError:
+                        await ctx.send(f'Unable to start plugin: `{exc}`')
 
     @plugin.command(name='list')
     async def list_(self, ctx):
