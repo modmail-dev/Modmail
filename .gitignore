@@ -102,13 +102,13 @@ ENV/
 *.json
 !app.json
 
-#Pycharm
+# Pycharm
 .idea/
 
-#MacOS
+# MacOS
 .DS_Store
 
-# custom
+# VS Code
 .vscode/
 
 # Modmail
