@@ -4,73 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# v2.12.5
+# v2.11.0 
 
-### Fixed
+### Added 
 
-- `config del` command will now work properly on selfhosted db bots.
-
-
-# v2.12.4
-
-### Added
-- Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
-  - Named colors can be set the same way as hex. But this can only be done through `?config set`, which means database modifications will not work.
-  - For example: `?config set main_color yellowish green`.
-- New config var `main_color` allows you to customize the main Modmail color (as requested by many). Defaults to Discord `blurple`.
-
-# v2.12.3
-
-### Fixed
-- Patched a bug where `?logs` sub-commands were accessible by anyone.
-- Patched a bug where an error was raised if there was an open thread where the recipient had left the server.
-
-Huge thanks to Sasiko for reporting these issues.
-
-# v2.12.2
-
-### Fixed
-- Fixed a bug in self-hosted `?update` command.
-
-# v2.12.1
-
-### Changed
-
-- `logs search` now also searches usernames present in thread logs.
-
-# v2.12.0
-
-### Important 
-
-In the future, the Modmail API (https://modmail.tk) will be deprecated. This is due to the fact that we are providing a free service without getting anything in return, and thus we do not have the resources to scale to accomodate for more users. We recommend using your own database for logs. In the future you will soon get a `backup` command so you can download all your pre-existing data and migrate to your own database. 
-
-### Changed
-- A lot of painful code cleanup, which is good for us (the devs), but shouldn't affect you.
-- The appearance of the `logs` command. Should be clearer with better info now.
-- Bot owners get access to all commands regardless of server permissions.
-- Blocked users no longer receive a message, only the blocked emoji will be sent.
-
-### Added
-
-**Note:** The following commands only work if you are selfhosting your logs. We recommend you to use your own database.
-
-- Log search queries, in the form of two new commands. 
-- `logs search [query]` - this searches all log messages for a query string.
-- `logs closed-by [user]` this returns all logs closed by a certain user
-
-### Fixed
-- `?activity listening to music` no longer result in two "to"s ("listening to to music").
-  - This may require you to change your activity message to accommodate this fix.
-- A problem where `main_category_id` and `log_channel_id` weren't updated when their corresponding channel or category get deleted. 
-
-# v2.11.0
-
-### Added
 - `loglink` command, returns the log link for the current thread.
 
 # v2.10.2
-
-### Changed
 - Your logs now track and show edited messages.
 
 # v2.10.1
@@ -85,17 +25,13 @@ In the future, the Modmail API (https://modmail.tk) will be deprecated. This is 
 The username of the anonymous user defaults to the `mod_tag` (the footer text of a mod reply). The avatar defaults the guild icon url. However you can change both of these via the `anon_username`, `anon_avatar_url` and `anon_tag` config variables. 
 
 ### Changed
-- Your bot now logs all messages sent in a thread channel, including discussions that take place. You can now toggle to view them in the log viewer app.
+Your bot now logs all messages sent in a thread channel, including discussions that take place. You can now toggle to view them in the log viewer app.
 
 # v2.9.4
-
-### Fixed
-- Small bug due to a typo.
+Fixed a small bug due to a typo.
 
 # v2.9.3
-
-### Changed
-- Forgot to enable custom embed colors.
+Forgot to enable custom embed colors.
 
 ### Added
 - Ability to set a custom `mod_tag` (the text in the footer of the mod reply embed, which by default says "Moderator")
@@ -113,7 +49,6 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 - Ability to set your own custom `mod_color` and `recipient_color` for the thread message embeds.
 
 # v2.9.1
-
 Changed order of arguments for the contact command. This is so that you can use aliases to their full potential. 
 For example: 
 - `contact "Recruitment Category" @somedude` 
@@ -307,7 +242,7 @@ Breaking changes.
 # v2.0.10
 
 ### Security
-- Fix a bug where blocked users were still able to message Modmail.
+- Fix a bug where blocked users were still able to message modmail.
 
 # v2.0.9
 
@@ -332,7 +267,7 @@ Improvements to commands and new config options available.
 ### Changed
 - You now have the ability to supply a reason when blocking a user.
 - Blocked users are now stored in the database instead of in the channel topic.
-    - This means you can delete the top channel in the Modmail category now. (Migrate first though.)
+    - This means you can delete the top channel in the modmail category now. (Migrate first though.)
 
 # v2.0.7
 
@@ -362,7 +297,7 @@ New command and improvements in bot update message interfaces.
 # v2.0.4
 
 ### Fixed
-- Fixed a one-off bug where the channel topic disappears, but Modmail operations should still continue.
+- Fixed a one-off bug where the channel topic disappears, but modmail operations should still continue.
 - Fixed `linked_message_id` issues.
 
 # v2.0.3
