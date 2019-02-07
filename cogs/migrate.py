@@ -4,6 +4,7 @@ import re
 import os
 from datetime import datetime
 
+import discord
 from discord.ext import commands
 
 from core.models import Bot
@@ -43,7 +44,10 @@ class Thread:
         if user_id:
             self.recipient = bot.get_user(int(user_id))
             if self.recipient is None:
-                self.recipient = await bot.get_user_info(int(user_id))
+                try:
+                    self.recipient = await bot.get_user_info(int(user_id))
+                except discord.NotFound:
+                    self.recipient = None
         else:
             self.recipient = None
 
@@ -152,7 +156,10 @@ class ThreadMessage:
         if user_id:
             self.author = bot.get_user(int(user_id))
             if self.author is None:
-                self.author = await bot.get_user_info(int(user_id))
+                try:
+                    self.author = await bot.get_user_info(int(user_id))
+                except discord.NotFound:
+                    self.author = None
         else:
             self.author = None
 
