@@ -533,3 +533,12 @@ class SelfHostedClient(UserClient, ApiClient):
                 'url': user.url
             }
         }
+
+
+class PluginDatabaseClient:
+    def __init__(self, bot: Bot):
+        self.bot = bot
+
+    def get_partition(self, cog):
+        cls_name = cog.__class__.__name__
+        return self.bot.db.plugins[cls_name]
