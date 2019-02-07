@@ -79,11 +79,12 @@ class Plugins:
         dirname = f'plugins/{username}-{repo}/{plugin_name}'
         if 'requirements.txt' in os.listdir(dirname):
             # Install PIP requirements
+            print(dirname + '/' + 'requirements.txt')
             try:
                 await self.bot.loop.run_in_executor(
                     None, self._asubprocess_run,
                     f'python3 -m pip install -U -r {dirname}/'
-                    'requirements.txt --user -q -q'
+                    'requirements.txt -q -q'
                 )
                 # -q -q (quiet)
                 # so there's no terminal output unless there's an error
