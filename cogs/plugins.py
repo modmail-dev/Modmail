@@ -1,4 +1,3 @@
-import asyncio
 import importlib
 import os
 import shutil
@@ -20,7 +19,8 @@ class Plugins:
 
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
-    Learn how to create a plugin yourself here: https://github.com/kyb3r/modmail/wiki/Plugins
+    Learn how to create a plugin yourself here:
+    https://github.com/kyb3r/modmail/wiki/Plugins
     """
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -76,18 +76,23 @@ class Plugins:
 
     async def load_plugin(self, username, repo, plugin_name):
         ext = f'plugins.{username}-{repo}.{plugin_name}.{plugin_name}'
-        if 'requirements.txt' in os.listdir(f'plugins/{username}-{repo}/{plugin_name}'):
+        dirname = f'plugins/{username}-{repo}/{plugin_name}'
+        if 'requirements.txt' in os.listdir(dirname):
             # Install PIP requirements
             try:
                 await self.bot.loop.run_in_executor(
                     None, self._asubprocess_run,
-                    f'python3 -m pip install -U -r plugins/{username}-{repo}/{plugin_name}/requirements.txt --user -q -q'
+                    f'python3 -m pip install -U -r {dirname}/'
+                    'requirements.txt --user -q -q'
                 )
-                # -q -q (quiet) so there's no terminal output unless there's an error
+                # -q -q (quiet)
+                # so there's no terminal output unless there's an error
             except subprocess.CalledProcessError as exc:
                 error = exc.stderr.decode('utf8').strip()
                 if error:
-                    raise DownloadError(f'Unable to download requirements: ```\n{error}\n```') from exc
+                    raise DownloadError(
+                        f'Unable to download requirements: ```\n{error}\n```'
+                    ) from exc
 
         try:
             self.bot.load_extension(ext)
@@ -161,11 +166,12 @@ class Plugins:
                     # if there are no more of such repos, delete the folder
                     def onerror(func, path, exc_info):
                         if not os.access(path, os.W_OK):
-                            # Is the error an access error ?
+                            # Is the error an access error?
                             os.chmod(path, stat.S_IWUSR)
                             func(path)
 
-                    shutil.rmtree(f'plugins/{username}-{repo}', onerror=onerror)
+                    shutil.rmtree(f'plugins/{username}-{repo}',
+                                  onerror=onerror)
             except Exception as exc:
                 print(exc)
                 self.bot.config.plugins.append(plugin_name)
@@ -205,15 +211,16 @@ class Plugins:
                     importlib.reload(importlib.import_module(ext))
 
                     try:
-                        self.load_plugin(username, repo, name)
-                    except DownloadError:
+                        await self.load_plugin(username, repo, name)
+                    except DownloadError as exc:
                         await ctx.send(f'Unable to start plugin: `{exc}`')
 
     @plugin.command(name='list')
     async def list_(self, ctx):
         """Shows a list of currently enabled plugins"""
         if self.bot.config.plugins:
-            await ctx.send('```\n' + '\n'.join(self.bot.config.plugins) + '\n```')
+            msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
+            await ctx.send(msg)
         else:
             await ctx.send('No plugins installed')
 
