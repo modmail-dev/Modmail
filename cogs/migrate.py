@@ -5,7 +5,8 @@ import os
 from datetime import datetime
 
 from discord.ext import commands
-from core.decorators import owner_only, trigger_typing
+
+from core.models import Bot
 
 
 class Thread:
@@ -15,9 +16,24 @@ class Thread:
         3: 'suspended'
     }
 
+    __slots__ = ['bot', 'id', 'status', 'recipient', 'creator', 'creator_mod',
+                 'closer', 'channel_id', 'created_at', 'scheduled_close_at',
+                 'scheduled_close_id', 'alert_id', 'messages']
+
     @classmethod
-    async def from_data(cls, bot, data, cursor):
-        # id	status	is_legacy	user_id	user_name	channel_id	created_at	scheduled_close_at	scheduled_close_id	scheduled_close_name	alert_id
+    async def from_data(cls, bot: Bot, data, cursor):
+        # id
+        # status
+        # is_legacy
+        # user_id
+        # user_name
+        # channel_id
+        # created_at
+        # scheduled_close_at
+        # scheduled_close_id
+        # scheduled_close_name
+        # alert_id
+
         self = cls()
         self.bot = bot
         self.id = data[0]
@@ -37,19 +53,23 @@ class Thread:
 
         self.channel_id = int(data[5])
         self.created_at = datetime.fromisoformat(data[6])
-        self.scheduled_close_at = datetime.fromisoformat(data[7]) if data[7] else datetime.utcnow()
+        self.scheduled_close_at = datetime.fromisoformat(data[7]) \
+            if data[7] else datetime.utcnow()
         self.scheduled_close_id = data[8]
         self.alert_id = data[9]
 
         self.messages = []
 
         if self.id:
-            for i in cursor.execute("SELECT * FROM 'thread_messages' WHERE thread_id == ?", (self.id,)):
+            for i in cursor.execute(
+                    "SELECT * FROM 'thread_messages' WHERE thread_id == ?",
+                    (self.id,)):
                 message = await ThreadMessage.from_data(bot, i)
-                if message.type == 'command' and 'close' in message.body:
+                if message.type_ == 'command' and 'close' in message.body:
                     self.closer = message.author
-                elif message.type == 'system' and message.body.startswith('Thread was opened by '):
-                    # user used the newthread command
+                elif message.type_ == 'system' and \
+                        message.body.startswith('Thread was opened by '):
+                    # user used the `newthread` command
                     mod = message.body[:21]  # gets name#discrim
                     for i in bot.users:
                         if str(i) == mod:
@@ -92,7 +112,10 @@ class Thread:
                 'mod': True
             }
         return payload
-# TODO: Handle if the user closed by himself how does a user close by humself? is that a thing in dragory (yes)
+
+
+# TODO: Handle if the user closed by himself how does a user close by himself?
+#  is that a thing in dragory (yes)
 
 
 class ThreadMessage:
@@ -105,13 +128,25 @@ class ThreadMessage:
         6: 'command'
     }
 
+    __slots__ = ['bot', 'id', 'type_', 'author', 'body', 'attachments',
+                 'content', 'is_anonymous', 'dm_message_id', 'created_at']
+
     @classmethod
-    async def from_data(cls, bot, data):
-        # id	thread_id	message_type	user_id	user_name	body	is_anonymous	dm_message_id	created_at
+    async def from_data(cls, bot: Bot, data):
+        # id
+        # thread_id
+        # message_type
+        # user_id
+        # user_name
+        # body
+        # is_anonymous
+        # dm_message_id
+        # created_at
+
         self = cls()
         self.bot = bot
         self.id = data[1]
-        self.type = self.types[data[2]]
+        self.type_ = self.types[data[2]]
 
         user_id = data[3]
         if user_id:
@@ -123,7 +158,7 @@ class ThreadMessage:
 
         self.body = data[5]
 
-        pattern = re.compile(r'http:\/\/[\d.]+:\d+\/attachments\/\d+\/.*')
+        pattern = re.compile(r'http://[\d.]+:\d+/attachments/\d+/.*')
         self.attachments = pattern.findall(str(self.body))
         if self.attachments:
             index = self.body.find(self.attachments[0])
@@ -138,7 +173,7 @@ class ThreadMessage:
         return self
 
     def serialize(self):
-        if self.type in ('from_user', 'to_user'):
+        if self.type_ in ('from_user', 'to_user'):
             return {
                 'timestamp': str(self.created_at),
                 'message_id': self.dm_message_id,
@@ -148,18 +183,18 @@ class ThreadMessage:
                     'name': self.author.name,
                     'discriminator': self.author.discriminator,
                     'avatar_url': self.author.avatar_url,
-                    'mod': self.type == 'to_user'
+                    'mod': self.type_ == 'to_user'
                 } if self.author else None,
                 'attachments': self.attachments
             }
 
 
 class Migrate:
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
     @commands.command()
-    @owner_only()
+    @commands.is_owner()
     async def migratedragory(self, ctx, url=None):
         try:
             url = url or ctx.message.attachments[0].url
@@ -167,6 +202,7 @@ class Migrate:
             await ctx.send('Provide an sqlite file as the attachment.')
 
         async with self.bot.session.get(url) as resp:
+            # TODO: use BytesIO or sth
             with open('dragorydb.sqlite', 'wb+') as f:
                 f.write(await resp.read())
 
@@ -177,7 +213,10 @@ class Migrate:
         # Blocked Users
 
         for row in c.execute("SELECT * FROM 'blocked_users'"):
-            # user_id	user_name	blocked_by	blocked_at
+            # user_id
+            # user_name
+            # blocked_by
+            # blocked_at
 
             user_id = row[0]
             categ = self.bot.main_category
@@ -208,7 +247,7 @@ class Migrate:
         async def convert_thread_log(row):
             thread = await Thread.from_data(self.bot, row, c)
             converted = thread.serialize()
-            log_url = await self.bot.modmail_api.get_log_url(payload=converted)
+            log_url = await self.bot.api.create_log_entry(payload=converted)
             print(f'Posted thread log: {log_url}')
 
         # Threads
@@ -222,7 +261,8 @@ class Migrate:
 
             await self.bot.config.update()
 
-            async with self.bot.session.post('https://hastebin.com/documents', data=output) as resp:
+            async with self.bot.session.post('https://hastebin.com/documents',
+                                             data=output) as resp:
                 key = (await resp.json())['key']
 
             await ctx.send(f'Done. Logs: https://hastebin.com/{key}')
