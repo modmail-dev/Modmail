@@ -58,7 +58,7 @@ class Utility:
             if fmt == '':
                 continue
             embed = Embed(
-                description='*' + inspect.getdoc(cog) + '*',
+                description='*' + (inspect.getdoc(cog) or 'No description') + '*',
                 color=self.bot.main_color
             )
 
