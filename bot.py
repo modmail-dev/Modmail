@@ -22,26 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.12.5'
+__version__ = '2.13.0'
 
 import asyncio
+import traceback
+import os
 from datetime import datetime
-from os import listdir
 from textwrap import dedent
 from types import SimpleNamespace
 
 import discord
-import uvloop
-from aiohttp import ClientSession
-from colorama import init, Fore, Style
 from discord.enums import ActivityType
 from discord.ext import commands
 from discord.ext.commands.view import StringView
+
+from aiohttp import ClientSession
+from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import Changelog
 from core.clients import ModmailApiClient, SelfHostedClient
+from core.clients import PluginDatabaseClient
 from core.config import ConfigManager
 from core.models import Bot
 from core.thread import ThreadManager
@@ -59,7 +61,6 @@ class ModmailBot(Bot):
         self._threads = None
         self._session = None
         self._config = None
-        self._connected = asyncio.Event()
         self._db = None
 
         if self.self_hosted:
@@ -67,6 +68,7 @@ class ModmailBot(Bot):
             self._api = SelfHostedClient(self)
         else:
             self._api = ModmailApiClient(self)
+        self.plugin_db = PluginDatabaseClient(self)
 
         self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
@@ -120,17 +122,18 @@ class ModmailBot(Bot):
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
         print('Authors: kyb3r, fourjr, Taaku18' + Style.RESET_ALL)
-        print(LINE + Fore.CYAN)
+        print(LINE)
 
-        for file in listdir('cogs'):
+        for file in os.listdir('cogs'):
             if not file.endswith('.py'):
                 continue
             cog = f'cogs.{file[:-3]}'
-            print(f'Loading {cog}')
+            print(Fore.CYAN + f'Loading {cog}' + Style.RESET_ALL)
             try:
                 self.load_extension(cog)
             except Exception:
                 print(f'Failed to load {cog}')
+                traceback.print_exc()
 
     async def is_owner(self, user):
         allowed = {int(x) for x in
@@ -145,8 +148,21 @@ class ModmailBot(Bot):
 
     def run(self, *args, **kwargs):
         try:
-            super().run(self.token, *args, **kwargs)
+            self.loop.run_until_complete(self.start(self.token))
+        except discord.LoginFailure:
+            print('Invalid token')
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            print('Fatal exception')
+            traceback.print_exc()
         finally:
+            self.data_task.cancel()
+            self.autoupdate_task.cancel()
+
+            self.loop.run_until_complete(self.logout())
+            self.loop.run_until_complete(self.session.close())
+            self.loop.close()
             print(Fore.RED + ' - Shutting down bot' + Style.RESET_ALL)
 
     @property
@@ -294,7 +310,7 @@ class ModmailBot(Bot):
             await coll.create_index([
                 ('messages.content', 'text'),
                 ('messages.author.name', 'text')
-                ])
+            ])
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -647,17 +663,19 @@ class ModmailBot(Bot):
         await self.wait_until_ready()
 
         if self.config.get('disable_autoupdates'):
-            print('Autoupdates disabled.')
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
             print(LINE)
             return
 
         if self.self_hosted and not self.config.get('github_access_token'):
+            print('Github access token not found.')
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
             print('GitHub access token not found.')
             print('Autoupdates disabled.')
             print(LINE)
             return
 
-        while True:
+        while not self.is_closed():
             metadata = await self.api.get_metadata()
 
             if metadata['latest_version'] != self.version:
@@ -694,6 +712,8 @@ class ModmailBot(Bot):
 
 
 if __name__ == '__main__':
-    uvloop.install()
+    if os.name != 'nt':
+        import uvloop
+        uvloop.install()
     bot = ModmailBot()  # pylint: disable=invalid-name
     bot.run()
