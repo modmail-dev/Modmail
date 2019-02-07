@@ -32,16 +32,18 @@ from textwrap import dedent
 from types import SimpleNamespace
 
 import discord
-from aiohttp import ClientSession
-from colorama import init, Fore, Style
 from discord.enums import ActivityType
 from discord.ext import commands
 from discord.ext.commands.view import StringView
+
+from aiohttp import ClientSession
+from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import Changelog
-from core.clients import ModmailApiClient, SelfHostedClient, PluginDatabaseClient
+from core.clients import ModmailApiClient, SelfHostedClient
+from core.clients import PluginDatabaseClient
 from core.config import ConfigManager
 from core.models import Bot
 from core.thread import ThreadManager

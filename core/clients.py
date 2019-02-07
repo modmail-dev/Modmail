@@ -539,6 +539,6 @@ class PluginDatabaseClient:
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    def get_partition(self, cog_cls):
-        cls_name = cog_cls.__class__.__name__
+    def get_partition(self, cog):
+        cls_name = cog.__class__.__name__
         return self.bot.db.plugins[cls_name]
