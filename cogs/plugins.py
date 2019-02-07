@@ -1,8 +1,10 @@
 import importlib
 import os
 import shutil
+import site
 import stat
 import subprocess
+import sys
 
 from colorama import Fore, Style
 from discord.ext import commands
@@ -79,7 +81,6 @@ class Plugins:
         dirname = f'plugins/{username}-{repo}/{plugin_name}'
         if 'requirements.txt' in os.listdir(dirname):
             # Install PIP requirements
-            print(dirname + '/' + 'requirements.txt')
             try:
                 await self.bot.loop.run_in_executor(
                     None, self._asubprocess_run,
@@ -94,6 +95,11 @@ class Plugins:
                     raise DownloadError(
                         f'Unable to download requirements: ```\n{error}\n```'
                     ) from exc
+            else:
+                if not os.path.exists(site.USER_SITE):
+                    os.makedirs(site.USER_SITE)
+
+                sys.path.insert(0, site.USER_SITE)
 
         try:
             self.bot.load_extension(ext)
