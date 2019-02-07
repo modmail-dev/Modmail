@@ -25,9 +25,9 @@ SOFTWARE.
 __version__ = '2.12.5'
 
 import asyncio
-from datetime import datetime
-from os import listdir
-from textwrap import dedent
+import textwrap
+import datetime
+import os
 from types import SimpleNamespace
 
 import discord
@@ -43,8 +43,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from core.changelog import Changelog
 from core.clients import ModmailApiClient, SelfHostedClient
 from core.config import ConfigManager
-from core.models import Bot
-from core.thread import ThreadManager
+from core.changelog import ChangeLog
+
+if os.name != 'nt':
+    import uvloop
 
 init()
 
@@ -119,23 +121,15 @@ class ModmailBot(Bot):
               '││││ │ │││││├─┤││',
               '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
         print(f'v{__version__}')
-        print('Authors: kyb3r, fourjr, Taaku18' + Style.RESET_ALL)
-        print(LINE + Fore.CYAN)
+        print('Authors: kyb3r, fourjr' + Style.RESET_ALL)
+        print(line)
 
         for file in listdir('cogs'):
             if not file.endswith('.py'):
                 continue
             cog = f'cogs.{file[:-3]}'
-            print(f'Loading {cog}')
-            try:
-                self.load_extension(cog)
-            except Exception:
-                print(f'Failed to load {cog}')
-
-    async def is_owner(self, user):
-        allowed = {int(x) for x in
-                   str(self.config.get('owners', '0')).split(',')}
-        return user.id in allowed
+            print(Fore.CYAN + f'Loading {cog}' + Style.RESET_ALL)
+            self.load_extension(cog)
 
     async def logout(self):
         await self.session.close()
@@ -280,21 +274,13 @@ class ModmailBot(Bot):
         coll = self.db.logs
         index_name = 'messages.content_text_messages.author.name_text'
 
-        index_info = await coll.index_information()
+        if activity_type is not None and message:
+            url = self.config.get('twitch_url', 'https://www.twitch.tv/discord-modmail/') if activity_type == ActivityType.streaming else None
+            activity = discord.Activity(type=activity_type, name=message,
+                                        url=url)
+            await self.change_presence(activity=activity)
 
-        # Backwards compatibility
-        old_index = 'messages.content_text'
-        if old_index in index_info:
-            print('Dropping old index:', old_index)
-            await coll.drop_index(old_index)
-
-        if index_name not in index_info:
-            print('Creating "text" index for logs collection.')
-            print('Name:', index_name)
-            await coll.create_index([
-                ('messages.content', 'text'),
-                ('messages.author.name', 'text')
-                ])
+        self._connected.set()
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -647,14 +633,14 @@ class ModmailBot(Bot):
         await self.wait_until_ready()
 
         if self.config.get('disable_autoupdates'):
-            print('Autoupdates disabled.')
-            print(LINE)
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
+            print(line)
             return
 
-        if self.self_hosted and not self.config.get('github_access_token'):
-            print('GitHub access token not found.')
-            print('Autoupdates disabled.')
-            print(LINE)
+        if self.selfhosted and not self.config.get('github_access_token'):
+            print('Github access token not found.')
+            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
+            print(line)
             return
 
         while True:
@@ -694,6 +680,7 @@ class ModmailBot(Bot):
 
 
 if __name__ == '__main__':
-    uvloop.install()
-    bot = ModmailBot()  # pylint: disable=invalid-name
+    if os.name != 'nt':
+        uvloop.install()
+    bot = ModmailBot()
     bot.run()

@@ -31,16 +31,23 @@ class Utility:
 
         prefix = self.bot.prefix
 
-        fmts = ['']
-        for cmd in sorted(self.bot.commands,
-                          key=lambda cmd: cmd.qualified_name):
-            if cmd.instance is cog and not cmd.hidden:
-                new_fmt = f'`{prefix + cmd.qualified_name}` - '
-                new_fmt += f'{cmd.short_doc}\n'
-                if len(new_fmt) + len(fmts[-1]) >= 1024:
-                    fmts.append(new_fmt)
-                else:
-                    fmts[-1] += new_fmt
+        fmt = ['']
+        index = 0
+        for cmd in self.bot.commands:
+            if cmd.instance is cog:
+                if cmd.hidden:
+                    continue
+                if len(fmt[index] + f'`{prefix+cmd.qualified_name:<{maxlen}}` - ' + f'{cmd.short_doc or "No description":<{maxlen}}\n') > 1024:
+                    index += 1
+                    fmt.append('')
+                fmt[index] += f'`{prefix+cmd.qualified_name:<{maxlen}}` - '
+                fmt[index] += f'{cmd.short_doc or "No description":<{maxlen}}\n'
+
+        em = discord.Embed(
+            description=f"*{inspect.getdoc(cog) or 'No description'}*",
+            color=discord.Colour.blurple()
+        )
+        em.set_author(name=cog.__class__.__name__ + ' - Help', icon_url=ctx.bot.user.avatar_url)
 
         embeds = []
         for fmt in fmts:
@@ -78,8 +85,12 @@ class Utility:
             if length == i + 1:  # last
                 branch = '└─'
             else:
-                branch = '├─'
-            fmt += f"`{branch} {name}` - {c.short_doc}\n"
+                branch = '├─ ' + c.name
+            fmt += f"`{branch:<{maxlen+1}}` - "
+            fmt += f"{c.short_doc or 'No description':<{maxlen}}\n"
+
+        em.add_field(name='Subcommands', value=fmt)
+        em.set_footer(text=f'Type "{prefix}help {cmd} command" for more info on a command.')
 
         embed.add_field(name='Sub Commands', value=fmt)
         embed.set_footer(
