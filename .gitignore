@@ -102,10 +102,15 @@ ENV/
 *.json
 !app.json
 
-#Pycharm
+# Pycharm
 .idea/
 
-#MacOs
+# MacOS
 .DS_Store
 
+# VS Code
+.vscode/
+
+# Modmail
 config.json
+plugins/

@@ -31,8 +31,8 @@ class ConfigManager(ConfigManagerABC):
         'blocked',
         # threads
         'snippets', 'notification_squad', 'subscriptions', 'closures',
-        # commands
-        'aliases'
+        # misc
+        'aliases', 'plugins'
     }
 
     protected_keys = {
@@ -82,6 +82,7 @@ class ConfigManager(ConfigManagerABC):
     def populate_cache(self):
         data = {
             'snippets': {},
+            'plugins': [],
             'aliases': {},
             'blocked': {},
             'notification_squad': {},
