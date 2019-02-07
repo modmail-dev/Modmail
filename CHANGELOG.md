@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugins
     - Think of it like addons! Anyone (with the skills) can create a plugin, make it public and distribute it.    
     Add a welcome message to Modmail, or moderation commands? It's all up to your imagination!    
-    Have a niche feature request that you think only your server would benefit from? Plugins are your go-to!
+    Have a nice feature request that you think only your server would benefit from? Plugins are your go-to!
     - [Creating Plugins Documention](https://github.com/kyb3r/modmail/wiki/Plugins)
 
 # v2.12.5
