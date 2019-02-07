@@ -1,8 +1,10 @@
 import importlib
 import os
 import shutil
+import site
 import stat
 import subprocess
+import sys
 
 from colorama import Fore, Style
 from discord.ext import commands
@@ -93,6 +95,11 @@ class Plugins:
                     raise DownloadError(
                         f'Unable to download requirements: ```\n{error}\n```'
                     ) from exc
+            else:
+                if not os.path.exists(site.USER_SITE):
+                    os.makedirs(site.USER_SITE)
+
+                sys.path.insert(0, site.USER_SITE)
 
         try:
             self.bot.load_extension(ext)
