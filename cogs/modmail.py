@@ -329,14 +329,16 @@ class Modmail:
         mentions = self.bot.config['subscriptions'][str(thread.id)]
 
         if mention not in mentions:
-            return await ctx.send(embed=discord.Embed(color=discord.Color.red(), description=f'{mention} is not already subscribed to this thread.'))
-        
-        mentions.remove(mention)
-        await self.bot.config.update()
-
-        em = discord.Embed(color=discord.Color.blurple())
-        em.description = f'{mention} is now unsubscribed to this thread.'
-        await ctx.send(embed=em)
+            embed = discord.Embed(color=discord.Color.red(),
+                                  description=f'{mention} is not already '
+                                  'subscribed to this thread.')
+        else:
+            mentions.remove(mention)
+            await self.bot.config.update()
+            embed = discord.Embed(color=self.bot.main_color,
+                                  description=f'{mention} is now unsubscribed '
+                                  'to this thread.')
+        return await ctx.send(embed=embed)
 
     @commands.command()
     @checks.thread_only()
@@ -348,22 +350,14 @@ class Modmail:
     @commands.command()
     @checks.thread_only()
     async def loglink(self, ctx):
-        """Returns the log lnk of the current thread"""
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread:
-            log_link = await self.bot.modmail_api.get_log_link(ctx.channel.id)
-            await ctx.send(
-                embed=discord.Embed(
-                    color=discord.Color.blurple(), 
-                    description=log_link
-                )
+        """Return the link to the current thread's logs."""
+        log_link = await self.bot.api.get_log_link(ctx.channel.id)
+        await ctx.send(
+            embed=discord.Embed(
+                color=self.bot.main_color,
+                description=log_link
             )
-
-    @commands.command(aliases=['threads'])
-    @commands.has_permissions(manage_messages=True)
-    @trigger_typing
-    async def logs(self, ctx, *, member: Union[discord.Member, discord.User, obj]=None):
-        """Shows a list of previous Modmail thread logs of a member."""
+        )
 
     def format_log_embeds(self, logs, avatar_url):
         embeds = []
@@ -533,31 +527,31 @@ class Modmail:
         automatically embedding image URLs.
         """
         ctx.message.content = msg
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread:
-            await ctx.trigger_typing()
-            await thread.reply(ctx.message)
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message)
 
     @commands.command()
     @checks.thread_only()
     async def anonreply(self, ctx, *, msg=''):
-        """Anonymously reply to threads"""
+        """Reply to a thread anonymously.
+
+        You can edit the anonymous user's name,
+        avatar and tag using the config command.
+
+        Edit the `anon_username`, `anon_avatar_url`
+        and `anon_tag` config variables to do so.
+        """
         ctx.message.content = msg
-        thread = await self.bot.threads.find(channel=ctx.channel)
-        if thread:
-            await ctx.trigger_typing()
-            await thread.reply(ctx.message, anonymous=True)
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message, anonymous=True)
 
     @commands.command()
     @checks.thread_only()
     async def note(self, ctx, *, msg=''):
         """Take a note about the current thread, useful for noting context."""
         ctx.message.content = msg
-        thread = await self.bot.threads.find(channel=ctx.channel)
-
-        if thread:
-            await ctx.trigger_typing()
-            await thread.note(ctx.message)
+        async with ctx.typing():
+            await ctx.thread.note(ctx.message)
 
     @commands.command()
     @checks.thread_only()

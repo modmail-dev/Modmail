@@ -7,6 +7,7 @@ from io import StringIO
 from json import JSONDecodeError
 from textwrap import indent
 
+import discord
 from aiohttp import ClientResponseError
 from discord import Embed, Color, Activity
 from discord.enums import ActivityType
@@ -26,33 +27,38 @@ class Utility:
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    def format_cog_help(self, ctx, cog):
+    async def check_checks(self, ctx, cmd):
+        predicates = cmd.checks
+        if not predicates:
+            return True
+
+        try:
+            return await discord.utils.async_all(predicate(ctx) for predicate in predicates)
+        except commands.CheckFailure:
+            return False
+
+    async def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
 
         prefix = self.bot.prefix
 
-        fmt = ['']
-        index = 0
-        for cmd in self.bot.commands:
-            if cmd.instance is cog:
-                if cmd.hidden:
-                    continue
-                if len(fmt[index] + f'`{prefix+cmd.qualified_name:<{maxlen}}` - ' + f'{cmd.short_doc or "No description":<{maxlen}}\n') > 1024:
-                    index += 1
-                    fmt.append('')
-                fmt[index] += f'`{prefix+cmd.qualified_name:<{maxlen}}` - '
-                fmt[index] += f'{cmd.short_doc or "No description":<{maxlen}}\n'
-
-        em = discord.Embed(
-            description=f"*{inspect.getdoc(cog) or 'No description'}*",
-            color=discord.Colour.blurple()
-        )
-        em.set_author(name=cog.__class__.__name__ + ' - Help', icon_url=ctx.bot.user.avatar_url)
+        fmts = ['']
+        for cmd in sorted(self.bot.commands,
+                          key=lambda cmd: cmd.qualified_name):
+            if cmd.instance is cog and not cmd.hidden and await self.check_checks(ctx, cmd):
+                new_fmt = f'`{prefix + cmd.qualified_name}` - '
+                new_fmt += f'{cmd.short_doc}\n'
+                if len(new_fmt) + len(fmts[-1]) >= 1024:
+                    fmts.append(new_fmt)
+                else:
+                    fmts[-1] += new_fmt
 
         embeds = []
         for fmt in fmts:
+            if fmt == '':
+                continue
             embed = Embed(
-                description='*' + inspect.getdoc(cog) + '*',
+                description='*' + (inspect.getdoc(cog) or 'No description') + '*',
                 color=self.bot.main_color
             )
 
@@ -65,8 +71,11 @@ class Utility:
             embeds.append(embed)
         return embeds
 
-    def format_command_help(self, cmd):
+    async def format_command_help(self, ctx, cmd):
         """Formats command help."""
+        if cmd.hidden or not await self.check_checks(ctx, cmd):
+            return None
+
         prefix = self.bot.prefix
         embed = Embed(
             color=self.bot.main_color,
@@ -85,12 +94,8 @@ class Utility:
             if length == i + 1:  # last
                 branch = '└─'
             else:
-                branch = '├─ ' + c.name
-            fmt += f"`{branch:<{maxlen+1}}` - "
-            fmt += f"{c.short_doc or 'No description':<{maxlen}}\n"
-
-        em.add_field(name='Subcommands', value=fmt)
-        em.set_footer(text=f'Type "{prefix}help {cmd} command" for more info on a command.')
+                branch = '├─'
+            fmt += f"`{branch} {name}` - {c.short_doc}\n"
 
         embed.add_field(name='Sub Commands', value=fmt)
         embed.set_footer(
@@ -99,7 +104,7 @@ class Utility:
         )
         return embed
 
-    def format_not_found(self, ctx, command):
+    async def format_not_found(self, ctx, command):
         prefix = ctx.prefix
         embed = Embed(
             title='Unable to Find Command or Category',
@@ -108,7 +113,19 @@ class Utility:
         embed.set_footer(text=f'Type "{prefix}help" to get '
                               'a full list of commands.')
 
-        choices = set(self.bot.cogs.keys()) | set(self.bot.all_commands.keys())
+        choices = set()
+        # filter out hidden commands & blank cogs
+        for i in self.bot.cogs:
+            for cmd in self.bot.commands:
+                if cmd.cog_name == i and not cmd.hidden and await self.check_checks(ctx, cmd):
+                    # as long as there's one valid cmd, add cog
+                    choices.add(i)
+                    break
+
+        for i in self.bot.commands:
+            if not i.hidden and await self.check_checks(ctx, i):
+                choices.add(i.name)
+
         closest = get_close_matches(command, choices, n=1, cutoff=0.45)
         if closest:
             # Perhaps you meant:
@@ -117,27 +134,35 @@ class Utility:
                                  f'\u2000- `{closest[0]}`')
         return embed
 
-    @commands.command()
+    @commands.command(name='help')
     @trigger_typing
-    async def help(self, ctx, *, command: str = None):
+    async def help_(self, ctx, *, command: str = None):
         """Shows the help message."""
 
-        if command is not None:
+        if command:
             cmd = self.bot.get_command(command)
             cog = self.bot.cogs.get(command)
-            if cmd is not None:
-                embeds = [self.format_command_help(cmd)]
-            elif cog is not None:
-                embeds = self.format_cog_help(ctx, cog)
-            else:
-                embeds = [self.format_not_found(ctx, command)]
+            embeds = []
+
+            if cmd:
+                help_msg = await self.format_command_help(ctx, cmd)
+                if help_msg:
+                    embeds = [help_msg]
+
+            elif cog:
+                # checks if cog has commands
+                embeds = await self.format_cog_help(ctx, cog)
+
+            if not embeds:
+                embeds = [await self.format_not_found(ctx, command)]
+
             p_session = PaginatorSession(ctx, *embeds)
             return await p_session.run()
 
         embeds = []
         for cog in sorted(self.bot.cogs.values(),
                           key=lambda cog: cog.__class__.__name__):
-            embeds.extend(self.format_cog_help(ctx, cog))
+            embeds.extend(await self.format_cog_help(ctx, cog))
 
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
