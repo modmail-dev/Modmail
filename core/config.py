@@ -19,7 +19,7 @@ class ConfigManager(ConfigManagerABC):
         # threads
         'sent_emoji', 'blocked_emoji', 'thread_creation_response',
         # moderation
-        'recipient_color', 'mod_tag', 'mod_color'
+        'recipient_color', 'mod_tag', 'mod_color',
         # anonymous message
         'anon_username', 'anon_avatar_url', 'anon_tag'
     }
