@@ -19,7 +19,7 @@ class ConfigManager(ConfigManagerABC):
         # threads
         'sent_emoji', 'blocked_emoji', 'thread_creation_response',
         # moderation
-        'recipient_color', 'mod_tag', 'mod_color'
+        'recipient_color', 'mod_tag', 'mod_color',
         # anonymous message
         'anon_username', 'anon_avatar_url', 'anon_tag'
     }
@@ -31,8 +31,8 @@ class ConfigManager(ConfigManagerABC):
         'blocked',
         # threads
         'snippets', 'notification_squad', 'subscriptions', 'closures',
-        # commands
-        'aliases'
+        # misc
+        'aliases', 'plugins'
     }
 
     protected_keys = {
@@ -82,6 +82,7 @@ class ConfigManager(ConfigManagerABC):
     def populate_cache(self):
         data = {
             'snippets': {},
+            'plugins': [],
             'aliases': {},
             'blocked': {},
             'notification_squad': {},
