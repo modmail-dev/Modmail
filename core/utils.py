@@ -5,6 +5,13 @@ from urllib import parse
 from discord import Object
 from discord.ext import commands
 
+class SafeDict(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'
+        
+def safeformat(str, **kwargs):
+    replacements = SafeDict(**kwargs)
+    return str.format_map(replacements)
 
 class User(commands.IDConverter):
     """
