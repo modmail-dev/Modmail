@@ -6,8 +6,9 @@ import stat
 import subprocess
 import sys
 
-from colorama import Fore, Style
 from discord.ext import commands
+
+from colorama import Fore, Style
 
 from core.models import Bot
 

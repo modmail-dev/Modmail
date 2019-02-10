@@ -3,10 +3,11 @@ import asyncio
 import typing
 from datetime import datetime
 
-from aiohttp import ClientSession
 from discord import Color, Member, User, CategoryChannel, DMChannel, Embed
 from discord import Message, TextChannel, Guild
 from discord.ext import commands
+
+from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
