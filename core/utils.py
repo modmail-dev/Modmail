@@ -5,6 +5,8 @@ from urllib import parse
 from discord import Object
 from discord.ext import commands
 
+from colorama import Fore, Style
+
 
 class SafeDict(dict):
     def __missing__(self, key):
@@ -14,6 +16,14 @@ class SafeDict(dict):
 def safeformat(s, **kwargs):
     replacements = SafeDict(**kwargs)
     return s.format_map(replacements)
+
+
+def info(*msg):
+    return f'{Fore.CYAN}{" ".join(msg)}{Style.RESET_ALL}'
+
+
+def error(*msg):
+    return f'{Fore.RED}{" ".join(msg)}{Style.RESET_ALL}'
 
 
 class User(commands.IDConverter):

@@ -25,10 +25,10 @@ SOFTWARE.
 __version__ = '2.13.3'
 
 import asyncio
-import traceback
+import logging
 import os
+
 from datetime import datetime
-from textwrap import dedent
 from types import SimpleNamespace
 
 import discord
@@ -45,8 +45,19 @@ from core.changelog import Changelog
 from core.clients import ModmailApiClient, SelfHostedClient
 from core.clients import PluginDatabaseClient
 from core.config import ConfigManager
+from core.utils import info, error
 from core.models import Bot
 from core.thread import ThreadManager
+
+
+logger = logging.getLogger('Modmail')
+logger.setLevel(logging.INFO)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+formatter = logging.Formatter('%(filename)s - %(levelname)s: %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 init()
 
@@ -116,54 +127,64 @@ class ModmailBot(Bot):
         """Adds commands automatically"""
         self.remove_command('help')
 
-        print(LINE + Fore.CYAN)
-        print('┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬',
-              '││││ │ │││││├─┤││',
-              '┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘', sep='\n')
-        print(f'v{__version__}')
-        print('Authors: kyb3r, fourjr, Taaku18' + Style.RESET_ALL)
-        print(LINE)
+        logger.info(LINE)
+        logger.info(info('┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬'))
+        logger.info(info('││││ │ │││││├─┤││'))
+        logger.info(info('┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘'))
+        logger.info(info(f'v{__version__}'))
+        logger.info(info('Authors: kyb3r, fourjr, Taaku18'))
+        logger.info(LINE)
 
         for file in os.listdir('cogs'):
             if not file.endswith('.py'):
                 continue
             cog = f'cogs.{file[:-3]}'
-            print(Fore.CYAN + f'Loading {cog}' + Style.RESET_ALL)
+            logger.info(info(f'Loading {cog}'))
             try:
                 self.load_extension(cog)
             except Exception:
-                print(f'Failed to load {cog}')
-                traceback.print_exc()
+                logger.exception(error(f'Failed to load {cog}'))
 
     async def is_owner(self, user):
         allowed = {int(x) for x in
                    str(self.config.get('owners', '0')).split(',')}
         return user.id in allowed
 
-    async def logout(self):
-        await self.session.close()
-        self.data_task.cancel()
-        self.autoupdate_task.cancel()
-        await super().logout()
-
     def run(self, *args, **kwargs):
         try:
             self.loop.run_until_complete(self.start(self.token))
         except discord.LoginFailure:
-            print('Invalid token')
+            logger.fatal(error('Invalid token'))
         except KeyboardInterrupt:
             pass
         except Exception:
-            print('Fatal exception')
-            traceback.print_exc()
+            logger.fatal(error('Fatal exception'), exc_info=True)
         finally:
-            self.data_task.cancel()
-            self.autoupdate_task.cancel()
+            try:
+                self.data_task.cancel()
+                self.loop.run_until_complete(self.data_task)
+            except asyncio.CancelledError:
+                logger.debug('data_task has been cancelled')
+
+            try:
+                self.autoupdate_task.cancel()
+                self.loop.run_until_complete(self.autoupdate_task)
+            except asyncio.CancelledError:
+                logger.debug('data_task has been cancelled')
 
             self.loop.run_until_complete(self.logout())
-            self.loop.run_until_complete(self.session.close())
-            self.loop.close()
-            print(Fore.RED + ' - Shutting down bot' + Style.RESET_ALL)
+            for task in asyncio.Task.all_tasks():
+                task.cancel()
+            try:
+                self.loop.run_until_complete(
+                    asyncio.gather(*asyncio.Task.all_tasks())
+                )
+            except asyncio.CancelledError:
+                logger.debug('All pending tasks has been cancelled')
+            finally:
+                self.loop.run_until_complete(self.session.close())
+                self.loop.close()
+                logger.info(error(' - Shutting down bot - '))
 
     @property
     def log_channel(self):
@@ -241,7 +262,7 @@ class ModmailBot(Bot):
         try:
             color = int(color.lstrip('#'), base=16)
         except ValueError:
-            print('Invalid mod_color provided')
+            logger.error(error('Invalid mod_color provided'))
             return discord.Color.green()
         else:
             return color
@@ -254,7 +275,7 @@ class ModmailBot(Bot):
         try:
             color = int(color.lstrip('#'), base=16)
         except ValueError:
-            print('Invalid recipient_color provided')
+            logger.error(error('Invalid recipient_color provided'))
             return discord.Color.gold()
         else:
             return color
@@ -267,24 +288,23 @@ class ModmailBot(Bot):
         try:
             color = int(color.lstrip('#'), base=16)
         except ValueError:
-            print('Invalid main_color provided')
+            logger.error(error('Invalid main_color provided'))
             return discord.Color.blurple()
         else:
             return color
 
     async def on_connect(self):
-        print(LINE)
-        print(Fore.CYAN, end='')
+        logger.info(LINE)
         if not self.self_hosted:
-            print('MODE: Using the Modmail API')
-            print(LINE)
+            logger.info(info('MODE: Using the Modmail API'))
+            logger.info(LINE)
             await self.validate_api_token()
-            print(LINE)
+            logger.info(LINE)
         else:
-            print('Mode: Self-hosting logs.')
+            logger.info(info('Mode: Self-hosting logs.'))
             await self.validate_database_connection()
-            print(LINE)
-        print(Fore.CYAN + 'Connected to gateway.')
+            logger.info(LINE)
+        logger.info(info('Connected to gateway.'))
 
         await self.config.refresh()
         if self.db:
@@ -301,12 +321,12 @@ class ModmailBot(Bot):
         # Backwards compatibility
         old_index = 'messages.content_text'
         if old_index in index_info:
-            print('Dropping old index:', old_index)
+            logger.info(info(f'Dropping old index: {old_index}'))
             await coll.drop_index(old_index)
 
         if index_name not in index_info:
-            print('Creating "text" index for logs collection.')
-            print('Name:', index_name)
+            logger.info(info('Creating "text" index for logs collection.'))
+            logger.info(info('Name: ' + index_name))
             await coll.create_index([
                 ('messages.content', 'text'),
                 ('messages.author.name', 'text')
@@ -315,18 +335,17 @@ class ModmailBot(Bot):
     async def on_ready(self):
         """Bot startup, sets uptime."""
         await self._connected.wait()
-        print(dedent(f"""
-            {LINE}
-            {Fore.CYAN}Client ready.
-            {LINE}
-            {Fore.CYAN}Logged in as: {self.user}
-            {Fore.CYAN}User ID: {self.user.id}
-            {Fore.CYAN}Guild ID: {self.guild.id if self.guild else 0}
-            {LINE}""").strip())
+        logger.info(LINE)
+        logger.info(info('Client ready.'))
+        logger.info(LINE)
+        logger.info(info(f'Logged in as: {self.user}'))
+        logger.info(info(f'User ID: {self.user.id}'))
+        logger.info(info(f'Guild ID: {self.guild.id if self.guild else 0}'))
+        logger.info(LINE)
 
         if not self.guild:
-            print(f'{Fore.RED}{Style.BRIGHT}WARNING - The GUILD_ID '
-                  f'provided does not exist!{Style.RESET_ALL}')
+            logger.error(error('WARNING - The GUILD_ID '
+                               'provided does not exist!'))
         else:
             await self.threads.populate_cache()
 
@@ -363,15 +382,15 @@ class ModmailBot(Bot):
                                         url=url)
             await self.change_presence(activity=activity)
             # TODO: Trim message
-            print(f'{Fore.CYAN}Activity set to: '
-                  f'{activity_type.name} {message}.')
+            logger.info(info('Activity set to: '
+                             f'{activity_type.name} {message}.'))
         else:
-            print(f'{Fore.CYAN}No activity message set.')
+            logger.info(info(f'No activity message set.'))
 
         # closures
         closures = self.config.closures.copy()
-        print(f'{Fore.CYAN}There are {len(closures)} thread(s) pending '
-              'to be closed.')
+        logger.info(info(f'There are {len(closures)} thread(s) '
+                         'pending to be closed.'))
 
         for recipient_id, items in closures.items():
             after = (datetime.fromisoformat(items['time']) -
@@ -397,7 +416,7 @@ class ModmailBot(Bot):
                 delete_channel=items['delete_channel'],
                 message=items['message']
             )
-        print(LINE)
+        logger.info(LINE)
 
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
@@ -599,39 +618,38 @@ class ModmailBot(Bot):
         try:
             self.config.modmail_api_token
         except KeyError:
-            print(Fore.RED + Style.BRIGHT, end='')
-            print('MODMAIL_API_TOKEN not found.')
-            print('Set a config variable called MODMAIL_API_TOKEN '
-                  'with a token from https://dashboard.modmail.tk')
-            print('If you want to self-host logs, '
-                  'input a MONGO_URI config variable.')
-            print('A Modmail api token is not needed '
-                  'if you are self-hosting logs.')
+            logger.fatal(error(f'MODMAIL_API_TOKEN not found.'))
+            logger.fatal(error('Set a config variable called '
+                               'MODMAIL_API_TOKEN with a token from '
+                               'https://dashboard.modmail.tk.'))
+            logger.fatal(error('If you want to self-host logs, '
+                               'input a MONGO_URI config variable.'))
+            logger.fatal(error('A Modmail API token is not needed '
+                               'if you are self-hosting logs.'))
+
             return await self.logout()
         else:
             valid = await self.api.validate_token()
             if not valid:
-                print(Fore.RED, end='')
-                print('Invalid MODMAIL_API_TOKEN - get one '
-                      'from https://dashboard.modmail.tk')
+                logger.fatal(error('Invalid MODMAIL_API_TOKEN - get one '
+                                   'from https://dashboard.modmail.tk'))
                 return await self.logout()
 
         user = await self.api.get_user_info()
         username = user['user']['username']
-        print(Style.RESET_ALL + Fore.CYAN + 'Validated token.')
-        print('GitHub user: ' + username + Style.RESET_ALL)
+        logger.info(info('Validated token.'))
+        logger.info(info('GitHub user: ' + username))
 
     async def validate_database_connection(self):
         try:
             await self.db.command('buildinfo')
         except Exception as exc:
-            print(Fore.RED, end='')
-            print('Something went wrong while connecting to the database.')
-            print(type(exc).__name__, exc, sep=': ')
+            logger.fatal(error('Something went wrong '
+                               'while connecting to the database.'))
+            logger.fatal(error(f'{type(exc).__name__}: {str(exc)}'))
             return await self.logout()
         else:
-            print(Style.RESET_ALL + Fore.CYAN +
-                  'Successfully connected to the database.')
+            logger.info(info('Successfully connected to the database.'))
 
     async def data_loop(self):
         await self.wait_until_ready()
@@ -663,16 +681,14 @@ class ModmailBot(Bot):
         await self.wait_until_ready()
 
         if self.config.get('disable_autoupdates'):
-            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
-            print(LINE)
+            logger.warning(info('Autoupdates disabled.'))
+            logger.warning(LINE)
             return
 
         if self.self_hosted and not self.config.get('github_access_token'):
-            print('Github access token not found.')
-            print(Fore.CYAN + 'Autoupdates disabled.' + Style.RESET_ALL)
-            print('GitHub access token not found.')
-            print('Autoupdates disabled.')
-            print(LINE)
+            logger.warning(info('GitHub access token not found.'))
+            logger.warning(info('Autoupdates disabled.'))
+            logger.warning(LINE)
             return
 
         while not self.is_closed():
@@ -704,7 +720,7 @@ class ModmailBot(Bot):
                     embed.add_field(name='Merge Commit',
                                     value=f"[`{short_sha}`]({html_url}) "
                                     f"{message} - {user['username']}")
-                    print('Updating bot.')
+                    logger.info(info('Updating bot.'))
                     channel = self.log_channel
                     await channel.send(embed=embed)
 
