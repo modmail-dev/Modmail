@@ -472,12 +472,12 @@ class Utility:
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:
+                await self.bot.config.update({key: value})
                 embed = Embed(
                     title='Success',
                     color=self.bot.main_color,
                     description=f'Set `{key}` to `{value_text}`'
                 )
-                await self.bot.config.update({key: value})
         else:
             embed = Embed(
                 title='Error',
