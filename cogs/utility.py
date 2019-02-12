@@ -7,10 +7,12 @@ from io import StringIO
 from json import JSONDecodeError
 from textwrap import indent
 
-from aiohttp import ClientResponseError
+import discord
 from discord import Embed, Color, Activity
 from discord.enums import ActivityType
 from discord.ext import commands
+
+from aiohttp import ClientResponseError
 
 from core import checks
 from core.changelog import Changelog
@@ -26,7 +28,19 @@ class Utility:
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    def format_cog_help(self, ctx, cog):
+    @staticmethod
+    async def verify_checks(ctx, cmd):
+        predicates = cmd.checks
+        if not predicates:
+            return True
+
+        try:
+            return await discord.utils.async_all(predicate(ctx)
+                                                 for predicate in predicates)
+        except commands.CheckFailure:
+            return False
+
+    async def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
 
         prefix = self.bot.prefix
@@ -34,7 +48,8 @@ class Utility:
         fmts = ['']
         for cmd in sorted(self.bot.commands,
                           key=lambda cmd: cmd.qualified_name):
-            if cmd.instance is cog and not cmd.hidden:
+            if cmd.instance is cog and not cmd.hidden and \
+                    await self.verify_checks(ctx, cmd):
                 new_fmt = f'`{prefix + cmd.qualified_name}` - '
                 new_fmt += f'{cmd.short_doc}\n'
                 if len(new_fmt) + len(fmts[-1]) >= 1024:
@@ -44,8 +59,11 @@ class Utility:
 
         embeds = []
         for fmt in fmts:
+            if fmt == '':
+                continue
             embed = Embed(
-                description='*' + inspect.getdoc(cog) + '*',
+                description='*' + (inspect.getdoc(cog) or
+                                   'No description') + '*',
                 color=self.bot.main_color
             )
 
@@ -58,8 +76,11 @@ class Utility:
             embeds.append(embed)
         return embeds
 
-    def format_command_help(self, cmd):
+    async def format_command_help(self, ctx, cmd):
         """Formats command help."""
+        if cmd.hidden or not await self.verify_checks(ctx, cmd):
+            return None
+
         prefix = self.bot.prefix
         embed = Embed(
             color=self.bot.main_color,
@@ -88,7 +109,7 @@ class Utility:
         )
         return embed
 
-    def format_not_found(self, ctx, command):
+    async def format_not_found(self, ctx, command):
         prefix = ctx.prefix
         embed = Embed(
             title='Unable to Find Command or Category',
@@ -97,7 +118,20 @@ class Utility:
         embed.set_footer(text=f'Type "{prefix}help" to get '
                               'a full list of commands.')
 
-        choices = set(self.bot.cogs.keys()) | set(self.bot.all_commands.keys())
+        choices = set()
+        # filter out hidden commands & blank cogs
+        for i in self.bot.cogs:
+            for cmd in self.bot.commands:
+                if cmd.cog_name == i and not cmd.hidden and \
+                        await self.verify_checks(ctx, cmd):
+                    # as long as there's one valid cmd, add cog
+                    choices.add(i)
+                    break
+
+        for i in self.bot.commands:
+            if not i.hidden and await self.verify_checks(ctx, i):
+                choices.add(i.name)
+
         closest = get_close_matches(command, choices, n=1, cutoff=0.45)
         if closest:
             # Perhaps you meant:
@@ -106,27 +140,35 @@ class Utility:
                                  f'\u2000- `{closest[0]}`')
         return embed
 
-    @commands.command()
+    @commands.command(name='help')
     @trigger_typing
-    async def help(self, ctx, *, command: str = None):
+    async def help_(self, ctx, *, command: str = None):
         """Shows the help message."""
 
-        if command is not None:
+        if command:
             cmd = self.bot.get_command(command)
             cog = self.bot.cogs.get(command)
-            if cmd is not None:
-                embeds = [self.format_command_help(cmd)]
-            elif cog is not None:
-                embeds = self.format_cog_help(ctx, cog)
-            else:
-                embeds = [self.format_not_found(ctx, command)]
+            embeds = []
+
+            if cmd:
+                help_msg = await self.format_command_help(ctx, cmd)
+                if help_msg:
+                    embeds = [help_msg]
+
+            elif cog:
+                # checks if cog has commands
+                embeds = await self.format_cog_help(ctx, cog)
+
+            if not embeds:
+                embeds = [await self.format_not_found(ctx, command)]
+
             p_session = PaginatorSession(ctx, *embeds)
             return await p_session.run()
 
         embeds = []
         for cog in sorted(self.bot.cogs.values(),
                           key=lambda cog: cog.__class__.__name__):
-            embeds.extend(self.format_cog_help(ctx, cog))
+            embeds.extend(await self.format_cog_help(ctx, cog))
 
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
@@ -405,6 +447,7 @@ class Utility:
             await ctx.invoke(cmd, command='config')
 
     @config.command()
+    @commands.is_owner()
     async def options(self, ctx):
         """Return a list of valid config keys you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
@@ -415,6 +458,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command()
+    @commands.is_owner()
     async def set(self, ctx, key: str.lower, *, value):
         """
         Sets a configuration variable and its value
@@ -428,12 +472,12 @@ class Utility:
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:
+                await self.bot.config.update({key: value})
                 embed = Embed(
                     title='Success',
                     color=self.bot.main_color,
                     description=f'Set `{key}` to `{value_text}`'
                 )
-                await self.bot.config.update({key: value})
         else:
             embed = Embed(
                 title='Error',
@@ -446,21 +490,22 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command(name='del')
+    @commands.is_owner()
     async def del_config(self, ctx, key: str.lower):
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
-            embed = Embed(
-                title='Success',
-                color=self.bot.main_color,
-                description=f'`{key}` had been deleted from the config.'
-            )
             try:
                 del self.bot.config.cache[key]
                 await self.bot.config.update()
             except KeyError:
                 # when no values were set
                 pass
+            embed = Embed(
+                title='Success',
+                color=self.bot.main_color,
+                description=f'`{key}` had been deleted from the config.'
+            )
         else:
             embed = Embed(
                 title='Error',
@@ -473,6 +518,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command()
+    @commands.is_owner()
     async def get(self, ctx, key=None):
         """Shows the config variables that are currently set."""
         keys = self.bot.config.allowed_to_change_in_command
@@ -555,6 +601,7 @@ class Utility:
         return await session.run()
 
     @alias.command(name='add')
+    @checks.has_permissions(manage_messages=True)
     async def add_(self, ctx, name: str.lower, *, value):
         """Add an alias to the bot config."""
         if 'aliases' not in self.bot.config.cache:
@@ -590,6 +637,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @alias.command(name='del')
+    @checks.has_permissions(manage_messages=True)
     async def del_alias(self, ctx, *, name: str.lower):
         """Removes a alias from bot config."""
 

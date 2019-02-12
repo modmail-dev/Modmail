@@ -3,10 +3,11 @@ import asyncio
 import typing
 from datetime import datetime
 
-from aiohttp import ClientSession
 from discord import Color, Member, User, CategoryChannel, DMChannel, Embed
 from discord import Message, TextChannel, Guild
 from discord.ext import commands
+
+from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
@@ -14,6 +15,7 @@ class Bot(abc.ABC, commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_time = datetime.utcnow()
+        self._connected = asyncio.Event()
 
     @property
     def uptime(self) -> str:
