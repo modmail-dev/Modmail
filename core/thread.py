@@ -432,7 +432,7 @@ class Thread(ThreadABC):
         for att in images:  # TODO: Logic needs review
             if not prioritize_uploads or (
                     is_image_url(*att) and not
-            embedded_image and
+                    embedded_image and
                     att[1]
             ):
                 embed.set_image(url=att[0])
