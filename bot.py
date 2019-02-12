@@ -74,10 +74,7 @@ class ModmailBot(Bot):
         self._config = None
         self._db = None
 
-        log_level = logging._nameToLevel.get(self.config.log_level.upper())
-        if log_level is not None:
-            logger.setLevel(log_level)
-            ch.setLevel(log_level)
+        self._configure_logging()
 
         if self.self_hosted:
             self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
@@ -90,6 +87,26 @@ class ModmailBot(Bot):
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
         self.owner = None
+
+    def _configure_logging(self):
+        level_text = self.config.log_level.upper()
+        logging_levels = {
+            'FATAL': logging.FATAL,
+            'ERROR': logging.ERROR,
+            'WARNING': logging.WARNING,
+            'INFO': logging.INFO,
+            'DEBUG': logging.DEBUG,
+        }
+
+        log_level = logging_levels.get(level_text)
+        logger.info(LINE)
+        if log_level is not None:
+            logger.setLevel(log_level)
+            ch.setLevel(log_level)
+            logger.info(info('Logging level: ' + level_text))
+        else:
+            logger.info(error('Invalid logging level set. '))
+            logger.info(info('Using default logging level: INFO'))
 
     @property
     def version(self):
