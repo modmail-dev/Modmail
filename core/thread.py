@@ -8,18 +8,16 @@ import discord
 from discord.ext.commands import UserInputError, CommandError
 
 from core.models import Bot, ThreadManagerABC, ThreadABC
-from core.utils import is_image_url, days, match_user_id, truncate
-from core.decorators import ignore
+from core.utils import is_image_url, days, match_user_id, truncate, ignore
 
 
 class Thread(ThreadABC):
     """Represents a discord Modmail thread"""
 
     def __init__(self, manager: 'ThreadManager',
-                 recipient: typing.Union[discord.Member, discord.User,
-                                         int],
+                 recipient: typing.Union[discord.Member, discord.User, int],
                  channel: typing.Union[discord.DMChannel,
-                                       discord.TextChannel]=None):
+                                       discord.TextChannel] = None):
         self.manager = manager
         self.bot = manager.bot
         if isinstance(recipient, int):
@@ -72,9 +70,9 @@ class Thread(ThreadABC):
             self._ready_event.set()
         else:
             self._ready_event.clear()
-    
+
     async def setup(self, *, creator=None, category=None):
-        """Create the thread channel and other io related initilisation tasks"""
+        """Create the thread channel and other io related initialisation tasks"""
 
         recipient = self.recipient
 
@@ -105,8 +103,9 @@ class Thread(ThreadABC):
         )
 
         log_count = sum(1 for log in log_data if not log['open'])
-        info_embed = self.manager._format_info_embed(recipient, log_url, log_count,
-                                             discord.Color.green())
+        info_embed = self.manager._format_info_embed(recipient, log_url,
+                                                     log_count,
+                                                     discord.Color.green())
 
         topic = f'User ID: {recipient.id}'
         if creator:
@@ -118,7 +117,7 @@ class Thread(ThreadABC):
             channel.edit(topic=topic),
             channel.send(mention, embed=info_embed)
         )
-        
+
         self.ready = True
 
         # Once thread is ready, tell the recipient.
@@ -213,7 +212,7 @@ class Thread(ThreadABC):
                 sneak_peak = 'No content'
 
             desc = f"[`{log_data['key']}`]({log_url}): "
-            desc += truncate(sneak_peak, max=75-13)
+            desc += truncate(sneak_peak, max=75 - 13)
         else:
             desc = "Could not resolve log url."
 
@@ -306,14 +305,14 @@ class Thread(ThreadABC):
                     description='Your message could not be delivered since'
                                 'the recipient shares no servers with the bot'
                 ))
-            
+
         tasks = []
-        
+
         try:
             await self.send(message,
-                destination=self.recipient,
-                from_mod=True,
-                anonymous=anonymous)
+                            destination=self.recipient,
+                            from_mod=True,
+                            anonymous=anonymous)
         except Exception as e:
             print(e)
             tasks.append(message.channel.send(
@@ -329,16 +328,16 @@ class Thread(ThreadABC):
             # Send the same thing in the thread channel.
             tasks.append(
                 self.send(message,
-                destination=self.channel,
-                from_mod=True,
-                anonymous=anonymous)
-                )
+                          destination=self.channel,
+                          from_mod=True,
+                          anonymous=anonymous)
+            )
 
             tasks.append(
                 self.bot.api.append_log(message,
-                self.channel.id,
-                type_='anonymous' if anonymous else 'thread_message'
-            ))
+                                        self.channel.id,
+                                        type_='anonymous' if anonymous else 'thread_message'
+                                        ))
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
@@ -363,7 +362,7 @@ class Thread(ThreadABC):
                 self.channel.send(embed=discord.Embed(
                     color=discord.Color.red(),
                     description='Scheduled close has been cancelled.'
-                    )))
+                )))
             self.bot.loop.create_task(tasks)
 
         if not from_mod and not note:
@@ -372,7 +371,7 @@ class Thread(ThreadABC):
             )
 
         if not self.ready:
-            self.wait_until_ready()
+            await self.wait_until_ready()
 
         destination = destination or self.channel
 
@@ -433,7 +432,7 @@ class Thread(ThreadABC):
         for att in images:  # TODO: Logic needs review
             if not prioritize_uploads or (
                     is_image_url(*att) and not
-                    embedded_image and
+            embedded_image and
                     att[1]
             ):
                 embed.set_image(url=att[0])

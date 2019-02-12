@@ -4,12 +4,6 @@ from discord import Embed, Color
 from discord.ext import commands
 
 
-async def ignore(coro):
-    try:
-        await coro
-    except:
-        pass
-
 def trigger_typing(func):
     @functools.wraps(func)
     async def wrapper(self, ctx: commands.Context, *args, **kwargs):
