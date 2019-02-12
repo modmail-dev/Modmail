@@ -6,6 +6,16 @@ from discord import Object
 from discord.ext import commands
 
 
+class SafeDict(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'
+
+
+def safeformat(s, **kwargs):
+    replacements = SafeDict(**kwargs)
+    return s.format_map(replacements)
+
+
 class User(commands.IDConverter):
     """
     A custom discord.py `Converter` that
