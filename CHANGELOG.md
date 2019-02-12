@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  
 ### Changed
 - `print` is replaced by logging.
+  - New environment variable introduced: `LOG_LEVEL`.
+  - This influences the amount of messages received in Heroku logs. 
+  - Possible options, from least to most severe, are: `INFO`, `DEBUG`, `WARNING`, `ERROR`, `FATAL`.
+  - In most cases, you can ignore this change.
 
 # v2.13.4
 
@@ -20,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # v2.13.3
 
 ### Fixed
-- a typo in the config options.
+- Fixed a typo in the config options.
 
 # v2.13.2
 
