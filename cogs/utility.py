@@ -472,12 +472,12 @@ class Utility:
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:
+                await self.bot.config.update({key: value})
                 embed = Embed(
                     title='Success',
                     color=self.bot.main_color,
                     description=f'Set `{key}` to `{value_text}`'
                 )
-                await self.bot.config.update({key: value})
         else:
             embed = Embed(
                 title='Error',
@@ -495,17 +495,17 @@ class Utility:
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
-            embed = Embed(
-                title='Success',
-                color=self.bot.main_color,
-                description=f'`{key}` had been deleted from the config.'
-            )
             try:
                 del self.bot.config.cache[key]
                 await self.bot.config.update()
             except KeyError:
                 # when no values were set
                 pass
+            embed = Embed(
+                title='Success',
+                color=self.bot.main_color,
+                description=f'`{key}` had been deleted from the config.'
+            )
         else:
             embed = Embed(
                 title='Error',
