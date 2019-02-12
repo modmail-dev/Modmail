@@ -175,7 +175,7 @@ class ModmailBot(Bot):
                 self.autoupdate_task.cancel()
                 self.loop.run_until_complete(self.autoupdate_task)
             except asyncio.CancelledError:
-                logger.debug('data_task has been cancelled')
+                logger.debug('autoupdate_task has been cancelled')
 
             self.loop.run_until_complete(self.logout())
             for task in asyncio.Task.all_tasks():
