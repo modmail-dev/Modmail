@@ -3,8 +3,9 @@ from datetime import datetime
 from typing import Optional, Union
 
 import discord
-from dateutil import parser
 from discord.ext import commands
+
+from dateutil import parser
 from natural.date import duration
 
 from core import checks
@@ -603,12 +604,19 @@ class Modmail:
                       user: Union[discord.Member, discord.User]):
         """Create a thread with a specified member."""
 
+        if user.bot:
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                description='Cannot start a thread with a bot.'
+            )
+            return await ctx.send(embed=embed)
+
         exists = await self.bot.threads.find(recipient=user)
         if exists:
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description='A thread for this user already '
-                f'exists in {exists.channel.mention}.'
+                            f'exists in {exists.channel.mention}.'
             )
 
         else:
@@ -621,7 +629,7 @@ class Modmail:
                 color=self.bot.main_color
             )
 
-        return await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @trigger_typing

@@ -3,9 +3,10 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Union, Optional
 
-from aiohttp import ClientResponseError, ClientResponse
 from discord import Member, DMChannel
 from discord.ext import commands
+
+from aiohttp import ClientResponseError, ClientResponse
 
 from core.models import Bot, UserClient
 
