@@ -91,7 +91,7 @@ class ModmailBot(Bot):
     def _configure_logging(self):
         level_text = self.config.log_level.upper()
         logging_levels = {
-            'FATAL': logging.FATAL,
+            'CRITICAL': logging.CRITICAL,
             'ERROR': logging.ERROR,
             'WARNING': logging.WARNING,
             'INFO': logging.INFO,
