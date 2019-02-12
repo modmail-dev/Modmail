@@ -615,8 +615,10 @@ class ModmailBot(Bot):
                                   commands.UserInputError)):
             await context.invoke(self.get_command('help'),
                                  command=str(context.command))
+        elif isinstance(exception, commands.CommandNotFound):
+            logger.info(error(str(exception)))
         else:
-            raise exception
+            logger.error(error('Unexpected exception:'), exc_info=exception)
 
     @staticmethod
     def overwrites(ctx):
@@ -643,19 +645,19 @@ class ModmailBot(Bot):
         except KeyError:
             logger.critical(error(f'MODMAIL_API_TOKEN not found.'))
             logger.critical(error('Set a config variable called '
-                               'MODMAIL_API_TOKEN with a token from '
-                               'https://dashboard.modmail.tk.'))
+                                  'MODMAIL_API_TOKEN with a token from '
+                                  'https://dashboard.modmail.tk.'))
             logger.critical(error('If you want to self-host logs, '
-                               'input a MONGO_URI config variable.'))
+                                  'input a MONGO_URI config variable.'))
             logger.critical(error('A Modmail API token is not needed '
-                               'if you are self-hosting logs.'))
+                                  'if you are self-hosting logs.'))
 
             return await self.logout()
         else:
             valid = await self.api.validate_token()
             if not valid:
                 logger.critical(error('Invalid MODMAIL_API_TOKEN - get one '
-                                   'from https://dashboard.modmail.tk'))
+                                      'from https://dashboard.modmail.tk'))
                 return await self.logout()
 
         user = await self.api.get_user_info()
@@ -668,7 +670,7 @@ class ModmailBot(Bot):
             await self.db.command('buildinfo')
         except Exception as exc:
             logger.critical(error('Something went wrong '
-                               'while connecting to the database.'))
+                                  'while connecting to the database.'))
             logger.critical(error(f'{type(exc).__name__}: {str(exc)}'))
             return await self.logout()
         else:
