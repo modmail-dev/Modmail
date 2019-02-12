@@ -8,10 +8,11 @@ from json import JSONDecodeError
 from textwrap import indent
 
 import discord
-from aiohttp import ClientResponseError
 from discord import Embed, Color, Activity
 from discord.enums import ActivityType
 from discord.ext import commands
+
+from aiohttp import ClientResponseError
 
 from core import checks
 from core.changelog import Changelog
@@ -27,13 +28,15 @@ class Utility:
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    async def check_checks(self, ctx, cmd):
+    @staticmethod
+    async def verify_checks(ctx, cmd):
         predicates = cmd.checks
         if not predicates:
             return True
 
         try:
-            return await discord.utils.async_all(predicate(ctx) for predicate in predicates)
+            return await discord.utils.async_all(predicate(ctx)
+                                                 for predicate in predicates)
         except commands.CheckFailure:
             return False
 
@@ -45,7 +48,8 @@ class Utility:
         fmts = ['']
         for cmd in sorted(self.bot.commands,
                           key=lambda cmd: cmd.qualified_name):
-            if cmd.instance is cog and not cmd.hidden and await self.check_checks(ctx, cmd):
+            if cmd.instance is cog and not cmd.hidden and \
+                    await self.verify_checks(ctx, cmd):
                 new_fmt = f'`{prefix + cmd.qualified_name}` - '
                 new_fmt += f'{cmd.short_doc}\n'
                 if len(new_fmt) + len(fmts[-1]) >= 1024:
@@ -58,7 +62,8 @@ class Utility:
             if fmt == '':
                 continue
             embed = Embed(
-                description='*' + (inspect.getdoc(cog) or 'No description') + '*',
+                description='*' + (inspect.getdoc(cog) or
+                                   'No description') + '*',
                 color=self.bot.main_color
             )
 
@@ -73,7 +78,7 @@ class Utility:
 
     async def format_command_help(self, ctx, cmd):
         """Formats command help."""
-        if cmd.hidden or not await self.check_checks(ctx, cmd):
+        if cmd.hidden or not await self.verify_checks(ctx, cmd):
             return None
 
         prefix = self.bot.prefix
@@ -117,13 +122,14 @@ class Utility:
         # filter out hidden commands & blank cogs
         for i in self.bot.cogs:
             for cmd in self.bot.commands:
-                if cmd.cog_name == i and not cmd.hidden and await self.check_checks(ctx, cmd):
+                if cmd.cog_name == i and not cmd.hidden and \
+                        await self.verify_checks(ctx, cmd):
                     # as long as there's one valid cmd, add cog
                     choices.add(i)
                     break
 
         for i in self.bot.commands:
-            if not i.hidden and await self.check_checks(ctx, i):
+            if not i.hidden and await self.verify_checks(ctx, i):
                 choices.add(i.name)
 
         closest = get_close_matches(command, choices, n=1, cutoff=0.45)
@@ -466,12 +472,12 @@ class Utility:
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:
+                await self.bot.config.update({key: value})
                 embed = Embed(
                     title='Success',
                     color=self.bot.main_color,
                     description=f'Set `{key}` to `{value_text}`'
                 )
-                await self.bot.config.update({key: value})
         else:
             embed = Embed(
                 title='Error',
@@ -489,17 +495,17 @@ class Utility:
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
-            embed = Embed(
-                title='Success',
-                color=self.bot.main_color,
-                description=f'`{key}` had been deleted from the config.'
-            )
             try:
                 del self.bot.config.cache[key]
                 await self.bot.config.update()
             except KeyError:
                 # when no values were set
                 pass
+            embed = Embed(
+                title='Success',
+                color=self.bot.main_color,
+                description=f'`{key}` had been deleted from the config.'
+            )
         else:
             embed = Embed(
                 title='Error',

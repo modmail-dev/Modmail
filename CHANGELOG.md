@@ -4,16 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.13.4
+
+### Changed
+- `?contact` no longer raise a silent error in Heroku logs when the recipient is a bot. Now Modmail respond with an error message.
+
+# v2.13.3
+
+### Fixed
+- a typo in the config options.
+
 # v2.13.2
 
 ### Fixed
-- Installing `requirements.txt` files in plugins
+- Installing `requirements.txt` files in plugins.
 
 
 # v2.13.1
 
 ### Fixed
-- Reading `requirements.txt` files in plugins
+- Reading `requirements.txt` files in plugins.
 
 
 # v2.13.0
@@ -23,13 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Think of it like addons! Anyone (with the skills) can create a plugin, make it public and distribute it.    
     Add a welcome message to Modmail, or moderation commands? It's all up to your imagination!    
     Have a niche feature request that you think only your server would benefit from? Plugins are your go-to!
-    - [Creating Plugins Documention](https://github.com/kyb3r/modmail/wiki/Plugins)
+    - [Creating Plugins Documention](https://github.com/kyb3r/modmail/wiki/Plugins).
 
 # v2.12.5
 
 ### Fixed
 
-- `config del` command will now work properly on selfhosted db bots.
+- `config del` command will now work properly on self-hosted db bots.
 
 
 # v2.12.4
