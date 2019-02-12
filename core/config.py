@@ -90,7 +90,7 @@ class ConfigManager(ConfigManagerABC):
             'notification_squad': {},
             'subscriptions': {},
             'closures': {},
-            'log_level': 'info'
+            'log_level': 'INFO'
         }
 
         data.update(os.environ)
