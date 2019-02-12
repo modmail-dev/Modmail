@@ -176,11 +176,11 @@ class ModmailBot(Bot):
         try:
             self.loop.run_until_complete(self.start(self.token))
         except discord.LoginFailure:
-            logger.fatal(error('Invalid token'))
+            logger.critical(error('Invalid token'))
         except KeyboardInterrupt:
             pass
         except Exception:
-            logger.fatal(error('Fatal exception'), exc_info=True)
+            logger.critical(error('Fatal exception'), exc_info=True)
         finally:
             try:
                 self.data_task.cancel()
@@ -640,20 +640,20 @@ class ModmailBot(Bot):
         try:
             self.config.modmail_api_token
         except KeyError:
-            logger.fatal(error(f'MODMAIL_API_TOKEN not found.'))
-            logger.fatal(error('Set a config variable called '
+            logger.critical(error(f'MODMAIL_API_TOKEN not found.'))
+            logger.critical(error('Set a config variable called '
                                'MODMAIL_API_TOKEN with a token from '
                                'https://dashboard.modmail.tk.'))
-            logger.fatal(error('If you want to self-host logs, '
+            logger.critical(error('If you want to self-host logs, '
                                'input a MONGO_URI config variable.'))
-            logger.fatal(error('A Modmail API token is not needed '
+            logger.critical(error('A Modmail API token is not needed '
                                'if you are self-hosting logs.'))
 
             return await self.logout()
         else:
             valid = await self.api.validate_token()
             if not valid:
-                logger.fatal(error('Invalid MODMAIL_API_TOKEN - get one '
+                logger.critical(error('Invalid MODMAIL_API_TOKEN - get one '
                                    'from https://dashboard.modmail.tk'))
                 return await self.logout()
 
@@ -666,9 +666,9 @@ class ModmailBot(Bot):
         try:
             await self.db.command('buildinfo')
         except Exception as exc:
-            logger.fatal(error('Something went wrong '
+            logger.critical(error('Something went wrong '
                                'while connecting to the database.'))
-            logger.fatal(error(f'{type(exc).__name__}: {str(exc)}'))
+            logger.critical(error(f'{type(exc).__name__}: {str(exc)}'))
             return await self.logout()
         else:
             logger.info(info('Successfully connected to the database.'))
