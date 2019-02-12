@@ -27,6 +27,7 @@ __version__ = '2.13.4'
 import asyncio
 import logging
 import os
+import sys
 
 from datetime import datetime
 from types import SimpleNamespace
@@ -53,7 +54,7 @@ from core.thread import ThreadManager
 logger = logging.getLogger('Modmail')
 logger.setLevel(logging.INFO)
 
-ch = logging.StreamHandler()
+ch = logging.StreamHandler(stream=sys.stdout)
 ch.setLevel(logging.INFO)
 formatter = logging.Formatter('%(filename)s - %(levelname)s: %(message)s')
 ch.setFormatter(formatter)
