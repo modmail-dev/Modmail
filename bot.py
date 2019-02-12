@@ -74,6 +74,11 @@ class ModmailBot(Bot):
         self._config = None
         self._db = None
 
+        log_level = logging._nameToLevel.get(self.config.log_level.upper())
+        if log_level is not None:
+            logger.setLevel(log_level)
+            ch.setLevel(log_level)
+
         if self.self_hosted:
             self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
             self._api = SelfHostedClient(self)
