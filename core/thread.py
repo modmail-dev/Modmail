@@ -365,13 +365,13 @@ class Thread(ThreadABC):
                 )))
             self.bot.loop.create_task(tasks)
 
+        if not self.ready:
+            await self.wait_until_ready()
+
         if not from_mod and not note:
             self.bot.loop.create_task(
                 self.bot.api.append_log(message, self.channel.id)
             )
-
-        if not self.ready:
-            await self.wait_until_ready()
 
         destination = destination or self.channel
 
@@ -556,6 +556,7 @@ class ThreadManager(ThreadManagerABC):
             if channel:
                 thread = Thread(self, recipient, channel)
                 self.cache[recipient.id] = thread
+                thread.ready = True
         return thread
 
     async def _find_from_channel(self, channel):
