@@ -27,6 +27,7 @@ __version__ = '2.13.4'
 import asyncio
 import logging
 import os
+import re
 import sys
 
 from datetime import datetime
@@ -59,6 +60,27 @@ ch.setLevel(logging.INFO)
 formatter = logging.Formatter('%(filename)s - %(levelname)s: %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+
+
+class FileFormatter(logging.Formatter):
+    ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+
+    def format(self, record):
+        record.msg = self.ansi_escape.sub('', record.msg)
+        return super().format(record)
+
+
+ch_debug = logging.FileHandler(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp/logs.log'),
+    mode='a+'
+)
+
+ch_debug.setLevel(logging.DEBUG)
+formatter_debug = FileFormatter('%(asctime)s %(filename)s - '
+                                '%(levelname)s: %(message)s',
+                                datefmt='%Y-%m-%d %H:%M:%S')
+ch_debug.setFormatter(formatter_debug)
+logger.addHandler(ch_debug)
 
 init()
 

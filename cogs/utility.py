@@ -1,4 +1,5 @@
 import inspect
+import os
 import traceback
 from contextlib import redirect_stdout
 from datetime import datetime
@@ -232,12 +233,103 @@ class Utility:
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
+    @commands.group()
+    @commands.is_owner()
+    @trigger_typing
+    async def debug(self, ctx):
+        """Shows the recent logs of the bot."""
+
+        if ctx.invoked_subcommand is not None:
+            return
+
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../temp/logs.log'), 'r+') as f:
+            logs = f.read().strip(' \n\r')
+
+        embeds = []
+
+        if logs:
+            embed = Embed(
+                color=self.bot.main_color,
+                title='Debug Logs'
+            )
+        else:
+            embed = Embed(
+                color=self.bot.main_color,
+                title='Debug Logs',
+                description='Something\'s wrong. '
+                            'You don\'t have any logs at the moment.'
+            )
+            embed.set_footer(text='Go to Heroku to see your logs.')
+        embeds.append(embed)
+
+        msg = '```\n'
+        for line in logs.splitlines(keepends=True):
+            if msg != '```\n':
+                if len(line) + len(msg) + 3 > 2048:
+                    msg += '```'
+                    embeds[-1].description = msg
+                    embeds.append(Embed(
+                        color=self.bot.main_color,
+                        title='Debug Logs'
+                    ))
+                    msg = '```\n'
+            msg += line
+            if len(msg) + 3 > 2048:
+                msg = msg[:2030] + '[...]```'
+                embeds[-1].description = msg
+                embeds.append(Embed(
+                    color=self.bot.main_color,
+                    title='Debug Logs'
+                ))
+                embeds[-1].set_footer(text='Part of the logs are trimmed due '
+                                           'to line too long. Go to Heroku to '
+                                           'see the complete logs.')
+                msg = '```\n'
+
+        if len(msg) != '```\n':
+            msg += '```'
+            embeds[-1].description = msg
+        else:
+            embeds.pop()
+
+        session = PaginatorSession(ctx, *embeds)
+        return await session.run()
+
+    @debug.command()
+    @commands.is_owner()
+    @trigger_typing
+    async def hastebin(self, ctx):
+        """Upload logs to hastebin."""
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../temp/logs.log'), 'r+') as f:
+            logs = f.read().strip(' \n\r')
+
+        try:
+            async with self.bot.session.post('https://hastebin.com/documents',
+                                             data=logs) as resp:
+                key = (await resp.json())["key"]
+                embed = Embed(
+                    title='Debug Logs',
+                    color=self.bot.main_color,
+                    description=f'https://hastebin.com/' + key
+                )
+        except (JSONDecodeError, ClientResponseError, IndexError):
+            embed = Embed(
+                title='Debug Logs',
+                color=self.bot.main_color,
+                description='Something\'s wrong. '
+                            'We\'re unable to upload your logs to hastebin.'
+            )
+            embed.set_footer(text='Go to Heroku to see your logs.')
+        await ctx.send(embed=embed)
+
     @commands.command()
     @commands.is_owner()
     @github_access_token_required
     @trigger_typing
     async def github(self, ctx):
-        """Shows the github user your access token is linked to."""
+        """Shows the GitHub user your access token is linked to."""
         if ctx.invoked_subcommand:
             return
 

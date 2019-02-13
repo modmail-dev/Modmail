@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Unreleased]
 
+### Added
+- You will no longer need to view your bot debug logs from Heroku. `?debug` will show you the you the recent logs within 24h through a series of embeds.
+  - If you don't mind your data (may or may not be limited to: user ID, guild ID, bot name) be on the internet, `?debug hastebin` will upload a formatted logs file to https://hastebin.com.
+
 ### Fixed
 - Will no longer show  `Unclosed client session` and `Task was destroyed but it is pending!` when the bot terminates.
  
