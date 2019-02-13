@@ -20,7 +20,7 @@ class DownloadError(Exception):
 
 
 class Plugins:
-    """Plugins expand Mod Mail functionality by allowing third-party addons.
+    """Plugins expand Modmail functionality by allowing third-party addons.
 
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
