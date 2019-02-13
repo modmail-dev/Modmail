@@ -1,6 +1,6 @@
 {
     "TOKEN": "MyBotToken",
-    "MODMAIL_API_TOKEN": "MyApiToken",
+    "LOG_URL": "https://logviewername.herokuapp.com/",
     "GUILD_ID": 1234567890,
     "OWNERS": "Owner1ID,Owner2ID,Owner3ID",
     "MONGO_URI": "mongodb+srv://mongodburi"
