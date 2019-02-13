@@ -641,8 +641,6 @@ class ModmailBot(Bot):
                                   commands.UserInputError)):
             await context.invoke(self.get_command('help'),
                                  command=str(context.command))
-        elif isinstance(exception, commands.CommandNotFound):
-            logger.info(error(str(exception)))
         else:
             logger.error(error('Unexpected exception:'), exc_info=exception)
 

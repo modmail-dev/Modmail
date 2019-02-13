@@ -19,7 +19,7 @@ from core import checks
 from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot, InvalidConfigError
-from core.paginator import PaginatorSession
+from core.paginator import PaginatorSession, MessagePaginatorSession
 from core.utils import cleanup_code
 
 
@@ -246,55 +246,50 @@ class Utility:
                                '../temp/logs.log'), 'r+') as f:
             logs = f.read().strip(' \n\r')
 
-        embeds = []
-
-        if logs:
+        if not logs:
             embed = Embed(
                 color=self.bot.main_color,
-                title='Debug Logs'
-            )
-        else:
-            embed = Embed(
-                color=self.bot.main_color,
-                title='Debug Logs',
+                title='Debug Logs:',
                 description='You don\'t have any logs at the moment.'
             )
             embed.set_footer(text='Go to Heroku to see your logs.')
-        embeds.append(embed)
+            return await ctx.send(embed=embed)
 
-        msg = '```\n'
+        messages = []
+
+        # Using Scala formatting because it's similar to Python for exceptions
+        # and it does a fine job formatting the logs.
+        msg = '```Scala\n'
+
         for line in logs.splitlines(keepends=True):
-            if msg != '```\n':
-                if len(line) + len(msg) + 3 > 2048:
+            if msg != '```Scala\n':
+                if len(line) + len(msg) + 3 > 2000:
                     msg += '```'
-                    embeds[-1].description = msg
-                    embeds.append(Embed(
-                        color=self.bot.main_color,
-                        title='Debug Logs'
-                    ))
-                    msg = '```\n'
+                    messages.append(msg)
+                    msg = '```Scala\n'
             msg += line
-            if len(msg) + 3 > 2048:
-                msg = msg[:2030] + '[...]```'
-                embeds[-1].description = msg
-                embeds.append(Embed(
-                    color=self.bot.main_color,
-                    title='Debug Logs'
-                ))
-                embeds[-1].set_footer(text='Part of the logs are trimmed due '
-                                           'to line too long. Go to Heroku to '
-                                           'see the complete logs.')
-                msg = '```\n'
+            if len(msg) + 3 > 2000:
+                msg = msg[:1993] + '[...]```'
+                messages.append(msg)
+                msg = '```Scala\n'
 
-        if msg != '```\n':
+        if msg != '```Scala\n':
             msg += '```'
-            embeds[-1].description = msg
-        elif len(embeds) == 1:
-            pass
-        else:
-            embeds.pop()
+            messages.append(msg)
 
-        session = PaginatorSession(ctx, *embeds)
+        embed = Embed(
+            color=self.bot.main_color,
+            title='Debug Logs:',
+            description='This message contains your '
+                        'locally cached Modmail bot logs, '
+                        'go to the last page to see the most recent logs.'
+        )
+        embed.add_field(name='\u200b',
+                        value='**Navigate using the reactions below.**')
+        embed.set_footer(text='If you\'re hosting Modmail on Heroku, '
+                              'logs are cleared at least once every 27 hours.')
+
+        session = MessagePaginatorSession(ctx, *messages, embed=embed)
         return await session.run()
 
     @debug.command()
