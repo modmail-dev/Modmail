@@ -194,8 +194,8 @@ class Modmail:
         - `close silently`
         - `close in 10m silently`
 
-        Cancel closing a thread:
-        - close cancel
+        Stop a thread from closing:
+        - `close cancel`
         """
 
         thread = ctx.thread

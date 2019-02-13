@@ -324,6 +324,7 @@ class Utility:
     @commands.is_owner()
     @trigger_typing
     async def clear(self, ctx):
+        """Clears the locally cached logs."""
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'w'):
             pass
