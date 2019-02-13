@@ -636,6 +636,10 @@ class ModmailBot(Bot):
                                                     after.content)
                         break
 
+    async def on_error(self, event_method, *args, **kwargs):
+        logger.error(error('Ignoring exception in {}'.format(event_method)))
+        logger.error(error('Unexpected exception:'), exc_info=sys.exc_info())
+
     async def on_command_error(self, context, exception):
         if isinstance(exception, (commands.MissingRequiredArgument,
                                   commands.UserInputError)):
