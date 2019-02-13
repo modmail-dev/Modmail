@@ -556,7 +556,6 @@ class ThreadManager(ThreadManagerABC):
             if channel:
                 thread = Thread(self, recipient, channel)
                 self.cache[recipient.id] = thread
-                thread.ready = True
         return thread
 
     async def _find_from_channel(self, channel):
