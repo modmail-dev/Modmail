@@ -332,7 +332,10 @@ class Utility:
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'w') as f:
             pass
-        await ctx.send(embed=Embed(description='Cached logs are now cleared.'))
+        await ctx.send(embed=Embed(
+            color=self.bot.main_color,
+            description='Cached logs are now cleared.'
+        ))
 
     @commands.command()
     @commands.is_owner()
