@@ -52,6 +52,8 @@ from core.models import Bot
 from core.thread import ThreadManager
 
 
+init()
+
 logger = logging.getLogger('Modmail')
 logger.setLevel(logging.INFO)
 
@@ -81,8 +83,6 @@ formatter_debug = FileFormatter('%(asctime)s %(filename)s - '
                                 datefmt='%Y-%m-%d %H:%M:%S')
 ch_debug.setFormatter(formatter_debug)
 logger.addHandler(ch_debug)
-
-init()
 
 LINE = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
        Style.RESET_ALL
