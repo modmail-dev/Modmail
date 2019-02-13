@@ -330,7 +330,7 @@ class Utility:
     @trigger_typing
     async def clear(self, ctx):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               '../temp/logs.log'), 'w') as f:
+                               '../temp/logs.log'), 'w'):
             pass
         await ctx.send(embed=Embed(
             color=self.bot.main_color,

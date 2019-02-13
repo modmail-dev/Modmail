@@ -72,8 +72,12 @@ class FileFormatter(logging.Formatter):
         return super().format(record)
 
 
+temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp')
+if not os.path.exists(temp_dir):
+    os.mkdir(temp_dir)
+
 ch_debug = logging.FileHandler(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp/logs.log'),
+    os.path.join(temp_dir, 'logs.log'),
     mode='a+'
 )
 
