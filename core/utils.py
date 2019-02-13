@@ -18,12 +18,12 @@ def safeformat(s, **kwargs):
     return s.format_map(replacements)
 
 
-def info(*msg):
-    return f'{Fore.CYAN}{" ".join(msg)}{Style.RESET_ALL}'
+def info(*msgs):
+    return f'{Fore.CYAN}{" ".join(msgs)}{Style.RESET_ALL}'
 
 
-def error(*msg):
-    return f'{Fore.RED}{" ".join(msg)}{Style.RESET_ALL}'
+def error(*msgs):
+    return f'{Fore.RED}{" ".join(msgs)}{Style.RESET_ALL}'
 
 
 class User(commands.IDConverter):

@@ -29,6 +29,7 @@ import logging
 import os
 import re
 import sys
+import traceback
 
 from datetime import datetime
 from types import SimpleNamespace
@@ -573,6 +574,11 @@ class ModmailBot(Bot):
         thread = await self.threads.find(channel=ctx.channel)
         if thread is not None:
             await self.api.append_log(message, type_='internal')
+        elif ctx.invoked_with:
+            exc = commands.CommandNotFound(
+                'Command "{}" is not found'.format(ctx.invoked_with)
+            )
+            self.dispatch('command_error', ctx, exc)
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
@@ -645,6 +651,8 @@ class ModmailBot(Bot):
                                   commands.UserInputError)):
             await context.invoke(self.get_command('help'),
                                  command=str(context.command))
+        elif isinstance(exception, commands.CommandNotFound):
+            logger.warning(error('CommandNotFound: ' + str(exception)))
         else:
             logger.error(error('Unexpected exception:'), exc_info=exception)
 
