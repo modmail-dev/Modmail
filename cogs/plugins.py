@@ -184,7 +184,7 @@ class Plugins:
                     shutil.rmtree(f'plugins/{username}-{repo}',
                                   onerror=onerror)
             except Exception as exc:
-                logger.error(exc)
+                logger.error(str(exc))
                 self.bot.config.plugins.append(plugin_name)
                 raise exc
 
