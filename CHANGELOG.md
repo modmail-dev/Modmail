@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # [Unreleased]
 
 ### Added
-- You will no longer need to view your bot debug logs from Heroku. `?debug` will show you the you the recent logs within 24h through a series of embeds.
-  - If you don't mind your data (may or may not be limited to: user ID, guild ID, bot name) be on the internet, `?debug hastebin` will upload a formatted logs file to https://hastebin.com.
+- You will no longer need to view your bot debug logs from Heroku. `debug` will show you the you the recent logs within 24h through a series of embeds.
+  - If you don't mind your data (may or may not be limited to: user ID, guild ID, bot name) be on the internet, `debug hastebin` will upload a formatted logs file to https://hastebin.com.
+  - `debug clear` will clear the locally cached logs.
+  - Local logs are automatically cleared at least once every 27h.
 
 ### Fixed
 - Will no longer show  `Unclosed client session` and `Task was destroyed but it is pending!` when the bot terminates.
@@ -62,14 +64,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
-  - Named colors can be set the same way as hex. But this can only be done through `?config set`, which means database modifications will not work.
-  - For example: `?config set main_color yellowish green`.
+  - Named colors can be set the same way as hex. But this can only be done through `config set`, which means database modifications will not work.
+  - For example: `config set main_color yellowish green`.
 - New config var `main_color` allows you to customize the main Modmail color (as requested by many). Defaults to Discord `blurple`.
 
 # v2.12.3
 
 ### Fixed
-- Patched a bug where `?logs` sub-commands were accessible by anyone.
+- Patched a bug where `logs` sub-commands were accessible by anyone.
 - Patched a bug where an error was raised if there was an open thread where the recipient had left the server.
 
 Huge thanks to Sasiko for reporting these issues.
@@ -77,7 +79,7 @@ Huge thanks to Sasiko for reporting these issues.
 # v2.12.2
 
 ### Fixed
-- Fixed a bug in self-hosted `?update` command.
+- Fixed a bug in self-hosted `update` command.
 
 # v2.12.1
 
@@ -106,7 +108,7 @@ In the future, the Modmail API (https://modmail.tk) will be deprecated. This is 
 - `logs closed-by [user]` this returns all logs closed by a certain user
 
 ### Fixed
-- `?activity listening to music` no longer result in two "to"s ("listening to to music").
+- `activity listening to music` no longer result in two "to"s ("listening to to music").
   - This may require you to change your activity message to accommodate this fix.
 - A problem where `main_category_id` and `log_channel_id` weren't updated when their corresponding channel or category get deleted. 
 
