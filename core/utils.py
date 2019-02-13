@@ -185,3 +185,10 @@ def match_user_id(text: str) -> int:
     if match is not None:
         return int(match.group(1))
     return -1
+
+
+async def ignore(coro):
+    try:
+        await coro
+    except Exception:
+        pass

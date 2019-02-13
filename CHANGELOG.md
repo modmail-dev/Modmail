@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+### Fixed
+- `thread.create` is now synchronous so that the first message sent can be queued to be sent as soon as a thread is created. 
+    - This fixes a problem where if multiple messages are sent in quick succession, the first message sent (which triggers the thread creation) is not sent in order.
+
 # v2.13.4
 
 ### Changed
@@ -40,7 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `config del` command will now work properly on self-hosted db bots.
-
 
 # v2.12.4
 
