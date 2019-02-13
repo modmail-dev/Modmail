@@ -29,7 +29,6 @@ import logging
 import os
 import re
 import sys
-import traceback
 
 from datetime import datetime
 from types import SimpleNamespace
