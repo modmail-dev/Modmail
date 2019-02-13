@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `thread.create` is now synchronous so that the first message sent can be queued to be sent as soon as a thread is created. 
     - This fixes a problem where if multiple messages are sent in quick succession, the first message sent (which triggers the thread creation) is not sent in order.
 
+- Trying to reply to someone who has DMs disabled or has blocked the bot is now handled and the bot will send a message saying so. 
+
 # v2.13.4
 
 ### Changed
