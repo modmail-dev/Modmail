@@ -257,8 +257,7 @@ class Utility:
             embed = Embed(
                 color=self.bot.main_color,
                 title='Debug Logs',
-                description='Something\'s wrong. '
-                            'You don\'t have any logs at the moment.'
+                description='You don\'t have any logs at the moment.'
             )
             embed.set_footer(text='Go to Heroku to see your logs.')
         embeds.append(embed)
@@ -287,9 +286,11 @@ class Utility:
                                            'see the complete logs.')
                 msg = '```\n'
 
-        if len(msg) != '```\n':
+        if msg != '```\n':
             msg += '```'
             embeds[-1].description = msg
+        elif len(embeds) == 1:
+            pass
         else:
             embeds.pop()
 
@@ -323,6 +324,15 @@ class Utility:
             )
             embed.set_footer(text='Go to Heroku to see your logs.')
         await ctx.send(embed=embed)
+
+    @debug.command()
+    @commands.is_owner()
+    @trigger_typing
+    async def clear(self, ctx):
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../temp/logs.log'), 'w') as f:
+            pass
+        await ctx.send(embed=Embed(description='Cached logs are now cleared.'))
 
     @commands.command()
     @commands.is_owner()
