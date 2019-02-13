@@ -52,12 +52,20 @@ from core.models import Bot
 from core.thread import ThreadManager
 
 
+class StreamFormatter(logging.Formatter):
+    ansi_replace = re.compile(r'(\x1B)(?=\[[0-?]*[ -/]*[@-~])')
+
+    def format(self, record):
+        record.msg = self.ansi_replace.sub(r'\\e', record.msg)
+        return super().format(record)
+
+
 logger = logging.getLogger('Modmail')
 logger.setLevel(logging.INFO)
 
 ch = logging.StreamHandler(stream=sys.stdout)
 ch.setLevel(logging.INFO)
-formatter = logging.Formatter('%(filename)s - %(levelname)s: %(message)s')
+formatter = StreamFormatter('%(filename)s - %(levelname)s: %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
