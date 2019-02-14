@@ -45,7 +45,9 @@ class ConfigManager(ConfigManagerABC):
         # bot
         'token',
         # GitHub
-        'github_access_token'
+        'github_access_token',
+        # Logging
+        'log_level'
     }
 
     colors = {
@@ -88,6 +90,7 @@ class ConfigManager(ConfigManagerABC):
             'notification_squad': {},
             'subscriptions': {},
             'closures': {},
+            'log_level': 'INFO'
         }
 
         data.update(os.environ)
