@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import re
 import string
 import typing
@@ -8,7 +9,11 @@ import discord
 from discord.ext.commands import UserInputError, CommandError
 
 from core.models import Bot, ThreadManagerABC, ThreadABC
-from core.utils import is_image_url, days, match_user_id, truncate, ignore
+from core.utils import is_image_url, days, match_user_id
+from core.utils import truncate, ignore, error
+
+
+logger = logging.getLogger('Modmail')
 
 
 class Thread(ThreadABC):
@@ -313,8 +318,8 @@ class Thread(ThreadABC):
                             destination=self.recipient,
                             from_mod=True,
                             anonymous=anonymous)
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.info(error('Message delivery failed:'), exc_info=True)
             tasks.append(message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),

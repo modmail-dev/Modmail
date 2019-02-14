@@ -1,4 +1,5 @@
 import inspect
+import os
 import traceback
 from contextlib import redirect_stdout
 from datetime import datetime
@@ -18,7 +19,7 @@ from core import checks
 from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot, InvalidConfigError
-from core.paginator import PaginatorSession
+from core.paginator import PaginatorSession, MessagePaginatorSession
 from core.utils import cleanup_code
 
 
@@ -232,12 +233,112 @@ class Utility:
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
+    @commands.group()
+    @commands.is_owner()
+    @trigger_typing
+    async def debug(self, ctx):
+        """Shows the recent logs of the bot."""
+
+        if ctx.invoked_subcommand is not None:
+            return
+
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../temp/logs.log'), 'r+') as f:
+            logs = f.read().strip(' \n\r')
+
+        if not logs:
+            embed = Embed(
+                color=self.bot.main_color,
+                title='Debug Logs:',
+                description='You don\'t have any logs at the moment.'
+            )
+            embed.set_footer(text='Go to Heroku to see your logs.')
+            return await ctx.send(embed=embed)
+
+        messages = []
+
+        # Using Scala formatting because it's similar to Python for exceptions
+        # and it does a fine job formatting the logs.
+        msg = '```Scala\n'
+
+        for line in logs.splitlines(keepends=True):
+            if msg != '```Scala\n':
+                if len(line) + len(msg) + 3 > 2000:
+                    msg += '```'
+                    messages.append(msg)
+                    msg = '```Scala\n'
+            msg += line
+            if len(msg) + 3 > 2000:
+                msg = msg[:1993] + '[...]```'
+                messages.append(msg)
+                msg = '```Scala\n'
+
+        if msg != '```Scala\n':
+            msg += '```'
+            messages.append(msg)
+
+        embed = Embed(
+            color=self.bot.main_color,
+            title='Debug Logs:',
+            description='This message contains your '
+                        'locally cached Modmail bot logs, '
+                        'go to the last page to see the most recent logs.'
+        )
+        embed.add_field(name='\u200b',
+                        value='**Navigate using the reactions below.**')
+        embed.set_footer(text='If you\'re hosting Modmail on Heroku, '
+                              'logs are cleared at least once every 27 hours.')
+
+        session = MessagePaginatorSession(ctx, *messages, embed=embed)
+        return await session.run()
+
+    @debug.command()
+    @commands.is_owner()
+    @trigger_typing
+    async def hastebin(self, ctx):
+        """Upload logs to hastebin."""
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../temp/logs.log'), 'r+') as f:
+            logs = f.read().strip(' \n\r')
+
+        try:
+            async with self.bot.session.post('https://hastebin.com/documents',
+                                             data=logs) as resp:
+                key = (await resp.json())["key"]
+                embed = Embed(
+                    title='Debug Logs',
+                    color=self.bot.main_color,
+                    description=f'https://hastebin.com/' + key
+                )
+        except (JSONDecodeError, ClientResponseError, IndexError):
+            embed = Embed(
+                title='Debug Logs',
+                color=self.bot.main_color,
+                description='Something\'s wrong. '
+                            'We\'re unable to upload your logs to hastebin.'
+            )
+            embed.set_footer(text='Go to Heroku to see your logs.')
+        await ctx.send(embed=embed)
+
+    @debug.command()
+    @commands.is_owner()
+    @trigger_typing
+    async def clear(self, ctx):
+        """Clears the locally cached logs."""
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../temp/logs.log'), 'w'):
+            pass
+        await ctx.send(embed=Embed(
+            color=self.bot.main_color,
+            description='Cached logs are now cleared.'
+        ))
+
     @commands.command()
     @commands.is_owner()
     @github_access_token_required
     @trigger_typing
     async def github(self, ctx):
-        """Shows the github user your access token is linked to."""
+        """Shows the GitHub user your access token is linked to."""
         if ctx.invoked_subcommand:
             return
 
