@@ -194,8 +194,8 @@ class Modmail:
         - `close silently`
         - `close in 10m silently`
 
-        Cancel closing a thread:
-        - close cancel
+        Stop a thread from closing:
+        - `close cancel`
         """
 
         thread = ctx.thread
@@ -620,8 +620,8 @@ class Modmail:
             )
 
         else:
-            thread = await self.bot.threads.create(user, creator=ctx.author,
-                                                   category=category)
+            thread = self.bot.threads.create(user, creator=ctx.author,
+                                             category=category)
             embed = discord.Embed(
                 title='Created thread',
                 description=f'Thread started in {thread.channel.mention} '

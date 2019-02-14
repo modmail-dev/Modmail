@@ -1,3 +1,4 @@
+import logging
 import secrets
 from datetime import datetime
 from json import JSONDecodeError
@@ -9,6 +10,9 @@ from discord.ext import commands
 from aiohttp import ClientResponseError, ClientResponse
 
 from core.models import Bot, UserClient
+from core.utils import info
+
+logger = logging.getLogger('Modmail')
 
 
 class ApiClient:
@@ -243,7 +247,7 @@ class GitHub(ApiClient):
         self.username: str = resp['login']
         self.avatar_url: str = resp['avatar_url']
         self.url: str = resp['html_url']
-        print(f'Logged in to: {self.username}')
+        logger.info(info(f'GitHub logged in to: {self.username}'))
         return self
 
 

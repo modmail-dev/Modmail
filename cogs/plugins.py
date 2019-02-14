@@ -1,4 +1,5 @@
 import importlib
+import logging
 import os
 import shutil
 import site
@@ -8,9 +9,10 @@ import sys
 
 from discord.ext import commands
 
-from colorama import Fore, Style
-
 from core.models import Bot
+from core.utils import info, error
+
+logger = logging.getLogger('Modmail')
 
 
 class DownloadError(Exception):
@@ -18,7 +20,7 @@ class DownloadError(Exception):
 
 
 class Plugins:
-    """Plugins expand Mod Mail functionality by allowing third-party addons.
+    """Plugins expand Modmail functionality by allowing third-party addons.
 
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
@@ -53,13 +55,13 @@ class Plugins:
                 await self.download_plugin_repo(*parsed_plugin[:-1])
             except DownloadError as exc:
                 msg = f'{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
-                print(Fore.RED + msg + Style.RESET_ALL)
+                logger.error(error(msg))
             else:
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
                     msg = f'{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
-                    print(Fore.RED + msg + Style.RESET_ALL)
+                    logger.error(error(msg))
 
     async def download_plugin_repo(self, username, repo):
         try:
@@ -72,9 +74,9 @@ class Plugins:
             )
             # -q (quiet) so there's no terminal output unless there's an error
         except subprocess.CalledProcessError as exc:
-            error = exc.stderr.decode('utf-8').strip()
-            if not error.endswith('already exists and is '
-                                  'not an empty directory.'):
+            err = exc.stderr.decode('utf-8').strip()
+            if not err.endswith('already exists and is '
+                                'not an empty directory.'):
                 # don't raise error if the plugin folder exists
                 raise DownloadError(error) from exc
 
@@ -92,8 +94,8 @@ class Plugins:
                 # -q -q (quiet)
                 # so there's no terminal output unless there's an error
             except subprocess.CalledProcessError as exc:
-                error = exc.stderr.decode('utf8').strip()
-                if error:
+                err = exc.stderr.decode('utf8').strip()
+                if err:
                     raise DownloadError(
                         f'Unable to download requirements: ```\n{error}\n```'
                     ) from exc
@@ -109,7 +111,7 @@ class Plugins:
             raise DownloadError('Invalid plugin structure') from exc
         else:
             msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
-            print(Fore.LIGHTCYAN_EX + msg + Style.RESET_ALL)
+            logger.info(info(msg))
 
     @commands.group(aliases=['plugins'])
     @commands.is_owner()
@@ -182,7 +184,7 @@ class Plugins:
                     shutil.rmtree(f'plugins/{username}-{repo}',
                                   onerror=onerror)
             except Exception as exc:
-                print(exc)
+                logger.error(str(exc))
                 self.bot.config.plugins.append(plugin_name)
                 raise exc
 
@@ -208,8 +210,8 @@ class Plugins:
                     cmd
                 )
             except subprocess.CalledProcessError as exc:
-                error = exc.stderr.decode('utf8').strip()
-                await ctx.send(f'Error while updating: {error}')
+                err = exc.stderr.decode('utf8').strip()
+                await ctx.send(f'Error while updating: {err}')
             else:
                 output = cmd.stdout.decode('utf8').strip()
                 await ctx.send(f'```\n{output}\n```')
