@@ -34,7 +34,6 @@ from datetime import datetime
 from types import SimpleNamespace
 
 import discord
-from discord.enums import ActivityType
 from discord.ext import commands
 from discord.ext.commands.view import StringView
 
@@ -400,41 +399,6 @@ class ModmailBot(Bot):
 
         # Wait until config cache is populated with stuff from db
         await self.config.wait_until_ready()
-
-        # activities
-        activity_type = self.config.get('activity_type', -1)
-        message = self.config.get('activity_message', '')
-
-        try:
-            activity_type = ActivityType(activity_type)
-        except ValueError:
-            activity_type = -1
-
-        if activity_type >= 0 and message:
-            normalized_message = message.strip()
-            if activity_type == ActivityType.listening:
-                if message.lower().startswith('to '):
-                    # Must be listening to...
-                    normalized_message = message[3:].strip()
-        else:
-            normalized_message = ''
-
-        if normalized_message:
-            if activity_type == ActivityType.streaming:
-                url = self.config.get('twitch_url',
-                                      'https://www.twitch.tv/discord-modmail/')
-            else:
-                url = None
-
-            activity = discord.Activity(type=activity_type,
-                                        name=normalized_message,
-                                        url=url)
-            await self.change_presence(activity=activity)
-            # TODO: Trim message
-            logger.info(info('Activity set to: '
-                             f'{activity_type.name} {message}.'))
-        else:
-            logger.info(info(f'No activity message set.'))
 
         # closures
         closures = self.config.closures.copy()

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+### Added
+- New `status` command, change the bot's status to `online`, `idle`, `dnd`, `invisible`, or `offline`.
+  - To remove the status (change it back to default), use `status clear`.
+ 
+### Changed
+- The internals for `activity` has drastically changed to accommodate the new `status` command.  
+
 # 2.13.5
 
 ### Added

@@ -25,8 +25,8 @@ class ConfigManager(ConfigManagerABC):
     }
 
     internal_keys = {
-        # activity
-        'activity_message', 'activity_type',
+        # activity + status
+        'activity_message', 'activity_type', 'status',
         # moderation
         'blocked',
         # threads
@@ -38,10 +38,7 @@ class ConfigManager(ConfigManagerABC):
     protected_keys = {
         # Modmail
         'modmail_api_token', 'modmail_guild_id', 'guild_id', 'owners',
-        # logs
-        'log_url',
-        # database
-        'mongo_uri',
+        'log_url', 'mongo_uri',
         # bot
         'token',
         # GitHub
