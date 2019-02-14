@@ -589,26 +589,25 @@ class Utility:
 
         await self.bot.change_presence(activity=activity, status=status)
 
-        presence = {'activity': None, 'status': None}
+        presence = {'activity': (None, 'No activity has been set.'),
+                    'status': (None, 'No status has been set.')}
         if activity is not None:
             # TODO: Trim message
             to = 'to ' if activity.type == ActivityType.listening else ''
             msg = f'Activity set to: {activity.type.name.capitalize()} '
             msg += f'{to}{activity.name}.'
-            if log:
-                logger.info(info(msg))
             presence['activity'] = (activity, msg)
         if status is not None:
             msg = f'Status set to: {status.value}.'
-            if log:
-                logger.info(info(msg))
             presence['status'] = (status, msg)
         return presence
 
     async def on_ready(self):
         # Wait until config cache is populated with stuff from db
         await self.bot.config.wait_until_ready()
-        await self.set_presence()
+        presence = await self.set_presence()
+        logger.info(info(presence['activity'][1]))
+        logger.info(info(presence['status'][1]))
 
     @commands.command()
     @trigger_typing
