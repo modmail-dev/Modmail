@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New `status` command, change the bot's status to `online`, `idle`, `dnd`, `invisible`, or `offline`.
   - To remove the status (change it back to default), use `status clear`.
- 
+  - This also introduces a new internal configuration variable: `status`. Possible values are `online`, `idle`, `dnd`, `invisible`, and `offline`.
 ### Changed
 - The internals for `activity` has drastically changed to accommodate the new `status` command.  
 
