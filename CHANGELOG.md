@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - This influences the amount of messages received in Heroku logs. 
   - Possible options, from least to most severe, are: `INFO`, `DEBUG`, `WARNING`, `ERROR`, `CRITICAL`.
   - In most cases, you can ignore this change.
+- `on_error` and `CommandNotFound` are now logged.
 
 # v2.13.4
 
