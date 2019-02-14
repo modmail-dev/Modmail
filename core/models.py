@@ -381,9 +381,9 @@ class ThreadManagerABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def create(self, recipient: typing.Union[Member, User], *,
-                     creator: typing.Union[Member, User] = None,
-                     category: CategoryChannel = None) -> 'ThreadABC':
+    def create(self, recipient: typing.Union[Member, User], *,
+               creator: typing.Union[Member, User] = None,
+               category: CategoryChannel = None) -> 'ThreadABC':
         raise NotImplementedError
 
     @abc.abstractmethod
