@@ -1,4 +1,5 @@
 import inspect
+import logging
 import os
 import traceback
 from contextlib import redirect_stdout
@@ -10,7 +11,7 @@ from textwrap import indent
 
 import discord
 from discord import Embed, Color, Activity
-from discord.enums import ActivityType
+from discord.enums import ActivityType, Status
 from discord.ext import commands
 
 from aiohttp import ClientResponseError
@@ -20,7 +21,9 @@ from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot, InvalidConfigError
 from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code
+from core.utils import cleanup_code, info, error
+
+logger = logging.getLogger('Modmail')
 
 
 class Utility:
@@ -244,7 +247,7 @@ class Utility:
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'r+') as f:
-            logs = f.read().strip(' \n\r')
+            logs = f.read().strip()
 
         if not logs:
             embed = Embed(
@@ -299,7 +302,7 @@ class Utility:
         """Upload logs to hastebin."""
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'r+') as f:
-            logs = f.read().strip(' \n\r')
+            logs = f.read().strip()
 
         try:
             async with self.bot.session.post('https://hastebin.com/documents',
@@ -431,10 +434,10 @@ class Utility:
         it must be followed by a "to": "listening to..."
         """
         if activity_type == 'clear':
-            await self.bot.change_presence(activity=None)
             self.bot.config['activity_type'] = None
             self.bot.config['activity_message'] = None
             await self.bot.config.update()
+            await self.set_presence(log=False)
             embed = Embed(
                 title='Activity Removed',
                 color=self.bot.main_color
@@ -445,41 +448,166 @@ class Utility:
             raise commands.UserInputError
 
         try:
-            activity_type = ActivityType[activity_type.lower()]
-        except KeyError:
+            activity, msg = (await self.set_presence(
+                activity_identifier=activity_type,
+                activity_by_key=True,
+                activity_message=message,
+                log=False
+            ))['activity']
+        except ValueError:
             raise commands.UserInputError
 
-        if activity_type == ActivityType.listening:
-            if not message.lower().startswith('to '):
-                # Must be listening to...
-                raise commands.UserInputError
-            normalized_message = message[3:].strip()
-        else:
-            # Discord does not allow leading/trailing spaces anyways
-            normalized_message = message.strip()
-
-        if activity_type == ActivityType.streaming:
-            url = self.bot.config.get('twitch_url',
-                                      'https://www.twitch.tv/discord-Modmail/')
-        else:
-            url = None
-
-        activity = Activity(type=activity_type,
-                            name=normalized_message,
-                            url=url)
-        await self.bot.change_presence(activity=activity)
-
-        self.bot.config['activity_type'] = activity_type
+        self.bot.config['activity_type'] = activity.type.value
         self.bot.config['activity_message'] = message
         await self.bot.config.update()
 
-        desc = f'Current activity is: {activity_type.name} {message}.'
         embed = Embed(
             title='Activity Changed',
-            description=desc,
+            description=msg,
             color=self.bot.main_color
         )
         return await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.has_permissions(administrator=True)
+    async def status(self, ctx, *, status_type: str):
+        """
+        Set a custom status for the bot.
+
+        Possible status types:
+            - `online`
+            - `idle`
+            - `dnd`
+            - `do_not_disturb` or `do not disturb`
+            - `invisible` or `offline`
+            - `clear`
+
+        When status type is set to `clear`, the current status is removed.
+        """
+        if status_type == 'clear':
+            self.bot.config['status'] = None
+            await self.bot.config.update()
+            await self.set_presence(log=False)
+            embed = Embed(
+                title='Status Removed',
+                color=self.bot.main_color
+            )
+            return await ctx.send(embed=embed)
+        status_type = status_type.replace(' ', '_')
+
+        try:
+            status, msg = (await self.set_presence(
+                status_identifier=status_type,
+                status_by_key=True,
+                log=False
+            ))['status']
+        except ValueError:
+            raise commands.UserInputError
+
+        self.bot.config['status'] = status.value
+        await self.bot.config.update()
+
+        embed = Embed(
+            title='Status Changed',
+            description=msg,
+            color=self.bot.main_color
+        )
+        return await ctx.send(embed=embed)
+
+    async def set_presence(self, *,
+                           status_identifier=None,
+                           status_by_key=True,
+                           activity_identifier=None,
+                           activity_by_key=True,
+                           activity_message=None,
+                           log=True):
+
+        activity = status = None
+        if status_identifier is None:
+            status_identifier = self.bot.config.get('status', None)
+            status_by_key = False
+
+        try:
+            if status_by_key:
+                status = Status[status_identifier]
+            else:
+                status = Status(status_identifier)
+        except (KeyError, ValueError):
+            if status_identifier is not None:
+                msg = f'Invalid status type: {status_identifier}'
+                if log:
+                    logger.warning(error(msg))
+                else:
+                    raise ValueError(msg)
+
+        if activity_identifier is None:
+            if activity_message is not None:
+                raise ValueError('activity_message must be None '
+                                 'if activity_identifier is None.')
+            activity_identifier = self.bot.config.get('activity_type', None)
+            activity_by_key = False
+
+        try:
+            if activity_by_key:
+                activity_type = ActivityType[activity_identifier]
+            else:
+                activity_type = ActivityType(activity_identifier)
+        except (KeyError, ValueError):
+            if activity_identifier is not None:
+                msg = f'Invalid activity type: {activity_identifier}'
+                if log:
+                    logger.warning(error(msg))
+                else:
+                    raise ValueError(msg)
+        else:
+            url = None
+            activity_message = (
+                    activity_message or
+                    self.bot.config.get('activity_message', '')
+            ).strip()
+
+            if activity_type == ActivityType.listening:
+                if activity_message.lower().startswith('to '):
+                    # The actual message is after listening to [...]
+                    # discord automatically add the "to"
+                    activity_message = activity_message[3:].strip()
+            elif activity_type == ActivityType.streaming:
+                url = self.bot.config.get(
+                    'twitch_url', 'https://www.twitch.tv/discord-modmail/'
+                )
+
+            if activity_message:
+                activity = Activity(type=activity_type,
+                                    name=activity_message,
+                                    url=url)
+            else:
+                msg = 'You must supply an activity message to use custom activity.'
+                if log:
+                    logger.warning(error(msg))
+                else:
+                    raise ValueError(msg)
+
+        await self.bot.change_presence(activity=activity, status=status)
+
+        presence = {'activity': (None, 'No activity has been set.'),
+                    'status': (None, 'No status has been set.')}
+        if activity is not None:
+            # TODO: Trim message
+            to = 'to ' if activity.type == ActivityType.listening else ''
+            msg = f'Activity set to: {activity.type.name.capitalize()} '
+            msg += f'{to}{activity.name}.'
+            presence['activity'] = (activity, msg)
+        if status is not None:
+            msg = f'Status set to: {status.value}.'
+            presence['status'] = (status, msg)
+        return presence
+
+    async def on_ready(self):
+        # Wait until config cache is populated with stuff from db
+        await self.bot.config.wait_until_ready()
+        presence = await self.set_presence()
+        logger.info(info(presence['activity'][1]))
+        logger.info(info(presence['status'][1]))
 
     @commands.command()
     @trigger_typing
