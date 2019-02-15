@@ -602,7 +602,11 @@ class Modmail:
     async def contact(self, ctx,
                       category: Optional[discord.CategoryChannel] = None, *,
                       user: Union[discord.Member, discord.User]):
-        """Create a thread with a specified member."""
+        """Create a thread with a specified member.
+        
+        If the optional category argument is passed, the thread
+        will be created in the specified category.
+        """
 
         if user.bot:
             embed = discord.Embed(
@@ -622,6 +626,7 @@ class Modmail:
         else:
             thread = self.bot.threads.create(user, creator=ctx.author,
                                              category=category)
+            await thread.wait_until_ready()
             embed = discord.Embed(
                 title='Created thread',
                 description=f'Thread started in {thread.channel.mention} '
