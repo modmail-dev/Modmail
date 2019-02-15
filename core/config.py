@@ -25,7 +25,7 @@ class ConfigManager(ConfigManagerABC):
     }
 
     internal_keys = {
-        # activity + status
+        # bot presence
         'activity_message', 'activity_type', 'status',
         # moderation
         'blocked',
