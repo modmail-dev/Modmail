@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# 2.13.7
+
+### Added
+
+The ability to enable typing interactions. 
+
+If you want the bot to type in the thread channel if the user is also typing, add the config variable `user_typing`, the value doesnt matter, just it's presence. use `config del` to disable the functionality. The same thing in reverse is also possible, if you want the use to see the bot type when someone is typing in the thread channel add the `mod_typing` config variable. 
+
 # 2.13.6
 
 ### Fixed
