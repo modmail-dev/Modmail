@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.13.5'
+__version__ = '2.13.6'
 
 import asyncio
 import logging
@@ -34,7 +34,6 @@ from datetime import datetime
 from types import SimpleNamespace
 
 import discord
-from discord.enums import ActivityType
 from discord.ext import commands
 from discord.ext.commands.view import StringView
 
@@ -401,41 +400,6 @@ class ModmailBot(Bot):
         # Wait until config cache is populated with stuff from db
         await self.config.wait_until_ready()
 
-        # activities
-        activity_type = self.config.get('activity_type', -1)
-        message = self.config.get('activity_message', '')
-
-        try:
-            activity_type = ActivityType(activity_type)
-        except ValueError:
-            activity_type = -1
-
-        if activity_type >= 0 and message:
-            normalized_message = message.strip()
-            if activity_type == ActivityType.listening:
-                if message.lower().startswith('to '):
-                    # Must be listening to...
-                    normalized_message = message[3:].strip()
-        else:
-            normalized_message = ''
-
-        if normalized_message:
-            if activity_type == ActivityType.streaming:
-                url = self.config.get('twitch_url',
-                                      'https://www.twitch.tv/discord-modmail/')
-            else:
-                url = None
-
-            activity = discord.Activity(type=activity_type,
-                                        name=normalized_message,
-                                        url=url)
-            await self.change_presence(activity=activity)
-            # TODO: Trim message
-            logger.info(info('Activity set to: '
-                             f'{activity_type.name} {message}.'))
-        else:
-            logger.info(info(f'No activity message set.'))
-
         # closures
         closures = self.config.closures.copy()
         logger.info(info(f'There are {len(closures)} thread(s) '
@@ -578,6 +542,20 @@ class ModmailBot(Bot):
                 'Command "{}" is not found'.format(ctx.invoked_with)
             )
             self.dispatch('command_error', ctx, exc)
+    
+    async def on_typing(self, channel, user, when):
+        if isinstance(channel, discord.DMChannel):
+            if not self.config.get('user_typing'):
+                return
+            thread = await self.threads.find(recipient=user)
+            if thread:
+                await thread.channel.trigger_typing()
+        else:
+            if not self.config.get('mod_typing'):
+                return
+            thread = await self.threads.find(channel=channel)
+            if thread and thread.recipient:
+                await thread.recipient.trigger_typing()
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
