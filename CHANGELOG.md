@@ -4,7 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# 2.13.5
+# v2.13.7
+
+### Added
+
+- The ability to enable typing interactions. 
+
+If you want the bot to type in the thread channel if the user is also typing, add the config variable `user_typing`, the value doesnt matter, just it's presence. use `config del` to disable the functionality. The same thing in reverse is also possible, if you want the user to see the bot type when someone is typing in the thread channel add the `mod_typing` config variable. 
+
+- New `status` command, change the bot's status to `online`, `idle`, `dnd`, `invisible`, or `offline`.
+  - To remove the status (change it back to default), use `status clear`.
+  - This also introduces a new internal configuration variable: `status`. Possible values are `online`, `idle`, `dnd`, `invisible`, and `offline`.
+  
+### Changed
+- The internals for `activity` has drastically changed to accommodate the new `status` command.  
+
+# v2.13.6
+
+### Fixed
+
+Fixed a bug in the contact command where the response message did not send.
+
+# v2.13.5
 
 ### Added
 - You will no longer need to view your bot debug logs from Heroku. `debug` will show you the you the recent logs within 24h through a series of embeds.
