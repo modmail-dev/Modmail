@@ -578,6 +578,20 @@ class ModmailBot(Bot):
                 'Command "{}" is not found'.format(ctx.invoked_with)
             )
             self.dispatch('command_error', ctx, exc)
+    
+    async def on_typing(self, channel, user, when):
+        if isinstance(channel, discord.DMChannel):
+            if not self.config.get('user_typing'):
+                return
+            thread = await self.threads.find(recipient=user)
+            if thread:
+                await thread.channel.trigger_typing()
+        else:
+            if not self.config.get('mod_typing'):
+                return
+            thread = await self.threads.find(channel=channel)
+            if thread and thread.recipient:
+                await thread.recipient.trigger_typing()
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
