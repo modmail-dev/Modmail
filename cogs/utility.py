@@ -410,7 +410,7 @@ class Utility:
 
     @commands.command(aliases=['presence'])
     @checks.has_permissions(administrator=True)
-    async def activity(self, ctx, activity_type: str, *, message: str = ''):
+    async def activity(self, ctx, activity_type: str.lower, *, message: str = ''):
         """
         Set a custom activity for the bot.
 
@@ -463,7 +463,7 @@ class Utility:
 
     @commands.command()
     @checks.has_permissions(administrator=True)
-    async def status(self, ctx, *, status_type: str):
+    async def status(self, ctx, *, status_type: str.lower):
         """
         Set a custom status for the bot.
 
