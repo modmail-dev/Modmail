@@ -281,16 +281,9 @@ class Utility:
             messages.append(msg)
 
         embed = Embed(
-            color=self.bot.main_color,
-            title='Debug Logs:',
-            description='This message contains your '
-                        'locally cached Modmail bot logs, '
-                        'go to the last page to see the most recent logs.'
+            color=self.bot.main_color
         )
-        embed.add_field(name='\u200b',
-                        value='**Navigate using the reactions below.**')
-        embed.set_footer(text='If you\'re hosting Modmail on Heroku, '
-                              'logs are cleared at least once every 27 hours.')
+        embed.set_footer(text='Debug logs - Navigate using the reactions below.')
 
         session = MessagePaginatorSession(ctx, *messages, embed=embed)
         return await session.run()
