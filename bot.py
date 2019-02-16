@@ -465,23 +465,23 @@ class ModmailBot(Bot):
         account_age = self.config.get('account_age', 0)
         try:
             account_age = float(account_age)
-            if account_age < 0 or not account_age.is_integer():
+            if account_age < 0:
                 raise ValueError
         except ValueError:
             logger.warning('The age limit needs to be a whole number, '
                            f'not "{account_age}".')
             del self.config.cache['account_age']
             await self.config.update()
-        else:
-            account_age = int(account_age)
 
+        reason = self.blocked_users.get(str(message.author.id), '')
         if (datetime.utcnow() - message.author.created_at).days < account_age:
-            # user under the age limit
+            # user account under the age limit
             reaction = blocked_emoji
-            if str(message.author.id) not in self.blocked_users:
-                reason = f'System Message: New Account. Account must be ' \
+            if str(message.author.id) not in self.blocked_users or \
+               account_age != int(re.search(r'(\d+) day\(s\)', reason).group(1)):
+                new_reason = f'System Message: New Account. Account must be ' \
                     f'created before {account_age} day(s).'
-                self.config.blocked[str(message.author.id)] = reason
+                self.config.blocked[str(message.author.id)] = new_reason
                 await message.channel.send(embed=discord.Embed(
                     title='Message not sent!',
                     description='Your Discord account must be '
@@ -491,7 +491,6 @@ class ModmailBot(Bot):
                 ))
         elif str(message.author.id) in self.blocked_users:
             reaction = blocked_emoji
-            reason = self.blocked_users.get(str(message.author.id), '')
             if reason.startswith('System Message: New Account.'):
                 if (datetime.utcnow() - message.author.created_at).days >= account_age:
                     reaction = sent_emoji

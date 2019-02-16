@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # [Unreleased]
 
 ### Added
-- Addresses #175.
 - Introduced a new configuration variable `account_age` for setting a minimum account creation age.
   - This utilizes `blocked` configuration variable to keep track of users under the limit.
 
