@@ -739,18 +739,17 @@ class Modmail:
                 reason = self.bot.blocked_users.get(str(user.id))[16:]
                 embed = discord.Embed(
                     title='Error',
-                    description=f'{mention} is blocked internally due to '
-                                f'{reason}, unable to unblock.',
-                    color=discord.Color.red()
+                    description=f'{mention} is blocked internally due to {reason}.',
+                    color=self.bot.main_color
                 )
-            else:
-                del self.bot.config.blocked[str(user.id)]
-                await self.bot.config.update()
-                embed = discord.Embed(
-                    title='Success',
-                    color=self.bot.main_color,
-                    description=f'{mention} is no longer blocked.'
-                )
+                await ctx.send(embed=embed)
+            del self.bot.config.blocked[str(user.id)]
+            await self.bot.config.update()
+            embed = discord.Embed(
+                title='Success',
+                color=self.bot.main_color,
+                description=f'{mention} is no longer blocked.'
+            )
         else:
             embed = discord.Embed(
                 title='Error',

@@ -485,7 +485,7 @@ class ModmailBot(Bot):
                 await message.channel.send(embed=discord.Embed(
                     title='Message not sent!',
                     description='Your Discord account must be '
-                                f'created before at least {account_age} day(s) '
+                                f'created for at least {account_age} day(s) '
                                 f'before you can contact {self.user.mention}.',
                     color=discord.Color.red()
                 ))
