@@ -298,13 +298,13 @@ class Utility:
             logs = f.read().strip()
 
         try:
-            async with self.bot.session.post('https://hastebin.com/documents',
+            async with self.bot.session.post('https://hasteb.in/documents',
                                              data=logs) as resp:
                 key = (await resp.json())["key"]
                 embed = Embed(
                     title='Debug Logs',
                     color=self.bot.main_color,
-                    description=f'https://hastebin.com/' + key
+                    description=f'https://hasteb.in/' + key
                 )
         except (JSONDecodeError, ClientResponseError, IndexError):
             embed = Embed(
