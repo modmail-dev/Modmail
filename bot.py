@@ -478,7 +478,7 @@ class ModmailBot(Bot):
             # user account under the age limit
             reaction = blocked_emoji
             if str(message.author.id) not in self.blocked_users or \
-               account_age != int(re.search(r'(\d+) day\(s\)', reason).group(1)):
+               account_age != float(re.search(r'(\d+(?:.\d+)?) day\(s\)', reason).group(1)):
                 new_reason = f'System Message: New Account. Account must be ' \
                     f'created before {account_age} day(s).'
                 self.config.blocked[str(message.author.id)] = new_reason
