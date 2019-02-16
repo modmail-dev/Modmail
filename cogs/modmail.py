@@ -731,10 +731,10 @@ class Modmail:
 
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
-        system = self.bot.blocked_users.get(str(user.id),
-                                            '').startswith('System Message: ')
-
         if str(user.id) in self.bot.blocked_users:
+            system = self.bot.blocked_users.get(str(user.id), '').startswith(
+                'System Message: '
+            )
             if system:
                 reason = self.bot.blocked_users.get(str(user.id))[16:]
                 embed = discord.Embed(

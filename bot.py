@@ -447,7 +447,7 @@ class ModmailBot(Bot):
                 )
             except commands.BadArgument:
                 logger.warning(info(f'Sent Emoji ({sent_emoji}) '
-                                    f'is not a emoji.'))
+                                    f'is not a valid emoji.'))
                 del self.config.cache['sent_emoji']
                 await self.config.update()
 
@@ -458,7 +458,7 @@ class ModmailBot(Bot):
                 )
             except commands.BadArgument:
                 logger.warning(info(f'Blocked emoji ({blocked_emoji}) '
-                                    'is not a emoji.'))
+                                    'is not a valid emoji.'))
                 del self.config.cache['blocked_emoji']
                 await self.config.update()
 
