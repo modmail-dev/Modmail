@@ -30,7 +30,7 @@ import os
 import re
 import sys
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 
 import discord
@@ -464,28 +464,37 @@ class ModmailBot(Bot):
 
         account_age = self.config.get('account_age', 0)
         try:
-            account_age = float(account_age)
+            account_age = float(account_age) * 86400  # in seconds
             if account_age < 0:
                 raise ValueError
         except ValueError:
-            logger.warning('The age limit needs to be a number greater '
-                           f'than 1 in days, not "{account_age}".')
+            logger.warning('The account age limit needs to be a number '
+                           f'greater than 0 in days, not "{account_age}".')
             del self.config.cache['account_age']
             await self.config.update()
 
         reason = self.blocked_users.get(str(message.author.id), '')
-        if (datetime.utcnow() - message.author.created_at).days < account_age:
-            # user account under the age limit
+        accepted_time = message.author.created_at + timedelta(seconds=account_age)
+
+        if accepted_time > datetime.utcnow():
+            # user account has not reached the required time
             reaction = blocked_emoji
-            if str(message.author.id) not in self.blocked_users or \
-               account_age != float(re.search(r'(\d+(?:.\d+)?) day\(s\)', reason).group(1)):
-                new_reason = f'System Message: New Account. Account must be ' \
-                    f'created before {account_age} day(s).'
+
+            try:
+                time_changed = account_age != float(
+                    re.search(r'(\d+(?:.\d+)?) second\(s\)', reason).group(1)
+                )
+            except AttributeError:
+                time_changed = False
+
+            if str(message.author.id) not in self.blocked_users or time_changed:
+                new_reason = ('System Message: New Account. Account must be '
+                              f'created before {account_age} second(s).')
                 self.config.blocked[str(message.author.id)] = new_reason
                 await message.channel.send(embed=discord.Embed(
                     title='Message not sent!',
-                    description='Your Discord account must be '
-                                f'created for at least {account_age} day(s) '
+                    description='Your Discord account must be created for '
+                                f'at least {round(account_age/86400)} day(s) '
                                 f'before you can contact {self.user.mention}.',
                     color=discord.Color.red()
                 ))
