@@ -13,7 +13,7 @@ class ConfigManager(ConfigManagerABC):
         'twitch_url',
         # bot settings
         'main_category_id', 'disable_autoupdates', 'prefix', 'mention',
-        'main_color', 'user_typing', 'mod_typing',
+        'main_color', 'user_typing', 'mod_typing', 'account_age',
         # logging
         'log_channel_id',
         # threads

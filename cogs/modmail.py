@@ -630,7 +630,7 @@ class Modmail:
             embed = discord.Embed(
                 title='Created thread',
                 description=f'Thread started in {thread.channel.mention} '
-                f'for {user.mention}',
+                f'for {user.mention}.',
                 color=self.bot.main_color
             )
 
@@ -665,15 +665,23 @@ class Modmail:
             embed.add_field(name='Unknown', value=val, inline=False)
 
         if not users and not not_reachable:
-            embed.description = 'Currently there are no blocked users'
+            embed.description = 'Currently there are no blocked users.'
 
         await ctx.send(embed=embed)
 
     @commands.command()
     @trigger_typing
     @checks.has_permissions(manage_channels=True)
-    async def block(self, ctx, user: User = None, *, reason=None):
-        """Block a user from using Modmail."""
+    async def block(self, ctx, user: User = None, *, reason: str = None):
+        """
+        Block a user from using Modmail.
+
+        Note: reasons start with "System Message: " are reserved for internal
+        use only.
+        """
+
+        if reason.startswith('System Message: '):
+            raise commands.UserInputError
 
         if user is None:
             thread = ctx.thread
@@ -683,21 +691,22 @@ class Modmail:
                 raise commands.UserInputError
 
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
-
-        if str(user.id) not in self.bot.blocked_users:
+        system = self.bot.blocked_users.get(str(user.id),
+                                            '').startswith('System Message: ')
+        if str(user.id) not in self.bot.blocked_users or system:
             self.bot.config.blocked[str(user.id)] = reason
             await self.bot.config.update()
             extend = f'for `{reason}`' if reason else ''
             embed = discord.Embed(
                 title='Success',
                 color=self.bot.main_color,
-                description=f'{mention} is now blocked ' + extend
+                description=f'{mention} is now blocked {extend}.'
             )
         else:
             embed = discord.Embed(
                 title='Error',
                 color=discord.Color.red(),
-                description=f'{mention} is already blocked'
+                description=f'{mention} is already blocked,'
             )
 
         return await ctx.send(embed=embed)
@@ -706,7 +715,12 @@ class Modmail:
     @trigger_typing
     @checks.has_permissions(manage_channels=True)
     async def unblock(self, ctx, *, user: User = None):
-        """Unblocks a user from using Modmail."""
+        """
+        Unblocks a user from using Modmail.
+
+        Note: reasons start with "System Message: " are reserved for internal
+        use only.
+        """
 
         if user is None:
             thread = ctx.thread
@@ -717,18 +731,30 @@ class Modmail:
 
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
+        system = self.bot.blocked_users.get(str(user.id),
+                                            '').startswith('System Message: ')
+
         if str(user.id) in self.bot.blocked_users:
-            del self.bot.config.blocked[str(user.id)]
-            await self.bot.config.update()
-            embed = discord.Embed(
-                title='Success',
-                color=self.bot.main_color,
-                description=f'{mention} is no longer blocked'
-            )
+            if system:
+                reason = self.bot.blocked_users.get(str(user.id))[16:]
+                embed = discord.Embed(
+                    title='Error',
+                    description=f'{mention} is blocked internally due to '
+                                f'{reason}, unable to unblock.',
+                    color=discord.Color.red()
+                )
+            else:
+                del self.bot.config.blocked[str(user.id)]
+                await self.bot.config.update()
+                embed = discord.Embed(
+                    title='Success',
+                    color=self.bot.main_color,
+                    description=f'{mention} is no longer blocked.'
+                )
         else:
             embed = discord.Embed(
                 title='Error',
-                description=f'{mention} is not blocked',
+                description=f'{mention} is not blocked.',
                 color=discord.Color.red()
             )
 
