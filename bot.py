@@ -468,8 +468,8 @@ class ModmailBot(Bot):
             if account_age < 0:
                 raise ValueError
         except ValueError:
-            logger.warning('The age limit needs to be a whole number, '
-                           f'not "{account_age}".')
+            logger.warning('The age limit needs to be a number greater '
+                           f'than 1 in days, not "{account_age}".')
             del self.config.cache['account_age']
             await self.config.update()
 
