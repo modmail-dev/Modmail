@@ -281,16 +281,9 @@ class Utility:
             messages.append(msg)
 
         embed = Embed(
-            color=self.bot.main_color,
-            title='Debug Logs:',
-            description='This message contains your '
-                        'locally cached Modmail bot logs, '
-                        'go to the last page to see the most recent logs.'
+            color=self.bot.main_color
         )
-        embed.add_field(name='\u200b',
-                        value='**Navigate using the reactions below.**')
-        embed.set_footer(text='If you\'re hosting Modmail on Heroku, '
-                              'logs are cleared at least once every 27 hours.')
+        embed.set_footer(text='Debug logs - Navigate using the reactions below.')
 
         session = MessagePaginatorSession(ctx, *messages, embed=embed)
         return await session.run()
@@ -305,13 +298,13 @@ class Utility:
             logs = f.read().strip()
 
         try:
-            async with self.bot.session.post('https://hastebin.com/documents',
+            async with self.bot.session.post('https://hasteb.in/documents',
                                              data=logs) as resp:
                 key = (await resp.json())["key"]
                 embed = Embed(
                     title='Debug Logs',
                     color=self.bot.main_color,
-                    description=f'https://hastebin.com/' + key
+                    description=f'https://hasteb.in/' + key
                 )
         except (JSONDecodeError, ClientResponseError, IndexError):
             embed = Embed(
@@ -417,7 +410,7 @@ class Utility:
 
     @commands.command(aliases=['presence'])
     @checks.has_permissions(administrator=True)
-    async def activity(self, ctx, activity_type: str, *, message: str = ''):
+    async def activity(self, ctx, activity_type: str.lower, *, message: str = ''):
         """
         Set a custom activity for the bot.
 
@@ -470,7 +463,7 @@ class Utility:
 
     @commands.command()
     @checks.has_permissions(administrator=True)
-    async def status(self, ctx, *, status_type: str):
+    async def status(self, ctx, *, status_type: str.lower):
         """
         Set a custom status for the bot.
 

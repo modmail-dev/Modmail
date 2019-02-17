@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `block` reason cannot start with `System Message: ` as it is now reserved for internal user blocking.
 
+# v2.13.8
+
+### Fixed
+- A bug where a thread was blocked from sending messsages when multiple images were uploaded. (This was due to a typo)
+
 # v2.13.7
 
 ### Added
