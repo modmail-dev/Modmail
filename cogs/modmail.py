@@ -694,7 +694,7 @@ class Modmail:
         system = self.bot.blocked_users.get(str(user.id),
                                             '').startswith('System Message: ')
         if str(user.id) not in self.bot.blocked_users or system:
-            self.bot.config.blocked[str(user.id)] = reason
+            self.bot.config.blocked[str(user.id)] = reason if reason else None
             await self.bot.config.update()
             extend = f'for `{reason}`' if reason else ''
             embed = discord.Embed(
