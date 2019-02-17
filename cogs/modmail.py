@@ -732,24 +732,24 @@ class Modmail:
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         if str(user.id) in self.bot.blocked_users:
-            system = self.bot.blocked_users.get(str(user.id), '').startswith(
-                'System Message: '
-            )
-            if system:
-                reason = self.bot.blocked_users.get(str(user.id))[16:]
-                embed = discord.Embed(
-                    title='Error',
-                    description=f'{mention} is blocked internally due to {reason}.',
-                    color=self.bot.main_color
-                )
-                await ctx.send(embed=embed)
+            msg = self.bot.blocked_users.get(str(user.id), '')
             del self.bot.config.blocked[str(user.id)]
             await self.bot.config.update()
-            embed = discord.Embed(
-                title='Success',
-                color=self.bot.main_color,
-                description=f'{mention} is no longer blocked.'
-            )
+
+            if msg.startswith('System Message: '):
+                reason = msg[16:].strip('. \n\r')
+                embed = discord.Embed(
+                    title='Success',
+                    description=f'{mention} was previously blocked internally due to '
+                    f'"{reason}". {mention} is no longer blocked.',
+                    color=self.bot.main_color
+                )
+            else:
+                embed = discord.Embed(
+                    title='Success',
+                    color=self.bot.main_color,
+                    description=f'{mention} is no longer blocked.'
+                )
         else:
             embed = discord.Embed(
                 title='Error',
