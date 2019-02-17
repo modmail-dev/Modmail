@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Introduced a new configuration variable `account_age` for setting a minimum account creation age.
-  - This utilizes `blocked` configuration variable to keep track of users under the limit.
+  - Blocked users for this reason will be stored in `blocked` along with other reasons for being blocked.
+  - `account_age` needs to be an ISO8601 Duration Format (examples: `P12DT3H` 12 days and 3 hours, `P3Y5M` 3 years and 5 months `PT4H14M999S` 4 hours 14 minutes and 999 seconds). https://en.wikipedia.org/wiki/ISO_8601#Durations.
 
 ### Changed
 - `block` reason cannot start with `System Message: ` as it is now reserved for internal user blocking.

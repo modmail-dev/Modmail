@@ -37,10 +37,12 @@ class ShortTime:
         now = datetime.utcnow()
         self.dt = now + relativedelta(**data)
 
+
 # Monkey patch mins and secs into the units
 units = pdt.pdtLocales['en_US'].units
 units['minutes'].append('mins')
 units['seconds'].append('secs')
+
 
 class HumanTime:
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)

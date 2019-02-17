@@ -30,12 +30,14 @@ import os
 import re
 import sys
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from types import SimpleNamespace
 
 import discord
 from discord.ext import commands
 from discord.ext.commands.view import StringView
+
+import isodate
 
 from aiohttp import ClientSession
 from colorama import init, Fore, Style
@@ -43,12 +45,12 @@ from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import Changelog
-from core.clients import ModmailApiClient, SelfHostedClient
-from core.clients import PluginDatabaseClient
+from core.clients import ModmailApiClient, SelfHostedClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error
 from core.models import Bot
 from core.thread import ThreadManager
+from core.time import human_timedelta
 
 
 init()
@@ -431,9 +433,7 @@ class ModmailBot(Bot):
             )
         logger.info(LINE)
 
-    async def process_modmail(self, message):
-        """Processes messages sent to the bot."""
-
+    async def retrieve_emoji(self):
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
 
@@ -461,51 +461,51 @@ class ModmailBot(Bot):
                                     'is not a valid emoji.'))
                 del self.config.cache['blocked_emoji']
                 await self.config.update()
+        return sent_emoji, blocked_emoji
 
-        account_age = self.config.get('account_age', 0)
+    async def process_modmail(self, message):
+        """Processes messages sent to the bot."""
+        sent_emoji, blocked_emoji = await self.retrieve_emoji()
+
+        account_age = self.config.get('account_age')
         try:
-            account_age = float(account_age) * 86400  # in seconds
-            if account_age < 0:
-                raise ValueError
-        except ValueError:
-            logger.warning('The account age limit needs to be a number '
-                           f'greater than 0 in days, not "{account_age}".')
+            account_age = isodate.parse_duration(account_age)
+        except isodate.ISO8601Error:
+            logger.warning('The account age limit needs to be a ISO8601 duration formatted '
+                           f'duration string greater than 0 days, not "{account_age}".')
             del self.config.cache['account_age']
             await self.config.update()
+            account_age = isodate.duration.Duration()
 
         reason = self.blocked_users.get(str(message.author.id), '')
-        accepted_time = message.author.created_at + timedelta(seconds=account_age)
+        accepted_time = message.author.created_at + account_age
 
         if accepted_time > datetime.utcnow():
             # user account has not reached the required time
             reaction = blocked_emoji
+            changed = False
 
-            try:
-                time_changed = account_age != float(
-                    re.search(r'(\d+(?:.\d+)?) second\(s\)', reason).group(1)
-                )
-            except AttributeError:
-                time_changed = False
-
-            if str(message.author.id) not in self.blocked_users or time_changed:
-                new_reason = ('System Message: New Account. Account must be '
-                              f'created before {account_age} second(s).')
+            if str(message.author.id) not in self.blocked_users:
+                new_reason = 'System Message: New Account.'
                 self.config.blocked[str(message.author.id)] = new_reason
+                changed = True
+
+            if reason.startswith('System Message: New Account.') or changed:
+                delta = human_timedelta(accepted_time)
                 await message.channel.send(embed=discord.Embed(
                     title='Message not sent!',
-                    description='Your Discord account must be created for '
-                                f'at least {round(account_age/86400)} day(s) '
+                    description=f'Your must wait for {delta} '
                                 f'before you can contact {self.user.mention}.',
                     color=discord.Color.red()
                 ))
+
         elif str(message.author.id) in self.blocked_users:
             reaction = blocked_emoji
             if reason.startswith('System Message: New Account.'):
-                if (datetime.utcnow() - message.author.created_at).days >= account_age:
-                    reaction = sent_emoji
-                    # met the age limit already
-                    del self.config.blocked[str(message.author.id)]
-                    await self.config.update()
+                # met the age limit already
+                reaction = sent_emoji
+                del self.config.blocked[str(message.author.id)]
+                await self.config.update()
         else:
             reaction = sent_emoji
 
