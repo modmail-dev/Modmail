@@ -481,16 +481,18 @@ class ModmailBot(Bot):
                 await self.config.update()
                 account_age = isodate.duration.Duration()
 
-        reason = self.blocked_users.get(str(message.author.id), '')
+        reason = self.blocked_users.get(str(message.author.id))
+        if reason is None:
+            reason = ''
         try:
-            accepted_time = message.author.created_at + account_age
+            min_account_age = message.author.created_at + account_age
         except ValueError as e:
             logger.warning(e.args[0])
             del self.config.cache['account_age']
             await self.config.update()
-            accepted_time = message.author.created_at
+            min_account_age = message.author.created_at
 
-        if accepted_time > datetime.utcnow():
+        if min_account_age > datetime.utcnow():
             # user account has not reached the required time
             reaction = blocked_emoji
             changed = False
@@ -501,7 +503,7 @@ class ModmailBot(Bot):
                 changed = True
 
             if reason.startswith('System Message: New Account.') or changed:
-                delta = human_timedelta(accepted_time)
+                delta = human_timedelta(min_account_age)
                 await message.channel.send(embed=discord.Embed(
                     title='Message not sent!',
                     description=f'Your must wait for {delta} '
@@ -512,10 +514,21 @@ class ModmailBot(Bot):
         elif str(message.author.id) in self.blocked_users:
             reaction = blocked_emoji
             if reason.startswith('System Message: New Account.'):
-                # met the age limit already
+                # Met the age limit already
                 reaction = sent_emoji
                 del self.config.blocked[str(message.author.id)]
                 await self.config.update()
+            else:
+                end_time = re.search(r'%(.+?)%$', reason)
+                if end_time is not None:
+                    after = (datetime.fromisoformat(end_time.group(1)) -
+                             datetime.utcnow()).total_seconds()
+                    if after <= 0:
+                        # No longer blocked
+                        reaction = sent_emoji
+                        del self.config.blocked[str(message.author.id)]
+                        await self.config.update()
+
         else:
             reaction = sent_emoji
 

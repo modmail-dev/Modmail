@@ -88,14 +88,16 @@ class FutureTime(Time):
 class UserFriendlyTime(Converter):
     """That way quotes aren't absolutely necessary."""
 
-    def __init__(self, converter=None):
+    def __init__(self, converter: Converter = None):
         if isinstance(converter, type) and issubclass(converter, Converter):
             converter = converter()
 
         if converter is not None and not isinstance(converter, Converter):
             raise TypeError('commands.Converter subclass necessary.')
-        self.dt = self.arg = None
-        self.now = None
+        self.raw: str = None
+        self.dt: datetime = None
+        self.arg = None
+        self.now: datetime = None
         self.converter = converter
 
     async def check_constraints(self, ctx, now, remaining):
@@ -109,6 +111,7 @@ class UserFriendlyTime(Converter):
         return self
 
     async def convert(self, ctx, argument):
+        self.raw = argument
         remaining = ''
         try:
             calendar = HumanTime.calendar
@@ -126,8 +129,11 @@ class UserFriendlyTime(Converter):
             # apparently nlp does not like "from now"
             # it likes "from x" in other cases though
             # so let me handle the 'now' case
-            if argument.endswith('from now'):
-                argument = argument[:-8].strip()
+            if argument.endswith(' from now'):
+                argument = argument[:-9].strip()
+            # handles "for xxx hours"
+            if argument.startswith('for '):
+                argument = argument[4:].strip()
 
             if argument[0:2] == 'me':
                 # starts with "me to", "me in", or "me at "
