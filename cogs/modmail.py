@@ -603,7 +603,7 @@ class Modmail:
                       category: Optional[discord.CategoryChannel] = None, *,
                       user: Union[discord.Member, discord.User]):
         """Create a thread with a specified member.
-        
+
         If the optional category argument is passed, the thread
         will be created in the specified category.
         """

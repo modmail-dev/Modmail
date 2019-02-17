@@ -555,8 +555,8 @@ class Utility:
         else:
             url = None
             activity_message = (
-                    activity_message or
-                    self.bot.config.get('activity_message', '')
+                activity_message or
+                self.bot.config.get('activity_message', '')
             ).strip()
 
             if activity_type == ActivityType.listening:

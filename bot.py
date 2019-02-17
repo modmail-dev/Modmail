@@ -476,13 +476,19 @@ class ModmailBot(Bot):
             except isodate.ISO8601Error:
                 logger.warning('The account age limit needs to be a '
                                'ISO-8601 duration formatted duration string '
-                               f'greater than 0 days, not "{account_age}".')
+                               f'greater than 0 days, not "%s".', str(account_age))
                 del self.config.cache['account_age']
                 await self.config.update()
                 account_age = isodate.duration.Duration()
 
         reason = self.blocked_users.get(str(message.author.id), '')
-        accepted_time = message.author.created_at + account_age
+        try:
+            accepted_time = message.author.created_at + account_age
+        except ValueError as e:
+            logger.warning(e.args[0])
+            del self.config.cache['account_age']
+            await self.config.update()
+            accepted_time = message.author.created_at
 
         if accepted_time > datetime.utcnow():
             # user account has not reached the required time
@@ -594,7 +600,7 @@ class ModmailBot(Bot):
                 'Command "{}" is not found'.format(ctx.invoked_with)
             )
             self.dispatch('command_error', ctx, exc)
-    
+
     async def on_typing(self, channel, user, when):
         if isinstance(channel, discord.DMChannel):
             if not self.config.get('user_typing'):

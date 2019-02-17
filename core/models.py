@@ -394,8 +394,8 @@ class ThreadManagerABC(abc.ABC):
 
 
 class InvalidConfigError(commands.BadArgument):
-    def __init__(self, msg):
-        super().__init__(msg)
+    def __init__(self, msg, *args):
+        super().__init__(msg, *args)
         self.msg = msg
 
     @property

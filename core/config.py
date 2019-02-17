@@ -4,6 +4,8 @@ import os
 
 import isodate
 
+from discord.ext.commands import BadArgument
+
 from core._color_data import ALL_COLORS
 from core.models import Bot, ConfigManagerABC, InvalidConfigError
 from core.time import UserFriendlyTime
@@ -142,6 +144,10 @@ class ConfigManager(ConfigManagerABC):
                 try:
                     converter = UserFriendlyTime()
                     time = await converter.convert(None, val)
+                    if time.arg:
+                        raise ValueError
+                except BadArgument as e:
+                    raise InvalidConfigError(*e.args)
                 except Exception:
                     raise InvalidConfigError(
                         'Unrecognized time, please use ISO-8601 duration format '
