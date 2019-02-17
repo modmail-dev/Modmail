@@ -674,7 +674,8 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @checks.has_permissions(manage_channels=True)
-    async def block(self, ctx, user: User = None, *, after: UserFriendlyTime = None):
+    async def block(self, ctx, user: Optional[User] = None, *,
+                    after: UserFriendlyTime = None):
         """
         Block a user from using Modmail.
 
