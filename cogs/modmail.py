@@ -678,7 +678,7 @@ class Modmail:
         """
         Block a user from using Modmail.
 
-        Note: reasons start with "System Message: " are reserved for internal
+        Note: reasons that start with "System Message: " are reserved for internal
         use only.
         """
         reason = ''
