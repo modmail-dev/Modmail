@@ -690,7 +690,7 @@ class Utility:
 
         if key in keys:
             try:
-                value, value_text = self.bot.config.clean_data(key, value)
+                value, value_text = await self.bot.config.clean_data(key, value)
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:

@@ -468,14 +468,18 @@ class ModmailBot(Bot):
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
 
         account_age = self.config.get('account_age')
-        try:
-            account_age = isodate.parse_duration(account_age)
-        except isodate.ISO8601Error:
-            logger.warning('The account age limit needs to be a ISO8601 duration formatted '
-                           f'duration string greater than 0 days, not "{account_age}".')
-            del self.config.cache['account_age']
-            await self.config.update()
+        if account_age is None:
             account_age = isodate.duration.Duration()
+        else:
+            try:
+                account_age = isodate.parse_duration(account_age)
+            except isodate.ISO8601Error:
+                logger.warning('The account age limit needs to be a '
+                               'ISO-8601 duration formatted duration string '
+                               f'greater than 0 days, not "{account_age}".')
+                del self.config.cache['account_age']
+                await self.config.update()
+                account_age = isodate.duration.Duration()
 
         reason = self.blocked_users.get(str(message.author.id), '')
         accepted_time = message.author.created_at + account_age

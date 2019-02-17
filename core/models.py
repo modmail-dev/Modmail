@@ -244,8 +244,8 @@ class ConfigManagerABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def clean_data(self, key: str,
-                   val: typing.Any) -> typing.Tuple[str, str]:
+    async def clean_data(self, key: str,
+                         val: typing.Any) -> typing.Tuple[str, str]:
         raise NotImplementedError
 
     @abc.abstractmethod

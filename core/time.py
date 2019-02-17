@@ -95,6 +95,7 @@ class UserFriendlyTime(Converter):
         if converter is not None and not isinstance(converter, Converter):
             raise TypeError('commands.Converter subclass necessary.')
         self.dt = self.arg = None
+        self.now = None
         self.converter = converter
 
     async def check_constraints(self, ctx, now, remaining):
@@ -112,15 +113,15 @@ class UserFriendlyTime(Converter):
         try:
             calendar = HumanTime.calendar
             regex = ShortTime.compiled
-            self.dt = now = datetime.utcnow()
+            self.dt = self.now = datetime.utcnow()
 
             match = regex.match(argument)
             if match is not None and match.group(0):
                 data = {k: int(v) for k, v in
                         match.groupdict(default='0').items()}
                 remaining = argument[match.end():].strip()
-                self.dt = now + relativedelta(**data)
-                return await self.check_constraints(ctx, now, remaining)
+                self.dt = self.now + relativedelta(**data)
+                return await self.check_constraints(ctx, self.now, remaining)
 
             # apparently nlp does not like "from now"
             # it likes "from x" in other cases though
@@ -133,9 +134,9 @@ class UserFriendlyTime(Converter):
                 if argument[0:6] in ('me to ', 'me in ', 'me at '):
                     argument = argument[6:]
 
-            elements = calendar.nlp(argument, sourceTime=now)
+            elements = calendar.nlp(argument, sourceTime=self.now)
             if elements is None or not elements:
-                return await self.check_constraints(ctx, now, argument)
+                return await self.check_constraints(ctx, self.now, argument)
 
             # handle the following cases:
             # "date time" foo
@@ -146,7 +147,7 @@ class UserFriendlyTime(Converter):
             dt, status, begin, end, _ = elements[0]
 
             if not status.hasDateOrTime:
-                return await self.check_constraints(ctx, now, argument)
+                return await self.check_constraints(ctx, self.now, argument)
 
             if begin not in (0, 1) and end != len(argument):
                 raise BadArgument(
@@ -156,14 +157,14 @@ class UserFriendlyTime(Converter):
 
             if not status.hasTime:
                 # replace it with the current time
-                dt = dt.replace(hour=now.hour,
-                                minute=now.minute,
-                                second=now.second,
-                                microsecond=now.microsecond)
+                dt = dt.replace(hour=self.now.hour,
+                                minute=self.now.minute,
+                                second=self.now.second,
+                                microsecond=self.now.microsecond)
 
             # if midnight is provided, just default to next day
             if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
-                dt = dt.replace(day=now.day + 1)
+                dt = dt.replace(day=self.now.day + 1)
 
             self.dt = dt
 
@@ -186,7 +187,7 @@ class UserFriendlyTime(Converter):
             elif len(argument) == end:
                 remaining = argument[:begin].strip()
 
-            return await self.check_constraints(ctx, now, remaining)
+            return await self.check_constraints(ctx, self.now, remaining)
         except Exception:
             logger.exception(
                 error('Something went wrong while parsing the time')
