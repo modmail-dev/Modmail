@@ -712,7 +712,7 @@ class Modmail:
         if str(user.id) not in self.bot.blocked_users or extend or msg.startswith('System Message: '):
             if str(user.id) in self.bot.blocked_users:
 
-                old_reason = msg.strip('. \n\r') or 'no reason'
+                old_reason = msg.strip().rstrip('.') or 'no reason'
                 embed = discord.Embed(
                     title='Success',
                     description=f'{mention} was previously blocked for '
@@ -764,7 +764,9 @@ class Modmail:
             await self.bot.config.update()
 
             if msg.startswith('System Message: '):
-                reason = msg[16:].strip('. \n\r')
+                # If the user is blocked internally (for example: below minimum account age)
+                # Show an extended message stating the original internal message
+                reason = msg[16:].strip().rstrip('.') or 'no reason'
                 embed = discord.Embed(
                     title='Success',
                     description=f'{mention} was previously blocked internally due to '
