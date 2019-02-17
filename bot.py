@@ -496,14 +496,15 @@ class ModmailBot(Bot):
             # user account has not reached the required time
             reaction = blocked_emoji
             changed = False
+            delta = human_timedelta(min_account_age)
 
             if str(message.author.id) not in self.blocked_users:
-                new_reason = 'System Message: New Account.'
+                new_reason = f'System Message: New Account. Required to wait for {delta}.'
                 self.config.blocked[str(message.author.id)] = new_reason
+                await self.config.update()
                 changed = True
 
             if reason.startswith('System Message: New Account.') or changed:
-                delta = human_timedelta(min_account_age)
                 await message.channel.send(embed=discord.Embed(
                     title='Message not sent!',
                     description=f'Your must wait for {delta} '
@@ -528,7 +529,6 @@ class ModmailBot(Bot):
                         reaction = sent_emoji
                         del self.config.blocked[str(message.author.id)]
                         await self.config.update()
-
         else:
             reaction = sent_emoji
 
