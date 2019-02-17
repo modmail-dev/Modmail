@@ -5,6 +5,8 @@ from typing import Optional, Union
 import discord
 from discord.ext import commands
 
+import re
+
 from dateutil import parser
 from natural.date import duration
 
@@ -672,16 +674,14 @@ class Modmail:
     @commands.command()
     @trigger_typing
     @checks.has_permissions(manage_channels=True)
-    async def block(self, ctx, user: User = None, *, reason: str = None):
+    async def block(self, ctx, user: User = None, *, after: UserFriendlyTime = None):
         """
         Block a user from using Modmail.
 
         Note: reasons start with "System Message: " are reserved for internal
         use only.
         """
-
-        if reason.startswith('System Message: '):
-            raise commands.UserInputError
+        reason = ''
 
         if user is None:
             thread = ctx.thread
@@ -690,23 +690,48 @@ class Modmail:
             else:
                 raise commands.UserInputError
 
+        if after is not None:
+            reason = after.arg
+            if reason.startswith('System Message: '):
+                raise commands.UserInputError
+            elif re.search(r'%(.+?)%$', reason) is not None:
+                raise commands.UserInputError
+            elif after.dt > after.now:
+                reason = f'{reason} %{after.dt.isoformat()}%'
+
+        if not reason:
+            reason = None
+
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
-        system = self.bot.blocked_users.get(str(user.id),
-                                            '').startswith('System Message: ')
-        if str(user.id) not in self.bot.blocked_users or system:
+
+        extend = f' for `{reason}`' if reason is not None else ''
+        msg = self.bot.blocked_users.get(str(user.id))
+        if msg is None:
+            msg = ''
+
+        if str(user.id) not in self.bot.blocked_users or extend or msg.startswith('System Message: '):
+            if str(user.id) in self.bot.blocked_users:
+
+                old_reason = msg.strip('. \n\r') or 'no reason'
+                embed = discord.Embed(
+                    title='Success',
+                    description=f'{mention} was previously blocked for '
+                    f'"{old_reason}". {mention} is now blocked{extend}.',
+                    color=self.bot.main_color
+                )
+            else:
+                embed = discord.Embed(
+                    title='Success',
+                    color=self.bot.main_color,
+                    description=f'{mention} is now blocked{extend}.'
+                )
             self.bot.config.blocked[str(user.id)] = reason
             await self.bot.config.update()
-            extend = f'for `{reason}`' if reason else ''
-            embed = discord.Embed(
-                title='Success',
-                color=self.bot.main_color,
-                description=f'{mention} is now blocked {extend}.'
-            )
         else:
             embed = discord.Embed(
                 title='Error',
                 color=discord.Color.red(),
-                description=f'{mention} is already blocked,'
+                description=f'{mention} is already blocked.'
             )
 
         return await ctx.send(embed=embed)
@@ -732,7 +757,9 @@ class Modmail:
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
         if str(user.id) in self.bot.blocked_users:
-            msg = self.bot.blocked_users.get(str(user.id), '')
+            msg = self.bot.blocked_users.get(str(user.id))
+            if msg is None:
+                msg = ''
             del self.bot.config.blocked[str(user.id)]
             await self.bot.config.update()
 
