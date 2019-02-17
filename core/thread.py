@@ -500,9 +500,9 @@ class Thread(ThreadABC):
 
         await destination.send(mentions, embed=embed)
         if additional_images:
-            self.ready = True
-            await asyncio.gather(*additional_images)
             self.ready = False
+            await asyncio.gather(*additional_images)
+            self.ready = True
 
         if delete_message:
             self.bot.loop.create_task(ignore(message.delete()))
