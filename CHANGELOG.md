@@ -21,11 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - A bug where a thread was blocked from sending messages when multiple images were uploaded, due to a typo.
 
+### changed
+- Uses https://hasteb.in instead of https://hastebin.com for `?debug hastebin`.
+
 # v2.13.7
 
 ### Added
 - The ability to enable typing interactions. 
-  - If you want the bot to type in the thread channel if the user is also typing, add the config variable `user_typing`, the value doesnt matter, just it's presence. use `config del` to disable the functionality. The same thing in reverse is also possible, if you want the user to see the bot type when someone is typing in the thread channel add the `mod_typing` config variable.
+  - If you want the bot to type in the thread channel if the user is also typing, add the config variable `user_typing` and set it to "yes" or "true". use `config del` to disable the functionality. The same thing in reverse is also possible if you want the user to see the bot type when someone is typing in the thread channel add the `mod_typing` config variable.
 - New `status` command, change the bot's status to `online`, `idle`, `dnd`, `invisible`, or `offline`.
   - To remove the status (change it back to default), use `status clear`.
   - This also introduces a new internal configuration variable: `status`. Possible values are `online`, `idle`, `dnd`, `invisible`, and `offline`.
