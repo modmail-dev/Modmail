@@ -362,13 +362,15 @@ class Thread(ThreadABC):
                    from_mod=False, note=False, anonymous=False):
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
-            tasks = asyncio.gather(
-                self.cancel_closure(),
+            self.bot.loop.create_task(
+                self.cancel_closure()
+            )
+            self.bot.loop.create_task(
                 self.channel.send(embed=discord.Embed(
                     color=discord.Color.red(),
                     description='Scheduled close has been cancelled.'
-                )))
-            self.bot.loop.create_task(tasks)
+                ))
+            )
 
         if not self.ready:
             await self.wait_until_ready()
