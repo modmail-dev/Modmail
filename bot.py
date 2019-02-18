@@ -614,7 +614,7 @@ class ModmailBot(Bot):
             )
             self.dispatch('command_error', ctx, exc)
 
-    async def on_typing(self, channel, user, when):
+    async def on_typing(self, channel, user, _):
         if isinstance(channel, discord.DMChannel):
             if not self.config.get('user_typing'):
                 return

@@ -585,7 +585,6 @@ class Utility:
         presence = {'activity': (None, 'No activity has been set.'),
                     'status': (None, 'No status has been set.')}
         if activity is not None:
-            # TODO: Trim message
             to = 'to ' if activity.type == ActivityType.listening else ''
             msg = f'Activity set to: {activity.type.name.capitalize()} '
             msg += f'{to}{activity.name}.'
