@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # v2.13.5
 
 ### Added
-- You will no longer need to view your bot debug logs from Heroku. `debug` will show you the you the recent logs within 24h through a series of embeds.
+- You will no longer need to view your bot debug logs from Heroku. `debug` will show you the recent logs within 24h through a series of embeds.
   - If you don't mind your data (may or may not be limited to: user ID, guild ID, bot name) be on the internet, `debug hastebin` will upload a formatted logs file to https://hasteb.in.
   - `debug clear` will clear the locally cached logs.
   - Local logs are automatically cleared at least once every 27h for bots hosted on Heroku.
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `print` is replaced by logging.
   - New environment variable introduced: `LOG_LEVEL`.
-  - This influences the amount of messages received in Heroku logs. 
+  - This influences the number of messages received in Heroku logs. 
   - Possible options, from least to most severe, are: `INFO`, `DEBUG`, `WARNING`, `ERROR`, `CRITICAL`.
   - In most cases, you can ignore this change.
 - `on_error` and `CommandNotFound` are now logged.
@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # v2.13.4
 
 ### Changed
-- `?contact` no longer raise a silent error in Heroku logs when the recipient is a bot. Now Modmail respond with an error message.
+- `?contact` no longer raise a silent error in Heroku logs when the recipient is a bot. Now Modmail responds with an error message.
 
 # v2.13.3
 
