@@ -430,7 +430,7 @@ class Utility:
             self.bot.config['activity_type'] = None
             self.bot.config['activity_message'] = None
             await self.bot.config.update()
-            await self.set_presence(log=False)
+            await self.set_presence()
             embed = Embed(
                 title='Activity Removed',
                 color=self.bot.main_color
@@ -440,14 +440,12 @@ class Utility:
         if not message:
             raise commands.UserInputError
 
-        try:
-            activity, msg = (await self.set_presence(
+        activity, msg = (await self.set_presence(
                 activity_identifier=activity_type,
                 activity_by_key=True,
-                activity_message=message,
-                log=False
-            ))['activity']
-        except ValueError:
+                activity_message=message
+         ))['activity']
+        if activity is None:
             raise commands.UserInputError
 
         self.bot.config['activity_type'] = activity.type.value
@@ -480,7 +478,7 @@ class Utility:
         if status_type == 'clear':
             self.bot.config['status'] = None
             await self.bot.config.update()
-            await self.set_presence(log=False)
+            await self.set_presence()
             embed = Embed(
                 title='Status Removed',
                 color=self.bot.main_color
@@ -488,13 +486,11 @@ class Utility:
             return await ctx.send(embed=embed)
         status_type = status_type.replace(' ', '_')
 
-        try:
-            status, msg = (await self.set_presence(
+        status, msg = (await self.set_presence(
                 status_identifier=status_type,
-                status_by_key=True,
-                log=False
-            ))['status']
-        except ValueError:
+                status_by_key=True
+        ))['status']
+        if status is None:
             raise commands.UserInputError
 
         self.bot.config['status'] = status.value
@@ -512,8 +508,7 @@ class Utility:
                            status_by_key=True,
                            activity_identifier=None,
                            activity_by_key=True,
-                           activity_message=None,
-                           log=True):
+                           activity_message=None):
 
         activity = status = None
         if status_identifier is None:
@@ -528,10 +523,7 @@ class Utility:
         except (KeyError, ValueError):
             if status_identifier is not None:
                 msg = f'Invalid status type: {status_identifier}'
-                if log:
-                    logger.warning(error(msg))
-                else:
-                    raise ValueError(msg)
+                logger.warning(error(msg))
 
         if activity_identifier is None:
             if activity_message is not None:
@@ -548,10 +540,7 @@ class Utility:
         except (KeyError, ValueError):
             if activity_identifier is not None:
                 msg = f'Invalid activity type: {activity_identifier}'
-                if log:
-                    logger.warning(error(msg))
-                else:
-                    raise ValueError(msg)
+                logger.warning(error(msg))
         else:
             url = None
             activity_message = (
@@ -575,10 +564,7 @@ class Utility:
                                     url=url)
             else:
                 msg = 'You must supply an activity message to use custom activity.'
-                if log:
-                    logger.warning(error(msg))
-                else:
-                    raise ValueError(msg)
+                logger.warning(error(msg))
 
         await self.bot.change_presence(activity=activity, status=status)
 
