@@ -488,7 +488,7 @@ class Utility:
 
         status, msg = (await self.set_presence(
                 status_identifier=status_type,
-                status_by_key=True,
+                status_by_key=True
         ))['status']
         if status is None:
             raise commands.UserInputError
