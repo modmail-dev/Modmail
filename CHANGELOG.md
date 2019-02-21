@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# v2.13.10
+# v2.13.11
 
 ### Added
 - Introduced a new configuration variable `account_age` for setting a minimum account creation age.
@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `block` reason cannot start with `System Message: ` as it is now reserved for internal user blocking.
 - `block`, like `close`, now support a block duration (temp blocking).
+
+# v2.13.10
+
+### Fixed
+- Fixed an issue where status and activity does not work if they were modified wrongly in the database.
+  - This was especially an issue for older Modmail users, as the old `status` configuration variable clashes with the new `status` variable.
 
 # v2.13.9
 
