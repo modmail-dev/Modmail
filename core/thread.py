@@ -345,7 +345,7 @@ class Thread(ThreadABC):
                                         ))
 
         if self.close_task is not None:
-            # cancel closing if a thread message is sent.
+            # Cancel closing if a thread message is sent.
             await self.cancel_closure()
             tasks.append(
                 self.channel.send(
@@ -436,7 +436,7 @@ class Thread(ThreadABC):
         additional_images = []
         additional_count = 1
 
-        for att in images:  # TODO: Logic needs review
+        for att in images:
             if not prioritize_uploads or (
                     is_image_url(*att) and not
                     embedded_image and
