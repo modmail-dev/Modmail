@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - A bug where a thread was blocked from sending messages when multiple images were uploaded, due to a typo.
 
-### changed
+### Changed
 - Uses https://hasteb.in instead of https://hastebin.com for `?debug hastebin`.
 
 # v2.13.7
