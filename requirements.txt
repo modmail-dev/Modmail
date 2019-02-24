@@ -5,6 +5,7 @@ emoji>=0.2
 uvloop>=0.12.0
 motor>=2.0.0
 natural==0.2.0
+isodate>=0.6.0
 dnspython~=1.16.0   # required by motor
 parsedatetime==2.4  # to be replaced by dateparser
 aiohttp<3.5         # to comply with discord.py
