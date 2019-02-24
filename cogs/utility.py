@@ -544,8 +544,8 @@ class Utility:
         else:
             url = None
             activity_message = (
-                    activity_message or
-                    self.bot.config.get('activity_message', '')
+                activity_message or
+                self.bot.config.get('activity_message', '')
             ).strip()
 
             if activity_type == ActivityType.listening:
@@ -571,7 +571,6 @@ class Utility:
         presence = {'activity': (None, 'No activity has been set.'),
                     'status': (None, 'No status has been set.')}
         if activity is not None:
-            # TODO: Trim message
             to = 'to ' if activity.type == ActivityType.listening else ''
             msg = f'Activity set to: {activity.type.name.capitalize()} '
             msg += f'{to}{activity.name}.'
@@ -676,7 +675,7 @@ class Utility:
 
         if key in keys:
             try:
-                value, value_text = self.bot.config.clean_data(key, value)
+                value, value_text = await self.bot.config.clean_data(key, value)
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:
