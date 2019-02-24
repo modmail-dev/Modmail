@@ -8,16 +8,6 @@ from discord.ext import commands
 from colorama import Fore, Style
 
 
-class SafeDict(dict):
-    def __missing__(self, key):
-        return '{' + key + '}'
-
-
-def safeformat(s, **kwargs):
-    replacements = SafeDict(**kwargs)
-    return s.format_map(replacements)
-
-
 def info(*msgs):
     return f'{Fore.CYAN}{" ".join(msgs)}{Style.RESET_ALL}'
 

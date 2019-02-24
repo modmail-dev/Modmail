@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.13.10'
+__version__ = '2.13.11'
 
 import asyncio
 import logging
@@ -37,18 +37,20 @@ import discord
 from discord.ext import commands
 from discord.ext.commands.view import StringView
 
+import isodate
+
 from aiohttp import ClientSession
 from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import Changelog
-from core.clients import ModmailApiClient, SelfHostedClient
-from core.clients import PluginDatabaseClient
+from core.clients import ModmailApiClient, SelfHostedClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error
 from core.models import Bot
 from core.thread import ThreadManager
+from core.time import human_timedelta
 
 
 init()
@@ -431,22 +433,12 @@ class ModmailBot(Bot):
             )
         logger.info(LINE)
 
-    async def process_modmail(self, message):
-        """Processes messages sent to the bot."""
-
+    async def retrieve_emoji(self):
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
 
-        blocked_emoji = self.config.get('blocked_emoji', '🚫')
         sent_emoji = self.config.get('sent_emoji', '✅')
-
-        if blocked_emoji not in UNICODE_EMOJI:
-            try:
-                blocked_emoji = await converter.convert(
-                    ctx, blocked_emoji.strip(':')
-                )
-            except commands.BadArgument:
-                pass
+        blocked_emoji = self.config.get('blocked_emoji', '🚫')
 
         if sent_emoji not in UNICODE_EMOJI:
             try:
@@ -454,10 +446,89 @@ class ModmailBot(Bot):
                     ctx, sent_emoji.strip(':')
                 )
             except commands.BadArgument:
-                pass
+                logger.warning(info(f'Sent Emoji ({sent_emoji}) '
+                                    f'is not a valid emoji.'))
+                del self.config.cache['sent_emoji']
+                await self.config.update()
 
-        if str(message.author.id) in self.blocked_users:
+        if blocked_emoji not in UNICODE_EMOJI:
+            try:
+                blocked_emoji = await converter.convert(
+                    ctx, blocked_emoji.strip(':')
+                )
+            except commands.BadArgument:
+                logger.warning(info(f'Blocked emoji ({blocked_emoji}) '
+                                    'is not a valid emoji.'))
+                del self.config.cache['blocked_emoji']
+                await self.config.update()
+        return sent_emoji, blocked_emoji
+
+    async def process_modmail(self, message):
+        """Processes messages sent to the bot."""
+        sent_emoji, blocked_emoji = await self.retrieve_emoji()
+
+        account_age = self.config.get('account_age')
+        if account_age is None:
+            account_age = isodate.duration.Duration()
+        else:
+            try:
+                account_age = isodate.parse_duration(account_age)
+            except isodate.ISO8601Error:
+                logger.warning('The account age limit needs to be a '
+                               'ISO-8601 duration formatted duration string '
+                               f'greater than 0 days, not "%s".', str(account_age))
+                del self.config.cache['account_age']
+                await self.config.update()
+                account_age = isodate.duration.Duration()
+
+        reason = self.blocked_users.get(str(message.author.id))
+        if reason is None:
+            reason = ''
+        try:
+            min_account_age = message.author.created_at + account_age
+        except ValueError as e:
+            logger.warning(e.args[0])
+            del self.config.cache['account_age']
+            await self.config.update()
+            min_account_age = message.author.created_at
+
+        if min_account_age > datetime.utcnow():
+            # user account has not reached the required time
             reaction = blocked_emoji
+            changed = False
+            delta = human_timedelta(min_account_age)
+
+            if str(message.author.id) not in self.blocked_users:
+                new_reason = f'System Message: New Account. Required to wait for {delta}.'
+                self.config.blocked[str(message.author.id)] = new_reason
+                await self.config.update()
+                changed = True
+
+            if reason.startswith('System Message: New Account.') or changed:
+                await message.channel.send(embed=discord.Embed(
+                    title='Message not sent!',
+                    description=f'Your must wait for {delta} '
+                                f'before you can contact {self.user.mention}.',
+                    color=discord.Color.red()
+                ))
+
+        elif str(message.author.id) in self.blocked_users:
+            reaction = blocked_emoji
+            if reason.startswith('System Message: New Account.'):
+                # Met the age limit already
+                reaction = sent_emoji
+                del self.config.blocked[str(message.author.id)]
+                await self.config.update()
+            else:
+                end_time = re.search(r'%(.+?)%$', reason)
+                if end_time is not None:
+                    after = (datetime.fromisoformat(end_time.group(1)) -
+                             datetime.utcnow()).total_seconds()
+                    if after <= 0:
+                        # No longer blocked
+                        reaction = sent_emoji
+                        del self.config.blocked[str(message.author.id)]
+                        await self.config.update()
         else:
             reaction = sent_emoji
 
@@ -542,8 +613,8 @@ class ModmailBot(Bot):
                 'Command "{}" is not found'.format(ctx.invoked_with)
             )
             self.dispatch('command_error', ctx, exc)
-    
-    async def on_typing(self, channel, user, when):
+
+    async def on_typing(self, channel, user, _):
         if isinstance(channel, discord.DMChannel):
             if not self.config.get('user_typing'):
                 return
@@ -720,13 +791,13 @@ class ModmailBot(Bot):
 
         if self.config.get('disable_autoupdates'):
             logger.warning(info('Autoupdates disabled.'))
-            logger.warning(LINE)
+            logger.info(LINE)
             return
 
         if self.self_hosted and not self.config.get('github_access_token'):
             logger.warning(info('GitHub access token not found.'))
             logger.warning(info('Autoupdates disabled.'))
-            logger.warning(LINE)
+            logger.info(LINE)
             return
 
         while not self.is_closed():
