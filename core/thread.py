@@ -307,8 +307,8 @@ class Thread(ThreadABC):
             return await message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
-                    description='Your message could not be delivered since'
-                                'the recipient shares no servers with the bot'
+                    description='Your message could not be delivered since '
+                                'the recipient shares no servers with the bot.'
                 ))
 
         tasks = []
