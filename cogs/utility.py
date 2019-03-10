@@ -26,7 +26,7 @@ from core.utils import cleanup_code, info, error
 logger = logging.getLogger('Modmail')
 
 
-class Utility:
+class Utility(commands.Cog):
     """General commands that provide utility"""
 
     def __init__(self, bot: Bot):
@@ -52,7 +52,7 @@ class Utility:
         fmts = ['']
         for cmd in sorted(self.bot.commands,
                           key=lambda cmd: cmd.qualified_name):
-            if cmd.instance is cog and not cmd.hidden and \
+            if cmd.cog is cog and not cmd.hidden and \
                     await self.verify_checks(ctx, cmd):
                 new_fmt = f'`{prefix + cmd.qualified_name}` - '
                 new_fmt += f'{cmd.short_doc}\n'
@@ -580,6 +580,7 @@ class Utility:
             presence['status'] = (status, msg)
         return presence
 
+    @commands.Cog.listener()
     async def on_ready(self):
         # Wait until config cache is populated with stuff from db
         await self.bot.config.wait_until_ready()

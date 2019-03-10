@@ -1,4 +1,4 @@
-git+https://github.com/Rapptz/discord.py@7f4c57dd5ad20b7fa10aea485f674a4bc24b9547
+git+https://github.com/Rapptz/discord.py
 colorama>=0.4.0
 python-dateutil>=2.7.0
 emoji>=0.2

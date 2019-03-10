@@ -19,7 +19,7 @@ class DownloadError(Exception):
     pass
 
 
-class Plugins:
+class Plugins(commands.Cog):
     """Plugins expand Modmail functionality by allowing third-party addons.
 
     These addons could have a range of features from moderation to simply

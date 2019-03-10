@@ -18,7 +18,7 @@ from core.time import UserFriendlyTime, human_timedelta
 from core.utils import format_preview, User
 
 
-class Modmail:
+class Modmail(commands.Cog):
     """Commands directly related to Modmail functionality."""
 
     def __init__(self, bot: Bot):
