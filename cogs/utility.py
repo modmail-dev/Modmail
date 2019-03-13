@@ -307,7 +307,7 @@ class Utility:
                 embed = Embed(
                     title='Debug Logs',
                     color=self.bot.main_color,
-                    description=f'{haste_url}' + key
+                    description=f'{haste_url}/' + key
                 )
         except (JSONDecodeError, ClientResponseError, IndexError):
             embed = Embed(
