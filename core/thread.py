@@ -652,19 +652,19 @@ class ThreadManager(ThreadManagerABC):
             if separate_server:
                 for r in roles:
                     count = count + 1
-                if count <= 15:
+                if count <= 41:
                     role_names = ', '.join(r.name for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "Too Many Roles To Show!"
+                    role_names = "Too many roles to show."
             else:
                 for r in roles:
                     count = count + 1
-                if count <= 15:
+                if count <= 41:
                     role_names = ' '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "Too Many Roles To Show!"
+                    role_names = "Too many roles to show.!"
 
         embed = discord.Embed(color=color,
                               description=user.mention,
