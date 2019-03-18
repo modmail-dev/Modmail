@@ -664,7 +664,7 @@ class ThreadManager(ThreadManagerABC):
                     role_names = ' '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "Too many roles to show.!"
+                    role_names = "Too many roles to show."
 
         embed = discord.Embed(color=color,
                               description=user.mention,
