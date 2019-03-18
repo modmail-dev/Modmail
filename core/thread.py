@@ -680,9 +680,8 @@ class ThreadManager(ThreadManagerABC):
                                 value=member.nick,
                                 inline=True)
             if role_names:
-                embed.add_field(name='Roles',
-                                value=role_names,
-                                inline=True)
+                embed.description += f'Role list is currently disabled.'
+                
         else:
             embed.set_footer(text=f'{footer} | Note: this member '
                                   'is not part of this server.')
