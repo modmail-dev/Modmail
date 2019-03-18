@@ -680,7 +680,7 @@ class ThreadManager(ThreadManagerABC):
                                 value=member.nick,
                                 inline=True)
             if role_names:
-                embed.description += f' (Role list disabled)'
+                embed.description += f','
                 
         else:
             embed.set_footer(text=f'{footer} | Note: this member '
