@@ -307,8 +307,8 @@ class Thread(ThreadABC):
             return await message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
-                    description='Your message could not be delivered since'
-                                'the recipient shares no servers with the bot'
+                    description='Your message could not be delivered since '
+                                'the recipient shares no servers with the bot.'
                 ))
 
         tasks = []
@@ -645,15 +645,26 @@ class ThreadManager(ThreadManagerABC):
         # key = log_url.split('/')[-1]
 
         role_names = ''
+        count = 0
         if member:
             separate_server = self.bot.guild != self.bot.modmail_guild
             roles = sorted(member.roles, key=lambda c: c.position)
             if separate_server:
-                role_names = ', '.join(r.name for r in roles
-                                       if r.name != "@everyone")
+                for r in roles:
+                    count = count + 1
+                if count <= 15:
+                    role_names = ', '.join(r.name for r in roles
+                                            if r.name != "@everyone")
+                else:
+                    role_names = "Too Many Roles To Show!"
             else:
-                role_names = ' '.join(r.mention for r in roles
-                                      if r.name != "@everyone")
+                for r in roles:
+                    count = count + 1
+                if count <= 15:
+                    role_names = ' '.join(r.mention for r in roles
+                                            if r.name != "@everyone")
+                else:
+                    role_names = "Too Many Roles To Show!"
 
         embed = discord.Embed(color=color,
                               description=user.mention,
@@ -680,8 +691,9 @@ class ThreadManager(ThreadManagerABC):
                                 value=member.nick,
                                 inline=True)
             if role_names:
-                embed.description += f','
-                
+                embed.add_field(name='Roles',
+                                value=role_names,
+                                inline=True)
         else:
             embed.set_footer(text=f'{footer} | Note: this member '
                                   'is not part of this server.')
