@@ -1,7 +1,7 @@
 {
-    "TOKEN": "MyBotToken",
+    "TOKEN": "NTU3NTczMTE2NjA0MzE3Njk2.D3Kszw.ybfLomiGUl5jR5QLZ6atbxod0P8",
     "LOG_URL": "https://logviewername.herokuapp.com/",
-    "GUILD_ID": 1234567890,
-    "OWNERS": "Owner1ID,Owner2ID,Owner3ID",
+    "GUILD_ID": 557583813249728523,
+    "OWNERS": "272004278082600960",
     "MONGO_URI": "mongodb+srv://mongodburi"
 }
