@@ -662,7 +662,7 @@ class ThreadManager(ThreadManagerABC):
             else:
                 for r in roles:
                     count = count + 1
-		if count <= 41:
+                if count <= 41:
                     role_names = ' '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 else:
