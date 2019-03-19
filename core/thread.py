@@ -652,19 +652,19 @@ class ThreadManager(ThreadManagerABC):
             if separate_server:
                 for r in roles:
                     count = count + 1
-                if count <= 41:
+                if count <= 21:
                     role_names = ', '.join(r.name for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "This user has too many roles which can't be displayed due to Discord limitations."
+                    role_names = "Too Many Roles To Show!"
             else:
                 for r in roles:
                     count = count + 1
-                if count <= 41:
+                if count <= 21:
                     role_names = ' '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "This user has too many roles which can't be displayed due to Discord limitations."
+                    role_names = "Too Many Roles To Show!"
 
         embed = discord.Embed(color=color,
                               description=user.mention,
@@ -691,7 +691,8 @@ class ThreadManager(ThreadManagerABC):
                                 value=member.nick,
                                 inline=True)
             if role_names:
-                embed.add_field(name='Roles',
+                count = count - 1
+                embed.add_field(name='Roles['+str(count)+"]",
                                 value=role_names,
                                 inline=True)
         else:
