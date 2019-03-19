@@ -665,7 +665,7 @@ class ThreadManager(ThreadManagerABC):
                 charCounter = ', '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 if len(charCounter) <= 1024:
-                                      role_names = ' '.join(r.mention for r in roles
+                    role_names = ' '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 else:
                     role_names = "Due to Discord limitations the bot can't display roles that exceed more than 1024 characters in total."
