@@ -658,17 +658,15 @@ class ThreadManager(ThreadManagerABC):
                     role_names = ', '.join(r.name for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "Too Many Roles To Show!"
+                    role_names = "Due to Discord limitations the bot can't display users with roles that exceed more than 120 characters in total."
             else:
                 for r in roles:
                     count = count + 1
-                charCounter = ', '.join(r.mention for r in roles
-                                            if r.name != "@everyone")
-                if len(charCounter) <= 120:
+				if count <= 41:
                     role_names = ' '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "Too Many Roles To Show!"
+                    role_names = "Due to Discord limitations the bot can't display users with more than 40 roles."
 
         embed = discord.Embed(color=color,
                               description=user.mention,
@@ -696,7 +694,7 @@ class ThreadManager(ThreadManagerABC):
                                 inline=True)
             if role_names:
                 count = count - 1
-                embed.add_field(name='Roles['+str(count)+"]",
+                embed.add_field(name='Roles ['+str(count)+"]",
                                 value=role_names,
                                 inline=True)
         else:
