@@ -662,11 +662,13 @@ class ThreadManager(ThreadManagerABC):
             else:
                 for r in roles:
                     count = count + 1
-                if count <= 41:
-                    role_names = ' '.join(r.mention for r in roles
+                charCounter = ', '.join(r.mention for r in roles
+                                            if r.name != "@everyone")
+                if len(charCounter) <= 1024:
+                                      role_names = ' '.join(r.mention for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "Due to Discord limitations the bot can't display more than 40 roles."
+                    role_names = "Due to Discord limitations the bot can't display roles that exceed more than 1024 characters in total."
 
         embed = discord.Embed(color=color,
                               description=user.mention,
