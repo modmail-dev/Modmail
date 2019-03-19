@@ -652,11 +652,11 @@ class ThreadManager(ThreadManagerABC):
             if separate_server:
                 for r in roles:
                     count = count + 1
-                if count <= 41:
+                if count <= 21:
                     role_names = ', '.join(r.name for r in roles
                                             if r.name != "@everyone")
                 else:
-                    role_names = "Due to Discord limitations the bot can't display users with more than 40 roles."
+                    role_names = "Due to Discord limitations the bot can't display users with more than 20 roles."
             else:
                 for r in roles:
                     count = count + 1
