@@ -649,26 +649,14 @@ class ThreadManager(ThreadManagerABC):
         if member:
             separate_server = self.bot.guild != self.bot.modmail_guild
             roles = sorted(member.roles, key=lambda c: c.position)
+            for r in roles:
+                count += 1
             if separate_server:
-                for r in roles:
-                    count = count + 1
-                charCounter = ', '.join(r.name for r in roles
-                                            if r.name != "@everyone")
-                if len(charCounter) <= 1024:
-                    role_names = ', '.join(r.name for r in roles
-                                            if r.name != "@everyone")
-                else:
-                    role_names = "Due to Discord limitations the bot can't display roles that contain more than 1024 characters in total."
+                role_names = ', '.join(r.name for r in roles
+                                        if r.name != "@everyone")
             else:
-                for r in roles:
-                    count = count + 1
-                charCounter = ', '.join(r.mention for r in roles
-                                            if r.name != "@everyone")
-                if len(charCounter) <= 1024:
-                    role_names = ' '.join(r.mention for r in roles
-                                            if r.name != "@everyone")
-                else:
-                    role_names = "Due to Discord limitations the bot can't display roles that contain more than 1024 characters in total."
+                role_names = ' '.join(r.mention for r in roles
+                                        if r.name != "@everyone")
 
         embed = discord.Embed(color=color,
                               description=user.mention,
@@ -695,9 +683,8 @@ class ThreadManager(ThreadManagerABC):
                                 value=member.nick,
                                 inline=True)
             if role_names:
-                count = count - 1
-                embed.add_field(name='Roles ['+str(count)+"]",
-                                value=role_names,
+                embed.add_field(name='Roles ['+str(count-1)+"]",
+                                value=role_names if len(role_names) <= 1024 else "Role characters limit exceeded!",
                                 inline=True)
         else:
             embed.set_footer(text=f'{footer} | Note: this member '
