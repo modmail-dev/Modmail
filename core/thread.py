@@ -683,8 +683,7 @@ class ThreadManager(ThreadManagerABC):
                                 value=member.nick,
                                 inline=True)
             if role_names:
-                count -= 1
-                embed.add_field(name='Roles['+str(count)+"]",
+                embed.add_field(name='Roles['+str(count-1)+"]",
                                 value=role_names if len(role_names) <= 1024 else "Role characters limit exceeded!",
                                 inline=True)
         else:
