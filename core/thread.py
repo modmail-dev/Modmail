@@ -307,8 +307,8 @@ class Thread(ThreadABC):
             return await message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
-                    description='Your message could not be delivered since'
-                                'the recipient shares no servers with the bot'
+                    description='Your message could not be delivered since '
+                                'the recipient shares no servers with the bot.'
                 ))
 
         tasks = []
@@ -443,6 +443,9 @@ class Thread(ThreadABC):
                     att[1]
             ):
                 embed.set_image(url=att[0])
+                if att[1]:
+                    embed.url = att[0]
+                    embed.title = att[1]
                 embedded_image = True
             elif att[1] is not None:
                 if note:
