@@ -244,8 +244,8 @@ class ConfigManagerABC(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def clean_data(self, key: str,
-                   val: typing.Any) -> typing.Tuple[str, str]:
+    async def clean_data(self, key: str,
+                         val: typing.Any) -> typing.Tuple[str, str]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -394,8 +394,8 @@ class ThreadManagerABC(abc.ABC):
 
 
 class InvalidConfigError(commands.BadArgument):
-    def __init__(self, msg):
-        super().__init__(msg)
+    def __init__(self, msg, *args):
+        super().__init__(msg, *args)
         self.msg = msg
 
     @property
