@@ -56,11 +56,6 @@ Have you sent something with the `?reply` command by accident? Don't fret, you c
 
 Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. An example of a logged conversation: https://logs.modmail.tk/02032d65a6f3
 
-## Automatic Updates
-
-The bot checks for new updates every hour and will automatically update to the newest version. Modmail is under active development, which means that you can always look forward to new and useful features! To disable this functionality, for example, when you customized your fork, you can do so by adding a `disable_autoupdates` config variable and set it to `yes` or `true`. 
-
----
 
 # Contributing
 

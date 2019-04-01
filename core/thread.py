@@ -443,6 +443,9 @@ class Thread(ThreadABC):
                     att[1]
             ):
                 embed.set_image(url=att[0])
+                if att[1]:
+                    embed.url = att[0]
+                    embed.title = att[1]
                 embedded_image = True
             elif att[1] is not None:
                 if note:
