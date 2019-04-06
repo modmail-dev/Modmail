@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.14.0
+
+### What's new?
+
+Added the ability to enable the recipient to close their own threads. This takes place in the form of a reaction that the user can click to close their thread. This functionality is now enabled by default. 
+
+To disable this, do `?config set disable_recipient_thread_close true`
+
+### More Customisability!
+
+More config variables have been added that you can edit.
+
+- `close_emoji` - the emoji that the user can click on to close a thread. Defaults to a lock (🔒)
+
+You now have complete control of the look of the thread creation and close embeds the users see.
+
+- `thread_creation_title` - the title of the embed. Defaults to 'Thread Created'
+- `thread_creation_footer` - the footer text in the embed. Defaults to 'Your message has been sent...'
+- `thread_close_title` - the title of the embed. Defaults to 'Thread Closed'
+- `thread_close_footer` - the footer text in the embed. Defaults to 'Replying will create a new thread'
+
 # v2.13.13
 
 ### What's new? 
@@ -11,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Added the ability to disable the `sent_emoji` and `blocked_emoji` when a user messages modmail.
 
 You can do this via `?config set sent_emoji disable`
+
+### Fixed
+
+The bot now handles having too many roles to show in the thread created embed. 
 
 # v2.13.12
 ### What's new?
