@@ -38,6 +38,8 @@ When a user sends a direct message to the bot, a channel is created within an is
 
 Currently, the easiest and fastest way to set up the bot is by using Heroku, which is a service that offers a free plan for hosting applications. If you choose to install the bot using Heroku, you will not need to download anything. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join our [Discord server](https://discord.gg/etJNHCQ) for help and support. Even if you don't have any issues, you should come and check out our awesome Discord community! :wink:
 
+Interactive installation: [**https://taaku18.github.io/modmail/installation**](https://taaku18.github.io/modmail/installation)
+
 ---
 
 # Notable Features
