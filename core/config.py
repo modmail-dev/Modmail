@@ -16,15 +16,22 @@ class ConfigManager(ConfigManagerABC):
     allowed_to_change_in_command = {
         # activity
         'twitch_url',
+
         # bot settings
         'main_category_id', 'disable_autoupdates', 'prefix', 'mention',
-        'main_color', 'user_typing', 'mod_typing', 'account_age',
+        'main_color', 'user_typing', 'mod_typing', 'account_age', 
+
         # logging
         'log_channel_id',
+
         # threads
-        'sent_emoji', 'blocked_emoji', 'thread_creation_response',
+        'sent_emoji', 'blocked_emoji', 'close_emoji', 'disable_recipient_thread_close',
+        'thread_creation_response', 'thread_creation_footer', 'thread_creation_title',
+        'thread_close_footer', 'thread_close_title',
+        
         # moderation
         'recipient_color', 'mod_tag', 'mod_color',
+
         # anonymous message
         'anon_username', 'anon_avatar_url', 'anon_tag'
     }
@@ -32,10 +39,13 @@ class ConfigManager(ConfigManagerABC):
     internal_keys = {
         # bot presence
         'activity_message', 'activity_type', 'status',
+
         # moderation
         'blocked',
+
         # threads
         'snippets', 'notification_squad', 'subscriptions', 'closures',
+
         # misc
         'aliases', 'plugins'
     }
@@ -44,10 +54,13 @@ class ConfigManager(ConfigManagerABC):
         # Modmail
         'modmail_api_token', 'modmail_guild_id', 'guild_id', 'owners',
         'log_url', 'mongo_uri',
+
         # bot
         'token',
+
         # GitHub
         'github_access_token',
+
         # Logging
         'log_level'
     }

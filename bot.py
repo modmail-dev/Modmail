@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.13.12'
+__version__ = '2.14.0'
 
 import asyncio
 import logging
@@ -433,12 +433,29 @@ class ModmailBot(Bot):
             )
         logger.info(LINE)
 
+    async def convert_emoji(self, name):
+        ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
+        converter = commands.EmojiConverter()
+
+        if name not in UNICODE_EMOJI:
+            try:
+                return await converter.convert(
+                    ctx, sent_emoji.strip(':')
+                )
+            except commands.BadArgument:
+                pass
+        return name
+
     async def retrieve_emoji(self):
+
+        # TODO: use a function to convert emojis
+
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
 
         sent_emoji = self.config.get('sent_emoji', '✅')
         blocked_emoji = self.config.get('blocked_emoji', '🚫')
+
 
         if sent_emoji not in UNICODE_EMOJI:
             try:
@@ -446,10 +463,11 @@ class ModmailBot(Bot):
                     ctx, sent_emoji.strip(':')
                 )
             except commands.BadArgument:
-                logger.warning(info(f'Sent Emoji ({sent_emoji}) '
-                                    f'is not a valid emoji.'))
-                del self.config.cache['sent_emoji']
-                await self.config.update()
+                if sent_emoji != 'disable':
+                    logger.warning(info(f'Sent Emoji ({sent_emoji}) '
+                                        f'is not a valid emoji.'))
+                    del self.config.cache['sent_emoji']
+                    await self.config.update()
 
         if blocked_emoji not in UNICODE_EMOJI:
             try:
@@ -457,10 +475,12 @@ class ModmailBot(Bot):
                     ctx, blocked_emoji.strip(':')
                 )
             except commands.BadArgument:
-                logger.warning(info(f'Blocked emoji ({blocked_emoji}) '
-                                    'is not a valid emoji.'))
-                del self.config.cache['blocked_emoji']
-                await self.config.update()
+                if blocked_emoji != 'disable':
+                    logger.warning(info(f'Blocked emoji ({blocked_emoji}) '
+                                        'is not a valid emoji.'))
+                    del self.config.cache['blocked_emoji']
+                    await self.config.update()
+
         return sent_emoji, blocked_emoji
 
     async def process_modmail(self, message):
@@ -531,11 +551,12 @@ class ModmailBot(Bot):
                         await self.config.update()
         else:
             reaction = sent_emoji
-
-        try:
-            await message.add_reaction(reaction)
-        except (discord.HTTPException, discord.InvalidArgument):
-            pass
+        
+        if reaction != 'disable':
+            try:
+                await message.add_reaction(reaction)
+            except (discord.HTTPException, discord.InvalidArgument):
+                pass
 
         if str(message.author.id) not in self.blocked_users:
             thread = await self.threads.find_or_create(message.author)
@@ -615,6 +636,8 @@ class ModmailBot(Bot):
             self.dispatch('command_error', ctx, exc)
 
     async def on_typing(self, channel, user, _):
+        if user.bot:
+            return 
         if isinstance(channel, discord.DMChannel):
             if not self.config.get('user_typing'):
                 return
@@ -627,6 +650,45 @@ class ModmailBot(Bot):
             thread = await self.threads.find(channel=channel)
             if thread and thread.recipient:
                 await thread.recipient.trigger_typing()
+    
+    async def on_raw_reaction_add(self, payload):
+
+        user = self.get_user(payload.user_id)
+
+        if user.bot:
+            return
+
+        channel = self.get_channel(payload.channel_id)
+
+        if not channel: # dm channel not in internal cache
+            _thread = await self.threads.find(recipient=user)
+            if not _thread:
+                return
+            channel = await _thread.recipient.create_dm()
+
+        message = await channel.get_message(payload.message_id) # TODO: change to fetch_message (breaking change in d.py)
+        reaction = payload.emoji
+
+        close_emoji = await self.convert_emoji(self.config.get('close_emoji', '🔒'))
+
+        if isinstance(channel, discord.DMChannel) and str(reaction) == str(close_emoji): # closing thread
+            thread = await self.threads.find(recipient=user)
+            ts = message.embeds[0].timestamp if message.embeds else None
+            if thread and ts == thread.channel.created_at: 
+                # the reacted message is the corresponding thread creation embed
+                if not self.config.get('disable_recipient_thread_close'):
+                    await thread.close(closer=user)
+        elif not isinstance(channel, discord.DMChannel):
+            message_id = str(message.embeds[0].author.url).split('/')[-1]
+            if message_id.isdigit():
+                thread = await self.threads.find(channel=message.channel)
+                channel = thread.recipient.dm_channel
+                if not channel:
+                    channel = await thread.recipient.create_dm()
+                async for msg in channel.history():
+                    if msg.id == int(message_id):
+                        await msg.add_reaction(reaction)
+
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
