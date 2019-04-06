@@ -444,8 +444,7 @@ class Thread(ThreadABC):
             ):
                 embed.set_image(url=att[0])
                 if att[1]:
-                    embed.url = att[0]
-                    embed.title = att[1]
+                    embed.add_field(name='Image', value=f'[**{att[1]}**]({att[0]})')
                 embedded_image = True
             elif att[1] is not None:
                 if note:
@@ -649,14 +648,24 @@ class ThreadManager(ThreadManagerABC):
 
         role_names = ''
         if member:
-            separate_server = self.bot.guild != self.bot.modmail_guild
-            roles = sorted(member.roles, key=lambda c: c.position)
-            if separate_server:
-                role_names = ', '.join(r.name for r in roles
-                                       if r.name != "@everyone")
-            else:
-                role_names = ' '.join(r.mention for r in roles
-                                      if r.name != "@everyone")
+            sep_server = self.bot.using_multiple_server_setup
+            seperator = ', ' if sep_server else ' '
+
+            roles = []
+
+            for role in sorted(member.roles, key=lambda r: r.position):
+                if role.name == '@everyone':
+                    continue
+
+                fmt = role.name if sep_server else role.mention
+                roles.append(fmt)
+
+                if len(seperator.join(roles)) > 1000:
+                    roles.pop()
+                    roles.append('...')
+                    break
+                
+            role_names = seperator.join(roles)
 
         embed = discord.Embed(color=color,
                               description=user.mention,
