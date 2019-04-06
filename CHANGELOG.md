@@ -12,6 +12,10 @@ Added the ability to disable the `sent_emoji` and `blocked_emoji` when a user me
 
 You can do this via `?config set sent_emoji disable`
 
+### Fixed
+
+The bot now handles having too many roles to show in the thread created embed. 
+
 # v2.13.12
 ### What's new?
 
