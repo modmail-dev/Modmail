@@ -4,14 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.13.13
+
+### What's new? 
+
+Added the ability to disable the `sent_emoji` and `blocked_emoji` when a user messages modmail.
+
+You can do this via `?config set sent_emoji disable`
+
 # v2.13.12
-### Added
+### What's new?
 
 Added image link in title in case discord fails to embed an image.
 
 # v2.13.11
 
-### Added
+### What's new?
 - Introduced a new configuration variable `account_age` for setting a minimum account creation age.
   - Users blocked by this reason will be stored in `blocked` along with other reasons for being blocked.
   - `account_age` needs to be an ISO-8601 Duration Format (examples: `P12DT3H` 12 days and 3 hours, `P3Y5M` 3 years and 5 months `PT4H14M999S` 4 hours 14 minutes and 999 seconds). https://en.wikipedia.org/wiki/ISO_8601#Durations.
@@ -42,7 +50,7 @@ Added image link in title in case discord fails to embed an image.
 
 # v2.13.7
 
-### Added
+### What's new?
 - The ability to enable typing interactions. 
   - If you want the bot to type in the thread channel if the user is also typing, add the config variable `user_typing` and set it to "yes" or "true". use `config del` to disable the functionality. The same thing in reverse is also possible if you want the user to see the bot type when someone is typing in the thread channel add the `mod_typing` config variable.
 - New `status` command, change the bot's status to `online`, `idle`, `dnd`, `invisible`, or `offline`.
@@ -59,7 +67,7 @@ Added image link in title in case discord fails to embed an image.
 
 # v2.13.5
 
-### Added
+### What's new?
 - You will no longer need to view your bot debug logs from Heroku. `debug` will show you the recent logs within 24h through a series of embeds.
   - If you don't mind your data (may or may not be limited to: user ID, guild ID, bot name) be on the internet, `debug hastebin` will upload a formatted logs file to https://hasteb.in.
   - `debug clear` will clear the locally cached logs.
@@ -101,7 +109,7 @@ Added image link in title in case discord fails to embed an image.
 
 # v2.13.0
 
-### Added 
+### What's new? 
 - Plugins:
   - Think of it like addons! Anyone (with the skills) can create a plugin, make it public and distribute it. Add a welcome message to Modmail, or moderation commands? It's all up to your imagination!    Have a niche feature request that you think only your server would benefit from? Plugins are your go-to!
   - [Creating Plugins Documentation](https://github.com/kyb3r/modmail/wiki/Plugins).
@@ -114,7 +122,7 @@ Added image link in title in case discord fails to embed an image.
 
 # v2.12.4
 
-### Added
+### What's new?
 - Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
   - Named colors can be set the same way as hex. But this can only be done through `config set`, which means database modifications will not work.
   - For example: `config set main_color yellowish green`.
@@ -151,7 +159,7 @@ We recommend using your own database for logs. In the future you will soon get a
 - Bot owners get access to all commands regardless of server permissions.
 - Blocked users no longer receive a message, only the blocked emoji will be sent.
 
-### Added
+### What's new?
 - **Note:** The following commands only work if you are self-hosting your logs. We recommend you to use your own database.
 - Log search queries, in the form of two new commands. 
 - `logs search [query]` - this searches all log messages for a query string.
@@ -164,7 +172,7 @@ We recommend using your own database for logs. In the future you will soon get a
 
 # v2.11.0
 
-### Added
+### What's new?
 - `loglink` command, returns the log link for the current thread.
 
 # v2.10.2
@@ -179,7 +187,7 @@ We recommend using your own database for logs. In the future you will soon get a
 
 # v2.10.0
 
-### Added
+### What's new?
 - `anonreply` command to anonymously reply to the recipient. 
 The username of the anonymous user defaults to the `mod_tag` (the footer text of a mod reply message). The avatar defaults the guild icon URL. However you can change both of these via the `anon_username`, `anon_avatar_url` and `anon_tag` config variables. 
 
@@ -196,7 +204,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 ### Changed
 - Forgot to enable custom embed colors.
 
-### Added
+### What's new?
 - Ability to set a custom `mod_tag` (the text in the footer of the mod reply embed, which by default says "Moderator")
 
 # v2.9.2
@@ -208,7 +216,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 ### Fixed
 - Bug where the close command wouldn't work if you didnt configure a log channel. 
 
-### Added
+### What's new?
 - Ability to set your own custom `mod_color` and `recipient_color` for the thread message embeds.
 
 # v2.9.1
@@ -222,7 +230,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 
 # v2.9.0
 
-### Added
+### What's new?
 - New command `note` will add a system message to your thread logs. This is useful for noting the context of a conversation.
 
 # v2.8.1
@@ -240,7 +248,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 
 # v2.7.2
 
-### Added 
+### What's new? 
 - `config options` command to see a list of valid config variables that you can modify.
 
 ### Security
@@ -285,7 +293,7 @@ Thread channels will now default to being private (`@everyone`'s read message pe
 
 # v2.6.0
 
-### Added
+### What's new?
 - `threads` is now a default alias to `logs`.
 
 ### Changed
@@ -335,7 +343,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.4.2
 
-### Added
+### What's new?
 - Ability to set your own Twitch URL for `streaming` activity status.
 
 # v2.4.1
@@ -345,7 +353,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.4.0
 
-### Added
+### What's new?
 - Added the `activity` command for setting the activity
 - [PR #131](https://github.com/kyb3r/modmail/pull/131#issue-244686818) this supports multiple activity types (`playing`, `watching`, `listening` and `streaming`).
 
@@ -355,7 +363,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.3.0
 
-### Added
+### What's new?
 - Ability to self-host logs.
 
 ### Changed
@@ -369,7 +377,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.2.0
 
-### Added
+### What's new?
 - Notify command `notify [role]`.
   - Notify a given role or yourself to the next thread message received.
   - Once a thread message is received you will be pinged once only.
@@ -388,7 +396,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.1.0
 
-### Added
+### What's new?
 - Ability to set a custom thread creation response message.
   - Via `config set thread_creation_response [message]`.
 
@@ -406,7 +414,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.0.9
 
-### Added
+### What's new?
 - Support for custom blocked and sent emoji.
 - Use the `config set blocked_emoji [emoji]` or `sent_emoji` commands.
 
@@ -416,7 +424,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.0.8
 
-### Added
+### What's new?
 - Added the ability to use your own log channel.
   - You can do this via the `config set log_channel_id <id>` command.
 - Added the ability to use your own main inbox category.
@@ -429,7 +437,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.0.7
 
-### Added
+### What's new?
 - Added a `changelog` command to view the bot's changelog within discord.
 
 ### Changed
@@ -493,7 +501,7 @@ Read the updated installation guide [here](https://github.com/kyb3r/modmail/wiki
 ### Fixed
 - `status` command now changes playing status indefinitely.
 
-### Added
+### What's new?
 - Dynamic `help` command (#84).
 - Dynamic configuration through `api.modmail.tk`.
 - Thread logs via `logs.modmail.tk` (#78).
