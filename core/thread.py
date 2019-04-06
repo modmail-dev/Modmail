@@ -123,27 +123,41 @@ class Thread(ThreadABC):
             channel.send(mention, embed=info_embed)
         )
 
+        self.bot.loop.create_task(msg.pin()) # pin message
         self.ready = True
 
         # Once thread is ready, tell the recipient.
         thread_creation_response = self.bot.config.get(
             'thread_creation_response',
-            'The moderation team will get back to you as soon as possible!'
+            'The staff team will get back to you as soon as possible.'
         )
 
         embed = discord.Embed(
             color=self.bot.mod_color,
             description=thread_creation_response,
-            timestamp=datetime.utcnow(),
+            timestamp=channel.created_at,
         )
-        embed.set_footer(text='Your message has been sent',
+
+        footer = 'Your message has been sent'
+        if not self.bot.config.get('disable_recipient_thread_close'):
+            footer = 'Click the lock to close the thread'
+
+        footer = self.bot.config.get('thread_creation_footer', footer)
+            
+
+        embed.set_footer(text=footer,
                          icon_url=self.bot.guild.icon_url)
-        embed.set_author(name='Thread Created')
+
+        embed.title = self.bot.config.get('thread_creation_title', 'Thread Created')
+
 
         if creator is None:
-            self.bot.loop.create_task(recipient.send(embed=embed))
-
-        await msg.pin()
+            msg = await recipient.send(embed=embed)
+            if not self.bot.config.get('disable_recipient_thread_close'):
+                close_emoji = self.bot.config.get('close_emoji', '🔒')
+                close_emoji = await self.bot.convert_emoji(close_emoji)
+                await msg.add_reaction(close_emoji) 
+        
 
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -227,12 +241,17 @@ class Thread(ThreadABC):
             user = f"{self.recipient} (`{self.id}`)"
         else:
             user = f'`{self.id}`'
+        
+        if self.id == closer.id:
+            _closer = 'the Recipient'
+        else:
+            _closer = f'{closer} ({closer.id})'
 
         embed.title = user
 
         event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
         # embed.set_author(name=f'Event: {event}', url=log_url)
-        embed.set_footer(text=f'{event} by {closer} ({closer.id})')
+        embed.set_footer(text=f'{event} by {_closer}')
         embed.timestamp = datetime.utcnow()
 
         tasks = [
@@ -244,14 +263,18 @@ class Thread(ThreadABC):
 
         # Thread closed message
 
-        embed = discord.Embed(title='Thread Closed',
+        embed = discord.Embed(title=self.bot.config.get('thread_close_title', 'Thread Closed'),
                               color=discord.Color.red(),
                               timestamp=datetime.utcnow())
 
         if not message:
-            message = f'{closer.mention} has closed this Modmail thread.'
+            if self.id == closer.id:
+                message = 'You have closed this modmail thread.'
+            else:
+                message = f'{closer.mention} has closed this Modmail thread.'
         embed.description = message
-        embed.set_footer(text='Replying will create a new thread',
+        footer = self.bot.config.get('thread_close_footer', 'Replying will create a new thread')
+        embed.set_footer(text=footer,
                          icon_url=self.bot.guild.icon_url)
 
         if not silent and self.recipient is not None:
@@ -648,14 +671,24 @@ class ThreadManager(ThreadManagerABC):
 
         role_names = ''
         if member:
-            separate_server = self.bot.guild != self.bot.modmail_guild
-            roles = sorted(member.roles, key=lambda c: c.position)
-            if separate_server:
-                role_names = ', '.join(r.name for r in roles
-                                       if r.name != "@everyone")
-            else:
-                role_names = ' '.join(r.mention for r in roles
-                                      if r.name != "@everyone")
+            sep_server = self.bot.using_multiple_server_setup
+            seperator = ', ' if sep_server else ' '
+
+            roles = []
+
+            for role in sorted(member.roles, key=lambda r: r.position):
+                if role.name == '@everyone':
+                    continue
+
+                fmt = role.name if sep_server else role.mention
+                roles.append(fmt)
+
+                if len(seperator.join(roles)) > 1000:
+                    roles.pop()
+                    roles.append('...')
+                    break
+                
+            role_names = seperator.join(roles)
 
         embed = discord.Embed(color=color,
                               description=user.mention,
