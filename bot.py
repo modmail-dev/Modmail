@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.13.12'
+__version__ = '2.13.13'
 
 import asyncio
 import logging
@@ -440,16 +440,18 @@ class ModmailBot(Bot):
         sent_emoji = self.config.get('sent_emoji', '✅')
         blocked_emoji = self.config.get('blocked_emoji', '🚫')
 
+
         if sent_emoji not in UNICODE_EMOJI:
             try:
                 sent_emoji = await converter.convert(
                     ctx, sent_emoji.strip(':')
                 )
             except commands.BadArgument:
-                logger.warning(info(f'Sent Emoji ({sent_emoji}) '
-                                    f'is not a valid emoji.'))
-                del self.config.cache['sent_emoji']
-                await self.config.update()
+                if sent_emoji != 'disable':
+                    logger.warning(info(f'Sent Emoji ({sent_emoji}) '
+                                        f'is not a valid emoji.'))
+                    del self.config.cache['sent_emoji']
+                    await self.config.update()
 
         if blocked_emoji not in UNICODE_EMOJI:
             try:
@@ -457,10 +459,12 @@ class ModmailBot(Bot):
                     ctx, blocked_emoji.strip(':')
                 )
             except commands.BadArgument:
-                logger.warning(info(f'Blocked emoji ({blocked_emoji}) '
-                                    'is not a valid emoji.'))
-                del self.config.cache['blocked_emoji']
-                await self.config.update()
+                if blocked_emoji != 'disable':
+                    logger.warning(info(f'Blocked emoji ({blocked_emoji}) '
+                                        'is not a valid emoji.'))
+                    del self.config.cache['blocked_emoji']
+                    await self.config.update()
+
         return sent_emoji, blocked_emoji
 
     async def process_modmail(self, message):
@@ -531,11 +535,12 @@ class ModmailBot(Bot):
                         await self.config.update()
         else:
             reaction = sent_emoji
-
-        try:
-            await message.add_reaction(reaction)
-        except (discord.HTTPException, discord.InvalidArgument):
-            pass
+        
+        if reaction != 'disable':
+            try:
+                await message.add_reaction(reaction)
+            except (discord.HTTPException, discord.InvalidArgument):
+                pass
 
         if str(message.author.id) not in self.blocked_users:
             thread = await self.threads.find_or_create(message.author)
@@ -615,6 +620,8 @@ class ModmailBot(Bot):
             self.dispatch('command_error', ctx, exc)
 
     async def on_typing(self, channel, user, _):
+        if user.bot:
+            return 
         if isinstance(channel, discord.DMChannel):
             if not self.config.get('user_typing'):
                 return
