@@ -140,7 +140,7 @@ class Thread(ThreadABC):
 
         footer = 'Your message has been sent'
         if not self.bot.config.get('disable_recipient_thread_close'):
-            footer = 'Click the lock to close the thread'
+            footer = 'Click the emoji to close the thread'
 
         footer = self.bot.config.get('thread_creation_footer', footer)
             
