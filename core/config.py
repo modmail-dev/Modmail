@@ -27,7 +27,8 @@ class ConfigManager(ConfigManagerABC):
         # threads
         'sent_emoji', 'blocked_emoji', 'close_emoji', 'disable_recipient_thread_close',
         'thread_creation_response', 'thread_creation_footer', 'thread_creation_title',
-        'thread_close_footer', 'thread_close_title',
+        'thread_close_footer', 'thread_close_title', 'thread_close_response',
+        'thread_self_close_response',
         
         # moderation
         'recipient_color', 'mod_tag', 'mod_color',
