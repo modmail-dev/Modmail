@@ -433,7 +433,6 @@ class Modmail:
             return await ctx.send(embed=embed)
 
         logs = reversed([e for e in logs if not e['open']])
-        logs.sort(key=lambda e: e.)
 
         embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
