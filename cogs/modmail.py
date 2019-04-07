@@ -433,6 +433,7 @@ class Modmail:
             return await ctx.send(embed=embed)
 
         logs = reversed([e for e in logs if not e['open']])
+        logs.sort(key=lambda e: e.)
 
         embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
@@ -600,7 +601,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @checks.has_permissions(manage_channels=True)
+    @checks.has_permissions(manage_messages=True)
     async def contact(self, ctx,
                       category: Optional[discord.CategoryChannel] = None, *,
                       user: Union[discord.Member, discord.User]):
