@@ -280,7 +280,7 @@ class Thread(ThreadABC):
                     '{closer.mention} has closed this Modmail thread.'
                     )
             
-            message = message.format(closer=closer, loglink=log_url, logkey=log_data['key'])
+        message = message.format(closer=closer, loglink=log_url, logkey=log_data['key'])
 
         embed.description = message
         footer = self.bot.config.get('thread_close_footer', 'Replying will create a new thread')
