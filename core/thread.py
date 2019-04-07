@@ -267,11 +267,21 @@ class Thread(ThreadABC):
                               color=discord.Color.red(),
                               timestamp=datetime.utcnow())
 
+
         if not message:
             if self.id == closer.id:
-                message = 'You have closed this modmail thread.'
+                message = self.bot.config.get(
+                    'thread_self_close_response', 
+                    'You have closed this Modmail thread.'
+                    )
             else:
-                message = f'{closer.mention} has closed this Modmail thread.'
+                message = self.bot.config.get(
+                    'thread_close_response',
+                    '{closer.mention} has closed this Modmail thread.'
+                    )
+            
+            message = message.format(closer=closer, loglink=log_url, logkey=log_data['key'])
+
         embed.description = message
         footer = self.bot.config.get('thread_close_footer', 'Replying will create a new thread')
         embed.set_footer(text=footer,
