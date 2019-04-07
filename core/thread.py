@@ -676,7 +676,7 @@ class ThreadManager(ThreadManagerABC):
         role_names = ''
         if member:
             sep_server = self.bot.using_multiple_server_setup
-            seperator = ', ' if sep_server else ' '
+            separator = ', ' if sep_server else ' '
 
             roles = []
 
@@ -687,12 +687,13 @@ class ThreadManager(ThreadManagerABC):
                 fmt = role.name if sep_server else role.mention
                 roles.append(fmt)
 
-                if len(seperator.join(roles)) > 1000:
-                    roles.pop()
+                if len(separator.join(roles)) > 1024:
                     roles.append('...')
+                    while len(separator.join(roles)) > 1024:
+                        roles.pop(-2)
                     break
-                
-            role_names = seperator.join(roles)
+
+            role_names = separator.join(roles)
 
         embed = discord.Embed(color=color,
                               description=user.mention,
