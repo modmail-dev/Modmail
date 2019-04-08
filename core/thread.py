@@ -101,13 +101,18 @@ class Thread(ThreadABC):
 
         self._channel = channel
 
-        log_url, log_data = await asyncio.gather(
-            self.bot.api.create_log_entry(recipient, channel,
-                                          creator or recipient),
-            self.bot.api.get_user_logs(recipient.id)
-        )
+        try:
+            log_url, log_data = await asyncio.gather(
+                self.bot.api.create_log_entry(recipient, channel,
+                                            creator or recipient),
+                self.bot.api.get_user_logs(recipient.id)
+            )
 
-        log_count = sum(1 for log in log_data if not log['open'])
+            log_count = sum(1 for log in log_data if not log['open'])
+        except: # Something went wrong with database?
+            log_url = log_count = None
+            # ensure core functionality still works
+
         info_embed = self.manager._format_info_embed(recipient, log_url,
                                                      log_count,
                                                      discord.Color.green())
@@ -118,12 +123,16 @@ class Thread(ThreadABC):
         else:
             mention = self.bot.config.get('mention', '@here')
 
-        _, msg = await asyncio.gather(
-            channel.edit(topic=topic),
-            channel.send(mention, embed=info_embed)
-        )
+        async def send_info_embed():
+            try:
+                msg = await channel.send(mention, embed=info_embed)
+                await msg.pin()
+            except:
+                pass
 
-        self.bot.loop.create_task(msg.pin()) # pin message
+        await channel.edit(topic=topic)
+        self.bot.loop.create_task(send_info_embed())
+
         self.ready = True
 
         # Once thread is ready, tell the recipient.
@@ -252,9 +261,11 @@ class Thread(ThreadABC):
         tasks = [
             self.bot.config.update()
         ]
-
-        if self.bot.log_channel:
+        
+        try:
             tasks.append(self.bot.log_channel.send(embed=embed))
+        except (ValueError, AttributeError):
+            pass
 
         # Thread closed message
 
