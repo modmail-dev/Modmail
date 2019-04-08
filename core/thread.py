@@ -261,9 +261,11 @@ class Thread(ThreadABC):
         tasks = [
             self.bot.config.update()
         ]
-
-        if self.bot.log_channel:
+        
+        try:
             tasks.append(self.bot.log_channel.send(embed=embed))
+        except (ValueError, AttributeError):
+            pass
 
         # Thread closed message
 
