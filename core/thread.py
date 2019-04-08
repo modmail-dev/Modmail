@@ -152,13 +152,8 @@ class Thread(ThreadABC):
             footer = 'Click the lock to close the thread'
 
         footer = self.bot.config.get('thread_creation_footer', footer)
-            
-
-        embed.set_footer(text=footer,
-                         icon_url=self.bot.guild.icon_url)
-
+        embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
         embed.title = self.bot.config.get('thread_creation_title', 'Thread Created')
-
 
         if creator is None:
             msg = await recipient.send(embed=embed)
@@ -166,7 +161,6 @@ class Thread(ThreadABC):
                 close_emoji = self.bot.config.get('close_emoji', '🔒')
                 close_emoji = await self.bot.convert_emoji(close_emoji)
                 await msg.add_reaction(close_emoji) 
-        
 
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -243,6 +237,7 @@ class Thread(ThreadABC):
             desc += truncate(sneak_peak, max=75 - 13)
         else:
             desc = "Could not resolve log url."
+            log_url = None
 
         embed = discord.Embed(description=desc, color=discord.Color.red())
 
@@ -275,7 +270,6 @@ class Thread(ThreadABC):
         embed = discord.Embed(title=self.bot.config.get('thread_close_title', 'Thread Closed'),
                               color=discord.Color.red(),
                               timestamp=datetime.utcnow())
-
 
         if not message:
             if self.id == closer.id:
@@ -691,7 +685,7 @@ class ThreadManager(ThreadManagerABC):
         role_names = ''
         if member:
             sep_server = self.bot.using_multiple_server_setup
-            seperator = ', ' if sep_server else ' '
+            separator = ', ' if sep_server else ' '
 
             roles = []
 
@@ -702,12 +696,13 @@ class ThreadManager(ThreadManagerABC):
                 fmt = role.name if sep_server else role.mention
                 roles.append(fmt)
 
-                if len(seperator.join(roles)) > 1000:
-                    roles.pop()
+                if len(separator.join(roles)) > 1024:
                     roles.append('...')
+                    while len(separator.join(roles)) > 1024:
+                        roles.pop(-2)
                     break
-                
-            role_names = seperator.join(roles)
+
+            role_names = separator.join(roles)
 
         embed = discord.Embed(color=color,
                               description=user.mention,
