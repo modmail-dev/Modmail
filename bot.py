@@ -677,6 +677,8 @@ class ModmailBot(Bot):
                 if not self.config.get('disable_recipient_thread_close'):
                     await thread.close(closer=user)
         elif not isinstance(channel, discord.DMChannel):
+            if not message.embeds:
+                return
             message_id = str(message.embeds[0].author.url).split('/')[-1]
             if message_id.isdigit():
                 thread = await self.threads.find(channel=message.channel)
