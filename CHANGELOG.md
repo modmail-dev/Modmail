@@ -191,7 +191,7 @@ Huge thanks to Sasiko for reporting these issues.
 
 # v2.12.0
 
-### Important 
+### Important
 **In the future, the Modmail API (https://modmail.tk) will be deprecated. This is due to the fact that we are providing a free service without getting anything in return, and thus we do not have the resources to scale to accommodate for more users. 
 We recommend using your own database for logs. In the future you will soon get a `backup` command so you can download all your pre-existing data and migrate to your own database.** 
 
