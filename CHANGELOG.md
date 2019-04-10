@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.16.0
+
+### What's changed?
+
+All support for Modmail API (api.modmail.tk) has terminated. 
+If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
+option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the 
+installation tutorial for information regarding self-hosted Modmail.
+
+# v2.15.1
+
+### Fixed
+
+Emergency patch of a SyntaxError.
+
 # v2.15.0
 
 ### What's new?
