@@ -68,7 +68,6 @@ class Version:
         embed.set_author(
             name=f'{self.version} - Changelog',
             icon_url=self.bot.user.avatar_url,
-            url='https://modmail.tk/changelog'
         )
 
         for name, value in self.fields.items():
