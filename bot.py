@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.15.1'
+__version__ = '2.16.0'
 
 import asyncio
 import logging
@@ -439,11 +439,9 @@ class ModmailBot(Bot):
 
         if name not in UNICODE_EMOJI:
             try:
-                return await converter.convert(
-                    ctx, sent_emoji.strip(':')
-                )
+                name = await converter.convert(ctx, name.strip(':'))
             except commands.BadArgument:
-                pass
+                logger.warning(f'{name} is not a valid emoji.')
         return name
 
     async def retrieve_emoji(self):
@@ -455,7 +453,6 @@ class ModmailBot(Bot):
 
         sent_emoji = self.config.get('sent_emoji', '✅')
         blocked_emoji = self.config.get('blocked_emoji', '🚫')
-
 
         if sent_emoji not in UNICODE_EMOJI:
             try:
@@ -660,18 +657,19 @@ class ModmailBot(Bot):
 
         channel = self.get_channel(payload.channel_id)
 
-        if not channel: # dm channel not in internal cache
+        if not channel:  # dm channel not in internal cache
             _thread = await self.threads.find(recipient=user)
             if not _thread:
                 return
             channel = await _thread.recipient.create_dm()
 
-        message = await channel.get_message(payload.message_id) # TODO: change to fetch_message (breaking change in d.py)
+        # TODO: change to fetch_message (breaking change in d.py)
+        message = await channel.get_message(payload.message_id)
         reaction = payload.emoji
 
         close_emoji = await self.convert_emoji(self.config.get('close_emoji', '🔒'))
 
-        if isinstance(channel, discord.DMChannel) and str(reaction) == str(close_emoji): # closing thread
+        if isinstance(channel, discord.DMChannel) and str(reaction) == str(close_emoji):  # closing thread
             thread = await self.threads.find(recipient=user)
             ts = message.embeds[0].timestamp if message.embeds else None
             if thread and ts == thread.channel.created_at: 
@@ -679,6 +677,8 @@ class ModmailBot(Bot):
                 if not self.config.get('disable_recipient_thread_close'):
                     await thread.close(closer=user)
         elif not isinstance(channel, discord.DMChannel):
+            if not message.embeds:
+                return
             message_id = str(message.embeds[0].author.url).split('/')[-1]
             if message_id.isdigit():
                 thread = await self.threads.find(channel=message.channel)
@@ -688,7 +688,6 @@ class ModmailBot(Bot):
                 async for msg in channel.history():
                     if msg.id == int(message_id):
                         await msg.add_reaction(reaction)
-
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
@@ -719,6 +718,24 @@ class ModmailBot(Bot):
             return
 
         await thread.close(closer=mod, silent=True, delete_channel=False)
+    
+    async def on_member_remove(self, member):
+        thread = await self.threads.find(recipient=member)
+        if thread:
+            em = discord.Embed(
+                description='The recipient has left the server.',
+                color=discord.Color.red()
+                )
+            await thread.channel.send(embed=em)
+    
+    async def on_member_join(self, member):
+        thread = await self.threads.find(recipient=member)
+        if thread:
+            em = discord.Embed(
+                description='The recipient has joined the server.',
+                color=self.mod_color
+                )
+            await thread.channel.send(embed=em)
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
@@ -897,10 +914,9 @@ class ModmailBot(Bot):
 
             await asyncio.sleep(3600)
 
-
 if __name__ == '__main__':
     if os.name != 'nt':
         import uvloop
         uvloop.install()
-    bot = ModmailBot()  # pylint: disable=invalid-name
+    bot = ModmailBot()
     bot.run()
