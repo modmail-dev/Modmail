@@ -37,6 +37,9 @@ class Utility:
         predicates = cmd.checks
         if not predicates:
             return True
+        
+        if await ctx.bot.is_owner(ctx.author):
+            return True
 
         try:
             return await discord.utils.async_all(predicate(ctx)
