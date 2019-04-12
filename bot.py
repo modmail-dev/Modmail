@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.16.0'
+__version__ = '2.16.1'
 
 import asyncio
 import logging
@@ -412,18 +412,15 @@ class ModmailBot(Bot):
                      datetime.utcnow()).total_seconds()
             if after < 0:
                 after = 0
-            recipient = self.get_user(int(recipient_id))
 
-            thread = await self.threads.find(recipient=recipient)
+            thread = await self.threads.find(recipient_id=int(recipient_id))
 
             if not thread:
-                # If the recipient is gone or channel is deleted
+                # If the channel is deleted
                 self.config.closures.pop(str(recipient_id))
                 await self.config.update()
                 continue
 
-            # TODO: Low priority,
-            #  Retrieve messages/replies when bot is down, from history?
             await thread.close(
                 closer=self.get_user(items['closer_id']),
                 after=after,
@@ -431,6 +428,7 @@ class ModmailBot(Bot):
                 delete_channel=items['delete_channel'],
                 message=items['message']
             )
+
         logger.info(LINE)
 
     async def convert_emoji(self, name):
