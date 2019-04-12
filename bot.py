@@ -914,10 +914,9 @@ class ModmailBot(Bot):
 
             await asyncio.sleep(3600)
 
-
 if __name__ == '__main__':
     if os.name != 'nt':
         import uvloop
         uvloop.install()
-    bot = ModmailBot()  # pylint: disable=invalid-name
+    bot = ModmailBot()
     bot.run()
