@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.16.0
+
+### What's new?
+
+If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occured.
+
+# v2.15.0
+
+### What's new?
+
+Added the ability to change the default close message via the introduction of two config variables.
+
+- `thread_close_response` - when someone closes the thread.
+- `thread_self_close_response` - when the recipient closes their own thread.
+
+They will be provided by string variables that you can incorporate into them:
+
+- `closer` - the user object that closed the thread.
+- `logkey` - the key for the thread logs e.g. (`5219ccc82ad4`)
+- `loglink` - the full link to the thread logs e.g. (`https://logwebsite.com/logs/5219ccc82ad4`)
+
+Example usage would be: ``?config set thread_close_message {closer.mention} closed the thread, here is the link to your logs: [**`{logkey}`**]({loglink})``
+
 # v2.14.0
 
 ### What's new?
