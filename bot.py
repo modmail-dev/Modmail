@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.15.1'
+__version__ = '2.16.0'
 
 import asyncio
 import logging
@@ -718,6 +718,24 @@ class ModmailBot(Bot):
             return
 
         await thread.close(closer=mod, silent=True, delete_channel=False)
+    
+    async def on_member_remove(self, member):
+        thread = await self.threads.find(recipient=member)
+        if thread:
+            em = discord.Embed(
+                description='The recipient has left the server.',
+                color=discord.Color.red()
+                )
+            await thread.channel.send(embed=em)
+    
+    async def on_member_join(self, member):
+        thread = await self.threads.find(recipient=member)
+        if thread:
+            em = discord.Embed(
+                description='The recipient has joined the server.',
+                color=self.mod_color
+                )
+            await thread.channel.send(embed=em)
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
