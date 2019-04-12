@@ -140,6 +140,10 @@ class Bot(abc.ABC, commands.Bot):
     async def process_modmail(self, message: Message) -> None:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    async def convert_emoji(self, name: str) -> str:
+        raise NotImplementedError
+
     @staticmethod
     @abc.abstractmethod
     def overwrites(ctx: commands.Context) -> dict:
