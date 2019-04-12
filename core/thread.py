@@ -101,13 +101,18 @@ class Thread(ThreadABC):
 
         self._channel = channel
 
-        log_url, log_data = await asyncio.gather(
-            self.bot.api.create_log_entry(recipient, channel,
-                                          creator or recipient),
-            self.bot.api.get_user_logs(recipient.id)
-        )
+        try:
+            log_url, log_data = await asyncio.gather(
+                self.bot.api.create_log_entry(recipient, channel,
+                                            creator or recipient),
+                self.bot.api.get_user_logs(recipient.id)
+            )
 
-        log_count = sum(1 for log in log_data if not log['open'])
+            log_count = sum(1 for log in log_data if not log['open'])
+        except: # Something went wrong with database?
+            log_url = log_count = None
+            # ensure core functionality still works
+
         info_embed = self.manager._format_info_embed(recipient, log_url,
                                                      log_count,
                                                      discord.Color.green())
@@ -118,12 +123,16 @@ class Thread(ThreadABC):
         else:
             mention = self.bot.config.get('mention', '@here')
 
-        _, msg = await asyncio.gather(
-            channel.edit(topic=topic),
-            channel.send(mention, embed=info_embed)
-        )
+        async def send_info_embed():
+            try:
+                msg = await channel.send(mention, embed=info_embed)
+                await msg.pin()
+            except:
+                pass
 
-        self.bot.loop.create_task(msg.pin()) # pin message
+        await channel.edit(topic=topic)
+        self.bot.loop.create_task(send_info_embed())
+
         self.ready = True
 
         # Once thread is ready, tell the recipient.
@@ -143,13 +152,8 @@ class Thread(ThreadABC):
             footer = 'Click the lock to close the thread'
 
         footer = self.bot.config.get('thread_creation_footer', footer)
-            
-
-        embed.set_footer(text=footer,
-                         icon_url=self.bot.guild.icon_url)
-
+        embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
         embed.title = self.bot.config.get('thread_creation_title', 'Thread Created')
-
 
         if creator is None:
             msg = await recipient.send(embed=embed)
@@ -157,7 +161,6 @@ class Thread(ThreadABC):
                 close_emoji = self.bot.config.get('close_emoji', '🔒')
                 close_emoji = await self.bot.convert_emoji(close_emoji)
                 await msg.add_reaction(close_emoji) 
-        
 
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -234,6 +237,7 @@ class Thread(ThreadABC):
             desc += truncate(sneak_peak, max=75 - 13)
         else:
             desc = "Could not resolve log url."
+            log_url = None
 
         embed = discord.Embed(description=desc, color=discord.Color.red())
 
@@ -257,16 +261,17 @@ class Thread(ThreadABC):
         tasks = [
             self.bot.config.update()
         ]
-
-        if self.bot.log_channel:
+        
+        try:
             tasks.append(self.bot.log_channel.send(embed=embed))
+        except (ValueError, AttributeError):
+            pass
 
         # Thread closed message
 
         embed = discord.Embed(title=self.bot.config.get('thread_close_title', 'Thread Closed'),
                               color=discord.Color.red(),
                               timestamp=datetime.utcnow())
-
 
         if not message:
             if self.id == closer.id:
@@ -280,7 +285,7 @@ class Thread(ThreadABC):
                     '{closer.mention} has closed this Modmail thread.'
                     )
             
-            message = message.format(closer=closer, loglink=log_url, logkey=log_data['key'])
+        message = message.format(closer=closer, loglink=log_url, logkey=log_data['key'])
 
         embed.description = message
         footer = self.bot.config.get('thread_close_footer', 'Replying will create a new thread')
@@ -356,7 +361,7 @@ class Thread(ThreadABC):
             tasks.append(message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
-                    description='Your message could not be delivered because '
+                    description='Your message could not be delivered as '
                                 'the recipient is only accepting direct '
                                 'messages from friends, or the bot was '
                                 'blocked by the recipient.'
@@ -682,7 +687,7 @@ class ThreadManager(ThreadManagerABC):
         role_names = ''
         if member:
             sep_server = self.bot.using_multiple_server_setup
-            seperator = ', ' if sep_server else ' '
+            separator = ', ' if sep_server else ' '
 
             roles = []
 
@@ -693,12 +698,13 @@ class ThreadManager(ThreadManagerABC):
                 fmt = role.name if sep_server else role.mention
                 roles.append(fmt)
 
-                if len(seperator.join(roles)) > 1000:
-                    roles.pop()
+                if len(separator.join(roles)) > 1024:
                     roles.append('...')
+                    while len(separator.join(roles)) > 1024:
+                        roles.pop(-2)
                     break
-                
-            role_names = seperator.join(roles)
+
+            role_names = separator.join(roles)
 
         embed = discord.Embed(color=color,
                               description=user.mention,
