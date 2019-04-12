@@ -361,7 +361,7 @@ class Thread(ThreadABC):
             tasks.append(message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
-                    description='Your message could not be delivered because '
+                    description='Your message could not be delivered as '
                                 'the recipient is only accepting direct '
                                 'messages from friends, or the bot was '
                                 'blocked by the recipient.'
