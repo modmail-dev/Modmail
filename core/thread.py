@@ -482,7 +482,7 @@ class Thread(ThreadABC):
             ):
                 embed.set_image(url=att[0])
                 if att[1]:
-                    embed.add_field(name='Image', value=f'[**{att[1]}**]({att[0]})')
+                    embed.add_field(name='Image', value=f'[{att[1]}]({att[0]})')
                 embedded_image = True
             elif att[1] is not None:
                 if note:
