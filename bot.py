@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.16.1'
+__version__ = '2.17.0'
 
 import asyncio
 import logging
@@ -623,7 +623,10 @@ class ModmailBot(Bot):
 
         thread = await self.threads.find(channel=ctx.channel)
         if thread is not None:
-            await self.api.append_log(message, type_='internal')
+            if self.config.get('reply_without_command'):
+                await thread.reply(message)
+            else:
+                await self.api.append_log(message, type_='internal')
         elif ctx.invoked_with:
             exc = commands.CommandNotFound(
                 'Command "{}" is not found'.format(ctx.invoked_with)

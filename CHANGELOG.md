@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# v2.17.0
+
+### What's new?
+
+Added a config option `reply_without_command` which when present, enables the bot to forward any message sent in a thread channel to the recipient. (Replying without using a command)
+
+To enable this functionality, do `?config set reply_without_command true` and to disable it, use `?config del reply_without_command`.
+
+
+### Changed
+
+The `move` command now only requires `manage_messages` perms instead of `manage_channels`
+
 # v2.16.1
 
 ### Fixed
