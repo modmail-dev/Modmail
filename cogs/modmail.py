@@ -142,7 +142,7 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @commands.command()
-    @checks.has_permissions(manage_channels=True)
+    @checks.has_permissions(manage_messages=True)
     async def move(self, ctx, *, category: discord.CategoryChannel):
         """Moves a thread to a specified category."""
         thread = ctx.thread
