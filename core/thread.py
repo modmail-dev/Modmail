@@ -482,7 +482,7 @@ class Thread(ThreadABC):
             ):
                 embed.set_image(url=att[0])
                 if att[1]:
-                    embed.add_field(name='Image', value=f'[**{att[1]}**]({att[0]})')
+                    embed.add_field(name='Image', value=f'[{att[1]}]({att[0]})')
                 embedded_image = True
             elif att[1] is not None:
                 if note:
@@ -627,6 +627,8 @@ class ThreadManager(ThreadManagerABC):
         elif channel.topic is None:
             try:
                 async for message in channel.history(limit=100):
+                    if message.author != self.bot.user:
+                        continue
                     if message.embeds:
                         embed = message.embeds[0]
                         if embed.footer.text:
