@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+# v2.17.1
+
+### Changed
+
+- Stricter fallback genesis embed search. This update shouldn't affect anyone.
+
+### Info
+How modmail checks if a channel is a thread: 
+
+1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
+2. If a channel topic is not found, the bot searches through message history of a channel to find the thread creation embed. This step should never yield a thread for a normal user, but in the case of a another bot messing up the channel topic (happened to a user before) this extra step was added. 
+
+
 # v2.17.0
 
 ### What's new?
