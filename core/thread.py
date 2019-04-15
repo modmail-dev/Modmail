@@ -627,6 +627,8 @@ class ThreadManager(ThreadManagerABC):
         elif channel.topic is None:
             try:
                 async for message in channel.history(limit=100):
+                    if message.author != self.bot.user:
+                        continue
                     if message.embeds:
                         embed = message.embeds[0]
                         if embed.footer.text:
