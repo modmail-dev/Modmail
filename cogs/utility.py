@@ -952,6 +952,19 @@ class Utility:
                             break
                         await ctx.send(f'```py\n{page}\n```')
 
+    @commands.command(aliases=['install'], no_pm=True)
+    async def invite(self, ctx):
+        """ How to invite bot """
+        url = 'https://taaku18.github.io/modmail/installation'
+        e = Embed(
+                title='How to invite bot?',
+                color=self.bot.main_color,
+                description='This instance of the bot cannot be invited, '
+                f'please make your own using this guide \n{url}'
+            )
+        e.set_footer(text='If you need help, join the support guild')
+        await ctx.send(embed=e)
+
 
 def setup(bot):
     bot.add_cog(Utility(bot))
