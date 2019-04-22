@@ -781,6 +781,8 @@ class ModmailBot(Bot):
                                  command=str(context.command))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning(error('CommandNotFound: ' + str(exception)))
+        elif isinstance(exception, commands.CheckFailure):
+            logger.warning(error('CheckFailure: ' + str(exception)))
         else:
             logger.error(error('Unexpected exception:'), exc_info=exception)
 
@@ -914,6 +916,7 @@ class ModmailBot(Bot):
                     await channel.send(embed=embed)
 
             await asyncio.sleep(3600)
+
 
 if __name__ == '__main__':
     if os.name != 'nt':
