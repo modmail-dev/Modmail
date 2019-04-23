@@ -357,7 +357,7 @@ class Thread(ThreadABC):
             tasks.append(message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
-                    description='Your message could not be delivered because '
+                    description='Your message could not be delivered as '
                                 'the recipient is only accepting direct '
                                 'messages from friends, or the bot was '
                                 'blocked by the recipient.'
@@ -478,7 +478,7 @@ class Thread(ThreadABC):
             ):
                 embed.set_image(url=att[0])
                 if att[1]:
-                    embed.add_field(name='Image', value=f'[**{att[1]}**]({att[0]})')
+                    embed.add_field(name='Image', value=f'[{att[1]}]({att[0]})')
                 embedded_image = True
             elif att[1] is not None:
                 if note:
@@ -583,22 +583,26 @@ class ThreadManager(ThreadManagerABC):
     def __getitem__(self, item):
         return self.cache[item]
 
-    async def find(self, *, recipient=None, channel=None):
+    async def find(self, *, recipient=None, channel=None, recipient_id=None):
         """Finds a thread from cache or from discord channel topics."""
         if recipient is None and channel is not None:
             return await self._find_from_channel(channel)
 
         thread = None
+
+        if recipient:
+            recipient_id = recipient.id
+
         try:
-            thread = self.cache[recipient.id]
+            thread = self.cache[recipient_id]
         except KeyError:
             channel = discord.utils.get(
                 self.bot.modmail_guild.text_channels,
-                topic=f'User ID: {recipient.id}'
+                topic=f'User ID: {recipient_id}'
             )
             if channel:
                 thread = Thread(self, recipient, channel)
-                self.cache[recipient.id] = thread
+                self.cache[recipient_id] = thread
                 thread.ready = True
         return thread
 
@@ -619,6 +623,8 @@ class ThreadManager(ThreadManagerABC):
         elif channel.topic is None:
             try:
                 async for message in channel.history(limit=100):
+                    if message.author != self.bot.user:
+                        continue
                     if message.embeds:
                         embed = message.embeds[0]
                         if embed.footer.text:

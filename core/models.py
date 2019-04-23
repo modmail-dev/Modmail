@@ -363,7 +363,8 @@ class ThreadManagerABC(abc.ABC):
     @abc.abstractmethod
     async def find(self, *,
                    recipient: typing.Union[Member, User] = None,
-                   channel: TextChannel = None) -> \
+                   channel: TextChannel = None,
+                   recipient_id: int = None) -> \
             typing.Optional['ThreadABC']:
         raise NotImplementedError
 

@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.17.1
+
+### What's new?
+
+Stricter fallback genesis embed search.
+
+### What's changed?
+How modmail checks if a channel is a thread: 
+
+1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
+2. If a channel topic is not found, the bot searches through message history of a channel to find the thread creation embed. This step should never yield a thread for a normal user, but in the case of a another bot messing up the channel topic (happened to a user before) this extra step was added. 
+
+
+# v2.17.0
+
+### What's new?
+
+Added a config option `reply_without_command` which when present, enables the bot to forward any message sent in a thread channel to the recipient. (Replying without using a command)
+
+To enable this functionality, do `?config set reply_without_command true` and to disable it, use `?config del reply_without_command`.
+
+
+### Changed
+
+The `move` command now only requires `manage_messages` perms instead of `manage_channels`
+
+# v2.16.1
+
+### Fixed
+
+An issue where a scheduled close would not execute over a long period of time if the recipient no shares any servers with the bot.
+
 # v2.16.0
 
 ### What's changed?
@@ -12,6 +44,8 @@ All support for Modmail API (api.modmail.tk) has terminated.
 If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
 option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the 
 installation tutorial for information regarding self-hosted Modmail.
+
+If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occured.
 
 # v2.15.1
 

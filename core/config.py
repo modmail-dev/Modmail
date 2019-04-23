@@ -19,7 +19,7 @@ class ConfigManager(ConfigManagerABC):
 
         # bot settings
         'main_category_id', 'disable_autoupdates', 'prefix', 'mention',
-        'main_color', 'user_typing', 'mod_typing', 'account_age', 
+        'main_color', 'user_typing', 'mod_typing', 'account_age', 'reply_without_command',
 
         # logging
         'log_channel_id',
