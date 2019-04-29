@@ -12,7 +12,7 @@ from natural.date import duration
 
 from core import checks
 from core.decorators import trigger_typing
-from core.models import Bot
+from core.models import Bot, PermissionLevel
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import format_preview, User
@@ -26,7 +26,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @checks.has_permissions(administrator=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def setup(self, ctx):
         """Sets up a server for Modmail"""
         if self.bot.main_category:
@@ -62,15 +62,18 @@ class Modmail:
         self.bot.config['log_channel_id'] = log_channel.id
 
         await self.bot.config.update()
-        await ctx.send('Successfully set up server.')
+        await ctx.send('Successfully set up server.\n'
+                       'Consider setting permission groups to give access '
+                       'to roles or users the ability to use Modmail.\n'
+                       f'Type `{self.bot.prefix}permissions` for more info.')
+        if not self.bot.config.permissions:
+            await self.bot.update_perms(PermissionLevel.REGULAR, -1)
+            await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
 
-    @commands.group()
-    @checks.has_permissions(manage_messages=True)
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippets(self, ctx):
         """Returns a list of snippets that are currently set."""
-        if ctx.invoked_subcommand is not None:
-            return
-
         embeds = []
 
         if self.bot.snippets:
@@ -101,7 +104,7 @@ class Modmail:
         await session.run()
 
     @snippets.command(name='add')
-    @checks.has_permissions(manage_messages=True)
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def add_(self, ctx, name: str.lower, *, value):
         """Add a snippet to the bot config."""
         if 'snippets' not in self.bot.config.cache:
@@ -118,9 +121,9 @@ class Modmail:
 
         await ctx.send(embed=embed)
 
-    @snippets.command(name='del')
-    @checks.has_permissions(manage_messages=True)
-    async def del_(self, ctx, *, name: str.lower):
+    @snippets.command(name='remove', aliases=['del', 'delete', 'rm'])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def remove_(self, ctx, *, name: str.lower):
         """Removes a snippet from bot config."""
 
         if self.bot.config.snippets.get(name):
@@ -142,7 +145,7 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @commands.command()
-    @checks.has_permissions(manage_messages=True)
+    @checks.has_permissions(PermissionLevel.MODERATOR)
     async def move(self, ctx, *, category: discord.CategoryChannel):
         """Moves a thread to a specified category."""
         thread = ctx.thread
@@ -179,6 +182,7 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @commands.command(usage='[after] [close message]')
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def close(self, ctx, *, after: UserFriendlyTime = None):
         """
@@ -236,6 +240,7 @@ class Modmail:
         )
 
     @commands.command(aliases=['alert'])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def notify(self, ctx, *, role=None):
         """
@@ -272,6 +277,7 @@ class Modmail:
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['sub'])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def subscribe(self, ctx, *, role=None):
         """
@@ -311,6 +317,7 @@ class Modmail:
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['unsub'])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def unsubscribe(self, ctx, *, role=None):
         """Unsubscribe yourself or a given role from a thread."""
@@ -343,6 +350,7 @@ class Modmail:
         return await ctx.send(embed=embed)
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def nsfw(self, ctx):
         """Flags a Modmail thread as nsfw."""
@@ -350,6 +358,7 @@ class Modmail:
         await ctx.message.add_reaction('✅')
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def loglink(self, ctx):
         """Return the link to the current thread's logs."""
@@ -407,7 +416,7 @@ class Modmail:
         return embeds
 
     @commands.group(invoke_without_command=True)
-    @checks.has_permissions(manage_messages=True)
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def logs(self, ctx, *, member: User = None):
         """Shows a list of previous Modmail thread logs of a member."""
 
@@ -440,7 +449,7 @@ class Modmail:
         await session.run()
 
     @logs.command(name='closed-by')
-    @checks.has_permissions(manage_messages=True)
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def closed_by(self, ctx, *, user: User = None):
         """Returns all logs closed by a user."""
         if not self.bot.self_hosted:
@@ -478,8 +487,8 @@ class Modmail:
         session = PaginatorSession(ctx, *embeds)
         await session.run()
 
-    @logs.command(name='search')
-    @checks.has_permissions(manage_messages=True)
+    @logs.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def search(self, ctx, limit: Optional[int] = None, *, query):
         """Searches all logs for a message that contains your query."""
 
@@ -521,6 +530,7 @@ class Modmail:
         await session.run()
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def reply(self, ctx, *, msg=''):
         """Reply to users using this command.
@@ -533,6 +543,7 @@ class Modmail:
             await ctx.thread.reply(ctx.message)
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def anonreply(self, ctx, *, msg=''):
         """Reply to a thread anonymously.
@@ -548,6 +559,7 @@ class Modmail:
             await ctx.thread.reply(ctx.message, anonymous=True)
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def note(self, ctx, *, msg=''):
         """Take a note about the current thread, useful for noting context."""
@@ -556,6 +568,7 @@ class Modmail:
             await ctx.thread.note(ctx.message)
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def edit(self, ctx, message_id: Optional[int] = None,
                    *, new_message):
@@ -599,8 +612,8 @@ class Modmail:
         await ctx.message.add_reaction('✅')
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @trigger_typing
-    @checks.has_permissions(manage_messages=True)
     async def contact(self, ctx,
                       category: Optional[discord.CategoryChannel] = None, *,
                       user: Union[discord.Member, discord.User]):
@@ -639,8 +652,8 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
-    @checks.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
         embed = discord.Embed(title='Blocked Users',
@@ -672,8 +685,8 @@ class Modmail:
         await ctx.send(embed=embed)
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
-    @checks.has_permissions(manage_channels=True)
     async def block(self, ctx, user: Optional[User] = None, *,
                     after: UserFriendlyTime = None):
         """
@@ -738,8 +751,8 @@ class Modmail:
         return await ctx.send(embed=embed)
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
-    @checks.has_permissions(manage_channels=True)
     async def unblock(self, ctx, *, user: User = None):
         """
         Unblocks a user from using Modmail.

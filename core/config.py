@@ -42,7 +42,7 @@ class ConfigManager(ConfigManagerABC):
         'activity_message', 'activity_type', 'status',
 
         # moderation
-        'blocked',
+        'blocked', 'command_permissions', 'level_permissions',
 
         # threads
         'snippets', 'notification_squad', 'subscriptions', 'closures',
@@ -53,7 +53,7 @@ class ConfigManager(ConfigManagerABC):
 
     protected_keys = {
         # Modmail
-        'modmail_api_token', 'modmail_guild_id', 'guild_id', 'owners',
+        'modmail_api_token', 'modmail_guild_id', 'guild_id',
         'log_url', 'mongo_uri',
 
         # bot
@@ -107,6 +107,8 @@ class ConfigManager(ConfigManagerABC):
             'plugins': [],
             'aliases': {},
             'blocked': {},
+            'command_permissions': {},
+            'level_permissions': {},
             'notification_squad': {},
             'subscriptions': {},
             'closures': {},

@@ -6,6 +6,7 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO
+from typing import Union
 from json import JSONDecodeError
 from textwrap import indent
 
@@ -19,9 +20,9 @@ from aiohttp import ClientResponseError
 from core import checks
 from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
-from core.models import Bot, InvalidConfigError
+from core.models import Bot, InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code, info, error
+from core.utils import cleanup_code, info, error, User
 
 logger = logging.getLogger('Modmail')
 
@@ -36,9 +37,6 @@ class Utility:
     async def verify_checks(ctx, cmd):
         predicates = cmd.checks
         if not predicates:
-            return True
-        
-        if await ctx.bot.is_owner(ctx.author):
             return True
 
         try:
@@ -100,14 +98,14 @@ class Utility:
             return embed
 
         fmt = ''
-        length = len(cmd.all_commands)
-        for i, (name, c) in enumerate(sorted(cmd.all_commands.items(),
-                                             key=lambda c: c[0])):
+        length = len(cmd.commands)
+        for i, c in enumerate(sorted(cmd.commands, key=lambda c: c.name)):
+            # Bug: fmt may run over the embed limit
             if length == i + 1:  # last
                 branch = '└─'
             else:
                 branch = '├─'
-            fmt += f"`{branch} {name}` - {c.short_doc}\n"
+            fmt += f'`{branch} {c.name}` - {c.short_doc}\n'
 
         embed.add_field(name='Sub Commands', value=fmt)
         embed.set_footer(
@@ -148,6 +146,7 @@ class Utility:
         return embed
 
     @commands.command(name='help')
+    @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
     async def help_(self, ctx, *, command: str = None):
         """Shows the help message."""
@@ -181,6 +180,7 @@ class Utility:
         return await p_session.run()
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
     async def changelog(self, ctx):
         """Show a paginated changelog of the bot."""
@@ -189,6 +189,7 @@ class Utility:
         await paginator.run()
 
     @commands.command(aliases=['bot', 'info'])
+    @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
@@ -239,14 +240,11 @@ class Utility:
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
-    @commands.group()
-    @commands.is_owner()
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
     async def debug(self, ctx):
         """Shows the recent logs of the bot."""
-
-        if ctx.invoked_subcommand is not None:
-            return
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'r+') as f:
@@ -292,7 +290,7 @@ class Utility:
         return await session.run()
 
     @debug.command()
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
     async def hastebin(self, ctx):
         """Upload logs to hastebin."""
@@ -323,7 +321,7 @@ class Utility:
         await ctx.send(embed=embed)
 
     @debug.command()
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
     async def clear(self, ctx):
         """Clears the locally cached logs."""
@@ -336,14 +334,11 @@ class Utility:
         ))
 
     @commands.command()
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     @github_access_token_required
     @trigger_typing
     async def github(self, ctx):
         """Shows the GitHub user your access token is linked to."""
-        if ctx.invoked_subcommand:
-            return
-
         data = await self.bot.api.get_user_info()
 
         embed = Embed(
@@ -359,7 +354,7 @@ class Utility:
         await ctx.send(embed=embed)
 
     @commands.command()
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     @github_access_token_required
     @trigger_typing
     async def update(self, ctx):
@@ -415,7 +410,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['presence'])
-    @checks.has_permissions(administrator=True)
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def activity(self, ctx, activity_type: str.lower, *, message: str = ''):
         """
         Set a custom activity for the bot.
@@ -466,7 +461,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command()
-    @checks.has_permissions(administrator=True)
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def status(self, ctx, *, status_type: str.lower):
         """
         Set a custom status for the bot.
@@ -594,8 +589,8 @@ class Utility:
         logger.info(info(presence['status'][1]))
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @trigger_typing
-    @checks.has_permissions(administrator=True)
     async def ping(self, ctx):
         """Pong! Returns your websocket latency."""
         embed = Embed(
@@ -606,7 +601,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command()
-    @checks.has_permissions(administrator=True)
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def mention(self, ctx, *, mention=None):
         """Changes what the bot mentions at the start of each thread."""
         current = self.bot.config.get('mention', '@here')
@@ -630,7 +625,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @commands.command()
-    @checks.has_permissions(administrator=True)
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def prefix(self, ctx, *, prefix=None):
         """Changes the prefix for the bot."""
 
@@ -650,17 +645,15 @@ class Utility:
             await self.bot.config.update()
             await ctx.send(embed=embed)
 
-    @commands.group()
-    @commands.is_owner()
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def config(self, ctx):
         """Change config vars for the bot."""
-
-        if ctx.invoked_subcommand is None:
-            cmd = self.bot.get_command('help')
-            await ctx.invoke(cmd, command='config')
+        cmd = self.bot.get_command('help')
+        await ctx.invoke(cmd, command='config')
 
     @config.command()
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def options(self, ctx):
         """Return a list of valid config keys you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
@@ -671,7 +664,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command()
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def set(self, ctx, key: str.lower, *, value):
         """
         Sets a configuration variable and its value
@@ -702,9 +695,9 @@ class Utility:
 
         return await ctx.send(embed=embed)
 
-    @config.command(name='del')
-    @commands.is_owner()
-    async def del_config(self, ctx, key: str.lower):
+    @config.command(name='remove', aliases=['del', 'delete', 'rm'])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def remove_config(self, ctx, key: str.lower):
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
@@ -731,7 +724,7 @@ class Utility:
         return await ctx.send(embed=embed)
 
     @config.command()
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def get(self, ctx, key=None):
         """Shows the config variables that are currently set."""
         keys = self.bot.config.allowed_to_change_in_command
@@ -774,12 +767,10 @@ class Utility:
 
         return await ctx.send(embed=embed)
 
-    @commands.group(aliases=['aliases'])
-    @checks.has_permissions(manage_messages=True)
+    @commands.group(aliases=['aliases'], invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias(self, ctx):
         """Returns a list of aliases that are currently set."""
-        if ctx.invoked_subcommand is not None:
-            return
 
         embeds = []
         desc = 'Here is a list of aliases that are currently configured.'
@@ -814,7 +805,7 @@ class Utility:
         return await session.run()
 
     @alias.command(name='add')
-    @checks.has_permissions(manage_messages=True)
+    @checks.has_permissions(PermissionLevel.MODERATOR)
     async def add_(self, ctx, name: str.lower, *, value):
         """Add an alias to the bot config."""
         if 'aliases' not in self.bot.config.cache:
@@ -849,9 +840,9 @@ class Utility:
 
         return await ctx.send(embed=embed)
 
-    @alias.command(name='del')
-    @checks.has_permissions(manage_messages=True)
-    async def del_alias(self, ctx, *, name: str.lower):
+    @alias.command(name='remove', aliases=['del', 'delete', 'rm'])
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def remove_alias(self, ctx, *, name: str.lower):
         """Removes a alias from bot config."""
 
         if 'aliases' not in self.bot.config.cache:
@@ -876,8 +867,240 @@ class Utility:
 
         return await ctx.send(embed=embed)
 
+    @commands.group(aliases=['perms'], invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def permissions(self, ctx):
+        """Sets the permissions for Modmail commands.
+
+        You may set permissions based on individual command names, or permission
+        levels.
+
+        Acceptable permission levels are:
+            - **Owner** (absolute control over the bot)
+            - **Administrator** (administrative powers such as setting activities)
+            - **Moderator** (ability to block)
+            - **Supporter** (access to core Modmail supporting functions)
+            - **Regular** (most basic interactions such as help and about)
+
+        By default, owner is set to the bot owner and regular is @everyone.
+
+        Note: You will still have to manually give/take permission to the Modmail
+        category to users/roles.
+        """
+        cmd = self.bot.get_command('help')
+        await ctx.invoke(cmd, command='perms')
+
+    @permissions.group(name='add', invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def add_perms(self, ctx):
+        """Add a permission to a command or a permission level."""
+        cmd = self.bot.get_command('help')
+        await ctx.invoke(cmd, command='perms add')
+
+    @add_perms.command(name='command')
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def add_perms_command(self, ctx, command: str, user_or_role: Union[User, str]):
+        """Add a user, role, or everyone permission to use a command."""
+        if command not in self.bot.all_commands:
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='The command you are attempting to point '
+                            f'to does not exist: `{command}`.'
+            )
+            return await ctx.send(embed=embed)
+
+        if hasattr(user_or_role, 'id'):
+            value = user_or_role.id
+        elif user_or_role in {'everyone', 'all'}:
+            value = -1
+        else:
+            converter = commands.RoleConverter()
+            role = await converter.convert(ctx, user_or_role)
+            value = role.id
+        await self.bot.update_perms(self.bot.all_commands[command].name, value)
+        embed = Embed(
+            title='Success',
+            color=self.bot.main_color,
+            description=f'Permission for {command} was successfully updated.'
+        )
+        return await ctx.send(embed=embed)
+
+    @add_perms.command(name='level', aliases=['group'])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def add_perms_level(self, ctx, level: str, user_or_role: Union[User, str]):
+        """Add a user, role, or everyone permission to use commands of a permission level."""
+        if level.upper() not in PermissionLevel._member_names_:
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='The permission level you are attempting to point '
+                            f'to does not exist: `{level}`.'
+            )
+            return await ctx.send(embed=embed)
+
+        if hasattr(user_or_role, 'id'):
+            value = user_or_role.id
+        elif user_or_role in {'everyone', 'all'}:
+            value = -1
+        else:
+            converter = commands.RoleConverter()
+            role = await converter.convert(ctx, user_or_role)
+            value = role.id
+        await self.bot.update_perms(PermissionLevel[level.upper()], value)
+        embed = Embed(
+            title='Success',
+            color=self.bot.main_color,
+            description=f'Permission for {level} was successfully updated.'
+        )
+        return await ctx.send(embed=embed)
+
+    @permissions.group(name='remove', aliases=['del', 'delete', 'rm', 'revoke'])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def remove_perms(self, ctx):
+        """Remove a permission to use a command or permission level."""
+        cmd = self.bot.get_command('help')
+        await ctx.invoke(cmd, command='perms remove')
+
+    @remove_perms.command(name='command')
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def remove_perms_command(self, ctx, command: str, user_or_role: Union[User, str]):
+        """Remove a user, role, or everyone permission to use a command."""
+        if command not in self.bot.all_commands:
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='The command you are attempting to point '
+                            f'to does not exist: `{command}`.'
+            )
+            return await ctx.send(embed=embed)
+
+        if hasattr(user_or_role, 'id'):
+            value = user_or_role.id
+        elif user_or_role in {'everyone', 'all'}:
+            value = -1
+        else:
+            converter = commands.RoleConverter()
+            role = await converter.convert(ctx, user_or_role)
+            value = role.id
+        await self.bot.update_perms(self.bot.all_commands[command].name, value, add=False)
+        embed = Embed(
+            title='Success',
+            color=self.bot.main_color,
+            description=f'Permission for {command} was successfully updated.'
+        )
+        return await ctx.send(embed=embed)
+
+    @remove_perms.command(name='level', aliases=['group'])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def remove_perms_level(self, ctx, level: str, user_or_role: Union[User, str]):
+        """Remove a user, role, or everyone permission to use commands of a permission level."""
+        if level.upper() not in PermissionLevel._member_names_:
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='The permission level you are attempting to point '
+                f'to does not exist: `{level}`.'
+            )
+            return await ctx.send(embed=embed)
+
+        if hasattr(user_or_role, 'id'):
+            value = user_or_role.id
+        elif user_or_role in {'everyone', 'all'}:
+            value = -1
+        else:
+            converter = commands.RoleConverter()
+            role = await converter.convert(ctx, user_or_role)
+            value = role.id
+        await self.bot.update_perms(PermissionLevel[level.upper()], value, add=False)
+        embed = Embed(
+            title='Success',
+            color=self.bot.main_color,
+            description=f'Permission for {level} was successfully updated.'
+        )
+        return await ctx.send(embed=embed)
+
+    @permissions.group(name='get', invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def get_perms(self, ctx):
+        """View the currently-set permissions."""
+        cmd = self.bot.get_command('help')
+        await ctx.invoke(cmd, command='perms get')
+
+    @get_perms.command(name='command')
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def get_perms_command(self, ctx, command: str):
+        """View the currently-set permissions for a command."""
+        if command not in self.bot.all_commands:
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='The command you are attempting to point '
+                            f'to does not exist: `{command}`.'
+            )
+            return await ctx.send(embed=embed)
+        permissions = self.bot.config.command_permissions.get(self.bot.all_commands[command].name)
+        if permissions is None or not permissions:
+            embed = Embed(
+                title=f'Permission entries for command `{command}`:',
+                description='No permission entries found.'
+            )
+        else:
+            values = []
+            for perm in permissions:
+                if perm == -1:
+                    values.insert(0, '**everyone**')
+                else:
+                    user = self.bot.get_user(perm)
+                    if user is not None:
+                        values.append(user.name)
+                    else:
+                        values.append(str(perm))
+
+            embed = Embed(
+                title=f'Permission entries for command `{command}`:',
+                description=', '.join(values)
+            )
+        return await ctx.send(embed=embed)
+
+    @get_perms.command(name='level', aliases=['group'])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def get_perms_level(self, ctx, level: str):
+        """View the currently-set permissions for commands of a permission level."""
+        if level.upper() not in PermissionLevel._member_names_:
+            embed = Embed(
+                title='Error',
+                color=Color.red(),
+                description='The permission level you are attempting to point '
+                f'to does not exist: `{level}`.'
+            )
+            return await ctx.send(embed=embed)
+        permissions = self.bot.config.command_permissions.get(PermissionLevel[level.upper()].name)
+        if permissions is None or not permissions:
+            embed = Embed(
+                title=f'Permission entries for permission level `{level}`:',
+                description='No permission entries found.'
+            )
+        else:
+            values = []
+            for perm in permissions:
+                if perm == -1:
+                    values.insert(0, '**everyone**')
+                else:
+                    user = self.bot.get_user(perm)
+                    if user is not None:
+                        values.append(user.name)
+                    else:
+                        values.append(str(perm))
+
+            embed = Embed(
+                title=f'Permission entries for permission level `{level}`:',
+                description=', '.join(values)
+            )
+        return await ctx.send(embed=embed)
+
     @commands.command(hidden=True, name='eval')
-    @commands.is_owner()
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def eval_(self, ctx, *, body):
         """Evaluates Python code"""
 

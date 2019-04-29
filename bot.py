@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.17.1'
+__version__ = '2.18.0'
 
 import asyncio
 import logging
@@ -48,7 +48,7 @@ from core.changelog import Changelog
 from core.clients import ModmailApiClient, SelfHostedClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error
-from core.models import Bot
+from core.models import Bot, PermissionLevel
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
@@ -194,11 +194,6 @@ class ModmailBot(Bot):
                 self.load_extension(cog)
             except Exception:
                 logger.exception(error(f'Failed to load {cog}'))
-
-    async def is_owner(self, user):
-        allowed = {int(x) for x in
-                   str(self.config.get('owners', '0')).split(',')}
-        return user.id in allowed
 
     def run(self, *args, **kwargs):
         try:
@@ -599,6 +594,25 @@ class ModmailBot(Bot):
 
         return ctx
 
+    async def update_perms(self, name, value, add=True):
+        if isinstance(name, PermissionLevel):
+            permissions = self.config.level_permissions
+            name = name.name
+        else:
+            permissions = self.config.command_permissions
+        if name not in permissions:
+            if add:
+                permissions[name] = [value]
+        else:
+            if add:
+                if value not in permissions[name]:
+                    permissions[name].append(value)
+            else:
+                if value in permissions[name]:
+                    permissions[name].remove(value)
+        logger.info(info(f'Updating permissions for {name}, {value} (add={add}).'))
+        await self.config.update()
+
     async def on_message(self, message):
         if message.type == discord.MessageType.pins_add and \
                 message.author == self.user:
@@ -799,7 +813,7 @@ class ModmailBot(Bot):
         }
 
         for role in ctx.guild.roles:
-            if role.permissions.manage_guild:
+            if role.permissions.administrator:
                 overwrites[role] = discord.PermissionOverwrite(
                     read_messages=True
                 )

@@ -5,6 +5,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+# v2.18.0
+
+### What's new?
+
+- A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desire permission level specific to a command or a group of commands for a role or user.
+- There are five permission groups/levels:
+  - Owner
+  - Administrator
+  - Moderator
+  - Supporter
+  - Regular
+
+You may add a role or user to a permission group through any of the following methods:
+- `?permissions add level owner @role`
+- `?permissions add level supporter member-name`
+- `?permissions add level moderator everyone`
+- `?permissions add level moderator @member#1234`
+- `?permissions add level administrator 78912384930291853`
+
+The same applies for individual commands permissions:
+- `?permissions add command-name @member#1234`
+- ... and the other methods listed above.
+
+To revoke a permission, use `remove` instead of `add`.
+
+To view all roles and users with permission for a permission group or command do:
+-  `?permissions get command command-name`
+-  `?permissions get level owner`
+
+### Note
+
+When updating to this version, all prior permission settings with guild-based permissions will be invalidated. You will need to convert to the above system.
+
 # v2.17.1
 
 ### Changed
