@@ -1,11 +1,10 @@
 import asyncio
+import re
 from datetime import datetime
 from typing import Optional, Union
 
 import discord
 from discord.ext import commands
-
-import re
 
 from dateutil import parser
 from natural.date import duration
@@ -708,9 +707,9 @@ class Modmail:
             reason = after.arg
             if reason.startswith('System Message: '):
                 raise commands.UserInputError
-            elif re.search(r'%(.+?)%$', reason) is not None:
+            if re.search(r'%(.+?)%$', reason) is not None:
                 raise commands.UserInputError
-            elif after.dt > after.now:
+            if after.dt > after.now:
                 reason = f'{reason} %{after.dt.isoformat()}%'
 
         if not reason:

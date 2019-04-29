@@ -741,20 +741,20 @@ class ModmailBot(Bot):
     async def on_member_remove(self, member):
         thread = await self.threads.find(recipient=member)
         if thread:
-            em = discord.Embed(
+            embed = discord.Embed(
                 description='The recipient has left the server.',
                 color=discord.Color.red()
             )
-            await thread.channel.send(embed=em)
+            await thread.channel.send(embed=embed)
 
     async def on_member_join(self, member):
         thread = await self.threads.find(recipient=member)
         if thread:
-            em = discord.Embed(
+            embed = discord.Embed(
                 description='The recipient has joined the server.',
                 color=self.mod_color
             )
-            await thread.channel.send(embed=em)
+            await thread.channel.send(embed=embed)
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""

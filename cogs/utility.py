@@ -445,7 +445,7 @@ class Utility:
             activity_identifier=activity_type,
             activity_by_key=True,
             activity_message=message
-         ))['activity']
+        ))['activity']
         if activity is None:
             raise commands.UserInputError
 
