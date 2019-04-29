@@ -442,9 +442,9 @@ class Utility:
             raise commands.UserInputError
 
         activity, msg = (await self.set_presence(
-                activity_identifier=activity_type,
-                activity_by_key=True,
-                activity_message=message
+            activity_identifier=activity_type,
+            activity_by_key=True,
+            activity_message=message
          ))['activity']
         if activity is None:
             raise commands.UserInputError
@@ -488,8 +488,8 @@ class Utility:
         status_type = status_type.replace(' ', '_')
 
         status, msg = (await self.set_presence(
-                status_identifier=status_type,
-                status_by_key=True
+            status_identifier=status_type,
+            status_by_key=True
         ))['status']
         if status is None:
             raise commands.UserInputError

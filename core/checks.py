@@ -37,7 +37,7 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
     return commands.check(predicate)
 
 
-async def check_permissions(ctx: commands.Context, 
+async def check_permissions(ctx: commands.Context,
                             command_name: str,
                             permission_level: PermissionLevel) -> bool:
     if await ctx.bot.is_owner(ctx.author):

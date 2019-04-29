@@ -52,7 +52,6 @@ from core.models import Bot, PermissionLevel
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
-
 init()
 
 logger = logging.getLogger('Modmail')
@@ -486,7 +485,8 @@ class ModmailBot(Bot):
             except isodate.ISO8601Error:
                 logger.warning('The account age limit needs to be a '
                                'ISO-8601 duration formatted duration string '
-                               f'greater than 0 days, not "%s".', str(account_age))
+                               f'greater than 0 days, not "%s".',
+                               str(account_age))
                 del self.config.cache['account_age']
                 await self.config.update()
                 account_age = isodate.duration.Duration()
@@ -541,7 +541,7 @@ class ModmailBot(Bot):
                         await self.config.update()
         else:
             reaction = sent_emoji
-        
+
         if reaction != 'disable':
             try:
                 await message.add_reaction(reaction)
@@ -610,7 +610,9 @@ class ModmailBot(Bot):
             else:
                 if value in permissions[name]:
                     permissions[name].remove(value)
-        logger.info(info(f'Updating permissions for {name}, {value} (add={add}).'))
+        logger.info(
+            info(f'Updating permissions for {name}, {value} (add={add}).')
+        )
         await self.config.update()
 
     async def on_message(self, message):
@@ -649,7 +651,7 @@ class ModmailBot(Bot):
 
     async def on_typing(self, channel, user, _):
         if user.bot:
-            return 
+            return
         if isinstance(channel, discord.DMChannel):
             if not self.config.get('user_typing'):
                 return
@@ -662,7 +664,7 @@ class ModmailBot(Bot):
             thread = await self.threads.find(channel=channel)
             if thread and thread.recipient:
                 await thread.recipient.trigger_typing()
-    
+
     async def on_raw_reaction_add(self, payload):
 
         user = self.get_user(payload.user_id)
@@ -682,12 +684,14 @@ class ModmailBot(Bot):
         message = await channel.get_message(payload.message_id)
         reaction = payload.emoji
 
-        close_emoji = await self.convert_emoji(self.config.get('close_emoji', '🔒'))
+        close_emoji = await self.convert_emoji(
+            self.config.get('close_emoji', '🔒')
+        )
 
         if isinstance(channel, discord.DMChannel) and str(reaction) == str(close_emoji):  # closing thread
             thread = await self.threads.find(recipient=user)
             ts = message.embeds[0].timestamp if message.embeds else None
-            if thread and ts == thread.channel.created_at: 
+            if thread and ts == thread.channel.created_at:
                 # the reacted message is the corresponding thread creation embed
                 if not self.config.get('disable_recipient_thread_close'):
                     await thread.close(closer=user)
@@ -733,23 +737,23 @@ class ModmailBot(Bot):
             return
 
         await thread.close(closer=mod, silent=True, delete_channel=False)
-    
+
     async def on_member_remove(self, member):
         thread = await self.threads.find(recipient=member)
         if thread:
             em = discord.Embed(
                 description='The recipient has left the server.',
                 color=discord.Color.red()
-                )
+            )
             await thread.channel.send(embed=em)
-    
+
     async def on_member_join(self, member):
         thread = await self.threads.find(recipient=member)
         if thread:
             em = discord.Embed(
                 description='The recipient has joined the server.',
                 color=self.mod_color
-                )
+            )
             await thread.channel.send(embed=em)
 
     async def on_message_delete(self, message):
@@ -909,7 +913,7 @@ class ModmailBot(Bot):
                 embed.set_author(name=user['username'] + ' - Updating Bot',
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
-                embed.set_footer(text=f"Updating Modmail v{self.version} "
+                embed.set_footer(text=f'Updating Modmail v{self.version} '
                                       f"-> v{metadata['latest_version']}")
 
                 changelog = await Changelog.from_url(self)
@@ -935,6 +939,7 @@ class ModmailBot(Bot):
 if __name__ == '__main__':
     if os.name != 'nt':
         import uvloop
+
         uvloop.install()
     bot = ModmailBot()
     bot.run()
