@@ -1075,7 +1075,7 @@ class Utility:
                 f'to does not exist: `{level}`.'
             )
             return await ctx.send(embed=embed)
-        permissions = self.bot.config.command_permissions.get(PermissionLevel[level.upper()].name)
+        permissions = self.bot.config.level_permissions.get(PermissionLevel[level.upper()].name)
         if permissions is None or not permissions:
             embed = Embed(
                 title=f'Permission entries for permission level `{level}`:',
