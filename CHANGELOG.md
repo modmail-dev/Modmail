@@ -11,11 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desire permission level specific to a command or a group of commands for a role or user.
 - There are five permission groups/levels:
-  - Owner
-  - Administrator
-  - Moderator
-  - Supporter
-  - Regular
+  - Owner [5]
+  - Administrator [4]
+  - Moderator [3]
+  - Supporter [2]
+  - Regular [1]
 
 You may add a role or user to a permission group through any of the following methods:
 - `?permissions add level owner @role`
@@ -35,6 +35,8 @@ To view all roles and users with permission for a permission group or command do
 -  `?permissions get level owner`
 
 By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `EGULAR` set to @everyone.
+
+The help message no longer conceal inaccessible commands due to check failures.
 
 ### Note
 

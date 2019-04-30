@@ -34,6 +34,8 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
             logger.error(error(f'You does not have permission to use this command: '
                                f'`{ctx.command.qualified_name}` ({permission_level.name}).'))
         return has_perm
+
+    predicate.permission_level = permission_level
     return commands.check(predicate)
 
 

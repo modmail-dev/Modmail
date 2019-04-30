@@ -10,7 +10,6 @@ from typing import Union
 from json import JSONDecodeError
 from textwrap import indent
 
-import discord
 from discord import Embed, Color, Activity
 from discord.enums import ActivityType, Status
 from discord.ext import commands
@@ -28,22 +27,10 @@ logger = logging.getLogger('Modmail')
 
 
 class Utility:
-    """General commands that provide utility"""
+    """General commands that provide utility."""
 
     def __init__(self, bot: Bot):
         self.bot = bot
-
-    @staticmethod
-    async def verify_checks(ctx, cmd):
-        predicates = cmd.checks
-        if not predicates:
-            return True
-
-        try:
-            return await discord.utils.async_all(predicate(ctx)
-                                                 for predicate in predicates)
-        except commands.CheckFailure:
-            return False
 
     async def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
@@ -53,10 +40,13 @@ class Utility:
         fmts = ['']
         for cmd in sorted(self.bot.commands,
                           key=lambda cmd: cmd.qualified_name):
-            if cmd.instance is cog and not cmd.hidden and \
-                    await self.verify_checks(ctx, cmd):
-                new_fmt = f'`{prefix + cmd.qualified_name}` - '
-                new_fmt += f'{cmd.short_doc}\n'
+            if cmd.instance is cog and not cmd.hidden:
+                new_fmt = f'`{prefix + cmd.qualified_name}` '
+                perm_level = next(getattr(c, 'permission_level', None) for c in cmd.checks)
+                if perm_level is not None:
+                    new_fmt += f'[{perm_level}] '
+
+                new_fmt += f'- {cmd.short_doc}\n'
                 if len(new_fmt) + len(fmts[-1]) >= 1024:
                     fmts.append(new_fmt)
                 else:
@@ -81,18 +71,20 @@ class Utility:
             embeds.append(embed)
         return embeds
 
-    async def format_command_help(self, ctx, cmd):
+    async def format_command_help(self, cmd):
         """Formats command help."""
-        if cmd.hidden or not await self.verify_checks(ctx, cmd):
+        if cmd.hidden:
             return None
 
         prefix = self.bot.prefix
+
+        perm_level = next(getattr(c, 'permission_level', None) for c in cmd.checks)
+        perm_level = f' [{perm_level}]' if perm_level is not None else ''
         embed = Embed(
+            title=f'`{prefix}{cmd.signature}`{perm_level}',
             color=self.bot.main_color,
             description=cmd.help
         )
-
-        embed.title = f'`{prefix}{cmd.signature}`'
 
         if not isinstance(cmd, commands.Group):
             return embed
@@ -124,20 +116,12 @@ class Utility:
                               'a full list of commands.')
 
         choices = set()
-        # filter out hidden commands & blank cogs
-        for i in self.bot.cogs:
-            for cmd in self.bot.commands:
-                if cmd.cog_name == i and not cmd.hidden and \
-                        await self.verify_checks(ctx, cmd):
-                    # as long as there's one valid cmd, add cog
-                    choices.add(i)
-                    break
 
-        for i in self.bot.commands:
-            if not i.hidden and await self.verify_checks(ctx, i):
-                choices.add(i.name)
+        for name, c in self.bot.all_commands:
+            if not c.hidden:
+                choices.add(name)
 
-        closest = get_close_matches(command, choices, n=1, cutoff=0.45)
+        closest = get_close_matches(command, choices, n=1, cutoff=0.75)
         if closest:
             # Perhaps you meant:
             #  - `item`
@@ -157,7 +141,7 @@ class Utility:
             embeds = []
 
             if cmd:
-                help_msg = await self.format_command_help(ctx, cmd)
+                help_msg = await self.format_command_help(cmd)
                 if help_msg:
                     embeds = [help_msg]
 
@@ -876,11 +860,11 @@ class Utility:
         levels.
 
         Acceptable permission levels are:
-            - **Owner** (absolute control over the bot)
-            - **Administrator** (administrative powers such as setting activities)
-            - **Moderator** (ability to block)
-            - **Supporter** (access to core Modmail supporting functions)
-            - **Regular** (most basic interactions such as help and about)
+            - **Owner** [5] (absolute control over the bot)
+            - **Administrator** [4] (administrative powers such as setting activities)
+            - **Moderator** [3] (ability to block)
+            - **Supporter** [2] (access to core Modmail supporting functions)
+            - **Regular** [1] (most basic interactions such as help and about)
 
         By default, owner is set to the bot owner and regular is @everyone.
 
@@ -955,7 +939,8 @@ class Utility:
         )
         return await ctx.send(embed=embed)
 
-    @permissions.group(name='remove', aliases=['del', 'delete', 'rm', 'revoke'])
+    @permissions.group(name='remove', aliases=['del', 'delete', 'rm', 'revoke'],
+                       invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def remove_perms(self, ctx):
         """Remove a permission to use a command or permission level."""
