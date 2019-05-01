@@ -15,7 +15,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 class PermissionLevel(IntEnum):
     OWNER = 5
     ADMINISTRATOR = 4
+    ADMIN = 4
     MODERATOR = 3
+    MOD = 3
     SUPPORTER = 2
     REGULAR = 1
 

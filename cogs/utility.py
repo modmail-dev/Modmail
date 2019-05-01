@@ -10,7 +10,7 @@ from typing import Union
 from json import JSONDecodeError
 from textwrap import indent
 
-from discord import Embed, Color, Activity
+from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
 from discord.ext import commands
 
@@ -883,7 +883,7 @@ class Utility:
 
     @add_perms.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def add_perms_command(self, ctx, command: str, *, user_or_role: Union[User, str]):
+    async def add_perms_command(self, ctx, command: str, *, user_or_role: Union[User, Role, str]):
         """Add a user, role, or everyone permission to use a command."""
         if command not in self.bot.all_commands:
             embed = Embed(
@@ -899,9 +899,8 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            converter = commands.RoleConverter()
-            role = await converter.convert(ctx, user_or_role)
-            value = role.id
+            raise commands.CommandInvokeError('Invalid user or role.')
+
         await self.bot.update_perms(self.bot.all_commands[command].name, value)
         embed = Embed(
             title='Success',
@@ -912,9 +911,9 @@ class Utility:
 
     @add_perms.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def add_perms_level(self, ctx, level: str, *, user_or_role: Union[User, str]):
+    async def add_perms_level(self, ctx, level: str, *, user_or_role: Union[User, Role, str]):
         """Add a user, role, or everyone permission to use commands of a permission level."""
-        if level.upper() not in PermissionLevel._member_names_:
+        if level.upper() not in PermissionLevel.__members__:
             embed = Embed(
                 title='Error',
                 color=Color.red(),
@@ -928,9 +927,8 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            converter = commands.RoleConverter()
-            role = await converter.convert(ctx, user_or_role)
-            value = role.id
+            raise commands.CommandInvokeError('Invalid user or role.')
+
         await self.bot.update_perms(PermissionLevel[level.upper()], value)
         embed = Embed(
             title='Success',
@@ -949,7 +947,7 @@ class Utility:
 
     @remove_perms.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_perms_command(self, ctx, command: str, *, user_or_role: Union[User, str]):
+    async def remove_perms_command(self, ctx, command: str, *, user_or_role: Union[User, Role, str]):
         """Remove a user, role, or everyone permission to use a command."""
         if command not in self.bot.all_commands:
             embed = Embed(
@@ -965,9 +963,8 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            converter = commands.RoleConverter()
-            role = await converter.convert(ctx, user_or_role)
-            value = role.id
+            raise commands.CommandInvokeError('Invalid user or role.')
+
         await self.bot.update_perms(self.bot.all_commands[command].name, value, add=False)
         embed = Embed(
             title='Success',
@@ -978,9 +975,9 @@ class Utility:
 
     @remove_perms.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_perms_level(self, ctx, level: str, *, user_or_role: Union[User, str]):
+    async def remove_perms_level(self, ctx, level: str, *, user_or_role: Union[User, Role, str]):
         """Remove a user, role, or everyone permission to use commands of a permission level."""
-        if level.upper() not in PermissionLevel._member_names_:
+        if level.upper() not in PermissionLevel.__members__:
             embed = Embed(
                 title='Error',
                 color=Color.red(),
@@ -994,9 +991,8 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            converter = commands.RoleConverter()
-            role = await converter.convert(ctx, user_or_role)
-            value = role.id
+            raise commands.CommandInvokeError('Invalid user or role.')
+
         await self.bot.update_perms(PermissionLevel[level.upper()], value, add=False)
         embed = Embed(
             title='Success',
@@ -1007,10 +1003,44 @@ class Utility:
 
     @permissions.group(name='get', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def get_perms(self, ctx):
+    async def get_perms(self, ctx, *, user_or_role: Union[User, Role, str]):
         """View the currently-set permissions."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='perms get')
+
+        if hasattr(user_or_role, 'id'):
+            value = user_or_role.id
+        elif user_or_role in {'everyone', 'all'}:
+            value = -1
+        else:
+            raise commands.CommandInvokeError('Invalid user or role.')
+
+        cmds = []
+        levels = []
+        for cmd in self.bot.commands:
+            permissions = self.bot.config.command_permissions.get(cmd.name, [])
+            if value in permissions:
+                cmds.append(cmd.name)
+        for level in PermissionLevel:
+            permissions = self.bot.config.level_permissions.get(level.name, [])
+            if value in permissions:
+                levels.append(level.name)
+        mention = user_or_role.name if hasattr(user_or_role, 'name') else user_or_role
+        desc_cmd = ', '.join(map(lambda x: f'`{x}`', cmds)) if cmds else 'No permission entries found.'
+        desc_level = ', '.join(map(lambda x: f'`{x}`', levels)) if levels else 'No permission entries found.'
+
+        embeds = [
+            Embed(
+                title=f'{mention} has permission with the following commands:',
+                description=desc_cmd,
+                color=self.bot.main_color
+            ),
+            Embed(
+                title=f'{mention} has permission with the following permission groups:',
+                description=desc_level,
+                color=self.bot.main_color
+            )
+        ]
+        p_session = PaginatorSession(ctx, *embeds)
+        return await p_session.run()
 
     @get_perms.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -1018,8 +1048,8 @@ class Utility:
         """View the currently-set permissions for a command."""
 
         def get_command(cmd):
-            permissions = self.bot.config.command_permissions.get(cmd.name)
-            if permissions is None or not permissions:
+            permissions = self.bot.config.command_permissions.get(cmd.name, [])
+            if not permissions:
                 embed = Embed(
                     title=f'Permission entries for command `{cmd.name}`:',
                     description='No permission entries found.'
@@ -1029,12 +1059,20 @@ class Utility:
                 for perm in permissions:
                     if perm == -1:
                         values.insert(0, '**everyone**')
+                        continue
+                    member = ctx.guild.get_member(perm)
+                    if member is not None:
+                        values.append(member.mention)
+                        continue
+                    user = self.bot.get_user(perm)
+                    if user is not None:
+                        values.append(user.mention)
+                        continue
+                    role = ctx.guild.get_role(perm)
+                    if role is not None:
+                        values.append(role.mention)
                     else:
-                        user = self.bot.get_user(perm)
-                        if user is not None:
-                            values.append(user.name)
-                        else:
-                            values.append(str(perm))
+                        values.append(str(perm))
 
                 embed = Embed(
                     title=f'Permission entries for command `{cmd.name}`:',
@@ -1066,8 +1104,8 @@ class Utility:
         """View the currently-set permissions for commands of a permission level."""
 
         def get_level(perm_level):
-            permissions = self.bot.config.level_permissions.get(perm_level.name)
-            if permissions is None or not permissions:
+            permissions = self.bot.config.level_permissions.get(perm_level.name, [])
+            if not permissions:
                 embed = Embed(
                     title='Permission entries for permission '
                           f'level `{perm_level.name}`:',
@@ -1078,12 +1116,20 @@ class Utility:
                 for perm in permissions:
                     if perm == -1:
                         values.insert(0, '**everyone**')
+                        continue
+                    member = ctx.guild.get_member(perm)
+                    if member is not None:
+                        values.append(member.mention)
+                        continue
+                    user = self.bot.get_user(perm)
+                    if user is not None:
+                        values.append(user.mention)
+                        continue
+                    role = ctx.guild.get_role(perm)
+                    if role is not None:
+                        values.append(role.mention)
                     else:
-                        user = self.bot.get_user(perm)
-                        if user is not None:
-                            values.append(user.name)
-                        else:
-                            values.append(str(perm))
+                        values.append(str(perm))
 
                 embed = Embed(
                     title=f'Permission entries for permission level `{perm_level.name}`:',
@@ -1093,7 +1139,7 @@ class Utility:
 
         embeds = []
         if level is not None:
-            if level.upper() not in PermissionLevel._member_names_:
+            if level.upper() not in PermissionLevel.__members__:
                 embed = Embed(
                     title='Error',
                     color=Color.red(),
@@ -1101,7 +1147,7 @@ class Utility:
                     f'to does not exist: `{level}`.'
                 )
                 return await ctx.send(embed=embed)
-            embeds.append(get_level(PermissionLevel[level.upper()].name))
+            embeds.append(get_level(PermissionLevel[level.upper()]))
         else:
             for perm_level in PermissionLevel:
                 embeds.append(get_level(perm_level))
