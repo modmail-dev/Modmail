@@ -566,21 +566,7 @@ class Modmail:
         async with ctx.typing():
             await ctx.thread.note(ctx.message)
 
-    @commands.command()
-    @checks.has_permissions(PermissionLevel.SUPPORTER)
-    @checks.thread_only()
-    async def edit(self, ctx, message_id: Optional[int] = None,
-                   *, new_message):
-        """Edit a message that was sent using the reply command.
-
-        If no `message_id` is provided, the
-        last message sent by a mod will be edited.
-
-        `[message_id]` the id of the message that you want to edit.
-        `new_message` is the new message that will be edited in.
-        """
-        thread = ctx.thread
-
+    async def find_linked_message(self, ctx, message_id):
         linked_message_id = None
 
         async for msg in ctx.channel.history():
@@ -600,8 +586,31 @@ class Modmail:
                 linked_message_id = str(url).split('/')[-1]
                 break
 
-        if not linked_message_id:
-            raise commands.UserInputError
+        return linked_message_id
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def edit(self, ctx, message_id: Optional[int] = None,
+                   *, new_message):
+        """Edit a message that was sent using the reply command.
+
+        If no `message_id` is provided, the
+        last message sent by a mod will be edited.
+
+        `[message_id]` the id of the message that you want to edit.
+        `new_message` is the new message that will be edited in.
+        """
+        thread = ctx.thread
+
+        linked_message_id = await self.find_linked_message(ctx, message_id)
+
+        if linked_message_id is None:
+            return await ctx.send(embed=discord.Embed(
+                title='Failed',
+                description='Cannot find a message to edit.',
+                color=discord.Color.red()
+            ))
 
         await asyncio.gather(
             thread.edit_message(linked_message_id, new_message),
@@ -800,6 +809,27 @@ class Modmail:
             )
 
         return await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def delete(self, ctx, message_id: int = None):
+        """
+        Deletes the previous message, unless a message ID is provided, which in that case,
+        delete the message with that message ID.
+        """
+        thread = ctx.thread
+
+        linked_message_id = await self.find_linked_message(ctx, message_id)
+
+        if linked_message_id is None:
+            return await ctx.send(embed=discord.Embed(
+                title='Failed',
+                description='Cannot find a message to delete.',
+                color=discord.Color.red()
+            ))
+
+        await thread.delete_message(linked_message_id)
+        await ctx.message.add_reaction('✅')
 
 
 def setup(bot):

@@ -313,21 +313,38 @@ class Thread(ThreadABC):
             await self.bot.config.update()
 
     @staticmethod
-    async def _edit_thread_message(channel, message_id, message):
+    async def _find_thread_message(channel, message_id):
         async for msg in channel.history():
             if not msg.embeds:
                 continue
             embed = msg.embeds[0]
             if embed and embed.author and embed.author.url:
                 if str(message_id) == str(embed.author.url).split('/')[-1]:
-                    embed.description = message
-                    await msg.edit(embed=embed)
-                    break
+                    return msg
 
     async def edit_message(self, message_id, message):
+        msg_recipient, msg_channel = await asyncio.gather(
+            self._find_thread_message(self.recipient, message_id),
+            self._find_thread_message(self.channel, message_id)
+        )
+
+        embed_recipient = msg_recipient.embeds[0]
+        embed_channel = msg_recipient.embeds[0]
+        embed_recipient.description = message
+        embed_channel.description = message
         await asyncio.gather(
-            self._edit_thread_message(self.recipient, message_id, message),
-            self._edit_thread_message(self.channel, message_id, message)
+            msg_recipient.edit(embed=embed_recipient),
+            msg_channel.edit(embed=embed_channel)
+        )
+
+    async def delete_message(self, message_id):
+        msg_recipient, msg_channel = await asyncio.gather(
+            self._find_thread_message(self.recipient, message_id),
+            self._find_thread_message(self.channel, message_id)
+        )
+        await asyncio.gather(
+            msg_recipient.delete(),
+            msg_channel.delete()
         )
 
     async def note(self, message):
