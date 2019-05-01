@@ -899,7 +899,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.CommandInvokeError('Invalid user or role.')
+            raise commands.UserInputError('Invalid user or role.')
 
         await self.bot.update_perms(self.bot.all_commands[command].name, value)
         embed = Embed(
@@ -927,7 +927,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.CommandInvokeError('Invalid user or role.')
+            raise commands.UserInputError('Invalid user or role.')
 
         await self.bot.update_perms(PermissionLevel[level.upper()], value)
         embed = Embed(
@@ -963,7 +963,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.CommandInvokeError('Invalid user or role.')
+            raise commands.UserInputError('Invalid user or role.')
 
         await self.bot.update_perms(self.bot.all_commands[command].name, value, add=False)
         embed = Embed(
@@ -991,7 +991,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.CommandInvokeError('Invalid user or role.')
+            raise commands.UserInputError('Invalid user or role.')
 
         await self.bot.update_perms(PermissionLevel[level.upper()], value, add=False)
         embed = Embed(
@@ -1011,7 +1011,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.CommandInvokeError('Invalid user or role.')
+            raise commands.UserInputError('Invalid user or role.')
 
         cmds = []
         levels = []
