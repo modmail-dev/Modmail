@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### What's new?
 
-- A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desire permission level specific to a command or a group of commands for a role or user.
+- A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desired permission level specific to a command or a group of commands for a role or user.
 - There are five permission groups/levels:
   - Owner [5]
   - Administrator [4]
@@ -24,11 +24,11 @@ You may add a role or user to a permission group through any of the following me
 - `?permissions add level moderator @member#1234`
 - `?permissions add level administrator 78912384930291853`
 
-The same applies for individual commands permissions:
+The same applies to individual commands permissions:
 - `?permissions add command-name @member#1234`
 - ... and the other methods listed above.
 
-To revoke a permission, use `remove` instead of `add`.
+To revoke permission, use `remove` instead of `add`.
 
 To view all roles and users with permission for a permission group or command do:
 -  `?permissions get command command-name`
@@ -37,6 +37,8 @@ To view all roles and users with permission for a permission group or command do
 By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `EGULAR` set to @everyone.
 
 The help message no longer conceal inaccessible commands due to check failures.
+
+A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer require manage messages permission to recall thread messages.
 
 ### Note
 
