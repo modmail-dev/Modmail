@@ -883,7 +883,7 @@ class Utility:
 
     @add_perms.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def add_perms_command(self, ctx, command: str, user_or_role: Union[User, str]):
+    async def add_perms_command(self, ctx, command: str, *, user_or_role: Union[User, str]):
         """Add a user, role, or everyone permission to use a command."""
         if command not in self.bot.all_commands:
             embed = Embed(
@@ -912,7 +912,7 @@ class Utility:
 
     @add_perms.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def add_perms_level(self, ctx, level: str, user_or_role: Union[User, str]):
+    async def add_perms_level(self, ctx, level: str, *, user_or_role: Union[User, str]):
         """Add a user, role, or everyone permission to use commands of a permission level."""
         if level.upper() not in PermissionLevel._member_names_:
             embed = Embed(
@@ -949,7 +949,7 @@ class Utility:
 
     @remove_perms.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_perms_command(self, ctx, command: str, user_or_role: Union[User, str]):
+    async def remove_perms_command(self, ctx, command: str, *, user_or_role: Union[User, str]):
         """Remove a user, role, or everyone permission to use a command."""
         if command not in self.bot.all_commands:
             embed = Embed(
@@ -978,7 +978,7 @@ class Utility:
 
     @remove_perms.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_perms_level(self, ctx, level: str, user_or_role: Union[User, str]):
+    async def remove_perms_level(self, ctx, level: str, *, user_or_role: Union[User, str]):
         """Remove a user, role, or everyone permission to use commands of a permission level."""
         if level.upper() not in PermissionLevel._member_names_:
             embed = Embed(
