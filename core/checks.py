@@ -1,4 +1,8 @@
+import logging
 from discord.ext import commands
+from core.utils import error
+
+logger = logging.getLogger('Modmail')
 
 
 def has_permissions(**perms):
@@ -33,11 +37,17 @@ def has_permissions(**perms):
 
         resolved = ctx.channel.permissions_for(ctx.author)
 
-        return resolved.administrator or all(
+        has_perm = resolved.administrator or all(
             getattr(resolved, name, None) == value
             for name, value in perms.items()
         )
 
+        if not has_perm:
+            restrictions = ', '.join(f'{name.replace("_", " ").title()} ({"yes" if value else "no"})'
+                                     for name, value in perms.items())
+            logger.error(error(f'Command `{ctx.command.qualified_name}` processes '
+                               f'the following restrictions(s): {restrictions}.'))
+        return has_perm
     return commands.check(predicate)
 
 
