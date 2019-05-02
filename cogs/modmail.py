@@ -640,7 +640,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @checks.has_permissions(manage_channels=True)
+    @checks.has_permissions(kick_members=True)
     async def blocked(self, ctx):
         """Returns a list of blocked users"""
         embed = discord.Embed(title='Blocked Users',
@@ -673,7 +673,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @checks.has_permissions(manage_channels=True)
+    @checks.has_permissions(kick_members=True)
     async def block(self, ctx, user: Optional[User] = None, *,
                     after: UserFriendlyTime = None):
         """
@@ -739,7 +739,7 @@ class Modmail:
 
     @commands.command()
     @trigger_typing
-    @checks.has_permissions(manage_channels=True)
+    @checks.has_permissions(kick_members=True)
     async def unblock(self, ctx, *, user: User = None):
         """
         Unblocks a user from using Modmail.
