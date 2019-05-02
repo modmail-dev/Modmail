@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.17.1'
+__version__ = '2.17.2'
 
 import asyncio
 import logging
@@ -364,12 +364,12 @@ class ModmailBot(Bot):
     async def setup_indexes(self):
         """Setup text indexes so we can use the $search operator"""
         coll = self.db.logs
-        index_name = 'messages.content_text_messages.author.name_text'
+        index_name = 'messages.content_text_messages.author.name_text_key_text'
 
         index_info = await coll.index_information()
 
         # Backwards compatibility
-        old_index = 'messages.content_text'
+        old_index = 'messages.content_text_messages.author.name_text'
         if old_index in index_info:
             logger.info(info(f'Dropping old index: {old_index}'))
             await coll.drop_index(old_index)
@@ -379,7 +379,8 @@ class ModmailBot(Bot):
             logger.info(info('Name: ' + index_name))
             await coll.create_index([
                 ('messages.content', 'text'),
-                ('messages.author.name', 'text')
+                ('messages.author.name', 'text'),
+                ('key', 'text')
             ])
 
     async def on_ready(self):
@@ -781,6 +782,8 @@ class ModmailBot(Bot):
                                  command=str(context.command))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning(error('CommandNotFound: ' + str(exception)))
+        elif isinstance(exception, commands.CheckFailure):
+            logger.warning(error('CheckFailure: ' + str(exception)))
         else:
             logger.error(error('Unexpected exception:'), exc_info=exception)
 
@@ -914,6 +917,7 @@ class ModmailBot(Bot):
                     await channel.send(embed=embed)
 
             await asyncio.sleep(3600)
+
 
 if __name__ == '__main__':
     if os.name != 'nt':

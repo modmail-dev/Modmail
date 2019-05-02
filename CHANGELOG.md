@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.17.2
+
+### Changed
+
+- Logs search command will search through log keys as well now. 
+
+e.g. `?logs search e7499e82f8ff`
 
 # v2.17.1
 
