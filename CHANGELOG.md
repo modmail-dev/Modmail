@@ -4,13 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# v2.17.1
+# v2.17.2
 
+### Changed
+
+- Logs search command will search through log keys as well now. 
+- For example, `?logs search e7499e82f8ff`.
+
+# v2.17.1
 ### What's new?
 
 Stricter fallback genesis embed search.
 
-### What's changed?
+### Changed
 How modmail checks if a channel is a thread: 
 
 1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
@@ -38,7 +44,7 @@ An issue where a scheduled close would not execute over a long period of time if
 
 # v2.16.0
 
-### What's changed?
+### Changed
 
 All support for Modmail API (api.modmail.tk) has terminated. 
 If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
