@@ -43,11 +43,6 @@ class Bot(abc.ABC, commands.Bot):
 
     @property
     @abc.abstractmethod
-    def self_hosted(self) -> bool:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
     def config(self) -> 'ConfigManagerABC':
         raise NotImplementedError
 
@@ -169,10 +164,6 @@ class UserClient(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def validate_token(self) -> bool:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     async def get_log(self, channel_id: typing.Union[str, int]) -> dict:
         raise NotImplementedError
 
@@ -206,14 +197,6 @@ class UserClient(abc.ABC):
     async def post_log(self,
                        channel_id: typing.Union[int, str],
                        data: dict) -> dict:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def get_metadata(self) -> dict:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def post_metadata(self, data: dict) -> dict:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -380,7 +363,8 @@ class ThreadManagerABC(abc.ABC):
     @abc.abstractmethod
     async def find(self, *,
                    recipient: typing.Union[Member, User] = None,
-                   channel: TextChannel = None) -> \
+                   channel: TextChannel = None,
+                   recipient_id: int = None) -> \
             typing.Optional['ThreadABC']:
         raise NotImplementedError
 

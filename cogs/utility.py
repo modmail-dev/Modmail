@@ -7,6 +7,7 @@ from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO
 from json import JSONDecodeError
+from pkg_resources import parse_version
 from textwrap import indent
 
 import discord
@@ -203,34 +204,23 @@ class Utility:
         desc += 'an organised manner.'
         embed.description = desc
 
-        url = 'https://api.modmail.tk/metadata'
-        async with self.bot.session.get(url) as resp:
-            try:
-                meta = await resp.json()
-            except (JSONDecodeError, ClientResponseError):
-                meta = None
-
         embed.add_field(name='Uptime', value=self.bot.uptime)
-        if meta:
-            embed.add_field(name='Instances', value=meta['instances'])
-        else:
-            embed.add_field(name='Latency',
-                            value=f'{self.bot.latency * 1000:.2f} ms')
+        embed.add_field(name='Latency', value=f'{self.bot.latency * 1000:.2f} ms')
 
         embed.add_field(name='Version',
-                        value=f'[`{self.bot.version}`]'
-                        '(https://modmail.tk/changelog)')
+                        value=f'`{self.bot.version}`')
         embed.add_field(name='Author',
                         value='[`kyb3r`](https://github.com/kyb3r)')
 
         footer = f'Bot ID: {self.bot.user.id}'
 
-        if meta:
-            if self.bot.version != meta['latest_version']:
-                footer = ("A newer version is available "
-                          f"v{meta['latest_version']}")
-            else:
-                footer = 'You are up to date with the latest version.'
+        changelog = await Changelog.from_url(self.bot)
+        latest = changelog.latest_version
+
+        if parse_version(self.bot.version) < parse_version(latest.version):
+            footer = f"A newer version is available v{latest.version}"
+        else:
+            footer = 'You are up to date with the latest version.'
 
         embed.add_field(name='GitHub',
                         value='https://github.com/kyb3r/modmail',
@@ -364,18 +354,19 @@ class Utility:
     @trigger_typing
     async def update(self, ctx):
         """Updates the bot, this only works with heroku users."""
-        metadata = await self.bot.api.get_metadata()
+        changelog = await Changelog.from_url(self.bot)
+        latest = changelog.latest_version
 
         desc = (f'The latest version is [`{self.bot.version}`]'
                 '(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
 
-        embed = Embed(
-            title='Already up to date',
-            description=desc,
-            color=self.bot.main_color
-        )
+        if parse_version(self.bot.version) >= parse_version(latest.version):
+            embed = Embed(
+                title='Already up to date',
+                description=desc,
+                color=self.bot.main_color
+            )
 
-        if metadata['latest_version'] == self.bot.version:
             data = await self.bot.api.get_user_info()
             if not data.get('error'):
                 user = data['user']
@@ -387,19 +378,17 @@ class Utility:
 
             commit_data = data['data']
             user = data['user']
-            embed.title = None
-            embed.set_author(name=user['username'],
-                             icon_url=user['avatar_url'],
-                             url=user['url'])
-            embed.set_footer(text=f'Updating Modmail v{self.bot.version} '
-                                  f"-> v{metadata['latest_version']}")
 
             if commit_data:
+                embed = Embed(color=self.bot.main_color)
+
+                embed.set_footer(text=f'Updating Modmail v{self.bot.version} '
+                                      f'-> v{latest.version}')
+
                 embed.set_author(name=user['username'] + ' - Updating bot',
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
-                changelog = await Changelog.from_url(self.bot)
-                latest = changelog.latest_version
+
                 embed.description = latest.description
                 for name, value in latest.fields.items():
                     embed.add_field(name=name, value=value)
@@ -409,8 +398,14 @@ class Utility:
                 embed.add_field(name='Merge Commit',
                                 value=f'[`{short_sha}`]({html_url})')
             else:
-                embed.description = ('Already up to date '
-                                     'with master repository.')
+                embed = Embed(
+                    title='Already up to date with master repository.',
+                    description='No further updates required',
+                    color=self.bot.main_color
+                )
+                embed.set_author(name=user['username'],
+                                 icon_url=user['avatar_url'],
+                                 url=user['url'])
 
         return await ctx.send(embed=embed)
 
