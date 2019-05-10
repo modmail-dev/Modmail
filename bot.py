@@ -31,6 +31,7 @@ import re
 import sys
 
 from datetime import datetime
+from pkg_resources import parse_version
 from types import SimpleNamespace
 
 import discord
@@ -45,7 +46,7 @@ from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import Changelog
-from core.clients import ModmailApiClient, SelfHostedClient, PluginDatabaseClient
+from core.clients import SelfHostedClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error
 from core.models import Bot
@@ -104,14 +105,10 @@ class ModmailBot(Bot):
 
         self._configure_logging()
 
-        if self.self_hosted:
-            self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
-            self._api = SelfHostedClient(self)
-        else:
-            self._api = ModmailApiClient(self)
+        self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
+        self._api = SelfHostedClient(self)
         self.plugin_db = PluginDatabaseClient(self)
 
-        self.data_task = self.loop.create_task(self.data_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
         self.owner = None
@@ -143,10 +140,6 @@ class ModmailBot(Bot):
     @property
     def db(self):
         return self._db
-
-    @property
-    def self_hosted(self):
-        return bool(self.config.get('mongo_uri', ''))
 
     @property
     def api(self):
@@ -210,12 +203,6 @@ class ModmailBot(Bot):
         except Exception:
             logger.critical(error('Fatal exception'), exc_info=True)
         finally:
-            try:
-                self.data_task.cancel()
-                self.loop.run_until_complete(self.data_task)
-            except asyncio.CancelledError:
-                logger.debug('data_task has been cancelled')
-
             try:
                 self.autoupdate_task.cancel()
                 self.loop.run_until_complete(self.autoupdate_task)
@@ -345,15 +332,8 @@ class ModmailBot(Bot):
 
     async def on_connect(self):
         logger.info(LINE)
-        if not self.self_hosted:
-            logger.info(info('MODE: Using the Modmail API'))
-            logger.info(LINE)
-            await self.validate_api_token()
-            logger.info(LINE)
-        else:
-            logger.info(info('Mode: Self-hosting logs.'))
-            await self.validate_database_connection()
-            logger.info(LINE)
+        await self.validate_database_connection()
+        logger.info(LINE)
         logger.info(info('Connected to gateway.'))
 
         await self.config.refresh()
@@ -806,32 +786,6 @@ class ModmailBot(Bot):
                 )
         return overwrites
 
-    async def validate_api_token(self):
-        try:
-            self.config.modmail_api_token
-        except KeyError:
-            logger.critical(error(f'MODMAIL_API_TOKEN not found.'))
-            logger.critical(error('Set a config variable called '
-                                  'MODMAIL_API_TOKEN with a token from '
-                                  'https://dashboard.modmail.tk.'))
-            logger.critical(error('If you want to self-host logs, '
-                                  'input a MONGO_URI config variable.'))
-            logger.critical(error('A Modmail API token is not needed '
-                                  'if you are self-hosting logs.'))
-
-            return await self.logout()
-        else:
-            valid = await self.api.validate_token()
-            if not valid:
-                logger.critical(error('Invalid MODMAIL_API_TOKEN - get one '
-                                      'from https://dashboard.modmail.tk'))
-                return await self.logout()
-
-        user = await self.api.get_user_info()
-        username = user['user']['username']
-        logger.info(info('Validated token.'))
-        logger.info(info('GitHub user: ' + username))
-
     async def validate_database_connection(self):
         try:
             await self.db.command('buildinfo')
@@ -843,32 +797,6 @@ class ModmailBot(Bot):
         else:
             logger.info(info('Successfully connected to the database.'))
 
-    async def data_loop(self):
-        await self.wait_until_ready()
-        self.owner = (await self.application_info()).owner
-
-        while not self.is_closed():
-            data = {
-                "owner_name": str(self.owner),
-                "owner_id": self.owner.id,
-                "bot_id": self.user.id,
-                "bot_name": str(self.user),
-                "avatar_url": self.user.avatar_url,
-                "guild_id": self.guild_id,
-                "guild_name": self.guild.name,
-                "member_count": len(self.guild.members),
-                "uptime": (datetime.utcnow() -
-                           self.start_time).total_seconds(),
-                "latency": f'{self.ws.latency * 1000:.4f}',
-                "version": self.version,
-                # TODO: change to `self_hosted`
-                "selfhosted": self.self_hosted,
-                "last_updated": str(datetime.utcnow())
-            }
-
-            await self.api.post_metadata(data)
-            await asyncio.sleep(3600)
-
     async def autoupdate_loop(self):
         await self.wait_until_ready()
 
@@ -877,16 +805,19 @@ class ModmailBot(Bot):
             logger.info(LINE)
             return
 
-        if self.self_hosted and not self.config.get('github_access_token'):
+        if not self.config.get('github_access_token'):
             logger.warning(info('GitHub access token not found.'))
             logger.warning(info('Autoupdates disabled.'))
             logger.info(LINE)
             return
 
-        while not self.is_closed():
-            metadata = await self.api.get_metadata()
+        logger.info(info('Autoupdate loop started.'))
 
-            if metadata['latest_version'] != self.version:
+        while not self.is_closed():
+            changelog = await Changelog.from_url(self)
+            latest = changelog.latest_version
+
+            if parse_version(self.version) < parse_version(latest.version):
                 data = await self.api.update_repository()
 
                 embed = discord.Embed(color=discord.Color.green())
@@ -897,10 +828,8 @@ class ModmailBot(Bot):
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
                 embed.set_footer(text=f"Updating Modmail v{self.version} "
-                                      f"-> v{metadata['latest_version']}")
+                                      f"-> v{latest.version}")
 
-                changelog = await Changelog.from_url(self)
-                latest = changelog.latest_version
                 embed.description = latest.description
                 for name, value in latest.fields.items():
                     embed.add_field(name=name, value=value)

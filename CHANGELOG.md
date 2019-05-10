@@ -9,16 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Logs search command will search through log keys as well now. 
-
-e.g. `?logs search e7499e82f8ff`
+- For example, `?logs search e7499e82f8ff`.
 
 # v2.17.1
+### What's new?
+
+Stricter fallback genesis embed search.
 
 ### Changed
-
-- Stricter fallback genesis embed search. This update shouldn't affect anyone.
-
-### Info
 How modmail checks if a channel is a thread: 
 
 1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
@@ -46,9 +44,20 @@ An issue where a scheduled close would not execute over a long period of time if
 
 # v2.16.0
 
-### What's new?
+### Changed
+
+All support for Modmail API (api.modmail.tk) has terminated. 
+If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
+option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the 
+installation tutorial for information regarding self-hosted Modmail.
 
 If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occured.
+
+# v2.15.1
+
+### Fixed
+
+Emergency patch of a SyntaxError.
 
 # v2.15.0
 
@@ -237,7 +246,7 @@ Huge thanks to Sasiko for reporting these issues.
 
 # v2.12.0
 
-### Important 
+### Important
 **In the future, the Modmail API (https://modmail.tk) will be deprecated. This is due to the fact that we are providing a free service without getting anything in return, and thus we do not have the resources to scale to accommodate for more users. 
 We recommend using your own database for logs. In the future you will soon get a `backup` command so you can download all your pre-existing data and migrate to your own database.** 
 

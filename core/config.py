@@ -53,7 +53,7 @@ class ConfigManager(ConfigManagerABC):
 
     protected_keys = {
         # Modmail
-        'modmail_api_token', 'modmail_guild_id', 'guild_id', 'owners',
+        'modmail_guild_id', 'guild_id', 'owners',
         'log_url', 'mongo_uri',
 
         # bot
