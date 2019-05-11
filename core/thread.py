@@ -243,7 +243,7 @@ class Thread(ThreadABC):
             user = f'`{self.id}`'
 
         if self.id == closer.id:
-            _closer = 'the Recipient'
+            _closer = 'the recipent'
         else:
             _closer = f'{closer} ({closer.id})'
 
@@ -735,9 +735,9 @@ class ThreadManager(ThreadManagerABC):
         # if not role_names:
         #     embed.add_field(name='Mention', value=user.mention)
         # embed.add_field(name='Registered', value=created + days(created))
-        embed.description += f' was created {days(created)}'
+        embed.description += f' se creó {days(created)}'
 
-        footer = 'User ID: ' + str(user.id)
+        footer = 'ID del usuario: ' + str(user.id)
         embed.set_footer(text=footer)
         embed.set_author(name=str(user), icon_url=avi, url=log_url)
         # embed.set_thumbnail(url=avi)
@@ -745,10 +745,10 @@ class ThreadManager(ThreadManagerABC):
         if member:
             joined = str((time - member.joined_at).days)
             # embed.add_field(name='Joined', value=joined + days(joined))
-            embed.description += f', joined {days(joined)}'
+            embed.description += f', se unió al servidor {days(joined)}'
 
             if member.nick:
-                embed.add_field(name='Nickname',
+                embed.add_field(name='Apodo',
                                 value=member.nick,
                                 inline=True)
             if role_names:
@@ -756,13 +756,13 @@ class ThreadManager(ThreadManagerABC):
                                 value=role_names,
                                 inline=True)
         else:
-            embed.set_footer(text=f'{footer} | Note: this member '
-                                  'is not part of this server.')
+            embed.set_footer(text=f'{footer} | Nota: este miembro '
+                                  'no es parte del servidor.')
 
         if log_count:
             # embed.add_field(name='Past logs', value=f'{log_count}')
-            thread = 'thread' if log_count == 1 else 'threads'
-            embed.description += f" with **{log_count}** past {thread}."
+            thread = 'ticket' if log_count == 1 else 'tickets'
+            embed.description += f" con **{log_count}** {thread}."
         else:
             embed.description += '.'
 
