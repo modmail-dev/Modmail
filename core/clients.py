@@ -251,125 +251,7 @@ class GitHub(ApiClient):
         return self
 
 
-class ModmailApiClient(UserClient, ApiClient):
-    BASE = 'https://api.modmail.tk'
-    METADATA = BASE + '/metadata'
-    GITHUB = BASE + '/github'
-    LOGS = BASE + '/logs'
-    CONFIG = BASE + '/config'
-
-    def __init__(self, bot: Bot):
-        super().__init__(bot)
-        if self.token:
-            self.headers = {
-                'Authorization': 'Bearer ' + self.token
-            }
-
-    @property
-    def token(self):
-        return self.bot.config.get('modmail_api_token')
-
-    async def validate_token(self):
-        resp = await self.request(self.BASE + '/token/verify',
-                                  return_response=True)
-        return resp.status == 200
-
-    async def post_metadata(self, data):
-        return await self.request(self.METADATA, method='POST', payload=data)
-
-    async def get_user_info(self):
-        return await self.request(self.GITHUB + '/userinfo')
-
-    async def update_repository(self):
-        return await self.request(self.GITHUB + '/update')
-
-    async def get_metadata(self):
-        return await self.request(self.METADATA)
-
-    async def get_user_logs(self, user_id):
-        return await self.request(self.LOGS + '/user/' + str(user_id))
-
-    async def get_log(self, channel_id):
-        return await self.request(self.LOGS + '/' + str(channel_id))
-
-    async def get_log_link(self, channel_id):
-        doc = await self.get_log(channel_id)
-        return f'https://logs.modmail.tk/{doc["key"]}'
-
-    async def get_config(self):
-        return await self.request(self.CONFIG)
-
-    async def update_config(self, data):
-        data = self.filter_valid(data)
-        return await self.request(self.CONFIG, method='PATCH', payload=data)
-
-    async def create_log_entry(self, recipient, channel, creator):
-        return await self.request(self.LOGS + '/key', payload={
-            'channel_id': str(channel.id),
-            'guild_id': str(self.bot.guild_id),
-            'recipient': {
-                'id': str(recipient.id),
-                'name': recipient.name,
-                'discriminator': recipient.discriminator,
-                'avatar_url': recipient.avatar_url,
-                'mod': False
-            },
-            'creator': {
-                'id': str(creator.id),
-                'name': creator.name,
-                'discriminator': creator.discriminator,
-                'avatar_url': creator.avatar_url,
-                'mod': isinstance(creator, Member)
-            }
-        })
-
-    async def edit_message(self, message_id, new_content):
-        await self.request(self.LOGS + '/edit', method='PATCH',
-                           payload={
-                               'message_id': str(message_id),
-                               'new_content': new_content
-                           })
-
-    async def append_log(self, message, channel_id='', type_='thread_message'):
-        channel_id = str(channel_id) or str(message.channel.id)
-        data = {
-            'payload': {
-                'timestamp': str(message.created_at),
-                'message_id': str(message.id),
-                # author
-                'author': {
-                    'id': str(message.author.id),
-                    'name': message.author.name,
-                    'discriminator': message.author.discriminator,
-                    'avatar_url': message.author.avatar_url,
-                    'mod': not isinstance(message.channel, DMChannel),
-                },
-                # message properties
-                'content': message.content,
-                'type': type_,
-                'attachments': [
-                    {
-                        'id': a.id,
-                        'filename': a.filename,
-                        'is_image': a.width is not None,
-                        'size': a.size,
-                        'url': a.url
-                    } for a in message.attachments]
-            }
-        }
-        return await self.request(self.LOGS + f'/{channel_id}',
-                                  method='PATCH',
-                                  payload=data)
-
-    async def post_log(self, channel_id, data):
-        return await self.request(self.LOGS + f'/{channel_id}',
-                                  method='POST',
-                                  payload=data)
-
-
 class SelfHostedClient(UserClient, ApiClient):
-    BASE = 'https://api.modmail.tk'
-    METADATA = BASE + '/metadata'
 
     def __init__(self, bot: Bot):
         super().__init__(bot)
@@ -389,17 +271,6 @@ class SelfHostedClient(UserClient, ApiClient):
     @property
     def logs(self):
         return self.db.logs
-
-    async def validate_token(self):
-        resp = await self.request(self.BASE + '/token/verify',
-                                  return_response=True)
-        return resp.status == 200
-
-    async def get_metadata(self):
-        return await self.request(self.METADATA)
-
-    async def post_metadata(self, data):
-        return await self.request(self.METADATA, method='POST', payload=data)
 
     async def get_user_logs(self, user_id):
         query = {
