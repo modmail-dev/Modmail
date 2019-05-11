@@ -383,6 +383,7 @@ class Modmail:
             created_at = parser.parse(entry['created_at'])
 
             prefix = os.getenv('LOG_URL_PREFIX', '/logs')
+            if prefix == 'NONE':
                 prefix = ''
 
 
