@@ -36,14 +36,14 @@ class Version:
 
     def __init__(self, bot: Bot, version: str, lines: str):
         self.bot = bot
-        self.version = version
+        self.version = version.lstrip('vV')
         self.lines = [x for x in lines.splitlines() if x]
         self.fields = defaultdict(str)
         self.description = ''
         self.parse()
 
     def __repr__(self) -> str:
-        return f'Version({self.version}, description="{self.description}")'
+        return f'Version(v{self.version}, description="{self.description}")'
 
     def parse(self) -> None:
         """
@@ -66,9 +66,8 @@ class Version:
         """
         embed = Embed(color=Color.green(), description=self.description)
         embed.set_author(
-            name=f'{self.version} - Changelog',
+            name=f'v{self.version} - Changelog',
             icon_url=self.bot.user.avatar_url,
-            url='https://modmail.tk/changelog'
         )
 
         for name, value in self.fields.items():
@@ -151,8 +150,3 @@ class Changelog:
         url = url or cls.CHANGELOG_URL
         resp = await bot.session.get(url)
         return cls(bot, await resp.text())
-
-
-if __name__ == '__main__':
-    with open('../CHANGELOG.md') as f:
-        print(Changelog(..., f.read()).latest_version)
