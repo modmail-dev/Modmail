@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+import os
 import string
 import typing
 from datetime import datetime, timedelta
@@ -221,7 +222,9 @@ class Thread(ThreadABC):
         })
 
         if log_data is not None and isinstance(log_data, dict):
-            log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
+            prefix = os.getenv('LOG_URL_PREFIX', '/logs')
+            if prefix == 'NONE': prefix = ''
+            log_url = f"{self.bot.config.log_url.strip('/')}{prefix}/{log_data['key']}"
 
             if log_data['messages']:
                 content = str(log_data['messages'][0]['content'])
