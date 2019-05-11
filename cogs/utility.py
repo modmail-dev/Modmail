@@ -45,7 +45,7 @@ class Utility:
                 new_fmt = f'`{prefix + cmd.qualified_name}` '
                 perm_level = next(getattr(c, 'permission_level', None) for c in cmd.checks)
                 if perm_level is not None:
-                    new_fmt += f'[{perm_level}] '
+                    new_fmt = f'`[{perm_level}] {prefix + cmd.qualified_name}` '
 
                 new_fmt += f'- {cmd.short_doc}\n'
                 if len(new_fmt) + len(fmts[-1]) >= 1024:
@@ -80,12 +80,15 @@ class Utility:
         prefix = self.bot.prefix
 
         perm_level = next(getattr(c, 'permission_level', None) for c in cmd.checks)
-        perm_level = f' [{perm_level}]' if perm_level is not None else ''
+        perm_level = f'**{perm_level.name}** [{perm_level}]' if perm_level is not None else ''
+
         embed = Embed(
-            title=f'`{prefix}{cmd.signature}`{perm_level}',
+            title=f'`{prefix}{cmd.signature}`',
             color=self.bot.main_color,
             description=cmd.help
         )
+        
+        embed.add_field(name='Permission level', value=perm_level)
 
         if not isinstance(cmd, commands.Group):
             return embed
