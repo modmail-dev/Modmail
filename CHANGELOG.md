@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.18.3
+
+Attempt to fix teams bug.
+
 # v2.18.2
 
 ### Changed
@@ -45,7 +49,7 @@ To view all roles and users with permission for a permission group or command do
 -  `?permissions get command command-name`
 -  `?permissions get level owner`
 
-By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `EGULAR` set to @everyone.
+By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `REGULAR` set to @everyone.
 
 ### Breaking
 
