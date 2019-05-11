@@ -793,9 +793,10 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def delete(self, ctx, message_id: int = None):
-        """
+        """Delete a message that was sent using the reply command.
+
         Deletes the previous message, unless a message ID is provided, which in that case,
-        delete the message with that message ID.
+        deletes the message with that message ID.
         """
         thread = ctx.thread
 
