@@ -2,6 +2,7 @@ import abc
 import asyncio
 import typing
 from datetime import datetime
+from enum import IntEnum
 
 from discord import Color, Member, User, CategoryChannel, DMChannel, Embed
 from discord import Message, TextChannel, Guild
@@ -9,6 +10,16 @@ from discord.ext import commands
 
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient
+
+
+class PermissionLevel(IntEnum):
+    OWNER = 5
+    ADMINISTRATOR = 4
+    ADMIN = 4
+    MODERATOR = 3
+    MOD = 3
+    SUPPORTER = 2
+    REGULAR = 1
 
 
 class Bot(abc.ABC, commands.Bot):
@@ -137,6 +148,11 @@ class Bot(abc.ABC, commands.Bot):
 
     @abc.abstractmethod
     async def convert_emoji(self, name: str) -> str:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def update_perms(self, name: typing.Union[PermissionLevel, str],
+                           value: int, add: bool = True) -> None:
         raise NotImplementedError
 
     @staticmethod
