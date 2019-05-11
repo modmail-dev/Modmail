@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Supporter [2]
   - Regular [1]
 
+### Usage 
+
 You may add a role or user to a permission group through any of the following methods:
 - `?permissions add level owner @role`
 - `?permissions add level supporter member-name`
