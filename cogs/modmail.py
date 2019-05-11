@@ -1,5 +1,6 @@
 import asyncio
 import re
+import os
 from datetime import datetime
 from typing import Optional, Union
 from types import SimpleNamespace as param
@@ -381,7 +382,12 @@ class Modmail:
 
             created_at = parser.parse(entry['created_at'])
 
-            log_url = self.bot.config.log_url.strip('/') + f'/logs/{key}'
+            prefix = os.getenv('LOG_URL_PREFIX', '/logs')
+            if prefix == 'NONE':
+                prefix = ''
+
+
+            log_url = self.bot.config.log_url.strip('/') + f'{prefix}/{key}'
 
             username = entry['recipient']['name'] + '#'
             username += entry['recipient']['discriminator']
