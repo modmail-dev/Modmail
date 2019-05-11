@@ -87,8 +87,7 @@ class Utility:
             color=self.bot.main_color,
             description=cmd.help
         )
-        
-        
+                
 
         if not isinstance(cmd, commands.Group):
             embed.set_footer(text=f'Permission level: {perm_level}')
@@ -1053,7 +1052,8 @@ class Utility:
             if not permissions:
                 embed = Embed(
                     title=f'Permission entries for command `{cmd.name}`:',
-                    description='No permission entries found.'
+                    description='No permission entries found.',
+                    color=self.bot.main_color,
                 )
             else:
                 values = []
@@ -1077,7 +1077,8 @@ class Utility:
 
                 embed = Embed(
                     title=f'Permission entries for command `{cmd.name}`:',
-                    description=', '.join(values)
+                    description=', '.join(values),
+                    color=self.bot.main_color
                 )
             return embed
 
@@ -1110,7 +1111,8 @@ class Utility:
                 embed = Embed(
                     title='Permission entries for permission '
                           f'level `{perm_level.name}`:',
-                    description='No permission entries found.'
+                    description='No permission entries found.',
+                    color=self.bot.main_color,
                 )
             else:
                 values = []
@@ -1134,7 +1136,8 @@ class Utility:
 
                 embed = Embed(
                     title=f'Permission entries for permission level `{perm_level.name}`:',
-                    description=', '.join(values)
+                    description=', '.join(values),
+                    color=self.bot.main_color,
                 )
             return embed
 
