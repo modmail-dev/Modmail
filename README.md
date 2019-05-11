@@ -13,10 +13,6 @@
     <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support">
   </a>
   
-  <a href="https://github.com/kyb3r/modmail/">
-    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances">
-  </a>
-  
   <a href="https://patreon.com/kyber">
     <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7">
   </a>
@@ -56,8 +52,7 @@ Have you sent something with the `?reply` command by accident? Don't fret, you c
 
 ## Thread Logs
 
-Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. An example of a logged conversation: https://logs.modmail.tk/02032d65a6f3
-
+Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. An example of a logged conversation: https://modmail-logs.herokuapp.com/logs/02032d65a6f3.
 
 # Contributing
 
