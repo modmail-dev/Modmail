@@ -175,8 +175,11 @@ class Utility:
     async def changelog(self, ctx):
         """Show a paginated changelog of the bot."""
         changelog = await Changelog.from_url(self.bot)
-        paginator = PaginatorSession(ctx, *changelog.embeds)
-        await paginator.run()
+        try:
+            paginator = PaginatorSession(ctx, *changelog.embeds)
+            await paginator.run()
+        except:
+            await ctx.send(changelog.CHANGELOG_URL)
 
     @commands.command(aliases=['bot', 'info'])
     @checks.has_permissions(PermissionLevel.REGULAR)
