@@ -80,7 +80,7 @@ class Utility:
         prefix = self.bot.prefix
 
         perm_level = next(getattr(c, 'permission_level', None) for c in cmd.checks)
-        perm_level = f'**{perm_level.name}** [{perm_level}]' if perm_level is not None else ''
+        perm_level = f'{perm_level.name} [{perm_level}]' if perm_level is not None else ''
 
         embed = Embed(
             title=f'`{prefix}{cmd.signature}`',
@@ -88,10 +88,13 @@ class Utility:
             description=cmd.help
         )
         
-        embed.add_field(name='Permission level', value=perm_level)
+        
 
         if not isinstance(cmd, commands.Group):
+            embed.set_footer(text=f'Permission level: {perm_level}')
             return embed
+        
+        embed.add_field(name='Permission level', value=perm_level)
 
         fmt = ''
         length = len(cmd.commands)
