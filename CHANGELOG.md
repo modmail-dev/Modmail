@@ -4,21 +4,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.18.1
+
+Un-deprecated the `OWNERS` config variable to support discord developer team accounts.
+
+# v2.18.0
+
+### New Permissions System
+
+- A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desired permission level specific to a command or a group of commands for a role or user.
+- There are five permission groups/levels:
+  - Owner [5]
+  - Administrator [4]
+  - Moderator [3]
+  - Supporter [2]
+  - Regular [1]
+
+### Usage 
+
+You may add a role or user to a permission group through any of the following methods:
+- `?permissions add level owner @role`
+- `?permissions add level supporter member-name`
+- `?permissions add level moderator everyone`
+- `?permissions add level moderator @member#1234`
+- `?permissions add level administrator 78912384930291853`
+
+The same applies to individual commands permissions:
+- `?permissions add command command-name @member#1234`
+- ... and the other methods listed above.
+
+To revoke permission, use `remove` instead of `add`.
+
+To view all roles and users with permission for a permission group or command do:
+-  `?permissions get command command-name`
+-  `?permissions get level owner`
+
+By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `EGULAR` set to @everyone.
+
+### Breaking
+
+When updating to this version, all prior permission settings with guild-based permissions will be invalidated. You will need to convert to the above system.
+`OWNERS` will also get removed, you will need to set owners through `?permissions add level owner 212931293123129` or any way listed above.
+
+### New Command
+
+- A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer require manage messages permission to recall thread messages.
+
+### Changed
+
+- The help message no longer conceals inaccessible commands due to check failures.
+
+
 # v2.17.2
 
 ### Changed
 
 - Logs search command will search through log keys as well now. 
-
-e.g. `?logs search e7499e82f8ff`
+- For example, `?logs search e7499e82f8ff`.
 
 # v2.17.1
+### What's new?
+
+Stricter fallback genesis embed search.
 
 ### Changed
-
-- Stricter fallback genesis embed search. This update shouldn't affect anyone.
-
-### Info
 How modmail checks if a channel is a thread: 
 
 1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
@@ -46,9 +95,20 @@ An issue where a scheduled close would not execute over a long period of time if
 
 # v2.16.0
 
-### What's new?
+### Changed
+
+All support for Modmail API (api.modmail.tk) has terminated. 
+If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
+option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the 
+installation tutorial for information regarding self-hosted Modmail.
 
 If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occured.
+
+# v2.15.1
+
+### Fixed
+
+Emergency patch of a SyntaxError.
 
 # v2.15.0
 
@@ -237,7 +297,7 @@ Huge thanks to Sasiko for reporting these issues.
 
 # v2.12.0
 
-### Important 
+### Important
 **In the future, the Modmail API (https://modmail.tk) will be deprecated. This is due to the fact that we are providing a free service without getting anything in return, and thus we do not have the resources to scale to accommodate for more users. 
 We recommend using your own database for logs. In the future you will soon get a `backup` command so you can download all your pre-existing data and migrate to your own database.** 
 

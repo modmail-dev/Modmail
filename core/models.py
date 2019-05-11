@@ -2,6 +2,7 @@ import abc
 import asyncio
 import typing
 from datetime import datetime
+from enum import IntEnum
 
 from discord import Color, Member, User, CategoryChannel, DMChannel, Embed
 from discord import Message, TextChannel, Guild
@@ -9,6 +10,16 @@ from discord.ext import commands
 
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient
+
+
+class PermissionLevel(IntEnum):
+    OWNER = 5
+    ADMINISTRATOR = 4
+    ADMIN = 4
+    MODERATOR = 3
+    MOD = 3
+    SUPPORTER = 2
+    REGULAR = 1
 
 
 class Bot(abc.ABC, commands.Bot):
@@ -39,11 +50,6 @@ class Bot(abc.ABC, commands.Bot):
     @property
     @abc.abstractmethod
     def db(self) -> typing.Optional[AsyncIOMotorClient]:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def self_hosted(self) -> bool:
         raise NotImplementedError
 
     @property
@@ -144,6 +150,11 @@ class Bot(abc.ABC, commands.Bot):
     async def convert_emoji(self, name: str) -> str:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    async def update_perms(self, name: typing.Union[PermissionLevel, str],
+                           value: int, add: bool = True) -> None:
+        raise NotImplementedError
+
     @staticmethod
     @abc.abstractmethod
     def overwrites(ctx: commands.Context) -> dict:
@@ -166,10 +177,6 @@ class UserClient(abc.ABC):
 
     @abc.abstractmethod
     async def get_user_logs(self, user_id: typing.Union[str, int]) -> list:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def validate_token(self) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -206,14 +213,6 @@ class UserClient(abc.ABC):
     async def post_log(self,
                        channel_id: typing.Union[int, str],
                        data: dict) -> dict:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def get_metadata(self) -> dict:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def post_metadata(self, data: dict) -> dict:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -380,7 +379,8 @@ class ThreadManagerABC(abc.ABC):
     @abc.abstractmethod
     async def find(self, *,
                    recipient: typing.Union[Member, User] = None,
-                   channel: TextChannel = None) -> \
+                   channel: TextChannel = None,
+                   recipient_id: int = None) -> \
             typing.Optional['ThreadABC']:
         raise NotImplementedError
 
