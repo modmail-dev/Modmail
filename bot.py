@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.18.2'
+__version__ = '2.18.4'
 
 import asyncio
 import logging
@@ -226,7 +226,7 @@ class ModmailBot(Bot):
     async def is_owner(self, user):
         raw = str(self.config.get('owners', '0')).split(',')
         allowed = {int(x) for x in raw}
-        return await super().is_owner(user) or user.id in allowed
+        return (user.id in allowed) or await super().is_owner(user) 
 
     @property
     def log_channel(self):
