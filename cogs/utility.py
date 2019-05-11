@@ -909,7 +909,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.BadArgument('Could not find the specified User or Role.')
+            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
         await self.bot.update_perms(self.bot.all_commands[command].name, value)
         embed = Embed(
@@ -937,7 +937,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.BadArgument('Could not find the specified User or Role.')
+            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
         await self.bot.update_perms(PermissionLevel[level.upper()], value)
         embed = Embed(
@@ -973,7 +973,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.BadArgument('Could not find the specified User or Role.')
+            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
         await self.bot.update_perms(self.bot.all_commands[command].name, value, add=False)
         embed = Embed(
@@ -1001,7 +1001,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.BadArgument('Could not find the specified User or Role.')
+            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
         await self.bot.update_perms(PermissionLevel[level.upper()], value, add=False)
         embed = Embed(
@@ -1021,7 +1021,7 @@ class Utility:
         elif user_or_role in {'everyone', 'all'}:
             value = -1
         else:
-            raise commands.BadArgument('Could not find the specified User or Role.')
+            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
         cmds = []
         levels = []
