@@ -40,7 +40,7 @@ The help message no longer conceal inaccessible commands due to check failures.
 
 A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer require manage messages permission to recall thread messages.
 
-### Note
+### Breaking
 
 When updating to this version, all prior permission settings with guild-based permissions will be invalidated. You will need to convert to the above system.
 `OWNERS` will also get removed, you will need to set owners through `?permissions add level owner 212931293123129` or any way listed above.
