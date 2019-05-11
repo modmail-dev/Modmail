@@ -380,11 +380,7 @@ class Modmail:
 
             created_at = parser.parse(entry['created_at'])
 
-            log_url = (
-                f"https://logs.modmail.tk/{key}"
-                if not self.bot.self_hosted else
-                self.bot.config.log_url.strip('/') + f'/logs/{key}'
-            )
+            log_url = self.bot.config.log_url.strip('/') + f'/logs/{key}'
 
             username = entry['recipient']['name'] + '#'
             username += entry['recipient']['discriminator']
@@ -451,14 +447,6 @@ class Modmail:
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def closed_by(self, ctx, *, user: User = None):
         """Returns all logs closed by a user."""
-        if not self.bot.self_hosted:
-            embed = discord.Embed(
-                color=discord.Color.red(),
-                description='This command only works if '
-                            'you are self-hosting your logs.'
-                )
-            return await ctx.send(embed=embed)
-
         user = user or ctx.author
 
         query = {
@@ -492,14 +480,6 @@ class Modmail:
         """Searches all logs for a message that contains your query."""
 
         await ctx.trigger_typing()
-
-        if not self.bot.self_hosted:
-            embed = discord.Embed(
-                color=discord.Color.red(),
-                description='This command only works if you '
-                            'are self-hosting your logs.'
-                )
-            return await ctx.send(embed=embed)
 
         query = {
             'guild_id': str(self.bot.guild_id),

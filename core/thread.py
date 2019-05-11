@@ -221,11 +221,7 @@ class Thread(ThreadABC):
         })
 
         if log_data is not None and isinstance(log_data, dict):
-            if self.bot.self_hosted:
-                log_url = f"{self.bot.config.log_url.strip('/')}/" \
-                    f"logs/{log_data['key']}"
-            else:
-                log_url = f"https://logs.modmail.tk/{log_data['key']}"
+            log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
 
             if log_data['messages']:
                 content = str(log_data['messages'][0]['content'])
