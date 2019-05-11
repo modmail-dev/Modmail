@@ -39,7 +39,9 @@ class Utility:
         prefix = self.bot.prefix
 
         def perms_required(cmd):
-            return next(getattr(c, 'permission_level', 0) for c in cmd.checks)
+            for c in cmd.checks:
+                return getattr(c, 'permission_level', 0)
+            return 0
 
         fmts = ['']
         for cmd in sorted(self.bot.commands,
