@@ -30,7 +30,7 @@ You may add a role or user to a permission group through any of the following me
 - `?permissions add level administrator 78912384930291853`
 
 The same applies to individual commands permissions:
-- `?permissions add command-name @member#1234`
+- `?permissions add command command-name @member#1234`
 - ... and the other methods listed above.
 
 To revoke permission, use `remove` instead of `add`.
