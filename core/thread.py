@@ -12,7 +12,6 @@ from core.models import Bot, ThreadManagerABC, ThreadABC
 from core.utils import is_image_url, days, match_user_id
 from core.utils import truncate, ignore, error
 
-
 logger = logging.getLogger('Modmail')
 
 
@@ -104,12 +103,12 @@ class Thread(ThreadABC):
         try:
             log_url, log_data = await asyncio.gather(
                 self.bot.api.create_log_entry(recipient, channel,
-                                            creator or recipient),
+                                              creator or recipient),
                 self.bot.api.get_user_logs(recipient.id)
             )
 
             log_count = sum(1 for log in log_data if not log['open'])
-        except: # Something went wrong with database?
+        except:  # Something went wrong with database?
             log_url = log_count = None
             # ensure core functionality still works
 
@@ -153,14 +152,15 @@ class Thread(ThreadABC):
 
         footer = self.bot.config.get('thread_creation_footer', footer)
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
-        embed.title = self.bot.config.get('thread_creation_title', 'Thread Created')
+        embed.title = self.bot.config.get('thread_creation_title',
+                                          'Thread Created')
 
         if creator is None:
             msg = await recipient.send(embed=embed)
             if not self.bot.config.get('disable_recipient_thread_close'):
                 close_emoji = self.bot.config.get('close_emoji', '🔒')
                 close_emoji = await self.bot.convert_emoji(close_emoji)
-                await msg.add_reaction(close_emoji) 
+                await msg.add_reaction(close_emoji)
 
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -221,11 +221,7 @@ class Thread(ThreadABC):
         })
 
         if log_data is not None and isinstance(log_data, dict):
-            if self.bot.self_hosted:
-                log_url = f"{self.bot.config.log_url.strip('/')}/" \
-                    f"logs/{log_data['key']}"
-            else:
-                log_url = f"https://logs.modmail.tk/{log_data['key']}"
+            log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
 
             if log_data['messages']:
                 content = str(log_data['messages'][0]['content'])
@@ -245,7 +241,7 @@ class Thread(ThreadABC):
             user = f"{self.recipient} (`{self.id}`)"
         else:
             user = f'`{self.id}`'
-        
+
         if self.id == closer.id:
             _closer = 'the Recipient'
         else:
@@ -261,7 +257,7 @@ class Thread(ThreadABC):
         tasks = [
             self.bot.config.update()
         ]
-        
+
         try:
             tasks.append(self.bot.log_channel.send(embed=embed))
         except (ValueError, AttributeError):
@@ -269,26 +265,29 @@ class Thread(ThreadABC):
 
         # Thread closed message
 
-        embed = discord.Embed(title=self.bot.config.get('thread_close_title', 'Thread Closed'),
-                              color=discord.Color.red(),
-                              timestamp=datetime.utcnow())
+        embed = discord.Embed(
+            title=self.bot.config.get('thread_close_title', 'Thread Closed'),
+            color=discord.Color.red(),
+            timestamp=datetime.utcnow())
 
         if not message:
             if self.id == closer.id:
                 message = self.bot.config.get(
-                    'thread_self_close_response', 
+                    'thread_self_close_response',
                     'You have closed this Modmail thread.'
-                    )
+                )
             else:
                 message = self.bot.config.get(
                     'thread_close_response',
                     '{closer.mention} has closed this Modmail thread.'
-                    )
-            
-        message = message.format(closer=closer, loglink=log_url, logkey=log_data['key'])
+                )
+
+        message = message.format(closer=closer, loglink=log_url,
+                                 logkey=log_data['key'])
 
         embed.description = message
-        footer = self.bot.config.get('thread_close_footer', 'Replying will create a new thread')
+        footer = self.bot.config.get('thread_close_footer',
+                                     'Replying will create a new thread')
         embed.set_footer(text=footer,
                          icon_url=self.bot.guild.icon_url)
 
@@ -310,21 +309,38 @@ class Thread(ThreadABC):
             await self.bot.config.update()
 
     @staticmethod
-    async def _edit_thread_message(channel, message_id, message):
+    async def _find_thread_message(channel, message_id):
         async for msg in channel.history():
             if not msg.embeds:
                 continue
             embed = msg.embeds[0]
             if embed and embed.author and embed.author.url:
                 if str(message_id) == str(embed.author.url).split('/')[-1]:
-                    embed.description = message
-                    await msg.edit(embed=embed)
-                    break
+                    return msg
 
     async def edit_message(self, message_id, message):
+        msg_recipient, msg_channel = await asyncio.gather(
+            self._find_thread_message(self.recipient, message_id),
+            self._find_thread_message(self.channel, message_id)
+        )
+
+        embed_recipient = msg_recipient.embeds[0]
+        embed_channel = msg_recipient.embeds[0]
+        embed_recipient.description = message
+        embed_channel.description = message
         await asyncio.gather(
-            self._edit_thread_message(self.recipient, message_id, message),
-            self._edit_thread_message(self.channel, message_id, message)
+            msg_recipient.edit(embed=embed_recipient),
+            msg_channel.edit(embed=embed_channel)
+        )
+
+    async def delete_message(self, message_id):
+        msg_recipient, msg_channel = await asyncio.gather(
+            self._find_thread_message(self.recipient, message_id),
+            self._find_thread_message(self.channel, message_id)
+        )
+        await asyncio.gather(
+            msg_recipient.delete(),
+            msg_channel.delete()
         )
 
     async def note(self, message):
@@ -476,13 +492,12 @@ class Thread(ThreadABC):
 
         for att in images:
             if not prioritize_uploads or (
-                    is_image_url(*att) and not
-                    embedded_image and
-                    att[1]
+                    is_image_url(*att) and not embedded_image and att[1]
             ):
                 embed.set_image(url=att[0])
                 if att[1]:
-                    embed.add_field(name='Image', value=f'[{att[1]}]({att[0]})')
+                    embed.add_field(name='Image',
+                                    value=f'[{att[1]}]({att[0]})')
                 embedded_image = True
             elif att[1] is not None:
                 if note:
