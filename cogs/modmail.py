@@ -2,6 +2,7 @@ import asyncio
 import re
 from datetime import datetime
 from typing import Optional, Union
+from types import SimpleNamespace as param
 
 import discord
 from discord.ext import commands
@@ -420,7 +421,7 @@ class Modmail:
         if not member:
             thread = ctx.thread
             if not thread:
-                raise commands.UserInputError
+                raise commands.MissingRequiredArgument(param(name='member'))
             user = thread.recipient
         else:
             user = member
@@ -689,15 +690,17 @@ class Modmail:
             thread = ctx.thread
             if thread:
                 user = thread.recipient
+            elif after is None:
+                raise commands.MissingRequiredArgument(param(name='user'))
             else:
-                raise commands.UserInputError
+                raise commands.BadArgument(f'User "{after.arg}" not found')
 
         if after is not None:
             reason = after.arg
             if reason.startswith('System Message: '):
-                raise commands.UserInputError
+                raise commands.BadArgument('The reason cannot start with `System Message:`.')
             if re.search(r'%(.+?)%$', reason) is not None:
-                raise commands.UserInputError
+                raise commands.MissingRequiredArgument(param(name='reason'))
             if after.dt > after.now:
                 reason = f'{reason} %{after.dt.isoformat()}%'
 
@@ -749,12 +752,13 @@ class Modmail:
         use only.
         """
 
+
         if user is None:
             thread = ctx.thread
             if thread:
                 user = thread.recipient
             else:
-                raise commands.UserInputError
+                raise commands.MissingRequiredArgument(param(name='user'))
 
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
@@ -792,13 +796,19 @@ class Modmail:
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def delete(self, ctx, message_id: int = None):
+    @checks.thread_only()
+    async def delete(self, ctx, message_id = None):
         """Delete a message that was sent using the reply command.
 
         Deletes the previous message, unless a message ID is provided, which in that case,
         deletes the message with that message ID.
         """
         thread = ctx.thread
+
+        try:
+            message_id = int(message_id)
+        except ValueError:
+            raise commands.BadArgument('An integer message ID needs to be specified.')
 
         linked_message_id = await self.find_linked_message(ctx, message_id)
 

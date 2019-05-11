@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.18.2
+
+### Changed
+
+Commands now have better error messages, instead of just sending the help message for a command when an argument fails to be converted to its specified object, the bot now says things like "User 'bob' not found" instead.
+
 # v2.18.1
 
 Un-deprecated the `OWNERS` config variable to support discord developer team accounts.
@@ -30,7 +36,7 @@ You may add a role or user to a permission group through any of the following me
 - `?permissions add level administrator 78912384930291853`
 
 The same applies to individual commands permissions:
-- `?permissions add command-name @member#1234`
+- `?permissions add command command-name @member#1234`
 - ... and the other methods listed above.
 
 To revoke permission, use `remove` instead of `add`.
