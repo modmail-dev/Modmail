@@ -109,6 +109,7 @@ class ModmailBot(Bot):
         self._api = SelfHostedClient(self)
         self.plugin_db = PluginDatabaseClient(self)
 
+        self.metadata_task = self.loop.create_task(self.metadata_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
         self.owner = None
@@ -203,6 +204,11 @@ class ModmailBot(Bot):
         except Exception:
             logger.critical(error('Fatal exception'), exc_info=True)
         finally:
+            try:
+                self.metadata_task.cancel()
+                self.loop.run_until_complete(self.metadata_task)
+            except asyncio.CancelledError:
+                logger.debug('data_task has been cancelled')
             try:
                 self.autoupdate_task.cancel()
                 self.loop.run_until_complete(self.autoupdate_task)
@@ -845,6 +851,37 @@ class ModmailBot(Bot):
                     channel = self.log_channel
                     await channel.send(embed=embed)
 
+            await asyncio.sleep(3600)
+
+    async def metadata_loop(self):
+        await self.wait_until_ready()
+        self.owner = (await self.application_info()).owner
+
+        while not self.is_closed():
+            data = {
+                "owner_name": str(self.owner),
+                "owner_id": self.owner.id,
+                "bot_id": self.user.id,
+                "bot_name": str(self.user),
+                "avatar_url": self.user.avatar_url,
+                "guild_id": self.guild_id,
+                "guild_name": self.guild.name,
+                "member_count": len(self.guild.members),
+                "uptime": (datetime.utcnow() -
+                           self.start_time).total_seconds(),
+                "latency": f'{self.ws.latency * 1000:.4f}',
+                "version": self.version,
+                "selfhosted": True,
+                "last_updated": str(datetime.utcnow())
+            }
+
+
+            try:
+                await self.session.post('https://api.modmail.tk/metadata', json=data)
+                logger.debug('Posted metadata')
+            except:
+                pass
+                
             await asyncio.sleep(3600)
 
 
