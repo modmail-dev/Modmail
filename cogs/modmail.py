@@ -2,6 +2,7 @@ import asyncio
 import re
 from datetime import datetime
 from typing import Optional, Union
+from types import SimpleNamespace as p
 
 import discord
 from discord.ext import commands
@@ -420,7 +421,7 @@ class Modmail:
         if not member:
             thread = ctx.thread
             if not thread:
-                raise commands.UserInputError
+                raise commands.MissingRequiredArgument(p(name=member))
             user = thread.recipient
         else:
             user = member
@@ -690,14 +691,14 @@ class Modmail:
             if thread:
                 user = thread.recipient
             else:
-                raise commands.UserInputError
+                raise commands.MissingRequiredArgument(p(name='user'))
 
         if after is not None:
             reason = after.arg
             if reason.startswith('System Message: '):
-                raise commands.UserInputError
+                raise commands.BadArgument('The reason cannot start with `System Message:`.')
             if re.search(r'%(.+?)%$', reason) is not None:
-                raise commands.UserInputError
+                raise commands.MissingRequiredArgument(p(name='reason'))
             if after.dt > after.now:
                 reason = f'{reason} %{after.dt.isoformat()}%'
 
@@ -754,7 +755,7 @@ class Modmail:
             if thread:
                 user = thread.recipient
             else:
-                raise commands.UserInputError
+                raise commands.MissingRequiredArgument(p(name='user'))
 
         mention = user.mention if hasattr(user, 'mention') else f'`{user.id}`'
 
