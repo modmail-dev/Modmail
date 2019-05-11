@@ -1,3 +1,4 @@
+import os
 import logging
 import secrets
 from datetime import datetime
@@ -14,6 +15,9 @@ from core.utils import info
 
 logger = logging.getLogger('Modmail')
 
+prefix = os.getenv('LOG_URL_PREFIX', '/logs')
+if prefix == 'NONE':
+    prefix = ''
 
 class ApiClient:
     """
@@ -288,7 +292,7 @@ class SelfHostedClient(UserClient, ApiClient):
 
     async def get_log_link(self, channel_id):
         doc = await self.get_log(channel_id)
-        return f"{self.bot.config.log_url.strip('/')}/logs/{doc['key']}"
+        return f"{self.bot.config.log_url.strip('/')}{prefix}/{doc['key']}"
 
     async def create_log_entry(self, recipient, channel, creator):
         key = secrets.token_hex(6)
@@ -318,7 +322,7 @@ class SelfHostedClient(UserClient, ApiClient):
             'messages': []
         })
 
-        return f"{self.bot.config.log_url.strip('/')}/logs/{key}"
+        return f"{self.bot.config.log_url.strip('/')}{prefix}/{key}"
 
     async def get_config(self):
         conf = await self.db.config.find_one({'bot_id': self.bot.user.id})
