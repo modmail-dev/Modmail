@@ -784,11 +784,31 @@ class ModmailBot(Bot):
         logger.error(error('Ignoring exception in {}'.format(event_method)))
         logger.error(error('Unexpected exception:'), exc_info=sys.exc_info())
 
-    async def on_command_error(self, context, exception):
-        if isinstance(exception, (commands.MissingRequiredArgument,
-                                  commands.UserInputError)):
-            await context.invoke(self.get_command('help'),
-                                 command=str(context.command))
+    async def on_command_error(self, ctx, exception):
+
+        def human_join(strings):
+            if len(strings) <= 2:
+                return ' or '.join(strings)
+            else:
+                return ', '.join(strings[:len(strings)-1]) + ' or ' + strings[-1]
+
+        if isinstance(exception, commands.BadUnionArgument):
+            msg = 'Could not find the specified ' + human_join([c.__name__ for c in exception.converters])
+            await ctx.trigger_typing()
+            await ctx.send(embed=discord.Embed(
+                color=discord.Color.red(), 
+                description=msg
+                ))
+
+        elif isinstance(exception, commands.BadArgument):
+            await ctx.trigger_typing()
+            await ctx.send(embed=discord.Embed(
+                color=discord.Color.red(), 
+                description=str(exception)
+                ))
+        elif isinstance(exception, commands.MissingRequiredArgument):
+            await ctx.invoke(self.get_command('help'),
+                                 command=str(ctx.command))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning(error('CommandNotFound: ' + str(exception)))
         elif isinstance(exception, commands.CheckFailure):
