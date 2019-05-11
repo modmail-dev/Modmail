@@ -45,7 +45,7 @@ To view all roles and users with permission for a permission group or command do
 -  `?permissions get command command-name`
 -  `?permissions get level owner`
 
-By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `EGULAR` set to @everyone.
+By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `REGULAR` set to @everyone.
 
 ### Breaking
 
