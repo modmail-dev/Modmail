@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://i.imgur.com/o558Qnq.png" align="center">
   <br>
-  <strong><i>A simple and functional Modmail bot for Discord.</i></strong>
+  <strong><i>A simple and functional Modmail bot for Discord modified for SeaOfThievesES.</i></strong>
   <br>
   <br>
     
