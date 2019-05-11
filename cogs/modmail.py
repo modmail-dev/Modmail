@@ -693,7 +693,7 @@ class Modmail:
             elif after is None:
                 raise commands.MissingRequiredArgument(param(name='user'))
             else:
-                raise commands.BadArgument(f'User "{after}" not found')
+                raise commands.BadArgument(f'User "{after.arg}" not found')
 
         if after is not None:
             reason = after.arg
