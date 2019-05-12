@@ -46,7 +46,7 @@ Modmail has a range of configuration variables that you can dynamically alter wi
 
 ## Thread Logs
 
-Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. An example of a logged conversation: https://modmail-logs.herokuapp.com/logs/02032d65a6f3.
+Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. You have the ability to query and search through logs using the bot via commands. An example of a logged conversation: https://logs.modmail.tk/example.
 
 # Contributing
 
