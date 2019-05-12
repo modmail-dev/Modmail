@@ -187,7 +187,8 @@ def match_user_id(text: str) -> int:
         return int(match.group(1))
     return -1
 
-def perms_level(cmd):
+
+def get_perm_level(cmd) -> PermissionLevel:
     for c in cmd.checks:
         perm = getattr(c, 'permission_level', None)
         if perm is not None:
@@ -195,7 +196,8 @@ def perms_level(cmd):
     for c in cmd.checks:
         if 'is_owner' in str(c):
             return PermissionLevel.OWNER
-    return PermissionLevel.NONE
+    return PermissionLevel.INVALID
+
 
 async def ignore(coro):
     try:

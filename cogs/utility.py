@@ -6,6 +6,7 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO
+from operator import itemgetter
 from typing import Union
 from json import JSONDecodeError
 from pkg_resources import parse_version
@@ -22,7 +23,7 @@ from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot, InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code, info, error, User, perms_level
+from core.utils import cleanup_code, info, error, User, get_perm_level
 
 logger = logging.getLogger('Modmail')
 
@@ -39,12 +40,12 @@ class Utility:
         prefix = self.bot.prefix
 
         fmts = ['']
-        for cmd in sorted(self.bot.commands,
-                          key=lambda cmd: perms_level(cmd)):
+        for perm_level, cmd in sorted(((get_perm_level(c), c) for c in self.bot.commands),
+                                      key=itemgetter(0)):
             if cmd.instance is cog and not cmd.hidden:
-                new_fmt = f'`{prefix + cmd.qualified_name}` '
-                perm_level = perms_level(cmd)
-                if perm_level is not None:
+                if perm_level is PermissionLevel.INVALID:
+                    new_fmt = f'`{prefix + cmd.qualified_name}` '
+                else:
                     new_fmt = f'`[{perm_level}] {prefix + cmd.qualified_name}` '
 
                 new_fmt += f'- {cmd.short_doc}\n'
@@ -83,15 +84,17 @@ class Utility:
 
         prefix = self.bot.prefix
 
-        perm_level = perms_level(cmd)
-        perm_level = f'{perm_level.name} [{perm_level}]' if perm_level is not None else ''
+        perm_level = get_perm_level(cmd)
+        if perm_level is not PermissionLevel.INVALID:
+            perm_level = f'{perm_level.name} [{perm_level}]'
+        else:
+            perm_level = ''
 
         embed = Embed(
             title=f'`{prefix}{cmd.signature}`',
             color=self.bot.main_color,
             description=cmd.help
         )
-                
 
         if not isinstance(cmd, commands.Group):
             embed.set_footer(text=f'Permission level: {perm_level}')
@@ -343,15 +346,19 @@ class Utility:
     @checks.has_permissions(PermissionLevel.OWNER)
     @github_access_token_required
     @trigger_typing
-    async def update(self, ctx):
-        """Updates the bot, this only works with heroku users."""
+    async def update(self, ctx, *, flag: str = ''):
+        """Updates the bot, this only works with heroku users.
+
+        To stay up-to-date with the latest commit from GitHub, specify "force" as the flag.
+        """
+
         changelog = await Changelog.from_url(self.bot)
         latest = changelog.latest_version
 
         desc = (f'The latest version is [`{self.bot.version}`]'
                 '(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
 
-        if parse_version(self.bot.version) >= parse_version(latest.version):
+        if parse_version(self.bot.version) >= parse_version(latest.version) and flag.lower() != 'force':
             embed = Embed(
                 title='Already up to date',
                 description=desc,
