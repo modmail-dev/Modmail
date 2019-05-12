@@ -6,6 +6,7 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO
+from operator import itemgetter
 from typing import Union
 from json import JSONDecodeError
 from pkg_resources import parse_version
@@ -33,23 +34,27 @@ class Utility:
     def __init__(self, bot: Bot):
         self.bot = bot
 
+    @staticmethod
+    def get_perms_required(cmd) -> PermissionLevel:
+        for c in cmd.checks:
+            perm_level = getattr(c, 'permission_level',
+                                 PermissionLevel.INVALID)
+            if perm_level is not PermissionLevel.INVALID:
+                return perm_level
+        return PermissionLevel.INVALID
+
     async def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
 
         prefix = self.bot.prefix
 
-        def perms_required(cmd):
-            for c in cmd.checks:
-                return getattr(c, 'permission_level', 0)
-            return 0
-
         fmts = ['']
-        for cmd in sorted(self.bot.commands,
-                          key=lambda cmd: perms_required(cmd)):
+        for perm_level, cmd in sorted(((self.get_perms_required(c), c) for c in self.bot.commands),
+                                      key=itemgetter(0)):
             if cmd.instance is cog and not cmd.hidden:
-                new_fmt = f'`{prefix + cmd.qualified_name}` '
-                perm_level = perms_required(cmd)
-                if perm_level is not None:
+                if perm_level is PermissionLevel.INVALID:
+                    new_fmt = f'`{prefix + cmd.qualified_name}` '
+                else:
                     new_fmt = f'`[{perm_level}] {prefix + cmd.qualified_name}` '
 
                 new_fmt += f'- {cmd.short_doc}\n'
@@ -88,15 +93,17 @@ class Utility:
 
         prefix = self.bot.prefix
 
-        perm_level = next(getattr(c, 'permission_level', None) for c in cmd.checks)
-        perm_level = f'{perm_level.name} [{perm_level}]' if perm_level is not None else ''
+        perm_level = self.get_perms_required(cmd)
+        if perm_level is not PermissionLevel.INVALID:
+            perm_level = f'{perm_level.name} [{perm_level}]'
+        else:
+            perm_level = ''
 
         embed = Embed(
             title=f'`{prefix}{cmd.signature}`',
             color=self.bot.main_color,
             description=cmd.help
         )
-                
 
         if not isinstance(cmd, commands.Group):
             embed.set_footer(text=f'Permission level: {perm_level}')
