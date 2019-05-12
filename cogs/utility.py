@@ -346,15 +346,19 @@ class Utility:
     @checks.has_permissions(PermissionLevel.OWNER)
     @github_access_token_required
     @trigger_typing
-    async def update(self, ctx):
-        """Updates the bot, this only works with heroku users."""
+    async def update(self, ctx, *, flag: str = ''):
+        """Updates the bot, this only works with heroku users.
+
+        To stay up-to-date with the latest commit from GitHub, specify "force" as the flag.
+        """
+
         changelog = await Changelog.from_url(self.bot)
         latest = changelog.latest_version
 
         desc = (f'The latest version is [`{self.bot.version}`]'
                 '(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
 
-        if parse_version(self.bot.version) >= parse_version(latest.version):
+        if parse_version(self.bot.version) >= parse_version(latest.version) and flag.lower() != 'force':
             embed = Embed(
                 title='Already up to date',
                 description=desc,
