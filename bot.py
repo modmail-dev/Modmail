@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.19.0'
+__version__ = '2.19.1'
 
 import asyncio
 import logging
@@ -202,12 +202,12 @@ class ModmailBot(Bot):
                 self.metadata_task.cancel()
                 self.loop.run_until_complete(self.metadata_task)
             except asyncio.CancelledError:
-                logger.debug('data_task has been cancelled')
+                logger.debug(info('data_task has been cancelled.'))
             try:
                 self.autoupdate_task.cancel()
                 self.loop.run_until_complete(self.autoupdate_task)
             except asyncio.CancelledError:
-                logger.debug('autoupdate_task has been cancelled')
+                logger.debug(info('autoupdate_task has been cancelled.'))
 
             self.loop.run_until_complete(self.logout())
             for task in asyncio.Task.all_tasks():
@@ -217,7 +217,7 @@ class ModmailBot(Bot):
                     asyncio.gather(*asyncio.Task.all_tasks())
                 )
             except asyncio.CancelledError:
-                logger.debug('All pending tasks has been cancelled')
+                logger.debug(info('All pending tasks has been cancelled.'))
             finally:
                 self.loop.run_until_complete(self.session.close())
                 self.loop.close()
@@ -965,7 +965,7 @@ class ModmailBot(Bot):
 
             try:
                 await self.session.post('https://api.modmail.tk/metadata', json=data)
-                logger.debug('Posted metadata')
+                logger.debug(info('Uploading metadata to Modmail server.'))
             except:
                 pass
                 
