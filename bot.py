@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.18.5'
+__version__ = '2.19.0'
 
 import asyncio
 import logging
@@ -467,8 +467,10 @@ class ModmailBot(Bot):
     async def process_modmail(self, message):
         """Processes messages sent to the bot."""
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
+        now = datetime.utcnow()
 
         account_age = self.config.get('account_age')
+        guild_age = self.config.get('guild_age')
         if account_age is None:
             account_age = isodate.duration.Duration()
         else:
@@ -483,19 +485,41 @@ class ModmailBot(Bot):
                 await self.config.update()
                 account_age = isodate.duration.Duration()
 
+        if guild_age is None:
+            guild_age = isodate.duration.Duration()
+        else:
+            try:
+                guild_age = isodate.parse_duration(guild_age)
+            except isodate.ISO8601Error:
+                logger.warning('The guild join age limit needs to be a '
+                               'ISO-8601 duration formatted duration string '
+                               f'greater than 0 days, not "%s".', str(guild_age))
+                del self.config.cache['guild_age']
+                await self.config.update()
+                guild_age = isodate.duration.Duration()
+
         reason = self.blocked_users.get(str(message.author.id))
         if reason is None:
             reason = ''
+
         try:
             min_account_age = message.author.created_at + account_age
         except ValueError as e:
             logger.warning(e.args[0])
             del self.config.cache['account_age']
             await self.config.update()
-            min_account_age = message.author.created_at
+            min_account_age = now
 
-        if min_account_age > datetime.utcnow():
-            # user account has not reached the required time
+        try:
+            min_guild_age = self.guild.get_member(message.author.id).joined_at + guild_age
+        except ValueError as e:
+            logger.warning(e.args[0])
+            del self.config.cache['guild_age']
+            await self.config.update()
+            min_guild_age = now
+
+        if min_account_age > now:
+            # User account has not reached the required time
             reaction = blocked_emoji
             changed = False
             delta = human_timedelta(min_account_age)
@@ -514,6 +538,26 @@ class ModmailBot(Bot):
                     color=discord.Color.red()
                 ))
 
+        elif min_guild_age > now:
+            # User has not stayed in the guild for long enough
+            reaction = blocked_emoji
+            changed = False
+            delta = human_timedelta(min_guild_age)
+
+            if str(message.author.id) not in self.blocked_users:
+                new_reason = f'System Message: Recently Joined. Required to wait for {delta}.'
+                self.config.blocked[str(message.author.id)] = new_reason
+                await self.config.update()
+                changed = True
+
+            if reason.startswith('System Message: Recently Joined.') or changed:
+                await message.channel.send(embed=discord.Embed(
+                    title='Message not sent!',
+                    description=f'Your must wait for {delta} '
+                    f'before you can contact {self.user.mention}.',
+                    color=discord.Color.red()
+                ))
+
         elif str(message.author.id) in self.blocked_users:
             reaction = blocked_emoji
             if reason.startswith('System Message: New Account.'):
@@ -524,8 +568,7 @@ class ModmailBot(Bot):
             else:
                 end_time = re.search(r'%(.+?)%$', reason)
                 if end_time is not None:
-                    after = (datetime.fromisoformat(end_time.group(1)) -
-                             datetime.utcnow()).total_seconds()
+                    after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
                     if after <= 0:
                         # No longer blocked
                         reaction = sent_emoji
