@@ -22,7 +22,7 @@ from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot, InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code, info, error, User
+from core.utils import cleanup_code, info, error, User, perms_level
 
 logger = logging.getLogger('Modmail')
 
@@ -38,15 +38,12 @@ class Utility:
 
         prefix = self.bot.prefix
 
-        def perms_required(cmd):
-            return next(getattr(c, 'permission_level', 0) for c in cmd.checks)
-
         fmts = ['']
         for cmd in sorted(self.bot.commands,
-                          key=lambda cmd: perms_required(cmd)):
+                          key=lambda cmd: perms_level(cmd)):
             if cmd.instance is cog and not cmd.hidden:
                 new_fmt = f'`{prefix + cmd.qualified_name}` '
-                perm_level = perms_required(cmd)
+                perm_level = perms_level(cmd)
                 if perm_level is not None:
                     new_fmt = f'`[{perm_level}] {prefix + cmd.qualified_name}` '
 
@@ -86,7 +83,7 @@ class Utility:
 
         prefix = self.bot.prefix
 
-        perm_level = next(getattr(c, 'permission_level', None) for c in cmd.checks)
+        perm_level = perms_level(cmd)
         perm_level = f'{perm_level.name} [{perm_level}]' if perm_level is not None else ''
 
         embed = Embed(
