@@ -42,9 +42,11 @@ Interactive installation: [**https://taaku18.github.io/modmail/installation**](h
 
 ## Customizability
 
+<img src="https://i.imgur.com/6L9aaNw.png" align="right" height="300">
+
 Modmail has a range of configuration variables that you can dynamically alter with the `?config` command. You can use them to change the different aspects of the bot, for example, the embed color, responses, reactions, status, etc. Snippets and custom command aliases are also supported. The level of customization is ever growing thanks to our exceptional contributors.
 
-<img src="https://i.imgur.com/6L9aaNw.png" align="right" height="200">
+
 
 ## Thread Logs
 
