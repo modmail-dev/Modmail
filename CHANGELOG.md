@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.18.4
+
+Fix the teams permission bug.
+
+# v2.18.2
+
+### Changed
+
+Commands now have better error messages, instead of just sending the help message for a command when an argument fails to be converted to its specified object, the bot now says things like "User 'bob' not found" instead.
+
+# v2.18.1
+
+Un-deprecated the `OWNERS` config variable to support discord developer team accounts.
+
+# v2.18.0
+
+### New Permissions System
+
+- A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desired permission level specific to a command or a group of commands for a role or user.
+- There are five permission groups/levels:
+  - Owner [5]
+  - Administrator [4]
+  - Moderator [3]
+  - Supporter [2]
+  - Regular [1]
+
+### Usage 
+
+You may add a role or user to a permission group through any of the following methods:
+- `?permissions add level owner @role`
+- `?permissions add level supporter member-name`
+- `?permissions add level moderator everyone`
+- `?permissions add level moderator @member#1234`
+- `?permissions add level administrator 78912384930291853`
+
+The same applies to individual commands permissions:
+- `?permissions add command command-name @member#1234`
+- ... and the other methods listed above.
+
+To revoke permission, use `remove` instead of `add`.
+
+To view all roles and users with permission for a permission group or command do:
+-  `?permissions get command command-name`
+-  `?permissions get level owner`
+
+By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `REGULAR` set to @everyone.
+
+### Breaking
+
+When updating to this version, all prior permission settings with guild-based permissions will be invalidated. You will need to convert to the above system.
+`OWNERS` will also get removed, you will need to set owners through `?permissions add level owner 212931293123129` or any way listed above.
+
+### New Command
+
+- A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer require manage messages permission to recall thread messages.
+
+### Changed
+
+- The help message no longer conceals inaccessible commands due to check failures.
+
+
 # v2.17.2
 
 ### Changed

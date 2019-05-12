@@ -29,7 +29,7 @@ class ConfigManager(ConfigManagerABC):
         'thread_creation_response', 'thread_creation_footer', 'thread_creation_title',
         'thread_close_footer', 'thread_close_title', 'thread_close_response',
         'thread_self_close_response',
-        
+
         # moderation
         'recipient_color', 'mod_tag', 'mod_color',
 
@@ -42,7 +42,7 @@ class ConfigManager(ConfigManagerABC):
         'activity_message', 'activity_type', 'status',
 
         # moderation
-        'blocked',
+        'blocked', 'command_permissions', 'level_permissions',
 
         # threads
         'snippets', 'notification_squad', 'subscriptions', 'closures',
@@ -53,8 +53,8 @@ class ConfigManager(ConfigManagerABC):
 
     protected_keys = {
         # Modmail
-        'modmail_guild_id', 'guild_id', 'owners',
-        'log_url', 'mongo_uri',
+        'modmail_guild_id', 'guild_id',
+        'log_url', 'mongo_uri', 'owners',
 
         # bot
         'token',
@@ -107,6 +107,8 @@ class ConfigManager(ConfigManagerABC):
             'plugins': [],
             'aliases': {},
             'blocked': {},
+            'command_permissions': {},
+            'level_permissions': {},
             'notification_squad': {},
             'subscriptions': {},
             'closures': {},
