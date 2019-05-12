@@ -44,11 +44,7 @@ Interactive installation: [**https://taaku18.github.io/modmail/installation**](h
 
 Modmail has a range of configuration variables that you can dynamically alter with the `?config` command. You can use them to change the different aspects of the bot, for example, the embed color, responses, reactions, status, etc. Snippets and custom command aliases are also supported. The level of customization is ever growing thanks to our exceptional contributors.
 
-
-
 ## Thread Logs
-
-<img src="https://i.imgur.com/6L9aaNw.png" align="right" height="200">
 
 Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. An example of a logged conversation: https://modmail-logs.herokuapp.com/logs/02032d65a6f3.
 
