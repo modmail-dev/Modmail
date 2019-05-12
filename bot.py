@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.18.1'
+__version__ = '2.19.0'
 
 import asyncio
 import logging
@@ -49,10 +49,9 @@ from core.changelog import Changelog
 from core.clients import SelfHostedClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error
-from core.models import Bot
+from core.models import Bot, PermissionLevel
 from core.thread import ThreadManager
 from core.time import human_timedelta
-
 
 init()
 
@@ -109,6 +108,7 @@ class ModmailBot(Bot):
         self._api = SelfHostedClient(self)
         self.plugin_db = PluginDatabaseClient(self)
 
+        self.metadata_task = self.loop.create_task(self.metadata_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
         self.owner = None
@@ -188,11 +188,6 @@ class ModmailBot(Bot):
             except Exception:
                 logger.exception(error(f'Failed to load {cog}'))
 
-    async def is_owner(self, user):
-        allowed = {int(x) for x in
-                   str(self.config.get('owners', '0')).split(',')}
-        return user.id in allowed
-
     def run(self, *args, **kwargs):
         try:
             self.loop.run_until_complete(self.start(self.token))
@@ -203,6 +198,11 @@ class ModmailBot(Bot):
         except Exception:
             logger.critical(error('Fatal exception'), exc_info=True)
         finally:
+            try:
+                self.metadata_task.cancel()
+                self.loop.run_until_complete(self.metadata_task)
+            except asyncio.CancelledError:
+                logger.debug('data_task has been cancelled')
             try:
                 self.autoupdate_task.cancel()
                 self.loop.run_until_complete(self.autoupdate_task)
@@ -222,6 +222,11 @@ class ModmailBot(Bot):
                 self.loop.run_until_complete(self.session.close())
                 self.loop.close()
                 logger.info(error(' - Shutting down bot - '))
+
+    async def is_owner(self, user):
+        raw = str(self.config.get('owners', '0')).split(',')
+        allowed = {int(x) for x in raw}
+        return (user.id in allowed) or await super().is_owner(user) 
 
     @property
     def log_channel(self):
@@ -474,7 +479,8 @@ class ModmailBot(Bot):
             except isodate.ISO8601Error:
                 logger.warning('The account age limit needs to be a '
                                'ISO-8601 duration formatted duration string '
-                               f'greater than 0 days, not "%s".', str(account_age))
+                               f'greater than 0 days, not "%s".',
+                               str(account_age))
                 del self.config.cache['account_age']
                 await self.config.update()
                 account_age = isodate.duration.Duration()
@@ -570,7 +576,7 @@ class ModmailBot(Bot):
                         await self.config.update()
         else:
             reaction = sent_emoji
-        
+
         if reaction != 'disable':
             try:
                 await message.add_reaction(reaction)
@@ -623,6 +629,27 @@ class ModmailBot(Bot):
 
         return ctx
 
+    async def update_perms(self, name, value, add=True):
+        if isinstance(name, PermissionLevel):
+            permissions = self.config.level_permissions
+            name = name.name
+        else:
+            permissions = self.config.command_permissions
+        if name not in permissions:
+            if add:
+                permissions[name] = [value]
+        else:
+            if add:
+                if value not in permissions[name]:
+                    permissions[name].append(value)
+            else:
+                if value in permissions[name]:
+                    permissions[name].remove(value)
+        logger.info(
+            info(f'Updating permissions for {name}, {value} (add={add}).')
+        )
+        await self.config.update()
+
     async def on_message(self, message):
         if message.type == discord.MessageType.pins_add and \
                 message.author == self.user:
@@ -659,7 +686,7 @@ class ModmailBot(Bot):
 
     async def on_typing(self, channel, user, _):
         if user.bot:
-            return 
+            return
         if isinstance(channel, discord.DMChannel):
             if not self.config.get('user_typing'):
                 return
@@ -672,7 +699,7 @@ class ModmailBot(Bot):
             thread = await self.threads.find(channel=channel)
             if thread and thread.recipient:
                 await thread.recipient.trigger_typing()
-    
+
     async def on_raw_reaction_add(self, payload):
 
         user = self.get_user(payload.user_id)
@@ -692,12 +719,14 @@ class ModmailBot(Bot):
         message = await channel.get_message(payload.message_id)
         reaction = payload.emoji
 
-        close_emoji = await self.convert_emoji(self.config.get('close_emoji', '🔒'))
+        close_emoji = await self.convert_emoji(
+            self.config.get('close_emoji', '🔒')
+        )
 
         if isinstance(channel, discord.DMChannel) and str(reaction) == str(close_emoji):  # closing thread
             thread = await self.threads.find(recipient=user)
             ts = message.embeds[0].timestamp if message.embeds else None
-            if thread and ts == thread.channel.created_at: 
+            if thread and ts == thread.channel.created_at:
                 # the reacted message is the corresponding thread creation embed
                 if not self.config.get('disable_recipient_thread_close'):
                     await thread.close(closer=user)
@@ -743,24 +772,24 @@ class ModmailBot(Bot):
             return
 
         await thread.close(closer=mod, silent=True, delete_channel=False)
-    
+
     async def on_member_remove(self, member):
         thread = await self.threads.find(recipient=member)
         if thread:
-            em = discord.Embed(
+            embed = discord.Embed(
                 description='The recipient has left the server.',
                 color=discord.Color.red()
-                )
-            await thread.channel.send(embed=em)
-    
+            )
+            await thread.channel.send(embed=embed)
+
     async def on_member_join(self, member):
         thread = await self.threads.find(recipient=member)
         if thread:
-            em = discord.Embed(
+            embed = discord.Embed(
                 description='The recipient has joined the server.',
                 color=self.mod_color
-                )
-            await thread.channel.send(embed=em)
+            )
+            await thread.channel.send(embed=embed)
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
@@ -798,11 +827,31 @@ class ModmailBot(Bot):
         logger.error(error('Ignoring exception in {}'.format(event_method)))
         logger.error(error('Unexpected exception:'), exc_info=sys.exc_info())
 
-    async def on_command_error(self, context, exception):
-        if isinstance(exception, (commands.MissingRequiredArgument,
-                                  commands.UserInputError)):
-            await context.invoke(self.get_command('help'),
-                                 command=str(context.command))
+    async def on_command_error(self, ctx, exception):
+
+        def human_join(strings):
+            if len(strings) <= 2:
+                return ' or '.join(strings)
+            else:
+                return ', '.join(strings[:len(strings)-1]) + ' or ' + strings[-1]
+
+        if isinstance(exception, commands.BadUnionArgument):
+            msg = 'Could not find the specified ' + human_join([c.__name__ for c in exception.converters])
+            await ctx.trigger_typing()
+            await ctx.send(embed=discord.Embed(
+                color=discord.Color.red(), 
+                description=msg
+                ))
+
+        elif isinstance(exception, commands.BadArgument):
+            await ctx.trigger_typing()
+            await ctx.send(embed=discord.Embed(
+                color=discord.Color.red(), 
+                description=str(exception)
+                ))
+        elif isinstance(exception, commands.MissingRequiredArgument):
+            await ctx.invoke(self.get_command('help'),
+                                 command=str(ctx.command))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning(error('CommandNotFound: ' + str(exception)))
         elif isinstance(exception, commands.CheckFailure):
@@ -823,7 +872,7 @@ class ModmailBot(Bot):
         }
 
         for role in ctx.guild.roles:
-            if role.permissions.manage_guild:
+            if role.permissions.administrator:
                 overwrites[role] = discord.PermissionOverwrite(
                     read_messages=True
                 )
@@ -870,8 +919,9 @@ class ModmailBot(Bot):
                 embed.set_author(name=user['username'] + ' - Updating Bot',
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
-                embed.set_footer(text=f"Updating Modmail v{self.version} "
-                                      f"-> v{latest.version}")
+
+                embed.set_footer(text=f'Updating Modmail v{self.version} '
+                                      f'-> v{latest.version}')
 
                 embed.description = latest.description
                 for name, value in latest.fields.items():
@@ -890,10 +940,42 @@ class ModmailBot(Bot):
 
             await asyncio.sleep(3600)
 
+    async def metadata_loop(self):
+        await self.wait_until_ready()
+        self.owner = (await self.application_info()).owner
+
+        while not self.is_closed():
+            data = {
+                "owner_name": str(self.owner),
+                "owner_id": self.owner.id,
+                "bot_id": self.user.id,
+                "bot_name": str(self.user),
+                "avatar_url": self.user.avatar_url,
+                "guild_id": self.guild_id,
+                "guild_name": self.guild.name,
+                "member_count": len(self.guild.members),
+                "uptime": (datetime.utcnow() -
+                           self.start_time).total_seconds(),
+                "latency": f'{self.ws.latency * 1000:.4f}',
+                "version": self.version,
+                "selfhosted": True,
+                "last_updated": str(datetime.utcnow())
+            }
+
+
+            try:
+                await self.session.post('https://api.modmail.tk/metadata', json=data)
+                logger.debug('Posted metadata')
+            except:
+                pass
+                
+            await asyncio.sleep(3600)
+
 
 if __name__ == '__main__':
     if os.name != 'nt':
         import uvloop
+
         uvloop.install()
     bot = ModmailBot()
     bot.run()
