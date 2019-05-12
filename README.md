@@ -27,7 +27,7 @@
 
 ## How Does Modmail Work?
 
-<img src="https://i.imgur.com/GGukNDs.png" align="right" height="350">
+<img src="https://i.imgur.com/GGukNDs.png" align="right" height="250">
 
 When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `?reply` in the channel. A full list of commands can be found in the [wiki](https://github.com/kyb3r/modmail/wiki) or by using the `?help` command.
 
@@ -39,6 +39,8 @@ Interactive installation: [**https://taaku18.github.io/modmail/installation**](h
 
 
 # Notable Features
+
+<img src="https://i.imgur.com/6L9aaNw.png" align="right" height="350">
 
 ## Customizability
 
