@@ -20,7 +20,7 @@ class PermissionLevel(IntEnum):
     MOD = 3
     SUPPORTER = 2
     REGULAR = 1
-    NONE = 0
+    INVALID = -1
 
 
 class Bot(abc.ABC, commands.Bot):
