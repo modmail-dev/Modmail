@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 from discord.ext import commands
+from discord.utils import async_all
 
 from core import checks
 from core.models import Bot, PermissionLevel
@@ -63,6 +64,8 @@ class Plugins:
                 except DownloadError as exc:
                     msg = f'{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
                     logger.error(error(msg))
+        await async_all(env() for env in self.bot.extra_events['on_plugin_ready'])
+        logger.debug(info('on_plugin_ready called.'))
 
     async def download_plugin_repo(self, username, repo):
         try:
