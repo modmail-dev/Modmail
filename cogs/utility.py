@@ -23,7 +23,7 @@ from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
 from core.models import Bot, InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code, info, error, User
+from core.utils import cleanup_code, info, error, User, get_perm_level
 
 logger = logging.getLogger('Modmail')
 
@@ -34,22 +34,13 @@ class Utility:
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    @staticmethod
-    def get_perms_required(cmd) -> PermissionLevel:
-        for c in cmd.checks:
-            perm_level = getattr(c, 'permission_level',
-                                 PermissionLevel.INVALID)
-            if perm_level is not PermissionLevel.INVALID:
-                return perm_level
-        return PermissionLevel.INVALID
-
     async def format_cog_help(self, ctx, cog):
         """Formats the text for a cog help"""
 
         prefix = self.bot.prefix
 
         fmts = ['']
-        for perm_level, cmd in sorted(((self.get_perms_required(c), c) for c in self.bot.commands),
+        for perm_level, cmd in sorted(((get_perm_level(c), c) for c in self.bot.commands),
                                       key=itemgetter(0)):
             if cmd.instance is cog and not cmd.hidden:
                 if perm_level is PermissionLevel.INVALID:
@@ -93,7 +84,7 @@ class Utility:
 
         prefix = self.bot.prefix
 
-        perm_level = self.get_perms_required(cmd)
+        perm_level = get_perm_level(cmd)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f'{perm_level.name} [{perm_level}]'
         else:
