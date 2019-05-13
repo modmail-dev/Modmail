@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+# v2.20.0
+
+### What's new? 
+
+New `oauth` whitelist command which allows you to whitelist users so they can log in via discord to view logs. To set up oauth login for your logviewer app check the logviewer [repo](https://github.com/kyb3r/logviewer).
+
 # v2.19.1
 
 ### Changed
