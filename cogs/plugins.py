@@ -8,8 +8,10 @@ import subprocess
 import sys
 
 from discord.ext import commands
+from discord.utils import async_all
 
-from core.models import Bot
+from core import checks
+from core.models import Bot, PermissionLevel
 from core.utils import info, error
 
 logger = logging.getLogger('Modmail')
@@ -62,6 +64,8 @@ class Plugins(commands.Cog):
                 except DownloadError as exc:
                     msg = f'{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
                     logger.error(error(msg))
+        await async_all(env() for env in self.bot.extra_events.get('on_plugin_ready', []))
+        logger.debug(info('on_plugin_ready called.'))
 
     async def download_plugin_repo(self, username, repo):
         try:
@@ -113,15 +117,15 @@ class Plugins(commands.Cog):
             msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
             logger.info(info(msg))
 
-    @commands.group(aliases=['plugins'])
-    @commands.is_owner()
+    @commands.group(aliases=['plugins'], invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin(self, ctx):
         """Plugin handler. Controls the plugins in the bot."""
-        if ctx.invoked_subcommand is None:
-            cmd = self.bot.get_command('help')
-            await ctx.invoke(cmd, command='plugin')
+        cmd = self.bot.get_command('help')
+        await ctx.invoke(cmd, command='plugin')
 
     @plugin.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def add(self, ctx, *, plugin_name):
         """Adds a plugin"""
         if plugin_name in self.bot.config.plugins:
@@ -161,6 +165,7 @@ class Plugins(commands.Cog):
                                    'Use username/repo/plugin.')
 
     @plugin.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def remove(self, ctx, *, plugin_name):
         """Removes a certain plugin"""
         if plugin_name in self.bot.config.plugins:
@@ -195,6 +200,7 @@ class Plugins(commands.Cog):
             await ctx.send('Plugin not installed.')
 
     @plugin.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def update(self, ctx, *, plugin_name):
         """Updates a certain plugin"""
         if plugin_name not in self.bot.config.plugins:
@@ -227,6 +233,7 @@ class Plugins(commands.Cog):
                         await ctx.send(f'Unable to start plugin: `{exc}`')
 
     @plugin.command(name='list')
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def list_(self, ctx):
         """Shows a list of currently enabled plugins"""
         if self.bot.config.plugins:

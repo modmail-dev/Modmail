@@ -4,9 +4,199 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# v2.19.1
+
+### Changed
+
+- Ability to force an update despite having the same version number. Helpful to keep up-to-date with the latest GitHub commit.
+  - `?update force`.
+- Plugin developers now have a new event called `on_plugin_ready`, this is coroutine is awaited when all plugins are loaded. Use `on_plugin_ready` instead of `on_ready` since `on_ready` will not get called in plugins.
+
+# v2.19.0
+
+### What's new?
+
+- New config variable `guild_age`, similar to `account_age`, `guild_age` sets a limit as to how long a user has to wait after they joined the server to message Modmail.
+- `guild_age` can be set the same way as `account_age`.
+
+# v2.18.5
+
+Fix help command bug when using external plugins.
+
+# v2.18.4
+
+Fix the teams permission bug.
+
+# v2.18.2
+
+### Changed
+
+Commands now have better error messages, instead of just sending the help message for a command when an argument fails to be converted to its specified object, the bot now says things like "User 'bob' not found" instead.
+
+# v2.18.1
+
+Un-deprecated the `OWNERS` config variable to support discord developer team accounts.
+
+# v2.18.0
+
+### New Permissions System
+
+- A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desired permission level specific to a command or a group of commands for a role or user.
+- There are five permission groups/levels:
+  - Owner [5]
+  - Administrator [4]
+  - Moderator [3]
+  - Supporter [2]
+  - Regular [1]
+
+### Usage 
+
+You may add a role or user to a permission group through any of the following methods:
+- `?permissions add level owner @role`
+- `?permissions add level supporter member-name`
+- `?permissions add level moderator everyone`
+- `?permissions add level moderator @member#1234`
+- `?permissions add level administrator 78912384930291853`
+
+The same applies to individual commands permissions:
+- `?permissions add command command-name @member#1234`
+- ... and the other methods listed above.
+
+To revoke permission, use `remove` instead of `add`.
+
+To view all roles and users with permission for a permission group or command do:
+-  `?permissions get command command-name`
+-  `?permissions get level owner`
+
+By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `REGULAR` set to @everyone.
+
+### Breaking
+
+When updating to this version, all prior permission settings with guild-based permissions will be invalidated. You will need to convert to the above system.
+`OWNERS` will also get removed, you will need to set owners through `?permissions add level owner 212931293123129` or any way listed above.
+
+### New Command
+
+- A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer require manage messages permission to recall thread messages.
+
+### Changed
+
+- The help message no longer conceals inaccessible commands due to check failures.
+
+# v2.17.2
+
+### Changed
+
+- Logs search command will search through log keys as well now. 
+- For example, `?logs search e7499e82f8ff`.
+
+# v2.17.1
+### What's new?
+
+Stricter fallback genesis embed search.
+
+### Changed
+How modmail checks if a channel is a thread: 
+
+1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
+2. If a channel topic is not found, the bot searches through message history of a channel to find the thread creation embed. This step should never yield a thread for a normal user, but in the case of a another bot messing up the channel topic (happened to a user before) this extra step was added. 
+
+
+# v2.17.0
+
+### What's new?
+
+Added a config option `reply_without_command` which when present, enables the bot to forward any message sent in a thread channel to the recipient. (Replying without using a command)
+
+To enable this functionality, do `?config set reply_without_command true` and to disable it, use `?config del reply_without_command`.
+
+
+### Changed
+
+The `move` command now only requires `manage_messages` perms instead of `manage_channels`
+
+# v2.16.1
+
+### Fixed
+
+An issue where a scheduled close would not execute over a long period of time if the recipient no shares any servers with the bot.
+
+# v2.16.0
+
+### Changed
+
+All support for Modmail API (api.modmail.tk) has terminated. 
+If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
+option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the 
+installation tutorial for information regarding self-hosted Modmail.
+
+If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occured.
+
+# v2.15.1
+
+### Fixed
+
+Emergency patch of a SyntaxError.
+
+# v2.15.0
+
+### What's new?
+
+Added the ability to change the default close message via the introduction of two config variables.
+
+- `thread_close_response` - when someone closes the thread.
+- `thread_self_close_response` - when the recipient closes their own thread.
+
+They will be provided by string variables that you can incorporate into them:
+
+- `closer` - the user object that closed the thread.
+- `logkey` - the key for the thread logs e.g. (`5219ccc82ad4`)
+- `loglink` - the full link to the thread logs e.g. (`https://logwebsite.com/logs/5219ccc82ad4`)
+
+Example usage would be: ``?config set thread_close_message {closer.mention} closed the thread, here is the link to your logs: [**`{logkey}`**]({loglink})``
+
+# v2.14.0
+
+### What's new?
+
+Added the ability to enable the recipient to close their own threads. This takes place in the form of a reaction that the user can click to close their thread. This functionality is now enabled by default. 
+
+To disable this, do `?config set disable_recipient_thread_close true`
+
+### More Customisability!
+
+More config variables have been added that you can edit.
+
+- `close_emoji` - the emoji that the user can click on to close a thread. Defaults to a lock (🔒)
+
+You now have complete control of the look of the thread creation and close embeds the users see.
+
+- `thread_creation_title` - the title of the embed. Defaults to 'Thread Created'
+- `thread_creation_footer` - the footer text in the embed. Defaults to 'Your message has been sent...'
+- `thread_close_title` - the title of the embed. Defaults to 'Thread Closed'
+- `thread_close_footer` - the footer text in the embed. Defaults to 'Replying will create a new thread'
+
+# v2.13.13
+
+### What's new? 
+
+Added the ability to disable the `sent_emoji` and `blocked_emoji` when a user messages modmail.
+
+You can do this via `?config set sent_emoji disable`
+
+### Fixed
+
+The bot now handles having too many roles to show in the thread created embed. 
+
+# v2.13.12
+### What's new?
+
+Added image link in title in case discord fails to embed an image.
+
 # v2.13.11
 
-### Added
+### What's new?
 - Introduced a new configuration variable `account_age` for setting a minimum account creation age.
   - Users blocked by this reason will be stored in `blocked` along with other reasons for being blocked.
   - `account_age` needs to be an ISO-8601 Duration Format (examples: `P12DT3H` 12 days and 3 hours, `P3Y5M` 3 years and 5 months `PT4H14M999S` 4 hours 14 minutes and 999 seconds). https://en.wikipedia.org/wiki/ISO_8601#Durations.
@@ -37,7 +227,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.13.7
 
-### Added
+### What's new?
 - The ability to enable typing interactions. 
   - If you want the bot to type in the thread channel if the user is also typing, add the config variable `user_typing` and set it to "yes" or "true". use `config del` to disable the functionality. The same thing in reverse is also possible if you want the user to see the bot type when someone is typing in the thread channel add the `mod_typing` config variable.
 - New `status` command, change the bot's status to `online`, `idle`, `dnd`, `invisible`, or `offline`.
@@ -54,7 +244,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.13.5
 
-### Added
+### What's new?
 - You will no longer need to view your bot debug logs from Heroku. `debug` will show you the recent logs within 24h through a series of embeds.
   - If you don't mind your data (may or may not be limited to: user ID, guild ID, bot name) be on the internet, `debug hastebin` will upload a formatted logs file to https://hasteb.in.
   - `debug clear` will clear the locally cached logs.
@@ -96,7 +286,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.13.0
 
-### Added 
+### What's new? 
 - Plugins:
   - Think of it like addons! Anyone (with the skills) can create a plugin, make it public and distribute it. Add a welcome message to Modmail, or moderation commands? It's all up to your imagination!    Have a niche feature request that you think only your server would benefit from? Plugins are your go-to!
   - [Creating Plugins Documentation](https://github.com/kyb3r/modmail/wiki/Plugins).
@@ -109,7 +299,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.12.4
 
-### Added
+### What's new?
 - Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
   - Named colors can be set the same way as hex. But this can only be done through `config set`, which means database modifications will not work.
   - For example: `config set main_color yellowish green`.
@@ -136,7 +326,7 @@ Huge thanks to Sasiko for reporting these issues.
 
 # v2.12.0
 
-### Important 
+### Important
 **In the future, the Modmail API (https://modmail.tk) will be deprecated. This is due to the fact that we are providing a free service without getting anything in return, and thus we do not have the resources to scale to accommodate for more users. 
 We recommend using your own database for logs. In the future you will soon get a `backup` command so you can download all your pre-existing data and migrate to your own database.** 
 
@@ -146,7 +336,7 @@ We recommend using your own database for logs. In the future you will soon get a
 - Bot owners get access to all commands regardless of server permissions.
 - Blocked users no longer receive a message, only the blocked emoji will be sent.
 
-### Added
+### What's new?
 - **Note:** The following commands only work if you are self-hosting your logs. We recommend you to use your own database.
 - Log search queries, in the form of two new commands. 
 - `logs search [query]` - this searches all log messages for a query string.
@@ -159,7 +349,7 @@ We recommend using your own database for logs. In the future you will soon get a
 
 # v2.11.0
 
-### Added
+### What's new?
 - `loglink` command, returns the log link for the current thread.
 
 # v2.10.2
@@ -174,7 +364,7 @@ We recommend using your own database for logs. In the future you will soon get a
 
 # v2.10.0
 
-### Added
+### What's new?
 - `anonreply` command to anonymously reply to the recipient. 
 The username of the anonymous user defaults to the `mod_tag` (the footer text of a mod reply message). The avatar defaults the guild icon URL. However you can change both of these via the `anon_username`, `anon_avatar_url` and `anon_tag` config variables. 
 
@@ -191,7 +381,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 ### Changed
 - Forgot to enable custom embed colors.
 
-### Added
+### What's new?
 - Ability to set a custom `mod_tag` (the text in the footer of the mod reply embed, which by default says "Moderator")
 
 # v2.9.2
@@ -203,7 +393,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 ### Fixed
 - Bug where the close command wouldn't work if you didnt configure a log channel. 
 
-### Added
+### What's new?
 - Ability to set your own custom `mod_color` and `recipient_color` for the thread message embeds.
 
 # v2.9.1
@@ -217,7 +407,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 
 # v2.9.0
 
-### Added
+### What's new?
 - New command `note` will add a system message to your thread logs. This is useful for noting the context of a conversation.
 
 # v2.8.1
@@ -235,7 +425,7 @@ The username of the anonymous user defaults to the `mod_tag` (the footer text of
 
 # v2.7.2
 
-### Added 
+### What's new? 
 - `config options` command to see a list of valid config variables that you can modify.
 
 ### Security
@@ -280,7 +470,7 @@ Thread channels will now default to being private (`@everyone`'s read message pe
 
 # v2.6.0
 
-### Added
+### What's new?
 - `threads` is now a default alias to `logs`.
 
 ### Changed
@@ -330,7 +520,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.4.2
 
-### Added
+### What's new?
 - Ability to set your own Twitch URL for `streaming` activity status.
 
 # v2.4.1
@@ -340,7 +530,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.4.0
 
-### Added
+### What's new?
 - Added the `activity` command for setting the activity
 - [PR #131](https://github.com/kyb3r/modmail/pull/131#issue-244686818) this supports multiple activity types (`playing`, `watching`, `listening` and `streaming`).
 
@@ -350,7 +540,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.3.0
 
-### Added
+### What's new?
 - Ability to self-host logs.
 
 ### Changed
@@ -364,7 +554,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.2.0
 
-### Added
+### What's new?
 - Notify command `notify [role]`.
   - Notify a given role or yourself to the next thread message received.
   - Once a thread message is received you will be pinged once only.
@@ -383,7 +573,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.1.0
 
-### Added
+### What's new?
 - Ability to set a custom thread creation response message.
   - Via `config set thread_creation_response [message]`.
 
@@ -401,7 +591,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.0.9
 
-### Added
+### What's new?
 - Support for custom blocked and sent emoji.
 - Use the `config set blocked_emoji [emoji]` or `sent_emoji` commands.
 
@@ -411,7 +601,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.0.8
 
-### Added
+### What's new?
 - Added the ability to use your own log channel.
   - You can do this via the `config set log_channel_id <id>` command.
 - Added the ability to use your own main inbox category.
@@ -424,7 +614,7 @@ Fixed a bug in activity command where it would fail to set the activity on bot r
 
 # v2.0.7
 
-### Added
+### What's new?
 - Added a `changelog` command to view the bot's changelog within discord.
 
 ### Changed
@@ -488,7 +678,7 @@ Read the updated installation guide [here](https://github.com/kyb3r/modmail/wiki
 ### Fixed
 - `status` command now changes playing status indefinitely.
 
-### Added
+### What's new?
 - Dynamic `help` command (#84).
 - Dynamic configuration through `api.modmail.tk`.
 - Thread logs via `logs.modmail.tk` (#78).
