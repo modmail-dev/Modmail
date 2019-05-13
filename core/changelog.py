@@ -106,11 +106,11 @@ class Changelog:
     ----------------
     RAW_CHANGELOG_URL : str
         The URL to Modmail changelog.
+    CHANGELOG_URL : str
+        The URL to Modmail changelog directly from in GitHub.
     VERSION_REGEX : re.Pattern
         The regex used to parse the versions.
     """
-    
-
 
     RAW_CHANGELOG_URL = 'https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md'
     CHANGELOG_URL = 'https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md'
