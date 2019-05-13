@@ -723,7 +723,7 @@ class Utility:
 
     @config.command()
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def get(self, ctx, key=None):
+    async def _get(self, ctx, key=None):
         """Shows the config variables that are currently set."""
         keys = self.bot.config.allowed_to_change_in_command
 
