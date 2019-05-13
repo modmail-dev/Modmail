@@ -39,7 +39,7 @@ class ConfigManager(ConfigManagerABC):
 
     internal_keys = {
         # bot presence
-        'activity_message', 'activity_type', 'status',
+        'activity_message', 'activity_type', 'status', 'oauth_whitelist',
 
         # moderation
         'blocked', 'command_permissions', 'level_permissions',
@@ -107,6 +107,7 @@ class ConfigManager(ConfigManagerABC):
             'plugins': [],
             'aliases': {},
             'blocked': {},
+            'oauth_whitelist': [],
             'command_permissions': {},
             'level_permissions': {},
             'notification_squad': {},
