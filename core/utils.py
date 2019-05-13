@@ -6,6 +6,7 @@ from discord import Object
 from discord.ext import commands
 
 from colorama import Fore, Style
+from core.models import PermissionLevel
 
 
 def info(*msgs):
@@ -185,6 +186,17 @@ def match_user_id(text: str) -> int:
     if match is not None:
         return int(match.group(1))
     return -1
+
+
+def get_perm_level(cmd) -> PermissionLevel:
+    for c in cmd.checks:
+        perm = getattr(c, 'permission_level', None)
+        if perm is not None:
+            return perm
+    for c in cmd.checks:
+        if 'is_owner' in str(c):
+            return PermissionLevel.OWNER
+    return PermissionLevel.INVALID
 
 
 async def ignore(coro):

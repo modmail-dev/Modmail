@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# v2.19.1
+
+### Changed
+
+- Ability to force an update despite having the same version number. Helpful to keep up-to-date with the latest GitHub commit.
+  - `?update force`.
+- Plugin developers now have a new event called `on_plugin_ready`, this is coroutine is awaited when all plugins are loaded. Use `on_plugin_ready` instead of `on_ready` since `on_ready` will not get called in plugins.
+
+# v2.19.0
+
+### What's new?
+
+- New config variable `guild_age`, similar to `account_age`, `guild_age` sets a limit as to how long a user has to wait after they joined the server to message Modmail.
+- `guild_age` can be set the same way as `account_age`.
+
+# v2.18.5
+
+Fix help command bug when using external plugins.
+
 # v2.18.4
 
 Fix the teams permission bug.
@@ -63,7 +83,6 @@ When updating to this version, all prior permission settings with guild-based pe
 ### Changed
 
 - The help message no longer conceals inaccessible commands due to check failures.
-
 
 # v2.17.2
 
