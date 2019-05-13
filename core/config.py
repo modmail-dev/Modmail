@@ -19,7 +19,8 @@ class ConfigManager(ConfigManagerABC):
 
         # bot settings
         'main_category_id', 'disable_autoupdates', 'prefix', 'mention',
-        'main_color', 'user_typing', 'mod_typing', 'account_age', 'reply_without_command',
+        'main_color', 'user_typing', 'mod_typing', 'account_age', 'guild_age',
+        'reply_without_command',
 
         # logging
         'log_channel_id',
@@ -71,7 +72,7 @@ class ConfigManager(ConfigManagerABC):
     }
 
     time_deltas = {
-        'account_age'
+        'account_age', 'guild_age'
     }
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
