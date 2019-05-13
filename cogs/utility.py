@@ -12,7 +12,7 @@ from json import JSONDecodeError
 from pkg_resources import parse_version
 from textwrap import indent
 
-from discord import Embed, Color, Activity, Role
+from discord import Embed, Color, Activity, Role, Member
 from discord.enums import ActivityType, Status
 from discord.ext import commands
 
@@ -1172,6 +1172,64 @@ class Utility:
 
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
+    
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def oauth(self, ctx):
+        """Commands relating to Logviewer oauth2 login authentication."""
+        cmd = self.bot.get_command('help')
+        await ctx.invoke(cmd, command='config')
+    
+    @oauth.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def whitelist(self, ctx, target: Union[Member, Role]):
+        """Whitelist or un-whitelist a user or role from having access to logs."""
+        whitelisted = self.bot.config['oauth_whitelist']
+
+        if target.id in whitelisted:
+            whitelisted.remove(target.id)
+            removed = True
+        else:
+            whitelisted.append(target.id)
+            removed = False
+        
+        await self.bot.config.update()
+
+        em = Embed(color=self.bot.main_color)
+        em.title = 'Success'
+        em.description = (
+            f"{'Un-w' if removed else 'W'}hitelisted "
+            f"{target.mention} to view logs."
+            )
+
+        await ctx.send(embed=em)
+    
+    @oauth.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def get(self, ctx):
+        """Shows a list of users and roles that are whitelisted to view logs."""
+        whitelisted = self.bot.config['oauth_whitelist']
+        
+        users = []
+        roles = []
+
+        for id in whitelisted:
+            user = self.bot.get_user(id)
+            if user:
+                users.append(user)
+            role = self.bot.modmail_guild.get_role(id)
+            if role:
+                roles.append(role)
+        
+        em = Embed(color=self.bot.main_color)
+        em.title = 'Oauth Whitelist'
+
+        em.add_field(name='Users', value=' '.join(u.mention for u in users) or 'None')
+        em.add_field(name='Roles', value=' '.join(r.mention for r in roles) or 'None')
+
+        await ctx.send(embed=em)
+        
+
 
     @commands.command(hidden=True, name='eval')
     @checks.has_permissions(PermissionLevel.OWNER)
