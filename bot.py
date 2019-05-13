@@ -510,7 +510,11 @@ class ModmailBot(Bot):
             min_account_age = now
 
         try:
-            min_guild_age = self.guild.get_member(message.author.id).joined_at + guild_age
+            member = self.guild.get_member(message.author.id)
+            if member:
+                min_guild_age = member.joined_at + guild_age
+            else:
+                min_guild_age = now
         except ValueError as e:
             logger.warning(e.args[0])
             del self.config.cache['guild_age']
