@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.19.1'
+__version__ = '2.20.0'
 
 import asyncio
 import logging
@@ -111,7 +111,6 @@ class ModmailBot(Bot):
         self.metadata_task = self.loop.create_task(self.metadata_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
-        self.owner = None
 
     def _configure_logging(self):
         level_text = self.config.log_level.upper()
@@ -934,7 +933,7 @@ class ModmailBot(Bot):
                     embed.add_field(name='Merge Commit',
                                     value=f"[`{short_sha}`]({html_url}) "
                                     f"{message} - {user['username']}")
-                    logger.info(info('Updating bot.'))
+                    logger.info(info('Bot has been updated.'))
                     channel = self.log_channel
                     await channel.send(embed=embed)
 
@@ -942,12 +941,12 @@ class ModmailBot(Bot):
 
     async def metadata_loop(self):
         await self.wait_until_ready()
-        self.owner = (await self.application_info()).owner
+        owner = (await self.application_info()).owner
 
         while not self.is_closed():
             data = {
-                "owner_name": str(self.owner),
-                "owner_id": self.owner.id,
+                "owner_name": str(owner),
+                "owner_id": owner.id,
                 "bot_id": self.user.id,
                 "bot_name": str(self.user),
                 "avatar_url": self.user.avatar_url,
@@ -962,13 +961,9 @@ class ModmailBot(Bot):
                 "last_updated": str(datetime.utcnow())
             }
 
-
-            try:
-                await self.session.post('https://api.modmail.tk/metadata', json=data)
+            async with self.session.post('https://api.modmail.tk/metadata', json=data):
                 logger.debug(info('Uploading metadata to Modmail server.'))
-            except:
-                pass
-                
+
             await asyncio.sleep(3600)
 
 
