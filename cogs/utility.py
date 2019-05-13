@@ -1214,10 +1214,11 @@ class Utility:
         roles = []
 
         for id in whitelisted:
+            print(id)
             user = self.bot.get_user(id)
             if user:
                 users.append(users)
-            role = self.modmail_guild.get_role(id)
+            role = self.bot.modmail_guild.get_role(id)
             if role:
                 roles.append(role)
         
