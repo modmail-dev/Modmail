@@ -721,7 +721,7 @@ class Utility:
 
         return await ctx.send(embed=embed)
 
-    @config.command()
+    @config.command(name='get')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def _get(self, ctx, key=None):
         """Shows the config variables that are currently set."""
