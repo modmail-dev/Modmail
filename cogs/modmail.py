@@ -106,7 +106,7 @@ class Modmail:
 
     @snippets.command(name='add')
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def add_(self, ctx, name: str.lower, *, value):
+    async def snippets_add(self, ctx, name: str.lower, *, value):
         """Add a snippet to the bot config."""
         if 'snippets' not in self.bot.config.cache:
             self.bot.config['snippets'] = {}
@@ -124,7 +124,7 @@ class Modmail:
 
     @snippets.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def remove_(self, ctx, *, name: str.lower):
+    async def snippets_remove(self, ctx, *, name: str.lower):
         """Removes a snippet from bot config."""
 
         if self.bot.config.snippets.get(name):
@@ -386,7 +386,6 @@ class Modmail:
             if prefix == 'NONE':
                 prefix = ''
 
-
             log_url = self.bot.config.log_url.strip('/') + f'{prefix}/{key}'
 
             username = entry['recipient']['name'] + '#'
@@ -450,9 +449,9 @@ class Modmail:
         session = PaginatorSession(ctx, *embeds)
         await session.run()
 
-    @logs.command(name='closed-by')
+    @logs.command(name='closed-by', aliases=['closeby'])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def closed_by(self, ctx, *, user: User = None):
+    async def logs_closed_by(self, ctx, *, user: User = None):
         """Returns all logs closed by a user."""
         user = user or ctx.author
 
@@ -481,9 +480,9 @@ class Modmail:
         session = PaginatorSession(ctx, *embeds)
         await session.run()
 
-    @logs.command()
+    @logs.command(name='search', aliases=['find'])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def search(self, ctx, limit: Optional[int] = None, *, query):
+    async def logs_search(self, ctx, limit: Optional[int] = None, *, query):
         """Searches all logs for a message that contains your query."""
 
         await ctx.trigger_typing()
@@ -518,7 +517,7 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def reply(self, ctx, *, msg=''):
+    async def reply(self, ctx, *, msg: str):
         """Reply to users using this command.
 
         Supports attachments and images as well as
@@ -531,7 +530,7 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def anonreply(self, ctx, *, msg=''):
+    async def anonreply(self, ctx, *, msg: str):
         """Reply to a thread anonymously.
 
         You can edit the anonymous user's name,
@@ -547,7 +546,7 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def note(self, ctx, *, msg=''):
+    async def note(self, ctx, *, msg: str):
         """Take a note about the current thread, useful for noting context."""
         ctx.message.content = msg
         async with ctx.typing():
@@ -579,7 +578,7 @@ class Modmail:
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def edit(self, ctx, message_id: Optional[int] = None,
-                   *, new_message):
+                   *, new_message: str):
         """Edit a message that was sent using the reply command.
 
         If no `message_id` is provided, the
@@ -758,7 +757,6 @@ class Modmail:
         use only.
         """
 
-
         if user is None:
             thread = ctx.thread
             if thread:
@@ -803,7 +801,7 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def delete(self, ctx, message_id = None):
+    async def delete(self, ctx, message_id: Optional[int] = None):
         """Delete a message that was sent using the reply command.
 
         Deletes the previous message, unless a message ID is provided, which in that case,
@@ -811,10 +809,11 @@ class Modmail:
         """
         thread = ctx.thread
 
-        try:
-            message_id = int(message_id)
-        except ValueError:
-            raise commands.BadArgument('An integer message ID needs to be specified.')
+        if message_id is not None:
+            try:
+                message_id = int(message_id)
+            except ValueError:
+                raise commands.BadArgument('An integer message ID needs to be specified.')
 
         linked_message_id = await self.find_linked_message(ctx, message_id)
 
