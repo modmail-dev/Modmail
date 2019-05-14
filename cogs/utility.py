@@ -278,10 +278,10 @@ class Utility:
         session = MessagePaginatorSession(ctx, *messages, embed=embed)
         return await session.run()
 
-    @debug.command()
+    @debug.command(name='hastebin', aliases=['haste'])
     @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
-    async def hastebin(self, ctx):
+    async def debug_hastebin(self, ctx):
         """Upload logs to hastebin."""
 
         haste_url = os.environ.get('HASTE_URL', 'https://hasteb.in')
@@ -309,10 +309,10 @@ class Utility:
             embed.set_footer(text='Go to Heroku to see your logs.')
         await ctx.send(embed=embed)
 
-    @debug.command()
+    @debug.command(name='clear', aliases=['wipe'])
     @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
-    async def clear(self, ctx):
+    async def debug_clear(self, ctx):
         """Clears the locally cached logs."""
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'w'):
@@ -650,9 +650,9 @@ class Utility:
         cmd = self.bot.get_command('help')
         await ctx.invoke(cmd, command='config')
 
-    @config.command()
+    @config.command(name='options', aliases=['list'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def options(self, ctx):
+    async def config_options(self, ctx):
         """Return a list of valid config keys you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
         valid = ', '.join(f'`{k}`' for k in allowed)
@@ -661,11 +661,11 @@ class Utility:
                       color=self.bot.main_color)
         return await ctx.send(embed=embed)
 
-    @config.command()
+    @config.command(name='set', aliases=['add'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def set(self, ctx, key: str.lower, *, value):
+    async def config_set(self, ctx, key: str.lower, *, value: str):
         """
-        Sets a configuration variable and its value
+        Sets a configuration variable and its value.
         """
 
         keys = self.bot.config.allowed_to_change_in_command
@@ -695,7 +695,7 @@ class Utility:
 
     @config.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_config(self, ctx, key: str.lower):
+    async def config_remove(self, ctx, key: str.lower):
         """Deletes a key from the config."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
@@ -723,7 +723,7 @@ class Utility:
 
     @config.command(name='get')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def _get(self, ctx, key=None):
+    async def config_get(self, ctx, key: str.lower = None):
         """Shows the config variables that are currently set."""
         keys = self.bot.config.allowed_to_change_in_command
 
@@ -804,7 +804,7 @@ class Utility:
 
     @alias.command(name='add')
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def add_(self, ctx, name: str.lower, *, value):
+    async def alias_add(self, ctx, name: str.lower, *, value):
         """Add an alias to the bot config."""
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
@@ -840,7 +840,7 @@ class Utility:
 
     @alias.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def remove_alias(self, ctx, *, name: str.lower):
+    async def alias_remove(self, ctx, *, name: str.lower):
         """Removes a alias from bot config."""
 
         if 'aliases' not in self.bot.config.cache:
@@ -890,14 +890,15 @@ class Utility:
 
     @permissions.group(name='add', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def add_perms(self, ctx):
+    async def permissions_add(self, ctx):
         """Add a permission to a command or a permission level."""
         cmd = self.bot.get_command('help')
         await ctx.invoke(cmd, command='perms add')
 
-    @add_perms.command(name='command')
+    @permissions_add.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def add_perms_command(self, ctx, command: str, *, user_or_role: Union[User, Role, str]):
+    async def permissions_add_command(self, ctx, command: str, *,
+                                      user_or_role: Union[User, Role, str]):
         """Add a user, role, or everyone permission to use a command."""
         if command not in self.bot.all_commands:
             embed = Embed(
@@ -923,9 +924,10 @@ class Utility:
         )
         return await ctx.send(embed=embed)
 
-    @add_perms.command(name='level', aliases=['group'])
+    @permissions_add.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def add_perms_level(self, ctx, level: str, *, user_or_role: Union[User, Role, str]):
+    async def permissions_add_level(self, ctx, level: str, *,
+                                    user_or_role: Union[User, Role, str]):
         """Add a user, role, or everyone permission to use commands of a permission level."""
         if level.upper() not in PermissionLevel.__members__:
             embed = Embed(
@@ -954,14 +956,15 @@ class Utility:
     @permissions.group(name='remove', aliases=['del', 'delete', 'rm', 'revoke'],
                        invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_perms(self, ctx):
+    async def permissions_remove(self, ctx):
         """Remove a permission to use a command or permission level."""
         cmd = self.bot.get_command('help')
         await ctx.invoke(cmd, command='perms remove')
 
-    @remove_perms.command(name='command')
+    @permissions_remove.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_perms_command(self, ctx, command: str, *, user_or_role: Union[User, Role, str]):
+    async def permissions_remove_command(self, ctx, command: str, *,
+                                         user_or_role: Union[User, Role, str]):
         """Remove a user, role, or everyone permission to use a command."""
         if command not in self.bot.all_commands:
             embed = Embed(
@@ -987,9 +990,10 @@ class Utility:
         )
         return await ctx.send(embed=embed)
 
-    @remove_perms.command(name='level', aliases=['group'])
+    @permissions_remove.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def remove_perms_level(self, ctx, level: str, *, user_or_role: Union[User, Role, str]):
+    async def permissions_remove_level(self, ctx, level: str, *,
+                                       user_or_role: Union[User, Role, str]):
         """Remove a user, role, or everyone permission to use commands of a permission level."""
         if level.upper() not in PermissionLevel.__members__:
             embed = Embed(
@@ -1017,7 +1021,7 @@ class Utility:
 
     @permissions.group(name='get', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def get_perms(self, ctx, *, user_or_role: Union[User, Role, str]):
+    async def permissions_get(self, ctx, *, user_or_role: Union[User, Role, str]):
         """View the currently-set permissions."""
 
         if hasattr(user_or_role, 'id'):
@@ -1056,9 +1060,9 @@ class Utility:
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
 
-    @get_perms.command(name='command')
+    @permissions_get.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def get_perms_command(self, ctx, *, command: str = None):
+    async def permissions_get_command(self, ctx, *, command: str = None):
         """View the currently-set permissions for a command."""
 
         def get_command(cmd):
@@ -1114,9 +1118,9 @@ class Utility:
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
 
-    @get_perms.command(name='level', aliases=['group'])
+    @permissions_get.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def get_perms_level(self, ctx, *, level: str = None):
+    async def permissions_get_level(self, ctx, *, level: str = None):
         """View the currently-set permissions for commands of a permission level."""
 
         def get_level(perm_level):
@@ -1173,16 +1177,16 @@ class Utility:
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
     
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, aliases=['oauth2', 'auth', 'authentication'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
         """Commands relating to Logviewer oauth2 login authentication."""
         cmd = self.bot.get_command('help')
         await ctx.invoke(cmd, command='oauth')
     
-    @oauth.group(invoke_without_command=True)
+    @oauth.group(name='whitelist', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def whitelist(self, ctx, target: Union[Member, Role]):
+    async def oauth_whitelist(self, ctx, target: Union[Member, Role]):
         """Globally whitelist or un-whitelist a user or role to have access to logs."""
         whitelisted = self.bot.config['oauth_whitelist']
 
@@ -1204,12 +1208,12 @@ class Utility:
 
         await ctx.send(embed=em)
     
-    @oauth.command()
+    @oauth.command(name='show', aliases=['get', 'list', 'view'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def get(self, ctx):
+    async def oauth_show(self, ctx):
         """Shows a list of users and roles that are whitelisted to view logs."""
         whitelisted = self.bot.config['oauth_whitelist']
-        
+
         users = []
         roles = []
 
@@ -1220,7 +1224,7 @@ class Utility:
             role = self.bot.modmail_guild.get_role(id)
             if role:
                 roles.append(role)
-        
+
         em = Embed(color=self.bot.main_color)
         em.title = 'Oauth Whitelist'
 
@@ -1228,8 +1232,6 @@ class Utility:
         em.add_field(name='Roles', value=' '.join(r.mention for r in roles) or 'None')
 
         await ctx.send(embed=em)
-        
-
 
     @commands.command(hidden=True, name='eval')
     @checks.has_permissions(PermissionLevel.OWNER)
