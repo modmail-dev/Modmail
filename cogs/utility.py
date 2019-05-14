@@ -1178,12 +1178,12 @@ class Utility:
     async def oauth(self, ctx):
         """Commands relating to Logviewer oauth2 login authentication."""
         cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='config')
+        await ctx.invoke(cmd, command='oauth')
     
-    @oauth.command()
+    @oauth.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def whitelist(self, ctx, target: Union[Member, Role]):
-        """Whitelist or un-whitelist a user or role from having access to logs."""
+        """Globally whitelist or un-whitelist a user or role to have access to logs."""
         whitelisted = self.bot.config['oauth_whitelist']
 
         if target.id in whitelisted:
