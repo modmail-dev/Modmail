@@ -19,6 +19,7 @@ class PermissionLevel(IntEnum):
     MODERATOR = 3
     MOD = 3
     SUPPORTER = 2
+    RESPONDER = 2
     REGULAR = 1
     INVALID = -1
 
