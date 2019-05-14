@@ -216,14 +216,15 @@ class Thread(ThreadABC):
                 'id': str(closer.id),
                 'name': closer.name,
                 'discriminator': closer.discriminator,
-                'avatar_url': closer.avatar_url,
+                'avatar_url': str(closer.avatar_url),
                 'mod': True
             }
         })
 
         if log_data is not None and isinstance(log_data, dict):
             prefix = os.getenv('LOG_URL_PREFIX', '/logs')
-            if prefix == 'NONE': prefix = ''
+            if prefix == 'NONE':
+                prefix = ''
             log_url = f"{self.bot.config.log_url.strip('/')}{prefix}/{log_data['key']}"
 
             if log_data['messages']:
@@ -703,7 +704,6 @@ class ThreadManager(ThreadManagerABC):
         """Get information about a member of a server
         supports users from the guild or not."""
         member = self.bot.guild.get_member(user.id)
-        avi = user.avatar_url
         time = datetime.utcnow()
 
         # key = log_url.split('/')[-1]
@@ -742,7 +742,7 @@ class ThreadManager(ThreadManagerABC):
 
         footer = 'User ID: ' + str(user.id)
         embed.set_footer(text=footer)
-        embed.set_author(name=str(user), icon_url=avi, url=log_url)
+        embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
         # embed.set_thumbnail(url=avi)
 
         if member:

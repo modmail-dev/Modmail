@@ -28,7 +28,7 @@ from core.utils import cleanup_code, info, error, User, get_perm_level
 logger = logging.getLogger('Modmail')
 
 
-class Utility:
+class Utility(commands.Cog):
     """General commands that provide utility."""
 
     def __init__(self, bot: Bot):
@@ -40,9 +40,10 @@ class Utility:
         prefix = self.bot.prefix
 
         fmts = ['']
+        # TODO: Use Utility.get_commands() / Utility.walk_commands()
         for perm_level, cmd in sorted(((get_perm_level(c), c) for c in self.bot.commands),
                                       key=itemgetter(0)):
-            if cmd.instance is cog and not cmd.hidden:
+            if cmd.cog is cog and not cmd.hidden:
                 if perm_level is PermissionLevel.INVALID:
                     new_fmt = f'`{prefix + cmd.qualified_name}` '
                 else:
@@ -90,6 +91,7 @@ class Utility:
         else:
             perm_level = ''
 
+        # TODO: cmd.signature broken
         embed = Embed(
             title=f'`{prefix}{cmd.signature}`',
             color=self.bot.main_color,
@@ -148,6 +150,7 @@ class Utility:
     async def help_(self, ctx, *, command: str = None):
         """Shows the help message."""
 
+        # TODO: use https://gist.github.com/Rapptz/288294ca99fa1f042f0e39a92ddd88eb
         if command:
             cmd = self.bot.get_command(command)
             cog = self.bot.cogs.get(command)

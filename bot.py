@@ -46,7 +46,7 @@ from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import Changelog
-from core.clients import SelfHostedClient, PluginDatabaseClient
+from core.clients import DatabaseClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error
 from core.models import Bot, PermissionLevel
@@ -103,9 +103,9 @@ class ModmailBot(Bot):
         self._db = None
 
         self._configure_logging()
-
+        # TODO: Raise fatal error if mongo_uri or other essentials are not found
         self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
-        self._api = SelfHostedClient(self)
+        self._api = DatabaseClient(self)
         self.plugin_db = PluginDatabaseClient(self)
 
         self.metadata_task = self.loop.create_task(self.metadata_loop())
@@ -563,7 +563,8 @@ class ModmailBot(Bot):
 
         elif str(message.author.id) in self.blocked_users:
             reaction = blocked_emoji
-            if reason.startswith('System Message: New Account.'):
+            if reason.startswith('System Message: New Account.') or \
+                    reason.startswith('System Message: Recently Joined.'):
                 # Met the age limit already
                 reaction = sent_emoji
                 del self.config.blocked[str(message.author.id)]
@@ -718,8 +719,7 @@ class ModmailBot(Bot):
                 return
             channel = await _thread.recipient.create_dm()
 
-        # TODO: change to fetch_message (breaking change in d.py)
-        message = await channel.get_message(payload.message_id)
+        message = await channel.fetch_message(payload.message_id)
         reaction = payload.emoji
 
         close_emoji = await self.convert_emoji(
@@ -809,6 +809,9 @@ class ModmailBot(Bot):
                         url = str(msg.embeds[0].author.url)
                         if message_id == url.split('/')[-1]:
                             return await msg.delete()
+
+    async def on_bulk_message_delete(self, messages):
+        await discord.utils.async_all(self.on_message_delete(msg) for msg in messages)
 
     async def on_message_edit(self, before, after):
         if before.author.bot:
@@ -953,7 +956,7 @@ class ModmailBot(Bot):
                 "owner_id": owner.id,
                 "bot_id": self.user.id,
                 "bot_name": str(self.user),
-                "avatar_url": self.user.avatar_url,
+                "avatar_url": str(self.user.avatar_url),
                 "guild_id": self.guild_id,
                 "guild_name": self.guild.name,
                 "member_count": len(self.guild.members),

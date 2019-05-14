@@ -111,8 +111,8 @@ class Plugins(commands.Cog):
 
         try:
             self.bot.load_extension(ext)
-        except ModuleNotFoundError as exc:
-            raise DownloadError('Invalid plugin structure') from exc
+        except commands.ExtensionError as exc:
+            raise DownloadError('Invalid plugin.') from exc
         else:
             msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
             logger.info(info(msg))
@@ -129,10 +129,10 @@ class Plugins(commands.Cog):
     async def plugin_add(self, ctx, *, plugin_name):
         """Adds a plugin"""
         if plugin_name in self.bot.config.plugins:
-            return await ctx.send('Plugin already installed')
+            return await ctx.send('Plugin already installed.')
         if plugin_name in self.bot.cogs.keys():
             # another class with the same name
-            return await ctx.send('Another cog exists with the same name')
+            return await ctx.send('Another cog exists with the same name.')
 
         message = await ctx.send('Downloading plugin...')
         async with ctx.typing():
@@ -143,14 +143,14 @@ class Plugins(commands.Cog):
                     await self.download_plugin_repo(*parsed_plugin[:-1])
                 except DownloadError as exc:
                     return await ctx.send(
-                        f'Unable to fetch plugin from Github: {exc}'
+                        f'Unable to fetch plugin from Github: {exc}.'
                     )
 
                 importlib.invalidate_caches()
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
-                    return await ctx.send(f'Unable to load plugin: `{exc}`')
+                    return await ctx.send(f'Unable to load plugin: `{exc}`.')
 
                 # if it makes it here, it has passed all checks and should
                 # be entered into the config
@@ -204,7 +204,7 @@ class Plugins(commands.Cog):
     async def plugin_update(self, ctx, *, plugin_name):
         """Updates a certain plugin"""
         if plugin_name not in self.bot.config.plugins:
-            return await ctx.send('Plugin not installed')
+            return await ctx.send('Plugin not installed.')
 
         async with ctx.typing():
             username, repo, name = self.parse_plugin(plugin_name)
@@ -217,7 +217,7 @@ class Plugins(commands.Cog):
                 )
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode('utf8').strip()
-                await ctx.send(f'Error while updating: {err}')
+                await ctx.send(f'Error while updating: {err}.')
             else:
                 output = cmd.stdout.decode('utf8').strip()
                 await ctx.send(f'```\n{output}\n```')
@@ -230,7 +230,7 @@ class Plugins(commands.Cog):
                     try:
                         await self.load_plugin(username, repo, name)
                     except DownloadError as exc:
-                        await ctx.send(f'Unable to start plugin: `{exc}`')
+                        await ctx.send(f'Unable to start plugin: `{exc}`.')
 
     @plugin.command(name='list', aliases=['show', 'view'])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -240,7 +240,7 @@ class Plugins(commands.Cog):
             msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
             await ctx.send(msg)
         else:
-            await ctx.send('No plugins installed')
+            await ctx.send('No plugins installed.')
 
 
 def setup(bot):

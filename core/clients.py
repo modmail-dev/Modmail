@@ -19,6 +19,7 @@ prefix = os.getenv('LOG_URL_PREFIX', '/logs')
 if prefix == 'NONE':
     prefix = ''
 
+
 class ApiClient:
     """
     This class represents the general request class for all type of clients.
@@ -255,7 +256,7 @@ class GitHub(ApiClient):
         return self
 
 
-class SelfHostedClient(UserClient, ApiClient):
+class DatabaseClient(UserClient, ApiClient):
 
     def __init__(self, bot: Bot):
         super().__init__(bot)
@@ -308,14 +309,14 @@ class SelfHostedClient(UserClient, ApiClient):
                 'id': str(recipient.id),
                 'name': recipient.name,
                 'discriminator': recipient.discriminator,
-                'avatar_url': recipient.avatar_url,
+                'avatar_url': str(recipient.avatar_url),
                 'mod': False
             },
             'creator': {
                 'id': str(creator.id),
                 'name': creator.name,
                 'discriminator': creator.discriminator,
-                'avatar_url': creator.avatar_url,
+                'avatar_url': str(creator.avatar_url),
                 'mod': isinstance(creator, Member)
             },
             'closer': None,
@@ -363,7 +364,7 @@ class SelfHostedClient(UserClient, ApiClient):
                 'id': str(message.author.id),
                 'name': message.author.name,
                 'discriminator': message.author.discriminator,
-                'avatar_url': message.author.avatar_url,
+                'avatar_url': str(message.author.avatar_url),
                 'mod': not isinstance(message.channel, DMChannel),
             },
             'content': message.content,

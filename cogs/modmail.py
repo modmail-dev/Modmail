@@ -818,7 +818,8 @@ class Modmail(commands.Cog):
         linked_message_id = await self.find_linked_message(ctx, message_id)
 
         if linked_message_id is None:
-            return await ctx.send(embed=discord.Embed(
+            return await ctx.send(
+                embed=discord.Embed(
                 title='Failed',
                 description='Cannot find a message to delete.',
                 color=discord.Color.red()
