@@ -19,7 +19,7 @@ from core.utils import format_preview, User
 
 
 class Modmail:
-    """Commands directly related to Modmail functionality."""
+    """Commandes directement liées à la fonctionnalité Modmail."""
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -28,14 +28,14 @@ class Modmail:
     @trigger_typing
     @checks.has_permissions(administrator=True)
     async def setup(self, ctx):
-        """Sets up a server for Modmail"""
+        """Configure un serveur pour le ModMail"""
         if self.bot.main_category:
             return await ctx.send(
-                f'{self.bot.modmail_guild} is already set up.'
+                f'{self.bot.modmail_guild} est déjà configuré.'
             )
 
         category = await self.bot.modmail_guild.create_category(
-            name='Modmail',
+            name='Discord.FR',
             overwrites=self.bot.overwrites(ctx)
         )
 
@@ -46,23 +46,23 @@ class Modmail:
         )
 
         embed = discord.Embed(
-            title='Friendly Reminder:',
-            description='You may use the `config set log_channel_id '
-                        '<channel-id>` command to set up a custom log channel'
-                        ', then you can delete the default '
-                        f'{log_channel.mention} channel.',
+            title='Petit rappel:',
+            description='Vous pouvez utiliser le `config set log_channel_id '
+                        '<channel-id>` commande pour configurer un canal de journal personnalisé'
+                        ', alors vous pouvez supprimer la valeur par défaut '
+                        f'{log_channel.mention} salon.',
             color=self.bot.main_color
         )
 
-        embed.set_footer(text=f'Type "{self.bot.prefix}help" '
-                              'for a complete list of commands.')
+        embed.set_footer(text=f'Taper "{self.bot.prefix}help" '
+                              'pour une liste complète des commandes.')
         await log_channel.send(embed=embed)
 
         self.bot.config['main_category_id'] = category.id
         self.bot.config['log_channel_id'] = log_channel.id
 
         await self.bot.config.update()
-        await ctx.send('Successfully set up server.')
+        await ctx.send('Serveur configuré avec succès.')
 
     @commands.group()
     @checks.has_permissions(manage_messages=True)
@@ -144,12 +144,12 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(manage_messages=True)
     async def move(self, ctx, *, category: discord.CategoryChannel):
-        """Moves a thread to a specified category."""
+        """Déplace un ticket dans une catégorie spécifiée."""
         thread = ctx.thread
         if not thread:
             embed = discord.Embed(
-                title='Error',
-                description='This is not a Modmail thread.',
+                title='Erreur',
+                description="Ce n'est pas un fil Modmail.",
                 color=discord.Color.red()
             )
             return await ctx.send(embed=embed)
