@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://i.imgur.com/o558Qnq.png" align="center">
   <br>
-  <strong><i>A simple and functional Modmail bot for Discord.</i></strong>
+  <strong><i>A feature rich Modmail bot for Discord.</i></strong>
   <br>
   <br>
     
@@ -37,8 +37,8 @@ Modmail's core functionality provides an efficient communications interface betw
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
   * Minimum account/guild age in order to create a thread.
-* **Thread logs**, e.g. https://logs.modmail.tk/example
-  * When you close a thread, a log link is generated and posted to your log-channel.
+* **Thread logs**,
+  * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
   * Optional login in via Discord to protect your logs.
   * See past logs of a user with `?logs`
