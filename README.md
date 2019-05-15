@@ -12,13 +12,11 @@ Lorsqu'un utilisateur envoie un message direct au bot, un canal est créé dans 
 
 ---
 
-# Caractéristiques
-
 ## Logs des tickets support
 
 Les conversations de fil sont automatiquement connectées avec un site Web visualisable généré du fil de discussion complet. Les journaux sont rendus avec un style HTML stylé et présentés de manière esthétique - ils se fondent parfaitement dans la version mobile de Discord. Un exemple de conversation enregistrée: https://logs.modmail.tk/02032d65a6f3
 
-# Contribuer
+## Contribuer
 
 Ce projet est sous licence MIT. Si vous avez de nouvelles idées, créez un problème ou une demande d'extraction. Les contributions sont toujours les bienvenues, qu’il s’agisse d’améliorations de la documentation ou de nouvelles fonctionnalités, n’hésitez pas à faire le changement.
 
