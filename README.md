@@ -32,7 +32,7 @@ Modmail's core functionality provides an efficient communications interface betw
 ## Features
 
 * **Highly Customisable**
-  * Bot activity, prefix, etc.
+  * Bot activity, prefix, category, log channel, etc.
   * Fully customisable command permission system.
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
