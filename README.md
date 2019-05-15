@@ -20,4 +20,4 @@ Les conversations de fil sont automatiquement connectées avec un site Web visua
 
 Ce projet est sous licence MIT. Si vous avez de nouvelles idées, créez un problème ou une demande d'extraction. Les contributions sont toujours les bienvenues, qu’il s’agisse d’améliorations de la documentation ou de nouvelles fonctionnalités, n’hésitez pas à faire le changement.
 
-Si vous utilisez le Modmail et que vous l'aimez, pensez à me soutenir **Kyber** sur [Patreon](https://www.patreon.com/kyber) :heart:
+Si vous utilisez le Modmail et que vous l'aimez, pensez à soutenir **Kyber** sur [Patreon](https://www.patreon.com/kyber) :heart:
