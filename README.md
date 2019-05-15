@@ -29,7 +29,7 @@
 
 <img src="https://i.imgur.com/GGukNDs.png" align="right" height="350">
 
-When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `?reply` in the channel. A full list of commands can be found in the [wiki](https://github.com/kyb3r/modmail/wiki) or by using the `?help` command.
+When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `?reply` in the channel. A full list of commands can be found by using the `?help` command.
 
 ## Installation
 
