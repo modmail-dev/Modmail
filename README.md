@@ -33,25 +33,23 @@ Modmail's core functionality provides an efficient communications interface betw
 
 * **Highly Customisable**:
   * Bot activity, prefix, etc.
-  * Command permissions
+  * Fully customisable command permission system.
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
   * Minimum account/guild age in order to create a thread.
-* **Thread logs**,
+* **Thread logs**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
   * Optional login in via Discord to protect your logs.
   * See past logs of a user with `?logs`
   * Searchable by text queries using `?logs search`
-* **Feature rich and robust**
-  * Scheduled tasks - `?close in 2 hours silently`
-  * Moderate usage by blocking users -`?block @user spamming for 2 days`
-  * Get notified/subscribe for thread messages. `?notify` and `?sub`
+* **Robust implementation**
+  * Scheduled tasks in human time, e.g. `?close in 2 hours silently`.
   * Editing and deleting messages is synced on both ends.
-  * Optional automatic updates to stay up to date with the latest features.
+  * Support for the full range of message content (mutliple images, files).
+  * Paginated commands interfaces via reactions.
   
-This list is ever growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `help` command .
-
+This list is ever growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `help` command.
 
 ## Installation
 
