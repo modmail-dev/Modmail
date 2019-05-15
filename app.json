@@ -1,30 +1,30 @@
 {
-  "name": "Modmail",
-  "description": "An easy to install Modmail bot for Discord - DM to contact mods!",
-  "repository": "https://github.com/kyb3r/modmail",
+  "name": "Discord.FR",
+  "description": "Un bot ModMail facile à utiliser pour Discord.FR - MP pour contacter la team Support !",
+  "repository": "https://github.com/discord-fr/bot",
   "env": {
     "TOKEN": {
-      "description": "Your discord bot's token.",
+      "description": "Le token du bot Discord.",
       "required": true
     },
     "GUILD_ID": {
-      "description": "The id for the server you are hosting this bot for.",
+      "description": "L'identifiant du serveur pour lequel vous hébergez ce bot.",
       "required": true
     },
     "OWNERS": {
-      "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval and update).",
+      "description": "ID utilisateur séparés par des virgules des personnes autorisées à utiliser des commandes réservées au propriétaire. (eval et update).",
       "required": true
     },
     "GITHUB_ACCESS_TOKEN": {
-      "description": "Your personal access token for GitHub, adding this gives you the ability to use the 'update' command, which will sync your fork with the main repo.",
+      "description": "Votre jeton d'accès personnel pour GitHub, en ajoutant ceci, vous donne la possibilité d'utiliser la commande 'update', qui synchronisera votre fork avec le référentiel principal.",
       "required": false
     },
     "MONGO_URI": {
-      "description": "Mongo DB connection URI for self-hosting your data.",
+      "description": "URI de connexion Mongo DB pour l’auto-hébergement de vos données.",
       "required": true
     },
     "LOG_URL": {
-      "description": "The url of the log viewer app for viewing self-hosted logs.",
+      "description": "L'URL de l'application de visualisation des logs pour afficher les tickets auto-hébergés.",
       "required": true
     }
   }
