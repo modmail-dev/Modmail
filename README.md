@@ -31,24 +31,24 @@ When a user sends a direct message to the bot, a channel is created within an is
 
 ## Features
 
-* Aesthetic command interfaces e.g Pagination via reactions
 * Highly Customisable:
   * Bot activity, prefix, etc.
   * Command permissions
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
   * Minimum account/guild age in order to create a thread.
-* Scheduled closing - e.g. `?close in 2 hours silently`
-* Blocking users e.g. `?block @user spamming for 2 days`
-* Get notified/subscribe for thread messages. (`?notify` and `?sub`)
-* Linked thread messages
-  * Editing/deleting a message on one end is synced with the other.
 * Thread logs, e.g. https://logs.modmail.tk/example
   * When you close a thread, a log link is generated and posted to your log-channel.
   * Rendered in styled HTML like Discord.
   * Optional login in via Discord to protect your logs.
   * See past logs of a user with `?logs`
   * Searchable by text queries using `?logs search`
+* Aesthetic command interfaces e.g Pagination via reactions
+* Scheduled closing - e.g. `?close in 2 hours silently`
+* Blocking users e.g. `?block @user spamming for 2 days`
+* Get notified/subscribe for thread messages. (`?notify` and `?sub`)
+* Linked thread messages Editing/deleting messages is synced on both ends.
+
 * Optional automatic updates to stay up to date with the latest features.
   
 This list is ever growing thanks to active development and our exceptional contributors.
