@@ -57,7 +57,7 @@ This list is ever growing thanks to active development and our exceptional contr
 Currently, the easiest way to set up the bot is by using Heroku, a container-based cloud platform. Installation via Heroku is done in your web browser and keeps the bot online 24/7 for free. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
 
 ### Locally 
-Installation locally for development reasons or otherwise is as follows, you will need `python 3.7` and `pipenv`.
+Installation locally for development reasons or otherwise is as follows, you will need `python 3.7`.
 
 Clone the repo
 ```console
@@ -67,13 +67,13 @@ $ cd modmail
 
 Install dependancies
 ```console
-$ pipenv install
+$ pip install -r requirements.txt
 ```
 
 Rename the `config.json.example` to `config.json` and fill out the fields. 
 And finally, run the bot.
 ```console
-$ pipenv run python3 bot.py
+$ python3 bot.py
 ```
 
 ## Contributing
