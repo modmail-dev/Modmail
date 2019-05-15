@@ -6,7 +6,7 @@
 
 ---
 
-## Comment fonctionne Modmail ?
+# Comment fonctionne Modmail ?
 
 Lorsqu'un utilisateur envoie un message direct au bot, un canal est créé dans une catégorie isolée. Ce canal est l'endroit où les messages seront relayés. Pour répondre au message, la team support utilise simplement la commande `Reply` dans le canal. Une liste complète des commandes peut être trouvée en utilisant la commande `Help`.
 
