@@ -31,25 +31,58 @@
 
 When a user sends a direct message to the bot, a channel is created within an isolated category. This channel is where messages will be relayed. To reply to the message, simply use the command `?reply` in the channel. A full list of commands can be found by using the `?help` command.
 
+## Features
+
+* Aesthetic command interfaces e.g Pagination via reactions
+* Highly Customisable:
+  * Bot activity, prefix, etc.
+  * Command permissions
+  * Interface elements (color, responses, reactions, etc.)
+  * Snippets and *command aliases*
+  * Minimum account/guild age in order to create a thread.
+* Scheduled closing - e.g. `?close in 2 hours silently`
+* Blocking users e.g. `?block @user spamming for 2 days`
+* Get notified/subscribe for thread messages. (`?notify` and `?sub`)
+* Linked thread messages
+  * Editing/deleting a message on one end is synced with the other.
+* Thread logs, e.g. https://logs.modmail.tk/example
+  * When you close a thread, a log link is generated and posted to your log-channel.
+  * Rendered in styled HTML like Discord.
+  * Optional login in via Discord to protect your logs.
+  * See past logs of a user with `?logs`
+  * Searchable by text queries using `?logs search`
+* Optional automatic updates to stay up to date with the latest features.
+  
+This list is ever growing thanks to active development and our exceptional contributors.
+
+
 ## Installation
 
-Currently, the easiest and fastest way to set up the bot is by using Heroku, which is a service that offers a free plan for hosting applications. If you choose to install the bot using Heroku, you will not need to download anything. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join our [Discord server](https://discord.gg/etJNHCQ) for help and support. Even if you don't have any issues, you should come and check out our awesome Discord community! :wink:
+### Heroku
+Currently, the easiest way to set up the bot is by using Heroku, a container-based cloud platform. Installation via Heroku is done in your web browser and keeps the bot online 24/7 for free. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
 
-Interactive installation: [**https://taaku18.github.io/modmail/installation**](https://taaku18.github.io/modmail/installation)
+### Locally 
+Installation locally for development reasons or otherwise is as follows, you will need `python 3.7` and `pipenv`.
 
+Clone the repo
+```console
+$ git clone https://github.com/kyb3r/modmail
+$ cd modmail
+```
 
-# Notable Features
+Install dependancies
+```console
+$ pipenv install
+```
 
-## Customizability
+Rename the `config.json.example` to `config.json` and fill out the fields. 
+And finally, run the bot.
+```console
+$ pipenv run python3 bot.py
+```
 
-Modmail has a range of configuration variables that you can dynamically alter with the `?config` command. You can use them to change the different aspects of the bot, for example, the embed color, responses, reactions, status, etc. Snippets and custom command aliases are also supported. The level of customization is ever growing thanks to our exceptional contributors.
-
-## Thread Logs
-
-Thread conversations are automatically logged with a generated viewable website of the complete thread. Logs are rendered with styled HTML and presented in an aesthetically pleasing way—it blends seamlessly with the mobile version of Discord. You have the ability to query and search through logs using the bot via commands. An example of a logged conversation: https://logs.modmail.tk/example.
-
-# Contributing
+## Contributing
 
 This project is licenced under MIT. If you have any new ideas, create an issue or a pull request. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change.
 
-If you use Modmail and love it, consider supporting me on **[Patreon](https://www.patreon.com/kyber)** :heart:
+If you use Modmail and love it, consider becoming a patron on **[Patreon](https://www.patreon.com/kyber)** :smile:
