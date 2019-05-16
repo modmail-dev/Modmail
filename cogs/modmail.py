@@ -517,7 +517,7 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def reply(self, ctx, *, msg: str):
+    async def reply(self, ctx, *, msg: str=''):
         """Reply to users using this command.
 
         Supports attachments and images as well as
@@ -530,7 +530,7 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def anonreply(self, ctx, *, msg: str):
+    async def anonreply(self, ctx, *, msg: str=''):
         """Reply to a thread anonymously.
 
         You can edit the anonymous user's name,
@@ -546,7 +546,7 @@ class Modmail:
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def note(self, ctx, *, msg: str):
+    async def note(self, ctx, *, msg: str=''):
         """Take a note about the current thread, useful for noting context."""
         ctx.message.content = msg
         async with ctx.typing():
