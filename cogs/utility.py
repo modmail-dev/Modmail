@@ -363,14 +363,14 @@ class Utility:
     @github_access_token_required
     @trigger_typing
     async def update(self, ctx):
-        """Updates the bot, this only works with heroku users."""
+        """Met à jour le bot, cela ne fonctionne qu'avec les utilisateurs de heroku."""
         metadata = await self.bot.api.get_metadata()
 
-        desc = (f'The latest version is [`{self.bot.version}`]'
-                '(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)')
+        desc = (f'La dernière version est [`{self.bot.version}`]'
+                '(https://github.com/discord-fr/bot/blob/master/bot.py#L25)')
 
         embed = Embed(
-            title='Already up to date',
+            title='Déjà à jour',
             description=desc,
             color=self.bot.main_color
         )
@@ -391,11 +391,11 @@ class Utility:
             embed.set_author(name=user['username'],
                              icon_url=user['avatar_url'],
                              url=user['url'])
-            embed.set_footer(text=f'Updating Modmail v{self.bot.version} '
+            embed.set_footer(text=f'Mise à jour de Modmail v{self.bot.version} '
                                   f"-> v{metadata['latest_version']}")
 
             if commit_data:
-                embed.set_author(name=user['username'] + ' - Updating bot',
+                embed.set_author(name=user['username'] + ' - Mise à jour du bot',
                                  icon_url=user['avatar_url'],
                                  url=user['url'])
                 changelog = await Changelog.from_url(self.bot)
@@ -406,11 +406,11 @@ class Utility:
                 # message = commit_data['commit']['message']
                 html_url = commit_data["html_url"]
                 short_sha = commit_data['sha'][:6]
-                embed.add_field(name='Merge Commit',
+                embed.add_field(name='Fusionner la validation',
                                 value=f'[`{short_sha}`]({html_url})')
             else:
-                embed.description = ('Already up to date '
-                                     'with master repository.')
+                embed.description = ('Déjà à jour '
+                                     'avec le référentiel maître.')
 
         return await ctx.send(embed=embed)
 
@@ -418,19 +418,19 @@ class Utility:
     @checks.has_permissions(administrator=True)
     async def activity(self, ctx, activity_type: str.lower, *, message: str = ''):
         """
-        Set a custom activity for the bot.
+        Définissez une activité personnalisée pour le bot.
 
-        Possible activity types:
+        Types d'activités possibles:
             - `playing`
             - `streaming`
             - `listening`
             - `watching`
             - `clear`
 
-        When activity type is set to `clear`, the current activity is removed.
+        Lorsque le type d'activité est défini sur `clear`, l'activité en cours est supprimée.
 
-        When activity type is set to `listening`,
-        it must be followed by a "to": "listening to..."
+        Lorsque le type d'activité est défini sur `listening`,
+        il doit être suivi d'un "to": "listening to..."
         """
         if activity_type == 'clear':
             self.bot.config['activity_type'] = None
@@ -438,7 +438,7 @@ class Utility:
             await self.bot.config.update()
             await self.set_presence()
             embed = Embed(
-                title='Activity Removed',
+                title='Activité supprimée',
                 color=self.bot.main_color
             )
             return await ctx.send(embed=embed)
@@ -459,7 +459,7 @@ class Utility:
         await self.bot.config.update()
 
         embed = Embed(
-            title='Activity Changed',
+            title='Activité modifiée',
             description=msg,
             color=self.bot.main_color
         )
@@ -469,9 +469,9 @@ class Utility:
     @checks.has_permissions(administrator=True)
     async def status(self, ctx, *, status_type: str.lower):
         """
-        Set a custom status for the bot.
+        Définir un statut personnalisé pour le bot.
 
-        Possible status types:
+        Types de statut possibles:
             - `online`
             - `idle`
             - `dnd`
@@ -479,14 +479,14 @@ class Utility:
             - `invisible` or `offline`
             - `clear`
 
-        When status type is set to `clear`, the current status is removed.
+        Lorsque le type de statut est défini sur `clear`, le statut actuel est supprimé.
         """
         if status_type == 'clear':
             self.bot.config['status'] = None
             await self.bot.config.update()
             await self.set_presence()
             embed = Embed(
-                title='Status Removed',
+                title='Statut supprimé',
                 color=self.bot.main_color
             )
             return await ctx.send(embed=embed)
@@ -503,7 +503,7 @@ class Utility:
         await self.bot.config.update()
 
         embed = Embed(
-            title='Status Changed',
+            title='Statut modifié',
             description=msg,
             color=self.bot.main_color
         )
@@ -533,8 +533,8 @@ class Utility:
 
         if activity_identifier is None:
             if activity_message is not None:
-                raise ValueError('activity_message must be None '
-                                 'if activity_identifier is None.')
+                raise ValueError('activity_message doit être None '
+                                 'si activity_identifier est None.')
             activity_identifier = self.bot.config.get('activity_type', None)
             activity_by_key = False
 
@@ -545,7 +545,7 @@ class Utility:
                 activity_type = ActivityType(activity_identifier)
         except (KeyError, ValueError):
             if activity_identifier is not None:
-                msg = f'Invalid activity type: {activity_identifier}'
+                msg = f'Type d\'activité invalide: {activity_identifier}'
                 logger.warning(error(msg))
         else:
             url = None
@@ -561,7 +561,7 @@ class Utility:
                     activity_message = activity_message[3:].strip()
             elif activity_type == ActivityType.streaming:
                 url = self.bot.config.get(
-                    'twitch_url', 'https://www.twitch.tv/discord-modmail/'
+                    'twitch_url', 'https://www.twitch.tv/discordfr_'
                 )
 
             if activity_message:
@@ -569,20 +569,20 @@ class Utility:
                                     name=activity_message,
                                     url=url)
             else:
-                msg = 'You must supply an activity message to use custom activity.'
+                msg = 'Vous devez fournir un message d\'activité pour utiliser une activité personnalisée.'
                 logger.warning(error(msg))
 
         await self.bot.change_presence(activity=activity, status=status)
 
-        presence = {'activity': (None, 'No activity has been set.'),
-                    'status': (None, 'No status has been set.')}
+        presence = {'activity': (None, 'Aucune activité n\'a été définie.'),
+                    'status': (None, 'Aucun statut n\'a été défini.')}
         if activity is not None:
-            to = 'to ' if activity.type == ActivityType.listening else ''
-            msg = f'Activity set to: {activity.type.name.capitalize()} '
+            to = 'à ' if activity.type == ActivityType.listening else ''
+            msg = f'Activité réglée sur: {activity.type.name.capitalize()} '
             msg += f'{to}{activity.name}.'
             presence['activity'] = (activity, msg)
         if status is not None:
-            msg = f'Status set to: {status.value}.'
+            msg = f'Statut défini sur: {status.value}.'
             presence['status'] = (status, msg)
         return presence
 
@@ -597,9 +597,9 @@ class Utility:
     @trigger_typing
     @checks.has_permissions(administrator=True)
     async def ping(self, ctx):
-        """Pong! Returns your websocket latency."""
+        """Pong! Renvoie votre latence websocket."""
         embed = Embed(
-            title='Pong! Websocket Latency:',
+            title='Pong! Latence Websocket:',
             description=f'{self.bot.ws.latency * 1000:.4f} ms',
             color=self.bot.main_color
         )
@@ -608,20 +608,20 @@ class Utility:
     @commands.command()
     @checks.has_permissions(administrator=True)
     async def mention(self, ctx, *, mention=None):
-        """Changes what the bot mentions at the start of each thread."""
+        """Change ce que le bot mentionne au début de chaque ticket."""
         current = self.bot.config.get('mention', '@here')
 
         if mention is None:
             embed = Embed(
-                title='Current text',
+                title='Texte actuel',
                 color=self.bot.main_color,
                 description=f'{current}'
             )
 
         else:
             embed = Embed(
-                title='Changed mention!',
-                description=f'On thread creation the bot now says {mention}',
+                title='Mention changée !',
+                description=f'Sur la création de ticket, le bot dit maintenant {mention}',
                 color=self.bot.main_color
             )
             self.bot.config['mention'] = mention
@@ -632,11 +632,11 @@ class Utility:
     @commands.command()
     @checks.has_permissions(administrator=True)
     async def prefix(self, ctx, *, prefix=None):
-        """Changes the prefix for the bot."""
+        """Change le préfixe du bot."""
 
         current = self.bot.prefix
         embed = Embed(
-            title='Current prefix',
+            title='Préfixe actuel',
             color=self.bot.main_color,
             description=f'{current}'
         )
@@ -644,8 +644,8 @@ class Utility:
         if prefix is None:
             await ctx.send(embed=embed)
         else:
-            embed.title = 'Changed prefix!'
-            embed.description = f'Set prefix to `{prefix}`'
+            embed.title = 'Préfixe modifié !'
+            embed.description = f'Définir le préfixe sur `{prefix}`'
             self.bot.config['prefix'] = prefix
             await self.bot.config.update()
             await ctx.send(embed=embed)
@@ -653,7 +653,7 @@ class Utility:
     @commands.group()
     @commands.is_owner()
     async def config(self, ctx):
-        """Change config vars for the bot."""
+        """Changer de configuration pour le bot."""
 
         if ctx.invoked_subcommand is None:
             cmd = self.bot.get_command('help')
@@ -662,10 +662,10 @@ class Utility:
     @config.command()
     @commands.is_owner()
     async def options(self, ctx):
-        """Return a list of valid config keys you can change."""
+        """Renvoie une liste de clés de configuration valides que vous pouvez modifier."""
         allowed = self.bot.config.allowed_to_change_in_command
         valid = ', '.join(f'`{k}`' for k in allowed)
-        embed = Embed(title='Valid Keys',
+        embed = Embed(title='Clés valides',
                       description=valid,
                       color=self.bot.main_color)
         return await ctx.send(embed=embed)
@@ -674,7 +674,7 @@ class Utility:
     @commands.is_owner()
     async def set(self, ctx, key: str.lower, *, value):
         """
-        Sets a configuration variable and its value
+        Définit une variable de configuration et sa valeur
         """
 
         keys = self.bot.config.allowed_to_change_in_command
@@ -687,25 +687,25 @@ class Utility:
             else:
                 await self.bot.config.update({key: value})
                 embed = Embed(
-                    title='Success',
+                    title='Succès',
                     color=self.bot.main_color,
-                    description=f'Set `{key}` to `{value_text}`'
+                    description=f'Set `{key}` à `{value_text}`'
                 )
         else:
             embed = Embed(
-                title='Error',
+                title='Erreur',
                 color=Color.red(),
-                description=f'{key} is an invalid key.'
+                description=f'{key} est une clé invalide.'
             )
             valid_keys = [f'`{k}`' for k in keys]
-            embed.add_field(name='Valid keys', value=', '.join(valid_keys))
+            embed.add_field(name='Clés valides', value=', '.join(valid_keys))
 
         return await ctx.send(embed=embed)
 
     @config.command(name='del')
     @commands.is_owner()
     async def del_config(self, ctx, key: str.lower):
-        """Deletes a key from the config."""
+        """Supprime une clé de la configuration."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
             try:
@@ -715,30 +715,30 @@ class Utility:
                 # when no values were set
                 pass
             embed = Embed(
-                title='Success',
+                title='Succès',
                 color=self.bot.main_color,
-                description=f'`{key}` had been deleted from the config.'
+                description=f'`{key}` avait été supprimé de la config.'
             )
         else:
             embed = Embed(
-                title='Error',
+                title='Erreur',
                 color=Color.red(),
-                description=f'{key} is an invalid key.'
+                description=f'{key} est une clé invalide.'
             )
             valid_keys = [f'`{k}`' for k in keys]
-            embed.add_field(name='Valid keys', value=', '.join(valid_keys))
+            embed.add_field(name='Clés valides', value=', '.join(valid_keys))
 
         return await ctx.send(embed=embed)
 
     @config.command()
     @commands.is_owner()
     async def get(self, ctx, key=None):
-        """Shows the config variables that are currently set."""
+        """Affiche les variables de configuration actuellement définies."""
         keys = self.bot.config.allowed_to_change_in_command
 
         if key:
             if key in keys:
-                desc = f'`{key}` is set to `{self.bot.config.get(key)}`'
+                desc = f'`{key}` est réglé sur `{self.bot.config.get(key)}`'
                 embed = Embed(
                     color=self.bot.main_color,
                     description=desc
@@ -748,20 +748,20 @@ class Utility:
 
             else:
                 embed = Embed(
-                    title='Error',
+                    title='Erreur',
                     color=Color.red(),
-                    description=f'`{key}` is an invalid key.'
+                    description=f'`{key}` est une clé invalide.'
                 )
                 valid_keys = [f'`{k}`' for k in keys]
-                embed.add_field(name='Valid keys', value=', '.join(valid_keys))
+                embed.add_field(name='Clés valides', value=', '.join(valid_keys))
 
         else:
             embed = Embed(
                 color=self.bot.main_color,
-                description='Here is a list of currently '
-                            'set configuration variables.'
+                description='Voici une liste des variables de '
+                            'configuration actuellement définies.'
             )
-            embed.set_author(name='Current config',
+            embed.set_author(name='Configuration actuelle',
                              icon_url=self.bot.user.avatar_url)
 
             config = {
@@ -777,12 +777,12 @@ class Utility:
     @commands.group(aliases=['aliases'])
     @checks.has_permissions(manage_messages=True)
     async def alias(self, ctx):
-        """Returns a list of aliases that are currently set."""
+        """Renvoie une liste des alias actuellement définis."""
         if ctx.invoked_subcommand is not None:
             return
 
         embeds = []
-        desc = 'Here is a list of aliases that are currently configured.'
+        desc = 'Voici une liste des alias actuellement configurés.'
 
         if self.bot.aliases:
             embed = Embed(
@@ -792,20 +792,20 @@ class Utility:
         else:
             embed = Embed(
                 color=self.bot.main_color,
-                description='You dont have any aliases at the moment.'
+                description='Vous n'avez pas d'alias pour le moment.'
             )
-        embed.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
-        embed.set_footer(text=f'Do {self.bot.prefix}'
-                              'help aliases for more commands.')
+        embed.set_author(name='Alias de commande', icon_url=ctx.guild.icon_url)
+        embed.set_footer(text=f'Tapez {self.bot.prefix}'
+                              'help aliases pour plus de commandes.')
         embeds.append(embed)
 
         for name, value in self.bot.aliases.items():
             if len(embed.fields) == 5:
                 embed = Embed(color=self.bot.main_color, description=desc)
-                embed.set_author(name='Command aliases',
+                embed.set_author(name='Alias de commande',
                                  icon_url=ctx.guild.icon_url)
-                embed.set_footer(text=f'Do {self.bot.prefix}help '
-                                      'aliases for more commands.')
+                embed.set_footer(text=f'Tapez {self.bot.prefix}help '
+                                      'aliases pour plus de commandes.')
 
                 embeds.append(embed)
             embed.add_field(name=name, value=value, inline=False)
@@ -816,25 +816,25 @@ class Utility:
     @alias.command(name='add')
     @checks.has_permissions(manage_messages=True)
     async def add_(self, ctx, name: str.lower, *, value):
-        """Add an alias to the bot config."""
+        """Ajouter un alias à la configuration du bot."""
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
 
         if self.bot.get_command(name) or self.bot.config.aliases.get(name):
             embed = Embed(
-                title='Error',
+                title='Erreur',
                 color=Color.red(),
-                description='A command or alias already exists '
-                f'with the same name: `{name}`.'
+                description='Une commande ou un alias existe déjà '
+                f'avec le même nom: `{name}`.'
             )
             return await ctx.send(embed=embed)
 
         if not self.bot.get_command(value.split()[0]):
             embed = Embed(
-                title='Error',
+                title='Erreur',
                 color=Color.red(),
-                description='The command you are attempting to point '
-                f'to does not exist: `{value.split()[0]}`.'
+                description='La commande que vous essayez de pointer '
+                f'n\'existe pas: `{value.split()[0]}`.'
             )
             return await ctx.send(embed=embed)
 
@@ -842,9 +842,9 @@ class Utility:
         await self.bot.config.update()
 
         embed = Embed(
-            title='Added alias',
+            title='Ajouté alias',
             color=self.bot.main_color,
-            description=f'`{name}` points to: {value}'
+            description=f'`{name}` pointe vers: {value}'
         )
 
         return await ctx.send(embed=embed)
@@ -852,7 +852,7 @@ class Utility:
     @alias.command(name='del')
     @checks.has_permissions(manage_messages=True)
     async def del_alias(self, ctx, *, name: str.lower):
-        """Removes a alias from bot config."""
+        """Supprime un alias de config."""
 
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
@@ -862,16 +862,16 @@ class Utility:
             await self.bot.config.update()
 
             embed = Embed(
-                title='Removed alias',
+                title='Alias supprimé',
                 color=self.bot.main_color,
-                description=f'`{name}` no longer exists.'
+                description=f'`{name}` n\'existe plus.'
             )
 
         else:
             embed = Embed(
-                title='Error',
+                title='Erreur',
                 color=Color.red(),
-                description=f'Alias `{name}` does not exist.'
+                description=f'Alias `{name}` n\'existe pas.'
             )
 
         return await ctx.send(embed=embed)
@@ -879,7 +879,7 @@ class Utility:
     @commands.command(hidden=True, name='eval')
     @commands.is_owner()
     async def eval_(self, ctx, *, body):
-        """Evaluates Python code"""
+        """Evalue le code Python"""
 
         env = {
             'ctx': ctx,
@@ -900,7 +900,7 @@ class Utility:
         to_compile = f'async def func():\n{indent(body, "  ")}'
 
         def paginate(text: str):
-            """Simple generator that paginates text."""
+            """Générateur simple qui pagine du texte."""
             last = 0
             pages = []
             appd_index = curr = None
