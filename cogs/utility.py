@@ -27,7 +27,7 @@ logger = logging.getLogger('Modmail')
 
 
 class Utility:
-    """General commands that provide utility"""
+    """Commandes générales"""
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -48,7 +48,7 @@ class Utility:
             return False
 
     async def format_cog_help(self, ctx, cog):
-        """Formats the text for a cog help"""
+        """Formate le texte pour une aide de rouage"""
 
         prefix = self.bot.prefix
 
@@ -70,7 +70,7 @@ class Utility:
                 continue
             embed = Embed(
                 description='*' + (inspect.getdoc(cog) or
-                                   'No description') + '*',
+                                   'Pas de description') + '*',
                 color=self.bot.main_color
             )
 
@@ -78,13 +78,13 @@ class Utility:
             embed.set_author(name=cog.__class__.__name__ + ' - Help',
                              icon_url=ctx.bot.user.avatar_url)
 
-            embed.set_footer(text=f'Type "{prefix}help command" '
-                                  'for more info on a command.')
+            embed.set_footer(text=f'Tapez "{prefix}help command" '
+                                  "pour plus d'informations sur une commande.")
             embeds.append(embed)
         return embeds
 
     async def format_command_help(self, ctx, cmd):
-        """Formats command help."""
+        """Aide à la commande Formats."""
         if cmd.hidden or not await self.verify_checks(ctx, cmd):
             return None
 
@@ -109,21 +109,21 @@ class Utility:
                 branch = '├─'
             fmt += f"`{branch} {name}` - {c.short_doc}\n"
 
-        embed.add_field(name='Sub Commands', value=fmt)
+        embed.add_field(name='Sous Commandes', value=fmt)
         embed.set_footer(
-            text=f'Type "{prefix}help {cmd} command" '
-            'for more info on a command.'
+            text=f'Tapez "{prefix}help {cmd} command" '
+            "pour plus d'informations sur une commande."
         )
         return embed
 
     async def format_not_found(self, ctx, command):
         prefix = ctx.prefix
         embed = Embed(
-            title='Unable to Find Command or Category',
+            title='Impossible de trouver une commande ou une catégorie',
             color=Color.red()
         )
-        embed.set_footer(text=f'Type "{prefix}help" to get '
-                              'a full list of commands.')
+        embed.set_footer(text=f'Tapez "{prefix}help" pour obtenir '
+                              'une liste complète de commandes.')
 
         choices = set()
         # filter out hidden commands & blank cogs
@@ -143,14 +143,14 @@ class Utility:
         if closest:
             # Perhaps you meant:
             #  - `item`
-            embed.description = (f'**Perhaps you meant:**\n'
+            embed.description = (f'**Peut-être que vous vouliez dire:**\n'
                                  f'\u2000- `{closest[0]}`')
         return embed
 
     @commands.command(name='help')
     @trigger_typing
     async def help_(self, ctx, *, command: str = None):
-        """Shows the help message."""
+        """Affiche le message d'aide."""
 
         if command:
             cmd = self.bot.get_command(command)
@@ -183,7 +183,7 @@ class Utility:
     @commands.command()
     @trigger_typing
     async def changelog(self, ctx):
-        """Show a paginated changelog of the bot."""
+        """Montrer un changelog paginé du bot."""
         changelog = await Changelog.from_url(self.bot)
         paginator = PaginatorSession(ctx, *changelog.embeds)
         await paginator.run()
@@ -191,19 +191,19 @@ class Utility:
     @commands.command(aliases=['bot', 'info'])
     @trigger_typing
     async def about(self, ctx):
-        """Shows information about the bot."""
+        """Affiche des informations sur le bot."""
         embed = Embed(color=self.bot.main_color,
                       timestamp=datetime.utcnow())
-        embed.set_author(name='Modmail - About',
+        embed.set_author(name='À propos',
                          icon_url=self.bot.user.avatar_url)
         embed.set_thumbnail(url=self.bot.user.avatar_url)
 
-        desc = 'This is an open source Discord bot that serves as a means for '
-        desc += 'members to easily communicate with server administrators in '
-        desc += 'an organised manner.'
+        desc = "Il s'agit d'un bot Discord open source qui permet "
+        desc += "aux membres de communiquer facilement avec "
+        desc += "la team support de Discord.FR de manière organisée."
         embed.description = desc
 
-        url = 'https://api.modmail.tk/metadata'
+        url = 'https://github.com/discord-fr/bot/blob/master/CHANGELOG.md'
         async with self.bot.session.get(url) as resp:
             try:
                 meta = await resp.json()
@@ -212,28 +212,26 @@ class Utility:
 
         embed.add_field(name='Uptime', value=self.bot.uptime)
         if meta:
-            embed.add_field(name='Instances', value=meta['instances'])
+            embed.add_field(name='Ping', value=f'{self.bot.latency * 1000:.2f} ms')
         else:
-            embed.add_field(name='Latency',
-                            value=f'{self.bot.latency * 1000:.2f} ms')
 
         embed.add_field(name='Version',
                         value=f'[`{self.bot.version}`]'
-                        '(https://modmail.tk/changelog)')
-        embed.add_field(name='Author',
+                        '(https://github.com/discord-fr/bot/blob/master/CHANGELOG.md)')
+        embed.add_field(name='Auteur',
                         value='[`kyb3r`](https://github.com/kyb3r)')
 
         footer = f'Bot ID: {self.bot.user.id}'
 
         if meta:
             if self.bot.version != meta['latest_version']:
-                footer = ("A newer version is available "
+                footer = ("Une nouvelle version est disponible "
                           f"v{meta['latest_version']}")
             else:
-                footer = 'You are up to date with the latest version.'
+                footer = 'Vous êtes à jour avec la dernière version.'
 
         embed.add_field(name='GitHub',
-                        value='https://github.com/kyb3r/modmail',
+                        value='https://github.com/discord-fr/bot',
                         inline=False)
 
         embed.set_footer(text=footer)
@@ -243,7 +241,7 @@ class Utility:
     @commands.is_owner()
     @trigger_typing
     async def debug(self, ctx):
-        """Shows the recent logs of the bot."""
+        """Affiche les logs récents du bot."""
 
         if ctx.invoked_subcommand is not None:
             return
