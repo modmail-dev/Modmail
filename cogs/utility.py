@@ -212,8 +212,10 @@ class Utility:
 
         embed.add_field(name='Uptime', value=self.bot.uptime)
         if meta:
-            embed.add_field(name='Ping', value=f'{self.bot.latency * 1000:.2f} ms')
+            embed.add_field(name='Instances', value=meta['instances'])
         else:
+            embed.add_field(name='Latency',
+                            value=f'{self.bot.latency * 1000:.2f} ms')
 
         embed.add_field(name='Version',
                         value=f'[`{self.bot.version}`]'
