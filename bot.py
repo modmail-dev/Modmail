@@ -183,7 +183,7 @@ class ModmailBot(Bot):
         logger.info(info('| |  | |_ ___  ___ ___  _ __ __| | | |__  | |__) |'))
         logger.info(info('| |  | | / __|/ __/ _ \|  __/ _` | |  __| |  _  / '))
         logger.info(info('| |__| | \__ \ (_| (_) | | | (_| |_| |    | | \ \ '))
-        logger.info(info('|_____/|_|___/\___\___/|_|  \__,_(_)_|    |_|  \_\'))
+        logger.info(info('|_____/|_|___/\___\___/|_|  \__,_(_)_|    |_|  \_\''))
         logger.info(info(f'v{__version__}'))
         logger.info(info('Authors: kyb3r, fourjr, Taaku18'))
         logger.info(LINE)
