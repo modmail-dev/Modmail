@@ -20,11 +20,9 @@ class DownloadError(Exception):
 
 
 class Plugins:
-    """Plugins expand Modmail functionality by allowing third-party addons.
+    """Les plugins étendent les fonctionnalités du bot.
 
-    These addons could have a range of features from moderation to simply
-    making your life as a moderator easier!
-    Learn how to create a plugin yourself here:
+    Apprenez à créer un plugin vous-même ici:
     https://github.com/kyb3r/modmail/wiki/Plugins
     """
     def __init__(self, bot: Bot):
@@ -75,8 +73,8 @@ class Plugins:
             # -q (quiet) so there's no terminal output unless there's an error
         except subprocess.CalledProcessError as exc:
             err = exc.stderr.decode('utf-8').strip()
-            if not err.endswith('already exists and is '
-                                'not an empty directory.'):
+            if not err.endswith('existe déjà et est '
+                                'pas un répertoire vide.'):
                 # don't raise error if the plugin folder exists
                 raise DownloadError(error) from exc
 
@@ -97,7 +95,7 @@ class Plugins:
                 err = exc.stderr.decode('utf8').strip()
                 if err:
                     raise DownloadError(
-                        f'Unable to download requirements: ```\n{error}\n```'
+                        f'Impossible de télécharger les exigences: ```\n{error}\n```'
                     ) from exc
             else:
                 if not os.path.exists(site.USER_SITE):
@@ -108,29 +106,29 @@ class Plugins:
         try:
             self.bot.load_extension(ext)
         except ModuleNotFoundError as exc:
-            raise DownloadError('Invalid plugin structure') from exc
+            raise DownloadError('Structure de plugin invalide') from exc
         else:
-            msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
+            msg = f'Plugins chargés.{username}-{repo}.{plugin_name}'
             logger.info(info(msg))
 
     @commands.group(aliases=['plugins'])
     @commands.is_owner()
     async def plugin(self, ctx):
-        """Plugin handler. Controls the plugins in the bot."""
+        """Gestionnaire de plugins. Contrôle les plugins dans le bot."""
         if ctx.invoked_subcommand is None:
             cmd = self.bot.get_command('help')
             await ctx.invoke(cmd, command='plugin')
 
     @plugin.command()
     async def add(self, ctx, *, plugin_name):
-        """Adds a plugin"""
+        """Ajoute un plugin"""
         if plugin_name in self.bot.config.plugins:
-            return await ctx.send('Plugin already installed')
+            return await ctx.send('Plugin déjà installé')
         if plugin_name in self.bot.cogs.keys():
             # another class with the same name
-            return await ctx.send('Another cog exists with the same name')
+            return await ctx.send('Un autre rouage existe avec le même nom')
 
-        message = await ctx.send('Downloading plugin...')
+        message = await ctx.send('Téléchargement du plugin...')
         async with ctx.typing():
             if len(plugin_name.split('/')) >= 3:
                 parsed_plugin = self.parse_plugin(plugin_name)
@@ -139,14 +137,14 @@ class Plugins:
                     await self.download_plugin_repo(*parsed_plugin[:-1])
                 except DownloadError as exc:
                     return await ctx.send(
-                        f'Unable to fetch plugin from Github: {exc}'
+                        f'Impossible d\'extraire le plugin de Github: {exc}'
                     )
 
                 importlib.invalidate_caches()
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
-                    return await ctx.send(f'Unable to load plugin: `{exc}`')
+                    return await ctx.send(f'Impossible de charger le plugin: `{exc}`')
 
                 # if it makes it here, it has passed all checks and should
                 # be entered into the config
@@ -154,15 +152,15 @@ class Plugins:
                 self.bot.config.plugins.append(plugin_name)
                 await self.bot.config.update()
 
-                await message.edit(content='Plugin installed. Any plugin that '
-                                   'you install is of your OWN RISK.')
+                await message.edit(content='Plugin installé. Vous êtes responsable de '
+                                   'tout plugin que vous installez.')
             else:
-                await message.edit(content='Invalid plugin name format. '
-                                   'Use username/repo/plugin.')
+                await message.edit(content='Format de nom pour le plugin invalide. '
+                                   'Utilisation username/repo/plugin.')
 
     @plugin.command()
     async def remove(self, ctx, *, plugin_name):
-        """Removes a certain plugin"""
+        """Supprime un certain plugin"""
         if plugin_name in self.bot.config.plugins:
             username, repo, name = self.parse_plugin(plugin_name)
             self.bot.unload_extension(
@@ -189,16 +187,16 @@ class Plugins:
                 raise exc
 
             await self.bot.config.update()
-            await ctx.send('Plugin uninstalled and '
-                           'all related data is erased.')
+            await ctx.send('Plugin désinstallé et '
+                           'toutes les données associées sont effacées.')
         else:
-            await ctx.send('Plugin not installed.')
+            await ctx.send('Plugin non installé.')
 
     @plugin.command()
     async def update(self, ctx, *, plugin_name):
-        """Updates a certain plugin"""
+        """Met à jour un certain plugin"""
         if plugin_name not in self.bot.config.plugins:
-            return await ctx.send('Plugin not installed')
+            return await ctx.send('Plugin non installé')
 
         async with ctx.typing():
             username, repo, name = self.parse_plugin(plugin_name)
@@ -211,12 +209,12 @@ class Plugins:
                 )
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode('utf8').strip()
-                await ctx.send(f'Error while updating: {err}')
+                await ctx.send(f'Erreur lors de la mise à jour: {err}')
             else:
                 output = cmd.stdout.decode('utf8').strip()
                 await ctx.send(f'```\n{output}\n```')
 
-                if output != 'Already up to date.':
+                if output != 'Déjà à jour.':
                     # repo was updated locally, now perform the cog reload
                     ext = f'plugins.{username}-{repo}.{name}.{name}'
                     importlib.reload(importlib.import_module(ext))
@@ -224,16 +222,16 @@ class Plugins:
                     try:
                         await self.load_plugin(username, repo, name)
                     except DownloadError as exc:
-                        await ctx.send(f'Unable to start plugin: `{exc}`')
+                        await ctx.send(f'Impossible de démarrer le plugin: `{exc}`')
 
     @plugin.command(name='list')
     async def list_(self, ctx):
-        """Shows a list of currently enabled plugins"""
+        """Affiche une liste des plugins actuellement activés"""
         if self.bot.config.plugins:
             msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
             await ctx.send(msg)
         else:
-            await ctx.send('No plugins installed')
+            await ctx.send('Aucun plugin installé')
 
 
 def setup(bot):
