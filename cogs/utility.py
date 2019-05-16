@@ -214,7 +214,7 @@ class Utility:
         if meta:
             embed.add_field(name='Instances', value=meta['instances'])
         else:
-            embed.add_field(name='Latency',
+            embed.add_field(name='Ping',
                             value=f'{self.bot.latency * 1000:.2f} ms')
 
         embed.add_field(name='Version',
@@ -256,9 +256,9 @@ class Utility:
             embed = Embed(
                 color=self.bot.main_color,
                 title='Debug Logs:',
-                description='You don\'t have any logs at the moment.'
+                description='Vous n`\'avez pas de logs pour le moment.'
             )
-            embed.set_footer(text='Go to Heroku to see your logs.')
+            embed.set_footer(text='Allez sur Heroku pour voir vos logs.')
             return await ctx.send(embed=embed)
 
         messages = []
@@ -286,7 +286,7 @@ class Utility:
         embed = Embed(
             color=self.bot.main_color
         )
-        embed.set_footer(text='Debug logs - Navigate using the reactions below.')
+        embed.set_footer(text='Debug logs - Naviguez en utilisant les réactions ci-dessous.')
 
         session = MessagePaginatorSession(ctx, *messages, embed=embed)
         return await session.run()
@@ -295,7 +295,7 @@ class Utility:
     @commands.is_owner()
     @trigger_typing
     async def hastebin(self, ctx):
-        """Upload logs to hastebin."""
+        """Télécharger les logs sur hastebin."""
 
         haste_url = os.environ.get('HASTE_URL', 'https://hasteb.in')
 
@@ -316,23 +316,23 @@ class Utility:
             embed = Embed(
                 title='Debug Logs',
                 color=self.bot.main_color,
-                description='Something\'s wrong. '
-                            'We\'re unable to upload your logs to hastebin.'
+                description='Quelque-chose ne va pas. '
+                            'Nous ne pouvons pas télécharger vos logs sur hastebin.'
             )
-            embed.set_footer(text='Go to Heroku to see your logs.')
+            embed.set_footer(text='Allez sur Heroku pour voir vos logs.')
         await ctx.send(embed=embed)
 
     @debug.command()
     @commands.is_owner()
     @trigger_typing
     async def clear(self, ctx):
-        """Clears the locally cached logs."""
+        """Efface les logs mis en cache localement."""
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'w'):
             pass
         await ctx.send(embed=Embed(
             color=self.bot.main_color,
-            description='Cached logs are now cleared.'
+            description='Les logs mis en cache sont maintenant effacés.'
         ))
 
     @commands.command()
@@ -340,7 +340,7 @@ class Utility:
     @github_access_token_required
     @trigger_typing
     async def github(self, ctx):
-        """Shows the GitHub user your access token is linked to."""
+        """Montre l'utilisateur GitHub auquel est lié le jeton d'accès."""
         if ctx.invoked_subcommand:
             return
 
@@ -348,7 +348,7 @@ class Utility:
 
         embed = Embed(
             title='GitHub',
-            description='Current User',
+            description='Utilisateur actuel',
             color=self.bot.main_color
         )
         user = data['user']
