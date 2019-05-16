@@ -4,10 +4,11 @@ import re
 import os
 import string
 import typing
+from types import SimpleNamespace as param
 from datetime import datetime, timedelta
 
 import discord
-from discord.ext.commands import UserInputError, CommandError
+from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.models import Bot, ThreadManagerABC, ThreadABC
 from core.utils import is_image_url, days, match_user_id
@@ -349,7 +350,7 @@ class Thread(ThreadABC):
 
     async def note(self, message):
         if not message.content and not message.attachments:
-            raise UserInputError
+            raise MissingRequiredArgument(param(name='msg'))
 
         await asyncio.gather(
             self.bot.api.append_log(message,
@@ -360,7 +361,7 @@ class Thread(ThreadABC):
 
     async def reply(self, message, anonymous=False):
         if not message.content and not message.attachments:
-            raise UserInputError
+            raise MissingRequiredArgument(param(name='msg'))
         if all(not g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
                 embed=discord.Embed(
