@@ -792,7 +792,7 @@ class Utility:
         else:
             embed = Embed(
                 color=self.bot.main_color,
-                description='Vous n'avez pas d'alias pour le moment.'
+                description='Vous n\'avez pas d\'alias pour le moment.'
             )
         embed.set_author(name='Alias de commande', icon_url=ctx.guild.icon_url)
         embed.set_footer(text=f'Tapez {self.bot.prefix}'
