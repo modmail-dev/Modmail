@@ -147,17 +147,10 @@ class Modmail(commands.Cog):
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
+    @checks.thread_only()
     async def move(self, ctx, *, category: discord.CategoryChannel):
         """Moves a thread to a specified category."""
         thread = ctx.thread
-        if not thread:
-            embed = discord.Embed(
-                title='Error',
-                description='This is not a Modmail thread.',
-                color=discord.Color.red()
-            )
-            return await ctx.send(embed=embed)
-
         await thread.channel.edit(category=category, sync_permissions=True)
         await ctx.message.add_reaction('✅')
 
@@ -820,10 +813,11 @@ class Modmail(commands.Cog):
         if linked_message_id is None:
             return await ctx.send(
                 embed=discord.Embed(
-                title='Failed',
-                description='Cannot find a message to delete.',
-                color=discord.Color.red()
-            ))
+                    title='Failed',
+                    description='Cannot find a message to delete.',
+                    color=discord.Color.red()
+                )
+            )
 
         await thread.delete_message(linked_message_id)
         await ctx.message.add_reaction('✅')

@@ -6,7 +6,6 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO
-from operator import itemgetter
 from typing import Union
 from json import JSONDecodeError
 from pkg_resources import parse_version
@@ -28,156 +27,158 @@ from core.utils import cleanup_code, info, error, User, get_perm_level
 logger = logging.getLogger('Modmail')
 
 
-class Utility(commands.Cog):
-    """General commands that provide utility."""
+class ModmailHelpCommand(commands.HelpCommand):
+    async def format_cog_help(self, cog):
+        bot = self.context.bot
+        prefix = self.clean_prefix
 
-    def __init__(self, bot: Bot):
-        self.bot = bot
+        formats = ['']
+        for cmd in await self.filter_commands(cog.get_commands(), sort=True, key=get_perm_level):
+            perm_level = get_perm_level(cmd)
+            if perm_level is PermissionLevel.INVALID:
+                format_ = f'`{prefix + cmd.qualified_name}` '
+            else:
+                format_ = f'`[{perm_level}] {prefix + cmd.qualified_name}` '
 
-    async def format_cog_help(self, ctx, cog):
-        """Formats the text for a cog help"""
-
-        prefix = self.bot.prefix
-
-        fmts = ['']
-        # TODO: Use Utility.get_commands() / Utility.walk_commands()
-        for perm_level, cmd in sorted(((get_perm_level(c), c) for c in self.bot.commands),
-                                      key=itemgetter(0)):
-            if cmd.cog is cog and not cmd.hidden:
-                if perm_level is PermissionLevel.INVALID:
-                    new_fmt = f'`{prefix + cmd.qualified_name}` '
-                else:
-                    new_fmt = f'`[{perm_level}] {prefix + cmd.qualified_name}` '
-
-                new_fmt += f'- {cmd.short_doc}\n'
-                if len(new_fmt) + len(fmts[-1]) >= 1024:
-                    fmts.append(new_fmt)
-                else:
-                    fmts[-1] += new_fmt
+            format_ += f'- {cmd.short_doc}\n'
+            if not format_.strip():
+                continue
+            if len(format_) + len(formats[-1]) >= 1024:
+                formats.append(format_)
+            else:
+                formats[-1] += format_
 
         embeds = []
-        for fmt in fmts:
-            if fmt == '':
-                continue
+        for format_ in formats:
             embed = Embed(
-                description='*' + (inspect.getdoc(cog) or
-                                   'No description') + '*',
-                color=self.bot.main_color
+                description=f'*{cog.description or "No description."}*',
+                color=bot.main_color
             )
 
-            embed.add_field(name='Commands', value=fmt)
+            embed.add_field(name='Commands', value=format_)
 
             continued = ' (Continued)' if len(embeds) > 0 else ''
+            embed.set_author(name=cog.qualified_name + ' - Help' + continued,
+                             icon_url=bot.user.avatar_url)
 
-            embed.set_author(name=cog.__class__.__name__ + ' - Help' + continued,
-                             icon_url=ctx.bot.user.avatar_url)
-
-            embed.set_footer(text=f'Type "{prefix}help command" '
-                                  'for more info on a command.')
+            embed.set_footer(text=f'Type "{prefix}{self.command_attrs["name"]} command" '
+                                  'for more info on a specific command.')
             embeds.append(embed)
-            
         return embeds
 
-    async def format_command_help(self, cmd):
-        """Formats command help."""
-        if cmd.hidden:
-            return None
+    async def send_bot_help(self, mapping):
+        embeds = []
+        # TODO: Implement for no cog commands
+        for cog in sorted((key for key in mapping.keys() if key is not None),
+                          key=lambda c: c.qualified_name):
+            embeds.extend(await self.format_cog_help(cog))
 
-        prefix = self.bot.prefix
+        p_session = PaginatorSession(self.context, *embeds, destination=self.get_destination())
+        return await p_session.run()
 
-        perm_level = get_perm_level(cmd)
+    async def send_cog_help(self, cog):
+        embeds = await self.format_cog_help(cog)
+        p_session = PaginatorSession(self.context, *embeds, destination=self.get_destination())
+        return await p_session.run()
+
+    async def send_command_help(self, command):
+        if not await self.filter_commands([command]):
+            return
+        perm_level = get_perm_level(command)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f'{perm_level.name} [{perm_level}]'
         else:
             perm_level = ''
 
-        # TODO: cmd.signature broken
         embed = Embed(
-            title=f'`{prefix}{cmd.signature}`',
-            color=self.bot.main_color,
-            description=cmd.help
+            title=self.get_command_signature(command),
+            color=self.context.bot.main_color,
+            description=command.help
+        )
+        embed.set_footer(text=f'Permission level: {perm_level}')
+        await self.get_destination().send(embed=embed)
+
+    async def send_group_help(self, group):
+        if not await self.filter_commands([group]):
+            return
+
+        perm_level = get_perm_level(group)
+        if perm_level is not PermissionLevel.INVALID:
+            perm_level = f'{perm_level.name} [{perm_level}]'
+        else:
+            perm_level = ''
+
+        embed = Embed(
+            title=self.get_command_signature(group),
+            color=self.context.bot.main_color,
+            description=group.help
         )
 
-        if not isinstance(cmd, commands.Group):
-            embed.set_footer(text=f'Permission level: {perm_level}')
-            return embed
-        
         embed.add_field(name='Permission level', value=perm_level)
+        format_ = ''
+        length = len(group.commands)
 
-        fmt = ''
-        length = len(cmd.commands)
-        for i, c in enumerate(sorted(cmd.commands, key=lambda c: c.name)):
+        for i, command in enumerate(
+                await self.filter_commands(group.commands, sort=True, key=lambda c: c.name)
+        ):
             # Bug: fmt may run over the embed limit
             if length == i + 1:  # last
                 branch = '└─'
             else:
                 branch = '├─'
-            fmt += f'`{branch} {c.name}` - {c.short_doc}\n'
+            format_ += f'`{branch} {command.name}` - {command.short_doc}\n'
 
-        embed.add_field(name='Sub Commands', value=fmt)
+        embed.add_field(name='Sub Commands', value=format_)
         embed.set_footer(
-            text=f'Type "{prefix}help {cmd} command" '
-            'for more info on a command.'
+            text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
+                 'for more info on a command.'
         )
-        return embed
+        await self.get_destination().send(embed=embed)
 
-    async def format_not_found(self, ctx, command):
-        prefix = ctx.prefix
+    async def send_error_message(self, msg):
+        logger.warning(error(f'CommandNotFound: {msg}'))
+
         embed = Embed(
-            title='Unable to Find Command or Category',
             color=Color.red()
         )
-        embed.set_footer(text=f'Type "{prefix}help" to get '
-                              'a full list of commands.')
+        embed.set_footer(text=f'Command/Category "{self.remove_mentions(self.context.author.mention)}" not found.')
 
         choices = set()
 
-        for name, c in self.bot.all_commands.items():
+        for name, c in self.context.bot.all_commands.items():
             if not c.hidden:
                 choices.add(name)
-
+        command = self.context.kwargs.get('command')
+        # print(self.context.message.content[self.context.in])
         closest = get_close_matches(command, choices, n=1, cutoff=0.75)
         if closest:
-            # Perhaps you meant:
-            #  - `item`
-            embed.description = (f'**Perhaps you meant:**\n'
-                                 f'\u2000- `{closest[0]}`')
-        return embed
+            embed.add_field(name=f'Perhaps you meant:', value=f'`{closest[0]}`')
+        else:
+            embed.title = 'Cannot find command or category'
+            embed.set_footer(text=f'Type "{self.clean_prefix}{self.command_attrs["name"]}" '
+                                  'for a list of all available commands.')
+        await self.get_destination().send(embed=embed)
 
-    @commands.command(name='help')
-    @checks.has_permissions(PermissionLevel.REGULAR)
-    @trigger_typing
-    async def help_(self, ctx, *, command: str = None):
-        """Shows the help message."""
 
-        # TODO: use https://gist.github.com/Rapptz/288294ca99fa1f042f0e39a92ddd88eb
-        if command:
-            cmd = self.bot.get_command(command)
-            cog = self.bot.cogs.get(command)
-            embeds = []
+class Utility(commands.Cog):
+    """General commands that provide utility."""
 
-            if cmd:
-                help_msg = await self.format_command_help(cmd)
-                if help_msg:
-                    embeds = [help_msg]
+    def __init__(self, bot: Bot):
+        self.bot = bot
+        self._original_help_command = bot.help_command
+        self.bot.help_command = ModmailHelpCommand(
+            verify_checks=False,
+            command_attrs={'help': 'Shows this help message.'}
+        )
+        # Looks a bit ugly
+        self.bot.help_command._command_impl = checks.has_permissions(
+            PermissionLevel.REGULAR
+        )(self.bot.help_command._command_impl)
 
-            elif cog:
-                # checks if cog has commands
-                embeds = await self.format_cog_help(ctx, cog)
+        self.bot.help_command.cog = self
 
-            if not embeds:
-                embeds = [await self.format_not_found(ctx, command)]
-
-            p_session = PaginatorSession(ctx, *embeds)
-            return await p_session.run()
-
-        embeds = []
-        for cog in sorted(self.bot.cogs.values(),
-                          key=lambda cog: cog.__class__.__name__):
-            embeds.extend(await self.format_cog_help(ctx, cog))
-
-        p_session = PaginatorSession(ctx, *embeds)
-        return await p_session.run()
+    def cog_unload(self):
+        self.bot.help_command = self._original_help_command
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.REGULAR)
@@ -651,8 +652,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config(self, ctx):
         """Change config vars for the bot."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='config')
+        await ctx.send_help(ctx.command)
 
     @config.command(name='options', aliases=['list'])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -889,15 +889,13 @@ class Utility(commands.Cog):
         Note: You will still have to manually give/take permission to the Modmail
         category to users/roles.
         """
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='perms')
+        await ctx.send_help(ctx.command)
 
     @permissions.group(name='add', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add(self, ctx):
         """Add a permission to a command or a permission level."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='perms add')
+        await ctx.send_help(ctx.command)
 
     @permissions_add.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -962,8 +960,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove(self, ctx):
         """Remove a permission to use a command or permission level."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='perms remove')
+        await ctx.send_help(ctx.command)
 
     @permissions_remove.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -1185,9 +1182,8 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
         """Commands relating to Logviewer oauth2 login authentication."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='oauth')
-    
+        await ctx.send_help(ctx.command)
+
     @oauth.group(name='whitelist', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth_whitelist(self, ctx, target: Union[Member, Role]):

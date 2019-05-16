@@ -126,6 +126,13 @@ def parse_image_url(url: str) -> str:
     return ''
 
 
+def human_join(strings):
+    if len(strings) <= 2:
+        return ' or '.join(strings)
+    else:
+        return ', '.join(strings[:len(strings) - 1]) + ' or ' + strings[-1]
+
+
 def days(day: typing.Union[str, int]) -> str:
     """
     Humanize the number of days.

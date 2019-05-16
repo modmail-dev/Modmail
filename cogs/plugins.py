@@ -121,8 +121,7 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin(self, ctx):
         """Plugin handler. Controls the plugins in the bot."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='plugin')
+        await ctx.send_help(ctx.command)
 
     @plugin.command(name='add')
     @checks.has_permissions(PermissionLevel.OWNER)

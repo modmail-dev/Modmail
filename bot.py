@@ -48,7 +48,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from core.changelog import Changelog
 from core.clients import DatabaseClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.utils import info, error
+from core.utils import info, error, human_join
 from core.models import Bot, PermissionLevel
 from core.thread import ThreadManager
 from core.time import human_timedelta
@@ -167,8 +167,6 @@ class ModmailBot(Bot):
 
     def _load_extensions(self):
         """Adds commands automatically"""
-        self.remove_command('help')
-
         logger.info(LINE)
         logger.info(info('┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬'))
         logger.info(info('││││ │ │││││├─┤││'))
@@ -834,13 +832,6 @@ class ModmailBot(Bot):
         logger.error(error('Unexpected exception:'), exc_info=sys.exc_info())
 
     async def on_command_error(self, ctx, exception):
-
-        def human_join(strings):
-            if len(strings) <= 2:
-                return ' or '.join(strings)
-            else:
-                return ', '.join(strings[:len(strings)-1]) + ' or ' + strings[-1]
-
         if isinstance(exception, commands.BadUnionArgument):
             msg = 'Could not find the specified ' + human_join([c.__name__ for c in exception.converters])
             await ctx.trigger_typing()
@@ -855,12 +846,17 @@ class ModmailBot(Bot):
                 color=discord.Color.red(), 
                 description=str(exception)
                 ))
-        elif isinstance(exception, commands.MissingRequiredArgument):
-            await ctx.invoke(self.get_command('help'),
-                                 command=str(ctx.command))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning(error('CommandNotFound: ' + str(exception)))
+        elif isinstance(exception, commands.MissingRequiredArgument):
+            await ctx.send_help(ctx.command)
         elif isinstance(exception, commands.CheckFailure):
+            for check in ctx.command.checks:
+                if not await check(ctx) and hasattr(check, 'fail_msg'):
+                    await ctx.send(embed=discord.Embed(
+                        color=discord.Color.red(),
+                        description=check.fail_msg
+                    ))
             logger.warning(error('CheckFailure: ' + str(exception)))
         else:
             logger.error(error('Unexpected exception:'), exc_info=exception)
@@ -975,9 +971,5 @@ class ModmailBot(Bot):
 
 
 if __name__ == '__main__':
-    if os.name != 'nt':
-        import uvloop
-
-        uvloop.install()
     bot = ModmailBot()
     bot.run()
