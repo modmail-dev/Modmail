@@ -181,7 +181,7 @@ class ModmailBot(Bot):
         logger.info(info(' _____  _                       _   ______ _____  '))
         logger.info(info('|  __ \(_)                     | | |  ____|  __ \ '))
         logger.info(info('| |  | |_ ___  ___ ___  _ __ __| | | |__  | |__) |'))
-        logger.info(info('| |  | | / __|/ __/ _ \| '__/ _` | |  __| |  _  / '))
+        logger.info(info('| |  | | / __|/ __/ _ \|  __/ _` | |  __| |  _  / '))
         logger.info(info('| |__| | \__ \ (_| (_) | | | (_| |_| |    | | \ \ '))
         logger.info(info('|_____/|_|___/\___\___/|_|  \__,_(_)_|    |_|  \_\'))
         logger.info(info(f'v{__version__}'))
