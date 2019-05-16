@@ -275,7 +275,7 @@ class Modmail:
     @checks.thread_only()
     async def subscribe(self, ctx, *, role=None):
         """
-        Avertissez-vous ou indiquez un rôle pour chaque message reçu dans ce ticket.
+        Être notifié pour chaque message reçu dans ce ticket.
 
         Vous recevrez un ping pour chaque message reçu 
         dans ce ticket jusqu'à votre désinscription (unsubscribe).
