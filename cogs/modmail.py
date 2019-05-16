@@ -67,7 +67,7 @@ class Modmail:
     @commands.group()
     @checks.has_permissions(manage_messages=True)
     async def snippets(self, ctx):
-        """Returns a list of snippets that are currently set."""
+        """Renvoie une liste des snippets actuellement définis."""
         if ctx.invoked_subcommand is not None:
             return
 
@@ -75,15 +75,15 @@ class Modmail:
 
         if self.bot.snippets:
             embed = discord.Embed(color=self.bot.main_color,
-                                  description='Here is a list of snippets '
-                                              'that are currently configured.')
+                                  description='Voici une liste de snippets '
+                                              'qui sont actuellement configurés.')
         else:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='You dont have any snippets at the moment.'
+                description="Vous n'avez pas de snippets pour le moment."
             )
             embed.set_footer(
-                text=f'Do {self.bot.prefix}help snippets for more commands.'
+                text=f'Tapez {self.bot.prefix}help snippets pour plus de commandes.'
             )
 
         embed.set_author(name='Snippets', icon_url=ctx.guild.icon_url)
@@ -103,7 +103,7 @@ class Modmail:
     @snippets.command(name='add')
     @checks.has_permissions(manage_messages=True)
     async def add_(self, ctx, name: str.lower, *, value):
-        """Add a snippet to the bot config."""
+        """Ajoutez un snippet à la configuration du bot."""
         if 'snippets' not in self.bot.config.cache:
             self.bot.config['snippets'] = {}
 
@@ -111,9 +111,9 @@ class Modmail:
         await self.bot.config.update()
 
         embed = discord.Embed(
-            title='Added snippet',
+            title='Snippet ajoutée',
             color=self.bot.main_color,
-            description=f'`{name}` points to: {value}'
+            description=f'`{name}` pointe vers: {value}'
         )
 
         await ctx.send(embed=embed)
@@ -121,22 +121,22 @@ class Modmail:
     @snippets.command(name='del')
     @checks.has_permissions(manage_messages=True)
     async def del_(self, ctx, *, name: str.lower):
-        """Removes a snippet from bot config."""
+        """Supprime un snippet de bot config."""
 
         if self.bot.config.snippets.get(name):
             embed = discord.Embed(
-                title='Removed snippet',
+                title='Snippet supprimée',
                 color=self.bot.main_color,
-                description=f'`{name}` no longer exists.'
+                description=f"`{name}` n'existe plus."
             )
             del self.bot.config['snippets'][name]
             await self.bot.config.update()
 
         else:
             embed = discord.Embed(
-                title='Error',
+                title='Erreur',
                 color=discord.Color.red(),
-                description=f'Snippet `{name}` does not exist.'
+                description=f"Snippet `{name}` n'existe pas."
             )
 
         await ctx.send(embed=embed)
@@ -161,19 +161,19 @@ class Modmail:
     async def send_scheduled_close_message(ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
 
-        silent = '*silently* ' if silent else ''
+        silent = '*silencieusement* ' if silent else ''
 
         embed = discord.Embed(
-            title='Scheduled close',
-            description=f'This thread will close {silent}in {human_delta}.',
+            title='Fermeture prévue',
+            description=f'Ce ticket se fermera {silent}dans {human_delta}.',
             color=discord.Color.red()
         )
 
         if after.arg and not silent:
             embed.add_field(name='Message', value=after.arg)
 
-        embed.set_footer(text='Closing will be cancelled '
-                              'if a thread message is sent.')
+        embed.set_footer(text='La fermeture sera annulée '
+                              'si un message de discussion est envoyé.')
         embed.timestamp = after.dt
 
         await ctx.send(embed=embed)
@@ -182,21 +182,21 @@ class Modmail:
     @checks.thread_only()
     async def close(self, ctx, *, after: UserFriendlyTime = None):
         """
-        Close the current thread.
+        Fermer le ticket actuel.
 
-        Close after a period of time:
+        Fermer après une période de temps:
         - `close in 5 hours`
         - `close 2m30s`
 
-        Custom close messages:
-        - `close 2 hours The issue has been resolved.`
-        - `close We will contact you once we find out more.`
+        Messages de fermeture personnalisés:
+        - `close 2 hours Le problème a été résolu.`
+        - `close Nous vous contacterons dès que nous en saurons plus.`
 
-        Silently close a thread (no message)
+        Fermer silencieusement un fil de discussion (pas de message)
         - `close silently`
         - `close in 10m silently`
 
-        Stop a thread from closing:
+        Empêcher un fil de se fermer:
         - `close cancel`
         """
 
@@ -214,13 +214,13 @@ class Modmail:
             if thread.close_task is not None:
                 await thread.cancel_closure()
                 embed = discord.Embed(color=discord.Color.red(),
-                                      description='Scheduled close '
-                                                  'has been cancelled.')
+                                      description='La fermeture prévue '
+                                                  'a été annulé.')
             else:
                 embed = discord.Embed(
                     color=discord.Color.red(),
-                    description='This thread has not already '
-                                'been scheduled to close.'
+                    description="Ce fil n'a pas encore été "
+                                'programmé pour se fermer.'
                 )
 
             return await ctx.send(embed=embed)
@@ -239,9 +239,9 @@ class Modmail:
     @checks.thread_only()
     async def notify(self, ctx, *, role=None):
         """
-        Notify a given role or yourself to the next thread message received.
+        Avertissez un rôle ou vous-même au prochain ticket ouvert.
 
-        Once a thread message is received you will be pinged once only.
+        Vous serez notifié une fois dès qu'un ticket est ouvert.
         """
         thread = ctx.thread
 
@@ -261,24 +261,24 @@ class Modmail:
 
         if mention in mentions:
             embed = discord.Embed(color=discord.Color.red(),
-                                  description=f'{mention} is already '
-                                  'going to be mentioned.')
+                                  description=f'{mention} va déjà '
+                                  'être mentionné.')
         else:
             mentions.append(mention)
             await self.bot.config.update()
             embed = discord.Embed(color=self.bot.main_color,
-                                  description=f'{mention} will be mentioned '
-                                  'on the next message received.')
+                                  description=f'{mention} sera mentionné dans '
+                                  'le prochain ticket.')
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['sub'])
     @checks.thread_only()
     async def subscribe(self, ctx, *, role=None):
         """
-        Notify yourself or a given role for every thread message received.
+        Avertissez-vous ou indiquez un rôle pour chaque message reçu dans ce ticket.
 
-        You will be pinged for every thread message
-        received until you unsubscribe.
+        Vous recevrez un ping pour chaque message reçu 
+        dans ce ticket jusqu'à votre désinscription (unsubscribe).
         """
         thread = ctx.thread
 
@@ -298,22 +298,22 @@ class Modmail:
 
         if mention in mentions:
             embed = discord.Embed(color=discord.Color.red(),
-                                  description=f'{mention} is already '
-                                  'subscribed to this thread.')
+                                  description=f'{mention} est déjà '
+                                  'abonné à ce ticket.')
         else:
             mentions.append(mention)
             await self.bot.config.update()
             embed = discord.Embed(
                 color=self.bot.main_color,
-                description=f'{mention} will now be '
-                'notified of all messages received.'
+                description=f'{mention} sera maintenant '
+                'notifié pour tous les messages reçus dans ce ticket.'
             )
         return await ctx.send(embed=embed)
 
     @commands.command(aliases=['unsub'])
     @checks.thread_only()
     async def unsubscribe(self, ctx, *, role=None):
-        """Unsubscribe yourself or a given role from a thread."""
+        """Désabonnez-vous ou un rôle dans un ticket."""
         thread = ctx.thread
 
         if not role:
@@ -332,27 +332,27 @@ class Modmail:
 
         if mention not in mentions:
             embed = discord.Embed(color=discord.Color.red(),
-                                  description=f'{mention} is not already '
-                                  'subscribed to this thread.')
+                                  description=f"{mention} n'est pas "
+                                  'abonné à ce ticket.')
         else:
             mentions.remove(mention)
             await self.bot.config.update()
             embed = discord.Embed(color=self.bot.main_color,
-                                  description=f'{mention} is now unsubscribed '
-                                  'to this thread.')
+                                  description=f'{mention} est maintenant désabonné '
+                                  'à ce ticket.')
         return await ctx.send(embed=embed)
 
     @commands.command()
     @checks.thread_only()
     async def nsfw(self, ctx):
-        """Flags a Modmail thread as nsfw."""
+        """Marque un ticket comme nsfw."""
         await ctx.channel.edit(nsfw=True)
         await ctx.message.add_reaction('✅')
 
     @commands.command()
     @checks.thread_only()
     async def loglink(self, ctx):
-        """Return the link to the current thread's logs."""
+        """Renvoie le lien des logs du ticket actuel."""
         log_link = await self.bot.api.get_log_link(ctx.channel.id)
         await ctx.send(
             embed=discord.Embed(
@@ -364,7 +364,7 @@ class Modmail:
     def format_log_embeds(self, logs, avatar_url):
         embeds = []
         logs = tuple(logs)
-        title = f'Total Results Found ({len(logs)})'
+        title = f'Total des résultats trouvés ({len(logs)})'
 
         for entry in logs:
 
@@ -373,7 +373,7 @@ class Modmail:
             created_at = parser.parse(entry['created_at'])
 
             log_url = (
-                f"https://logs.modmail.tk/{key}"
+                f"https://support.discord.fr/{key}"
                 if not self.bot.self_hosted else
                 self.bot.config.log_url.strip('/') + f'/logs/{key}'
             )
@@ -387,21 +387,21 @@ class Modmail:
                              icon_url=avatar_url,
                              url=log_url)
             embed.url = log_url
-            embed.add_field(name='Created',
+            embed.add_field(name='Créé',
                             value=duration(created_at, now=datetime.utcnow()))
-            embed.add_field(name='Closed By',
+            embed.add_field(name='Fermé par',
                             value=f"<@{entry['closer']['id']}>")
 
             if entry['recipient']['id'] != entry['creator']['id']:
-                embed.add_field(name='Created by',
+                embed.add_field(name='Créé par',
                                 value=f"<@{entry['creator']['id']}>")
 
-            embed.add_field(name='Preview',
+            embed.add_field(name='Aperçu',
                             value=format_preview(entry['messages']),
                             inline=False)
-            embed.add_field(name='Link', value=log_url)
+            embed.add_field(name='Lien', value=log_url)
             embed.set_footer(
-                text='Recipient ID: ' + str(entry['recipient']['id'])
+                text='ID destinataire: ' + str(entry['recipient']['id'])
             )
             embeds.append(embed)
         return embeds
@@ -409,7 +409,7 @@ class Modmail:
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(manage_messages=True)
     async def logs(self, ctx, *, member: User = None):
-        """Shows a list of previous Modmail thread logs of a member."""
+        """Affiche une liste des tickets support d'un membre."""
 
         await ctx.trigger_typing()
 
@@ -428,8 +428,8 @@ class Modmail:
 
         if not any(not log['open'] for log in logs):
             embed = discord.Embed(color=discord.Color.red(),
-                                  description='This user does not '
-                                              'have any previous logs.')
+                                  description="Cet utilisateur n'a pas "
+                                              "n'a pas eu de ticket.")
             return await ctx.send(embed=embed)
 
         logs = reversed([e for e in logs if not e['open']])
@@ -442,12 +442,12 @@ class Modmail:
     @logs.command(name='closed-by')
     @checks.has_permissions(manage_messages=True)
     async def closed_by(self, ctx, *, user: User = None):
-        """Returns all logs closed by a user."""
+        """Renvoie tous les ticket fermés par un utilisateur."""
         if not self.bot.self_hosted:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='This command only works if '
-                            'you are self-hosting your logs.'
+                description='Cette commande ne fonctionne '
+                            'que si vous auto-hébergez vos logs.'
                 )
             return await ctx.send(embed=embed)
 
@@ -471,7 +471,7 @@ class Modmail:
         if not embeds:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='No log entries have been found for that query'
+                description="Aucun ticket n'a été trouvée pour cette requête."
                 )
             return await ctx.send(embed=embed)
 
@@ -481,15 +481,15 @@ class Modmail:
     @logs.command(name='search')
     @checks.has_permissions(manage_messages=True)
     async def search(self, ctx, limit: Optional[int] = None, *, query):
-        """Searches all logs for a message that contains your query."""
+        """Recherche dans tous les tickets un message contenant votre requête."""
 
         await ctx.trigger_typing()
 
         if not self.bot.self_hosted:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='This command only works if you '
-                            'are self-hosting your logs.'
+                description='Cette commande ne fonctionne '
+                            'que si vous auto-hébergez vos logs.'
                 )
             return await ctx.send(embed=embed)
 
@@ -513,7 +513,7 @@ class Modmail:
         if not embeds:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='No log entries have been found for that query'
+                description="Aucun ticket n'a été trouvée pour cette requête."
                 )
             return await ctx.send(embed=embed)
 
@@ -523,10 +523,10 @@ class Modmail:
     @commands.command()
     @checks.thread_only()
     async def reply(self, ctx, *, msg=''):
-        """Reply to users using this command.
+        """Répondre aux utilisateurs en utilisant cette commande.
 
-        Supports attachments and images as well as
-        automatically embedding image URLs.
+        Prend en charge les pièces jointes et les images
+        ainsi que l'intégration automatique des URLs d'image.
         """
         ctx.message.content = msg
         async with ctx.typing():
@@ -535,13 +535,13 @@ class Modmail:
     @commands.command()
     @checks.thread_only()
     async def anonreply(self, ctx, *, msg=''):
-        """Reply to a thread anonymously.
+        """Répondre anonymement à un ticket.
 
-        You can edit the anonymous user's name,
-        avatar and tag using the config command.
+        Vous pouvez modifier le nom, l'avatar et le tag de 
+        l'utilisateur anonyme à l'aide de la commande config.
 
-        Edit the `anon_username`, `anon_avatar_url`
-        and `anon_tag` config variables to do so.
+        Editez les variables de configuration `anon_username`,
+        `anon_avatar_url` et `anon_tag` pour le faire.
         """
         ctx.message.content = msg
         async with ctx.typing():
@@ -550,7 +550,7 @@ class Modmail:
     @commands.command()
     @checks.thread_only()
     async def note(self, ctx, *, msg=''):
-        """Take a note about the current thread, useful for noting context."""
+        """Prenez une note sur le ticket actuel, utile pour noter le contexte."""
         ctx.message.content = msg
         async with ctx.typing():
             await ctx.thread.note(ctx.message)
@@ -559,13 +559,13 @@ class Modmail:
     @checks.thread_only()
     async def edit(self, ctx, message_id: Optional[int] = None,
                    *, new_message):
-        """Edit a message that was sent using the reply command.
+        """Modifier un message envoyé à l'aide de la commande reply.
 
-        If no `message_id` is provided, the
-        last message sent by a mod will be edited.
+        Si `message_id` n'est pas fourni, ce sera
+        le dernier message envoyé qui sera édité.
 
-        `[message_id]` the id of the message that you want to edit.
-        `new_message` is the new message that will be edited in.
+        `[message_id]` l'ID du message que vous souhaitez modifier.
+        `new_message` est le nouveau message qui sera édité.
         """
         thread = ctx.thread
 
@@ -604,16 +604,16 @@ class Modmail:
     async def contact(self, ctx,
                       category: Optional[discord.CategoryChannel] = None, *,
                       user: Union[discord.Member, discord.User]):
-        """Create a thread with a specified member.
+        """Créez un ticket avec un membre spécifié.
 
-        If the optional category argument is passed, the thread
-        will be created in the specified category.
+        Si l'argument de catégorie facultatif est passé,
+        le fil sera créé dans la catégorie spécifiée.
         """
 
         if user.bot:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='Cannot start a thread with a bot.'
+                description='Impossible de démarrer un ticket avec un bot.'
             )
             return await ctx.send(embed=embed)
 
@@ -621,8 +621,8 @@ class Modmail:
         if exists:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description='A thread for this user already '
-                            f'exists in {exists.channel.mention}.'
+                description='Un ticket pour cet utilisateur '
+                            f'existe déjà dans {exists.channel.mention}.'
             )
 
         else:
@@ -630,9 +630,9 @@ class Modmail:
                                              category=category)
             await thread.wait_until_ready()
             embed = discord.Embed(
-                title='Created thread',
-                description=f'Thread started in {thread.channel.mention} '
-                f'for {user.mention}.',
+                title='Ticket créé',
+                description=f'Discussion commencée dans {thread.channel.mention} '
+                f'pour {user.mention}.',
                 color=self.bot.main_color
             )
 
@@ -642,10 +642,10 @@ class Modmail:
     @trigger_typing
     @checks.has_permissions(kick_members=True)
     async def blocked(self, ctx):
-        """Returns a list of blocked users"""
-        embed = discord.Embed(title='Blocked Users',
+        """Renvoie la liste d'utilisateurs bloqués"""
+        embed = discord.Embed(title='Utilisateurs bloqués',
                               color=self.bot.main_color,
-                              description='Here is a list of blocked users.')
+                              description='Voici une liste des utilisateurs bloqués.')
 
         users = []
         not_reachable = []
@@ -660,14 +660,14 @@ class Modmail:
         if users:
             val = '\n'.join(u.mention + (f' - `{r}`' if r else '')
                             for u, r in users)
-            embed.add_field(name='Currently Known', value=val)
+            embed.add_field(name='Actuellement connu', value=val)
         if not_reachable:
             val = '\n'.join(f'`{i}`' + (f' - `{r}`' if r else '')
                             for i, r in not_reachable)
-            embed.add_field(name='Unknown', value=val, inline=False)
+            embed.add_field(name='Inconnu', value=val, inline=False)
 
         if not users and not not_reachable:
-            embed.description = 'Currently there are no blocked users.'
+            embed.description = "Il n'y a actuellement aucun utilisateur bloqué."
 
         await ctx.send(embed=embed)
 
@@ -677,10 +677,10 @@ class Modmail:
     async def block(self, ctx, user: Optional[User] = None, *,
                     after: UserFriendlyTime = None):
         """
-        Block a user from using Modmail.
+        Empêcher un utilisateur d'utiliser les tickets support.
 
-        Note: reasons that start with "System Message: " are reserved for internal
-        use only.
+        Note: Les raisons commençant par "Message système:" 
+        sont réservées à un usage interne.
         """
         reason = ''
 
@@ -693,7 +693,7 @@ class Modmail:
 
         if after is not None:
             reason = after.arg
-            if reason.startswith('System Message: '):
+            if reason.startswith('Message système: '):
                 raise commands.UserInputError
             elif re.search(r'%(.+?)%$', reason) is not None:
                 raise commands.UserInputError
@@ -710,29 +710,29 @@ class Modmail:
         if msg is None:
             msg = ''
 
-        if str(user.id) not in self.bot.blocked_users or extend or msg.startswith('System Message: '):
+        if str(user.id) not in self.bot.blocked_users or extend or msg.startswith('Message système: '):
             if str(user.id) in self.bot.blocked_users:
 
-                old_reason = msg.strip().rstrip('.') or 'no reason'
+                old_reason = msg.strip().rstrip('.') or 'sans raison'
                 embed = discord.Embed(
                     title='Success',
-                    description=f'{mention} was previously blocked for '
-                    f'"{old_reason}". {mention} is now blocked{extend}.',
+                    description=f'{mention} a été précédemment bloqué pour '
+                    f'"{old_reason}". {mention} est maintenant bloqué{extend}.',
                     color=self.bot.main_color
                 )
             else:
                 embed = discord.Embed(
-                    title='Success',
+                    title='Succès',
                     color=self.bot.main_color,
-                    description=f'{mention} is now blocked{extend}.'
+                    description=f'{mention} est maintenant bloqué{extend}.'
                 )
             self.bot.config.blocked[str(user.id)] = reason
             await self.bot.config.update()
         else:
             embed = discord.Embed(
-                title='Error',
+                title='Erreur',
                 color=discord.Color.red(),
-                description=f'{mention} is already blocked.'
+                description=f'{mention} est déjà bloqué.'
             )
 
         return await ctx.send(embed=embed)
@@ -742,10 +742,10 @@ class Modmail:
     @checks.has_permissions(kick_members=True)
     async def unblock(self, ctx, *, user: User = None):
         """
-        Unblocks a user from using Modmail.
+        Débloque un utilisateur des tickets support.
 
-        Note: reasons start with "System Message: " are reserved for internal
-        use only.
+        Note: les motifs commençant par "Message système:" 
+        sont réservés à un usage interne.
         """
 
         if user is None:
@@ -764,26 +764,26 @@ class Modmail:
             del self.bot.config.blocked[str(user.id)]
             await self.bot.config.update()
 
-            if msg.startswith('System Message: '):
+            if msg.startswith('Message système: '):
                 # If the user is blocked internally (for example: below minimum account age)
                 # Show an extended message stating the original internal message
-                reason = msg[16:].strip().rstrip('.') or 'no reason'
+                reason = msg[16:].strip().rstrip('.') or 'sans raison'
                 embed = discord.Embed(
-                    title='Success',
-                    description=f'{mention} was previously blocked internally due to '
-                    f'"{reason}". {mention} is no longer blocked.',
+                    title='Succès',
+                    description=f'{mention} a été précédemment bloqué en interne en raison de '
+                    f'"{reason}". {mention} est plus bloqué.',
                     color=self.bot.main_color
                 )
             else:
                 embed = discord.Embed(
-                    title='Success',
+                    title='Succès',
                     color=self.bot.main_color,
-                    description=f'{mention} is no longer blocked.'
+                    description=f'{mention} est plus bloqué.'
                 )
         else:
             embed = discord.Embed(
-                title='Error',
-                description=f'{mention} is not blocked.',
+                title='Erreur',
+                description=f'{mention} est pas bloqué.',
                 color=discord.Color.red()
             )
 
