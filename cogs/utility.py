@@ -78,7 +78,7 @@ class Utility:
             embed.set_author(name=cog.__class__.__name__ + ' - Help',
                              icon_url=ctx.bot.user.avatar_url)
 
-            embed.set_footer(text=f'Tapez "{prefix}help command" '
+            embed.set_footer(text=f'Tapez "{prefix}help (commande)" '
                                   "pour plus d'informations sur une commande.")
             embeds.append(embed)
         return embeds
@@ -111,7 +111,7 @@ class Utility:
 
         embed.add_field(name='Sous Commandes', value=fmt)
         embed.set_footer(
-            text=f'Tapez "{prefix}help {cmd} command" '
+            text=f'Tapez "{prefix}help {cmd}" '
             "pour plus d'informations sur une commande."
         )
         return embed
