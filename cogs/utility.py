@@ -662,7 +662,7 @@ class Utility:
     @config.command()
     @commands.is_owner()
     async def options(self, ctx):
-        """Renvoie une liste de clés de configuration valides que vous pouvez modifier."""
+        """Renvoie une liste de clés valides que vous pouvez modifier."""
         allowed = self.bot.config.allowed_to_change_in_command
         valid = ', '.join(f'`{k}`' for k in allowed)
         embed = Embed(title='Clés valides',
