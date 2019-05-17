@@ -66,6 +66,9 @@ class ModmailHelpCommand(commands.HelpCommand):
             embeds.append(embed)
         return embeds
 
+    def process_help_msg(self, help: str):
+        return help.format(prefix=self.clean_prefix)
+
     async def send_bot_help(self, mapping):
         embeds = []
         # TODO: Implement for no cog commands
@@ -91,9 +94,9 @@ class ModmailHelpCommand(commands.HelpCommand):
             perm_level = ''
 
         embed = Embed(
-            title=self.get_command_signature(command),
+            title=f'`{self.get_command_signature(command)}`',
             color=self.context.bot.main_color,
-            description=command.help
+            description=self.process_help_msg(command.help)
         )
         embed.set_footer(text=f'Permission level: {perm_level}')
         await self.get_destination().send(embed=embed)
@@ -109,9 +112,9 @@ class ModmailHelpCommand(commands.HelpCommand):
             perm_level = ''
 
         embed = Embed(
-            title=self.get_command_signature(group),
+            title=f'`{self.get_command_signature(group)}`',
             color=self.context.bot.main_color,
-            description=group.help
+            description=self.process_help_msg(group.help)
         )
 
         embed.add_field(name='Permission level', value=perm_level)
@@ -184,7 +187,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
     async def changelog(self, ctx):
-        """Show a paginated changelog of the bot."""
+        """Shows the changelog of the Modmail."""
         changelog = await Changelog.from_url(self.bot)
         try:
             paginator = PaginatorSession(ctx, *changelog.embeds)
@@ -196,7 +199,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
     async def about(self, ctx):
-        """Shows information about the bot."""
+        """Shows information about this bot."""
         embed = Embed(color=self.bot.main_color,
                       timestamp=datetime.utcnow())
         embed.set_author(name='Modmail - About',
@@ -215,8 +218,6 @@ class Utility(commands.Cog):
                         value=f'`{self.bot.version}`')
         embed.add_field(name='Author',
                         value='[`kyb3r`](https://github.com/kyb3r)')
-
-        footer = f'Bot ID: {self.bot.user.id}'
 
         changelog = await Changelog.from_url(self.bot)
         latest = changelog.latest_version
@@ -237,7 +238,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
     async def debug(self, ctx):
-        """Shows the recent logs of the bot."""
+        """Shows the recent application-logs of the bot."""
 
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                '../temp/logs.log'), 'r+') as f:
@@ -286,7 +287,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
     async def debug_hastebin(self, ctx):
-        """Upload logs to hastebin."""
+        """Stores application-logs to Hastebin."""
 
         haste_url = os.environ.get('HASTE_URL', 'https://hasteb.in')
 
@@ -331,7 +332,7 @@ class Utility(commands.Cog):
     @github_access_token_required
     @trigger_typing
     async def github(self, ctx):
-        """Shows the GitHub user your access token is linked to."""
+        """Shows the GitHub user your Github_Access_Token is linked to."""
         data = await self.bot.api.get_user_info()
 
         embed = Embed(
@@ -351,9 +352,13 @@ class Utility(commands.Cog):
     @github_access_token_required
     @trigger_typing
     async def update(self, ctx, *, flag: str = ''):
-        """Updates the bot, this only works with heroku users.
+        """
+        Update bot.
 
-        To stay up-to-date with the latest commit from GitHub, specify "force" as the flag.
+        This only works for Heroku users who have configured their bot for updates.
+
+        To stay up-to-date with the latest commit
+        from GitHub, specify "force" as the flag.
         """
 
         changelog = await Changelog.from_url(self.bot)
@@ -415,19 +420,23 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def activity(self, ctx, activity_type: str.lower, *, message: str = ''):
         """
-        Set a custom activity for the bot.
+        Set an activity status for the bot.
 
         Possible activity types:
             - `playing`
             - `streaming`
             - `listening`
             - `watching`
-            - `clear`
-
-        When activity type is set to `clear`, the current activity is removed.
 
         When activity type is set to `listening`,
         it must be followed by a "to": "listening to..."
+
+        When activity type is set to `streaming`, you can set
+        the linked twitch page:
+        - `{prefix}config set twitch_url https://www.twitch.tv/somechannel/`
+
+        To remove the current activity status:
+        - `{prefix}activity clear`
         """
         if activity_type == 'clear':
             self.bot.config['activity_type'] = None
@@ -466,7 +475,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def status(self, ctx, *, status_type: str.lower):
         """
-        Set a custom status for the bot.
+        Set a status for the bot.
 
         Possible status types:
             - `online`
@@ -474,9 +483,9 @@ class Utility(commands.Cog):
             - `dnd`
             - `do_not_disturb` or `do not disturb`
             - `invisible` or `offline`
-            - `clear`
 
-        When status type is set to `clear`, the current status is removed.
+        To remove the current status:
+        - `{prefix}status clear`
         """
         if status_type == 'clear':
             self.bot.config['status'] = None
@@ -605,21 +614,24 @@ class Utility(commands.Cog):
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def mention(self, ctx, *, mention=None):
-        """Changes what the bot mentions at the start of each thread."""
+    async def mention(self, ctx, *, mention: str = None):
+        """
+        Change what the bot mentions at the start of each thread.
+
+        Type only `{prefix}mention` to retrieve your current "mention" message.
+        """
         current = self.bot.config.get('mention', '@here')
 
         if mention is None:
             embed = Embed(
                 title='Current text',
                 color=self.bot.main_color,
-                description=f'{current}'
+                description=str(current)
             )
-
         else:
             embed = Embed(
                 title='Changed mention!',
-                description=f'On thread creation the bot now says {mention}',
+                description=f'On thread creation the bot now says {mention}.',
                 color=self.bot.main_color
             )
             self.bot.config['mention'] = mention
@@ -630,7 +642,11 @@ class Utility(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def prefix(self, ctx, *, prefix=None):
-        """Changes the prefix for the bot."""
+        """
+        Change the prefix of the bot.
+
+        Type only `{prefix}prefix` to retrieve your current bot prefix.
+        """
 
         current = self.bot.prefix
         embed = Embed(
@@ -648,16 +664,27 @@ class Utility(commands.Cog):
             await self.bot.config.update()
             await ctx.send(embed=embed)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(aliases=['configuration'], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config(self, ctx):
-        """Change config vars for the bot."""
+        """
+        Modify changeable configuration variables for this bot.
+
+        Type `{prefix}config options` to view a list
+        of valid configuration variables.
+
+        To set a configuration variable:
+        - `{prefix}config set varname value here`
+
+        To remove a configuration variable:
+        - `{prefix}config set remove varname`
+        """
         await ctx.send_help(ctx.command)
 
     @config.command(name='options', aliases=['list'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_options(self, ctx):
-        """Return a list of valid config keys you can change."""
+        """Return a list of valid configuration names you can change."""
         allowed = self.bot.config.allowed_to_change_in_command
         valid = ', '.join(f'`{k}`' for k in allowed)
         embed = Embed(title='Valid Keys',
@@ -668,9 +695,7 @@ class Utility(commands.Cog):
     @config.command(name='set', aliases=['add'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_set(self, ctx, key: str.lower, *, value: str):
-        """
-        Sets a configuration variable and its value.
-        """
+        """Set a configuration variable and its value."""
 
         keys = self.bot.config.allowed_to_change_in_command
 
@@ -700,7 +725,7 @@ class Utility(commands.Cog):
     @config.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_remove(self, ctx, key: str.lower):
-        """Deletes a key from the config."""
+        """Delete a set configuration variable."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
             try:
@@ -728,7 +753,11 @@ class Utility(commands.Cog):
     @config.command(name='get')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_get(self, ctx, key: str.lower = None):
-        """Shows the config variables that are currently set."""
+        """
+        Show the configuration variables that are currently set.
+
+        Leave `key` empty to show all currently set configuration variables.
+        """
         keys = self.bot.config.allowed_to_change_in_command
 
         if key:
@@ -772,7 +801,23 @@ class Utility(commands.Cog):
     @commands.group(aliases=['aliases'], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias(self, ctx):
-        """Returns a list of aliases that are currently set."""
+        """
+        Create shortcuts to bot commands.
+
+        When `?alias` is used by itself, this will retrieve
+        a list of alias that are currently set.
+
+        To use alias:
+
+        First create a snippet using:
+        - `{prefix}alias add alias-name other-command`
+
+        For example:
+        - `{prefix}alias add reply r`
+        - Now you can use `{prefix}r` as an replacement for `{prefix}reply`.
+
+        See also `{prefix}snippets`.
+        """
 
         embeds = []
         desc = 'Here is a list of aliases that are currently configured.'
@@ -809,7 +854,7 @@ class Utility(commands.Cog):
     @alias.command(name='add')
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_add(self, ctx, name: str.lower, *, value):
-        """Add an alias to the bot config."""
+        """Add an alias."""
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
 
@@ -845,7 +890,7 @@ class Utility(commands.Cog):
     @alias.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_remove(self, ctx, *, name: str.lower):
-        """Removes a alias from bot config."""
+        """Remove an alias."""
 
         if 'aliases' not in self.bot.config.cache:
             self.bot.config['aliases'] = {}
@@ -872,7 +917,8 @@ class Utility(commands.Cog):
     @commands.group(aliases=['perms'], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions(self, ctx):
-        """Sets the permissions for Modmail commands.
+        """
+        Set the permissions for Modmail commands.
 
         You may set permissions based on individual command names, or permission
         levels.
@@ -884,7 +930,7 @@ class Utility(commands.Cog):
             - **Supporter** [2] (access to core Modmail supporting functions)
             - **Regular** [1] (most basic interactions such as help and about)
 
-        By default, owner is set to the bot owner and regular is @everyone.
+        By default, owner is set to the absolute bot owner and regular is `@everyone`.
 
         Note: You will still have to manually give/take permission to the Modmail
         category to users/roles.
@@ -901,7 +947,12 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add_command(self, ctx, command: str, *,
                                       user_or_role: Union[User, Role, str]):
-        """Add a user, role, or everyone permission to use a command."""
+        """
+        Add a user, role, or everyone permission to use a command.
+
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
+        """
         if command not in self.bot.all_commands:
             embed = Embed(
                 title='Error',
@@ -930,7 +981,12 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add_level(self, ctx, level: str, *,
                                     user_or_role: Union[User, Role, str]):
-        """Add a user, role, or everyone permission to use commands of a permission level."""
+        """
+        Add a user, role, or everyone permission to use commands of a permission level.
+
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
+        """
         if level.upper() not in PermissionLevel.__members__:
             embed = Embed(
                 title='Error',
@@ -966,7 +1022,12 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove_command(self, ctx, command: str, *,
                                          user_or_role: Union[User, Role, str]):
-        """Remove a user, role, or everyone permission to use a command."""
+        """
+        Remove a user, role, or everyone permission to use a command.
+
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
+        """
         if command not in self.bot.all_commands:
             embed = Embed(
                 title='Error',
@@ -995,7 +1056,12 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove_level(self, ctx, level: str, *,
                                        user_or_role: Union[User, Role, str]):
-        """Remove a user, role, or everyone permission to use commands of a permission level."""
+        """
+        Remove a user, role, or everyone permission to use commands of a permission level.
+
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
+        """
         if level.upper() not in PermissionLevel.__members__:
             embed = Embed(
                 title='Error',
@@ -1023,7 +1089,14 @@ class Utility(commands.Cog):
     @permissions.group(name='get', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get(self, ctx, *, user_or_role: Union[User, Role, str]):
-        """View the currently-set permissions."""
+        """
+        View the currently-set permissions.
+
+        You can specify `user_or_role` as an alternative to get-by-command or get-by-level.
+
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
+        """
 
         if hasattr(user_or_role, 'id'):
             value = user_or_role.id
@@ -1064,7 +1137,7 @@ class Utility(commands.Cog):
     @permissions_get.command(name='command')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get_command(self, ctx, *, command: str = None):
-        """View the currently-set permissions for a command."""
+        """View currently-set permissions for a command."""
 
         def get_command(cmd):
             permissions = self.bot.config.command_permissions.get(cmd.name, [])
@@ -1122,7 +1195,7 @@ class Utility(commands.Cog):
     @permissions_get.command(name='level', aliases=['group'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get_level(self, ctx, *, level: str = None):
-        """View the currently-set permissions for commands of a permission level."""
+        """View currently-set permissions for commands of a permission level."""
 
         def get_level(perm_level):
             permissions = self.bot.config.level_permissions.get(perm_level.name, [])
@@ -1186,8 +1259,12 @@ class Utility(commands.Cog):
 
     @oauth.group(name='whitelist', invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def oauth_whitelist(self, ctx, target: Union[Member, Role]):
-        """Globally whitelist or un-whitelist a user or role to have access to logs."""
+    async def oauth_whitelist(self, ctx, target: Union[User, Role]):
+        """
+        Whitelist or un-whitelist a user or role to have access to logs.
+
+        `target` may be a role ID, name, mention, user ID, name, or mention.
+        """
         whitelisted = self.bot.config['oauth_whitelist']
 
         if target.id in whitelisted:
@@ -1236,7 +1313,7 @@ class Utility(commands.Cog):
     @commands.command(hidden=True, name='eval')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def eval_(self, ctx, *, body: str):
-        """Evaluates Python code"""
+        """Evaluates Python code."""
 
         env = {
             'ctx': ctx,

@@ -22,7 +22,8 @@ class DownloadError(Exception):
 
 
 class Plugins(commands.Cog):
-    """Plugins expand Modmail functionality by allowing third-party addons.
+    """
+    Plugins expand Modmail functionality by allowing third-party addons.
 
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
@@ -125,8 +126,8 @@ class Plugins(commands.Cog):
 
     @plugin.command(name='add')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_add(self, ctx, *, plugin_name):
-        """Adds a plugin"""
+    async def plugin_add(self, ctx, *, plugin_name: str):
+        """Add a plugin."""
         if plugin_name in self.bot.config.plugins:
             return await ctx.send('Plugin already installed.')
         if plugin_name in self.bot.cogs.keys():
@@ -165,8 +166,8 @@ class Plugins(commands.Cog):
 
     @plugin.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_remove(self, ctx, *, plugin_name):
-        """Removes a certain plugin"""
+    async def plugin_remove(self, ctx, *, plugin_name: str):
+        """Remove a plugin."""
         if plugin_name in self.bot.config.plugins:
             username, repo, name = self.parse_plugin(plugin_name)
             self.bot.unload_extension(
@@ -200,8 +201,8 @@ class Plugins(commands.Cog):
 
     @plugin.command(name='update')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_update(self, ctx, *, plugin_name):
-        """Updates a certain plugin"""
+    async def plugin_update(self, ctx, *, plugin_name: str):
+        """Update a plugin."""
         if plugin_name not in self.bot.config.plugins:
             return await ctx.send('Plugin not installed.')
 
@@ -234,7 +235,7 @@ class Plugins(commands.Cog):
     @plugin.command(name='list', aliases=['show', 'view'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_list(self, ctx):
-        """Shows a list of currently enabled plugins"""
+        """Shows a list of currently enabled plugins."""
         if self.bot.config.plugins:
             msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
             await ctx.send(msg)
