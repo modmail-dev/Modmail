@@ -288,7 +288,7 @@ class Thread(ThreadABC):
         message = message.format(closer=closer, loglink=log_url, logkey=log_data['key'])
 
         embed.description = message
-        footer = self.bot.config.get('thread_close_footer', 'Replying will create a new thread')
+        footer = self.bot.config.get('thread_close_footer', 'Répondre va créer un nouveau ticket')
         embed.set_footer(text=footer,
                          icon_url=self.bot.guild.icon_url)
 
