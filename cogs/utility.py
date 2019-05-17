@@ -11,7 +11,7 @@ from json import JSONDecodeError
 from pkg_resources import parse_version
 from textwrap import indent
 
-from discord import Embed, Color, Activity, Role, Member
+from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
 from discord.ext import commands
 
@@ -287,7 +287,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     @trigger_typing
     async def debug_hastebin(self, ctx):
-        """Stores application-logs to Hastebin."""
+        """Posts application-logs to Hastebin."""
 
         haste_url = os.environ.get('HASTE_URL', 'https://hasteb.in')
 
@@ -353,7 +353,7 @@ class Utility(commands.Cog):
     @trigger_typing
     async def update(self, ctx, *, flag: str = ''):
         """
-        Update bot.
+        Update Modmail.
 
         This only works for Heroku users who have configured their bot for updates.
 
@@ -1015,7 +1015,7 @@ class Utility(commands.Cog):
                        invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove(self, ctx):
-        """Remove a permission to use a command or permission level."""
+        """Remove permission to use a command or permission level."""
         await ctx.send_help(ctx.command)
 
     @permissions_remove.command(name='command')

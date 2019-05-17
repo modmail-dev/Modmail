@@ -1,5 +1,4 @@
 import asyncio
-import re
 import os
 from datetime import datetime
 from typing import Optional, Union
@@ -177,7 +176,7 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def move(self, ctx, *, category: discord.CategoryChannel):
         """
-        Move a thread to a specified category.
+        Move a thread to another category.
 
         `category` may be a category ID, mention, or name.
         """
@@ -268,12 +267,13 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def notify(self, ctx, *, role: Union[discord.Role, str.lower, None] = None):
         """
-        Notify a role or yourself to the next thread message received.
+        Notify a role or yourself when the next thread message received.
 
-        Once a thread message is received `role` will only be pinged once.
+        Once a thread message is received, `role` will only be pinged once.
 
-        Leave `role` empty to notify yourself. `@here` and `@everyone` can be substituted with `here` and `everyone`.
-        `role` may be a role ID, mention, or name.
+        Leave `role` empty to notify yourself.
+        `@here` and `@everyone` can be substituted with `here` and `everyone`.
+        `role` may be a role ID, mention, name, "everyone", or "here".
         """
         thread = ctx.thread
 
@@ -312,8 +312,9 @@ class Modmail(commands.Cog):
 
         You will be pinged for every thread message received until you unsubscribe.
 
-        Leave `role` empty to notify yourself. `@here` and `@everyone` can be substituted with `here` and `everyone`.
-        `role` may be a role ID, mention, or name.
+        Leave `role` empty to subscribe yourself.
+        `@here` and `@everyone` can be substituted with `here` and `everyone`.
+        `role` may be a role ID, mention, name, "everyone", or "here".
         """
         thread = ctx.thread
 
@@ -350,10 +351,11 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def unsubscribe(self, ctx, *, role=None):
         """
-        Unsubscribe a role yourself from a thread.
+        Unsubscribe a role or yourself from a thread.
 
-        Leave `role` empty to notify yourself. `@here` and `@everyone` can be substituted with `here` and `everyone`.
-        `role` may be a role ID, mention, or name.
+        Leave `role` empty to unsubscribe yourself.
+        `@here` and `@everyone` can be substituted with `here` and `everyone`.
+        `role` may be a role ID, mention, name, "everyone", or "here".
         """
         thread = ctx.thread
 
@@ -492,7 +494,7 @@ class Modmail(commands.Cog):
         """
         Get all logs closed by the specified user.
 
-        If no `user` is provided, the user will be whoever sent this command.
+        If no `user` is provided, the user will be the person who sent this command.
         `user` may be a user ID, mention, or name.
         """
         user = user if user is not None else ctx.author
@@ -740,7 +742,7 @@ class Modmail(commands.Cog):
         """
         Block a user from using Modmail.
 
-        You may chose to set a time as to when the user will automatically be unblocked.
+        You may choose to set a time as to when the user will automatically be unblocked.
 
         Leave `user` blank when this command is used within a
         thread channel to block the current recipient.
