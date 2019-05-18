@@ -35,6 +35,7 @@ class Thread(ThreadABC):
             self._id = recipient.id
             self._recipient = recipient
         self._channel = channel
+        self.genesis_message = None
         self._ready_event = asyncio.Event()
         self._close_task = None
 
@@ -80,6 +81,8 @@ class Thread(ThreadABC):
     async def setup(self, *, creator=None, category=None):
         """Create the thread channel and other io related initialisation tasks"""
 
+        self.bot.dispatch('thread_create', self)
+
         recipient = self.recipient
 
         # in case it creates a channel outside of category
@@ -124,17 +127,19 @@ class Thread(ThreadABC):
         else:
             mention = self.bot.config.get('mention', '@here')
 
-        async def send_info_embed():
+        async def send_genesis_message():
             try:
                 msg = await channel.send(mention, embed=info_embed)
-                await msg.pin()
+                self.bot.loop.create_task(msg.pin())
+                self.genesis_message = msg
             except:
                 pass
+            finally:
+                self.ready = True
+                self.bot.dispatch('thread_ready', self)
 
         await channel.edit(topic=topic)
-        self.bot.loop.create_task(send_info_embed())
-
-        self.ready = True
+        self.bot.loop.create_task(send_genesis_message())
 
         # Once thread is ready, tell the recipient.
         thread_creation_response = self.bot.config.get(
