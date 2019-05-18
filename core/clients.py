@@ -19,7 +19,7 @@ if prefix == 'NONE':
     prefix = ''
 
 
-class ApiClient:
+class RequestClient:
     """
     This class represents the general request class for all type of clients.
 
@@ -107,7 +107,7 @@ class ApiClient:
         return {k: v for k, v in data.items() if k in valid_keys}
 
 
-class GitHub(ApiClient):
+class GitHub(RequestClient):
     """
     The client for interacting with GitHub API.
 
@@ -255,7 +255,7 @@ class GitHub(ApiClient):
         return self
 
 
-class DatabaseClient(ApiClient):
+class ApiClient(RequestClient):
 
     def __init__(self, bot):
         super().__init__(bot)

@@ -47,7 +47,7 @@ from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.changelog import Changelog
-from core.clients import DatabaseClient, PluginDatabaseClient
+from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error, human_join
 from core.models import PermissionLevel
@@ -108,7 +108,7 @@ class ModmailBot(commands.Bot):
         self._configure_logging()
         # TODO: Raise fatal error if mongo_uri or other essentials are not found
         self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
-        self._api = DatabaseClient(self)
+        self._api = ApiClient(self)
         self.plugin_db = PluginDatabaseClient(self)
 
         self.metadata_task = self.loop.create_task(self.metadata_loop())
@@ -158,7 +158,7 @@ class ModmailBot(commands.Bot):
         return self._db
 
     @property
-    def api(self) -> DatabaseClient:
+    def api(self) -> ApiClient:
         return self._api
 
     @property
