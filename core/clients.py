@@ -5,12 +5,11 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Union, Optional
 
-from discord import Member, DMChannel
+from discord import Member, DMChannel, TextChannel, Message
 from discord.ext import commands
 
 from aiohttp import ClientResponseError, ClientResponse
 
-from core.models import Bot, UserClient
 from core.utils import info
 
 logger = logging.getLogger('Modmail')
@@ -39,7 +38,7 @@ class ApiClient:
         The HTTP headers that will be sent along with the requiest.
     """
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.session = bot.session
         self.headers: dict = None
@@ -161,7 +160,7 @@ class GitHub(ApiClient):
     FORK_URL = REPO + '/forks'
     STAR_URL = BASE + '/user/starred/kyb3r/modmail'
 
-    def __init__(self, bot: Bot,
+    def __init__(self, bot,
                  access_token: str = '',
                  username: str = '',
                  **kwargs):
@@ -233,7 +232,7 @@ class GitHub(ApiClient):
                            headers={'Content-Length': '0'})
 
     @classmethod
-    async def login(cls, bot: Bot) -> 'GitHub':
+    async def login(cls, bot) -> 'GitHub':
         """
         Logs in to GitHub with configuration variable information.
 
@@ -256,9 +255,9 @@ class GitHub(ApiClient):
         return self
 
 
-class DatabaseClient(UserClient, ApiClient):
+class DatabaseClient(ApiClient):
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         super().__init__(bot)
         if self.token:
             self.headers = {
@@ -266,7 +265,7 @@ class DatabaseClient(UserClient, ApiClient):
             }
 
     @property
-    def token(self):
+    def token(self) -> Optional[str]:
         return self.bot.config.get('github_access_token')
 
     @property
@@ -277,7 +276,7 @@ class DatabaseClient(UserClient, ApiClient):
     def logs(self):
         return self.db.logs
 
-    async def get_user_logs(self, user_id):
+    async def get_user_logs(self, user_id: Union[str, int]) -> list:
         query = {
             'recipient.id': str(user_id),
             'guild_id': str(self.bot.guild_id)
@@ -288,14 +287,17 @@ class DatabaseClient(UserClient, ApiClient):
         }
         return await self.logs.find(query, projection).to_list(None)
 
-    async def get_log(self, channel_id):
+    async def get_log(self, channel_id: Union[str, int]) -> dict:
         return await self.logs.find_one({'channel_id': str(channel_id)})
 
-    async def get_log_link(self, channel_id):
+    async def get_log_link(self, channel_id: Union[str, int]) -> str:
         doc = await self.get_log(channel_id)
         return f"{self.bot.config.log_url.strip('/')}{prefix}/{doc['key']}"
 
-    async def create_log_entry(self, recipient, channel, creator):
+    async def create_log_entry(self,
+                               recipient: Member,
+                               channel: TextChannel,
+                               creator: Member) -> str:
         key = secrets.token_hex(6)
 
         await self.logs.insert_one({
@@ -325,14 +327,14 @@ class DatabaseClient(UserClient, ApiClient):
 
         return f"{self.bot.config.log_url.strip('/')}{prefix}/{key}"
 
-    async def get_config(self):
+    async def get_config(self) -> dict:
         conf = await self.db.config.find_one({'bot_id': self.bot.user.id})
         if conf is None:
             await self.db.config.insert_one({'bot_id': self.bot.user.id})
             return {'bot_id': self.bot.user.id}
         return conf
 
-    async def update_config(self, data):
+    async def update_config(self, data: dict):
         valid_keys = self.bot.config.valid_keys.difference(
             self.bot.config.protected_keys
         )
@@ -345,7 +347,8 @@ class DatabaseClient(UserClient, ApiClient):
             {'$set': toset, '$unset': unset}
             )
 
-    async def edit_message(self, message_id, new_content):
+    async def edit_message(self, message_id: Union[int, str],
+                           new_content: str) -> None:
         await self.logs.update_one({
             'messages.message_id': str(message_id)
         }, {
@@ -355,7 +358,10 @@ class DatabaseClient(UserClient, ApiClient):
             }
         })
 
-    async def append_log(self, message, channel_id='', type_='thread_message'):
+    async def append_log(self,
+                         message: Message,
+                         channel_id: Union[str, int] = '',
+                         type_: str = 'thread_message') -> dict:
         channel_id = str(channel_id) or str(message.channel.id)
         data = {
             'timestamp': str(message.created_at),
@@ -386,14 +392,16 @@ class DatabaseClient(UserClient, ApiClient):
             return_document=True
         )
 
-    async def post_log(self, channel_id, data):
+    async def post_log(self,
+                       channel_id: Union[int, str],
+                       data: dict) -> dict:
         return await self.logs.find_one_and_update(
             {'channel_id': str(channel_id)},
             {'$set': {k: v for k, v in data.items()}},
             return_document=True
         )
 
-    async def update_repository(self):
+    async def update_repository(self) -> dict:
         user = await GitHub.login(self.bot)
         data = await user.update_repository()
         return {
@@ -405,7 +413,7 @@ class DatabaseClient(UserClient, ApiClient):
             }
         }
 
-    async def get_user_info(self):
+    async def get_user_info(self) -> dict:
         user = await GitHub.login(self.bot)
         return {
             'user': {
@@ -417,7 +425,7 @@ class DatabaseClient(UserClient, ApiClient):
 
 
 class PluginDatabaseClient:
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
 
     def get_partition(self, cog):

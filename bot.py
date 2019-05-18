@@ -29,6 +29,7 @@ import logging
 import os
 import re
 import sys
+import typing
 
 from datetime import datetime
 from pkg_resources import parse_version
@@ -49,7 +50,7 @@ from core.changelog import Changelog
 from core.clients import DatabaseClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error, human_join
-from core.models import Bot, PermissionLevel
+from core.models import PermissionLevel
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
@@ -93,7 +94,7 @@ LINE = Fore.BLACK + Style.BRIGHT + '-------------------------' + \
        Style.RESET_ALL
 
 
-class ModmailBot(Bot):
+class ModmailBot(commands.Bot):
 
     def __init__(self):
         super().__init__(command_prefix=None)  # implemented in `get_prefix`
@@ -101,6 +102,8 @@ class ModmailBot(Bot):
         self._session = None
         self._config = None
         self._db = None
+        self.start_time = datetime.utcnow()
+        self._connected = asyncio.Event()
 
         self._configure_logging()
         # TODO: Raise fatal error if mongo_uri or other essentials are not found
@@ -111,6 +114,20 @@ class ModmailBot(Bot):
         self.metadata_task = self.loop.create_task(self.metadata_loop())
         self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
+
+    @property
+    def uptime(self) -> str:
+        now = datetime.utcnow()
+        delta = now - self.start_time
+        hours, remainder = divmod(int(delta.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        days, hours = divmod(hours, 24)
+
+        fmt = '{h}h {m}m {s}s'
+        if days:
+            fmt = '{d}d ' + fmt
+
+        return fmt.format(d=days, h=hours, m=minutes, s=seconds)
 
     def _configure_logging(self):
         level_text = self.config.log_level.upper()
@@ -133,31 +150,31 @@ class ModmailBot(Bot):
             logger.info(info('Using default logging level: INFO'))
 
     @property
-    def version(self):
+    def version(self) -> str:
         return __version__
 
     @property
-    def db(self):
+    def db(self) -> typing.Optional[AsyncIOMotorClient]:
         return self._db
 
     @property
-    def api(self):
+    def api(self) -> DatabaseClient:
         return self._api
 
     @property
-    def config(self):
+    def config(self) -> ConfigManager:
         if self._config is None:
             self._config = ConfigManager(self)
         return self._config
 
     @property
-    def session(self):
+    def session(self) -> ClientSession:
         if self._session is None:
             self._session = ClientSession(loop=self.loop)
         return self._session
 
     @property
-    def threads(self):
+    def threads(self) -> ThreadManager:
         if self._threads is None:
             self._threads = ThreadManager(self)
         return self._threads
@@ -220,13 +237,13 @@ class ModmailBot(Bot):
                 self.loop.close()
                 logger.info(error(' - Shutting down bot - '))
 
-    async def is_owner(self, user):
+    async def is_owner(self, user: discord.User) -> bool:
         raw = str(self.config.get('owners', '0')).split(',')
         allowed = {int(x) for x in raw}
         return (user.id in allowed) or await super().is_owner(user) 
 
     @property
-    def log_channel(self):
+    def log_channel(self) -> typing.Optional[discord.TextChannel]:
         channel_id = self.config.get('log_channel_id')
         if channel_id is not None:
             return self.get_channel(int(channel_id))
@@ -235,23 +252,23 @@ class ModmailBot(Bot):
         return None
 
     @property
-    def snippets(self):
+    def snippets(self) -> typing.Dict[str, str]:
         return {k: v for k, v in self.config.get('snippets', {}).items() if v}
 
     @property
-    def aliases(self):
+    def aliases(self) -> typing.Dict[str, str]:
         return {k: v for k, v in self.config.get('aliases', {}).items() if v}
 
     @property
-    def token(self):
+    def token(self) -> str:
         return self.config.token
 
     @property
-    def guild_id(self):
+    def guild_id(self) -> int:
         return int(self.config.guild_id)
 
     @property
-    def guild(self):
+    def guild(self) -> discord.Guild:
         """
         The guild that the bot is serving
         (the server where users message it from)
@@ -259,7 +276,7 @@ class ModmailBot(Bot):
         return discord.utils.get(self.guilds, id=self.guild_id)
 
     @property
-    def modmail_guild(self):
+    def modmail_guild(self) -> discord.Guild:
         """
         The guild that the bot is operating in
         (where the bot is creating threads)
@@ -270,11 +287,11 @@ class ModmailBot(Bot):
         return discord.utils.get(self.guilds, id=int(modmail_guild_id))
 
     @property
-    def using_multiple_server_setup(self):
+    def using_multiple_server_setup(self) -> bool:
         return self.modmail_guild != self.guild
 
     @property
-    def main_category(self):
+    def main_category(self) -> typing.Optional[discord.TextChannel]:
         category_id = self.config.get('main_category_id')
         if category_id is not None:
             return discord.utils.get(self.modmail_guild.categories,
@@ -286,15 +303,15 @@ class ModmailBot(Bot):
         return None
 
     @property
-    def blocked_users(self):
+    def blocked_users(self) -> typing.Dict[str, str]:
         return self.config.get('blocked', {})
 
     @property
-    def prefix(self):
+    def prefix(self) -> str:
         return self.config.get('prefix', '?')
 
     @property
-    def mod_color(self):
+    def mod_color(self) -> typing.Union[discord.Color, int]:
         color = self.config.get('mod_color')
         if not color:
             return discord.Color.green()
@@ -307,7 +324,7 @@ class ModmailBot(Bot):
             return color
 
     @property
-    def recipient_color(self):
+    def recipient_color(self) -> typing.Union[discord.Color, int]:
         color = self.config.get('recipient_color')
         if not color:
             return discord.Color.gold()
@@ -320,7 +337,7 @@ class ModmailBot(Bot):
             return color
 
     @property
-    def main_color(self):
+    def main_color(self) -> typing.Union[discord.Color, int]:
         color = self.config.get('main_color')
         if not color:
             return discord.Color.blurple()
@@ -414,7 +431,7 @@ class ModmailBot(Bot):
 
         logger.info(LINE)
 
-    async def convert_emoji(self, name):
+    async def convert_emoji(self, name: str) -> str:
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
 
@@ -425,7 +442,7 @@ class ModmailBot(Bot):
                 logger.warning(f'{name} is not a valid emoji.')
         return name
 
-    async def retrieve_emoji(self):
+    async def retrieve_emoji(self) -> typing.Tuple[str, str]:
 
         # TODO: use a function to convert emojis
 
@@ -461,7 +478,7 @@ class ModmailBot(Bot):
 
         return sent_emoji, blocked_emoji
 
-    async def process_modmail(self, message):
+    async def process_modmail(self, message: discord.Message) -> None:
         """Processes messages sent to the bot."""
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
         now = datetime.utcnow()
@@ -631,7 +648,8 @@ class ModmailBot(Bot):
 
         return ctx
 
-    async def update_perms(self, name, value, add=True):
+    async def update_perms(self, name: typing.Union[PermissionLevel, str],
+                           value: int, add: bool = True) -> None:
         if isinstance(name, PermissionLevel):
             permissions = self.config.level_permissions
             name = name.name
@@ -862,7 +880,7 @@ class ModmailBot(Bot):
             logger.error(error('Unexpected exception:'), exc_info=exception)
 
     @staticmethod
-    def overwrites(ctx):
+    def overwrites(ctx: commands.Context) -> dict:
         """Permission overwrites for the guild."""
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(

@@ -20,7 +20,7 @@ from aiohttp import ClientResponseError
 from core import checks
 from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
-from core.models import Bot, InvalidConfigError, PermissionLevel
+from core.models import InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
 from core.utils import cleanup_code, info, error, User, get_perm_level
 
@@ -166,7 +166,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 class Utility(commands.Cog):
     """General commands that provide utility."""
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self._original_help_command = bot.help_command
         self.bot.help_command = ModmailHelpCommand(

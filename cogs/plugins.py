@@ -11,7 +11,7 @@ from discord.ext import commands
 from discord.utils import async_all
 
 from core import checks
-from core.models import Bot, PermissionLevel
+from core.models import PermissionLevel
 from core.utils import info, error
 
 logger = logging.getLogger('Modmail')
@@ -30,7 +30,7 @@ class Plugins(commands.Cog):
     Learn how to create a plugin yourself here:
     https://github.com/kyb3r/modmail/wiki/Plugins
     """
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.bot.loop.create_task(self.download_initial_plugins())
 

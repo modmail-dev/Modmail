@@ -12,7 +12,7 @@ from natural.date import duration
 
 from core import checks
 from core.decorators import trigger_typing
-from core.models import Bot, PermissionLevel
+from core.models import PermissionLevel
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import format_preview, User
@@ -21,7 +21,7 @@ from core.utils import format_preview, User
 class Modmail(commands.Cog):
     """Commands directly related to Modmail functionality."""
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
