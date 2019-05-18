@@ -72,7 +72,8 @@ class Modmail(commands.Cog):
                        'Consider setting permission groups to give access '
                        'to roles or users the ability to use Modmail.\n'
                        f'Type `{self.bot.prefix}permissions` for more info.')
-        if not self.bot.config.permissions:
+                       
+        if not self.bot.config.get('permissions'):
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
             await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
 
@@ -592,6 +593,7 @@ class Modmail(commands.Cog):
         ctx.message.content = msg
         async with ctx.typing():
             await ctx.thread.reply(ctx.message, anonymous=True)
+
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
