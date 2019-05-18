@@ -671,6 +671,11 @@ class ModmailBot(Bot):
             if cmd in self.snippets:
                 message.content = f'{prefix}reply {self.snippets[cmd]}'
 
+                snippet = self.snippets[cmd]
+                if thread:
+                    snippet = snippet.format(recipient=thread.recipient)
+                message.content = f'{prefix}reply {snippet}'
+        
         ctx = await self.get_context(message)
         if ctx.command:
             return await self.invoke(ctx)
