@@ -55,7 +55,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 color=bot.main_color
             )
 
-            embed.add_field(name='Commands', value=format_)
+            embed.add_field(name='Commands', value=format_ or 'No commands.')
 
             continued = ' (Continued)' if embeds else ''
             embed.set_author(name=cog.qualified_name + ' - Help' + continued,
