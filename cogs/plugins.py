@@ -213,13 +213,13 @@ class Plugins(commands.Cog):
                                 '*Please note: any plugin that you install is of your OWN RISK*',
                     color=self.bot.main_color
                 )
-                await self.bot.edit_message(message, embed=em)
+                await message.edit(embed=em)
             else:
                 em = discord.Embed(
                     description='Invalid plugin name format: use username/repo/plugin.',
                     color=self.bot.main_color
                 )
-                await self.bot.edit_message(message, embed=em)
+                await message.edit(embed=em)
 
     @plugin.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -259,7 +259,7 @@ class Plugins(commands.Cog):
             await self.bot.config.update()
 
             em = discord.Embed(
-                description='The plugin is uninstalled and all it\'s data is erased.',
+                description='The plugin is uninstalled and all its data is erased.',
                 color=self.bot.main_color
             )
             await ctx.send(embed=em)
