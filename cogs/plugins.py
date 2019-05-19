@@ -180,7 +180,7 @@ class Plugins(commands.Cog):
                 if not any(i.startswith(f'{username}/{repo}')
                            for i in self.bot.config.plugins):
                     # if there are no more of such repos, delete the folder
-                    def onerror(func, path, exc_info):
+                    def onerror(func, path, exc_info):  # pylint: disable=W0613
                         if not os.access(path, os.W_OK):
                             # Is the error an access error?
                             os.chmod(path, stat.S_IWUSR)

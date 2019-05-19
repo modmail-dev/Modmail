@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = '2.20.0'
+__version__ = '2.20.1'
 
 import asyncio
 import logging
@@ -32,7 +32,6 @@ import sys
 import typing
 
 from datetime import datetime
-from pkg_resources import parse_version
 from types import SimpleNamespace
 
 import discord
@@ -45,6 +44,7 @@ from aiohttp import ClientSession
 from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
+from pkg_resources import parse_version
 
 from core.changelog import Changelog
 from core.clients import ApiClient, PluginDatabaseClient
@@ -240,7 +240,7 @@ class ModmailBot(commands.Bot):
     async def is_owner(self, user: discord.User) -> bool:
         raw = str(self.config.get('owners', '0')).split(',')
         allowed = {int(x) for x in raw}
-        return (user.id in allowed) or await super().is_owner(user) 
+        return (user.id in allowed) or await super().is_owner(user)
 
     @property
     def log_channel(self) -> typing.Optional[discord.TextChannel]:
@@ -518,8 +518,8 @@ class ModmailBot(commands.Bot):
 
         try:
             min_account_age = message.author.created_at + account_age
-        except ValueError as e:
-            logger.warning(e.args[0])
+        except ValueError as exc:
+            logger.warning(exc.args[0])
             del self.config.cache['account_age']
             await self.config.update()
             min_account_age = now
@@ -530,8 +530,8 @@ class ModmailBot(commands.Bot):
                 min_guild_age = member.joined_at + guild_age
             else:
                 min_guild_age = now
-        except ValueError as e:
-            logger.warning(e.args[0])
+        except ValueError as exc:
+            logger.warning(exc.args[0])
             del self.config.cache['guild_age']
             await self.config.update()
             min_guild_age = now
@@ -641,11 +641,6 @@ class ModmailBot(commands.Bot):
         ctx.prefix = self.prefix  # Sane prefix (No mentions)
         ctx.command = self.all_commands.get(invoker)
 
-        has_ai = hasattr(ctx, '_alias_invoked')
-        if ctx.command is self.get_command('eval') and has_ai:
-            # ctx.command.checks = None # Let anyone use the command.
-            pass
-
         return ctx
 
     async def update_perms(self, name: typing.Union[PermissionLevel, str],
@@ -691,7 +686,7 @@ class ModmailBot(commands.Bot):
                 if thread:
                     snippet = snippet.format(recipient=thread.recipient)
                 message.content = f'{prefix}reply {snippet}'
-        
+
         ctx = await self.get_context(message)
         if ctx.command:
             return await self.invoke(ctx)
@@ -853,29 +848,29 @@ class ModmailBot(commands.Bot):
         logger.error(error('Ignoring exception in {}'.format(event_method)))
         logger.error(error('Unexpected exception:'), exc_info=sys.exc_info())
 
-    async def on_command_error(self, ctx, exception):
+    async def on_command_error(self, context, exception):
         if isinstance(exception, commands.BadUnionArgument):
             msg = 'Could not find the specified ' + human_join([c.__name__ for c in exception.converters])
-            await ctx.trigger_typing()
-            await ctx.send(embed=discord.Embed(
-                color=discord.Color.red(), 
+            await context.trigger_typing()
+            await context.send(embed=discord.Embed(
+                color=discord.Color.red(),
                 description=msg
                 ))
 
         elif isinstance(exception, commands.BadArgument):
-            await ctx.trigger_typing()
-            await ctx.send(embed=discord.Embed(
-                color=discord.Color.red(), 
+            await context.trigger_typing()
+            await context.send(embed=discord.Embed(
+                color=discord.Color.red(),
                 description=str(exception)
                 ))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning(error('CommandNotFound: ' + str(exception)))
         elif isinstance(exception, commands.MissingRequiredArgument):
-            await ctx.send_help(ctx.command)
+            await context.send_help(context.command)
         elif isinstance(exception, commands.CheckFailure):
-            for check in ctx.command.checks:
-                if not await check(ctx) and hasattr(check, 'fail_msg'):
-                    await ctx.send(embed=discord.Embed(
+            for check in context.command.checks:
+                if not await check(context) and hasattr(check, 'fail_msg'):
+                    await context.send(embed=discord.Embed(
                         color=discord.Color.red(),
                         description=check.fail_msg
                     ))

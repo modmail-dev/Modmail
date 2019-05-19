@@ -166,8 +166,8 @@ class ConfigManager:
                     time = await converter.convert(None, val)
                     if time.arg:
                         raise ValueError
-                except BadArgument as e:
-                    raise InvalidConfigError(*e.args)
+                except BadArgument as exc:
+                    raise InvalidConfigError(*exc.args)
                 except Exception:
                     raise InvalidConfigError(
                         'Unrecognized time, please use ISO-8601 duration format '

@@ -53,7 +53,7 @@ class Modmail(commands.Cog):
 
         embed = discord.Embed(
             title='Friendly Reminder:',
-            description='You may use the `config set log_channel_id '
+            description=f'You may use the `{self.bot.prefix}config set log_channel_id '
                         '<channel-id>` command to set up a custom log channel'
                         ', then you can delete the default '
                         f'{log_channel.mention} channel.',
@@ -72,7 +72,7 @@ class Modmail(commands.Cog):
                        'Consider setting permission groups to give access '
                        'to roles or users the ability to use Modmail.\n'
                        f'Type `{self.bot.prefix}permissions` for more info.')
-                       
+
         if not self.bot.config.get('permissions'):
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
             await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
@@ -278,7 +278,7 @@ class Modmail(commands.Cog):
         """
         thread = ctx.thread
 
-        if role is None or role == 'me':
+        if role is None:
             mention = ctx.author.mention
         elif isinstance(role, discord.Role):
             mention = role.mention
@@ -593,7 +593,6 @@ class Modmail(commands.Cog):
         ctx.message.content = msg
         async with ctx.typing():
             await ctx.thread.reply(ctx.message, anonymous=True)
-
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)

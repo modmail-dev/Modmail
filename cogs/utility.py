@@ -8,7 +8,6 @@ from difflib import get_close_matches
 from io import StringIO
 from typing import Union
 from json import JSONDecodeError
-from pkg_resources import parse_version
 from textwrap import indent
 
 from discord import Embed, Color, Activity, Role
@@ -16,6 +15,7 @@ from discord.enums import ActivityType, Status
 from discord.ext import commands
 
 from aiohttp import ClientResponseError
+from pkg_resources import parse_version
 
 from core import checks
 from core.changelog import Changelog
@@ -57,7 +57,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
             embed.add_field(name='Commands', value=format_)
 
-            continued = ' (Continued)' if len(embeds) > 0 else ''
+            continued = ' (Continued)' if embeds else ''
             embed.set_author(name=cog.qualified_name + ' - Help' + continued,
                              icon_url=bot.user.avatar_url)
 
@@ -66,8 +66,8 @@ class ModmailHelpCommand(commands.HelpCommand):
             embeds.append(embed)
         return embeds
 
-    def process_help_msg(self, help: str):
-        return help.format(prefix=self.clean_prefix)
+    def process_help_msg(self, help_: str):
+        return help_.format(prefix=self.clean_prefix)
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -138,7 +138,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         )
         await self.get_destination().send(embed=embed)
 
-    async def send_error_message(self, msg):
+    async def send_error_message(self, msg):  # pylint: disable=W0221
         logger.warning(error(f'CommandNotFound: {msg}'))
 
         embed = Embed(
@@ -583,9 +583,9 @@ class Utility(commands.Cog):
         presence = {'activity': (None, 'No activity has been set.'),
                     'status': (None, 'No status has been set.')}
         if activity is not None:
-            to = 'to ' if activity.type == ActivityType.listening else ''
+            use_to = 'to ' if activity.type == ActivityType.listening else ''
             msg = f'Activity set to: {activity.type.name.capitalize()} '
-            msg += f'{to}{activity.name}.'
+            msg += f'{use_to}{activity.name}.'
             presence['activity'] = (activity, msg)
         if status is not None:
             msg = f'Status set to: {status.value}.'
@@ -1276,14 +1276,14 @@ class Utility(commands.Cog):
         
         await self.bot.config.update()
 
-        em = Embed(color=self.bot.main_color)
-        em.title = 'Success'
-        em.description = (
+        embed = Embed(color=self.bot.main_color)
+        embed.title = 'Success'
+        embed.description = (
             f"{'Un-w' if removed else 'W'}hitelisted "
             f"{target.mention} to view logs."
             )
 
-        await ctx.send(embed=em)
+        await ctx.send(embed=embed)
     
     @oauth.command(name='show', aliases=['get', 'list', 'view'])
     @checks.has_permissions(PermissionLevel.OWNER)
