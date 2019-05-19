@@ -43,11 +43,12 @@ class PaginatorSession:
 
     def __init__(self, ctx: commands.Context, *embeds, **options):
         self.ctx = ctx
-        self.timeout: int = options.get('timeout', 180)
+        self.timeout: int = options.get('timeout', 210)
         self.embeds: typing.List[Embed] = list(embeds)
         self.running = False
         self.base: Message = None
         self.current = 0
+        self.destination = options.get('destination', ctx)
         self.reaction_map = {
             '⏮': self.first_page,
             '◀': self.previous_page,
@@ -87,7 +88,7 @@ class PaginatorSession:
         embed : Embed
             The `Embed` to fill the base `Message`.
         """
-        self.base = await self.ctx.send(embed=embed)
+        self.base = await self.destination.send(embed=embed)
 
         if len(self.embeds) == 1:
             self.running = False

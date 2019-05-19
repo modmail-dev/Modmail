@@ -79,7 +79,8 @@ disable=raw-checker-failed,
         too-many-instance-attributes,
         too-many-arguments,
         too-few-public-methods,
-        too-many-lines
+        too-many-lines,
+        line-too-long
 
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -358,15 +359,14 @@ function-naming-style=snake_case
 # Good variable names which should always be accepted, separated by a comma.
 good-names=i,
            j,
-           k,
            ex,
            _,
-           v,
            id,
            db,
            f,
            dt,
-           c
+           ch,
+           ts
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=yes
