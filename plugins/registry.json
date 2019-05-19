@@ -6,5 +6,45 @@
         "title": "Profanity Filter Plugin",
         "icon_url": "https://i.imgur.com/951szZ3.jpg",
         "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
-    }
+    },
+    "autorole": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Easily auto-assign a role to a user when they join your server.",
+        "bot_version": "2.20.1",
+        "title": "Autorole Plugin",
+        "icon_url": "https://i.imgur.com/67bEi82.png",
+        "thumbnail_url": "https://i.imgur.com/67bEi82.png"
+    },
+    "embedder": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Easily make embeds for a nicer presence.",
+        "bot_version": "2.20.1",
+        "title": "Embedder Plugin",
+        "icon_url": "https://i.imgur.com/l3uzJwD.png",
+        "thumbnail_url": "https://i.imgur.com/l3uzJwD.png"
+    },
+    "leveling": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "A leveling system for your server: see who's active and who's not.",
+        "bot_version": "2.20.1",
+        "title": "Leveling Plugin",
+        "icon_url": "https://i.imgur.com/VuZ60QX.png",
+        "thumbnail_url": "https://i.imgur.com/VuZ60QX.png"
+    },
+    "purger": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Delete multiple messages at a time.",
+        "bot_version": "2.20.1",
+        "title": "Purger Plugin",
+        "icon_url": "https://i.imgur.com/HnC42jM.png",
+        "thumbnail_url": "https://i.imgur.com/HnC42jM.png"
+    },
+    "supporters": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Let your users know who is part of the support team.",
+        "bot_version": "2.20.1",
+        "title": "Supporters Plugin",
+        "icon_url": "https://i.imgur.com/1QXRutA.png",
+        "thumbnail_url": "https://i.imgur.com/1QXRutA.png"
+    }   
 }
