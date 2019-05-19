@@ -80,4 +80,4 @@ $ python3 bot.py
 
 This project is licenced under MIT. If you have any new ideas, create an issue or a pull request. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change.
 
-If you use Modmail and love it, consider becoming a patron on **[Patreon](https://www.patreon.com/kyber)** :smile:
+This bot is open source and always will be. If you like this project and would like to show your appreciation, heres the link for our **[Patreon](https://www.patreon.com/kyber)**. 
