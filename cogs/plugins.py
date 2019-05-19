@@ -137,7 +137,7 @@ class Plugins(commands.Cog):
         """Plugin handler. Controls the plugins in the bot."""
         await ctx.send_help(ctx.command)
 
-    @plugin.command(name='add')
+    @plugin.command(name='add', aliases=['install'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_add(self, ctx, *, plugin_name: str):
         """Add a plugin."""
@@ -191,10 +191,13 @@ class Plugins(commands.Cog):
             info = self.registry[plugin_name]
             plugin_name = info['repository'] + '/' + plugin_name
         if plugin_name in self.bot.config.plugins:
-            username, repo, name = self.parse_plugin(plugin_name)
-            self.bot.unload_extension(
-                f'plugins.{username}-{repo}.{name}.{name}'
-            )
+            try:
+                username, repo, name = self.parse_plugin(plugin_name)
+                self.bot.unload_extension(
+                    f'plugins.{username}-{repo}.{name}.{name}'
+                )
+            except:
+                pass
 
             self.bot.config.plugins.remove(plugin_name)
 
@@ -256,7 +259,7 @@ class Plugins(commands.Cog):
                     except DownloadError as exc:
                         await ctx.send(f'Unable to start plugin: `{exc}`.')
 
-    @plugin.command(name='enabled')
+    @plugin.command(name='enabled', aliases=['installed'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_enabled(self, ctx):
         """Shows a list of currently enabled plugins."""
@@ -271,9 +274,9 @@ class Plugins(commands.Cog):
     async def plugin_registry(self, ctx, *, plugin_name:str=None):
         """Shows a list of all approved plugins."""
 
+        await self.populate_registry()
+
         embeds = []
-
-
 
         registry = list(self.registry.items())
         random.shuffle(registry)
