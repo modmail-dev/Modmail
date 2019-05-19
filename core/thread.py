@@ -8,16 +8,15 @@ from types import SimpleNamespace as param
 from datetime import datetime, timedelta
 
 import discord
-from discord.ext.commands import MissingRequiredArgument
+from discord.ext.commands import MissingRequiredArgument, CommandError
 
-from core.models import Bot, ThreadManagerABC, ThreadABC
 from core.utils import is_image_url, days, match_user_id
 from core.utils import truncate, ignore, error
 
 logger = logging.getLogger('Modmail')
 
 
-class Thread(ThreadABC):
+class Thread:
     """Represents a discord Modmail thread"""
 
     def __init__(self, manager: 'ThreadManager',
@@ -35,6 +34,7 @@ class Thread(ThreadABC):
             self._id = recipient.id
             self._recipient = recipient
         self._channel = channel
+        self.genesis_message = None
         self._ready_event = asyncio.Event()
         self._close_task = None
 
@@ -42,36 +42,36 @@ class Thread(ThreadABC):
         return (f'Thread(recipient="{self.recipient or self.id}", '
                 f'channel={self.channel.id})')
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
         await self._ready_event.wait()
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self._id
 
     @property
-    def close_task(self):
+    def close_task(self) -> asyncio.TimerHandle:
         return self._close_task
 
     @close_task.setter
-    def close_task(self, val):
+    def close_task(self, val: asyncio.TimerHandle):
         self._close_task = val
 
     @property
-    def channel(self):
+    def channel(self) -> typing.Union[discord.TextChannel, discord.DMChannel]:
         return self._channel
 
     @property
-    def recipient(self):
+    def recipient(self) -> typing.Optional[typing.Union[discord.User, discord.Member]]:
         return self._recipient
 
     @property
-    def ready(self):
+    def ready(self) -> bool:
         return self._ready_event.is_set()
 
     @ready.setter
-    def ready(self, flag):
+    def ready(self, flag: bool):
         if flag:
             self._ready_event.set()
         else:
@@ -79,6 +79,8 @@ class Thread(ThreadABC):
 
     async def setup(self, *, creator=None, category=None):
         """Create the thread channel and other io related initialisation tasks"""
+
+        self.bot.dispatch('thread_create', self)
 
         recipient = self.recipient
 
@@ -94,7 +96,7 @@ class Thread(ThreadABC):
             overwrites = None
 
         channel = await self.bot.modmail_guild.create_text_channel(
-            name=self.manager._format_channel_name(recipient),
+            name=self.manager.format_channel_name(recipient),
             category=category,
             overwrites=overwrites,
             reason='Creating a thread channel'
@@ -114,9 +116,9 @@ class Thread(ThreadABC):
             log_url = log_count = None
             # ensure core functionality still works
 
-        info_embed = self.manager._format_info_embed(recipient, log_url,
-                                                     log_count,
-                                                     discord.Color.green())
+        info_embed = self.manager.format_info_embed(recipient, log_url,
+                                                    log_count,
+                                                    discord.Color.green())
 
         topic = f'User ID: {recipient.id}'
         if creator:
@@ -124,17 +126,19 @@ class Thread(ThreadABC):
         else:
             mention = self.bot.config.get('mention', '@here')
 
-        async def send_info_embed():
+        async def send_genesis_message():
             try:
                 msg = await channel.send(mention, embed=info_embed)
-                await msg.pin()
+                self.bot.loop.create_task(msg.pin())
+                self.genesis_message = msg
             except:
                 pass
+            finally:
+                self.ready = True
+                self.bot.dispatch('thread_ready', self)
 
         await channel.edit(topic=topic)
-        self.bot.loop.create_task(send_info_embed())
-
-        self.ready = True
+        self.bot.loop.create_task(send_genesis_message())
 
         # Once thread is ready, tell the recipient.
         thread_creation_response = self.bot.config.get(
@@ -169,8 +173,11 @@ class Thread(ThreadABC):
             self._close(closer, silent, delete_channel, message, True)
         )
 
-    async def close(self, *, closer, after=0, silent=False,
-                    delete_channel=True, message=None):
+    async def close(self, *, closer: typing.Union[discord.Member, discord.User],
+                    after: int = 0,
+                    silent: bool = False,
+                    delete_channel: bool = True,
+                    message: str = None) -> None:
         """Close a thread now or after a set time in seconds"""
 
         # restarts the after timer
@@ -217,14 +224,15 @@ class Thread(ThreadABC):
                 'id': str(closer.id),
                 'name': closer.name,
                 'discriminator': closer.discriminator,
-                'avatar_url': closer.avatar_url,
+                'avatar_url': str(closer.avatar_url),
                 'mod': True
             }
         })
 
         if log_data is not None and isinstance(log_data, dict):
             prefix = os.getenv('LOG_URL_PREFIX', '/logs')
-            if prefix == 'NONE': prefix = ''
+            if prefix == 'NONE':
+                prefix = ''
             log_url = f"{self.bot.config.log_url.strip('/')}{prefix}/{log_data['key']}"
 
             if log_data['messages']:
@@ -303,7 +311,7 @@ class Thread(ThreadABC):
 
         await asyncio.gather(*tasks)
 
-    async def cancel_closure(self):
+    async def cancel_closure(self) -> None:
         if self.close_task is not None:
             self.close_task.cancel()
             self.close_task = None
@@ -322,7 +330,8 @@ class Thread(ThreadABC):
                 if str(message_id) == str(embed.author.url).split('/')[-1]:
                     return msg
 
-    async def edit_message(self, message_id, message):
+    async def edit_message(self, message_id: typing.Union[int, str],
+                           message: str) -> None:
         msg_recipient, msg_channel = await asyncio.gather(
             self._find_thread_message(self.recipient, message_id),
             self._find_thread_message(self.channel, message_id)
@@ -347,7 +356,7 @@ class Thread(ThreadABC):
             msg_channel.delete()
         )
 
-    async def note(self, message):
+    async def note(self, message: discord.Message) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(param(name='msg'))
 
@@ -358,7 +367,8 @@ class Thread(ThreadABC):
             self.send(message, self.channel, note=True)
         )
 
-    async def reply(self, message, anonymous=False):
+    async def reply(self, message: discord.Message,
+                    anonymous: bool = False) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(param(name='msg'))
         if all(not g.get_member(self.id) for g in self.bot.guilds):
@@ -416,8 +426,12 @@ class Thread(ThreadABC):
 
         await asyncio.gather(*tasks)
 
-    async def send(self, message, destination=None,
-                   from_mod=False, note=False, anonymous=False):
+    async def send(self, message: discord.Message,
+                   destination: typing.Union[discord.TextChannel, discord.DMChannel,
+                                             discord.User, discord.Member] = None,
+                   from_mod: bool = False,
+                   note: bool = False,
+                   anonymous: bool = False) -> None:
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             self.bot.loop.create_task(
@@ -568,7 +582,7 @@ class Thread(ThreadABC):
         if delete_message:
             self.bot.loop.create_task(ignore(message.delete()))
 
-    def get_notifications(self):
+    def get_notifications(self) -> str:
         config = self.bot.config
         key = str(self.id)
 
@@ -583,14 +597,14 @@ class Thread(ThreadABC):
         return ' '.join(mentions)
 
 
-class ThreadManager(ThreadManagerABC):
+class ThreadManager:
     """Class that handles storing, finding and creating Modmail threads."""
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.cache = {}
 
-    async def populate_cache(self):
+    async def populate_cache(self) -> None:
         for channel in self.bot.modmail_guild.text_channels:
             if channel.category != self.bot.main_category and not \
                     self.bot.using_multiple_server_setup:
@@ -603,10 +617,13 @@ class ThreadManager(ThreadManagerABC):
     def __iter__(self):
         return iter(self.cache.values())
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Thread:
         return self.cache[item]
 
-    async def find(self, *, recipient=None, channel=None, recipient_id=None):
+    async def find(self, *,
+                   recipient: typing.Union[discord.Member, discord.User] = None,
+                   channel: discord.TextChannel = None,
+                   recipient_id: int = None) -> Thread:
         """Finds a thread from cache or from discord channel topics."""
         if recipient is None and channel is not None:
             return await self._find_from_channel(channel)
@@ -671,7 +688,9 @@ class ThreadManager(ThreadManagerABC):
 
             return thread
 
-    def create(self, recipient, *, creator=None, category=None):
+    def create(self, recipient: typing.Union[discord.Member, discord.User], *,
+               creator: typing.Union[discord.Member, discord.User] = None,
+               category: discord.CategoryChannel = None) -> Thread:
         """Creates a Modmail thread"""
         # create thread immediately so messages can be processed
         thread = Thread(self, recipient)
@@ -684,10 +703,12 @@ class ThreadManager(ThreadManagerABC):
         ))
         return thread
 
-    async def find_or_create(self, recipient):
+    async def find_or_create(self,
+                             recipient: typing.Union[discord.Member,
+                                                     discord.User]) -> Thread:
         return await self.find(recipient=recipient) or self.create(recipient)
 
-    def _format_channel_name(self, author):
+    def format_channel_name(self, author):
         """Sanitises a username for use with text channel names"""
         name = author.name.lower()
         allowed = string.ascii_letters + string.digits + '-'
@@ -700,11 +721,10 @@ class ThreadManager(ThreadManagerABC):
 
         return new_name
 
-    def _format_info_embed(self, user, log_url, log_count, color):
+    def format_info_embed(self, user, log_url, log_count, color):
         """Get information about a member of a server
         supports users from the guild or not."""
         member = self.bot.guild.get_member(user.id)
-        avi = user.avatar_url
         time = datetime.utcnow()
 
         # key = log_url.split('/')[-1]
@@ -743,7 +763,7 @@ class ThreadManager(ThreadManagerABC):
 
         footer = 'User ID: ' + str(user.id)
         embed.set_footer(text=footer)
-        embed.set_author(name=str(user), icon_url=avi, url=log_url)
+        embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
         # embed.set_thumbnail(url=avi)
 
         if member:

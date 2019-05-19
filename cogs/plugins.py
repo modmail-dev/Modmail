@@ -11,7 +11,7 @@ from discord.ext import commands
 from discord.utils import async_all
 
 from core import checks
-from core.models import Bot, PermissionLevel
+from core.models import PermissionLevel
 from core.utils import info, error
 
 logger = logging.getLogger('Modmail')
@@ -21,15 +21,16 @@ class DownloadError(Exception):
     pass
 
 
-class Plugins:
-    """Plugins expand Modmail functionality by allowing third-party addons.
+class Plugins(commands.Cog):
+    """
+    Plugins expand Modmail functionality by allowing third-party addons.
 
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
     Learn how to create a plugin yourself here:
     https://github.com/kyb3r/modmail/wiki/Plugins
     """
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.bot.loop.create_task(self.download_initial_plugins())
 
@@ -111,8 +112,8 @@ class Plugins:
 
         try:
             self.bot.load_extension(ext)
-        except ModuleNotFoundError as exc:
-            raise DownloadError('Invalid plugin structure') from exc
+        except commands.ExtensionError as exc:
+            raise DownloadError('Invalid plugin.') from exc
         else:
             msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
             logger.info(info(msg))
@@ -121,18 +122,17 @@ class Plugins:
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin(self, ctx):
         """Plugin handler. Controls the plugins in the bot."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='plugin')
+        await ctx.send_help(ctx.command)
 
     @plugin.command(name='add')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_add(self, ctx, *, plugin_name):
-        """Adds a plugin"""
+    async def plugin_add(self, ctx, *, plugin_name: str):
+        """Add a plugin."""
         if plugin_name in self.bot.config.plugins:
-            return await ctx.send('Plugin already installed')
+            return await ctx.send('Plugin already installed.')
         if plugin_name in self.bot.cogs.keys():
             # another class with the same name
-            return await ctx.send('Another cog exists with the same name')
+            return await ctx.send('Another cog exists with the same name.')
 
         message = await ctx.send('Downloading plugin...')
         async with ctx.typing():
@@ -143,14 +143,14 @@ class Plugins:
                     await self.download_plugin_repo(*parsed_plugin[:-1])
                 except DownloadError as exc:
                     return await ctx.send(
-                        f'Unable to fetch plugin from Github: {exc}'
+                        f'Unable to fetch plugin from Github: {exc}.'
                     )
 
                 importlib.invalidate_caches()
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
-                    return await ctx.send(f'Unable to load plugin: `{exc}`')
+                    return await ctx.send(f'Unable to load plugin: `{exc}`.')
 
                 # if it makes it here, it has passed all checks and should
                 # be entered into the config
@@ -166,8 +166,8 @@ class Plugins:
 
     @plugin.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_remove(self, ctx, *, plugin_name):
-        """Removes a certain plugin"""
+    async def plugin_remove(self, ctx, *, plugin_name: str):
+        """Remove a plugin."""
         if plugin_name in self.bot.config.plugins:
             username, repo, name = self.parse_plugin(plugin_name)
             self.bot.unload_extension(
@@ -180,7 +180,7 @@ class Plugins:
                 if not any(i.startswith(f'{username}/{repo}')
                            for i in self.bot.config.plugins):
                     # if there are no more of such repos, delete the folder
-                    def onerror(func, path, exc_info):
+                    def onerror(func, path, exc_info):  # pylint: disable=W0613
                         if not os.access(path, os.W_OK):
                             # Is the error an access error?
                             os.chmod(path, stat.S_IWUSR)
@@ -201,10 +201,10 @@ class Plugins:
 
     @plugin.command(name='update')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_update(self, ctx, *, plugin_name):
-        """Updates a certain plugin"""
+    async def plugin_update(self, ctx, *, plugin_name: str):
+        """Update a plugin."""
         if plugin_name not in self.bot.config.plugins:
-            return await ctx.send('Plugin not installed')
+            return await ctx.send('Plugin not installed.')
 
         async with ctx.typing():
             username, repo, name = self.parse_plugin(plugin_name)
@@ -217,7 +217,7 @@ class Plugins:
                 )
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode('utf8').strip()
-                await ctx.send(f'Error while updating: {err}')
+                await ctx.send(f'Error while updating: {err}.')
             else:
                 output = cmd.stdout.decode('utf8').strip()
                 await ctx.send(f'```\n{output}\n```')
@@ -230,17 +230,17 @@ class Plugins:
                     try:
                         await self.load_plugin(username, repo, name)
                     except DownloadError as exc:
-                        await ctx.send(f'Unable to start plugin: `{exc}`')
+                        await ctx.send(f'Unable to start plugin: `{exc}`.')
 
     @plugin.command(name='list', aliases=['show', 'view'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_list(self, ctx):
-        """Shows a list of currently enabled plugins"""
+        """Shows a list of currently enabled plugins."""
         if self.bot.config.plugins:
             msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
             await ctx.send(msg)
         else:
-            await ctx.send('No plugins installed')
+            await ctx.send('No plugins installed.')
 
 
 def setup(bot):
