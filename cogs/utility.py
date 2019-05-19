@@ -55,7 +55,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 color=bot.main_color
             )
 
-            embed.add_field(name='Commands', value=format_)
+            embed.add_field(name='Commands', value=format_ or 'No commands.')
 
             continued = ' (Continued)' if embeds else ''
             embed.set_author(name=cog.qualified_name + ' - Help' + continued,
@@ -117,7 +117,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             description=self.process_help_msg(group.help)
         )
 
-        embed.add_field(name='Permission level', value=perm_level)
+        embed.add_field(name='Permission level', value=perm_level, inline=False)
         format_ = ''
         length = len(group.commands)
 
@@ -131,7 +131,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 branch = '├─'
             format_ += f'`{branch} {command.name}` - {command.short_doc}\n'
 
-        embed.add_field(name='Sub Commands', value=format_)
+        embed.add_field(name='Sub Commands', value=format_, inline=False)
         embed.set_footer(
             text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
                  'for more info on a command.'
