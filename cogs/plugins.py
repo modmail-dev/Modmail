@@ -269,7 +269,7 @@ class Plugins(commands.Cog):
         else:
             await ctx.send('No plugins installed.')
 
-    @plugin.command(name='registry', aliases=['list'])
+    @plugin.group(invoke_without_command=True, name='registry', aliases=['list'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_registry(self, ctx, *, plugin_name:str=None):
         """Shows a list of all approved plugins."""
@@ -304,6 +304,7 @@ class Plugins(commands.Cog):
 
         for name, info in registry:
             repo = f"https://github.com/{info['repository']}"
+            url = f"{repo}/tree/master/{name}"
 
             em = discord.Embed(
                 color=self.bot.main_color,
@@ -316,15 +317,56 @@ class Plugins(commands.Cog):
                 name='Installation', 
                 value=f'```{self.bot.prefix}plugins add {name}```')
             
-            em.set_author(name=info['title'], icon_url=info.get('icon_url'))
+            em.set_author(name=info['title'], icon_url=info.get('icon_url'), url=url)
             if info.get('thumbnail_url'):
                 em.set_thumbnail(url=info.get('thumbnail_url'))
+            if info.get('image_url'):
+                em.set_image(url=info.get('image_url'))
 
             embeds.append(em)
 
         paginator = PaginatorSession(ctx, *embeds)
         paginator.current = index
         await paginator.run()
+
+    @plugin_registry.command(name='compact')
+    async def plugin_registry_compact(self, ctx):
+        """Shows a compact view of all plugins within the registry."""
+
+        await self.populate_registry()
+
+        registry = list(self.registry.items())
+        registry.sort(key=lambda elem: elem[0])
+
+        pages = ['']
+
+        for name, info in registry:
+            repo = f"https://github.com/{info['repository']}"
+            url = f"{repo}/tree/master/{name}"
+            desc = info['description'].replace('\n', '')
+            fmt = f"[`{name}`]({url}) - {desc}"
+            length = len(fmt) - len(url) - 4
+            fmt = fmt[:75 + len(url)].strip() + '...' if length > 75 else fmt
+            if len(fmt) + len(pages[-1]) >= 2048:
+                pages.append(fmt+'\n')
+            else:
+                pages[-1] += fmt + '\n'
+        
+        embeds = []
+
+        for page in pages:
+            em = discord.Embed(
+                color=self.bot.main_color, 
+                description=page,
+                )
+            em.set_author(name='Plugin Registry', icon_url=self.bot.user.avatar_url)
+            embeds.append(em)
+
+        paginator = PaginatorSession(ctx, *embeds)
+        await paginator.run()
+
+
+
 
 
 
