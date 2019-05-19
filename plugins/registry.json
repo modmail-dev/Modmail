@@ -1,0 +1,10 @@
+{
+    "profanity-filter": {
+        "repository": "kyb3r/modmail-plugins",
+        "description": "Checks for profanity in a message using machine learning and deletes it.",
+        "bot_version": "2.20.1",
+        "title": "Profanity Filter Plugin",
+        "icon_url": "https://i.imgur.com/951szZ3.jpg",
+        "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
+    }
+}
