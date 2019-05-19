@@ -126,6 +126,12 @@ def parse_image_url(url: str) -> str:
     return ''
 
 
+def human_join(strings):
+    if len(strings) <= 2:
+        return ' or '.join(strings)
+    return ', '.join(strings[:len(strings) - 1]) + ' or ' + strings[-1]
+
+
 def days(day: typing.Union[str, int]) -> str:
     """
     Humanize the number of days.
@@ -189,12 +195,12 @@ def match_user_id(text: str) -> int:
 
 
 def get_perm_level(cmd) -> PermissionLevel:
-    for c in cmd.checks:
-        perm = getattr(c, 'permission_level', None)
+    for check in cmd.checks:
+        perm = getattr(check, 'permission_level', None)
         if perm is not None:
             return perm
-    for c in cmd.checks:
-        if 'is_owner' in str(c):
+    for check in cmd.checks:
+        if 'is_owner' in str(check):
             return PermissionLevel.OWNER
     return PermissionLevel.INVALID
 
