@@ -271,9 +271,9 @@ class Plugins(commands.Cog):
     async def plugin_registry(self, ctx, *, plugin_name:str=None):
         """Shows a list of all approved plugins."""
 
+        await self.populate_registry()
+
         embeds = []
-
-
 
         registry = list(self.registry.items())
         random.shuffle(registry)
