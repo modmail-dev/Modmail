@@ -268,7 +268,7 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def notify(self, ctx, *, user_or_role: Union[discord.Role, User, str.lower, None] = None):
         """
-        Notify a user, role, or yourself when the next thread message received.
+        Notify a user or role when the next thread message received.
 
         Once a thread message is received, `user_or_role` will only be pinged once.
 
@@ -905,7 +905,7 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def delete(self, ctx, message_id: Optional[int] = None):
         """
-        Delete a message that was sent using the reply or anonreply command.
+        Delete a message that was sent using the reply command.
 
         Deletes the previous message, unless a message ID is provided,
         which in that case, deletes the message with that message ID.
