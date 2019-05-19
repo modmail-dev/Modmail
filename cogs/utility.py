@@ -282,6 +282,7 @@ class Utility(commands.Cog):
         embed.set_footer(text='Debug logs - Navigate using the reactions below.')
 
         session = MessagePaginatorSession(ctx, *messages, embed=embed)
+        session.current = len(messages) - 1
         return await session.run()
 
     @debug.command(name='hastebin', aliases=['haste'])
