@@ -46,5 +46,77 @@
         "title": "Supporters Plugin",
         "icon_url": "https://i.imgur.com/1QXRutA.png",
         "thumbnail_url": "https://i.imgur.com/1QXRutA.png"
-    }   
+    },
+    "Tags": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Tag Management For Your Server",
+        "bot_version": "2.20.1",
+        "title": "Tags Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "announcement": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Easily make announcements in your server!",
+        "bot_version": "2.20.1",
+        "title": "Announcement Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "code": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Run Codes from discord bot. Same like R.Danny's longue Commands",
+        "bot_version": "2.20.1",
+        "title": "code Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "dm-on-join": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "DM New Users when they join",
+        "bot_version": "2.20.1",
+        "title": "dm-on-join Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "hastebin": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Easily Upload Text To hastebin!",
+        "bot_version": "2.20.1",
+        "title": "hastebin Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "leave-server": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Don't Want Your Bot in a server? Did Someone invited it without your permission? Then this plugin is useful for you!",
+        "bot_version": "2.20.1",
+        "title": "leave-server Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "moderation": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Rule Offenders in your server?Lift the ban hammer on them or warn them! Moderation Plugin To The Rescue :tada:",
+        "bot_version": "2.20.1",
+        "title": "moderation Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "reboot": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Too Lazy to go to heroku and restart? Install this plugin and reboot using a single command, reboots within 3 seconds!",
+        "bot_version": "2.20.1",
+        "title": "reboot Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "translator": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "You can auto translate thread msgs using this plugin or translate text fromm any language to English!",
+        "bot_version": "2.20.1",
+        "title": "translator Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    }
 }
