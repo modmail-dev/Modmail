@@ -304,7 +304,7 @@ class Plugins(commands.Cog):
 
         for name, info in registry:
             repo = f"https://github.com/{info['repository']}"
-            url = f"{repo}/tree/master/name"
+            url = f"{repo}/tree/master/{name}"
 
             em = discord.Embed(
                 color=self.bot.main_color,
