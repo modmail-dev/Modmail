@@ -6,13 +6,18 @@ import site
 import stat
 import subprocess
 import sys
+import json
+from pkg_resources import parse_version
+import random
 
+import discord
 from discord.ext import commands
 from discord.utils import async_all
 
 from core import checks
 from core.models import PermissionLevel
 from core.utils import info, error
+from core.paginator import PaginatorSession
 
 logger = logging.getLogger('Modmail')
 
@@ -32,7 +37,14 @@ class Plugins(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.registry = {}
         self.bot.loop.create_task(self.download_initial_plugins())
+        self.bot.loop.create_task(self.populate_registry())
+    
+    async def populate_registry(self):
+        url = 'https://raw.githubusercontent.com/kyb3r/modmail/master/plugins/registry.json'
+        async with self.bot.session.get(url) as resp:
+            self.registry = json.loads(await resp.text())
 
     @staticmethod
     def _asubprocess_run(cmd):
@@ -128,6 +140,12 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_add(self, ctx, *, plugin_name: str):
         """Add a plugin."""
+        if plugin_name in self.registry:
+            info = self.registry[plugin_name]
+            plugin_name = info['repository'] + '/' + plugin_name
+            required_version = info['bot_version']
+            if parse_version(self.bot.version) < parse_version(required_version):
+                return await ctx.send(f"Bot version too low, plugin requires version `{required_version}`")
         if plugin_name in self.bot.config.plugins:
             return await ctx.send('Plugin already installed.')
         if plugin_name in self.bot.cogs.keys():
@@ -168,6 +186,9 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_remove(self, ctx, *, plugin_name: str):
         """Remove a plugin."""
+        if plugin_name in self.registry:
+            info = self.registry[plugin_name]
+            plugin_name = info['repository'] + '/' + plugin_name
         if plugin_name in self.bot.config.plugins:
             username, repo, name = self.parse_plugin(plugin_name)
             self.bot.unload_extension(
@@ -203,6 +224,9 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_update(self, ctx, *, plugin_name: str):
         """Update a plugin."""
+        if plugin_name in self.registry:
+            info = self.registry[plugin_name]
+            plugin_name = info['repository'] + '/' + plugin_name
         if plugin_name not in self.bot.config.plugins:
             return await ctx.send('Plugin not installed.')
 
@@ -232,15 +256,48 @@ class Plugins(commands.Cog):
                     except DownloadError as exc:
                         await ctx.send(f'Unable to start plugin: `{exc}`.')
 
-    @plugin.command(name='list', aliases=['show', 'view'])
+    @plugin.command(name='enabled')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_list(self, ctx):
+    async def plugin_enabled(self, ctx):
         """Shows a list of currently enabled plugins."""
         if self.bot.config.plugins:
             msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
             await ctx.send(msg)
         else:
             await ctx.send('No plugins installed.')
+
+    @plugin.command(name='registry', aliases=['list'])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def plugin_registry(self, ctx):
+        """Shows a list of all approved plugins."""
+
+        embeds = []
+
+        for name, info in self.registry.items():
+            repo = f"https://github.com/{info['repository']}"
+
+            em = discord.Embed(
+                color=self.bot.main_color,
+                description=info['description'],
+                url=repo,
+                title=info['repository']
+                )
+            
+            em.add_field(
+                name='Installation', 
+                value=f'```{self.bot.prefix}plugins add {name}```')
+            
+            em.set_author(name=info['title'], icon_url=info.get('icon_url'))
+            if info.get('thumbnail_url'):
+                em.set_thumbnail(url=info.get('thumbnail_url'))
+
+            embeds.append(em)
+
+        paginator = PaginatorSession(ctx, *embeds)
+        await paginator.run()
+
+
+
 
 
 def setup(bot):
