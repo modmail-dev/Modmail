@@ -136,6 +136,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
                  'for more info on a command.'
         )
+
         await self.get_destination().send(embed=embed)
 
     async def send_error_message(self, msg):  # pylint: disable=W0221
@@ -1257,11 +1258,10 @@ class Utility(commands.Cog):
         """Commands relating to Logviewer oauth2 login authentication."""
         await ctx.send_help(ctx.command)
 
-    @oauth.group(name='whitelist', invoke_without_command=True)
+    @oauth.command(name='whitelist')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth_whitelist(self, ctx, target: Union[User, Role]):
-        """
-        Whitelist or un-whitelist a user or role to have access to logs.
+        """Whitelist or un-whitelist a user or role to have access to logs.
 
         `target` may be a role ID, name, mention, user ID, name, or mention.
         """
