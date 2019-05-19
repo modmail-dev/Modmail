@@ -903,7 +903,23 @@ class ModmailBot(commands.Bot):
         except Exception as exc:
             logger.critical(error('Something went wrong '
                                   'while connecting to the database.'))
-            logger.critical(error(f'{type(exc).__name__}: {str(exc)}'))
+            message = f'{type(exc).__name__}: {str(exc)}'
+            logger.critical(error(message))
+
+            if 'ServerSelectionTimeoutError' in message:
+                logger.critical(error(
+                    "This may have been caused by not whitelisting "
+                    "IPs correctly. Make sure to whitelist all "
+                    "IPs (0.0.0.0/0) https://i.imgur.com/mILuQ5U.png"
+                    ))
+            
+            if 'OperationFailure' in message:
+                logger.critical(error("This is due to having invalid credentials in your MONGO_URI."))
+                logger.critical(error(
+                    "Recheck the username/password and make sure to url encode them. "
+                    "https://www.urlencoder.io/"
+                ))
+            
             return await self.logout()
         else:
             logger.info(info('Successfully connected to the database.'))
