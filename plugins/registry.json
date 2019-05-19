@@ -6,5 +6,109 @@
         "title": "Profanity Filter Plugin",
         "icon_url": "https://i.imgur.com/951szZ3.jpg",
         "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
+    },
+    "autorole": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Easily auto-assign a role to a user when they join your server.",
+        "bot_version": "2.20.1",
+        "title": "Autorole Plugin",
+        "icon_url": "https://i.imgur.com/67bEi82.png",
+        "thumbnail_url": "https://i.imgur.com/67bEi82.png"
+    },
+    "embedder": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Easily make embeds for a nicer presence.",
+        "bot_version": "2.20.1",
+        "title": "Embedder Plugin",
+        "icon_url": "https://i.imgur.com/l3uzJwD.png",
+        "thumbnail_url": "https://i.imgur.com/l3uzJwD.png"
+    },
+    "leveling": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "A leveling system for your server: see who's active and who's not.",
+        "bot_version": "2.20.1",
+        "title": "Leveling Plugin",
+        "icon_url": "https://i.imgur.com/VuZ60QX.png",
+        "thumbnail_url": "https://i.imgur.com/VuZ60QX.png"
+    },
+    "purger": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Delete multiple messages at a time.",
+        "bot_version": "2.20.1",
+        "title": "Purger Plugin",
+        "icon_url": "https://i.imgur.com/HnC42jM.png",
+        "thumbnail_url": "https://i.imgur.com/HnC42jM.png"
+    },
+    "supporters": {
+        "repository": "papiersnipper/modmail-plugins",
+        "description": "Let your users know who is part of the support team.",
+        "bot_version": "2.20.1",
+        "title": "Supporters Plugin",
+        "icon_url": "https://i.imgur.com/1QXRutA.png",
+        "thumbnail_url": "https://i.imgur.com/1QXRutA.png"
+    },
+    "announcement": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Easily make announcements in your server!",
+        "bot_version": "2.20.1",
+        "title": "Announcement Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "code": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Run Codes from discord bot. Same like R.Danny's longue Commands",
+        "bot_version": "2.20.1",
+        "title": "Code Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "dm-on-join": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "DM New Users when they join",
+        "bot_version": "2.20.1",
+        "title": "DM-on-join Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "hastebin": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Easily Upload Text To hastebin!",
+        "bot_version": "2.20.1",
+        "title": "Hastebin Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "leave-server": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Don't want your bot in a server? Did someone invite it without your permission? If so, this plugin is useful for you!",
+        "bot_version": "2.20.1",
+        "title": "Leave-server Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "moderation": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Rule offenders in your server? Lift the ban hammer or warn them! Moderation plugin to the rescue :tada:",
+        "bot_version": "2.20.1",
+        "title": "Moderation Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "translator": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "You can auto translate thread msgs using this plugin or translate text fromm any language to English!",
+        "bot_version": "2.20.1",
+        "title": "Translator Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "welcomer": {
+        "repository": "fourjr/modmail-plugins",
+        "description": "Add messages to welcome new members! Allows for embedded messages as well. [Read more](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)",
+        "bot_version": "2.20.1",
+        "title": "New member messages plugin",
+        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
+        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
     }
 }
