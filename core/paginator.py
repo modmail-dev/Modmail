@@ -43,11 +43,12 @@ class PaginatorSession:
 
     def __init__(self, ctx: commands.Context, *embeds, **options):
         self.ctx = ctx
-        self.timeout: int = options.get('timeout', 180)
+        self.timeout: int = options.get('timeout', 210)
         self.embeds: typing.List[Embed] = list(embeds)
         self.running = False
         self.base: Message = None
         self.current = 0
+        self.destination = options.get('destination', ctx)
         self.reaction_map = {
             '⏮': self.first_page,
             '◀': self.previous_page,
@@ -87,7 +88,7 @@ class PaginatorSession:
         embed : Embed
             The `Embed` to fill the base `Message`.
         """
-        self.base = await self.ctx.send(embed=embed)
+        self.base = await self.destination.send(embed=embed)
 
         if len(self.embeds) == 1:
             self.running = False
@@ -147,7 +148,7 @@ class PaginatorSession:
             If it's closed before running ends.
         """
         if not self.running:
-            await self.show_page(0)
+            await self.show_page(self.current)
         while self.running:
             try:
                 reaction, user = await self.ctx.bot.wait_for(
@@ -268,7 +269,7 @@ class MessagePaginatorSession:
             The message content to fill the base `Message`.
         """
         if self.embed is not None:
-            footer_text = f'Page 1 of {len(self.messages)}'
+            footer_text = f'Page {self.current+1} of {len(self.messages)}'
             if self.footer_text:
                 footer_text = footer_text + ' • ' + self.footer_text
             self.embed.set_footer(text=footer_text,
@@ -297,7 +298,7 @@ class MessagePaginatorSession:
         """
         if not 0 <= index < len(self.messages):
             return
-
+        
         self.current = index
         page = self.messages[index]
 
@@ -341,7 +342,7 @@ class MessagePaginatorSession:
             If it's closed before running ends.
         """
         if not self.running:
-            await self.show_page(0)
+            await self.show_page(self.current)
         while self.running:
             try:
                 reaction, user = await self.ctx.bot.wait_for(

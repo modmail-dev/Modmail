@@ -6,13 +6,19 @@ import site
 import stat
 import subprocess
 import sys
+import json
+from pkg_resources import parse_version
+from difflib import get_close_matches
+import random
 
+import discord
 from discord.ext import commands
 from discord.utils import async_all
 
 from core import checks
-from core.models import Bot, PermissionLevel
+from core.models import PermissionLevel
 from core.utils import info, error
+from core.paginator import PaginatorSession
 
 logger = logging.getLogger('Modmail')
 
@@ -21,17 +27,25 @@ class DownloadError(Exception):
     pass
 
 
-class Plugins:
-    """Plugins expand Modmail functionality by allowing third-party addons.
+class Plugins(commands.Cog):
+    """
+    Plugins expand Modmail functionality by allowing third-party addons.
 
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
     Learn how to create a plugin yourself here:
     https://github.com/kyb3r/modmail/wiki/Plugins
     """
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
+        self.registry = {}
         self.bot.loop.create_task(self.download_initial_plugins())
+        self.bot.loop.create_task(self.populate_registry())
+    
+    async def populate_registry(self):
+        url = 'https://raw.githubusercontent.com/kyb3r/modmail/master/plugins/registry.json'
+        async with self.bot.session.get(url) as resp:
+            self.registry = json.loads(await resp.text())
 
     @staticmethod
     def _asubprocess_run(cmd):
@@ -111,8 +125,8 @@ class Plugins:
 
         try:
             self.bot.load_extension(ext)
-        except ModuleNotFoundError as exc:
-            raise DownloadError('Invalid plugin structure') from exc
+        except commands.ExtensionError as exc:
+            raise DownloadError('Invalid plugin') from exc
         else:
             msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
             logger.info(info(msg))
@@ -121,18 +135,23 @@ class Plugins:
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin(self, ctx):
         """Plugin handler. Controls the plugins in the bot."""
-        cmd = self.bot.get_command('help')
-        await ctx.invoke(cmd, command='plugin')
+        await ctx.send_help(ctx.command)
 
-    @plugin.command(name='add')
+    @plugin.command(name='add', aliases=['install'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_add(self, ctx, *, plugin_name):
-        """Adds a plugin"""
+    async def plugin_add(self, ctx, *, plugin_name: str):
+        """Add a plugin."""
+        if plugin_name in self.registry:
+            info = self.registry[plugin_name]
+            plugin_name = info['repository'] + '/' + plugin_name
+            required_version = info['bot_version']
+            if parse_version(self.bot.version) < parse_version(required_version):
+                return await ctx.send(f"Bot version too low, plugin requires version `{required_version}`")
         if plugin_name in self.bot.config.plugins:
-            return await ctx.send('Plugin already installed')
+            return await ctx.send('Plugin already installed.')
         if plugin_name in self.bot.cogs.keys():
             # another class with the same name
-            return await ctx.send('Another cog exists with the same name')
+            return await ctx.send('Another cog exists with the same name.')
 
         message = await ctx.send('Downloading plugin...')
         async with ctx.typing():
@@ -143,14 +162,14 @@ class Plugins:
                     await self.download_plugin_repo(*parsed_plugin[:-1])
                 except DownloadError as exc:
                     return await ctx.send(
-                        f'Unable to fetch plugin from Github: {exc}'
+                        f'Unable to fetch plugin from Github: {exc}.'
                     )
 
                 importlib.invalidate_caches()
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
-                    return await ctx.send(f'Unable to load plugin: `{exc}`')
+                    return await ctx.send(f'Unable to load plugin: `{exc}`.')
 
                 # if it makes it here, it has passed all checks and should
                 # be entered into the config
@@ -166,13 +185,19 @@ class Plugins:
 
     @plugin.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_remove(self, ctx, *, plugin_name):
-        """Removes a certain plugin"""
+    async def plugin_remove(self, ctx, *, plugin_name: str):
+        """Remove a plugin."""
+        if plugin_name in self.registry:
+            info = self.registry[plugin_name]
+            plugin_name = info['repository'] + '/' + plugin_name
         if plugin_name in self.bot.config.plugins:
-            username, repo, name = self.parse_plugin(plugin_name)
-            self.bot.unload_extension(
-                f'plugins.{username}-{repo}.{name}.{name}'
-            )
+            try:
+                username, repo, name = self.parse_plugin(plugin_name)
+                self.bot.unload_extension(
+                    f'plugins.{username}-{repo}.{name}.{name}'
+                )
+            except:
+                pass
 
             self.bot.config.plugins.remove(plugin_name)
 
@@ -180,7 +205,7 @@ class Plugins:
                 if not any(i.startswith(f'{username}/{repo}')
                            for i in self.bot.config.plugins):
                     # if there are no more of such repos, delete the folder
-                    def onerror(func, path, exc_info):
+                    def onerror(func, path, exc_info):  # pylint: disable=W0613
                         if not os.access(path, os.W_OK):
                             # Is the error an access error?
                             os.chmod(path, stat.S_IWUSR)
@@ -201,10 +226,13 @@ class Plugins:
 
     @plugin.command(name='update')
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_update(self, ctx, *, plugin_name):
-        """Updates a certain plugin"""
+    async def plugin_update(self, ctx, *, plugin_name: str):
+        """Update a plugin."""
+        if plugin_name in self.registry:
+            info = self.registry[plugin_name]
+            plugin_name = info['repository'] + '/' + plugin_name
         if plugin_name not in self.bot.config.plugins:
-            return await ctx.send('Plugin not installed')
+            return await ctx.send('Plugin not installed.')
 
         async with ctx.typing():
             username, repo, name = self.parse_plugin(plugin_name)
@@ -217,7 +245,7 @@ class Plugins:
                 )
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode('utf8').strip()
-                await ctx.send(f'Error while updating: {err}')
+                await ctx.send(f'Error while updating: {err}.')
             else:
                 output = cmd.stdout.decode('utf8').strip()
                 await ctx.send(f'```\n{output}\n```')
@@ -225,22 +253,121 @@ class Plugins:
                 if output != 'Already up to date.':
                     # repo was updated locally, now perform the cog reload
                     ext = f'plugins.{username}-{repo}.{name}.{name}'
-                    importlib.reload(importlib.import_module(ext))
-
+                    self.bot.unload_extension(ext)
                     try:
                         await self.load_plugin(username, repo, name)
                     except DownloadError as exc:
-                        await ctx.send(f'Unable to start plugin: `{exc}`')
+                        await ctx.send(f'Unable to start plugin: `{exc}`.')
 
-    @plugin.command(name='list', aliases=['show', 'view'])
+    @plugin.command(name='enabled', aliases=['installed'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_list(self, ctx):
-        """Shows a list of currently enabled plugins"""
+    async def plugin_enabled(self, ctx):
+        """Shows a list of currently enabled plugins."""
         if self.bot.config.plugins:
             msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
             await ctx.send(msg)
         else:
-            await ctx.send('No plugins installed')
+            await ctx.send('No plugins installed.')
+
+    @plugin.group(invoke_without_command=True, name='registry', aliases=['list'])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def plugin_registry(self, ctx, *, plugin_name:str=None):
+        """Shows a list of all approved plugins."""
+
+        await self.populate_registry()
+
+        embeds = []
+
+        registry = list(self.registry.items())
+        random.shuffle(registry)
+
+        def find_index(name):
+            index = 0
+            for n, info in registry:
+                if name == n:
+                    return index
+                index += 1
+
+        index = 0
+        if plugin_name in self.registry:
+            index = find_index(plugin_name)
+        elif plugin_name is not None:
+            em = discord.Embed(
+                    color=discord.Color.red(), 
+                    description=f'Could not find a plugin with name "{plugin_name}" within the registry.'
+                    )
+
+            matches = get_close_matches(plugin_name, self.registry.keys())
+            if matches:
+                em.add_field(name='Perhaps you meant', value='\n'.join(f'`{m}`' for m in matches))
+            return await ctx.send(embed=em)
+
+        for name, info in registry:
+            repo = f"https://github.com/{info['repository']}"
+            url = f"{repo}/tree/master/{name}"
+
+            em = discord.Embed(
+                color=self.bot.main_color,
+                description=info['description'],
+                url=repo,
+                title=info['repository']
+                )
+            
+            em.add_field(
+                name='Installation', 
+                value=f'```{self.bot.prefix}plugins add {name}```')
+            
+            em.set_author(name=info['title'], icon_url=info.get('icon_url'), url=url)
+            if info.get('thumbnail_url'):
+                em.set_thumbnail(url=info.get('thumbnail_url'))
+            if info.get('image_url'):
+                em.set_image(url=info.get('image_url'))
+
+            embeds.append(em)
+
+        paginator = PaginatorSession(ctx, *embeds)
+        paginator.current = index
+        await paginator.run()
+
+    @plugin_registry.command(name='compact')
+    async def plugin_registry_compact(self, ctx):
+        """Shows a compact view of all plugins within the registry."""
+
+        await self.populate_registry()
+
+        registry = list(self.registry.items())
+        registry.sort(key=lambda elem: elem[0])
+
+        pages = ['']
+
+        for name, info in registry:
+            repo = f"https://github.com/{info['repository']}"
+            url = f"{repo}/tree/master/{name}"
+            desc = info['description'].replace('\n', '')
+            fmt = f"[`{name}`]({url}) - {desc}"
+            length = len(fmt) - len(url) - 4
+            fmt = fmt[:75 + len(url)].strip() + '...' if length > 75 else fmt
+            if len(fmt) + len(pages[-1]) >= 2048:
+                pages.append(fmt+'\n')
+            else:
+                pages[-1] += fmt + '\n'
+        
+        embeds = []
+
+        for page in pages:
+            em = discord.Embed(
+                color=self.bot.main_color, 
+                description=page,
+                )
+            em.set_author(name='Plugin Registry', icon_url=self.bot.user.avatar_url)
+            embeds.append(em)
+
+        paginator = PaginatorSession(ctx, *embeds)
+        await paginator.run()
+
+
+
+
 
 
 def setup(bot):
