@@ -126,7 +126,7 @@ class Plugins(commands.Cog):
         try:
             self.bot.load_extension(ext)
         except commands.ExtensionError as exc:
-            raise DownloadError('Invalid plugin.') from exc
+            raise DownloadError('Invalid plugin') from exc
         else:
             msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
             logger.info(info(msg))
@@ -250,8 +250,7 @@ class Plugins(commands.Cog):
                 if output != 'Already up to date.':
                     # repo was updated locally, now perform the cog reload
                     ext = f'plugins.{username}-{repo}.{name}.{name}'
-                    importlib.reload(importlib.import_module(ext))
-
+                    self.bot.unload_extension(ext)
                     try:
                         await self.load_plugin(username, repo, name)
                     except DownloadError as exc:
