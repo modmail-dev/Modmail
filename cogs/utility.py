@@ -813,7 +813,7 @@ class Utility(commands.Cog):
         To use alias:
 
         First create a snippet using:
-        - `{prefix}alias add alias-name other-command`
+        - `{prefix}alias add command alias-name`
 
         For example:
         - `{prefix}alias add reply r`
