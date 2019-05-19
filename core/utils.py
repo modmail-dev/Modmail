@@ -195,12 +195,12 @@ def match_user_id(text: str) -> int:
 
 
 def get_perm_level(cmd) -> PermissionLevel:
-    for c in cmd.checks:
-        perm = getattr(c, 'permission_level', None)
+    for check in cmd.checks:
+        perm = getattr(check, 'permission_level', None)
         if perm is not None:
             return perm
-    for c in cmd.checks:
-        if 'is_owner' in str(c):
+    for check in cmd.checks:
+        if 'is_owner' in str(check):
             return PermissionLevel.OWNER
     return PermissionLevel.INVALID
 

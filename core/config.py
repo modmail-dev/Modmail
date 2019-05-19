@@ -147,9 +147,9 @@ class ConfigManager:
                     val = val[1:]
                 if len(val) != 6:
                     raise InvalidConfigError('Invalid color name or hex.')
-                for v in val:
-                    if v not in {'0', '1', '2', '3', '4', '5', '6', '7',
-                                 '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}:
+                for letter in val:
+                    if letter not in {'0', '1', '2', '3', '4', '5', '6', '7',
+                                      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}:
                         raise InvalidConfigError('Invalid color name or hex.')
                 clean_value = '#' + val
                 value_text = clean_value

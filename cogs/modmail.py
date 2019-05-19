@@ -266,26 +266,26 @@ class Modmail(commands.Cog):
     @commands.command(aliases=['alert'])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def notify(self, ctx, *, role: Union[discord.Role, str.lower, None] = None):
+    async def notify(self, ctx, *, user_or_role: Union[discord.Role, User, str.lower, None] = None):
         """
-        Notify a role or yourself when the next thread message received.
+        Notify a user, role, or yourself when the next thread message received.
 
-        Once a thread message is received, `role` will only be pinged once.
+        Once a thread message is received, `user_or_role` will only be pinged once.
 
-        Leave `role` empty to notify yourself.
+        Leave `user_or_role` empty to notify yourself.
         `@here` and `@everyone` can be substituted with `here` and `everyone`.
-        `role` may be a role ID, mention, name, "everyone", or "here".
+        `user_or_role` may be a user ID, mention, name. role ID, mention, name, "everyone", or "here".
         """
         thread = ctx.thread
 
-        if role is None:
+        if user_or_role is None:
             mention = ctx.author.mention
-        elif isinstance(role, discord.Role):
-            mention = role.mention
-        elif role in {'here', 'everyone', '@here', '@everyone'}:
-            mention = '@' + role.lstrip('@')
+        elif hasattr(user_or_role, 'mention'):
+            mention = user_or_role.mention
+        elif user_or_role in {'here', 'everyone', '@here', '@everyone'}:
+            mention = '@' + user_or_role.lstrip('@')
         else:
-            raise commands.BadArgument(f'{role} is not a valid role.')
+            raise commands.BadArgument(f'{user_or_role} is not a valid role.')
 
         if str(thread.id) not in self.bot.config['notification_squad']:
             self.bot.config['notification_squad'][str(thread.id)] = []
@@ -304,29 +304,68 @@ class Modmail(commands.Cog):
                                   'on the next message received.')
         return await ctx.send(embed=embed)
 
-    @commands.command(aliases=['sub'])
+    @commands.command(aliases=['unalert'])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def subscribe(self, ctx, *, role: Union[discord.Role, str.lower, None] = None):
+    async def unnotify(self, ctx, *, user_or_role: Union[discord.Role, User, str.lower, None] = None):
         """
-        Notify a role or yourself for every thread message received.
+        Un-notify a user, role, or yourself from a thread.
 
-        You will be pinged for every thread message received until you unsubscribe.
-
-        Leave `role` empty to subscribe yourself.
+        Leave `user_or_role` empty to un-notify yourself.
         `@here` and `@everyone` can be substituted with `here` and `everyone`.
-        `role` may be a role ID, mention, name, "everyone", or "here".
+        `user_or_role` may be a user ID, mention, name, role ID, mention, name, "everyone", or "here".
         """
         thread = ctx.thread
 
-        if role is None:
+        if user_or_role is None:
             mention = ctx.author.mention
-        elif isinstance(role, discord.Role):
-            mention = role.mention
-        elif role in {'here', 'everyone', '@here', '@everyone'}:
-            mention = '@' + role.lstrip('@')
+        elif hasattr(user_or_role, 'mention'):
+            mention = user_or_role.mention
+        elif user_or_role in {'here', 'everyone', '@here', '@everyone'}:
+            mention = '@' + user_or_role.lstrip('@')
         else:
-            raise commands.BadArgument(f'{role} is not a valid role.')
+            mention = f'`{user_or_role}`'
+
+        if str(thread.id) not in self.bot.config['notification_squad']:
+            self.bot.config['notification_squad'][str(thread.id)] = []
+
+        mentions = self.bot.config['notification_squad'][str(thread.id)]
+
+        if mention not in mentions:
+            embed = discord.Embed(color=discord.Color.red(),
+                                  description=f'{mention} does not have a '
+                                              'pending notification.')
+        else:
+            mentions.remove(mention)
+            await self.bot.config.update()
+            embed = discord.Embed(color=self.bot.main_color,
+                                  description=f'{mention} will no longer '
+                                              'be notified.')
+        return await ctx.send(embed=embed)
+
+    @commands.command(aliases=['sub'])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def subscribe(self, ctx, *, user_or_role: Union[discord.Role, User, str.lower, None] = None):
+        """
+        Notify a user, role, or yourself for every thread message received.
+
+        You will be pinged for every thread message received until you unsubscribe.
+
+        Leave `user_or_role` empty to subscribe yourself.
+        `@here` and `@everyone` can be substituted with `here` and `everyone`.
+        `user_or_role` may be a user ID, mention, name, role ID, mention, name, "everyone", or "here".
+        """
+        thread = ctx.thread
+
+        if user_or_role is None:
+            mention = ctx.author.mention
+        elif hasattr(user_or_role, 'mention'):
+            mention = user_or_role.mention
+        elif user_or_role in {'here', 'everyone', '@here', '@everyone'}:
+            mention = '@' + user_or_role.lstrip('@')
+        else:
+            raise commands.BadArgument(f'{user_or_role} is not a valid role.')
 
         if str(thread.id) not in self.bot.config['subscriptions']:
             self.bot.config['subscriptions'][str(thread.id)] = []
@@ -350,24 +389,24 @@ class Modmail(commands.Cog):
     @commands.command(aliases=['unsub'])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def unsubscribe(self, ctx, *, role=None):
+    async def unsubscribe(self, ctx, *, user_or_role: Union[discord.Role, User, str.lower, None] = None):
         """
-        Unsubscribe a role or yourself from a thread.
+        Unsubscribe a user, role, or yourself from a thread.
 
-        Leave `role` empty to unsubscribe yourself.
+        Leave `user_or_role` empty to unsubscribe yourself.
         `@here` and `@everyone` can be substituted with `here` and `everyone`.
-        `role` may be a role ID, mention, name, "everyone", or "here".
+        `user_or_role` may be a user ID, mention, name, role ID, mention, name, "everyone", or "here".
         """
         thread = ctx.thread
 
-        if not role:
+        if user_or_role is None:
             mention = ctx.author.mention
-        elif role.lower() in ('here', 'everyone'):
-            mention = '@' + role
+        elif hasattr(user_or_role, 'mention'):
+            mention = user_or_role.mention
+        elif user_or_role in {'here', 'everyone', '@here', '@everyone'}:
+            mention = '@' + user_or_role.lstrip('@')
         else:
-            converter = commands.RoleConverter()
-            role = await converter.convert(ctx, role)
-            mention = role.mention
+            mention = f'`{user_or_role}`'
 
         if str(thread.id) not in self.bot.config['subscriptions']:
             self.bot.config['subscriptions'][str(thread.id)] = []

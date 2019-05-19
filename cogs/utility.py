@@ -148,8 +148,8 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         choices = set()
 
-        for name, c in self.context.bot.all_commands.items():
-            if not c.hidden:
+        for name, cmd in self.context.bot.all_commands.items():
+            if not cmd.hidden:
                 choices.add(name)
         command = self.context.kwargs.get('command')
         # print(self.context.message.content[self.context.in])
@@ -789,8 +789,8 @@ class Utility(commands.Cog):
                              icon_url=self.bot.user.avatar_url)
 
             config = {
-                k: v for k, v in self.bot.config.cache.items()
-                if v and k in keys
+                key: val for key, val in self.bot.config.cache.items()
+                if val and key in keys
             }
 
             for k, v in reversed(list(config.items())):
@@ -1250,7 +1250,7 @@ class Utility(commands.Cog):
 
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
-    
+
     @commands.group(invoke_without_command=True, aliases=['oauth2', 'auth', 'authentication'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
@@ -1273,7 +1273,7 @@ class Utility(commands.Cog):
         else:
             whitelisted.append(target.id)
             removed = False
-        
+
         await self.bot.config.update()
 
         embed = Embed(color=self.bot.main_color)
@@ -1284,7 +1284,7 @@ class Utility(commands.Cog):
             )
 
         await ctx.send(embed=embed)
-    
+
     @oauth.command(name='show', aliases=['get', 'list', 'view'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth_show(self, ctx):
@@ -1294,21 +1294,21 @@ class Utility(commands.Cog):
         users = []
         roles = []
 
-        for id in whitelisted:
-            user = self.bot.get_user(id)
+        for id_ in whitelisted:
+            user = self.bot.get_user(id_)
             if user:
                 users.append(user)
-            role = self.bot.modmail_guild.get_role(id)
+            role = self.bot.modmail_guild.get_role(id_)
             if role:
                 roles.append(role)
 
-        em = Embed(color=self.bot.main_color)
-        em.title = 'Oauth Whitelist'
+        embed = Embed(color=self.bot.main_color)
+        embed.title = 'Oauth Whitelist'
 
-        em.add_field(name='Users', value=' '.join(u.mention for u in users) or 'None')
-        em.add_field(name='Roles', value=' '.join(r.mention for r in roles) or 'None')
+        embed.add_field(name='Users', value=' '.join(u.mention for u in users) or 'None')
+        embed.add_field(name='Roles', value=' '.join(r.mention for r in roles) or 'None')
 
-        await ctx.send(embed=em)
+        await ctx.send(embed=embed)
 
     @commands.command(hidden=True, name='eval')
     @checks.has_permissions(PermissionLevel.OWNER)

@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # v2.20.1
 
+### What's new?
+
+  - New error message when using thread-only commands outside of threads.
+  - `?unnotify`, ability to undo `?notify`.
+  - `?notify` and `?subscribe` now accepts other users.
+
 ### Changes
 
 This update contains mostly internal changes.
   - Implemented support for the new discord.py v1.1.1.
-  - New error message when using thread-only commands outside of threads.
   - Improved help text for most commands.
   - Completely revamped help command, few user changes.
   - Removed abc (internal).
