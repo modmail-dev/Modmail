@@ -8,6 +8,7 @@ import subprocess
 import sys
 import json
 from pkg_resources import parse_version
+from difflib import get_close_matches
 import random
 
 import discord
@@ -289,11 +290,15 @@ class Plugins(commands.Cog):
         if plugin_name in self.registry:
             index = find_index(plugin_name)
         elif plugin_name is not None:
-            return await ctx.send(embed=discord.Embed(
+            em = discord.Embed(
                     color=discord.Color.red(), 
                     description=f'Could not find a plugin with name "{plugin_name}" within the registry.'
                     )
-                    )
+
+            matches = get_close_matches(plugin_name, self.registry.keys())
+            if matches:
+                em.add_field(name='Perhaps you meant', value='\n'.join(f'`{m}`' for m in matches))
+            return await ctx.send(embed=em)
 
         for name, info in registry:
             repo = f"https://github.com/{info['repository']}"
