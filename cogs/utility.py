@@ -67,7 +67,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         return embeds
 
     def process_help_msg(self, help_: str):
-        return help_.format(prefix=self.clean_prefix)
+        return help_.format(prefix=self.clean_prefix) if help_ else 'No help message.'
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -124,7 +124,8 @@ class ModmailHelpCommand(commands.HelpCommand):
         for i, command in enumerate(
                 await self.filter_commands(group.commands, sort=True, key=lambda c: c.name)
         ):
-            # Bug: fmt may run over the embed limit
+            # BUG: fmt may run over the embed limit
+            # TODO: paginate this
             if length == i + 1:  # last
                 branch = '└─'
             else:
