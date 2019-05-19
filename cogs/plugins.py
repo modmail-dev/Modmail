@@ -8,6 +8,7 @@ import subprocess
 import sys
 import json
 from pkg_resources import parse_version
+from difflib import get_close_matches
 import random
 
 import discord
@@ -125,7 +126,7 @@ class Plugins(commands.Cog):
         try:
             self.bot.load_extension(ext)
         except commands.ExtensionError as exc:
-            raise DownloadError('Invalid plugin.') from exc
+            raise DownloadError('Invalid plugin') from exc
         else:
             msg = f'Loaded plugins.{username}-{repo}.{plugin_name}'
             logger.info(info(msg))
@@ -136,7 +137,7 @@ class Plugins(commands.Cog):
         """Plugin handler. Controls the plugins in the bot."""
         await ctx.send_help(ctx.command)
 
-    @plugin.command(name='add')
+    @plugin.command(name='add', aliases=['install'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_add(self, ctx, *, plugin_name: str):
         """Add a plugin."""
@@ -190,10 +191,13 @@ class Plugins(commands.Cog):
             info = self.registry[plugin_name]
             plugin_name = info['repository'] + '/' + plugin_name
         if plugin_name in self.bot.config.plugins:
-            username, repo, name = self.parse_plugin(plugin_name)
-            self.bot.unload_extension(
-                f'plugins.{username}-{repo}.{name}.{name}'
-            )
+            try:
+                username, repo, name = self.parse_plugin(plugin_name)
+                self.bot.unload_extension(
+                    f'plugins.{username}-{repo}.{name}.{name}'
+                )
+            except:
+                pass
 
             self.bot.config.plugins.remove(plugin_name)
 
@@ -249,14 +253,13 @@ class Plugins(commands.Cog):
                 if output != 'Already up to date.':
                     # repo was updated locally, now perform the cog reload
                     ext = f'plugins.{username}-{repo}.{name}.{name}'
-                    importlib.reload(importlib.import_module(ext))
-
+                    self.bot.unload_extension(ext)
                     try:
                         await self.load_plugin(username, repo, name)
                     except DownloadError as exc:
                         await ctx.send(f'Unable to start plugin: `{exc}`.')
 
-    @plugin.command(name='enabled')
+    @plugin.command(name='enabled', aliases=['installed'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_enabled(self, ctx):
         """Shows a list of currently enabled plugins."""
@@ -266,15 +269,42 @@ class Plugins(commands.Cog):
         else:
             await ctx.send('No plugins installed.')
 
-    @plugin.command(name='registry', aliases=['list'])
+    @plugin.group(invoke_without_command=True, name='registry', aliases=['list'])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_registry(self, ctx):
+    async def plugin_registry(self, ctx, *, plugin_name:str=None):
         """Shows a list of all approved plugins."""
+
+        await self.populate_registry()
 
         embeds = []
 
-        for name, info in self.registry.items():
+        registry = list(self.registry.items())
+        random.shuffle(registry)
+
+        def find_index(name):
+            index = 0
+            for n, info in registry:
+                if name == n:
+                    return index
+                index += 1
+
+        index = 0
+        if plugin_name in self.registry:
+            index = find_index(plugin_name)
+        elif plugin_name is not None:
+            em = discord.Embed(
+                    color=discord.Color.red(), 
+                    description=f'Could not find a plugin with name "{plugin_name}" within the registry.'
+                    )
+
+            matches = get_close_matches(plugin_name, self.registry.keys())
+            if matches:
+                em.add_field(name='Perhaps you meant', value='\n'.join(f'`{m}`' for m in matches))
+            return await ctx.send(embed=em)
+
+        for name, info in registry:
             repo = f"https://github.com/{info['repository']}"
+            url = f"{repo}/tree/master/{name}"
 
             em = discord.Embed(
                 color=self.bot.main_color,
@@ -287,14 +317,54 @@ class Plugins(commands.Cog):
                 name='Installation', 
                 value=f'```{self.bot.prefix}plugins add {name}```')
             
-            em.set_author(name=info['title'], icon_url=info.get('icon_url'))
+            em.set_author(name=info['title'], icon_url=info.get('icon_url'), url=url)
             if info.get('thumbnail_url'):
                 em.set_thumbnail(url=info.get('thumbnail_url'))
+            if info.get('image_url'):
+                em.set_image(url=info.get('image_url'))
 
             embeds.append(em)
 
         paginator = PaginatorSession(ctx, *embeds)
+        paginator.current = index
         await paginator.run()
+
+    @plugin_registry.command(name='compact')
+    async def plugin_registry_compact(self, ctx):
+        """Shows a compact view of all plugins within the registry."""
+
+        await self.populate_registry()
+
+        registry = list(self.registry.items())
+        registry.sort(key=lambda elem: elem[0])
+
+        pages = ['']
+
+        for name, info in registry:
+            repo = f"https://github.com/{info['repository']}"
+            url = f"{repo}/tree/master/{name}"
+            desc = info['description'].replace('\n', '')
+            fmt = f"[`{name}`]({url}) - {desc}"
+            length = len(fmt) - len(url) - 4
+            fmt = fmt[:75 + len(url)].strip() + '...' if length > 75 else fmt
+            if len(fmt) + len(pages[-1]) >= 2048:
+                pages.append(fmt+'\n')
+            else:
+                pages[-1] += fmt + '\n'
+        
+        embeds = []
+
+        for page in pages:
+            em = discord.Embed(
+                color=self.bot.main_color, 
+                description=page,
+                )
+            em.set_author(name='Plugin Registry', icon_url=self.bot.user.avatar_url)
+            embeds.append(em)
+
+        paginator = PaginatorSession(ctx, *embeds)
+        await paginator.run()
+
 
 
 
