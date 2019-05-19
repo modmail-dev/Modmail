@@ -680,7 +680,7 @@ class Utility(commands.Cog):
         - `{prefix}config set varname value here`
 
         To remove a configuration variable:
-        - `{prefix}config set remove varname`
+        - `{prefix}config remove remove varname`
         """
         await ctx.send_help(ctx.command)
 
