@@ -347,7 +347,7 @@ class Plugins(commands.Cog):
             fmt = f"[`{name}`]({url}) - {desc}"
             length = len(fmt) - len(url) - 4
             fmt = fmt[:75 + len(url)].strip() + '...' if length > 75 else fmt
-            if len(fmt) + len(pages[-1]) >= 1024:
+            if len(fmt) + len(pages[-1]) >= 2048:
                 pages.append(fmt+'\n')
             else:
                 pages[-1] += fmt + '\n'
@@ -358,8 +358,8 @@ class Plugins(commands.Cog):
             em = discord.Embed(
                 color=self.bot.main_color, 
                 description=page,
-                title='Plugin Registry (Compact View)',
                 )
+            em.set_author(name='Plugin Registry', icon_url=self.bot.user.avatar_url)
             embeds.append(em)
 
         paginator = PaginatorSession(ctx, *embeds)
