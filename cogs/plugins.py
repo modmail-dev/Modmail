@@ -8,6 +8,7 @@ import subprocess
 import sys
 import json
 from pkg_resources import parse_version
+import random
 
 import discord
 from discord.ext import commands
@@ -36,9 +37,14 @@ class Plugins(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
+        self.registry = {}
         self.bot.loop.create_task(self.download_initial_plugins())
-        with open('plugins/registry.json') as f:
-            self.registry = json.load(f)
+        self.bot.loop.create_task(self.populate_registry())
+    
+    async def populate_registry(self):
+        url = 'https://raw.githubusercontent.com/kyb3r/modmail/master/plugins/registry.json'
+        async with self.bot.session.get(url) as resp:
+            self.registry = json.loads(await resp.text())
 
     @staticmethod
     def _asubprocess_run(cmd):
