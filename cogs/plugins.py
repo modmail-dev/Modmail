@@ -273,7 +273,10 @@ class Plugins(commands.Cog):
 
         embeds = []
 
-        for name, info in self.registry.items():
+        registry = list(self.registry.items())
+        random.shuffle(registry)
+
+        for name, info in registry:
             repo = f"https://github.com/{info['repository']}"
 
             em = discord.Embed(
