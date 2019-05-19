@@ -148,7 +148,7 @@ class PaginatorSession:
             If it's closed before running ends.
         """
         if not self.running:
-            await self.show_page(0)
+            await self.show_page(self.current)
         while self.running:
             try:
                 reaction, user = await self.ctx.bot.wait_for(
@@ -269,7 +269,7 @@ class MessagePaginatorSession:
             The message content to fill the base `Message`.
         """
         if self.embed is not None:
-            footer_text = f'Page 1 of {len(self.messages)}'
+            footer_text = f'Page {self.current+1} of {len(self.messages)}'
             if self.footer_text:
                 footer_text = footer_text + ' • ' + self.footer_text
             self.embed.set_footer(text=footer_text,
@@ -298,7 +298,7 @@ class MessagePaginatorSession:
         """
         if not 0 <= index < len(self.messages):
             return
-
+        
         self.current = index
         page = self.messages[index]
 
@@ -342,7 +342,7 @@ class MessagePaginatorSession:
             If it's closed before running ends.
         """
         if not self.running:
-            await self.show_page(0)
+            await self.show_page(self.current)
         while self.running:
             try:
                 reaction, user = await self.ctx.bot.wait_for(
