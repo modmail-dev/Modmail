@@ -191,10 +191,13 @@ class Plugins(commands.Cog):
             info = self.registry[plugin_name]
             plugin_name = info['repository'] + '/' + plugin_name
         if plugin_name in self.bot.config.plugins:
-            username, repo, name = self.parse_plugin(plugin_name)
-            self.bot.unload_extension(
-                f'plugins.{username}-{repo}.{name}.{name}'
-            )
+            try:
+                username, repo, name = self.parse_plugin(plugin_name)
+                self.bot.unload_extension(
+                    f'plugins.{username}-{repo}.{name}.{name}'
+                )
+            except:
+                pass
 
             self.bot.config.plugins.remove(plugin_name)
 
