@@ -52,13 +52,17 @@ class Modmail(commands.Cog):
         )
 
         embed = discord.Embed(
-            title='Friendly Reminder:',
+            title='Friendly Reminder',
             description=f'You may use the `{self.bot.prefix}config set log_channel_id '
                         '<channel-id>` command to set up a custom log channel'
                         ', then you can delete the default '
                         f'{log_channel.mention} channel.',
             color=self.bot.main_color
         )
+
+        embed.add_field(name='Thanks for using the bot!', value='If you like what you see, '
+        'consider giving the [repo a star](https://github.com/kyb3r/modmail) :star: or if you are '
+        'feeling generous, check us out on [Patreon](https://patreon.com/kyber)!')
 
         embed.set_footer(text=f'Type "{self.bot.prefix}help" '
                               'for a complete list of commands.')
