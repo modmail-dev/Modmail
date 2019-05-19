@@ -102,5 +102,13 @@
         "title": "translator Plugin",
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "welcomer": {
+        "repository": "fourjr/modmail-plugins",
+        "description": "Add messages to welcome new members! Allows for embedded messages as well. [Read more](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)",
+        "bot_version": "2.20.1",
+        "title": "New member messages plugin",
+        "icon_url": "https://avatars0.githubusercontent.com/u/28086837?s=1080&v=4",
+        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
     }
 }
