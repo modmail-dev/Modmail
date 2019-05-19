@@ -49,8 +49,7 @@ class Plugins(commands.Cog):
 
     @staticmethod
     def _asubprocess_run(cmd):
-        return subprocess.run(cmd, shell=True, check=True,
-                              capture_output=True)
+        return subprocess.run(cmd, shell=True, check=True, capture_output=True)
 
     @staticmethod
     def parse_plugin(name):
@@ -60,10 +59,12 @@ class Plugins(commands.Cog):
             result[2] = '/'.join(result[2:])
         except IndexError:
             return None
+
         return tuple(result)
 
     async def download_initial_plugins(self):
         await self.bot._connected.wait()
+
         for i in self.bot.config.plugins:
             parsed_plugin = self.parse_plugin(i)
 
@@ -78,29 +79,29 @@ class Plugins(commands.Cog):
                 except DownloadError as exc:
                     msg = f'{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}'
                     logger.error(error(msg))
+
         await async_all(env() for env in self.bot.extra_events.get('on_plugin_ready', []))
+
         logger.debug(info('on_plugin_ready called.'))
 
     async def download_plugin_repo(self, username, repo):
         try:
             cmd = f'git clone https://github.com/{username}/{repo} '
             cmd += f'plugins/{username}-{repo} -q'
-            await self.bot.loop.run_in_executor(
-                None,
-                self._asubprocess_run,
-                cmd
-            )
+
+            await self.bot.loop.run_in_executor(None, self._asubprocess_run, cmd)
             # -q (quiet) so there's no terminal output unless there's an error
         except subprocess.CalledProcessError as exc:
             err = exc.stderr.decode('utf-8').strip()
-            if not err.endswith('already exists and is '
-                                'not an empty directory.'):
+
+            if not err.endswith('already exists and is not an empty directory.'):
                 # don't raise error if the plugin folder exists
                 raise DownloadError(error) from exc
 
     async def load_plugin(self, username, repo, plugin_name):
         ext = f'plugins.{username}-{repo}.{plugin_name}.{plugin_name}'
         dirname = f'plugins/{username}-{repo}/{plugin_name}'
+
         if 'requirements.txt' in os.listdir(dirname):
             # Install PIP requirements
             try:
@@ -113,6 +114,7 @@ class Plugins(commands.Cog):
                 # so there's no terminal output unless there's an error
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode('utf8').strip()
+
                 if err:
                     raise DownloadError(
                         f'Unable to download requirements: ```\n{error}\n```'
@@ -135,28 +137,33 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin(self, ctx):
         """Plugin handler. Controls the plugins in the bot."""
+
         await ctx.send_help(ctx.command)
 
     @plugin.command(name='add', aliases=['install'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_add(self, ctx, *, plugin_name: str):
         """Add a plugin."""
+
         if plugin_name in self.registry:
             info = self.registry[plugin_name]
             plugin_name = info['repository'] + '/' + plugin_name
             required_version = info['bot_version']
+
             if parse_version(self.bot.version) < parse_version(required_version):
                 em = discord.Embed(
                     description=f'Your bot\'s version is too low. This plugin requires version `{required_version}`.',
                     color=self.bot.main_color
                 )
                 return await ctx.send(embed=em)
+
         if plugin_name in self.bot.config.plugins:
             em = discord.Embed(
                 description='This plugin is already installed.',
                 color=self.bot.main_color
             )
             return await ctx.send(embed=em)
+
         if plugin_name in self.bot.cogs.keys():
             # another class with the same name
             em = discord.Embed(
@@ -170,6 +177,7 @@ class Plugins(commands.Cog):
             color=self.bot.main_color
         )
         message = await ctx.send(embed=em)
+
         async with ctx.typing():
             if len(plugin_name.split('/')) >= 3:
                 parsed_plugin = self.parse_plugin(plugin_name)
@@ -184,6 +192,7 @@ class Plugins(commands.Cog):
                     return await ctx.send(embed=em)
 
                 importlib.invalidate_caches()
+
                 try:
                     await self.load_plugin(*parsed_plugin)
                 except DownloadError as exc:
@@ -216,15 +225,16 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_remove(self, ctx, *, plugin_name: str):
         """Remove a plugin."""
+
         if plugin_name in self.registry:
             info = self.registry[plugin_name]
             plugin_name = info['repository'] + '/' + plugin_name
+
         if plugin_name in self.bot.config.plugins:
             try:
                 username, repo, name = self.parse_plugin(plugin_name)
-                self.bot.unload_extension(
-                    f'plugins.{username}-{repo}.{name}.{name}'
-                )
+
+                self.bot.unload_extension(f'plugins.{username}-{repo}.{name}.{name}')
             except Exception:
                 pass
 
@@ -240,14 +250,14 @@ class Plugins(commands.Cog):
                             os.chmod(path, stat.S_IWUSR)
                             func(path)
 
-                    shutil.rmtree(f'plugins/{username}-{repo}',
-                                  onerror=onerror)
+                    shutil.rmtree(f'plugins/{username}-{repo}', onerror=onerror)
             except Exception as exc:
                 logger.error(str(exc))
                 self.bot.config.plugins.append(plugin_name)
                 raise exc
 
             await self.bot.config.update()
+
             em = discord.Embed(
                 description='The plugin is uninstalled and all it\'s data is erased.',
                 color=self.bot.main_color
@@ -264,9 +274,11 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_update(self, ctx, *, plugin_name: str):
         """Update a plugin."""
+
         if plugin_name in self.registry:
             info = self.registry[plugin_name]
             plugin_name = info['repository'] + '/' + plugin_name
+
         if plugin_name not in self.bot.config.plugins:
             em = discord.Embed(
                 description='That plugin is not installed.',
@@ -276,22 +288,22 @@ class Plugins(commands.Cog):
 
         async with ctx.typing():
             username, repo, name = self.parse_plugin(plugin_name)
+
             try:
                 cmd = f'cd plugins/{username}-{repo} && git pull'
-                cmd = await self.bot.loop.run_in_executor(
-                    None,
-                    self._asubprocess_run,
-                    cmd
-                )
+                cmd = await self.bot.loop.run_in_executor(None, self._asubprocess_run, cmd)
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode('utf8').strip()
+
                 em = discord.Embed(
                     description=f'An error occured while updating: {err}.',
                     color=self.bot.main_color
                 )
                 await ctx.send(embed=em)
+
             else:
                 output = cmd.stdout.decode('utf8').strip()
+
                 em = discord.Embed(
                     description='```\n{output}\n```',
                     color=self.bot.main_color
@@ -302,6 +314,7 @@ class Plugins(commands.Cog):
                     # repo was updated locally, now perform the cog reload
                     ext = f'plugins.{username}-{repo}.{name}.{name}'
                     self.bot.unload_extension(ext)
+
                     try:
                         await self.load_plugin(username, repo, name)
                     except DownloadError as exc:
@@ -315,6 +328,7 @@ class Plugins(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_enabled(self, ctx):
         """Shows a list of currently enabled plugins."""
+
         if self.bot.config.plugins:
             msg = '```\n' + '\n'.join(self.bot.config.plugins) + '\n```'
             em = discord.Embed(
@@ -358,8 +372,10 @@ class Plugins(commands.Cog):
             )
 
             matches = get_close_matches(plugin_name, self.registry.keys())
+
             if matches:
                 em.add_field(name='Perhaps you meant', value='\n'.join(f'`{m}`' for m in matches))
+
             return await ctx.send(embed=em)
 
         for name, info in registry:
