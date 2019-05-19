@@ -4,8 +4,6 @@ from typing import List
 
 from discord import Embed, Color
 
-from core.models import Bot
-
 
 class Version:
     """
@@ -34,7 +32,7 @@ class Version:
         General description of the version.
     """
 
-    def __init__(self, bot: Bot, version: str, lines: str):
+    def __init__(self, bot, version: str, lines: str):
         self.bot = bot
         self.version = version.lstrip('vV')
         self.lines = [x for x in lines.splitlines() if x]
@@ -116,7 +114,7 @@ class Changelog:
     CHANGELOG_URL = 'https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md'
     VERSION_REGEX = re.compile(r'# (v\d+\.\d+\.\d+)([\S\s]*?(?=# v|$))')
 
-    def __init__(self, bot: Bot, text: str):
+    def __init__(self, bot, text: str):
         self.bot = bot
         self.text = text
         self.versions = [Version(bot, *m)
@@ -137,7 +135,7 @@ class Changelog:
         return [v.embed for v in self.versions]
 
     @classmethod
-    async def from_url(cls, bot: Bot, url: str = '') -> 'Changelog':
+    async def from_url(cls, bot, url: str = '') -> 'Changelog':
         """
         Create a `Changelog` from a URL.
 
