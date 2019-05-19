@@ -55,7 +55,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 color=bot.main_color
             )
 
-            embed.add_field(name='Commands', value=format_)
+            embed.add_field(name='Commands', value=format_ or 'No commands.')
 
             continued = ' (Continued)' if embeds else ''
             embed.set_author(name=cog.qualified_name + ' - Help' + continued,
@@ -67,7 +67,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         return embeds
 
     def process_help_msg(self, help_: str):
-        return help_.format(prefix=self.clean_prefix)
+        return help_.format(prefix=self.clean_prefix) if help_ else 'No help message.'
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -117,21 +117,22 @@ class ModmailHelpCommand(commands.HelpCommand):
             description=self.process_help_msg(group.help)
         )
 
-        embed.add_field(name='Permission level', value=perm_level)
+        embed.add_field(name='Permission level', value=perm_level, inline=False)
         format_ = ''
         length = len(group.commands)
 
         for i, command in enumerate(
                 await self.filter_commands(group.commands, sort=True, key=lambda c: c.name)
         ):
-            # Bug: fmt may run over the embed limit
+            # BUG: fmt may run over the embed limit
+            # TODO: paginate this
             if length == i + 1:  # last
                 branch = '└─'
             else:
                 branch = '├─'
             format_ += f'`{branch} {command.name}` - {command.short_doc}\n'
 
-        embed.add_field(name='Sub Commands', value=format_)
+        embed.add_field(name='Sub Commands', value=format_, inline=False)
         embed.set_footer(
             text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
                  'for more info on a command.'
@@ -145,7 +146,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         embed = Embed(
             color=Color.red()
         )
-        embed.set_footer(text=f'Command/Category "{self.remove_mentions(self.context.author.mention)}" not found.')
+        embed.set_footer(text=f'Command/Category "{self.context.kwargs.get("command")}" not found.')
 
         choices = set()
 
