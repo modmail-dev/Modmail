@@ -145,7 +145,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         embed = Embed(
             color=Color.red()
         )
-        embed.set_footer(text=f'Command/Category "{self.remove_mentions(self.context.author.mention)}" not found.')
+        embed.set_footer(text=f'Command/Category "{self.context.kwargs.get("command")}" not found.')
 
         choices = set()
 
