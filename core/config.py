@@ -1,17 +1,18 @@
 import asyncio
 import json
 import os
+import typing
 
 import isodate
 
 from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
-from core.models import Bot, ConfigManagerABC, InvalidConfigError
+from core.models import InvalidConfigError
 from core.time import UserFriendlyTime
 
 
-class ConfigManager(ConfigManagerABC):
+class ConfigManager:
 
     allowed_to_change_in_command = {
         # activity
@@ -77,7 +78,7 @@ class ConfigManager(ConfigManagerABC):
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self._cache = {}
         self._ready_event = asyncio.Event()
@@ -91,18 +92,18 @@ class ConfigManager(ConfigManagerABC):
         return self.bot.api
 
     @property
-    def ready_event(self):
+    def ready_event(self) -> asyncio.Event:
         return self._ready_event
 
     @property
-    def cache(self):
+    def cache(self) -> dict:
         return self._cache
 
     @cache.setter
-    def cache(self, val):
+    def cache(self, val: dict):
         self._cache = val
 
-    def populate_cache(self):
+    def populate_cache(self) -> dict:
         data = {
             'snippets': {},
             'plugins': [],
@@ -130,7 +131,8 @@ class ConfigManager(ConfigManagerABC):
         }
         return self.cache
 
-    async def clean_data(self, key, val):
+    async def clean_data(self, key: str,
+                         val: typing.Any) -> typing.Tuple[str, str]:
         value_text = val
         clean_value = val
 
@@ -145,9 +147,9 @@ class ConfigManager(ConfigManagerABC):
                     val = val[1:]
                 if len(val) != 6:
                     raise InvalidConfigError('Invalid color name or hex.')
-                for v in val:
-                    if v not in {'0', '1', '2', '3', '4', '5', '6', '7',
-                                 '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}:
+                for letter in val:
+                    if letter not in {'0', '1', '2', '3', '4', '5', '6', '7',
+                                      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}:
                         raise InvalidConfigError('Invalid color name or hex.')
                 clean_value = '#' + val
                 value_text = clean_value
@@ -164,8 +166,8 @@ class ConfigManager(ConfigManagerABC):
                     time = await converter.convert(None, val)
                     if time.arg:
                         raise ValueError
-                except BadArgument as e:
-                    raise InvalidConfigError(*e.args)
+                except BadArgument as exc:
+                    raise InvalidConfigError(*exc.args)
                 except Exception:
                     raise InvalidConfigError(
                         'Unrecognized time, please use ISO-8601 duration format '
@@ -176,31 +178,31 @@ class ConfigManager(ConfigManagerABC):
 
         return clean_value, value_text
 
-    async def update(self, data=None):
+    async def update(self, data: typing.Optional[dict] = None) -> dict:
         """Updates the config with data from the cache"""
         if data is not None:
             self.cache.update(data)
         await self.api.update_config(self.cache)
         return self.cache
 
-    async def refresh(self):
+    async def refresh(self) -> dict:
         """Refreshes internal cache with data from database"""
         data = await self.api.get_config()
         self.cache.update(data)
         self.ready_event.set()
         return self.cache
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self) -> None:
         await self.ready_event.wait()
 
-    def __getattr__(self, value):
+    def __getattr__(self, value: str) -> typing.Any:
         return self.cache[value]
 
-    def __setitem__(self, key, item):
+    def __setitem__(self, key: str, item: typing.Any) -> None:
         self.cache[key] = item
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> typing.Any:
         return self.cache[key]
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: typing.Any = None) -> typing.Any:
         return self.cache.get(key, default)
