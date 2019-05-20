@@ -816,7 +816,7 @@ class Utility(commands.Cog):
         - `{prefix}alias add alias-name other-command`
 
         For example:
-        - `{prefix}alias add reply r`
+        - `{prefix}alias add r reply`
         - Now you can use `{prefix}r` as an replacement for `{prefix}reply`.
 
         See also `{prefix}snippets`.
