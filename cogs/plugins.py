@@ -305,7 +305,7 @@ class Plugins(commands.Cog):
                 output = cmd.stdout.decode('utf8').strip()
 
                 em = discord.Embed(
-                    description=f'```\n{output}\n```',
+                    description='```\n{output}\n```',
                     color=self.bot.main_color
                 )
                 await ctx.send(embed=em)
