@@ -680,7 +680,7 @@ class Utility(commands.Cog):
         - `{prefix}config set varname value here`
 
         To remove a configuration variable:
-        - `{prefix}config set remove varname`
+        - `{prefix}config remove varname`
         """
         await ctx.send_help(ctx.command)
 
@@ -1263,7 +1263,8 @@ class Utility(commands.Cog):
     @oauth.command(name='whitelist')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth_whitelist(self, ctx, target: Union[User, Role]):
-        """Whitelist or un-whitelist a user or role to have access to logs.
+        """
+        Whitelist or un-whitelist a user or role to have access to logs.
 
         `target` may be a role ID, name, mention, user ID, name, or mention.
         """
