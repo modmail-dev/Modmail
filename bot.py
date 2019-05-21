@@ -439,42 +439,32 @@ class ModmailBot(commands.Bot):
             try:
                 name = await converter.convert(ctx, name.strip(':'))
             except commands.BadArgument:
-                logger.warning(f'{name} is not a valid emoji.')
+                logger.warning(info('%s is not a valid emoji.'), name)
+                raise
         return name
 
     async def retrieve_emoji(self) -> typing.Tuple[str, str]:
 
-        # TODO: use a function to convert emojis
-
-        ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
-        converter = commands.EmojiConverter()
-
         sent_emoji = self.config.get('sent_emoji', '✅')
         blocked_emoji = self.config.get('blocked_emoji', '🚫')
 
-        if sent_emoji not in UNICODE_EMOJI:
+        if sent_emoji != 'disable':
             try:
-                sent_emoji = await converter.convert(
-                    ctx, sent_emoji.strip(':')
-                )
+                sent_emoji = await self.convert_emoji(sent_emoji)
             except commands.BadArgument:
-                if sent_emoji != 'disable':
-                    logger.warning(info(f'Sent Emoji ({sent_emoji}) '
-                                        f'is not a valid emoji.'))
-                    del self.config.cache['sent_emoji']
-                    await self.config.update()
+                logger.warning(info('Removed sent emoji (%s).'), sent_emoji)
+                del self.config.cache['sent_emoji']
+                await self.config.update()
+                sent_emoji = '✅'
 
-        if blocked_emoji not in UNICODE_EMOJI:
+        if blocked_emoji != 'disable':
             try:
-                blocked_emoji = await converter.convert(
-                    ctx, blocked_emoji.strip(':')
-                )
+                blocked_emoji = await self.convert_emoji(blocked_emoji)
             except commands.BadArgument:
-                if blocked_emoji != 'disable':
-                    logger.warning(info(f'Blocked emoji ({blocked_emoji}) '
-                                        'is not a valid emoji.'))
-                    del self.config.cache['blocked_emoji']
-                    await self.config.update()
+                logger.warning(info('Removed blocked emoji (%s).'), blocked_emoji)
+                del self.config.cache['blocked_emoji']
+                await self.config.update()
+                blocked_emoji = '🚫'
 
         return sent_emoji, blocked_emoji
 
@@ -912,14 +902,14 @@ class ModmailBot(commands.Bot):
                     "IPs correctly. Make sure to whitelist all "
                     "IPs (0.0.0.0/0) https://i.imgur.com/mILuQ5U.png"
                     ))
-            
+
             if 'OperationFailure' in message:
                 logger.critical(error("This is due to having invalid credentials in your MONGO_URI."))
                 logger.critical(error(
                     "Recheck the username/password and make sure to url encode them. "
                     "https://www.urlencoder.io/"
                 ))
-            
+
             return await self.logout()
         else:
             logger.info(info('Successfully connected to the database.'))
