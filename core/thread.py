@@ -635,13 +635,13 @@ class ThreadManager:
 
         try:
             thread = self.cache[recipient_id]
-            if not self.bot.get_channel(thread.channel.id): # deleted channel
+            if not self.bot.get_channel(thread.channel.id):  # deleted channel
                 self.bot.loop.create_task(
                     thread.close(
-                        closer=self.bot.user, 
-                        silent=True, 
+                        closer=self.bot.user,
+                        silent=True,
                         delete_channel=False
-                        ))
+                    ))
                 thread = None
         except KeyError:
             channel = discord.utils.get(
