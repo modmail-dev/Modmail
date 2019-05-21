@@ -233,6 +233,9 @@ class Utility(commands.Cog):
                         value='https://github.com/kyb3r/modmail',
                         inline=False)
 
+        embed.add_field(name='\u200b',
+                        value='Support this bot on [Patreon](https://patreon.com/kyber).')
+
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
