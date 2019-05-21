@@ -357,12 +357,10 @@ class Plugins(commands.Cog):
         registry = list(self.registry.items())
         random.shuffle(registry)
 
-        def find_index(name):
-            index = 0
-            for n, info in registry:
-                if name == n:
-                    return index
-                index += 1
+        def find_index(find_name):
+            for i, (n, _) in enumerate(registry):
+                if find_name == n:
+                    return i
 
         index = 0
         if plugin_name in self.registry:

@@ -298,7 +298,7 @@ class MessagePaginatorSession:
         """
         if not 0 <= index < len(self.messages):
             return
-        
+
         self.current = index
         page = self.messages[index]
 
