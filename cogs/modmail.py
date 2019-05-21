@@ -60,9 +60,10 @@ class Modmail(commands.Cog):
             color=self.bot.main_color
         )
 
-        embed.add_field(name='Thanks for using the bot!', value='If you like what you see, '
-        'consider giving the [repo a star](https://github.com/kyb3r/modmail) :star: or if you are '
-        'feeling generous, check us out on [Patreon](https://patreon.com/kyber)!')
+        embed.add_field(name='Thanks for using the bot!',
+                        value='If you like what you see, consider giving the '
+                              '[repo a star](https://github.com/kyb3r/modmail) :star: or if you are '
+                              'feeling generous, check us out on [Patreon](https://patreon.com/kyber)!')
 
         embed.set_footer(text=f'Type "{self.bot.prefix}help" '
                               'for a complete list of commands.')
@@ -562,7 +563,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description='No log entries have been found for that query'
-                )
+            )
             return await ctx.send(embed=embed)
 
         session = PaginatorSession(ctx, *embeds)
@@ -584,7 +585,7 @@ class Modmail(commands.Cog):
             'open': False,
             '$text': {
                 '$search': f'"{query}"'
-                }
+            }
         }
 
         projection = {
@@ -600,7 +601,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description='No log entries have been found for that query'
-                )
+            )
             return await ctx.send(embed=embed)
 
         session = PaginatorSession(ctx, *embeds)
