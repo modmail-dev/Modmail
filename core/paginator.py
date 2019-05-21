@@ -1,5 +1,5 @@
 import typing
-from asyncio import TimeoutError
+import asyncio
 
 from discord import User, Reaction, Message, Embed
 from discord import HTTPException, InvalidArgument
@@ -155,7 +155,7 @@ class PaginatorSession:
                 reaction, user = await self.ctx.bot.wait_for(
                     "reaction_add", check=self.react_check, timeout=self.timeout
                 )
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 return await self.close(delete=False)
             else:
                 action = self.reaction_map.get(reaction.emoji)
@@ -348,7 +348,7 @@ class MessagePaginatorSession:
                 reaction, user = await self.ctx.bot.wait_for(
                     "reaction_add", check=self.react_check, timeout=self.timeout
                 )
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 return await self.close(delete=False)
             else:
                 action = self.reaction_map.get(reaction.emoji)

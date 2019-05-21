@@ -93,16 +93,12 @@ class Plugins(commands.Cog):
             cmd = f"git clone https://github.com/{username}/{repo} "
             cmd += f"plugins/{username}-{repo} -q"
 
-            await self.bot.loop.run_in_executor(
-                None, self._asubprocess_run, cmd
-            )
+            await self.bot.loop.run_in_executor(None, self._asubprocess_run, cmd)
             # -q (quiet) so there's no terminal output unless there's an error
         except subprocess.CalledProcessError as exc:
             err = exc.stderr.decode("utf-8").strip()
 
-            if not err.endswith(
-                "already exists and is not an empty directory."
-            ):
+            if not err.endswith("already exists and is not an empty directory."):
                 # don't raise error if the plugin folder exists
                 raise DownloadError(error) from exc
 
@@ -159,9 +155,7 @@ class Plugins(commands.Cog):
             plugin_name = details["repository"] + "/" + plugin_name
             required_version = details["bot_version"]
 
-            if parse_version(self.bot.version) < parse_version(
-                required_version
-            ):
+            if parse_version(self.bot.version) < parse_version(required_version):
                 embed = discord.Embed(
                     description=f"Your bot's version is too low. This plugin requires version `{required_version}`.",
                     color=self.bot.main_color,
@@ -205,7 +199,7 @@ class Plugins(commands.Cog):
 
                 try:
                     await self.load_plugin(*parsed_plugin)
-                except DownloadError as exc:
+                except Exception as exc:
                     embed = discord.Embed(
                         description=f"Unable to load this plugin: {exc}.",
                         color=self.bot.main_color,
@@ -223,13 +217,13 @@ class Plugins(commands.Cog):
                     "*Please note: any plugin that you install is of your OWN RISK*",
                     color=self.bot.main_color,
                 )
-                await message.edit(embed=embed)
+                await ctx.send(embed=embed)
             else:
                 embed = discord.Embed(
                     description="Invalid plugin name format: use username/repo/plugin.",
                     color=self.bot.main_color,
                 )
-                await message.edit(embed=embed)
+                await ctx.send(embed=embed)
 
     @plugin.command(name="remove", aliases=["del", "delete", "rm"])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -244,9 +238,7 @@ class Plugins(commands.Cog):
             try:
                 username, repo, name = self.parse_plugin(plugin_name)
 
-                self.bot.unload_extension(
-                    f"plugins.{username}-{repo}.{name}.{name}"
-                )
+                self.bot.unload_extension(f"plugins.{username}-{repo}.{name}.{name}")
             except Exception:
                 pass
 
@@ -255,8 +247,7 @@ class Plugins(commands.Cog):
             try:
                 # BUG: Local variables 'username' and 'repo' might be referenced before assignment
                 if not any(
-                    i.startswith(f"{username}/{repo}")
-                    for i in self.bot.config.plugins
+                    i.startswith(f"{username}/{repo}") for i in self.bot.config.plugins
                 ):
                     # if there are no more of such repos, delete the folder
                     def onerror(func, path, exc_info):  # pylint: disable=W0613
@@ -280,8 +271,7 @@ class Plugins(commands.Cog):
             await ctx.send(embed=embed)
         else:
             embed = discord.Embed(
-                description="That plugin is not installed.",
-                color=self.bot.main_color,
+                description="That plugin is not installed.", color=self.bot.main_color
             )
             await ctx.send(embed=embed)
 
@@ -296,8 +286,7 @@ class Plugins(commands.Cog):
 
         if plugin_name not in self.bot.config.plugins:
             embed = discord.Embed(
-                description="That plugin is not installed.",
-                color=self.bot.main_color,
+                description="That plugin is not installed.", color=self.bot.main_color
             )
             return await ctx.send(embed=embed)
 
@@ -351,13 +340,12 @@ class Plugins(commands.Cog):
             await ctx.send(embed=embed)
         else:
             embed = discord.Embed(
-                description="There are no plugins installed.",
-                color=self.bot.main_color,
+                description="There are no plugins installed.", color=self.bot.main_color
             )
             await ctx.send(embed=embed)
 
     @plugin.group(
-        invoke_without_command=True, name="registry", aliases=["list"]
+        invoke_without_command=True, name="registry", aliases=["list", "info"]
     )
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_registry(self, ctx, *, plugin_name: str = None):
@@ -406,8 +394,7 @@ class Plugins(commands.Cog):
             )
 
             embed.add_field(
-                name="Installation",
-                value=f"```{self.bot.prefix}plugins add {name}```",
+                name="Installation", value=f"```{self.bot.prefix}plugins add {name}```"
             )
 
             embed.set_author(
@@ -451,9 +438,7 @@ class Plugins(commands.Cog):
 
         for page in pages:
             embed = discord.Embed(color=self.bot.main_color, description=page)
-            embed.set_author(
-                name="Plugin Registry", icon_url=self.bot.user.avatar_url
-            )
+            embed.set_author(name="Plugin Registry", icon_url=self.bot.user.avatar_url)
             embeds.append(embed)
 
         paginator = PaginatorSession(ctx, *embeds)

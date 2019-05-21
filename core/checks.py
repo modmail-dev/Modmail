@@ -45,9 +45,8 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
     return commands.check(predicate)
 
 
-async def check_permissions(
-    ctx: commands.Context, command_name: str, permission_level: PermissionLevel
-) -> bool:
+async def check_permissions(ctx, command_name, permission_level) -> bool:
+    """Logic for checking permissions for a command for a user"""
     if await ctx.bot.is_owner(ctx.author):
         # Direct bot owner (creator) has absolute power over the bot
         return True
