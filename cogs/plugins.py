@@ -37,6 +37,7 @@ class Plugins(commands.Cog):
     Learn how to create a plugin yourself here:
     https://github.com/kyb3r/modmail/wiki/Plugins
     """
+
     def __init__(self, bot):
         self.bot = bot
         self.registry = {}
@@ -196,7 +197,7 @@ class Plugins(commands.Cog):
 
                 try:
                     await self.load_plugin(*parsed_plugin)
-                except DownloadError as exc:
+                except Exception as exc:
                     embed = discord.Embed(
                         description=f'Unable to load this plugin: {exc}.',
                         color=self.bot.main_color
@@ -214,13 +215,13 @@ class Plugins(commands.Cog):
                                 '*Please note: any plugin that you install is of your OWN RISK*',
                     color=self.bot.main_color
                 )
-                await message.edit(embed=embed)
+                await ctx.send(embed=embed)
             else:
                 embed = discord.Embed(
                     description='Invalid plugin name format: use username/repo/plugin.',
                     color=self.bot.main_color
                 )
-                await message.edit(embed=embed)
+                await ctx.send(embed=embed)
 
     @plugin.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -345,7 +346,7 @@ class Plugins(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @plugin.group(invoke_without_command=True, name='registry', aliases=['list'])
+    @plugin.group(invoke_without_command=True, name='registry', aliases=['list', 'info'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_registry(self, ctx, *, plugin_name: str = None):
         """Shows a list of all approved plugins."""
@@ -357,12 +358,10 @@ class Plugins(commands.Cog):
         registry = list(self.registry.items())
         random.shuffle(registry)
 
-        def find_index(name):
-            index = 0
-            for n, info in registry:
-                if name == n:
-                    return index
-                index += 1
+        def find_index(find_name):
+            for i, (n, _) in enumerate(registry):
+                if find_name == n:
+                    return i
 
         index = 0
         if plugin_name in self.registry:
@@ -376,7 +375,7 @@ class Plugins(commands.Cog):
             matches = get_close_matches(plugin_name, self.registry.keys())
 
             if matches:
-                embed.add_field(name='Perhaps you meant', value='\n'.join(f'`{m}`' for m in matches))
+                embed.add_field(name='Perhaps you meant:', value='\n'.join(f'`{m}`' for m in matches))
 
             return await ctx.send(embed=embed)
 
@@ -389,7 +388,7 @@ class Plugins(commands.Cog):
                 description=details['description'],
                 url=repo,
                 title=details['repository']
-                )
+            )
 
             embed.add_field(
                 name='Installation',
@@ -436,7 +435,7 @@ class Plugins(commands.Cog):
             embed = discord.Embed(
                 color=self.bot.main_color,
                 description=page,
-                )
+            )
             embed.set_author(name='Plugin Registry', icon_url=self.bot.user.avatar_url)
             embeds.append(embed)
 
