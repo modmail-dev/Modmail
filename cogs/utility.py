@@ -799,8 +799,8 @@ class Utility(commands.Cog):
                 if val and key in keys
             }
 
-            for k, v in reversed(list(config.items())):
-                embed.add_field(name=k, value=f'`{v}`', inline=False)
+            for name, value in reversed(list(config.items())):
+                embed.add_field(name=name, value=f'`{value}`', inline=False)
 
         return await ctx.send(embed=embed)
 
