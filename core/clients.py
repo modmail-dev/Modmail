@@ -280,7 +280,7 @@ class ApiClient(RequestClient):
         query = {
             'recipient.id': str(user_id),
             'guild_id': str(self.bot.guild_id)
-            }
+        }
 
         projection = {
             'messages': {'$slice': 5}
@@ -345,7 +345,7 @@ class ApiClient(RequestClient):
         return await self.db.config.update_one(
             {'bot_id': self.bot.user.id},
             {'$set': toset, '$unset': unset}
-            )
+        )
 
     async def edit_message(self, message_id: Union[int, str],
                            new_content: str) -> None:

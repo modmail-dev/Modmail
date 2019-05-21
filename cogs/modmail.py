@@ -563,7 +563,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description='No log entries have been found for that query'
-                )
+            )
             return await ctx.send(embed=embed)
 
         session = PaginatorSession(ctx, *embeds)
@@ -585,7 +585,7 @@ class Modmail(commands.Cog):
             'open': False,
             '$text': {
                 '$search': f'"{query}"'
-                }
+            }
         }
 
         projection = {
@@ -601,7 +601,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description='No log entries have been found for that query'
-                )
+            )
             return await ctx.send(embed=embed)
 
         session = PaginatorSession(ctx, *embeds)

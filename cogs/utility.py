@@ -1287,7 +1287,7 @@ class Utility(commands.Cog):
         embed.description = (
             f"{'Un-w' if removed else 'W'}hitelisted "
             f"{target.mention} to view logs."
-            )
+        )
 
         await ctx.send(embed=embed)
 
