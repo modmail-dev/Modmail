@@ -10,11 +10,12 @@ import subprocess
 import sys
 from difflib import get_close_matches
 
+from pkg_resources import parse_version
+
 import discord
 from discord.ext import commands
 from discord.utils import async_all
 
-from pkg_resources import parse_version
 
 from core import checks
 from core.models import PermissionLevel
@@ -51,7 +52,7 @@ class Plugins(commands.Cog):
 
     @staticmethod
     def _asubprocess_run(cmd):
-        return subprocess.run(cmd, shell=True, check=True, capture_output=True)
+        return subprocess.run(cmd, shell=False, check=True, capture_output=True)
 
     @staticmethod
     def parse_plugin(name):
