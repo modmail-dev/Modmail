@@ -233,6 +233,9 @@ class Utility(commands.Cog):
                         value='https://github.com/kyb3r/modmail',
                         inline=False)
 
+        embed.add_field(name='\u200b',
+                        value='Support this bot on [Patreon](https://patreon.com/kyber).')
+
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
@@ -680,7 +683,7 @@ class Utility(commands.Cog):
         - `{prefix}config set varname value here`
 
         To remove a configuration variable:
-        - `{prefix}config set remove varname`
+        - `{prefix}config remove varname`
         """
         await ctx.send_help(ctx.command)
 
@@ -816,7 +819,7 @@ class Utility(commands.Cog):
         - `{prefix}alias add alias-name other-command`
 
         For example:
-        - `{prefix}alias add reply r`
+        - `{prefix}alias add r reply`
         - Now you can use `{prefix}r` as an replacement for `{prefix}reply`.
 
         See also `{prefix}snippets`.
@@ -1263,7 +1266,8 @@ class Utility(commands.Cog):
     @oauth.command(name='whitelist')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth_whitelist(self, ctx, target: Union[User, Role]):
-        """Whitelist or un-whitelist a user or role to have access to logs.
+        """
+        Whitelist or un-whitelist a user or role to have access to logs.
 
         `target` may be a role ID, name, mention, user ID, name, or mention.
         """
