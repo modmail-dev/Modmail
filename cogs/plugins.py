@@ -374,7 +374,7 @@ class Plugins(commands.Cog):
             matches = get_close_matches(plugin_name, self.registry.keys())
 
             if matches:
-                em.add_field(name='Perhaps you meant', value='\n'.join(f'`{m}`' for m in matches))
+                em.add_field(name='Perhaps you meant:', value='\n'.join(f'`{m}`' for m in matches))
 
             return await ctx.send(embed=em)
 
