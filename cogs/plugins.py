@@ -196,7 +196,7 @@ class Plugins(commands.Cog):
 
                 try:
                     await self.load_plugin(*parsed_plugin)
-                except DownloadError as exc:
+                except Exception as exc:
                     embed = discord.Embed(
                         description=f'Unable to load this plugin: {exc}.',
                         color=self.bot.main_color
@@ -214,13 +214,13 @@ class Plugins(commands.Cog):
                                 '*Please note: any plugin that you install is of your OWN RISK*',
                     color=self.bot.main_color
                 )
-                await message.edit(embed=embed)
+                await ctx.send(embed=embed)
             else:
                 embed = discord.Embed(
                     description='Invalid plugin name format: use username/repo/plugin.',
                     color=self.bot.main_color
                 )
-                await message.edit(embed=embed)
+                await ctx.send(embed=embed)
 
     @plugin.command(name='remove', aliases=['del', 'delete', 'rm'])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -345,7 +345,7 @@ class Plugins(commands.Cog):
             )
             await ctx.send(embed=embed)
 
-    @plugin.group(invoke_without_command=True, name='registry', aliases=['list'])
+    @plugin.group(invoke_without_command=True, name='registry', aliases=['list', 'info'])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_registry(self, ctx, *, plugin_name: str = None):
         """Shows a list of all approved plugins."""
