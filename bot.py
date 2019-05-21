@@ -845,14 +845,14 @@ class ModmailBot(commands.Bot):
             await context.send(embed=discord.Embed(
                 color=discord.Color.red(),
                 description=msg
-                ))
+            ))
 
         elif isinstance(exception, commands.BadArgument):
             await context.trigger_typing()
             await context.send(embed=discord.Embed(
                 color=discord.Color.red(),
                 description=str(exception)
-                ))
+            ))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning(error('CommandNotFound: ' + str(exception)))
         elif isinstance(exception, commands.MissingRequiredArgument):
@@ -901,7 +901,7 @@ class ModmailBot(commands.Bot):
                     "This may have been caused by not whitelisting "
                     "IPs correctly. Make sure to whitelist all "
                     "IPs (0.0.0.0/0) https://i.imgur.com/mILuQ5U.png"
-                    ))
+                ))
 
             if 'OperationFailure' in message:
                 logger.critical(error("This is due to having invalid credentials in your MONGO_URI."))

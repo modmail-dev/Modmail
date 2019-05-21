@@ -37,6 +37,7 @@ class Plugins(commands.Cog):
     Learn how to create a plugin yourself here:
     https://github.com/kyb3r/modmail/wiki/Plugins
     """
+
     def __init__(self, bot):
         self.bot = bot
         self.registry = {}
@@ -387,7 +388,7 @@ class Plugins(commands.Cog):
                 description=details['description'],
                 url=repo,
                 title=details['repository']
-                )
+            )
 
             embed.add_field(
                 name='Installation',
@@ -434,7 +435,7 @@ class Plugins(commands.Cog):
             embed = discord.Embed(
                 color=self.bot.main_color,
                 description=page,
-                )
+            )
             embed.set_author(name='Plugin Registry', icon_url=self.bot.user.avatar_url)
             embeds.append(embed)
 
