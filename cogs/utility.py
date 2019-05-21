@@ -7,6 +7,7 @@ from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO
 from typing import Union
+from types import SimpleNamespace as param
 from json import JSONDecodeError
 from textwrap import indent
 
@@ -154,10 +155,9 @@ class ModmailHelpCommand(commands.HelpCommand):
             if not cmd.hidden:
                 choices.add(name)
         command = self.context.kwargs.get('command')
-        # print(self.context.message.content[self.context.in])
-        closest = get_close_matches(command, choices, n=1, cutoff=0.75)
+        closest = get_close_matches(command, choices)
         if closest:
-            embed.add_field(name=f'Perhaps you meant:', value=f'`{closest[0]}`')
+            embed.add_field(name=f'Perhaps you meant:', value="\n".join(f'`{x}`' for x in closest))
         else:
             embed.title = 'Cannot find command or category'
             embed.set_footer(text=f'Type "{self.clean_prefix}{self.command_attrs["name"]}" '
@@ -232,6 +232,9 @@ class Utility(commands.Cog):
         embed.add_field(name='GitHub',
                         value='https://github.com/kyb3r/modmail',
                         inline=False)
+
+        embed.add_field(name='\u200b',
+                        value='Support this bot on [Patreon](https://patreon.com/kyber).')
 
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
@@ -453,7 +456,7 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         if not message:
-            raise commands.UserInputError
+            raise commands.MissingRequiredArgument(param(name='message'))
 
         activity, msg = (await self.set_presence(
             activity_identifier=activity_type,
@@ -461,7 +464,7 @@ class Utility(commands.Cog):
             activity_message=message
         ))['activity']
         if activity is None:
-            raise commands.UserInputError
+            raise commands.MissingRequiredArgument(param(name='activity'))
 
         self.bot.config['activity_type'] = activity.type.value
         self.bot.config['activity_message'] = message
@@ -506,7 +509,7 @@ class Utility(commands.Cog):
             status_by_key=True
         ))['status']
         if status is None:
-            raise commands.UserInputError
+            raise commands.MissingRequiredArgument(param(name='status'))
 
         self.bot.config['status'] = status.value
         await self.bot.config.update()
@@ -680,7 +683,7 @@ class Utility(commands.Cog):
         - `{prefix}config set varname value here`
 
         To remove a configuration variable:
-        - `{prefix}config set remove varname`
+        - `{prefix}config remove varname`
         """
         await ctx.send_help(ctx.command)
 
@@ -796,8 +799,8 @@ class Utility(commands.Cog):
                 if val and key in keys
             }
 
-            for k, v in reversed(list(config.items())):
-                embed.add_field(name=k, value=f'`{v}`', inline=False)
+            for name, value in reversed(list(config.items())):
+                embed.add_field(name=name, value=f'`{value}`', inline=False)
 
         return await ctx.send(embed=embed)
 
@@ -816,7 +819,7 @@ class Utility(commands.Cog):
         - `{prefix}alias add alias-name other-command`
 
         For example:
-        - `{prefix}alias add reply r`
+        - `{prefix}alias add r reply`
         - Now you can use `{prefix}r` as an replacement for `{prefix}reply`.
 
         See also `{prefix}snippets`.
@@ -1263,7 +1266,8 @@ class Utility(commands.Cog):
     @oauth.command(name='whitelist')
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth_whitelist(self, ctx, target: Union[User, Role]):
-        """Whitelist or un-whitelist a user or role to have access to logs.
+        """
+        Whitelist or un-whitelist a user or role to have access to logs.
 
         `target` may be a role ID, name, mention, user ID, name, or mention.
         """
@@ -1283,7 +1287,7 @@ class Utility(commands.Cog):
         embed.description = (
             f"{'Un-w' if removed else 'W'}hitelisted "
             f"{target.mention} to view logs."
-            )
+        )
 
         await ctx.send(embed=embed)
 
