@@ -34,6 +34,8 @@ import typing
 from datetime import datetime
 from types import SimpleNamespace
 
+from pkg_resources import parse_version
+
 import discord
 from discord.ext import commands
 from discord.ext.commands.view import StringView
@@ -44,7 +46,6 @@ from aiohttp import ClientSession
 from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
-from pkg_resources import parse_version
 
 from core.changelog import Changelog
 from core.clients import ApiClient, PluginDatabaseClient
