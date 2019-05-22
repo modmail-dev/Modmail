@@ -52,7 +52,7 @@ class Plugins(commands.Cog):
 
     @staticmethod
     def _asubprocess_run(cmd):
-        return subprocess.run(cmd, shell=False, check=True, capture_output=True)
+        return subprocess.run(cmd, shell=True, check=True, capture_output=True)
 
     @staticmethod
     def parse_plugin(name):
