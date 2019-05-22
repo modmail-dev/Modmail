@@ -31,7 +31,7 @@
 ## What is Modmail?
 
 
-Modmail's core functionality provides an efficient way for server members to communicate with server staff. When a member sends a direct message to the bot, a channel is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
+Modmail's core functionality provides an efficient way for server members to communicate with server staff. When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
 
 ## Features
 
