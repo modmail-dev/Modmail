@@ -22,13 +22,15 @@
   <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
+
+<img src='https://i.imgur.com/VWDaQ37.png' align='center' width=300>
 </div>
 
 
 ## What is Modmail?
 
 
-<img src='https://i.imgur.com/VWDaQ37.png' align='center' width=300>
+
 
 Modmail's core functionality provides an efficient communications interface between server members and staff. When a member sends a direct message to the bot, a channel is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
 
