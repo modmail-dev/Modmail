@@ -24,16 +24,14 @@
   </a>
 
 <br>
-<img src='https://i.imgur.com/VWDaQ37.png' align='center' width=400>
+<img src='https://i.imgur.com/fru5Q07.png' align='center' width=500>
 </div>
 
 
 ## What is Modmail?
 
 
-
-
-Modmail's core functionality provides an efficient communications interface between server members and staff. When a member sends a direct message to the bot, a channel is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
+Modmail's core functionality provides an efficient way for server members to communicate with server staff. When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
 
 ## Features
 
@@ -82,6 +80,10 @@ And finally, run the bot.
 ```console
 $ python3 bot.py
 ```
+
+## Plugins
+
+Modmail supports the use of third party plugins to extend or add functionality to the bot. This allows the introduction of niche features as well as anything else outside of the scope of the core functionality of Modmail. A list of third party plugins can be found using the `plugins registry` command. To develop your own, check out the [documentation](https://github.com/kyb3r/modmail/wiki/Plugins) for plugins.
 
 ## Contributing
 
