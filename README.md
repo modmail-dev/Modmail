@@ -23,7 +23,8 @@
     <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
-<img src='https://i.imgur.com/VWDaQ37.png' align='center' width=300>
+<br>
+<img src='https://i.imgur.com/VWDaQ37.png' align='center' width=400>
 </div>
 
 
