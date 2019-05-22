@@ -81,6 +81,10 @@ And finally, run the bot.
 $ python3 bot.py
 ```
 
+## Plugins
+
+Modmail supports the use of third party plugins to extend or add functionality to the bot. This allows the introduction of niche features as well as anything else outside of the scope of the core functionality of Modmail. A list of third party plugins can be found using the `plugins registry` command. To develop your own, check out the [documentation](https://github.com/kyb3r/modmail/wiki/Plugins) for plugins.
+
 ## Contributing
 
 This project is licenced under MIT. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started. 
