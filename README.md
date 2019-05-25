@@ -22,14 +22,19 @@
   <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
+
+<br>
+<img src='https://i.imgur.com/fru5Q07.png' align='center' width=500>
 </div>
 
 
 ## What is Modmail?
 
-Modmail's core functionality provides an efficient communications interface between server members and staff. When a member sends a direct message to the bot, a channel is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
+
+Modmail's core functionality provides an efficient way for server members to communicate with server staff. When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
 
 ## Features
+
 
 * **Highly Customisable**
   * Bot activity, prefix, category, log channel, etc.
@@ -76,8 +81,12 @@ And finally, run the bot.
 $ python3 bot.py
 ```
 
+## Plugins
+
+Modmail supports the use of third party plugins to extend or add functionality to the bot. This allows the introduction of niche features as well as anything else outside of the scope of the core functionality of Modmail. A list of third party plugins can be found using the `plugins registry` command. To develop your own, check out the [documentation](https://github.com/kyb3r/modmail/wiki/Plugins) for plugins.
+
 ## Contributing
 
-This project is licenced under MIT. If you have any new ideas, create an issue or a pull request. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change.
+This project is licenced under MIT. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started. 
 
 This bot is open source and always will be. If you like this project and would like to show your appreciation, heres the link for our **[Patreon](https://www.patreon.com/kyber)**. 
