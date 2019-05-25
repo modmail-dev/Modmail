@@ -1,5 +1,5 @@
 import typing
-from asyncio import TimeoutError
+import asyncio
 
 from discord import User, Reaction, Message, Embed
 from discord import HTTPException, InvalidArgument
@@ -43,27 +43,26 @@ class PaginatorSession:
 
     def __init__(self, ctx: commands.Context, *embeds, **options):
         self.ctx = ctx
-        self.timeout: int = options.get('timeout', 210)
+        self.timeout: int = options.get("timeout", 210)
         self.embeds: typing.List[Embed] = list(embeds)
         self.running = False
         self.base: Message = None
         self.current = 0
-        self.destination = options.get('destination', ctx)
+        self.destination = options.get("destination", ctx)
         self.reaction_map = {
-            '⏮': self.first_page,
-            '◀': self.previous_page,
-            '▶': self.next_page,
-            '⏭': self.last_page,
+            "⏮": self.first_page,
+            "◀": self.previous_page,
+            "▶": self.next_page,
+            "⏭": self.last_page,
             # '⏹': self.close
         }
 
-        if options.get('edit_footer', True) and len(self.embeds) > 1:
+        if options.get("edit_footer", True) and len(self.embeds) > 1:
             for i, embed in enumerate(self.embeds):
-                footer_text = f'Page {i + 1} of {len(self.embeds)}'
+                footer_text = f"Page {i + 1} of {len(self.embeds)}"
                 if embed.footer.text:
-                    footer_text = footer_text + ' • ' + embed.footer.text
-                embed.set_footer(text=footer_text,
-                                 icon_url=embed.footer.icon_url)
+                    footer_text = footer_text + " • " + embed.footer.text
+                embed.set_footer(text=footer_text, icon_url=embed.footer.icon_url)
 
     def add_page(self, embed: Embed) -> None:
         """
@@ -77,7 +76,7 @@ class PaginatorSession:
         if isinstance(embed, Embed):
             self.embeds.append(embed)
         else:
-            raise TypeError('Page must be an Embed object.')
+            raise TypeError("Page must be an Embed object.")
 
     async def create_base(self, embed: Embed) -> None:
         """
@@ -96,7 +95,7 @@ class PaginatorSession:
 
         self.running = True
         for reaction in self.reaction_map:
-            if len(self.embeds) == 2 and reaction in '⏮⏭':
+            if len(self.embeds) == 2 and reaction in "⏮⏭":
                 continue
             await self.base.add_reaction(reaction)
 
@@ -134,9 +133,11 @@ class PaginatorSession:
         -------
         bool
         """
-        return (reaction.message.id == self.base.id and
-                user.id == self.ctx.author.id and
-                reaction.emoji in self.reaction_map.keys())
+        return (
+            reaction.message.id == self.base.id
+            and user.id == self.ctx.author.id
+            and reaction.emoji in self.reaction_map.keys()
+        )
 
     async def run(self) -> typing.Optional[Message]:
         """
@@ -152,11 +153,9 @@ class PaginatorSession:
         while self.running:
             try:
                 reaction, user = await self.ctx.bot.wait_for(
-                    'reaction_add',
-                    check=self.react_check,
-                    timeout=self.timeout
+                    "reaction_add", check=self.react_check, timeout=self.timeout
                 )
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 return await self.close(delete=False)
             else:
                 action = self.reaction_map.get(reaction.emoji)
@@ -196,7 +195,7 @@ class PaginatorSession:
         self.running = False
 
         try:
-            await self.ctx.message.add_reaction('✅')
+            await self.ctx.message.add_reaction("✅")
         except (HTTPException, InvalidArgument):
             pass
 
@@ -222,10 +221,11 @@ class PaginatorSession:
 
 
 class MessagePaginatorSession:
-    def __init__(self, ctx: commands.Context, *messages,
-                 embed: Embed = None, **options):
+    def __init__(
+        self, ctx: commands.Context, *messages, embed: Embed = None, **options
+    ):
         self.ctx = ctx
-        self.timeout: int = options.get('timeout', 180)
+        self.timeout: int = options.get("timeout", 180)
         self.messages: typing.List[str] = list(messages)
 
         self.running = False
@@ -238,10 +238,10 @@ class MessagePaginatorSession:
 
         self.current = 0
         self.reaction_map = {
-            '⏮': self.first_page,
-            '◀': self.previous_page,
-            '▶': self.next_page,
-            '⏭': self.last_page,
+            "⏮": self.first_page,
+            "◀": self.previous_page,
+            "▶": self.next_page,
+            "⏭": self.last_page,
             # '⏹': self.close
         }
 
@@ -257,7 +257,7 @@ class MessagePaginatorSession:
         if isinstance(msg, str):
             self.messages.append(msg)
         else:
-            raise TypeError('Page must be a str object.')
+            raise TypeError("Page must be a str object.")
 
     async def create_base(self, msg: str) -> None:
         """
@@ -269,11 +269,10 @@ class MessagePaginatorSession:
             The message content to fill the base `Message`.
         """
         if self.embed is not None:
-            footer_text = f'Page {self.current+1} of {len(self.messages)}'
+            footer_text = f"Page {self.current+1} of {len(self.messages)}"
             if self.footer_text:
-                footer_text = footer_text + ' • ' + self.footer_text
-            self.embed.set_footer(text=footer_text,
-                                  icon_url=self.embed.footer.icon_url)
+                footer_text = footer_text + " • " + self.footer_text
+            self.embed.set_footer(text=footer_text, icon_url=self.embed.footer.icon_url)
 
         self.base = await self.ctx.send(content=msg, embed=self.embed)
 
@@ -283,7 +282,7 @@ class MessagePaginatorSession:
 
         self.running = True
         for reaction in self.reaction_map:
-            if len(self.messages) == 2 and reaction in '⏮⏭':
+            if len(self.messages) == 2 and reaction in "⏮⏭":
                 continue
             await self.base.add_reaction(reaction)
 
@@ -303,11 +302,10 @@ class MessagePaginatorSession:
         page = self.messages[index]
 
         if self.embed is not None:
-            footer_text = f'Page {self.current + 1} of {len(self.messages)}'
+            footer_text = f"Page {self.current + 1} of {len(self.messages)}"
             if self.footer_text:
-                footer_text = footer_text + ' • ' + self.footer_text
-            self.embed.set_footer(text=footer_text,
-                                  icon_url=self.embed.footer.icon_url)
+                footer_text = footer_text + " • " + self.footer_text
+            self.embed.set_footer(text=footer_text, icon_url=self.embed.footer.icon_url)
 
         if self.running:
             await self.base.edit(content=page, embed=self.embed)
@@ -328,9 +326,11 @@ class MessagePaginatorSession:
         -------
         bool
         """
-        return (reaction.message.id == self.base.id and
-                user.id == self.ctx.author.id and
-                reaction.emoji in self.reaction_map.keys())
+        return (
+            reaction.message.id == self.base.id
+            and user.id == self.ctx.author.id
+            and reaction.emoji in self.reaction_map.keys()
+        )
 
     async def run(self) -> typing.Optional[Message]:
         """
@@ -346,11 +346,9 @@ class MessagePaginatorSession:
         while self.running:
             try:
                 reaction, user = await self.ctx.bot.wait_for(
-                    'reaction_add',
-                    check=self.react_check,
-                    timeout=self.timeout
+                    "reaction_add", check=self.react_check, timeout=self.timeout
                 )
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 return await self.close(delete=False)
             else:
                 action = self.reaction_map.get(reaction.emoji)
@@ -390,7 +388,7 @@ class MessagePaginatorSession:
         self.running = False
 
         try:
-            await self.ctx.message.add_reaction('✅')
+            await self.ctx.message.add_reaction("✅")
         except (HTTPException, InvalidArgument):
             pass
 
