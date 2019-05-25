@@ -80,7 +80,9 @@ disable=raw-checker-failed,
         too-many-arguments,
         too-few-public-methods,
         too-many-lines,
-        line-too-long
+        line-too-long,
+        bad-continuation,
+        invalid-name
 
 
 # Enable the message, report, category or checker with the given id(s). You can

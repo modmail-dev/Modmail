@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.22.0
+
+### Added
+
+Added a 🛑 reaction to the paginators to delete the embed.  
+
+### Fixed
+
+`?blocked` is now paginated using reactions. This fixes [#249](https://github.com/kyb3r/modmail/issues/249)
+
 # v2.21.0
 
 ### Added 

@@ -5,7 +5,7 @@ from discord.ext import commands
 from core.models import PermissionLevel
 from core.utils import error
 
-logger = logging.getLogger('Modmail')
+logger = logging.getLogger("Modmail")
 
 
 def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR):
@@ -28,25 +28,33 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
     """
 
     async def predicate(ctx):
-        has_perm = await check_permissions(ctx, ctx.command.qualified_name, permission_level)
+        has_perm = await check_permissions(
+            ctx, ctx.command.qualified_name, permission_level
+        )
 
-        if not has_perm and ctx.command.qualified_name != 'help':
-            logger.error(error(f'You does not have permission to use this command: '
-                               f'`{ctx.command.qualified_name}` ({permission_level.name}).'))
+        if not has_perm and ctx.command.qualified_name != "help":
+            logger.error(
+                error(
+                    f"You does not have permission to use this command: "
+                    f"`{ctx.command.qualified_name}` ({permission_level.name})."
+                )
+            )
         return has_perm
 
     predicate.permission_level = permission_level
     return commands.check(predicate)
 
 
-async def check_permissions(ctx: commands.Context,
-                            command_name: str,
-                            permission_level: PermissionLevel) -> bool:
+async def check_permissions(ctx, command_name, permission_level) -> bool:
+    """Logic for checking permissions for a command for a user"""
     if await ctx.bot.is_owner(ctx.author):
         # Direct bot owner (creator) has absolute power over the bot
         return True
 
-    if permission_level != PermissionLevel.OWNER and ctx.channel.permissions_for(ctx.author).administrator:
+    if (
+        permission_level != PermissionLevel.OWNER
+        and ctx.channel.permissions_for(ctx.author).administrator
+    ):
         # Administrators have permission to all non-owner commands
         return True
 
@@ -57,7 +65,9 @@ async def check_permissions(ctx: commands.Context,
         # -1 is for @everyone
         if -1 in command_permissions[command_name]:
             return True
-        has_perm_role = any(role.id in command_permissions[command_name] for role in author_roles)
+        has_perm_role = any(
+            role.id in command_permissions[command_name] for role in author_roles
+        )
         has_perm_id = ctx.author.id in command_permissions[command_name]
         return has_perm_role or has_perm_id
 
@@ -67,7 +77,9 @@ async def check_permissions(ctx: commands.Context,
         if level >= permission_level and level.name in level_permissions:
             if -1 in level_permissions[level.name]:
                 return True
-            has_perm_role = any(role.id in level_permissions[level.name] for role in author_roles)
+            has_perm_role = any(
+                role.id in level_permissions[level.name] for role in author_roles
+            )
             has_perm_id = ctx.author.id in level_permissions[level.name]
             if has_perm_role or has_perm_id:
                 return True
@@ -95,5 +107,6 @@ def thread_only():
             Otherwise, `False`.
         """
         return ctx.thread is not None
-    predicate.fail_msg = 'This is not a Modmail thread.'
+
+    predicate.fail_msg = "This is not a Modmail thread."
     return commands.check(predicate)

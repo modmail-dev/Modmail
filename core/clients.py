@@ -12,11 +12,11 @@ from aiohttp import ClientResponseError, ClientResponse
 
 from core.utils import info
 
-logger = logging.getLogger('Modmail')
+logger = logging.getLogger("Modmail")
 
-prefix = os.getenv('LOG_URL_PREFIX', '/logs')
-if prefix == 'NONE':
-    prefix = ''
+prefix = os.getenv("LOG_URL_PREFIX", "/logs")
+if prefix == "NONE":
+    prefix = ""
 
 
 class RequestClient:
@@ -43,12 +43,14 @@ class RequestClient:
         self.session = bot.session
         self.headers: dict = None
 
-    async def request(self, url: str,
-                      method: str = 'GET',
-                      payload: dict = None,
-                      return_response: bool = False,
-                      headers: dict = None) -> Union[ClientResponse,
-                                                     dict, str]:
+    async def request(
+        self,
+        url: str,
+        method: str = "GET",
+        payload: dict = None,
+        return_response: bool = False,
+        headers: dict = None,
+    ) -> Union[ClientResponse, dict, str]:
         """
         Makes a HTTP request.
 
@@ -78,8 +80,9 @@ class RequestClient:
             headers.update(self.headers)
         else:
             headers = self.headers
-        async with self.session.request(method, url, headers=headers,
-                                        json=payload) as resp:
+        async with self.session.request(
+            method, url, headers=headers, json=payload
+        ) as resp:
             if return_response:
                 return resp
             try:
@@ -153,24 +156,21 @@ class GitHub(RequestClient):
         URL to star Modmail.
     """
 
-    BASE = 'https://api.github.com'
-    REPO = BASE + '/repos/kyb3r/modmail'
-    HEAD = REPO + '/git/refs/heads/master'
-    MERGE_URL = BASE + '/repos/{username}/modmail/merges'
-    FORK_URL = REPO + '/forks'
-    STAR_URL = BASE + '/user/starred/kyb3r/modmail'
+    BASE = "https://api.github.com"
+    REPO = BASE + "/repos/kyb3r/modmail"
+    HEAD = REPO + "/git/refs/heads/master"
+    MERGE_URL = BASE + "/repos/{username}/modmail/merges"
+    FORK_URL = REPO + "/forks"
+    STAR_URL = BASE + "/user/starred/kyb3r/modmail"
 
-    def __init__(self, bot,
-                 access_token: str = '',
-                 username: str = '',
-                 **kwargs):
+    def __init__(self, bot, access_token: str = "", username: str = "", **kwargs):
         super().__init__(bot)
         self.access_token = access_token
         self.username = username
-        self.avatar_url: str = kwargs.pop('avatar_url', '')
-        self.url: str = kwargs.pop('url', '')
+        self.avatar_url: str = kwargs.pop("avatar_url", "")
+        self.url: str = kwargs.pop("url", "")
         if self.access_token:
-            self.headers = {'Authorization': 'token ' + str(access_token)}
+            self.headers = {"Authorization": "token " + str(access_token)}
 
     async def update_repository(self, sha: str = None) -> Optional[dict]:
         """
@@ -191,17 +191,13 @@ class GitHub(RequestClient):
 
         if sha is None:
             resp: dict = await self.request(self.HEAD)
-            sha = resp['object']['sha']
+            sha = resp["object"]["sha"]
 
-        payload = {
-            'base': 'master',
-            'head': sha,
-            'commit_message': 'Updating bot'
-        }
+        payload = {"base": "master", "head": sha, "commit_message": "Updating bot"}
 
         merge_url = self.MERGE_URL.format(username=self.username)
 
-        resp = await self.request(merge_url, method='POST', payload=payload)
+        resp = await self.request(merge_url, method="POST", payload=payload)
         if isinstance(resp, dict):
             return resp
 
@@ -209,7 +205,7 @@ class GitHub(RequestClient):
         """
         Forks Modmail's repository.
         """
-        await self.request(self.FORK_URL, method='POST')
+        await self.request(self.FORK_URL, method="POST")
 
     async def has_starred(self) -> bool:
         """
@@ -228,11 +224,10 @@ class GitHub(RequestClient):
         """
         Stars Modmail's repository.
         """
-        await self.request(self.STAR_URL, method='PUT',
-                           headers={'Content-Length': '0'})
+        await self.request(self.STAR_URL, method="PUT", headers={"Content-Length": "0"})
 
     @classmethod
-    async def login(cls, bot) -> 'GitHub':
+    async def login(cls, bot) -> "GitHub":
         """
         Logs in to GitHub with configuration variable information.
 
@@ -246,27 +241,24 @@ class GitHub(RequestClient):
         GitHub
             The newly created `GitHub` object.
         """
-        self = cls(bot, bot.config.get('github_access_token'), )
-        resp: dict = await self.request('https://api.github.com/user')
-        self.username: str = resp['login']
-        self.avatar_url: str = resp['avatar_url']
-        self.url: str = resp['html_url']
-        logger.info(info(f'GitHub logged in to: {self.username}'))
+        self = cls(bot, bot.config.get("github_access_token"))
+        resp: dict = await self.request("https://api.github.com/user")
+        self.username: str = resp["login"]
+        self.avatar_url: str = resp["avatar_url"]
+        self.url: str = resp["html_url"]
+        logger.info(info(f"GitHub logged in to: {self.username}"))
         return self
 
 
 class ApiClient(RequestClient):
-
     def __init__(self, bot):
         super().__init__(bot)
         if self.token:
-            self.headers = {
-                'Authorization': 'Bearer ' + self.token
-            }
+            self.headers = {"Authorization": "Bearer " + self.token}
 
     @property
     def token(self) -> Optional[str]:
-        return self.bot.config.get('github_access_token')
+        return self.bot.config.get("github_access_token")
 
     @property
     def db(self):
@@ -277,61 +269,57 @@ class ApiClient(RequestClient):
         return self.db.logs
 
     async def get_user_logs(self, user_id: Union[str, int]) -> list:
-        query = {
-            'recipient.id': str(user_id),
-            'guild_id': str(self.bot.guild_id)
-            }
+        query = {"recipient.id": str(user_id), "guild_id": str(self.bot.guild_id)}
 
-        projection = {
-            'messages': {'$slice': 5}
-        }
+        projection = {"messages": {"$slice": 5}}
         return await self.logs.find(query, projection).to_list(None)
 
     async def get_log(self, channel_id: Union[str, int]) -> dict:
-        return await self.logs.find_one({'channel_id': str(channel_id)})
+        return await self.logs.find_one({"channel_id": str(channel_id)})
 
     async def get_log_link(self, channel_id: Union[str, int]) -> str:
         doc = await self.get_log(channel_id)
         return f"{self.bot.config.log_url.strip('/')}{prefix}/{doc['key']}"
 
-    async def create_log_entry(self,
-                               recipient: Member,
-                               channel: TextChannel,
-                               creator: Member) -> str:
+    async def create_log_entry(
+        self, recipient: Member, channel: TextChannel, creator: Member
+    ) -> str:
         key = secrets.token_hex(6)
 
-        await self.logs.insert_one({
-            'key': key,
-            'open': True,
-            'created_at': str(datetime.utcnow()),
-            'closed_at': None,
-            'channel_id': str(channel.id),
-            'guild_id': str(self.bot.guild_id),
-            'recipient': {
-                'id': str(recipient.id),
-                'name': recipient.name,
-                'discriminator': recipient.discriminator,
-                'avatar_url': str(recipient.avatar_url),
-                'mod': False
-            },
-            'creator': {
-                'id': str(creator.id),
-                'name': creator.name,
-                'discriminator': creator.discriminator,
-                'avatar_url': str(creator.avatar_url),
-                'mod': isinstance(creator, Member)
-            },
-            'closer': None,
-            'messages': []
-        })
+        await self.logs.insert_one(
+            {
+                "key": key,
+                "open": True,
+                "created_at": str(datetime.utcnow()),
+                "closed_at": None,
+                "channel_id": str(channel.id),
+                "guild_id": str(self.bot.guild_id),
+                "recipient": {
+                    "id": str(recipient.id),
+                    "name": recipient.name,
+                    "discriminator": recipient.discriminator,
+                    "avatar_url": str(recipient.avatar_url),
+                    "mod": False,
+                },
+                "creator": {
+                    "id": str(creator.id),
+                    "name": creator.name,
+                    "discriminator": creator.discriminator,
+                    "avatar_url": str(creator.avatar_url),
+                    "mod": isinstance(creator, Member),
+                },
+                "closer": None,
+                "messages": [],
+            }
+        )
 
         return f"{self.bot.config.log_url.strip('/')}{prefix}/{key}"
 
     async def get_config(self) -> dict:
-        conf = await self.db.config.find_one({'bot_id': self.bot.user.id})
+        conf = await self.db.config.find_one({"bot_id": self.bot.user.id})
         if conf is None:
-            await self.db.config.insert_one({'bot_id': self.bot.user.id})
-            return {'bot_id': self.bot.user.id}
+            await self.db.config.insert_one({"bot_id": self.bot.user.id})
+            return {"bot_id": self.bot.user.id}
         return conf
 
     async def update_config(self, data: dict):
@@ -343,83 +331,78 @@ class ApiClient(RequestClient):
         unset = {k: 1 for k in valid_keys if k not in data}
 
         return await self.db.config.update_one(
-            {'bot_id': self.bot.user.id},
-            {'$set': toset, '$unset': unset}
-            )
+            {"bot_id": self.bot.user.id}, {"$set": toset, "$unset": unset}
+        )
 
-    async def edit_message(self, message_id: Union[int, str],
-                           new_content: str) -> None:
-        await self.logs.update_one({
-            'messages.message_id': str(message_id)
-        }, {
-            '$set': {
-                'messages.$.content': new_content,
-                'messages.$.edited': True
-            }
-        })
+    async def edit_message(self, message_id: Union[int, str], new_content: str) -> None:
+        await self.logs.update_one(
+            {"messages.message_id": str(message_id)},
+            {"$set": {"messages.$.content": new_content, "messages.$.edited": True}},
+        )
 
-    async def append_log(self,
-                         message: Message,
-                         channel_id: Union[str, int] = '',
-                         type_: str = 'thread_message') -> dict:
+    async def append_log(
+        self,
+        message: Message,
+        channel_id: Union[str, int] = "",
+        type_: str = "thread_message",
+    ) -> dict:
         channel_id = str(channel_id) or str(message.channel.id)
         data = {
-            'timestamp': str(message.created_at),
-            'message_id': str(message.id),
-            'author': {
-                'id': str(message.author.id),
-                'name': message.author.name,
-                'discriminator': message.author.discriminator,
-                'avatar_url': str(message.author.avatar_url),
-                'mod': not isinstance(message.channel, DMChannel),
+            "timestamp": str(message.created_at),
+            "message_id": str(message.id),
+            "author": {
+                "id": str(message.author.id),
+                "name": message.author.name,
+                "discriminator": message.author.discriminator,
+                "avatar_url": str(message.author.avatar_url),
+                "mod": not isinstance(message.channel, DMChannel),
             },
-            'content': message.content,
-            'type': type_,
-            'attachments': [
+            "content": message.content,
+            "type": type_,
+            "attachments": [
                 {
-                    'id': a.id,
-                    'filename': a.filename,
-                    'is_image': a.width is not None,
-                    'size': a.size,
-                    'url': a.url
-                } for a in message.attachments
-            ]
+                    "id": a.id,
+                    "filename": a.filename,
+                    "is_image": a.width is not None,
+                    "size": a.size,
+                    "url": a.url,
+                }
+                for a in message.attachments
+            ],
         }
 
         return await self.logs.find_one_and_update(
-            {'channel_id': channel_id},
-            {'$push': {f'messages': data}},
-            return_document=True
+            {"channel_id": channel_id},
+            {"$push": {f"messages": data}},
+            return_document=True,
         )
 
-    async def post_log(self,
-                       channel_id: Union[int, str],
-                       data: dict) -> dict:
+    async def post_log(self, channel_id: Union[int, str], data: dict) -> dict:
         return await self.logs.find_one_and_update(
-            {'channel_id': str(channel_id)},
-            {'$set': {k: v for k, v in data.items()}},
-            return_document=True
+            {"channel_id": str(channel_id)},
+            {"$set": {k: v for k, v in data.items()}},
+            return_document=True,
         )
 
     async def update_repository(self) -> dict:
         user = await GitHub.login(self.bot)
         data = await user.update_repository()
         return {
-            'data': data,
-            'user': {
-                'username': user.username,
-                'avatar_url': user.avatar_url,
-                'url': user.url
-            }
+            "data": data,
+            "user": {
+                "username": user.username,
+                "avatar_url": user.avatar_url,
+                "url": user.url,
+            },
         }
 
     async def get_user_info(self) -> dict:
         user = await GitHub.login(self.bot)
         return {
-            'user': {
-                'username': user.username,
-                'avatar_url': user.avatar_url,
-                'url': user.url
+            "user": {
+                "username": user.username,
+                "avatar_url": user.avatar_url,
+                "url": user.url,
             }
         }
 
