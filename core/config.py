@@ -16,65 +16,80 @@ class ConfigManager:
 
     allowed_to_change_in_command = {
         # activity
-        'twitch_url',
-
+        "twitch_url",
         # bot settings
-        'main_category_id', 'disable_autoupdates', 'prefix', 'mention',
-        'main_color', 'user_typing', 'mod_typing', 'account_age', 'guild_age',
-        'reply_without_command',
-
+        "main_category_id",
+        "disable_autoupdates",
+        "prefix",
+        "mention",
+        "main_color",
+        "user_typing",
+        "mod_typing",
+        "account_age",
+        "guild_age",
+        "reply_without_command",
         # logging
-        'log_channel_id',
-
+        "log_channel_id",
         # threads
-        'sent_emoji', 'blocked_emoji', 'close_emoji', 'disable_recipient_thread_close',
-        'thread_creation_response', 'thread_creation_footer', 'thread_creation_title',
-        'thread_close_footer', 'thread_close_title', 'thread_close_response',
-        'thread_self_close_response',
-
+        "sent_emoji",
+        "blocked_emoji",
+        "close_emoji",
+        "disable_recipient_thread_close",
+        "thread_creation_response",
+        "thread_creation_footer",
+        "thread_creation_title",
+        "thread_close_footer",
+        "thread_close_title",
+        "thread_close_response",
+        "thread_self_close_response",
         # moderation
-        'recipient_color', 'mod_tag', 'mod_color',
-
+        "recipient_color",
+        "mod_tag",
+        "mod_color",
         # anonymous message
-        'anon_username', 'anon_avatar_url', 'anon_tag'
+        "anon_username",
+        "anon_avatar_url",
+        "anon_tag",
     }
 
     internal_keys = {
         # bot presence
-        'activity_message', 'activity_type', 'status', 'oauth_whitelist',
-
+        "activity_message",
+        "activity_type",
+        "status",
+        "oauth_whitelist",
         # moderation
-        'blocked', 'command_permissions', 'level_permissions',
-
+        "blocked",
+        "command_permissions",
+        "level_permissions",
         # threads
-        'snippets', 'notification_squad', 'subscriptions', 'closures',
-
+        "snippets",
+        "notification_squad",
+        "subscriptions",
+        "closures",
         # misc
-        'aliases', 'plugins'
+        "aliases",
+        "plugins",
     }
 
     protected_keys = {
         # Modmail
-        'modmail_guild_id', 'guild_id',
-        'log_url', 'mongo_uri', 'owners',
-
+        "modmail_guild_id",
+        "guild_id",
+        "log_url",
+        "mongo_uri",
+        "owners",
         # bot
-        'token',
-
+        "token",
         # GitHub
-        'github_access_token',
-
+        "github_access_token",
         # Logging
-        'log_level'
+        "log_level",
     }
 
-    colors = {
-        'mod_color', 'recipient_color', 'main_color'
-    }
+    colors = {"mod_color", "recipient_color", "main_color"}
 
-    time_deltas = {
-        'account_age', 'guild_age'
-    }
+    time_deltas = {"account_age", "guild_age"}
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
 
@@ -105,34 +120,32 @@ class ConfigManager:
 
     def populate_cache(self) -> dict:
         data = {
-            'snippets': {},
-            'plugins': [],
-            'aliases': {},
-            'blocked': {},
-            'oauth_whitelist': [],
-            'command_permissions': {},
-            'level_permissions': {},
-            'notification_squad': {},
-            'subscriptions': {},
-            'closures': {},
-            'log_level': 'INFO'
+            "snippets": {},
+            "plugins": [],
+            "aliases": {},
+            "blocked": {},
+            "oauth_whitelist": [],
+            "command_permissions": {},
+            "level_permissions": {},
+            "notification_squad": {},
+            "subscriptions": {},
+            "closures": {},
+            "log_level": "INFO",
         }
 
         data.update(os.environ)
 
-        if os.path.exists('config.json'):
-            with open('config.json') as f:
+        if os.path.exists("config.json"):
+            with open("config.json") as f:
                 # Config json should override env vars
                 data.update(json.load(f))
 
         self.cache = {
-            k.lower(): v for k, v in data.items()
-            if k.lower() in self.valid_keys
+            k.lower(): v for k, v in data.items() if k.lower() in self.valid_keys
         }
         return self.cache
 
-    async def clean_data(self, key: str,
-                         val: typing.Any) -> typing.Tuple[str, str]:
+    async def clean_data(self, key: str, val: typing.Any) -> typing.Tuple[str, str]:
         value_text = val
         clean_value = val
 
@@ -142,20 +155,36 @@ class ConfigManager:
 
             if hex_ is None:
                 if not isinstance(val, str):
-                    raise InvalidConfigError('Invalid color name or hex.')
-                if val.startswith('#'):
+                    raise InvalidConfigError("Invalid color name or hex.")
+                if val.startswith("#"):
                     val = val[1:]
                 if len(val) != 6:
-                    raise InvalidConfigError('Invalid color name or hex.')
+                    raise InvalidConfigError("Invalid color name or hex.")
                 for letter in val:
-                    if letter not in {'0', '1', '2', '3', '4', '5', '6', '7',
-                                      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}:
-                        raise InvalidConfigError('Invalid color name or hex.')
-                clean_value = '#' + val
+                    if letter not in {
+                        "0",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "a",
+                        "b",
+                        "c",
+                        "d",
+                        "e",
+                        "f",
+                    }:
+                        raise InvalidConfigError("Invalid color name or hex.")
+                clean_value = "#" + val
                 value_text = clean_value
             else:
                 clean_value = hex_
-                value_text = f'{val} ({clean_value})'
+                value_text = f"{val} ({clean_value})"
 
         elif key in self.time_deltas:
             try:
@@ -170,11 +199,11 @@ class ConfigManager:
                     raise InvalidConfigError(*exc.args)
                 except Exception:
                     raise InvalidConfigError(
-                        'Unrecognized time, please use ISO-8601 duration format '
+                        "Unrecognized time, please use ISO-8601 duration format "
                         'string or a simpler "human readable" time.'
                     )
                 clean_value = isodate.duration_isoformat(time.dt - converter.now)
-                value_text = f'{val} ({clean_value})'
+                value_text = f"{val} ({clean_value})"
 
         return clean_value, value_text
 
