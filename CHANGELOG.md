@@ -4,6 +4,84 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.22.0
+
+### Added
+
+Added a 🛑 reaction to the paginators to delete the embed.  
+
+### Fixed
+
+`?blocked` is now paginated using reactions. This fixes [#249](https://github.com/kyb3r/modmail/issues/249)
+
+# v2.21.0
+
+### Added 
+
+New `?plugin registry compact` command which shows a more compact view of all plugins.
+
+# v2.20.2
+
+### Plugin Registry
+
+Plugin developers can now make a PR to include their plugin in the `plugin registry` command.
+Add your plugin in the `plugins/registry.json` file in the main repository.
+
+### Changed
+
+`?debug` command now shows the most recent logs first. (Starts at the last page)
+
+# v2.20.1
+
+### What's new?
+
+  - New error message when using thread-only commands outside of threads.
+  - `?unnotify`, ability to undo `?notify`.
+  - `?notify` and `?subscribe` now accepts other users.
+
+### Changes
+
+This update contains mostly internal changes.
+  - Implemented support for the new discord.py v1.1.1.
+  - Improved help text for most commands.
+  - Completely revamped help command, few user changes.
+  - Removed abc (internal).
+
+# v2.20.0
+
+### What's new? 
+
+New `oauth` whitelist command which allows you to whitelist users so they can log in via discord to view logs. To set up oauth login for your logviewer app check the logviewer [repo](https://github.com/kyb3r/logviewer).
+
+# v2.19.1
+
+### Changed
+
+- Ability to force an update despite having the same version number. Helpful to keep up-to-date with the latest GitHub commit.
+  - `?update force`.
+- Plugin developers now have a new event called `on_plugin_ready`, this is coroutine is awaited when all plugins are loaded. Use `on_plugin_ready` instead of `on_ready` since `on_ready` will not get called in plugins.
+
+# v2.19.0
+
+### What's new?
+
+- New config variable `guild_age`, similar to `account_age`, `guild_age` sets a limit as to how long a user has to wait after they joined the server to message Modmail.
+- `guild_age` can be set the same way as `account_age`.
+
+# v2.18.5
+
+Fix help command bug when using external plugins.
+
+# v2.18.4
+
+Fix the teams permission bug.
+
+# v2.18.2
+
+### Changed
+
+Commands now have better error messages, instead of just sending the help message for a command when an argument fails to be converted to its specified object, the bot now says things like "User 'bob' not found" instead.
+
 # v2.18.1
 
 Un-deprecated the `OWNERS` config variable to support discord developer team accounts.
@@ -39,7 +117,7 @@ To view all roles and users with permission for a permission group or command do
 -  `?permissions get command command-name`
 -  `?permissions get level owner`
 
-By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `EGULAR` set to @everyone.
+By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `REGULAR` set to @everyone.
 
 ### Breaking
 
@@ -53,7 +131,6 @@ When updating to this version, all prior permission settings with guild-based pe
 ### Changed
 
 - The help message no longer conceals inaccessible commands due to check failures.
-
 
 # v2.17.2
 
