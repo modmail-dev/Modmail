@@ -34,10 +34,10 @@ class Version:
 
     def __init__(self, bot, version: str, lines: str):
         self.bot = bot
-        self.version = version.lstrip('vV')
+        self.version = version.lstrip("vV")
         self.lines = [x for x in lines.splitlines() if x]
         self.fields = defaultdict(str)
-        self.description = ''
+        self.description = ""
         self.parse()
 
     def __repr__(self) -> str:
@@ -50,16 +50,16 @@ class Version:
         curr_action = None
 
         for line in self.lines:
-            if line.startswith('### '):
+            if line.startswith("### "):
                 curr_action = line[4:]
             elif curr_action is None:
-                self.description += line + '\n'
+                self.description += line + "\n"
             else:
-                self.fields[curr_action] += line + '\n'
+                self.fields[curr_action] += line + "\n"
 
     @property
     def url(self) -> str:
-        return Changelog.CHANGELOG_URL + '#v' + self.version.replace('.', '')
+        return Changelog.CHANGELOG_URL + "#v" + self.version.replace(".", "")
 
     @property
     def embed(self) -> Embed:
@@ -68,14 +68,14 @@ class Version:
         """
         embed = Embed(color=Color.green(), description=self.description)
         embed.set_author(
-            name=f'v{self.version} - Changelog',
+            name=f"v{self.version} - Changelog",
             icon_url=self.bot.user.avatar_url,
-            url=self.url
+            url=self.url,
         )
 
         for name, value in self.fields.items():
             embed.add_field(name=name, value=value)
-        embed.set_footer(text=f'Current version: v{self.bot.version}')
+        embed.set_footer(text=f"Current version: v{self.bot.version}")
         embed.set_thumbnail(url=self.bot.user.avatar_url)
         return embed
 
@@ -110,15 +110,16 @@ class Changelog:
         The regex used to parse the versions.
     """
 
-    RAW_CHANGELOG_URL = 'https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md'
-    CHANGELOG_URL = 'https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md'
-    VERSION_REGEX = re.compile(r'# (v\d+\.\d+\.\d+)([\S\s]*?(?=# v|$))')
+    RAW_CHANGELOG_URL = (
+        "https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md"
+    )
+    CHANGELOG_URL = "https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md"
+    VERSION_REGEX = re.compile(r"# (v\d+\.\d+\.\d+)([\S\s]*?(?=# v|$))")
 
     def __init__(self, bot, text: str):
         self.bot = bot
         self.text = text
-        self.versions = [Version(bot, *m)
-                         for m in self.VERSION_REGEX.findall(text)]
+        self.versions = [Version(bot, *m) for m in self.VERSION_REGEX.findall(text)]
 
     @property
     def latest_version(self) -> Version:
@@ -135,7 +136,7 @@ class Changelog:
         return [v.embed for v in self.versions]
 
     @classmethod
-    async def from_url(cls, bot, url: str = '') -> 'Changelog':
+    async def from_url(cls, bot, url: str = "") -> "Changelog":
         """
         Create a `Changelog` from a URL.
 
