@@ -255,7 +255,7 @@ class Modmail(commands.Cog):
                 await thread.cancel_closure()
                 embed = discord.Embed(
                     color=discord.Color.red(),
-                    description="Scheduled close " "has been cancelled.",
+                    description="Scheduled close has been cancelled.",
                 )
             else:
                 embed = discord.Embed(
@@ -763,35 +763,45 @@ class Modmail(commands.Cog):
     @trigger_typing
     async def blocked(self, ctx):
         """Retrieve a list of blocked users."""
-        embed = discord.Embed(
-            title="Blocked Users",
-            color=self.bot.main_color,
-            description="Here is a list of blocked users.",
-        )
+
+        embeds = [
+            discord.Embed(
+                title="Blocked Users", color=self.bot.main_color, description=""
+            )
+        ]
 
         users = []
-        not_reachable = []
 
         for id_, reason in self.bot.blocked_users.items():
             user = self.bot.get_user(int(id_))
             if user:
-                users.append((user, reason))
+                users.append((user.mention, reason))
             else:
-                not_reachable.append((id_, reason))
+                try:
+                    user = await self.bot.fetch_user(id_)
+                    users.append((str(user), reason))
+                except discord.NotFound:
+                    pass
 
         if users:
-            val = "\n".join(u.mention + (f" - `{r}`" if r else "") for u, r in users)
-            embed.add_field(name="Currently Known", value=val)
-        if not_reachable:
-            val = "\n".join(
-                f"`{i}`" + (f" - `{r}`" if r else "") for i, r in not_reachable
-            )
-            embed.add_field(name="Unknown", value=val, inline=False)
+            em = embeds[-1]
 
-        if not users and not not_reachable:
-            embed.description = "Currently there are no blocked users."
+            for mention, reason in users:
+                line = mention + f" - `{reason or 'No reason provided'}`\n"
+                if len(em.description) + len(line) > 2048:
+                    embeds.append(
+                        discord.Embed(
+                            title="Blocked Users (Continued)",
+                            color=self.bot.main_color,
+                            description=line,
+                        )
+                    )
+                else:
+                    em.description += line
+        else:
+            embeds[-1].description = "Currently there are no blocked users."
 
-        await ctx.send(embed=embed)
+        await PaginatorSession(ctx, *embeds).run()
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)

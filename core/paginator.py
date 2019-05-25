@@ -54,7 +54,7 @@ class PaginatorSession:
             "◀": self.previous_page,
             "▶": self.next_page,
             "⏭": self.last_page,
-            # '⏹': self.close
+            "🛑": self.close,
         }
 
         if options.get("edit_footer", True) and len(self.embeds) > 1:
@@ -194,10 +194,7 @@ class PaginatorSession:
         """
         self.running = False
 
-        try:
-            await self.ctx.message.add_reaction("✅")
-        except (HTTPException, InvalidArgument):
-            pass
+        self.ctx.bot.loop.create_task(self.ctx.message.add_reaction("✅"))
 
         if delete:
             return await self.base.delete()
@@ -221,6 +218,9 @@ class PaginatorSession:
 
 
 class MessagePaginatorSession:
+
+    # TODO: Subclass MessagePaginatorSession from PaginatorSession
+
     def __init__(
         self, ctx: commands.Context, *messages, embed: Embed = None, **options
     ):
@@ -242,7 +242,7 @@ class MessagePaginatorSession:
             "◀": self.previous_page,
             "▶": self.next_page,
             "⏭": self.last_page,
-            # '⏹': self.close
+            "🛑": self.close,
         }
 
     def add_page(self, msg: str) -> None:
@@ -387,10 +387,7 @@ class MessagePaginatorSession:
         """
         self.running = False
 
-        try:
-            await self.ctx.message.add_reaction("✅")
-        except (HTTPException, InvalidArgument):
-            pass
+        self.ctx.bot.loop.create_task(self.ctx.message.add_reaction("✅"))
 
         if delete:
             return await self.base.delete()
