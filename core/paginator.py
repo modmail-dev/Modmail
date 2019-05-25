@@ -195,7 +195,7 @@ class PaginatorSession:
         self.running = False
 
         self.ctx.bot.loop.create_task(self.ctx.message.add_reaction("✅"))
-        
+
         if delete:
             return await self.base.delete()
 
@@ -218,7 +218,7 @@ class PaginatorSession:
 
 
 class MessagePaginatorSession:
-    
+
     # TODO: Subclass MessagePaginatorSession from PaginatorSession
 
     def __init__(
