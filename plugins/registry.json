@@ -110,5 +110,13 @@
         "title": "New member messages plugin",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "tags": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Tag Management For Your Server",
+        "bot_version": "2.20.1",
+        "title": "Tags Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     }
 }
