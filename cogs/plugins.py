@@ -10,12 +10,11 @@ import subprocess
 import sys
 from difflib import get_close_matches
 
-from pkg_resources import parse_version
-
 import discord
 from discord.ext import commands
 from discord.utils import async_all
 
+from pkg_resources import parse_version
 
 from core import checks
 from core.models import PermissionLevel
@@ -181,7 +180,7 @@ class Plugins(commands.Cog):
         embed = discord.Embed(
             description="Downloading this plugin...", color=self.bot.main_color
         )
-        message = await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
         async with ctx.typing():
             if len(plugin_name.split("/")) >= 3:

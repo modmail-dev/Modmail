@@ -87,6 +87,6 @@ Modmail supports the use of third party plugins to extend or add functionality t
 
 ## Contributing
 
-This project is licenced under MIT. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started. 
+Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started. 
 
-This bot is open source and always will be. If you like this project and would like to show your appreciation, heres the link for our **[Patreon](https://www.patreon.com/kyber)**. 
+This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, here's the link for our **[Patreon](https://www.patreon.com/kyber)**. 
