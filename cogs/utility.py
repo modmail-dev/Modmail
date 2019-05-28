@@ -829,7 +829,7 @@ class Utility(commands.Cog):
         """
         Create shortcuts to bot commands.
 
-        When `?alias` is used by itself, this will retrieve
+        When `{prefix}alias` is used by itself, this will retrieve
         a list of alias that are currently set.
 
         To use alias:

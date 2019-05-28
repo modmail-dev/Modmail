@@ -655,7 +655,8 @@ class Modmail(commands.Cog):
         """
         ctx.message.content = msg
         async with ctx.typing():
-            await ctx.thread.note(ctx.message)
+            msg = await ctx.thread.note(ctx.message)
+            await msg.pin()
 
     async def find_linked_message(self, ctx, message_id):
         linked_message_id = None
