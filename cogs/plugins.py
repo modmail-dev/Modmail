@@ -133,6 +133,9 @@ class Plugins(commands.Cog):
         try:
             self.bot.load_extension(ext)
         except commands.ExtensionError as exc:
+            # TODO: Add better error handling for plugin load faliure
+            import traceback
+            traceback.print_exc()
             raise DownloadError("Invalid plugin") from exc
         else:
             msg = f"Loaded plugins.{username}-{repo}.{plugin_name}"
@@ -214,7 +217,7 @@ class Plugins(commands.Cog):
 
                 embed = discord.Embed(
                     description="The plugin is installed.\n"
-                    "*Please note: any plugin that you install is of your OWN RISK*",
+                    "*Please note: any plugin that you install is at your OWN RISK*",
                     color=self.bot.main_color,
                 )
                 await ctx.send(embed=embed)
