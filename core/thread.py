@@ -120,10 +120,6 @@ class Thread:
             log_url = log_count = None
             # ensure core functionality still works
 
-        info_embed = self.manager.format_info_embed(
-            recipient, log_url, log_count, discord.Color.green()
-        )
-
         topic = f"User ID: {recipient.id}"
         if creator:
             mention = None
@@ -131,11 +127,14 @@ class Thread:
             mention = self.bot.config.get("mention", "@here")
 
         async def send_genesis_message():
+            info_embed = self.manager.format_info_embed(
+                recipient, log_url, log_count, discord.Color.green()
+            )
             try:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self.genesis_message = msg
-            except:
+            except Exception as e:
                 pass
             finally:
                 self.ready = True
