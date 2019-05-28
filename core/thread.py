@@ -793,7 +793,7 @@ class ThreadManager:
                 embed.add_field(name="Roles", value=role_names, inline=True)
         else:
             embed.set_footer(
-                text=f"{footer} | Note: this member " "is not part of this server."
+                text=f"{footer} | Note: this member is not part of the main server."
             )
 
         if log_count:
@@ -802,5 +802,11 @@ class ThreadManager:
             embed.description += f" with **{log_count}** past {thread}."
         else:
             embed.description += "."
+
+        mutual_guilds = [g for g in self.bot.guilds if user in g]
+        if user not in self.bot.modmail_guild or len(mutual_guilds) > 1:
+            embed.add_field(
+                name="Mutual Servers", value=", ".join(g.name for g in mutual_guilds)
+            )
 
         return embed
