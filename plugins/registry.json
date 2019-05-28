@@ -7,6 +7,14 @@
         "icon_url": "https://i.imgur.com/951szZ3.jpg",
         "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
     },
+    "dragory-migrate": {
+        "repository": "kyb3r/modmail-plugins",
+        "description": "Migrate your logs from Dragory's modmail bot to this one with a simple command. Added at the request of users.",
+        "bot_version": "2.20.1",
+        "title": "Dragory Logs Migration",
+        "icon_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png",
+        "thumbnail_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png"
+    },
     "autorole": {
         "repository": "papiersnipper/modmail-plugins",
         "description": "Easily auto-assign a role to a user when they join your server.",
