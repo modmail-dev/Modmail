@@ -803,7 +803,7 @@ class ThreadManager:
             embed.description += "."
 
         mutual_guilds = [g for g in self.bot.guilds if user in g.members]
-        if user not in self.bot.modmail_guild.members or len(mutual_guilds) > 1:
+        if user not in self.bot.guild.members or len(mutual_guilds) > 1:
             embed.add_field(
                 name="Mutual Servers", value=", ".join(g.name for g in mutual_guilds)
             )
