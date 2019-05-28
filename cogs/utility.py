@@ -11,13 +11,13 @@ from types import SimpleNamespace as param
 from json import JSONDecodeError
 from textwrap import indent
 
-from pkg_resources import parse_version
-
 from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
 from discord.ext import commands
 
 from aiohttp import ClientResponseError
+from pkg_resources import parse_version
+
 from core import checks
 from core.changelog import Changelog
 from core.decorators import github_access_token_required, trigger_typing
@@ -829,7 +829,7 @@ class Utility(commands.Cog):
         """
         Create shortcuts to bot commands.
 
-        When `?alias` is used by itself, this will retrieve
+        When `{prefix}alias` is used by itself, this will retrieve
         a list of alias that are currently set.
 
         To use alias:

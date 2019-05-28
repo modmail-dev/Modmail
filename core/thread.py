@@ -120,10 +120,6 @@ class Thread:
             log_url = log_count = None
             # ensure core functionality still works
 
-        info_embed = self.manager.format_info_embed(
-            recipient, log_url, log_count, discord.Color.green()
-        )
-
         topic = f"User ID: {recipient.id}"
         if creator:
             mention = None
@@ -131,11 +127,14 @@ class Thread:
             mention = self.bot.config.get("mention", "@here")
 
         async def send_genesis_message():
+            info_embed = self.manager.format_info_embed(
+                recipient, log_url, log_count, discord.Color.green()
+            )
             try:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self.genesis_message = msg
-            except:
+            except Exception as e:
                 pass
             finally:
                 self.ready = True
@@ -365,10 +364,12 @@ class Thread:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(param(name="msg"))
 
-        await asyncio.gather(
+        _, msg = await asyncio.gather(
             self.bot.api.append_log(message, self.channel.id, type_="system"),
             self.send(message, self.channel, note=True),
         )
+
+        return msg
 
     async def reply(self, message: discord.Message, anonymous: bool = False) -> None:
         if not message.content and not message.attachments:
@@ -580,7 +581,8 @@ class Thread:
         else:
             mentions = None
 
-        await destination.send(mentions, embed=embed)
+        _msg = await destination.send(mentions, embed=embed)
+
         if additional_images:
             self.ready = False
             await asyncio.gather(*additional_images)
@@ -588,6 +590,8 @@ class Thread:
 
         if delete_message:
             self.bot.loop.create_task(ignore(message.delete()))
+
+        return _msg
 
     def get_notifications(self) -> str:
         config = self.bot.config
@@ -792,9 +796,7 @@ class ThreadManager:
             if role_names:
                 embed.add_field(name="Roles", value=role_names, inline=True)
         else:
-            embed.set_footer(
-                text=f"{footer} | Note: this member " "is not part of this server."
-            )
+            embed.set_footer(text=f"{footer} • (not in main server)")
 
         if log_count:
             # embed.add_field(name='Past logs', value=f'{log_count}')
@@ -802,5 +804,11 @@ class ThreadManager:
             embed.description += f" with **{log_count}** past {thread}."
         else:
             embed.description += "."
+
+        mutual_guilds = [g for g in self.bot.guilds if user in g.members]
+        if user not in self.bot.guild.members or len(mutual_guilds) > 1:
+            embed.add_field(
+                name="Mutual Servers", value=", ".join(g.name for g in mutual_guilds)
+            )
 
         return embed
