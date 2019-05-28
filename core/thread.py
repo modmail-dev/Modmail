@@ -792,7 +792,7 @@ class ThreadManager:
                 embed.add_field(name="Roles", value=role_names, inline=True)
         else:
             embed.set_footer(
-                text=f"{footer} • user not in main server"
+                text=f"{footer} • (Not in main server)"
             )
 
         if log_count:
