@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# v2.23.0
+
+### Added 
+
+Added a "Mutual servers" field to the genesis embed if:
+a) The user is not in the main guild.
+b) The user shares more than 1 server with the bot.
+
+### Changed
+
+Notes taken using the `?note` command are now automatically pinned within the thread channel.
+
+# v2.22.0
+
+### Added
+
+Added a 🛑 reaction to the paginators to delete the embed.  
+
+### Fixed
+
+`?blocked` is now paginated using reactions. This fixes [#249](https://github.com/kyb3r/modmail/issues/249)
+
 # v2.21.0
 
 ### Added 
