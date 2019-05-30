@@ -113,7 +113,7 @@ class Plugins(commands.Cog):
                     await self.bot.loop.run_in_executor(
                         None,
                         self._asubprocess_run,
-                        f"pip install -r {dirname}/requirements.txt",
+                        f"pip install -r {dirname}/requirements.txt -q -q",
                     )
                 else:
                     await self.bot.loop.run_in_executor(
