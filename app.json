@@ -1,0 +1,31 @@
+{
+  "name": "Modmail",
+  "description": "An easy to install Modmail bot for Discord - DM to contact mods!",
+  "repository": "https://github.com/kyb3r/modmail",
+  "env": {
+    "TOKEN": {
+      "description": "Your discord bot's token.",
+      "required": true
+    },
+    "GUILD_ID": {
+      "description": "The id for the server you are hosting this bot for.",
+      "required": true
+    },
+    "OWNERS": {
+      "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval and update).",
+      "required": true
+    },
+    "GITHUB_ACCESS_TOKEN": {
+      "description": "Your personal access token for GitHub, adding this gives you the ability to use the 'update' command, which will sync your fork with the main repo.",
+      "required": false
+    },
+    "MONGO_URI": {
+      "description": "Mongo DB connection URI for self-hosting your data.",
+      "required": true
+    },
+    "LOG_URL": {
+      "description": "The url of the log viewer app for viewing self-hosted logs.",
+      "required": true
+    }
+  }
+}
