@@ -90,7 +90,7 @@ class Plugins(commands.Cog):
 
     async def download_plugin_repo(self, username, repo):
         try:
-            cmd = f"git clone https://github.com/{username}/{repo} "
+            cmd = f"git clone https://github.com/{username}/{repo} -f"
             cmd += f"plugins/{username}-{repo} -q"
 
             await self.bot.loop.run_in_executor(None, self._asubprocess_run, cmd)
