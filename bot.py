@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = "2.23.0"
+__version__ = "2.24.0"
 
 import asyncio
 import logging
@@ -386,6 +386,7 @@ class ModmailBot(commands.Bot):
         logger.info(info("Client ready."))
         logger.info(LINE)
         logger.info(info(f"Logged in as: {self.user}"))
+        logger.info(info(f"Prefix: {self.prefix}"))
         logger.info(info(f"User ID: {self.user.id}"))
         logger.info(info(f"Guild ID: {self.guild.id if self.guild else 0}"))
         logger.info(LINE)
@@ -983,6 +984,9 @@ class ModmailBot(commands.Bot):
 
     async def metadata_loop(self):
         await self.wait_until_ready()
+        if not self.guild:
+            return
+
         owner = (await self.application_info()).owner
 
         while not self.is_closed():
