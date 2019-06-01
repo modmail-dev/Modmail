@@ -288,6 +288,7 @@ class ApiClient(RequestClient):
 
         await self.logs.insert_one(
             {
+                "_id": key,
                 "key": key,
                 "open": True,
                 "created_at": str(datetime.utcnow()),
