@@ -1,18 +1,21 @@
 """
-MIT License
+License
 
 Copyright (c) 2017-2019 kyb3r
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+in the Software without restriction, including the rights to use, copy, modify 
+and distribute copies of the Software, and to permit persons to whom the Software 
+is furnished to do so, subject to the following terms and conditions: 
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+- The above copyright notice shall be included in all copies of the Software.
 
+You may not:
+  - Claim credit for, or refuse to give credit to the creator(s) of the Software.
+  - Sell copies of the Software and of derivative works.
+  - Modify the original Software to contain hidden harmful content. 
+ 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = "2.23.0"
+__version__ = "2.24.0"
 
 import asyncio
 import logging
@@ -383,6 +386,7 @@ class ModmailBot(commands.Bot):
         logger.info(info("Client ready."))
         logger.info(LINE)
         logger.info(info(f"Logged in as: {self.user}"))
+        logger.info(info(f"Prefix: {self.prefix}"))
         logger.info(info(f"User ID: {self.user.id}"))
         logger.info(info(f"Guild ID: {self.guild.id if self.guild else 0}"))
         logger.info(LINE)
@@ -980,6 +984,9 @@ class ModmailBot(commands.Bot):
 
     async def metadata_loop(self):
         await self.wait_until_ready()
+        if not self.guild:
+            return
+
         owner = (await self.application_info()).owner
 
         while not self.is_closed():
@@ -1008,8 +1015,6 @@ class ModmailBot(commands.Bot):
 if __name__ == "__main__":
     if os.name != "nt":
         import uvloop
-
         uvloop.install()
-
     bot = ModmailBot()
     bot.run()
