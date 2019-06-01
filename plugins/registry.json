@@ -126,5 +126,13 @@
         "title": "Tags Plugin",
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    }
+    },
+    "backupdb": {
+        "repository": "officialpiyush/modmail-plugins",
+        "description": "Backup you're current modmail DB with a single command! **Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
+        "bot_version": "2.20.1",
+        "title": "Backup Database (backupdb)",
+        "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
+        "thumbnail_url": "https://images.ionadev.ml/b/nKAlOC4.jpg"
+   }
 }
