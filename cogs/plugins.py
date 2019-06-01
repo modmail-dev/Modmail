@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import json
 import logging
@@ -13,13 +14,12 @@ from difflib import get_close_matches
 import discord
 from discord.ext import commands
 from discord.utils import async_all
-
 from pkg_resources import parse_version
 
 from core import checks
 from core.models import PermissionLevel
 from core.paginator import PaginatorSession
-from core.utils import info, error
+from core.utils import error, info
 
 logger = logging.getLogger("Modmail")
 
@@ -55,10 +55,20 @@ class Plugins(commands.Cog):
 
     @staticmethod
     def parse_plugin(name):
-        # returns: (username, repo, plugin_name)
+        # returns: (username, repo, plugin_name, branch)
+        # default branch = master
         try:
             result = name.split("/")
             result[2] = "/".join(result[2:])
+            if '@' in result[2]:
+                # branch is specified
+                # for example, fourjr/modmail-plugins/welcomer@develop is a valid name
+                branchsplit_result = result[2].split('@')
+                result.append(branchsplit_result[-1])
+                result[2] = '@'.join(branchsplit_result[:-1])
+            else:
+                result.append('master')
+
         except IndexError:
             return None
 
@@ -68,18 +78,18 @@ class Plugins(commands.Cog):
         await self.bot._connected.wait()
 
         for i in self.bot.config.plugins:
-            parsed_plugin = self.parse_plugin(i)
+            username, repo, name, branch = self.parse_plugin(i)
 
             try:
-                await self.download_plugin_repo(*parsed_plugin[:-1])
+                await self.download_plugin_repo(username, repo, branch)
             except DownloadError as exc:
-                msg = f"{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}"
+                msg = f"{username}/{repo}@{branch} - {exc}"
                 logger.error(error(msg))
             else:
                 try:
-                    await self.load_plugin(*parsed_plugin)
+                    await self.load_plugin(username, repo, name, branch)
                 except DownloadError as exc:
-                    msg = f"{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}"
+                    msg = f"{username}/{repo}@{branch}[{name}] - {exc}"
                     logger.error(error(msg))
 
         await async_all(
@@ -88,10 +98,11 @@ class Plugins(commands.Cog):
 
         logger.debug(info("on_plugin_ready called."))
 
-    async def download_plugin_repo(self, username, repo):
+    async def download_plugin_repo(self, username, repo, branch):
         try:
-            cmd = f"git clone https://github.com/{username}/{repo} "
-            cmd += f"plugins/{username}-{repo} -q"
+            cmd  = f"git clone https://github.com/{username}/{repo} "
+            cmd += f"plugins/{username}-{repo}-{branch} "
+            cmd += f"-b {branch} -q"
 
             await self.bot.loop.run_in_executor(None, self._asubprocess_run, cmd)
             # -q (quiet) so there's no terminal output unless there's an error
@@ -100,29 +111,40 @@ class Plugins(commands.Cog):
 
             if not err.endswith("already exists and is not an empty directory."):
                 # don't raise error if the plugin folder exists
-                raise DownloadError(error) from exc
+                msg = f'Download Error: {username}/{repo}@{branch}'
+                logger.error(msg)
+                raise DownloadError(err) from exc
 
-    async def load_plugin(self, username, repo, plugin_name):
-        ext = f"plugins.{username}-{repo}.{plugin_name}.{plugin_name}"
-        dirname = f"plugins/{username}-{repo}/{plugin_name}"
+    async def load_plugin(self, username, repo, plugin_name, branch):
+        ext = f"plugins.{username}-{repo}-{branch}.{plugin_name}.{plugin_name}"
+        dirname = f"plugins/{username}-{repo}-{branch}/{plugin_name}"
 
         if "requirements.txt" in os.listdir(dirname):
             # Install PIP requirements
             try:
-                await self.bot.loop.run_in_executor(
-                    None,
-                    self._asubprocess_run,
-                    f"python3 -m pip install -U -r {dirname}/"
-                    "requirements.txt --user -q -q",
-                )
-                # -q -q (quiet)
-                # so there's no terminal output unless there's an error
+                if os.name == "nt":  # Windows
+                    await self.bot.loop.run_in_executor(
+                        None,
+                        self._asubprocess_run,
+                        f"pip install -r {dirname}/requirements.txt --user -q -q",
+                    )
+                else:
+                    await self.bot.loop.run_in_executor(
+                        None,
+                        self._asubprocess_run,
+                        f"python3 -m pip install -U -r {dirname}/"
+                        "requirements.txt --user -q -q",
+                    )
+                    # -q -q (quiet)
+                    # so there's no terminal output unless there's an error
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode("utf8").strip()
 
                 if err:
+                    msg = f'Requirements Download Error: {username}/{repo}@{branch}[{plugin_name}]'
+                    logger.error(error(msg))
                     raise DownloadError(
-                        f"Unable to download requirements: ```\n{error}\n```"
+                        f"Unable to download requirements: ```\n{err}\n```"
                     ) from exc
             else:
                 if not os.path.exists(site.USER_SITE):
@@ -130,12 +152,15 @@ class Plugins(commands.Cog):
 
                 sys.path.insert(0, site.USER_SITE)
 
+        await asyncio.sleep(0.5)
         try:
             self.bot.load_extension(ext)
         except commands.ExtensionError as exc:
+            msg = f'Plugin Load Failure: {username}/{repo}@{branch}[{plugin_name}]'
+            logger.error(error(msg))
             raise DownloadError("Invalid plugin") from exc
         else:
-            msg = f"Loaded plugins.{username}-{repo}.{plugin_name}"
+            msg = f"Loaded Plugin: {username}/{repo}@{branch}[{plugin_name}]"
             logger.info(info(msg))
 
     @commands.group(aliases=["plugins"], invoke_without_command=True)
@@ -152,7 +177,7 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name
+            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
             required_version = details["bot_version"]
 
             if parse_version(self.bot.version) < parse_version(required_version):
@@ -184,13 +209,13 @@ class Plugins(commands.Cog):
 
         async with ctx.typing():
             if len(plugin_name.split("/")) >= 3:
-                parsed_plugin = self.parse_plugin(plugin_name)
+                username, repo, name, branch = self.parse_plugin(plugin_name)
 
                 try:
-                    await self.download_plugin_repo(*parsed_plugin[:-1])
+                    await self.download_plugin_repo(username, repo, branch)
                 except DownloadError as exc:
                     embed = discord.Embed(
-                        description=f"Unable to fetch this plugin from Github: {exc}.",
+                        description=f"Unable to fetch this plugin from Github: `{exc}`.",
                         color=self.bot.main_color,
                     )
                     return await ctx.send(embed=embed)
@@ -198,10 +223,10 @@ class Plugins(commands.Cog):
                 importlib.invalidate_caches()
 
                 try:
-                    await self.load_plugin(*parsed_plugin)
+                    await self.load_plugin(username, repo, name, branch)
                 except Exception as exc:
                     embed = discord.Embed(
-                        description=f"Unable to load this plugin: {exc}.",
+                        description=f"Unable to load this plugin: `{exc}`.",
                         color=self.bot.main_color,
                     )
                     return await ctx.send(embed=embed)
@@ -214,7 +239,7 @@ class Plugins(commands.Cog):
 
                 embed = discord.Embed(
                     description="The plugin is installed.\n"
-                    "*Please note: any plugin that you install is of your OWN RISK*",
+                    "*Please note: Any plugin that you install is at your **own risk***",
                     color=self.bot.main_color,
                 )
                 await ctx.send(embed=embed)
@@ -232,13 +257,13 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name
+            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
 
         if plugin_name in self.bot.config.plugins:
             try:
-                username, repo, name = self.parse_plugin(plugin_name)
+                username, repo, name, branch = self.parse_plugin(plugin_name)
 
-                self.bot.unload_extension(f"plugins.{username}-{repo}.{name}.{name}")
+                self.bot.unload_extension(f"plugins.{username}-{repo}-{branch}.{name}.{name}")
             except Exception:
                 pass
 
@@ -256,10 +281,11 @@ class Plugins(commands.Cog):
                             os.chmod(path, stat.S_IWUSR)
                             func(path)
 
-                    shutil.rmtree(f"plugins/{username}-{repo}", onerror=onerror)
+                    shutil.rmtree(f"plugins/{username}-{repo}-{branch}", onerror=onerror)
             except Exception as exc:
                 logger.error(str(exc))
                 self.bot.config.plugins.append(plugin_name)
+                logger.error(error(exc))
                 raise exc
 
             await self.bot.config.update()
@@ -282,7 +308,7 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name
+            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
 
         if plugin_name not in self.bot.config.plugins:
             embed = discord.Embed(
@@ -291,10 +317,10 @@ class Plugins(commands.Cog):
             return await ctx.send(embed=embed)
 
         async with ctx.typing():
-            username, repo, name = self.parse_plugin(plugin_name)
+            username, repo, name, branch = self.parse_plugin(plugin_name)
 
             try:
-                cmd = f"cd plugins/{username}-{repo} && git pull"
+                cmd = f"cd plugins/{username}-{repo}-{branch} && git reset --hard origin/master && git fetch --all && git pull"
                 cmd = await self.bot.loop.run_in_executor(
                     None, self._asubprocess_run, cmd
                 )
@@ -317,11 +343,11 @@ class Plugins(commands.Cog):
 
                 if output != "Already up to date.":
                     # repo was updated locally, now perform the cog reload
-                    ext = f"plugins.{username}-{repo}.{name}.{name}"
+                    ext = f"plugins.{username}-{repo}-{branch}.{name}.{name}"
                     self.bot.unload_extension(ext)
 
                     try:
-                        await self.load_plugin(username, repo, name)
+                        await self.load_plugin(username, repo, name, branch)
                     except DownloadError as exc:
                         em = discord.Embed(
                             description=f"Unable to start the plugin: `{exc}`.",
@@ -424,7 +450,7 @@ class Plugins(commands.Cog):
 
         for name, details in registry:
             repo = f"https://github.com/{details['repository']}"
-            url = f"{repo}/tree/master/{name}"
+            url = f"{repo}/tree/{details['branch']}/{name}"
             desc = details["description"].replace("\n", "")
             fmt = f"[`{name}`]({url}) - {desc}"
             length = len(fmt) - len(url) - 4
