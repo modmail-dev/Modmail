@@ -129,7 +129,7 @@
     },
     "backupdb": {
         "repository": "officialpiyush/modmail-plugins",
-        "description": "Backup you're current modmail DB with a single command!\n**Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
+        "description": "Backup you're current modmail DB with a single command!\n\n**Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
         "bot_version": "2.20.1",
         "title": "Backup Database (backupdb)",
         "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
