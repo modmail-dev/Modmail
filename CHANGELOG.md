@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Fixed a bug with branches and `plugin update`.
 
-# v2.23.0
+# v2.24.0
 
 ### Added
 
 Branch support for `plugin add` and in registry. Typically for developers.    
+
+# v2.23.0
 
 ### Added 
 
