@@ -320,7 +320,7 @@ class Plugins(commands.Cog):
             username, repo, name, branch = self.parse_plugin(plugin_name)
 
             try:
-                cmd = f"cd plugins/{username}-{repo}-{branch} && git reset --hard origin/master && git fetch --all && git pull"
+                cmd = f"cd plugins/{username}-{repo}-{branch} && git reset --hard origin/{branch} && git fetch --all && git pull"
                 cmd = await self.bot.loop.run_in_executor(
                     None, self._asubprocess_run, cmd
                 )
