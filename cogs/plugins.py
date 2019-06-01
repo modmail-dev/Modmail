@@ -109,14 +109,21 @@ class Plugins(commands.Cog):
         if "requirements.txt" in os.listdir(dirname):
             # Install PIP requirements
             try:
-                await self.bot.loop.run_in_executor(
-                    None,
-                    self._asubprocess_run,
-                    f"python3 -m pip install -U -r {dirname}/"
-                    "requirements.txt --user -q -q",
-                )
-                # -q -q (quiet)
-                # so there's no terminal output unless there's an error
+                if os.name == "nt":  # Windows
+                    await self.bot.loop.run_in_executor(
+                        None,
+                        self._asubprocess_run,
+                        f"pip install -r {dirname}/requirements.txt -q -q",
+                    )
+                else:
+                    await self.bot.loop.run_in_executor(
+                        None,
+                        self._asubprocess_run,
+                        f"python3 -m pip install -U -r {dirname}/"
+                        "requirements.txt --user -q -q",
+                    )
+                    # -q -q (quiet)
+                    # so there's no terminal output unless there's an error
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode("utf8").strip()
 
@@ -133,6 +140,9 @@ class Plugins(commands.Cog):
         try:
             self.bot.load_extension(ext)
         except commands.ExtensionError as exc:
+            # TODO: Add better error handling for plugin load faliure
+            import traceback
+            traceback.print_exc()
             raise DownloadError("Invalid plugin") from exc
         else:
             msg = f"Loaded plugins.{username}-{repo}.{plugin_name}"
@@ -214,7 +224,7 @@ class Plugins(commands.Cog):
 
                 embed = discord.Embed(
                     description="The plugin is installed.\n"
-                    "*Please note: any plugin that you install is of your OWN RISK*",
+                    "*Please note: any plugin that you install is at your OWN RISK*",
                     color=self.bot.main_color,
                 )
                 await ctx.send(embed=embed)
