@@ -1,14 +1,25 @@
 {
     "profanity-filter": {
         "repository": "kyb3r/modmail-plugins",
+        "branch": "master",
         "description": "Checks for profanity in a message using machine learning and deletes it.",
         "bot_version": "2.20.1",
         "title": "Profanity Filter Plugin",
         "icon_url": "https://i.imgur.com/951szZ3.jpg",
         "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
     },
+    "dragory-migrate": {
+        "repository": "kyb3r/modmail-plugins",
+        "branch": "master",
+        "description": "Migrate your logs from Dragory's modmail bot to this one with a simple command. Added at the request of users.",
+        "bot_version": "2.20.1",
+        "title": "Dragory Logs Migration",
+        "icon_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png",
+        "thumbnail_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png"
+    },
     "autorole": {
         "repository": "papiersnipper/modmail-plugins",
+        "branch": "master",
         "description": "Easily auto-assign a role to a user when they join your server.",
         "bot_version": "2.20.1",
         "title": "Autorole Plugin",
@@ -17,6 +28,7 @@
     },
     "embedder": {
         "repository": "papiersnipper/modmail-plugins",
+        "branch": "master",
         "description": "Easily make embeds for a nicer presence.",
         "bot_version": "2.20.1",
         "title": "Embedder Plugin",
@@ -25,6 +37,7 @@
     },
     "leveling": {
         "repository": "papiersnipper/modmail-plugins",
+        "branch": "master",
         "description": "A leveling system for your server: see who's active and who's not.",
         "bot_version": "2.20.1",
         "title": "Leveling Plugin",
@@ -33,6 +46,7 @@
     },
     "purger": {
         "repository": "papiersnipper/modmail-plugins",
+        "branch": "master",
         "description": "Delete multiple messages at a time.",
         "bot_version": "2.20.1",
         "title": "Purger Plugin",
@@ -41,6 +55,7 @@
     },
     "supporters": {
         "repository": "papiersnipper/modmail-plugins",
+        "branch": "master",
         "description": "Let your users know who is part of the support team.",
         "bot_version": "2.20.1",
         "title": "Supporters Plugin",
@@ -49,6 +64,7 @@
     },
     "announcement": {
         "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
         "description": "Easily make announcements in your server!",
         "bot_version": "2.20.1",
         "title": "Announcement Plugin",
@@ -57,7 +73,8 @@
     },
     "code": {
         "repository": "officialpiyush/modmail-plugins",
-        "description": "Run Codes from discord bot. Same like R.Danny's longue Commands",
+        "branch": "master",
+        "description": "Run Codes from discord bot. Similar to R.Danny's longue Commands",
         "bot_version": "2.20.1",
         "title": "Code Plugin",
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
@@ -65,6 +82,7 @@
     },
     "dm-on-join": {
         "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
         "description": "DM New Users when they join",
         "bot_version": "2.20.1",
         "title": "DM-on-join Plugin",
@@ -73,6 +91,7 @@
     },
     "hastebin": {
         "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
         "description": "Easily Upload Text To hastebin!",
         "bot_version": "2.20.1",
         "title": "Hastebin Plugin",
@@ -81,6 +100,7 @@
     },
     "leave-server": {
         "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
         "description": "Don't want your bot in a server? Did someone invite it without your permission? If so, this plugin is useful for you!",
         "bot_version": "2.20.1",
         "title": "Leave-server Plugin",
@@ -89,6 +109,7 @@
     },
     "moderation": {
         "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
         "description": "Rule offenders in your server? Lift the ban hammer or warn them! Moderation plugin to the rescue :tada:",
         "bot_version": "2.20.1",
         "title": "Moderation Plugin",
@@ -97,6 +118,7 @@
     },
     "translator": {
         "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
         "description": "You can auto translate thread msgs using this plugin or translate text fromm any language to English!",
         "bot_version": "2.20.1",
         "title": "Translator Plugin",
@@ -105,6 +127,7 @@
     },
     "welcomer": {
         "repository": "fourjr/modmail-plugins",
+        "branch": "master",
         "description": "Add messages to welcome new members! Allows for embedded messages as well. [Read more](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)",
         "bot_version": "2.20.1",
         "title": "New member messages plugin",
@@ -113,10 +136,20 @@
     },
     "tags": {
         "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
         "description": "Tag Management For Your Server",
         "bot_version": "2.20.1",
         "title": "Tags Plugin",
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    }
+    },
+    "backupdb": {
+        "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
+        "description": "Backup you're current modmail DB with a single command!\n\n**Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
+        "bot_version": "2.20.1",
+        "title": "Backup Database (backupdb)",
+        "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
+        "thumbnail_url": "https://images.ionadev.ml/b/nKAlOC4.jpg"
+   }
 }

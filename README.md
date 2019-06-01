@@ -30,8 +30,12 @@
 
 ## What is Modmail?
 
+Modmail is akin to Reddit's Modmail both in functionality and purpose. It serves as a shared inbox/feed for server staff to communicate with the userbase and vice versa in a seamless way that DMing a single person never could achieve.
 
-Modmail's core functionality provides an efficient way for server members to communicate with server staff. When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
+While the core functionality is to get into contact with the server personal, it's extended  use includes but is not limited to organisational means. Feature or event requests, reporting other users and a comment/feedback/suggestion  box under the guise of anonymity because Modmail threads aren't public.
+
+## How does it work?
+When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
 
 ## Features
 
@@ -59,7 +63,7 @@ This list is ever growing thanks to active development and our exceptional contr
 ## Installation
 
 ### Heroku
-Currently, the easiest way to set up the bot is by using Heroku, a container-based cloud platform. Installation via Heroku is done in your web browser and keeps the bot online 24/7 for free. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
+Currently, the easiest way to set up the bot is by using Heroku, a container-based cloud platform. Installation via Heroku is done in your web browser and keeps the bot online 24/7 for free (If you verify with a credit card). The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
 
 ### Locally 
 Installation locally for development reasons or otherwise is as follows, you will need `python 3.7`.
