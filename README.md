@@ -62,7 +62,7 @@ This list is ever growing thanks to active development and our exceptional contr
 
 ## Installation
 
-### Paid service
+### Hosting for patrons
 
 We offer installation, hosting and maintainance for Modmail bots for [**Patrons**](https://patreon.com/kyber). Join the support server for more info! 
 
