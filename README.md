@@ -62,10 +62,6 @@ This list is ever growing thanks to active development and our exceptional contr
 
 ## Installation
 
-### Hosting for patrons
-
-We offer installation, hosting and maintainance for Modmail bots for [**Patrons**](https://patreon.com/kyber). Join the support server for more info! 
-
 ### Locally 
 Installation locally for development reasons or otherwise is as follows, you will need `python 3.7`.
 
@@ -85,6 +81,10 @@ And finally, run the bot.
 ```console
 $ python3 bot.py
 ```
+
+### Hosting for patrons
+
+We offer installation, hosting and maintainance for Modmail bots for [**Patrons**](https://patreon.com/kyber). Join the support server for more info! 
 
 ### Heroku
 This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
