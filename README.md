@@ -77,7 +77,7 @@ $ cd modmail
 
 Install dependancies (For windows users, remove `uvloop` from the `requirements.txt` file.)
 ```console
-$ pip install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
 Rename the `config.json.example` to `config.json` and fill out the fields. 
