@@ -81,13 +81,7 @@ class Plugins(commands.Cog):
                 except DownloadError as exc:
                     msg = f"{parsed_plugin[0]}/{parsed_plugin[1]} - {exc}"
                     logger.error(error(msg))
-
-        await async_all(
-            env() for env in self.bot.extra_events.get("on_plugin_ready", [])
-        )
-
-        logger.debug(info("on_plugin_ready called."))
-
+                    
     async def download_plugin_repo(self, username, repo):
         try:
             cmd = f"git clone https://github.com/{username}/{repo} "
