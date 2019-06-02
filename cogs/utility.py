@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 import os
@@ -196,6 +197,12 @@ class Utility(commands.Cog):
         )(self.bot.help_command._command_impl)
 
         self.bot.help_command.cog = self
+
+        # Class Variables
+        self.presence = None
+
+        # Tasks
+        self.presence_task = self.bot.loop.create_task(self.loop_presence())
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
@@ -627,9 +634,16 @@ class Utility(commands.Cog):
     async def on_ready(self):
         # Wait until config cache is populated with stuff from db
         await self.bot.config.wait_until_ready()
-        presence = await self.set_presence()
-        logger.info(info(presence["activity"][1]))
-        logger.info(info(presence["status"][1]))
+        logger.info(info(self.presence["activity"][1]))
+        logger.info(info(self.presence["status"][1]))
+
+    async def loop_presence(self):
+        """Set presence to the configured value every hour."""
+        await self.bot.config.wait_until_ready()
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            self.presence = await self.set_presence()
+            await asyncio.sleep(3600)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
