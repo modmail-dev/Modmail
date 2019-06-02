@@ -49,7 +49,7 @@ When a member sends a direct message to the bot, a channel or "thread" is create
 * **Thread logs**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
-  * Optional login in via Discord to protect your logs.
+  * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
   * See past logs of a user with `?logs`
   * Searchable by text queries using `?logs search`
 * **Robust implementation**
@@ -62,8 +62,9 @@ This list is ever growing thanks to active development and our exceptional contr
 
 ## Installation
 
-### Heroku
-Currently, the easiest way to set up the bot is by using Heroku, a container-based cloud platform. Installation via Heroku is done in your web browser and keeps the bot online 24/7 for free (If you verify with a credit card). The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
+### Paid service
+
+We offer installation, hosting and maintainance for Modmail bots for [**Patrons**](https://patreon.com/kyber). Join the support server for more info! 
 
 ### Locally 
 Installation locally for development reasons or otherwise is as follows, you will need `python 3.7`.
@@ -74,7 +75,7 @@ $ git clone https://github.com/kyb3r/modmail
 $ cd modmail
 ```
 
-Install dependancies
+Install dependancies (For windows users, remove `uvloop` from the `requirements.txt` file.)
 ```console
 $ pip install -r requirements.txt
 ```
@@ -84,6 +85,9 @@ And finally, run the bot.
 ```console
 $ python3 bot.py
 ```
+
+### Heroku
+This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
 
 ## Plugins
 
