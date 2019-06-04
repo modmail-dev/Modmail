@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3f613333c008005bbc2ca702d38629d9abbbdbcc7a2374f57d15068340f07822"
+            "sha256": "f550e423d6429c852f502c5b8cee64f84edd89980e90db9fcee100495330a18c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -313,6 +313,7 @@
                 "sha256:fefc3b2b947c99737c348887db2c32e539160dcbeb7af9aa6b53db7a283538fe"
             ],
             "index": "pypi",
+            "markers": "sys_platform != 'win32'",
             "version": "==0.12.2"
         },
         "websockets": {

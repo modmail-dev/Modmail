@@ -9,7 +9,7 @@ verify_ssl = true
 colorama = ">=0.4.0"
 python-dateutil = ">=2.7.0"
 emoji = ">=0.2"
-uvloop = ">=0.12.0"
+uvloop = {version=">=0.12.0", sys_platform = "!= 'win32'"}
 motor = ">=2.0.0"
 natural = "==0.2.0"
 isodate = ">=0.6.0"
