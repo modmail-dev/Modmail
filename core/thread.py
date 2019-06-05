@@ -576,7 +576,7 @@ class Thread:
 
         await destination.trigger_typing()
 
-        if not from_mod:
+        if not from_mod and not note:
             mentions = self.get_notifications()
         else:
             mentions = None
