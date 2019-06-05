@@ -20,7 +20,7 @@
   </a>
   
   <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-    <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
+    <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
 <br>
@@ -69,15 +69,15 @@ $ git clone https://github.com/kyb3r/modmail
 $ cd modmail
 ```
 
-Install dependancies (For windows users, remove `uvloop` from the `requirements.txt` file.)
+Install dependancies
 ```console
-$ pip3 install -r requirements.txt
+$ pipenv install
 ```
 
 Rename the `config.json.example` to `config.json` and fill out the fields. 
 And finally, run the bot.
 ```console
-$ python3 bot.py
+$ pipenv run python3 bot.py
 ```
 
 ### Hosting for patrons

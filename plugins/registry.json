@@ -151,5 +151,14 @@
         "title": "Backup Database (backupdb)",
         "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
         "thumbnail_url": "https://images.ionadev.ml/b/nKAlOC4.jpg"
-   }
+   },
+    "colors": {
+        "repository": "Taaku18/modmail-plugins",
+        "branch": "master",
+        "description": "Conversions between hex, RGB, and color names.",
+        "bot_version": "2.20.1",
+        "title": "Colors!!",
+        "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
+        "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
+    }
 }
