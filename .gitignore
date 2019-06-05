@@ -126,5 +126,6 @@ dmypy.json
 
 # Modmail
 config.json
-plugins/*-plugins/
+plugins/
+!plugins/registry.json
 temp/
