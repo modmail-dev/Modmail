@@ -85,7 +85,9 @@ $ pipenv run python3 bot.py
 If you don't want to go through the trouble of setting up your own bot, and want to support this project as well, we offer installation, hosting and maintainance for Modmail bots for [**Patrons**](https://patreon.com/kyber). Join the support server for more info! 
 
 ### Heroku
-This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
+This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support.
+
+You can also set up autoupdates. To do this, [install the Pull app in your fork](https://github.com/apps/pull). Then go to the Deploy tab in your Heroku account, select GitHub and connect your fork. Turn on auto-deploy for the master branch.
 
 ## Plugins
 
