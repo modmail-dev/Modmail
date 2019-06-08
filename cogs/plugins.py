@@ -60,14 +60,14 @@ class Plugins(commands.Cog):
         try:
             result = name.split("/")
             result[2] = "/".join(result[2:])
-            if '@' in result[2]:
+            if "@" in result[2]:
                 # branch is specified
                 # for example, fourjr/modmail-plugins/welcomer@develop is a valid name
-                branchsplit_result = result[2].split('@')
+                branchsplit_result = result[2].split("@")
                 result.append(branchsplit_result[-1])
-                result[2] = '@'.join(branchsplit_result[:-1])
+                result[2] = "@".join(branchsplit_result[:-1])
             else:
-                result.append('master')
+                result.append("master")
 
         except IndexError:
             return None
@@ -94,7 +94,7 @@ class Plugins(commands.Cog):
 
     async def download_plugin_repo(self, username, repo, branch):
         try:
-            cmd  = f"git clone https://github.com/{username}/{repo} "
+            cmd = f"git clone https://github.com/{username}/{repo} "
             cmd += f"plugins/{username}-{repo}-{branch} "
             cmd += f"-b {branch} -q"
 
@@ -105,7 +105,7 @@ class Plugins(commands.Cog):
 
             if not err.endswith("already exists and is not an empty directory."):
                 # don't raise error if the plugin folder exists
-                msg = f'Download Error: {username}/{repo}@{branch}'
+                msg = f"Download Error: {username}/{repo}@{branch}"
                 logger.error(msg)
                 raise DownloadError(err) from exc
 
@@ -135,7 +135,7 @@ class Plugins(commands.Cog):
                 err = exc.stderr.decode("utf8").strip()
 
                 if err:
-                    msg = f'Requirements Download Error: {username}/{repo}@{branch}[{plugin_name}]'
+                    msg = f"Requirements Download Error: {username}/{repo}@{branch}[{plugin_name}]"
                     logger.error(error(msg))
                     raise DownloadError(
                         f"Unable to download requirements: ```\n{err}\n```"
@@ -150,7 +150,7 @@ class Plugins(commands.Cog):
         try:
             self.bot.load_extension(ext)
         except commands.ExtensionError as exc:
-            msg = f'Plugin Load Failure: {username}/{repo}@{branch}[{plugin_name}]'
+            msg = f"Plugin Load Failure: {username}/{repo}@{branch}[{plugin_name}]"
             logger.error(error(msg))
             raise DownloadError("Invalid plugin") from exc
         else:
@@ -171,7 +171,9 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            plugin_name = (
+                details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            )
             required_version = details["bot_version"]
 
             if parse_version(self.bot.version) < parse_version(required_version):
@@ -251,13 +253,17 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            plugin_name = (
+                details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            )
 
         if plugin_name in self.bot.config.plugins:
             try:
                 username, repo, name, branch = self.parse_plugin(plugin_name)
 
-                self.bot.unload_extension(f"plugins.{username}-{repo}-{branch}.{name}.{name}")
+                self.bot.unload_extension(
+                    f"plugins.{username}-{repo}-{branch}.{name}.{name}"
+                )
             except Exception:
                 pass
 
@@ -275,7 +281,9 @@ class Plugins(commands.Cog):
                             os.chmod(path, stat.S_IWUSR)
                             func(path)
 
-                    shutil.rmtree(f"plugins/{username}-{repo}-{branch}", onerror=onerror)
+                    shutil.rmtree(
+                        f"plugins/{username}-{repo}-{branch}", onerror=onerror
+                    )
             except Exception as exc:
                 logger.error(str(exc))
                 self.bot.config.plugins.append(plugin_name)
@@ -302,7 +310,9 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            plugin_name = (
+                details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            )
 
         if plugin_name not in self.bot.config.plugins:
             embed = discord.Embed(
