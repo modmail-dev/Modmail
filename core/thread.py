@@ -336,22 +336,23 @@ class Thread:
                 if str(message_id) == str(embed.author.url).split("/")[-1]:
                     return msg
 
-    async def edit_message(
-        self, message_id: typing.Union[int, str], message: str
-    ) -> None:
-        msg_recipient, msg_channel = await asyncio.gather(
+    async def edit_message(self, message_id: int, message: str) -> None:
+        recipient_msg, channel_msg = await asyncio.gather(
             self._find_thread_message(self.recipient, message_id),
             self._find_thread_message(self.channel, message_id),
         )
 
-        embed_recipient = msg_recipient.embeds[0]
-        embed_channel = msg_recipient.embeds[0]
-        embed_recipient.description = message
-        embed_channel.description = message
-        await asyncio.gather(
-            msg_recipient.edit(embed=embed_recipient),
-            msg_channel.edit(embed=embed_channel),
-        )
+        channel_embed = channel_msg.embeds[0]
+        channel_embed.description = message
+
+        tasks = [channel_msg.edit(embed=channel_embed)]
+
+        if recipient_msg:
+            recipient_embed = recipient_msg.embeds[0]
+            recipient_embed.description = message
+            tasks.append(recipient_msg.edit(embed=recipient_embed))
+
+        await asyncio.gather(*tasks)
 
     async def delete_message(self, message_id):
         msg_recipient, msg_channel = await asyncio.gather(
