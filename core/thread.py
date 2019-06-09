@@ -739,7 +739,7 @@ class ThreadManager:
         """Sanitises a username for use with text channel names"""
         name = author.name.lower()
         new_name = (
-            "".join(l for l in name if l not in string.punctuation and l.printable())
+            "".join(l for l in name if l not in string.punctuation and l.isprintable())
             or "null"
         )
         new_name += f"⧫{author.discriminator}"
