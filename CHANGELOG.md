@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Unreleased]
 
+### Changed
+- Channel names now can contain unicode characters. 
+
 ### Fixed
 - Editing notes now works, minor bug with edit command is fixed.
 

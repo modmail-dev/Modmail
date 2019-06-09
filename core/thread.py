@@ -471,7 +471,7 @@ class Thread:
         embed = discord.Embed(description=message.content, timestamp=message.created_at)
 
         system_avatar_url = (
-            "https://discordapp.com/assets/" "f78426a064bc9dd24847519259bc42af.png"
+            "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
         )
 
         if not note:
@@ -508,8 +508,13 @@ class Thread:
         attachments = [x for x in attachments if not is_image_url(*x)]
 
         image_links = [
-            (link, None) for link in re.findall(r"(https?://[^\s]+)", message.content)
+            (link, None)
+            for link in re.findall(
+                r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)",
+                message.content,
+            )
         ]
+
         image_links = [x for x in image_links if is_image_url(*x)]
         images.extend(image_links)
 
@@ -652,7 +657,7 @@ class ThreadManager:
 
         try:
             thread = self.cache[recipient_id]
-            if not self.bot.get_channel(thread.channel.id):  # deleted channel
+            if not thread.channel or not self.bot.get_channel(thread.channel.id):
                 self.bot.loop.create_task(
                     thread.close(
                         closer=self.bot.user, silent=True, delete_channel=False
@@ -727,16 +732,16 @@ class ThreadManager:
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread
 
-    async def find_or_create(
-        self, recipient: typing.Union[discord.Member, discord.User]
-    ) -> Thread:
+    async def find_or_create(self, recipient) -> Thread:
         return await self.find(recipient=recipient) or self.create(recipient)
 
     def format_channel_name(self, author):
         """Sanitises a username for use with text channel names"""
         name = author.name.lower()
-        allowed = string.ascii_letters + string.digits + "-"
-        new_name = "".join(l for l in name if l in allowed) or "null"
+        new_name = (
+            "".join(l for l in name if l not in string.punctuation and l.isprintable())
+            or "null"
+        )
         new_name += f"-{author.discriminator}"
 
         while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:
