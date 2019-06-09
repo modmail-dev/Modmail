@@ -131,7 +131,9 @@ class ModmailHelpCommand(commands.HelpCommand):
             description=self.process_help_msg(group.help),
         )
 
-        embed.add_field(name="Permission level", value=perm_level, inline=False)
+        if perm_level:
+            embed.add_field(name="Permission level", value=perm_level, inline=False)
+
         format_ = ""
         length = len(group.commands)
 
@@ -146,7 +148,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 branch = "├─"
             format_ += f"`{branch} {command.name}` - {command.short_doc}\n"
 
-        embed.add_field(name="Sub Commands", value=format_, inline=False)
+        embed.add_field(name="Sub Commands", value=format_[:1024], inline=False)
         embed.set_footer(
             text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
             "for more info on a command."
