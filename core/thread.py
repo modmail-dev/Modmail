@@ -742,10 +742,10 @@ class ThreadManager:
             "".join(l for l in name if l not in string.punctuation and l.isprintable())
             or "null"
         )
-        new_name += f"⧫{author.discriminator}"
+        new_name += f"-{author.discriminator}"
 
         while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:
-            new_name += "⧫x"  # two channels with same name
+            new_name += "-x"  # two channels with same name
 
         return new_name
 
