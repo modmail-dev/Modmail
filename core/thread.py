@@ -669,7 +669,7 @@ class ThreadManager:
                 self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"
             )
             if channel:
-                thread = Thread(self, recipient, channel)
+                thread = Thread(self, recipient or recipient_id, channel)
                 self.cache[recipient_id] = thread
                 thread.ready = True
         return thread
