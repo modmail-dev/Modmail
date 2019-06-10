@@ -5,21 +5,21 @@
     "url": "https://patreon.com/kyber",
     "color": 6071775,
     "footer": {
-      "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png",
+      "icon_url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712",
       "text": "footer text"
     },
     "thumbnail": {
-      "url": "https://cdn.discordapp.com/embed/avatars/0.png"
+      "url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712"
     },
     "author": {
       "name": "Nothing here yet!",
       "url": "https://patreon.com/kyber",
-      "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png"
+      "icon_url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712"
     },
     "fields": [
       {
         "name": "🤔",
-        "value": "This command lists the sponsors of this project on [**Patreon**](https://patreon.com/kyb3r)"
+        "value": "This command lists the sponsors of this project on [**Patreon**](https://patreon.com/kyber)"
       }
     ]
   }
