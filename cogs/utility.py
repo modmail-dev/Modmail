@@ -254,8 +254,6 @@ class Utility(commands.Cog):
 
         embed.add_field(name="Donate", value="[Patreon](https://patreon.com/kyber)")
 
-        embed.add_field(name="Sponsers", value=f"`{self.bot.prefix}sponsors`")
-
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
