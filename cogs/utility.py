@@ -9,7 +9,7 @@ from difflib import get_close_matches
 from io import StringIO
 from typing import Union
 from types import SimpleNamespace as param
-from json import JSONDecodeError
+from json import JSONDecodeError, loads
 from textwrap import indent
 
 from discord import Embed, Color, Activity, Role
@@ -237,7 +237,6 @@ class Utility(commands.Cog):
 
         embed.add_field(name="Uptime", value=self.bot.uptime)
         embed.add_field(name="Latency", value=f"{self.bot.latency * 1000:.2f} ms")
-
         embed.add_field(name="Version", value=f"`{self.bot.version}`")
         embed.add_field(name="Author", value="[`kyb3r`](https://github.com/kyb3r)")
 
@@ -253,13 +252,31 @@ class Utility(commands.Cog):
             name="GitHub", value="https://github.com/kyb3r/modmail", inline=False
         )
 
-        embed.add_field(
-            name="\u200b",
-            value="Support this bot on [Patreon](https://patreon.com/kyber).",
-        )
+        embed.add_field(name="Donate", value="[Patreon](https://patreon.com/kyber)")
+
+        embed.add_field(name="Sponsers", value=f"`{self.bot.prefix}sponsors`")
 
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.REGULAR)
+    @trigger_typing
+    async def sponsors(self, ctx):
+        """Shows a list of sponsors."""
+        resp = await self.bot.session.get(
+            "https://raw.githubusercontent.com/kyb3r/modmail/master/SPONSORS.json"
+        )
+        data = loads(await resp.text())
+
+        embeds = []
+
+        for elem in data:
+            em = Embed.from_dict(elem["embed"])
+            embeds.append(em)
+
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
