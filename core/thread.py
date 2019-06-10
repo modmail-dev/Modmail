@@ -510,8 +510,7 @@ class Thread:
         image_links = [
             (link, None)
             for link in re.findall(
-                r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)",
-                message.content,
+                r"https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+", message.content
             )
         ]
 
