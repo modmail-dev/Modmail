@@ -3,6 +3,7 @@ import inspect
 import logging
 import os
 import traceback
+import random
 from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
@@ -272,6 +273,8 @@ class Utility(commands.Cog):
         for elem in data:
             em = Embed.from_dict(elem["embed"])
             embeds.append(em)
+
+        random.shuffle(embeds)
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
