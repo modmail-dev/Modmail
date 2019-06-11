@@ -3,6 +3,6 @@ rules:
   - base: master
     upstream: kyb3r:master
     mergeMethod: hardreset
-  - base: docs
+  - base: dev
     upstream: kyb3r:dev
     mergeMethod: hardreset
