@@ -30,13 +30,14 @@
 
 ## What is Modmail?
 
-Modmail is akin to Reddit's Modmail both in functionality and purpose. It serves as a shared inbox/feed for server staff to communicate with the userbase and vice versa in a seamless way.
+Modmail is similar to Reddit's Modmail both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.
 
 ## How does it work?
-When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
+When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user. 
+
+All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example)
 
 ## Features
-
 
 * **Highly Customisable**
   * Bot activity, prefix, category, log channel, etc.
