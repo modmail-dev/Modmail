@@ -20,7 +20,7 @@
   </a>
   
   <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-    <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
+    <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
 <br>
@@ -30,11 +30,14 @@
 
 ## What is Modmail?
 
+Modmail is similar to Reddit's Modmail both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.
 
-Modmail's core functionality provides an efficient way for server members to communicate with server staff. When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
+## How does it work?
+When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user. 
+
+All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example)
 
 ## Features
-
 
 * **Highly Customisable**
   * Bot activity, prefix, category, log channel, etc.
@@ -45,7 +48,7 @@ Modmail's core functionality provides an efficient way for server members to com
 * **Thread logs**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
-  * Optional login in via Discord to protect your logs.
+  * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
   * See past logs of a user with `?logs`
   * Searchable by text queries using `?logs search`
 * **Robust implementation**
@@ -58,9 +61,6 @@ This list is ever growing thanks to active development and our exceptional contr
 
 ## Installation
 
-### Heroku
-Currently, the easiest way to set up the bot is by using Heroku, a container-based cloud platform. Installation via Heroku is done in your web browser and keeps the bot online 24/7 for free. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
-
 ### Locally 
 Installation locally for development reasons or otherwise is as follows, you will need `python 3.7`.
 
@@ -72,14 +72,23 @@ $ cd modmail
 
 Install dependancies
 ```console
-$ pip install -r requirements.txt
+$ pipenv install
 ```
 
 Rename the `config.json.example` to `config.json` and fill out the fields. 
 And finally, run the bot.
 ```console
-$ python3 bot.py
+$ pipenv run python3 bot.py
 ```
+
+### Hosting for patrons
+
+If you don't want to go through the trouble of setting up your own bot, and want to support this project as well, we offer installation, hosting and maintainance for Modmail bots for [**Patrons**](https://patreon.com/kyber). Join the support server for more info! 
+
+### Heroku
+This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support.
+
+You can also set up autoupdates. To do this, [install the Pull app in your fork](https://github.com/apps/pull). Then go to the Deploy tab in your Heroku account, select GitHub and connect your fork. Turn on auto-deploy for the master branch.
 
 ## Plugins
 
@@ -87,6 +96,6 @@ Modmail supports the use of third party plugins to extend or add functionality t
 
 ## Contributing
 
-This project is licenced under MIT. Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started. 
+Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started. 
 
 This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, here's the link for our **[Patreon](https://www.patreon.com/kyber)**. 

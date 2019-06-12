@@ -120,10 +120,6 @@ class Thread:
             log_url = log_count = None
             # ensure core functionality still works
 
-        info_embed = self.manager.format_info_embed(
-            recipient, log_url, log_count, discord.Color.green()
-        )
-
         topic = f"User ID: {recipient.id}"
         if creator:
             mention = None
@@ -131,11 +127,14 @@ class Thread:
             mention = self.bot.config.get("mention", "@here")
 
         async def send_genesis_message():
+            info_embed = self.manager.format_info_embed(
+                recipient, log_url, log_count, discord.Color.green()
+            )
             try:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self.genesis_message = msg
-            except:
+            except Exception as e:
                 pass
             finally:
                 self.ready = True
@@ -337,22 +336,23 @@ class Thread:
                 if str(message_id) == str(embed.author.url).split("/")[-1]:
                     return msg
 
-    async def edit_message(
-        self, message_id: typing.Union[int, str], message: str
-    ) -> None:
-        msg_recipient, msg_channel = await asyncio.gather(
+    async def edit_message(self, message_id: int, message: str) -> None:
+        recipient_msg, channel_msg = await asyncio.gather(
             self._find_thread_message(self.recipient, message_id),
             self._find_thread_message(self.channel, message_id),
         )
 
-        embed_recipient = msg_recipient.embeds[0]
-        embed_channel = msg_recipient.embeds[0]
-        embed_recipient.description = message
-        embed_channel.description = message
-        await asyncio.gather(
-            msg_recipient.edit(embed=embed_recipient),
-            msg_channel.edit(embed=embed_channel),
-        )
+        channel_embed = channel_msg.embeds[0]
+        channel_embed.description = message
+
+        tasks = [channel_msg.edit(embed=channel_embed)]
+
+        if recipient_msg:
+            recipient_embed = recipient_msg.embeds[0]
+            recipient_embed.description = message
+            tasks.append(recipient_msg.edit(embed=recipient_embed))
+
+        await asyncio.gather(*tasks)
 
     async def delete_message(self, message_id):
         msg_recipient, msg_channel = await asyncio.gather(
@@ -365,10 +365,12 @@ class Thread:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(param(name="msg"))
 
-        await asyncio.gather(
+        _, msg = await asyncio.gather(
             self.bot.api.append_log(message, self.channel.id, type_="system"),
             self.send(message, self.channel, note=True),
         )
+
+        return msg
 
     async def reply(self, message: discord.Message, anonymous: bool = False) -> None:
         if not message.content and not message.attachments:
@@ -469,7 +471,7 @@ class Thread:
         embed = discord.Embed(description=message.content, timestamp=message.created_at)
 
         system_avatar_url = (
-            "https://discordapp.com/assets/" "f78426a064bc9dd24847519259bc42af.png"
+            "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
         )
 
         if not note:
@@ -506,8 +508,12 @@ class Thread:
         attachments = [x for x in attachments if not is_image_url(*x)]
 
         image_links = [
-            (link, None) for link in re.findall(r"(https?://[^\s]+)", message.content)
+            (link, None)
+            for link in re.findall(
+                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", message.content
+            )
         ]
+
         image_links = [x for x in image_links if is_image_url(*x)]
         images.extend(image_links)
 
@@ -575,12 +581,13 @@ class Thread:
 
         await destination.trigger_typing()
 
-        if not from_mod:
+        if not from_mod and not note:
             mentions = self.get_notifications()
         else:
             mentions = None
 
-        await destination.send(mentions, embed=embed)
+        _msg = await destination.send(mentions, embed=embed)
+
         if additional_images:
             self.ready = False
             await asyncio.gather(*additional_images)
@@ -588,6 +595,8 @@ class Thread:
 
         if delete_message:
             self.bot.loop.create_task(ignore(message.delete()))
+
+        return _msg
 
     def get_notifications(self) -> str:
         config = self.bot.config
@@ -647,7 +656,7 @@ class ThreadManager:
 
         try:
             thread = self.cache[recipient_id]
-            if not self.bot.get_channel(thread.channel.id):  # deleted channel
+            if not thread.channel or not self.bot.get_channel(thread.channel.id):
                 self.bot.loop.create_task(
                     thread.close(
                         closer=self.bot.user, silent=True, delete_channel=False
@@ -659,7 +668,7 @@ class ThreadManager:
                 self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"
             )
             if channel:
-                thread = Thread(self, recipient, channel)
+                thread = Thread(self, recipient or recipient_id, channel)
                 self.cache[recipient_id] = thread
                 thread.ready = True
         return thread
@@ -722,16 +731,16 @@ class ThreadManager:
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread
 
-    async def find_or_create(
-        self, recipient: typing.Union[discord.Member, discord.User]
-    ) -> Thread:
+    async def find_or_create(self, recipient) -> Thread:
         return await self.find(recipient=recipient) or self.create(recipient)
 
     def format_channel_name(self, author):
         """Sanitises a username for use with text channel names"""
         name = author.name.lower()
-        allowed = string.ascii_letters + string.digits + "-"
-        new_name = "".join(l for l in name if l in allowed) or "null"
+        new_name = (
+            "".join(l for l in name if l not in string.punctuation and l.isprintable())
+            or "null"
+        )
         new_name += f"-{author.discriminator}"
 
         while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:
@@ -792,9 +801,7 @@ class ThreadManager:
             if role_names:
                 embed.add_field(name="Roles", value=role_names, inline=True)
         else:
-            embed.set_footer(
-                text=f"{footer} | Note: this member " "is not part of this server."
-            )
+            embed.set_footer(text=f"{footer} • (not in main server)")
 
         if log_count:
             # embed.add_field(name='Past logs', value=f'{log_count}')
@@ -802,5 +809,11 @@ class ThreadManager:
             embed.description += f" with **{log_count}** past {thread}."
         else:
             embed.description += "."
+
+        mutual_guilds = [g for g in self.bot.guilds if user in g.members]
+        if user not in self.bot.guild.members or len(mutual_guilds) > 1:
+            embed.add_field(
+                name="Mutual Servers", value=", ".join(g.name for g in mutual_guilds)
+            )
 
         return embed

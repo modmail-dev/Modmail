@@ -96,7 +96,7 @@ class Modmail(commands.Cog):
         To use snippets:
 
         First create a snippet using:
-        - `{prefix}snippet add snippet-name A pre-defined text.`
+        - `{prefix}snippets add snippet-name A pre-defined text.`
 
         Afterwards, you can use your snippet in a thread channel
         with `{prefix}snippet-name`, the message "A pre-defined text."
@@ -655,7 +655,8 @@ class Modmail(commands.Cog):
         """
         ctx.message.content = msg
         async with ctx.typing():
-            await ctx.thread.note(ctx.message)
+            msg = await ctx.thread.note(ctx.message)
+            await msg.pin()
 
     async def find_linked_message(self, ctx, message_id):
         linked_message_id = None

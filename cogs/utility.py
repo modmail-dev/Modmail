@@ -1,14 +1,16 @@
+import asyncio
 import inspect
 import logging
 import os
 import traceback
+import random
 from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO
 from typing import Union
 from types import SimpleNamespace as param
-from json import JSONDecodeError
+from json import JSONDecodeError, loads
 from textwrap import indent
 
 from discord import Embed, Color, Activity, Role
@@ -130,7 +132,9 @@ class ModmailHelpCommand(commands.HelpCommand):
             description=self.process_help_msg(group.help),
         )
 
-        embed.add_field(name="Permission level", value=perm_level, inline=False)
+        if perm_level:
+            embed.add_field(name="Permission level", value=perm_level, inline=False)
+
         format_ = ""
         length = len(group.commands)
 
@@ -145,7 +149,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 branch = "├─"
             format_ += f"`{branch} {command.name}` - {command.short_doc}\n"
 
-        embed.add_field(name="Sub Commands", value=format_, inline=False)
+        embed.add_field(name="Sub Commands", value=format_[:1024], inline=False)
         embed.set_footer(
             text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
             "for more info on a command."
@@ -197,6 +201,12 @@ class Utility(commands.Cog):
 
         self.bot.help_command.cog = self
 
+        # Class Variables
+        self.presence = None
+
+        # Tasks
+        self.presence_task = self.bot.loop.create_task(self.loop_presence())
+
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
 
@@ -228,7 +238,6 @@ class Utility(commands.Cog):
 
         embed.add_field(name="Uptime", value=self.bot.uptime)
         embed.add_field(name="Latency", value=f"{self.bot.latency * 1000:.2f} ms")
-
         embed.add_field(name="Version", value=f"`{self.bot.version}`")
         embed.add_field(name="Author", value="[`kyb3r`](https://github.com/kyb3r)")
 
@@ -244,13 +253,31 @@ class Utility(commands.Cog):
             name="GitHub", value="https://github.com/kyb3r/modmail", inline=False
         )
 
-        embed.add_field(
-            name="\u200b",
-            value="Support this bot on [Patreon](https://patreon.com/kyber).",
-        )
+        embed.add_field(name="Donate", value="[Patreon](https://patreon.com/kyber)")
 
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.REGULAR)
+    @trigger_typing
+    async def sponsors(self, ctx):
+        """Shows a list of sponsors."""
+        resp = await self.bot.session.get(
+            "https://raw.githubusercontent.com/kyb3r/modmail/master/SPONSORS.json"
+        )
+        data = loads(await resp.text())
+
+        embeds = []
+
+        for elem in data:
+            em = Embed.from_dict(elem["embed"])
+            embeds.append(em)
+
+        random.shuffle(embeds)
+
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -627,9 +654,16 @@ class Utility(commands.Cog):
     async def on_ready(self):
         # Wait until config cache is populated with stuff from db
         await self.bot.config.wait_until_ready()
-        presence = await self.set_presence()
-        logger.info(info(presence["activity"][1]))
-        logger.info(info(presence["status"][1]))
+        logger.info(info(self.presence["activity"][1]))
+        logger.info(info(self.presence["status"][1]))
+
+    async def loop_presence(self):
+        """Set presence to the configured value every hour."""
+        await self.bot.config.wait_until_ready()
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            self.presence = await self.set_presence()
+            await asyncio.sleep(3600)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
@@ -829,7 +863,7 @@ class Utility(commands.Cog):
         """
         Create shortcuts to bot commands.
 
-        When `?alias` is used by itself, this will retrieve
+        When `{prefix}alias` is used by itself, this will retrieve
         a list of alias that are currently set.
 
         To use alias:

@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+colorama = ">=0.4.0"
+python-dateutil = ">=2.7.0"
+emoji = ">=0.2"
+uvloop = {version=">=0.12.0", sys_platform = "!= 'win32'"}
+motor = ">=2.0.0"
+natural = "==0.2.0"
+isodate = ">=0.6.0"
+dnspython = "~=1.16.0"
+parsedatetime = "==2.4"
+aiohttp = "<3.6.0,>=3.3.0"
+pylint = "*"
+"discord.py" = "==1.1.1"
+
+[requires]
+python_version = "3.7"
