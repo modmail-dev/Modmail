@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Editing notes now works, minor bug with edit command is fixed.
+- Bug in the `oauth` command where the response message fails to send when an ID is provided.
 
 # v2.24.1
 

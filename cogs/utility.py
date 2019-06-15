@@ -1328,7 +1328,10 @@ class Utility(commands.Cog):
     )
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
-        """Commands relating to Logviewer oauth2 login authentication."""
+        """Commands relating to Logviewer oauth2 login authentication.
+        
+        This functionality on your logviewer site is a [**Patron**](https://patreon.com/kyber) only feature.
+        """
         await ctx.send_help(ctx.command)
 
     @oauth.command(name="whitelist")
@@ -1352,6 +1355,10 @@ class Utility(commands.Cog):
 
         embed = Embed(color=self.bot.main_color)
         embed.title = "Success"
+
+        if not hasattr(target, 'mention'):
+            target = self.bot.get_user(target.id) or self.bot.modmail_guild.get_role(target.id)
+            
         embed.description = (
             f"{'Un-w' if removed else 'W'}hitelisted " f"{target.mention} to view logs."
         )
