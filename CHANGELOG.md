@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Channel names now can contain unicode characters.
 - Debug logs are now located in a unique file for each bot. (Internal change) 
+- Default cogs always appear first in the help command now.
 
 ### Fixed
 - Editing notes now works, minor bug with edit command is fixed.
