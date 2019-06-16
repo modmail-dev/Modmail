@@ -75,7 +75,7 @@ Install dependancies
 $ pipenv install
 ```
 
-Rename the `config.json.example` to `config.json` and fill out the fields. 
+Rename the `.env.example` to `.env` and fill out the fields. 
 And finally, run the bot.
 ```console
 $ pipenv run python3 bot.py
