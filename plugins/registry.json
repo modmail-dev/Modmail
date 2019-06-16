@@ -160,5 +160,14 @@
         "title": "Colors!!",
         "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
         "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
+   },
+    "debug": {
+        "repository": "MiTonder/modmail-plugins",
+        "branch": "master",
+        "description": "Debug One Or More Commands, Useful For Beginners Or People Who Want A Quick Debug Link",
+        "bot_version": "2.24.1",
+        "title": "Debug",
+        "icon_url": "https://cis.bentley.edu/sandbox/wp-content/uploads/2017/03/debug.png",
+        "thumbnail_url": "https://cis.bentley.edu/sandbox/wp-content/uploads/2017/03/debug.png"
     }
 }
