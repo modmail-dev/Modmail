@@ -116,8 +116,8 @@ class Plugins(commands.Cog):
         if "requirements.txt" in os.listdir(dirname):
             # Install PIP requirements
 
-            venv = hasattr(sys, 'real_prefix') # in a virtual env
-            user_install = '--user' if not venv else ''
+            venv = hasattr(sys, "real_prefix")  # in a virtual env
+            user_install = "--user" if not venv else ""
 
             try:
                 if os.name == "nt":  # Windows
