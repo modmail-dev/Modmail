@@ -54,16 +54,6 @@ temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
-ch_debug = logging.FileHandler(os.path.join(temp_dir, "logs.log"), mode="a+")
-
-ch_debug.setLevel(logging.DEBUG)
-formatter_debug = FileFormatter(
-    "%(asctime)s %(filename)s - " "%(levelname)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-ch_debug.setFormatter(formatter_debug)
-logger.addHandler(ch_debug)
-
 LINE = Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL
 
 
@@ -110,6 +100,19 @@ class ModmailBot(commands.Bot):
             "INFO": logging.INFO,
             "DEBUG": logging.DEBUG,
         }
+
+
+        log_file_name = self.config.token.split('.')[0]
+        ch_debug = logging.FileHandler(os.path.join(temp_dir, f"{log_file_name}.log"), mode="a+")
+
+        ch_debug.setLevel(logging.DEBUG)
+        formatter_debug = FileFormatter(
+            "%(asctime)s %(filename)s - " "%(levelname)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        ch_debug.setFormatter(formatter_debug)
+        logger.addHandler(ch_debug)
+
 
         log_level = logging_levels.get(level_text)
         logger.info(LINE)
@@ -359,9 +362,11 @@ class ModmailBot(commands.Bot):
         logger.info(info("Client ready."))
         logger.info(LINE)
         logger.info(info(f"Logged in as: {self.user}"))
-        logger.info(info(f"Prefix: {self.prefix}"))
         logger.info(info(f"User ID: {self.user.id}"))
+        logger.info(info(f"Prefix: {self.prefix}"))
+        logger.info(info(f"Guild Name: {self.guild.name if self.guild else 'None'}"))
         logger.info(info(f"Guild ID: {self.guild.id if self.guild else 0}"))
+        
         logger.info(LINE)
 
         if not self.guild:

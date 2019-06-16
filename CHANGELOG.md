@@ -11,11 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sponsors command that will list sponsors.
 
 ### Changed
-- Channel names now can contain unicode characters. 
+- Channel names now can contain unicode characters.
+- Debug logs are now located in a unique file for each bot. (Internal change) 
 
 ### Fixed
 - Editing notes now works, minor bug with edit command is fixed.
 - Bug in the `oauth` command where the response message fails to send when an ID is provided.
+- Plugin requirement installation now works in virtual environments
+
 
 # v2.24.1
 
