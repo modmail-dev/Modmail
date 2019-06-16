@@ -107,15 +107,6 @@
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
-    "moderation": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Rule offenders in your server? Lift the ban hammer or warn them! Moderation plugin to the rescue :tada:",
-        "bot_version": "2.20.1",
-        "title": "Moderation Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
     "translator": {
         "repository": "officialpiyush/modmail-plugins",
         "branch": "master",
@@ -133,15 +124,6 @@
         "title": "New member messages plugin",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
-    },
-    "tags": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Tag Management For Your Server",
-        "bot_version": "2.20.1",
-        "title": "Tags Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
     "backupdb": {
         "repository": "officialpiyush/modmail-plugins",
