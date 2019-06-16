@@ -115,19 +115,23 @@ class Plugins(commands.Cog):
 
         if "requirements.txt" in os.listdir(dirname):
             # Install PIP requirements
+
+            venv = hasattr(sys, 'real_prefix') # in a virtual env
+            user_install = '--user' if not venv else ''
+
             try:
                 if os.name == "nt":  # Windows
                     await self.bot.loop.run_in_executor(
                         None,
                         self._asubprocess_run,
-                        f"pip install -r {dirname}/requirements.txt --user -q -q",
+                        f"pip install -r {dirname}/requirements.txt {user_install} -q -q",
                     )
                 else:
                     await self.bot.loop.run_in_executor(
                         None,
                         self._asubprocess_run,
                         f"python3 -m pip install -U -r {dirname}/"
-                        "requirements.txt --user -q -q",
+                        f"requirements.txt {user_install} -q -q",
                     )
                     # -q -q (quiet)
                     # so there's no terminal output unless there's an error

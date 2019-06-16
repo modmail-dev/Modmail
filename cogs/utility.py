@@ -285,9 +285,11 @@ class Utility(commands.Cog):
     async def debug(self, ctx):
         """Shows the recent application-logs of the bot."""
 
+        log_file_name = self.bot.config.token.split('.')[0]
+
         with open(
             os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "../temp/logs.log"
+                os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"
             ),
             "r+",
         ) as f:
@@ -338,10 +340,11 @@ class Utility(commands.Cog):
         """Posts application-logs to Hastebin."""
 
         haste_url = os.environ.get("HASTE_URL", "https://hasteb.in")
+        log_file_name = self.bot.config.token.split('.')[0]
 
         with open(
             os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "../temp/logs.log"
+                os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"
             ),
             "r+",
         ) as f:
@@ -372,9 +375,12 @@ class Utility(commands.Cog):
     @trigger_typing
     async def debug_clear(self, ctx):
         """Clears the locally cached logs."""
+
+        log_file_name = self.bot.config.token.split('.')[0]
+
         with open(
             os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "../temp/logs.log"
+                os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"
             ),
             "w",
         ):
