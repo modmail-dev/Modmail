@@ -133,7 +133,16 @@
         "title": "Backup Database (backupdb)",
         "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
         "thumbnail_url": "https://images.ionadev.ml/b/nKAlOC4.jpg"
-   },
+    },
+    "tags": {
+        "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
+        "description": "Tag Management For Your Server",
+        "bot_version": "2.20.1",
+        "title": "Tags Plugin",
+        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
+        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
     "colors": {
         "repository": "Taaku18/modmail-plugins",
         "branch": "master",
@@ -150,6 +159,6 @@
         "bot_version": "2.24.1",
         "title": "Debug",
         "icon_url": "https://cis.bentley.edu/sandbox/wp-content/uploads/2017/03/debug.png",
-        "thumbnail_url": "https://cis.bentley.edu/sandbox/wp-content/uploads/2017/03/debug.png"
+        "thumbnail_url": "http://www.file-hosters.com/wp-content/uploads/2017/04/fi-hastebin.png"
     }
 }
