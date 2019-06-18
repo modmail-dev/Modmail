@@ -155,9 +155,9 @@
     "debug": {
         "repository": "MiTonder/modmail-plugins",
         "branch": "master",
-        "description": "Debug One Or More Commands, Useful For Beginners Or People Who Want A Quick Debug Link",
+        "description": "Debug one or more commands, useful for beginners or people who want a quick debug link",
         "bot_version": "2.24.1",
-        "title": "Debug",
+        "title": "Debug Commands",
         "icon_url": "https://cis.bentley.edu/sandbox/wp-content/uploads/2017/03/debug.png",
         "thumbnail_url": "http://www.file-hosters.com/wp-content/uploads/2017/04/fi-hastebin.png"
     }
