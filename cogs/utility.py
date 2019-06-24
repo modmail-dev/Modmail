@@ -22,7 +22,7 @@ from pkg_resources import parse_version
 
 from core import checks
 from core.changelog import Changelog
-from core.decorators import github_access_token_required, trigger_typing
+from core.decorators import trigger_typing
 from core.models import InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
 from core.utils import cleanup_code, info, error, User, get_perm_level
@@ -404,25 +404,7 @@ class Utility(commands.Cog):
                 color=self.bot.main_color, description="Cached logs are now cleared."
             )
         )
-
-    @commands.command()
-    @checks.has_permissions(PermissionLevel.OWNER)
-    @github_access_token_required
-    @trigger_typing
-    async def github(self, ctx):
-        """Shows the GitHub user your Github_Access_Token is linked to."""
-        data = await self.bot.api.get_user_info()
-
-        embed = Embed(
-            title="GitHub", description="Current User", color=self.bot.main_color
-        )
-        user = data["user"]
-        embed.set_author(
-            name=user["username"], icon_url=user["avatar_url"], url=user["url"]
-        )
-        embed.set_thumbnail(url=user["avatar_url"])
-        await ctx.send(embed=embed)
-
+        
     @commands.command(aliases=["presence"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def activity(self, ctx, activity_type: str.lower, *, message: str = ""):
