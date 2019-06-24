@@ -100,12 +100,25 @@ class Thread:
         if category is not None:
             overwrites = None
 
-        channel = await self.bot.modmail_guild.create_text_channel(
-            name=self.manager.format_channel_name(recipient),
-            category=category,
-            overwrites=overwrites,
-            reason="Creating a thread channel",
-        )
+        try:
+            channel = await self.bot.modmail_guild.create_text_channel(
+                name=self.manager.format_channel_name(recipient),
+                category=category,
+                overwrites=overwrites,
+                reason="Creating a thread channel",
+            )
+        except discord.HTTPException as e: # Failed to create due to 50 channel limit.
+            del self.manager.cache[self.id]
+            log_channel = self.bot.log_channel
+
+            em = discord.Embed(color=discord.Color.red())
+            em.title = 'Error while trying to create a thread'
+            em.description = e.message
+            em.add_field(name='Recipient', value=recipient.mention)
+
+            if log_channel is not None:
+                return await log_channel.send(embed=em)
+                
 
         self._channel = channel
 
