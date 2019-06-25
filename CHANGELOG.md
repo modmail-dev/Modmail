@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added 
 
 - Sponsors command that will list sponsors.
+- Threads will close automatically after some time when `thread_auto_close` is set.
+- Custom closing message can be set with `thread_auto_close_response`. 
+
 
 ### Changed
 - Channel names now can contain unicode characters.
