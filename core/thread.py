@@ -343,9 +343,7 @@ class Thread:
                 if str(message_id) == str(embed.author.url).split("/")[-1]:
                     return msg
 
-    async def _grab_timeout(
-            self
-    ) -> typing.Union[None, isodate.duration.Duration, timedelta]:
+    async def _fetch_timeout(self) -> typing.Union[None, isodate.duration.Duration, timedelta]:
         """
         This grabs the timeout value for closing threads automatically
         from the ConfigManager and parses it for use internally.
