@@ -35,6 +35,8 @@ class ConfigManager:
         "blocked_emoji",
         "close_emoji",
         "disable_recipient_thread_close",
+        "thread_auto_close",
+        "thread_auto_close_response",
         "thread_creation_response",
         "thread_creation_footer",
         "thread_creation_title",
@@ -89,7 +91,7 @@ class ConfigManager:
 
     colors = {"mod_color", "recipient_color", "main_color"}
 
-    time_deltas = {"account_age", "guild_age"}
+    time_deltas = {"account_age", "guild_age", "thread_auto_close"}
 
     valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
 

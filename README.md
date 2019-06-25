@@ -20,7 +20,7 @@
   </a>
   
   <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-    <img src="https://img.shields.io/badge/license-mit-e74c3c.svg?style=for-the-badge" alt="MIT License">
+    <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
 <br>
@@ -30,15 +30,14 @@
 
 ## What is Modmail?
 
-Modmail is akin to Reddit's Modmail both in functionality and purpose. It serves as a shared inbox/feed for server staff to communicate with the userbase and vice versa in a seamless way that DMing a single person never could achieve.
-
-While the core functionality is to get into contact with the server personal, it's extended  use includes but is not limited to organisational means. Feature or event requests, reporting other users and a comment/feedback/suggestion  box under the guise of anonymity because Modmail threads aren't public.
+Modmail is similar to Reddit's Modmail both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.
 
 ## How does it work?
-When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
+When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user. 
+
+All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example)
 
 ## Features
-
 
 * **Highly Customisable**
   * Bot activity, prefix, category, log channel, etc.
@@ -49,7 +48,7 @@ When a member sends a direct message to the bot, a channel or "thread" is create
 * **Thread logs**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
-  * Optional login in via Discord to protect your logs.
+  * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
   * See past logs of a user with `?logs`
   * Searchable by text queries using `?logs search`
 * **Robust implementation**
@@ -62,9 +61,6 @@ This list is ever growing thanks to active development and our exceptional contr
 
 ## Installation
 
-### Heroku
-Currently, the easiest way to set up the bot is by using Heroku, a container-based cloud platform. Installation via Heroku is done in your web browser and keeps the bot online 24/7 for free (If you verify with a credit card). The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support. 
-
 ### Locally 
 Installation locally for development reasons or otherwise is as follows, you will need `python 3.7`.
 
@@ -76,14 +72,23 @@ $ cd modmail
 
 Install dependancies
 ```console
-$ pip install -r requirements.txt
+$ pipenv install
 ```
 
-Rename the `config.json.example` to `config.json` and fill out the fields. 
+Rename the `.env.example` to `.env` and fill out the fields. 
 And finally, run the bot.
 ```console
-$ python3 bot.py
+$ pipenv run python3 bot.py
 ```
+
+### Hosting for patrons
+
+If you don't want to go through the trouble of setting up your own bot, and want to support this project as well, we offer installation, hosting and maintainance for Modmail bots for [**Patrons**](https://patreon.com/kyber). Join the support server for more info! 
+
+### Heroku
+This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support.
+
+You can also set up autoupdates. To do this, [install the Pull app in your fork](https://github.com/apps/pull). Then go to the Deploy tab in your Heroku account, select GitHub and connect your fork. Turn on auto-deploy for the master branch.
 
 ## Plugins
 
