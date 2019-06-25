@@ -4,12 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased]
+# v3.0.0
 
 ### Added 
 
 - Sponsors command that will list sponsors.
 - An alert will now be sent to the log channel if a thread channel fails to create. This could be due to a variety of problems such as insufficient permissions or the category channel limit is met. 
+- Threads will close automatically after some time when `thread_auto_close` is set.
+- Custom closing message can be set with `thread_auto_close_response`.
+
+### Breaking Changes
+
+- Removed autoupdate functionality and the `update` command in favour of the [Pull app](https://github.com/apps/pull).
+
+Read more about updating your bot [here](https://github.com/kyb3r/modmail/wiki/updating)
 
 ### Changed
 - Channel names now can contain unicode characters.
