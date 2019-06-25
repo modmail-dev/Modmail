@@ -343,7 +343,9 @@ class Thread:
                 if str(message_id) == str(embed.author.url).split("/")[-1]:
                     return msg
 
-    async def _fetch_timeout(self) -> typing.Union[None, isodate.duration.Duration, timedelta]:
+    async def _fetch_timeout(
+        self
+    ) -> typing.Union[None, isodate.duration.Duration, timedelta]:
         """
         This grabs the timeout value for closing threads automatically
         from the ConfigManager and parses it for use internally.
@@ -389,7 +391,7 @@ class Thread:
         close_message = self.bot.config.get(
             "thread_auto_close_response",
             f"This thread has been closed automatically after no response from"
-            f" you for {human_time}."
+            f" you for {human_time}.",
         )
         time_marker_regex = "%t"
         if len(re.findall(time_marker_regex, close_message)) == 1:
@@ -403,8 +405,7 @@ class Thread:
         if self._auto_close_task:
             self._auto_close_task.cancel()
         self._auto_close_task = self.bot.loop.call_later(
-            seconds, self._close_after, self.bot.user, False, True,
-            close_message
+            seconds, self._close_after, self.bot.user, False, True, close_message
         )
 
     async def edit_message(self, message_id: int, message: str) -> None:
