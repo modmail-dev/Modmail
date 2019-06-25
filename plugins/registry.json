@@ -151,5 +151,32 @@
         "title": "Backup Database (backupdb)",
         "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
         "thumbnail_url": "https://images.ionadev.ml/b/nKAlOC4.jpg"
-   }
+   },
+    "colors": {
+        "repository": "Taaku18/modmail-plugins",
+        "branch": "master",
+        "description": "Conversions between hex, RGB, and color names.",
+        "bot_version": "2.20.1",
+        "title": "Colors!!",
+        "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
+        "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
+    },
+     "fun": {
+        "repository": "TheKinG2149/modmail-plugins",
+        "branch": "master",
+        "description": "Some fun commands like 8ball,dadjokes",
+        "bot_version": "2.24.1",
+        "title": "Fun",
+        "icon_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png"
+   },
+    "stats": {
+        "repository": "MiTonder/modmail-plugins",
+        "branch": "master",
+        "description": "Get useful stats directly in an embed about either the ModMail bot, a user or the server.",
+        "bot_version": "2.24.1",
+        "title": "Get Stats",
+        "icon_url": "https://image.flaticon.com/icons/png/512/117/117761.png",
+        "thumbnail_url": "http://www.pngmart.com/files/7/Statistics-PNG-Clipart.png"
+    }
 }
