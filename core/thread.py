@@ -390,8 +390,8 @@ class Thread:
         # Grab message
         close_message = self.bot.config.get(
             "thread_auto_close_response",
-            f"This thread has been closed automatically after no response from"
-            f" you for {human_time}.",
+            f"This thread has been closed automatically due to inactivity "
+            f"after {human_time}.",
         )
         time_marker_regex = "%t"
         if len(re.findall(time_marker_regex, close_message)) == 1:
