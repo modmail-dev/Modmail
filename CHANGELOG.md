@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+### Added 
+
+- Sponsors command that will list sponsors.
+- An alert will now be sent to the log channel if a thread channel fails to create. This could be due to a variety of problems such as insufficient permissions or the category channel limit is met. 
+
+### Changed
+- Channel names now can contain unicode characters.
+- Debug logs are now located in a unique file for each bot. (Internal change) 
+- Default cogs always appear first in the help command now.
+
+### Fixed
+- Editing notes now works, minor bug with edit command is fixed.
+- Bug in the `oauth` command where the response message fails to send when an ID is provided.
+- Plugin requirement installation now works in virtual environments
+
+
 # v2.24.1
 
 ### Fixed

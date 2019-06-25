@@ -1,30 +1,3 @@
-"""
-License
-
-Copyright (c) 2017-2019 kyb3r
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including the rights to use, copy, modify 
-and distribute copies of the Software, and to permit persons to whom the Software 
-is furnished to do so, subject to the following terms and conditions: 
-
-- The above copyright notice shall be included in all copies of the Software.
-
-You may not:
-  - Claim credit for, or refuse to give credit to the creator(s) of the Software.
-  - Sell copies of the Software and of derivative works.
-  - Modify the original Software to contain hidden harmful content. 
- 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
-
 __version__ = "2.24.1"
 
 import asyncio
@@ -81,16 +54,6 @@ temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
-ch_debug = logging.FileHandler(os.path.join(temp_dir, "logs.log"), mode="a+")
-
-ch_debug.setLevel(logging.DEBUG)
-formatter_debug = FileFormatter(
-    "%(asctime)s %(filename)s - " "%(levelname)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-ch_debug.setFormatter(formatter_debug)
-logger.addHandler(ch_debug)
-
 LINE = Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL
 
 
@@ -137,6 +100,19 @@ class ModmailBot(commands.Bot):
             "INFO": logging.INFO,
             "DEBUG": logging.DEBUG,
         }
+
+        log_file_name = self.config.token.split(".")[0]
+        ch_debug = logging.FileHandler(
+            os.path.join(temp_dir, f"{log_file_name}.log"), mode="a+"
+        )
+
+        ch_debug.setLevel(logging.DEBUG)
+        formatter_debug = FileFormatter(
+            "%(asctime)s %(filename)s - " "%(levelname)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        ch_debug.setFormatter(formatter_debug)
+        logger.addHandler(ch_debug)
 
         log_level = logging_levels.get(level_text)
         logger.info(LINE)
@@ -386,9 +362,11 @@ class ModmailBot(commands.Bot):
         logger.info(info("Client ready."))
         logger.info(LINE)
         logger.info(info(f"Logged in as: {self.user}"))
-        logger.info(info(f"Prefix: {self.prefix}"))
         logger.info(info(f"User ID: {self.user.id}"))
+        logger.info(info(f"Prefix: {self.prefix}"))
+        logger.info(info(f"Guild Name: {self.guild.name if self.guild else 'None'}"))
         logger.info(info(f"Guild ID: {self.guild.id if self.guild else 0}"))
+
         logger.info(LINE)
 
         if not self.guild:
@@ -1015,6 +993,7 @@ class ModmailBot(commands.Bot):
 if __name__ == "__main__":
     if os.name != "nt":
         import uvloop
+
         uvloop.install()
     bot = ModmailBot()
     bot.run()
