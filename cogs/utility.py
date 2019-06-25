@@ -683,7 +683,7 @@ class Utility(commands.Cog):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             self.presence = await self.set_presence()
-            await asyncio.sleep(3600)
+            await asyncio.sleep(600)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
