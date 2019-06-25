@@ -1,15 +1,17 @@
 import asyncio
 import logging
-import re
 import os
+import re
 import string
 import typing
-from types import SimpleNamespace as param
 from datetime import datetime, timedelta
+from types import SimpleNamespace as param
 
 import discord
+import isodate
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
+from core.time import human_timedelta
 from core.utils import is_image_url, days, match_user_id
 from core.utils import truncate, ignore, error
 
@@ -39,6 +41,7 @@ class Thread:
         self.genesis_message = None
         self._ready_event = asyncio.Event()
         self._close_task = None
+        self._auto_close_task = None
 
     def __repr__(self):
         return (
@@ -100,12 +103,25 @@ class Thread:
         if category is not None:
             overwrites = None
 
-        channel = await self.bot.modmail_guild.create_text_channel(
-            name=self.manager.format_channel_name(recipient),
-            category=category,
-            overwrites=overwrites,
-            reason="Creating a thread channel",
-        )
+        try:
+            channel = await self.bot.modmail_guild.create_text_channel(
+                name=self.manager.format_channel_name(recipient),
+                category=category,
+                overwrites=overwrites,
+                reason="Creating a thread channel",
+            )
+        except discord.HTTPException as e: # Failed to create due to 50 channel limit.
+            del self.manager.cache[self.id]
+            log_channel = self.bot.log_channel
+
+            em = discord.Embed(color=discord.Color.red())
+            em.title = 'Error while trying to create a thread'
+            em.description = e.message
+            em.add_field(name='Recipient', value=recipient.mention)
+
+            if log_channel is not None:
+                return await log_channel.send(embed=em)
+                
 
         self._channel = channel
 
@@ -217,6 +233,10 @@ class Thread:
         del self.manager.cache[self.id]
 
         await self.cancel_closure()
+
+        # Cancel auto closing the thread if closed by any means.
+        if self._auto_close_task:
+            self._auto_close_task.cancel()
 
         if str(self.id) in self.bot.config.subscriptions:
             del self.bot.config.subscriptions[str(self.id)]
@@ -336,22 +356,88 @@ class Thread:
                 if str(message_id) == str(embed.author.url).split("/")[-1]:
                     return msg
 
-    async def edit_message(
-        self, message_id: typing.Union[int, str], message: str
-    ) -> None:
-        msg_recipient, msg_channel = await asyncio.gather(
+    async def _fetch_timeout(
+        self
+    ) -> typing.Union[None, isodate.duration.Duration, timedelta]:
+        """
+        This grabs the timeout value for closing threads automatically
+        from the ConfigManager and parses it for use internally.
+
+        :returns: None if no timeout is set.
+        """
+        timeout = self.bot.config.get("thread_auto_close")
+        if timeout is None:
+            return timeout
+        else:
+            try:
+                timeout = isodate.parse_duration(timeout)
+            except isodate.ISO8601Error:
+                logger.warning(
+                    "The auto_close_thread limit needs to be a "
+                    "ISO-8601 duration formatted duration string "
+                    'greater than 0 days, not "%s".',
+                    str(timeout),
+                )
+                del self.bot.config.cache["thread_auto_close"]
+                await self.bot.config.update()
+                timeout = None
+        return timeout
+
+    async def _restart_close_timer(self):
+        """
+        This will create or restart a timer to automatically close this
+        thread.
+        """
+        timeout = await self._grab_timeout()
+
+        # Exit if timeout was not set
+        if timeout is None:
+            return
+
+        # Set timeout seconds
+        seconds = timeout.total_seconds()
+        # seconds = 20  # Uncomment to debug with just 20 seconds
+        reset_time = datetime.utcnow() + timedelta(seconds=seconds)
+        human_time = human_timedelta(dt=reset_time)
+
+        # Grab message
+        close_message = self.bot.config.get(
+            "thread_auto_close_response",
+            f"This thread has been closed automatically due to inactivity "
+            f"after {human_time}.",
+        )
+        time_marker_regex = "%t"
+        if len(re.findall(time_marker_regex, close_message)) == 1:
+            close_message = re.sub(time_marker_regex, str(human_time), close_message)
+        elif len(re.findall(time_marker_regex, close_message)) > 1:
+            logger.warning(
+                "The thread_auto_close_response should only contain one"
+                f" '{time_marker_regex}' to specify time."
+            )
+
+        if self._auto_close_task:
+            self._auto_close_task.cancel()
+        self._auto_close_task = self.bot.loop.call_later(
+            seconds, self._close_after, self.bot.user, False, True, close_message
+        )
+
+    async def edit_message(self, message_id: int, message: str) -> None:
+        recipient_msg, channel_msg = await asyncio.gather(
             self._find_thread_message(self.recipient, message_id),
             self._find_thread_message(self.channel, message_id),
         )
 
-        embed_recipient = msg_recipient.embeds[0]
-        embed_channel = msg_recipient.embeds[0]
-        embed_recipient.description = message
-        embed_channel.description = message
-        await asyncio.gather(
-            msg_recipient.edit(embed=embed_recipient),
-            msg_channel.edit(embed=embed_channel),
-        )
+        channel_embed = channel_msg.embeds[0]
+        channel_embed.description = message
+
+        tasks = [channel_msg.edit(embed=channel_embed)]
+
+        if recipient_msg:
+            recipient_embed = recipient_msg.embeds[0]
+            recipient_embed.description = message
+            tasks.append(recipient_msg.edit(embed=recipient_embed))
+
+        await asyncio.gather(*tasks)
 
     async def delete_message(self, message_id):
         msg_recipient, msg_channel = await asyncio.gather(
@@ -421,6 +507,8 @@ class Thread:
                 )
             )
 
+            await self._restart_close_timer()
+
         if self.close_task is not None:
             # Cancel closing if a thread message is sent.
             await self.cancel_closure()
@@ -463,6 +551,10 @@ class Thread:
         if not from_mod and not note:
             self.bot.loop.create_task(self.bot.api.append_log(message, self.channel.id))
 
+            # Cancel auto closing if we get a new message from user
+            if self._auto_close_task:
+                self._auto_close_task.cancel()
+
         destination = destination or self.channel
 
         author = message.author
@@ -470,7 +562,7 @@ class Thread:
         embed = discord.Embed(description=message.content, timestamp=message.created_at)
 
         system_avatar_url = (
-            "https://discordapp.com/assets/" "f78426a064bc9dd24847519259bc42af.png"
+            "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
         )
 
         if not note:
@@ -507,8 +599,13 @@ class Thread:
         attachments = [x for x in attachments if not is_image_url(*x)]
 
         image_links = [
-            (link, None) for link in re.findall(r"(https?://[^\s]+)", message.content)
+            (link, None)
+            for link in re.findall(
+                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                message.content,
+            )
         ]
+
         image_links = [x for x in image_links if is_image_url(*x)]
         images.extend(image_links)
 
@@ -576,7 +673,7 @@ class Thread:
 
         await destination.trigger_typing()
 
-        if not from_mod:
+        if not from_mod and not note:
             mentions = self.get_notifications()
         else:
             mentions = None
@@ -651,7 +748,7 @@ class ThreadManager:
 
         try:
             thread = self.cache[recipient_id]
-            if not self.bot.get_channel(thread.channel.id):  # deleted channel
+            if not thread.channel or not self.bot.get_channel(thread.channel.id):
                 self.bot.loop.create_task(
                     thread.close(
                         closer=self.bot.user, silent=True, delete_channel=False
@@ -663,7 +760,7 @@ class ThreadManager:
                 self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"
             )
             if channel:
-                thread = Thread(self, recipient, channel)
+                thread = Thread(self, recipient or recipient_id, channel)
                 self.cache[recipient_id] = thread
                 thread.ready = True
         return thread
@@ -726,16 +823,16 @@ class ThreadManager:
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread
 
-    async def find_or_create(
-        self, recipient: typing.Union[discord.Member, discord.User]
-    ) -> Thread:
+    async def find_or_create(self, recipient) -> Thread:
         return await self.find(recipient=recipient) or self.create(recipient)
 
     def format_channel_name(self, author):
         """Sanitises a username for use with text channel names"""
         name = author.name.lower()
-        allowed = string.ascii_letters + string.digits + "-"
-        new_name = "".join(l for l in name if l in allowed) or "null"
+        new_name = (
+            "".join(l for l in name if l not in string.punctuation and l.isprintable())
+            or "null"
+        )
         new_name += f"-{author.discriminator}"
 
         while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:

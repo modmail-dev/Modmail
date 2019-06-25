@@ -1,31 +1,4 @@
-"""
-License
-
-Copyright (c) 2017-2019 kyb3r
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including the rights to use, copy, modify 
-and distribute copies of the Software, and to permit persons to whom the Software 
-is furnished to do so, subject to the following terms and conditions: 
-
-- The above copyright notice shall be included in all copies of the Software.
-
-You may not:
-  - Claim credit for, or refuse to give credit to the creator(s) of the Software.
-  - Sell copies of the Software and of derivative works.
-  - Modify the original Software to contain hidden harmful content. 
- 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
-
-__version__ = "2.24.1"
+__version__ = "3.0.0"
 
 import asyncio
 import logging
@@ -81,16 +54,6 @@ temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
-ch_debug = logging.FileHandler(os.path.join(temp_dir, "logs.log"), mode="a+")
-
-ch_debug.setLevel(logging.DEBUG)
-formatter_debug = FileFormatter(
-    "%(asctime)s %(filename)s - " "%(levelname)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-ch_debug.setFormatter(formatter_debug)
-logger.addHandler(ch_debug)
-
 LINE = Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL
 
 
@@ -111,7 +74,6 @@ class ModmailBot(commands.Bot):
         self.plugin_db = PluginDatabaseClient(self)
 
         self.metadata_task = self.loop.create_task(self.metadata_loop())
-        self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
 
     @property
@@ -137,6 +99,19 @@ class ModmailBot(commands.Bot):
             "INFO": logging.INFO,
             "DEBUG": logging.DEBUG,
         }
+
+        log_file_name = self.config.token.split(".")[0]
+        ch_debug = logging.FileHandler(
+            os.path.join(temp_dir, f"{log_file_name}.log"), mode="a+"
+        )
+
+        ch_debug.setLevel(logging.DEBUG)
+        formatter_debug = FileFormatter(
+            "%(asctime)s %(filename)s - " "%(levelname)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        ch_debug.setFormatter(formatter_debug)
+        logger.addHandler(ch_debug)
 
         log_level = logging_levels.get(level_text)
         logger.info(LINE)
@@ -216,11 +191,6 @@ class ModmailBot(commands.Bot):
                 self.loop.run_until_complete(self.metadata_task)
             except asyncio.CancelledError:
                 logger.debug(info("data_task has been cancelled."))
-            try:
-                self.autoupdate_task.cancel()
-                self.loop.run_until_complete(self.autoupdate_task)
-            except asyncio.CancelledError:
-                logger.debug(info("autoupdate_task has been cancelled."))
 
             self.loop.run_until_complete(self.logout())
             for task in asyncio.Task.all_tasks():
@@ -386,9 +356,11 @@ class ModmailBot(commands.Bot):
         logger.info(info("Client ready."))
         logger.info(LINE)
         logger.info(info(f"Logged in as: {self.user}"))
-        logger.info(info(f"Prefix: {self.prefix}"))
         logger.info(info(f"User ID: {self.user.id}"))
+        logger.info(info(f"Prefix: {self.prefix}"))
+        logger.info(info(f"Guild Name: {self.guild.name if self.guild else 'None'}"))
         logger.info(info(f"Guild ID: {self.guild.id if self.guild else 0}"))
+
         logger.info(LINE)
 
         if not self.guild:
@@ -926,62 +898,6 @@ class ModmailBot(commands.Bot):
         else:
             logger.info(info("Successfully connected to the database."))
 
-    async def autoupdate_loop(self):
-        await self.wait_until_ready()
-
-        if self.config.get("disable_autoupdates"):
-            logger.warning(info("Autoupdates disabled."))
-            logger.info(LINE)
-            return
-
-        if not self.config.get("github_access_token"):
-            logger.warning(info("GitHub access token not found."))
-            logger.warning(info("Autoupdates disabled."))
-            logger.info(LINE)
-            return
-
-        logger.info(info("Autoupdate loop started."))
-
-        while not self.is_closed():
-            changelog = await Changelog.from_url(self)
-            latest = changelog.latest_version
-
-            if parse_version(self.version) < parse_version(latest.version):
-                data = await self.api.update_repository()
-
-                embed = discord.Embed(color=discord.Color.green())
-
-                commit_data = data["data"]
-                user = data["user"]
-                embed.set_author(
-                    name=user["username"] + " - Updating Bot",
-                    icon_url=user["avatar_url"],
-                    url=user["url"],
-                )
-
-                embed.set_footer(
-                    text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
-                )
-
-                embed.description = latest.description
-                for name, value in latest.fields.items():
-                    embed.add_field(name=name, value=value)
-
-                if commit_data:
-                    message = commit_data["commit"]["message"]
-                    html_url = commit_data["html_url"]
-                    short_sha = commit_data["sha"][:6]
-                    embed.add_field(
-                        name="Merge Commit",
-                        value=f"[`{short_sha}`]({html_url}) "
-                        f"{message} - {user['username']}",
-                    )
-                    logger.info(info("Bot has been updated."))
-                    channel = self.log_channel
-                    await channel.send(embed=embed)
-
-            await asyncio.sleep(3600)
-
     async def metadata_loop(self):
         await self.wait_until_ready()
         if not self.guild:
@@ -1015,6 +931,7 @@ class ModmailBot(commands.Bot):
 if __name__ == "__main__":
     if os.name != "nt":
         import uvloop
+
         uvloop.install()
     bot = ModmailBot()
     bot.run()
