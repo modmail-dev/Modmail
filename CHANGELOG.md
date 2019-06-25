@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased] (3.0.0)
+# v3.0.0
 
 ### Added 
 
@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Threads will close automatically after some time when `thread_auto_close` is set.
 - Custom closing message can be set with `thread_auto_close_response`.
 
-### Removed
+### Breaking Changes
 
 - Removed autoupdate functionality and the `update` command in favour of the [Pull app](https://github.com/apps/pull).
 
