@@ -503,9 +503,7 @@ class Thread:
                 )
             )
 
-            await self._restart_close_timer()
 
-        if self.close_task is not None:
             # Cancel closing if a thread message is sent.
             await self.cancel_closure()
             tasks.append(
@@ -516,6 +514,8 @@ class Thread:
                     )
                 )
             )
+        
+            await self._restart_close_timer()
 
         await asyncio.gather(*tasks)
 
