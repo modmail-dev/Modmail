@@ -515,8 +515,6 @@ class Thread:
                         )
                     )
                 )
-        
-            await self._restart_close_timer()
 
         await asyncio.gather(*tasks)
 
@@ -530,6 +528,9 @@ class Thread:
         note: bool = False,
         anonymous: bool = False,
     ) -> None:
+
+        self.bot.loop.create_task(self._restart_close_timer()) # Start or restart thread auto close
+
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
             self.bot.loop.create_task(self.cancel_closure())
