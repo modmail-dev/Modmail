@@ -230,7 +230,7 @@ class Thread:
     ):
         del self.manager.cache[self.id]
 
-        await self.cancel_closure()
+        await self.cancel_closure(all=True)
 
         # Cancel auto closing the thread if closed by any means.
 
