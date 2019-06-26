@@ -251,7 +251,7 @@ class Modmail(commands.Cog):
 
         if cancel:
 
-            if thread.close_task is not None:
+            if thread.close_task is not None or thread.auto_close_task is not None:
                 await thread.cancel_closure(all=True)
                 embed = discord.Embed(
                     color=discord.Color.red(),
