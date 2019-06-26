@@ -209,6 +209,7 @@ class Thread:
                 "silent": silent,
                 "delete_channel": delete_channel,
                 "message": message,
+                "auto_close": auto_close
             }
             self.bot.config.closures[str(self.id)] = items
             await self.bot.config.update()
@@ -229,7 +230,7 @@ class Thread:
     ):
         del self.manager.cache[self.id]
 
-        await self.cancel_closure()
+        await self.cancel_closure(all=True)
 
         # Cancel auto closing the thread if closed by any means.
 
@@ -333,10 +334,10 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
-        if self.close_task is not None and not auto_close or both:
+        if self.close_task is not None and (not auto_close or all):
             self.close_task.cancel()
             self.close_task = None
-        if self.auto_close_task is not None and auto_close or both:
+        if self.auto_close_task is not None and (auto_close or all):
             self.auto_close_task.cancel()
             self.auto_close_task = None
 
