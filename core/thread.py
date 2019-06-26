@@ -388,7 +388,7 @@ class Thread:
         This will create or restart a timer to automatically close this
         thread.
         """
-        timeout = await self._grab_timeout()
+        timeout = await self._fetch_timeout()
 
         # Exit if timeout was not set
         if timeout is None:
