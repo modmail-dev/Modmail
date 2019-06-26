@@ -333,10 +333,10 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
-        if self.close_task is not None and not auto_close or both:
+        if self.close_task is not None and not auto_close or all:
             self.close_task.cancel()
             self.close_task = None
-        if self.auto_close_task is not None and auto_close or both:
+        if self.auto_close_task is not None and auto_close or all:
             self.auto_close_task.cancel()
             self.auto_close_task = None
 
