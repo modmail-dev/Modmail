@@ -295,6 +295,7 @@ class ApiClient(RequestClient):
                 "closed_at": None,
                 "channel_id": str(channel.id),
                 "guild_id": str(self.bot.guild_id),
+                "bot_id": str(self.bot.user.id),
                 "recipient": {
                     "id": str(recipient.id),
                     "name": recipient.name,
