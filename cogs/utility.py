@@ -85,14 +85,14 @@ class ModmailHelpCommand(commands.HelpCommand):
         cogs = list(filter(None, cogs))
 
         bot = self.context.bot
-        
+
         # always come first
-        default_cogs = [ 
+        default_cogs = [
             bot.get_cog("Modmail"),
             bot.get_cog("Utility"),
             bot.get_cog("Plugins"),
         ]
-        
+
         default_cogs.extend(c for c in cogs if c not in default_cogs)
 
         for cog in default_cogs:
@@ -404,7 +404,7 @@ class Utility(commands.Cog):
                 color=self.bot.main_color, description="Cached logs are now cleared."
             )
         )
-        
+
     @commands.command(aliases=["presence"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def activity(self, ctx, activity_type: str.lower, *, message: str = ""):
