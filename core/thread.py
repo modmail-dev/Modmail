@@ -415,11 +415,7 @@ class Thread:
                 f" '{time_marker_regex}' to specify time."
             )
 
-        if self._auto_close_task:
-            self._auto_close_task.cancel()
-        self._auto_close_task = self.bot.loop.call_later(
-            seconds, self._close_after, self.bot.user, False, True, close_message
-        )
+        await self.close(closer=self.bot.user, after=seconds, message=close_message)
 
     async def edit_message(self, message_id: int, message: str) -> None:
         recipient_msg, channel_msg = await asyncio.gather(
