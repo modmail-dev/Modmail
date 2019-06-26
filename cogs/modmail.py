@@ -252,7 +252,7 @@ class Modmail(commands.Cog):
         if cancel:
 
             if thread.close_task is not None:
-                await thread.cancel_closure()
+                await thread.cancel_closure(all=True)
                 embed = discord.Embed(
                     color=discord.Color.red(),
                     description="Scheduled close has been cancelled.",
