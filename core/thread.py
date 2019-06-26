@@ -40,8 +40,8 @@ class Thread:
         self._channel = channel
         self.genesis_message = None
         self._ready_event = asyncio.Event()
-        self._close_task = None
-        self._auto_close_task = None
+        self.close_task = None
+        self.auto_close_task = None
 
     def __repr__(self):
         return (
@@ -56,14 +56,6 @@ class Thread:
     @property
     def id(self) -> int:
         return self._id
-
-    @property
-    def close_task(self) -> asyncio.TimerHandle:
-        return self._close_task
-
-    @close_task.setter
-    def close_task(self, val: asyncio.TimerHandle):
-        self._close_task = val
 
     @property
     def channel(self) -> typing.Union[discord.TextChannel, discord.DMChannel]:
@@ -199,11 +191,12 @@ class Thread:
         silent: bool = False,
         delete_channel: bool = True,
         message: str = None,
+        auto_close: bool = False
     ) -> None:
         """Close a thread now or after a set time in seconds"""
 
         # restarts the after timer
-        await self.cancel_closure()
+        await self.cancel_closure(auto_close)
 
         if after > 0:
             # TODO: Add somewhere to clean up broken closures
@@ -221,9 +214,14 @@ class Thread:
             self.bot.config.closures[str(self.id)] = items
             await self.bot.config.update()
 
-            self.close_task = self.bot.loop.call_later(
+            task = self.bot.loop.call_later(
                 after, self._close_after, closer, silent, delete_channel, message
             )
+
+            if auto_close:
+                self.auto_close_task = task
+            else:
+                self.close_task = task
         else:
             await self._close(closer, silent, delete_channel, message)
 
@@ -235,8 +233,6 @@ class Thread:
         await self.cancel_closure()
 
         # Cancel auto closing the thread if closed by any means.
-        if self._auto_close_task:
-            self._auto_close_task.cancel()
 
         if str(self.id) in self.bot.config.subscriptions:
             del self.bot.config.subscriptions[str(self.id)]
@@ -337,10 +333,14 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def cancel_closure(self) -> None:
-        if self.close_task is not None:
+    async def cancel_closure(self, auto_close: bool = False) -> None:
+
+        if self.close_task is not None and not auto_close:
             self.close_task.cancel()
             self.close_task = None
+        elif self.auto_close_task is not None:
+            self.auto_close_task.cancel()
+            self.auto_close_task = None
 
         to_update = self.bot.config.closures.pop(str(self.id), None)
         if to_update is not None:
@@ -415,7 +415,7 @@ class Thread:
                 f" '{time_marker_regex}' to specify time."
             )
 
-        await self.close(closer=self.bot.user, after=seconds, message=close_message)
+        await self.close(closer=self.bot.user, after=seconds, message=close_message, auto_close=True)
 
     async def edit_message(self, message_id: int, message: str) -> None:
         recipient_msg, channel_msg = await asyncio.gather(
@@ -505,15 +505,16 @@ class Thread:
 
 
             # Cancel closing if a thread message is sent.
-            await self.cancel_closure()
-            tasks.append(
-                self.channel.send(
-                    embed=discord.Embed(
-                        color=discord.Color.red(),
-                        description="Scheduled close has been cancelled.",
+            if self.close_task is not None:
+                await self.cancel_closure()
+                tasks.append(
+                    self.channel.send(
+                        embed=discord.Embed(
+                            color=discord.Color.red(),
+                            description="Scheduled close has been cancelled.",
+                        )
                     )
                 )
-            )
         
             await self._restart_close_timer()
 
@@ -547,9 +548,6 @@ class Thread:
         if not from_mod and not note:
             self.bot.loop.create_task(self.bot.api.append_log(message, self.channel.id))
 
-            # Cancel auto closing if we get a new message from user
-            if self._auto_close_task:
-                self._auto_close_task.cancel()
 
         destination = destination or self.channel
 
