@@ -102,18 +102,17 @@ class Thread:
                 overwrites=overwrites,
                 reason="Creating a thread channel",
             )
-        except discord.HTTPException as e: # Failed to create due to 50 channel limit.
+        except discord.HTTPException as e:  # Failed to create due to 50 channel limit.
             del self.manager.cache[self.id]
             log_channel = self.bot.log_channel
 
             em = discord.Embed(color=discord.Color.red())
-            em.title = 'Error while trying to create a thread'
+            em.title = "Error while trying to create a thread"
             em.description = e.message
-            em.add_field(name='Recipient', value=recipient.mention)
+            em.add_field(name="Recipient", value=recipient.mention)
 
             if log_channel is not None:
                 return await log_channel.send(embed=em)
-                
 
         self._channel = channel
 
@@ -191,7 +190,7 @@ class Thread:
         silent: bool = False,
         delete_channel: bool = True,
         message: str = None,
-        auto_close: bool = False
+        auto_close: bool = False,
     ) -> None:
         """Close a thread now or after a set time in seconds"""
 
@@ -210,6 +209,7 @@ class Thread:
                 "silent": silent,
                 "delete_channel": delete_channel,
                 "message": message,
+                "auto_close": auto_close
             }
             self.bot.config.closures[str(self.id)] = items
             await self.bot.config.update()
@@ -230,7 +230,7 @@ class Thread:
     ):
         del self.manager.cache[self.id]
 
-        await self.cancel_closure()
+        await self.cancel_closure(all=True)
 
         # Cancel auto closing the thread if closed by any means.
 
@@ -333,12 +333,11 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def cancel_closure(self, auto_close: bool = False) -> None:
-
-        if self.close_task is not None and not auto_close:
+    async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
+        if self.close_task is not None and (not auto_close or all):
             self.close_task.cancel()
             self.close_task = None
-        elif self.auto_close_task is not None:
+        if self.auto_close_task is not None and (auto_close or all):
             self.auto_close_task.cancel()
             self.auto_close_task = None
 
@@ -415,7 +414,9 @@ class Thread:
                 f" '{time_marker_regex}' to specify time."
             )
 
-        await self.close(closer=self.bot.user, after=seconds, message=close_message, auto_close=True)
+        await self.close(
+            closer=self.bot.user, after=seconds, message=close_message, auto_close=True
+        )
 
     async def edit_message(self, message_id: int, message: str) -> None:
         recipient_msg, channel_msg = await asyncio.gather(
@@ -503,7 +504,6 @@ class Thread:
                 )
             )
 
-
             # Cancel closing if a thread message is sent.
             if self.close_task is not None:
                 await self.cancel_closure()
@@ -529,7 +529,9 @@ class Thread:
         anonymous: bool = False,
     ) -> None:
 
-        self.bot.loop.create_task(self._restart_close_timer()) # Start or restart thread auto close
+        self.bot.loop.create_task(
+            self._restart_close_timer()
+        )  # Start or restart thread auto close
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
@@ -548,7 +550,6 @@ class Thread:
 
         if not from_mod and not note:
             self.bot.loop.create_task(self.bot.api.append_log(message, self.channel.id))
-
 
         destination = destination or self.channel
 
