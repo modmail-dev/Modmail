@@ -146,7 +146,7 @@
     "backupdb": {
         "repository": "officialpiyush/modmail-plugins",
         "branch": "master",
-        "description": "Backup you're current modmail DB with a single command!\n\n**Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
+        "description": "Backup you're current Modmail DB with a single command!\n\n**Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
         "bot_version": "2.20.1",
         "title": "Backup Database (backupdb)",
         "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
@@ -161,10 +161,19 @@
         "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
         "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
     },
+    "logger": {
+        "repository": "Taaku18/modmail-plugins",
+        "branch": "master",
+        "description": "Moderation logger, logs message edits, message delete, channel changes, member join, etc.",
+        "bot_version": "2.20.1",
+        "title": "Server Activity Logger",
+        "icon_url": "https://i.imgur.com/dRqPq5M.png",
+        "thumbnail_url": "https://i.imgur.com/moQn7RC.png"
+    },
      "fun": {
         "repository": "TheKinG2149/modmail-plugins",
         "branch": "master",
-        "description": "Some fun commands like 8ball,dadjokes",
+        "description": "Some fun commands like 8ball, dadjokes",
         "bot_version": "2.24.1",
         "title": "Fun",
         "icon_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png",
@@ -173,7 +182,7 @@
     "stats": {
         "repository": "MiTonder/modmail-plugins",
         "branch": "master",
-        "description": "Get useful stats directly in an embed about either the ModMail bot, a user or the server.",
+        "description": "Get useful stats directly in an embed about either the Modmail bot, a user or the server.",
         "bot_version": "2.24.1",
         "title": "Get Stats",
         "icon_url": "https://image.flaticon.com/icons/png/512/117/117761.png",
