@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+black = "==19.3b0"
 
 [packages]
 colorama = ">=0.4.0"
@@ -17,6 +18,8 @@ dnspython = "~=1.16.0"
 parsedatetime = "==2.4"
 aiohttp = "<3.6.0,>=3.3.0"
 pylint = "*"
+python-dotenv = ">=0.10.3"
+pipenv = "==2018.11.26"
 "discord.py" = "==1.1.1"
 
 [requires]
