@@ -759,7 +759,7 @@ class Modmail(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
     async def blocked(self, ctx):
@@ -804,6 +804,63 @@ class Modmail(commands.Cog):
 
         await PaginatorSession(ctx, *embeds).run()
 
+    @blocked.command(name="whitelist")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    @trigger_typing
+    async def blocked_whitelist(self, ctx, *, user: User = None):
+        """
+        Whitelist or un-whitelist a user from getting blocked.
+
+        Useful for preventing users from getting blocked by account_age/guild_age restrictions.
+        """
+        if user is None:
+            thread = ctx.thread
+            if thread:
+                user = thread.recipient
+            else:
+                return await ctx.send_help(ctx.command)
+
+        mention = getattr(user, "mention", f"`{user.id}`")
+        msg = ""
+
+        if str(user.id) in self.bot.config.blocked_whitelist:
+            embed = discord.Embed(
+                title="Success",
+                description=f"{mention} is no longer whitelisted.",
+                color=self.bot.main_color,
+            )
+            self.bot.config.blocked_whitelist.remove(str(user.id))
+            return await ctx.send(embed=embed)
+
+        self.bot.config.blocked_whitelist.append(str(user.id))
+
+        if str(user.id) in self.bot.blocked_users:
+            msg = self.bot.blocked_users.get(str(user.id))
+            if msg is None:
+                msg = ""
+            del self.bot.config.blocked[str(user.id)]
+
+        await self.bot.config.update()
+
+        if msg.startswith("System Message: "):
+            # If the user is blocked internally (for example: below minimum account age)
+            # Show an extended message stating the original internal message
+            reason = msg[16:].strip().rstrip(".") or "no reason"
+            embed = discord.Embed(
+                title="Success",
+                description=f"{mention} was previously blocked internally due to "
+                f'"{reason}". {mention} is now whitelisted.',
+                color=self.bot.main_color,
+            )
+        else:
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"{mention} is now whitelisted.",
+            )
+
+        return await ctx.send(embed=embed)
+
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
@@ -832,6 +889,16 @@ class Modmail(commands.Cog):
             else:
                 raise commands.BadArgument(f'User "{after.arg}" not found')
 
+        mention = getattr(user, "mention", f"`{user.id}`")
+
+        if str(user.id) in self.bot.config.blocked_whitelist:
+            embed = discord.Embed(
+                title="Error",
+                description=f"Cannot block {mention}, user is whitelisted.",
+                color=discord.Color.red(),
+            )
+            return await ctx.send(embed=embed)
+
         if after is not None:
             reason = after.arg
             if reason.startswith("System Message: "):
@@ -845,8 +912,6 @@ class Modmail(commands.Cog):
 
         if not reason:
             reason = None
-
-        mention = user.mention if hasattr(user, "mention") else f"`{user.id}`"
 
         extend = f" for `{reason}`" if reason is not None else ""
         msg = self.bot.blocked_users.get(str(user.id), "")
@@ -901,7 +966,7 @@ class Modmail(commands.Cog):
             else:
                 raise commands.MissingRequiredArgument(param(name="user"))
 
-        mention = user.mention if hasattr(user, "mention") else f"`{user.id}`"
+        mention = getattr(user, "mention", f"`{user.id}`")
 
         if str(user.id) in self.bot.blocked_users:
             msg = self.bot.blocked_users.get(str(user.id))
@@ -919,6 +984,11 @@ class Modmail(commands.Cog):
                     description=f"{mention} was previously blocked internally due to "
                     f'"{reason}". {mention} is no longer blocked.',
                     color=self.bot.main_color,
+                )
+                embed.set_footer(
+                    text="However, if the original system block reason still apply, "
+                    f"{mention} will be automatically blocked again. Use "
+                    f'"{self.bot.prefix}blocked whitelist {mention}" to whitelist the user.'
                 )
             else:
                 embed = discord.Embed(

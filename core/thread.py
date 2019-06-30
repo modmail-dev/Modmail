@@ -209,7 +209,7 @@ class Thread:
                 "silent": silent,
                 "delete_channel": delete_channel,
                 "message": message,
-                "auto_close": auto_close
+                "auto_close": auto_close,
             }
             self.bot.config.closures[str(self.id)] = items
             await self.bot.config.update()
