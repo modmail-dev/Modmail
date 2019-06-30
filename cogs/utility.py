@@ -1248,9 +1248,7 @@ class Utility(commands.Cog):
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
 
-    @commands.group(
-        invoke_without_command=True, aliases=["oauth2", "auth", "authentication"]
-    )
+    @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
         """Commands relating to Logviewer oauth2 login authentication.
