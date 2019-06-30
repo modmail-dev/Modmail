@@ -1,4 +1,4 @@
-__version__ = "3.0.1"
+__version__ = "3.0.3"
 
 import asyncio
 import logging
@@ -272,6 +272,10 @@ class ModmailBot(commands.Bot):
         return self.config.get("blocked", {})
 
     @property
+    def blocked_whitelisted_users(self) -> typing.List[str]:
+        return self.config.get("blocked_whitelist", [])
+
+    @property
     def prefix(self) -> str:
         return self.config.get("prefix", "?")
 
@@ -398,7 +402,7 @@ class ModmailBot(commands.Bot):
                 silent=items["silent"],
                 delete_channel=items["delete_channel"],
                 message=items["message"],
-                auto_close=items.get("auto_close", False)
+                auto_close=items.get("auto_close", False),
             )
 
         logger.info(LINE)
@@ -440,9 +444,22 @@ class ModmailBot(commands.Bot):
 
         return sent_emoji, blocked_emoji
 
-    async def process_modmail(self, message: discord.Message) -> None:
-        """Processes messages sent to the bot."""
+    async def _process_blocked(self, message: discord.Message) -> bool:
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
+
+        if str(message.author.id) in self.blocked_whitelisted_users:
+            if str(message.author.id) in self.blocked_users:
+                del self.config.blocked[str(message.author.id)]
+                await self.config.update()
+
+            if sent_emoji != "disable":
+                try:
+                    await message.add_reaction(sent_emoji)
+                except (discord.HTTPException, discord.InvalidArgument):
+                    pass
+
+            return False
+
         now = datetime.utcnow()
 
         account_age = self.config.get("account_age")
@@ -579,8 +596,12 @@ class ModmailBot(commands.Bot):
                 await message.add_reaction(reaction)
             except (discord.HTTPException, discord.InvalidArgument):
                 pass
+        return str(message.author.id) in self.blocked_users
 
-        if str(message.author.id) not in self.blocked_users:
+    async def process_modmail(self, message: discord.Message) -> None:
+        """Processes messages sent to the bot."""
+        blocked = await self._process_blocked(message)
+        if not blocked:
             thread = await self.threads.find_or_create(message.author)
             await thread.send(message)
 

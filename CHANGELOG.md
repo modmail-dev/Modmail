@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# v3.0.3
+
+### Added
+
+- New commands, `?alias edit <name> <target>` and `?snippets edit <name> <target>`.
+  - They can be used to edit aliases and snippets respectively.
+
+# v3.0.2
+
+### Added
+
+- New command, `?blocked whitelist <user>`, this command prevents users from getting blocked by any means.
+
+### Changed
+
+- Removed some aliases from `?oauth`.
+
 # v3.0.1
 
 ### Fixed
@@ -22,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-- Removed autoupdate functionality and the `update` command in favour of the [Pull app](https://github.com/apps/pull).
+- Removed autoupdate functionality and the `?update` command in favour of the [Pull app](https://github.com/apps/pull).
 
 Read more about updating your bot [here](https://github.com/kyb3r/modmail/wiki/updating)
 
@@ -33,7 +51,7 @@ Read more about updating your bot [here](https://github.com/kyb3r/modmail/wiki/u
 
 ### Fixed
 - Editing notes now works, minor bug with edit command is fixed.
-- Bug in the `oauth` command where the response message fails to send when an ID is provided.
+- Bug in the `?oauth` command where the response message fails to send when an ID is provided.
 - Plugin requirement installation now works in virtual environments
 
 
@@ -41,13 +59,13 @@ Read more about updating your bot [here](https://github.com/kyb3r/modmail/wiki/u
 
 ### Fixed
 
-Fixed a bug with branches and `plugin update`.
+Fixed a bug with branches and `?plugin update`.
 
 # v2.24.0
 
 ### Added
 
-Branch support for `plugin add` and in registry. Typically for developers.    
+Branch support for `?plugin add` and in registry. Typically for developers.    
 
 # v2.23.0
 

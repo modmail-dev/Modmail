@@ -838,7 +838,7 @@ class Utility(commands.Cog):
         if "aliases" not in self.bot.config.cache:
             self.bot.config["aliases"] = {}
 
-        if self.bot.get_command(name) or self.bot.config.aliases.get(name):
+        if self.bot.get_command(name) or name in self.bot.config.aliases:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
@@ -847,14 +847,14 @@ class Utility(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        if not self.bot.get_command(value.split()[0]):
+        linked_command = value.split()[0]
+        if not self.bot.get_command(linked_command):
             embed = Embed(
                 title="Error",
                 color=Color.red(),
                 description="The command you are attempting to point "
-                f"to does not exist: `{value.split()[0]}`.",
+                f"to does not exist: `{linked_command}`.",
             )
-            return await ctx.send(embed=embed)
 
         self.bot.config.aliases[name] = value
         await self.bot.config.update()
@@ -862,7 +862,7 @@ class Utility(commands.Cog):
         embed = Embed(
             title="Added alias",
             color=self.bot.main_color,
-            description=f"`{name}` points to: {value}",
+            description=f'`{name}` points to: "{value}".',
         )
 
         return await ctx.send(embed=embed)
@@ -875,7 +875,7 @@ class Utility(commands.Cog):
         if "aliases" not in self.bot.config.cache:
             self.bot.config["aliases"] = {}
 
-        if self.bot.config.aliases.get(name):
+        if name in self.bot.config.aliases:
             del self.bot.config["aliases"][name]
             await self.bot.config.update()
 
@@ -892,6 +892,50 @@ class Utility(commands.Cog):
                 description=f"Alias `{name}` does not exist.",
             )
 
+        return await ctx.send(embed=embed)
+
+    @alias.command(name="edit")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def alias_edit(self, ctx, name: str.lower, *, value):
+        if "aliases" not in self.bot.config.cache:
+            self.bot.config["aliases"] = {}
+
+        if name not in self.bot.config.aliases:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"Alias `{name}` does not exist.",
+            )
+
+            return await ctx.send(embed=embed)
+
+        if self.bot.get_command(name):
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description="A command or alias already exists "
+                f"with the same name: `{name}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        linked_command = value.split()[0]
+        if not self.bot.get_command(linked_command):
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description="The command you are attempting to point "
+                f"to does not exist: `{linked_command}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        self.bot.config.aliases[name] = value
+        await self.bot.config.update()
+
+        embed = Embed(
+            title="Edited alias",
+            color=self.bot.main_color,
+            description=f'`{name}` now points to: "{value}".',
+        )
         return await ctx.send(embed=embed)
 
     @commands.group(aliases=["perms"], invoke_without_command=True)
@@ -1248,9 +1292,7 @@ class Utility(commands.Cog):
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
 
-    @commands.group(
-        invoke_without_command=True, aliases=["oauth2", "auth", "authentication"]
-    )
+    @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
         """Commands relating to Logviewer oauth2 login authentication.
