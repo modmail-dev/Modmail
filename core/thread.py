@@ -163,7 +163,7 @@ class Thread:
         )
 
         footer = "Your message has been sent"
-        if not self.bot.config.get("disable_recipient_thread_close"):
+        if self.bot.config.get("recipient_thread_close"):
             footer = "Click the lock to close the thread"
 
         footer = self.bot.config.get("thread_creation_footer", footer)
@@ -172,7 +172,7 @@ class Thread:
 
         if creator is None:
             msg = await recipient.send(embed=embed)
-            if not self.bot.config.get("disable_recipient_thread_close"):
+            if self.bot.config.get("recipient_thread_close"):
                 close_emoji = self.bot.config.get("close_emoji", "🔒")
                 close_emoji = await self.bot.convert_emoji(close_emoji)
                 await msg.add_reaction(close_emoji)

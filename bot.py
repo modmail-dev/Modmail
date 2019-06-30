@@ -20,9 +20,7 @@ from aiohttp import ClientSession
 from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
-from pkg_resources import parse_version
 
-from core.changelog import Changelog
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import info, error, human_join
@@ -68,9 +66,15 @@ class ModmailBot(commands.Bot):
         self._connected = asyncio.Event()
 
         self._configure_logging()
-        # TODO: Raise fatal error if mongo_uri or other essentials are not found
-        self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
-        self._api = ApiClient(self)
+
+        self.standalone = 'mongo_uri' not in self.config.cache
+
+        if not self.standalone:
+            self._db = AsyncIOMotorClient(self.config.mongo_uri).modmail_bot
+        else:
+            self._db = None
+
+        self.api = ApiClient(self)
         self.plugin_db = PluginDatabaseClient(self)
 
         self.metadata_task = self.loop.create_task(self.metadata_loop())
@@ -128,12 +132,10 @@ class ModmailBot(commands.Bot):
         return __version__
 
     @property
-    def db(self) -> typing.Optional[AsyncIOMotorClient]:
+    def db(self) -> AsyncIOMotorClient:
+        if self._db is None:
+            raise ValueError('No database instance found.')
         return self._db
-
-    @property
-    def api(self) -> ApiClient:
-        return self._api
 
     @property
     def config(self) -> ConfigManager:
@@ -743,7 +745,7 @@ class ModmailBot(commands.Bot):
             ts = message.embeds[0].timestamp if message.embeds else None
             if thread and ts == thread.channel.created_at:
                 # the reacted message is the corresponding thread creation embed
-                if not self.config.get("disable_recipient_thread_close"):
+                if self.config.get("recipient_thread_close"):
                     await thread.close(closer=user)
         elif not isinstance(channel, discord.DMChannel):
             if not message.embeds:

@@ -5,6 +5,7 @@ import typing
 
 import isodate
 
+import discord
 from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
@@ -122,7 +123,7 @@ class ConfigManager:
         self._cache = val
 
     def populate_cache(self) -> dict:
-        data = {
+        defaults = {
             "snippets": {},
             "plugins": [],
             "aliases": {},
@@ -134,10 +135,51 @@ class ConfigManager:
             "notification_squad": {},
             "subscriptions": {},
             "closures": {},
+            "twitch_url": 'https://www.twitch.tv/discord-modmail/',
+            "main_category_id": None,
+            "disable_autoupdates": False,
+            "prefix": '?',
+            "mention": None,
+            "main_color": discord.Color.blurple(),
+            "user_typing": False,
+            "mod_typing": False,
+            "account_age": None,
+            "guild_age": None,
+            "reply_without_command": False,
+            "log_channel_id": None,
+            "sent_emoji": '✅',
+            "blocked_emoji": '🚫',
+            "close_emoji": '🔒',
+            "recipient_thread_close": False,
+            "thread_auto_close": 0,
+            "thread_auto_close_response": None,
+            "thread_creation_response": "The staff team will get back to you as soon as possible.",
+            "thread_creation_footer": None,
+            "thread_creation_title": 'Thread Created',
+            "thread_close_footer": 'Replying will create a new thread',
+            "thread_close_title": 'Thread Closed',
+            "thread_close_response": '{closer.mention} has closed this Modmail thread.',
+            "thread_self_close_response": 'You have closed this Modmail thread.',
+            "recipient_color": discord.Color.gold(),
+            "mod_tag": None,
+            "mod_color": discord.Color.green(),
+            "anon_username": None,
+            "anon_avatar_url": None,
+            "anon_tag": 'Response',
+            "activity_message": None,
+            "activity_type": None,
+            "status": None,
+            "modmail_guild_id": None,
+            "guild_id": None,
+            "mongo_uri": None,
+            "owners": None,
+            "token": None,
+            "github_access_token": None,
+            "log_url": 'https://example.com/',
             "log_level": "INFO",
         }
 
-        data.update(os.environ)
+        defaults.update(os.environ)
 
         if os.path.exists("config.json"):
             with open("config.json") as f:
