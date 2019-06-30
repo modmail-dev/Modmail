@@ -1,4 +1,4 @@
-__version__ = "3.0.2"
+__version__ = "3.0.3"
 
 import asyncio
 import logging
@@ -272,6 +272,10 @@ class ModmailBot(commands.Bot):
         return self.config.get("blocked", {})
 
     @property
+    def blocked_whitelisted_users(self) -> typing.List[str]:
+        return self.config.get("blocked_whitelist", [])
+
+    @property
     def prefix(self) -> str:
         return self.config.get("prefix", "?")
 
@@ -443,7 +447,7 @@ class ModmailBot(commands.Bot):
     async def _process_blocked(self, message: discord.Message) -> bool:
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
 
-        if str(message.author.id) in self.config.blocked_whitelist:
+        if str(message.author.id) in self.blocked_whitelisted_users:
             if str(message.author.id) in self.blocked_users:
                 del self.config.blocked[str(message.author.id)]
                 await self.config.update()
