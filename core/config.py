@@ -62,6 +62,7 @@ class ConfigManager:
         "oauth_whitelist",
         # moderation
         "blocked",
+        "blocked_whitelist",
         "command_permissions",
         "level_permissions",
         # threads
@@ -126,6 +127,7 @@ class ConfigManager:
             "plugins": [],
             "aliases": {},
             "blocked": {},
+            "blocked_whitelist": [],
             "oauth_whitelist": [],
             "command_permissions": {},
             "level_permissions": {},
