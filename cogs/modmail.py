@@ -147,15 +147,21 @@ class Modmail(commands.Cog):
         {prefix}snippets add "two word" this is a two word snippet.
         ```
         """
+        if name in self.bot.config.snippets:
+            embed = discord.Embed(
+                title="Error",
+                color=discord.Color.red(),
+                description=f"Snippet `{name}` already exists.",
+            )
+        else:
+            self.bot.config.snippets[name] = value
+            await self.bot.config.update()
 
-        self.bot.config.snippets[name] = value
-        await self.bot.config.update()
-
-        embed = discord.Embed(
-            title="Added snippet",
-            color=self.bot.main_color,
-            description=f"`{name}` points to: {value}",
-        )
+            embed = discord.Embed(
+                title="Added snippet",
+                color=self.bot.main_color,
+                description=f'`{name}` will now send "{value}".',
+            )
 
         await ctx.send(embed=embed)
 
@@ -164,7 +170,7 @@ class Modmail(commands.Cog):
     async def snippets_remove(self, ctx, *, name: str.lower):
         """Remove a snippet."""
 
-        if self.bot.config.snippets.get(name):
+        if name in self.bot.config.snippets:
             embed = discord.Embed(
                 title="Removed snippet",
                 color=self.bot.main_color,
@@ -182,6 +188,27 @@ class Modmail(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @snippets.command(name="edit")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def snippets_edit(self, ctx, name: str.lower, *, value):
+        if name in self.bot.config.snippets:
+            self.bot.config.snippets[name] = value
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Edited snippet",
+                color=self.bot.main_color,
+                description=f'`{name}` will now send "{value}".',
+            )
+
+        else:
+            embed = discord.Embed(
+                title="Error",
+                color=discord.Color.red(),
+                description=f"Snippet `{name}` does not exist.",
+            )
+        await ctx.send(embed=embed)
+
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @checks.thread_only()
@@ -193,7 +220,11 @@ class Modmail(commands.Cog):
         """
         thread = ctx.thread
         await thread.channel.edit(category=category, sync_permissions=True)
-        await ctx.message.add_reaction("✅")
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        try:
+            await ctx.message.add_reaction(sent_emoji)
+        except (discord.HTTPException, discord.InvalidArgument):
+            pass
 
     @staticmethod
     async def send_scheduled_close_message(ctx, after, silent=False):
@@ -823,16 +854,16 @@ class Modmail(commands.Cog):
         mention = getattr(user, "mention", f"`{user.id}`")
         msg = ""
 
-        if str(user.id) in self.bot.config.blocked_whitelist:
+        if str(user.id) in self.bot.blocked_whitelisted_users:
             embed = discord.Embed(
                 title="Success",
                 description=f"{mention} is no longer whitelisted.",
                 color=self.bot.main_color,
             )
-            self.bot.config.blocked_whitelist.remove(str(user.id))
+            self.bot.blocked_whitelisted_users.remove(str(user.id))
             return await ctx.send(embed=embed)
 
-        self.bot.config.blocked_whitelist.append(str(user.id))
+        self.bot.blocked_whitelisted_users.append(str(user.id))
 
         if str(user.id) in self.bot.blocked_users:
             msg = self.bot.blocked_users.get(str(user.id))
@@ -891,7 +922,7 @@ class Modmail(commands.Cog):
 
         mention = getattr(user, "mention", f"`{user.id}`")
 
-        if str(user.id) in self.bot.config.blocked_whitelist:
+        if str(user.id) in self.bot.blocked_whitelisted_users:
             embed = discord.Embed(
                 title="Error",
                 description=f"Cannot block {mention}, user is whitelisted.",
