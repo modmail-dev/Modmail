@@ -4,17 +4,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# v3.0.3
+
+### Added
+
+- New commands, `?alias edit <name> <target>` and `?snippets edit <name> <target>`.
+  - They can be used to edit aliases and snippets respectively.
+
+# v3.0.2
+
+### Added
+
+- New command, `?blocked whitelist <user>`, this command prevents users from getting blocked by any means.
+
+### Changed
+
+- Removed some aliases from `?oauth`.
+
+# v3.0.1
+
+### Fixed
+
+- A lot of bugs with `thread_auto_close` 😅
+
+
+# v3.0.0
+
+### Added 
+
+- Sponsors command that will list sponsors.
+- An alert will now be sent to the log channel if a thread channel fails to create. This could be due to a variety of problems such as insufficient permissions or the category channel limit is met. 
+- Threads will close automatically after some time when `thread_auto_close` is set.
+- Custom closing message can be set with `thread_auto_close_response`.
+
+### Breaking Changes
+
+- Removed autoupdate functionality and the `?update` command in favour of the [Pull app](https://github.com/apps/pull).
+
+Read more about updating your bot [here](https://github.com/kyb3r/modmail/wiki/updating)
+
+### Changed
+- Channel names now can contain unicode characters.
+- Debug logs are now located in a unique file for each bot. (Internal change) 
+- Default cogs always appear first in the help command now.
+
+### Fixed
+- Editing notes now works, minor bug with edit command is fixed.
+- Bug in the `?oauth` command where the response message fails to send when an ID is provided.
+- Plugin requirement installation now works in virtual environments
+
+
 # v2.24.1
 
 ### Fixed
 
-Fixed a bug with branches and `plugin update`.
+Fixed a bug with branches and `?plugin update`.
 
 # v2.24.0
 
 ### Added
 
-Branch support for `plugin add` and in registry. Typically for developers.    
+Branch support for `?plugin add` and in registry. Typically for developers.    
 
 # v2.23.0
 
