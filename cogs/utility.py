@@ -296,7 +296,7 @@ class Utility(commands.Cog):
     async def debug(self, ctx):
         """Shows the recent application-logs of the bot."""
 
-        log_file_name = self.bot.config.token.split(".")[0]
+        log_file_name = self.bot.token.split(".")[0]
 
         with open(
             os.path.join(
@@ -352,7 +352,7 @@ class Utility(commands.Cog):
         """Posts application-logs to Hastebin."""
 
         haste_url = os.environ.get("HASTE_URL", "https://hasteb.in")
-        log_file_name = self.bot.config.token.split(".")[0]
+        log_file_name = self.bot.token.split(".")[0]
 
         with open(
             os.path.join(
@@ -389,7 +389,7 @@ class Utility(commands.Cog):
     async def debug_clear(self, ctx):
         """Clears the locally cached logs."""
 
-        log_file_name = self.bot.config.token.split(".")[0]
+        log_file_name = self.bot.token.split(".")[0]
 
         with open(
             os.path.join(
@@ -428,8 +428,8 @@ class Utility(commands.Cog):
         - `{prefix}activity clear`
         """
         if activity_type == "clear":
-            self.bot.config["activity_type"] = None
-            self.bot.config["activity_message"] = None
+            self.bot.config.remove("activity_type")
+            self.bot.config.remove("activity_message")
             await self.bot.config.update()
             await self.set_presence()
             embed = Embed(title="Activity Removed", color=self.bot.main_color)
@@ -474,7 +474,7 @@ class Utility(commands.Cog):
         - `{prefix}status clear`
         """
         if status_type == "clear":
-            self.bot.config["status"] = None
+            self.bot.config.remove("status")
             await self.bot.config.update()
             await self.set_presence()
             embed = Embed(title="Status Removed", color=self.bot.main_color)
@@ -507,7 +507,7 @@ class Utility(commands.Cog):
 
         activity = status = None
         if status_identifier is None:
-            status_identifier = self.bot.config.get("status", None)
+            status_identifier = self.bot.config["status"]
             status_by_key = False
 
         try:
@@ -525,7 +525,7 @@ class Utility(commands.Cog):
                 raise ValueError(
                     "activity_message must be None " "if activity_identifier is None."
                 )
-            activity_identifier = self.bot.config.get("activity_type", None)
+            activity_identifier = self.bot.config["activity_type"]
             activity_by_key = False
 
         try:
@@ -540,7 +540,7 @@ class Utility(commands.Cog):
         else:
             url = None
             activity_message = (
-                activity_message or self.bot.config.get("activity_message", "")
+                activity_message or self.bot.config["activity_message"]
             ).strip()
 
             if activity_type == ActivityType.listening:
@@ -549,9 +549,7 @@ class Utility(commands.Cog):
                     # discord automatically add the "to"
                     activity_message = activity_message[3:].strip()
             elif activity_type == ActivityType.streaming:
-                url = self.bot.config.get(
-                    "twitch_url", "https://www.twitch.tv/discord-modmail/"
-                )
+                url = self.bot.config["twitch_url"]
 
             if activity_message:
                 activity = Activity(type=activity_type, name=activity_message, url=url)
@@ -578,14 +576,13 @@ class Utility(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         # Wait until config cache is populated with stuff from db
-        await self.bot.config.wait_until_ready()
+        await self.bot.wait_for_connected()
         logger.info(info(self.presence["activity"][1]))
         logger.info(info(self.presence["status"][1]))
 
     async def loop_presence(self):
         """Set presence to the configured value every hour."""
-        await self.bot.config.wait_until_ready()
-        await self.bot.wait_until_ready()
+        await self.bot.wait_for_connected()
         while not self.bot.is_closed():
             self.presence = await self.set_presence()
             await asyncio.sleep(600)
@@ -610,7 +607,7 @@ class Utility(commands.Cog):
 
         Type only `{prefix}mention` to retrieve your current "mention" message.
         """
-        current = self.bot.config.get("mention", "@here")
+        current = self.bot.config["mention"]
 
         if mention is None:
             embed = Embed(
@@ -673,7 +670,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_options(self, ctx):
         """Return a list of valid configuration names you can change."""
-        allowed = self.bot.config.allowed_to_change_in_command
+        allowed = self.bot.config.public_keys
         valid = ", ".join(f"`{k}`" for k in allowed)
         embed = Embed(title="Valid Keys", description=valid, color=self.bot.main_color)
         return await ctx.send(embed=embed)
@@ -683,7 +680,7 @@ class Utility(commands.Cog):
     async def config_set(self, ctx, key: str.lower, *, value: str):
         """Set a configuration variable and its value."""
 
-        keys = self.bot.config.allowed_to_change_in_command
+        keys = self.bot.config.public_keys
 
         if key in keys:
             try:
@@ -691,7 +688,8 @@ class Utility(commands.Cog):
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:
-                await self.bot.config.update({key: value})
+                self.bot.config[key] = value
+                await self.bot.config.update()
                 embed = Embed(
                     title="Success",
                     color=self.bot.main_color,
@@ -714,16 +712,12 @@ class Utility(commands.Cog):
         """Delete a set configuration variable."""
         keys = self.bot.config.allowed_to_change_in_command
         if key in keys:
-            try:
-                del self.bot.config.cache[key]
-                await self.bot.config.update()
-            except KeyError:
-                # when no values were set
-                pass
+            self.bot.config.remove(key)
+            await self.bot.config.update()
             embed = Embed(
                 title="Success",
                 color=self.bot.main_color,
-                description=f"`{key}` had been deleted from the config.",
+                description=f"`{key}` had been reset to default.",
             )
         else:
             embed = Embed(
@@ -744,11 +738,11 @@ class Utility(commands.Cog):
 
         Leave `key` empty to show all currently set configuration variables.
         """
-        keys = self.bot.config.allowed_to_change_in_command
+        keys = self.bot.config.public_keys
 
         if key:
             if key in keys:
-                desc = f"`{key}` is set to `{self.bot.config.get(key)}`"
+                desc = f"`{key}` is set to `{self.bot.config[key]}`"
                 embed = Embed(color=self.bot.main_color, description=desc)
                 embed.set_author(
                     name="Config variable", icon_url=self.bot.user.avatar_url
@@ -773,8 +767,8 @@ class Utility(commands.Cog):
 
             config = {
                 key: val
-                for key, val in self.bot.config.cache.items()
-                if val and key in keys
+                for key, val in self.bot.config.items()
+                if val != self.bot.config.defaults['key'] and key in keys
             }
 
             for name, value in reversed(list(config.items())):
@@ -835,10 +829,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_add(self, ctx, name: str.lower, *, value):
         """Add an alias."""
-        if "aliases" not in self.bot.config.cache:
-            self.bot.config["aliases"] = {}
-
-        if self.bot.get_command(name) or name in self.bot.config.aliases:
+        if self.bot.get_command(name) or name in self.bot.aliases:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
@@ -855,8 +846,9 @@ class Utility(commands.Cog):
                 description="The command you are attempting to point "
                 f"to does not exist: `{linked_command}`.",
             )
+            return await ctx.send(embed=embed)
 
-        self.bot.config.aliases[name] = value
+        self.bot.aliases[name] = value
         await self.bot.config.update()
 
         embed = Embed(
@@ -872,11 +864,8 @@ class Utility(commands.Cog):
     async def alias_remove(self, ctx, *, name: str.lower):
         """Remove an alias."""
 
-        if "aliases" not in self.bot.config.cache:
-            self.bot.config["aliases"] = {}
-
-        if name in self.bot.config.aliases:
-            del self.bot.config["aliases"][name]
+        if name in self.bot.aliases:
+            self.bot.aliases.pop(name)
             await self.bot.config.update()
 
             embed = Embed(
@@ -897,10 +886,7 @@ class Utility(commands.Cog):
     @alias.command(name="edit")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_edit(self, ctx, name: str.lower, *, value):
-        if "aliases" not in self.bot.config.cache:
-            self.bot.config["aliases"] = {}
-
-        if name not in self.bot.config.aliases:
+        if name not in self.bot.aliases:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
@@ -928,7 +914,7 @@ class Utility(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        self.bot.config.aliases[name] = value
+        self.bot.aliases[name] = value
         await self.bot.config.update()
 
         embed = Embed(
@@ -1141,11 +1127,11 @@ class Utility(commands.Cog):
         cmds = []
         levels = []
         for cmd in self.bot.commands:
-            permissions = self.bot.config.command_permissions.get(cmd.name, [])
+            permissions = self.bot.config['command_permissions'].get(cmd.name, [])
             if value in permissions:
                 cmds.append(cmd.name)
         for level in PermissionLevel:
-            permissions = self.bot.config.level_permissions.get(level.name, [])
+            permissions = self.bot.config['level_permissions'].get(level.name, [])
             if value in permissions:
                 levels.append(level.name)
         mention = user_or_role.name if hasattr(user_or_role, "name") else user_or_role
@@ -1181,7 +1167,7 @@ class Utility(commands.Cog):
         """View currently-set permissions for a command."""
 
         def get_command(cmd):
-            permissions = self.bot.config.command_permissions.get(cmd.name, [])
+            permissions = self.bot.config['command_permissions'].get(cmd.name, [])
             if not permissions:
                 embed = Embed(
                     title=f"Permission entries for command `{cmd.name}`:",
@@ -1239,7 +1225,7 @@ class Utility(commands.Cog):
         """View currently-set permissions for commands of a permission level."""
 
         def get_level(perm_level):
-            permissions = self.bot.config.level_permissions.get(perm_level.name, [])
+            permissions = self.bot.config['level_permissions'].get(perm_level.name, [])
             if not permissions:
                 embed = Embed(
                     title="Permission entries for permission "
@@ -1311,6 +1297,7 @@ class Utility(commands.Cog):
         """
         whitelisted = self.bot.config["oauth_whitelist"]
 
+        # target.id is not int??
         if target.id in whitelisted:
             whitelisted.remove(target.id)
             removed = True

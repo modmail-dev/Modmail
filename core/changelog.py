@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from typing import List
+from typing import List, Union
 
 from discord import Embed, Color
 
@@ -32,10 +32,13 @@ class Version:
         General description of the version.
     """
 
-    def __init__(self, bot, version: str, lines: str):
+    def __init__(self, bot, version: str, lines: Union[List[str], str]):
         self.bot = bot
         self.version = version.lstrip("vV")
-        self.lines = [x for x in lines.splitlines() if x]
+        if isinstance(lines, list):
+            self.lines = lines
+        else:
+            self.lines = [x for x in lines.splitlines() if x]
         self.fields = defaultdict(str)
         self.description = ""
         self.parse()

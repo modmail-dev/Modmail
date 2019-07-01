@@ -13,7 +13,6 @@ from difflib import get_close_matches
 
 import discord
 from discord.ext import commands
-from discord.utils import async_all
 from pkg_resources import parse_version
 
 from core import checks
@@ -58,7 +57,8 @@ class Plugins(commands.Cog):
         # returns: (username, repo, plugin_name, branch)
         # default branch = master
         try:
-            result = name.split("/")
+            # when names are formatted with inline code
+            result = name.strip('`').split("/")
             result[2] = "/".join(result[2:])
             if "@" in result[2]:
                 # branch is specified
@@ -75,9 +75,9 @@ class Plugins(commands.Cog):
         return tuple(result)
 
     async def download_initial_plugins(self):
-        await self.bot._connected.wait()
+        await self.bot.wait_for_connected()
 
-        for i in self.bot.config.plugins:
+        for i in self.bot.config['plugins']:
             username, repo, name, branch = self.parse_plugin(i)
 
             try:
@@ -187,7 +187,7 @@ class Plugins(commands.Cog):
                 )
                 return await ctx.send(embed=embed)
 
-        if plugin_name in self.bot.config.plugins:
+        if plugin_name in self.bot.config['plugins']:
             embed = discord.Embed(
                 description="This plugin is already installed.",
                 color=self.bot.main_color,
@@ -234,7 +234,7 @@ class Plugins(commands.Cog):
                 # if it makes it here, it has passed all checks and should
                 # be entered into the config
 
-                self.bot.config.plugins.append(plugin_name)
+                self.bot.config['plugins'].append(plugin_name)
                 await self.bot.config.update()
 
                 embed = discord.Embed(
@@ -261,7 +261,7 @@ class Plugins(commands.Cog):
                 details["repository"] + "/" + plugin_name + "@" + details["branch"]
             )
 
-        if plugin_name in self.bot.config.plugins:
+        if plugin_name in self.bot.config['plugins']:
             try:
                 username, repo, name, branch = self.parse_plugin(plugin_name)
 
@@ -271,12 +271,12 @@ class Plugins(commands.Cog):
             except Exception:
                 pass
 
-            self.bot.config.plugins.remove(plugin_name)
+            self.bot.config['plugins'].remove(plugin_name)
 
             try:
-                # BUG: Local variables 'username' and 'repo' might be referenced before assignment
+                # BUG: Local variables 'username', 'branch' and 'repo' might be referenced before assignment
                 if not any(
-                    i.startswith(f"{username}/{repo}") for i in self.bot.config.plugins
+                    i.startswith(f"{username}/{repo}") for i in self.bot.config['plugins']
                 ):
                     # if there are no more of such repos, delete the folder
                     def onerror(func, path, exc_info):  # pylint: disable=W0613
@@ -290,7 +290,7 @@ class Plugins(commands.Cog):
                     )
             except Exception as exc:
                 logger.error(str(exc))
-                self.bot.config.plugins.append(plugin_name)
+                self.bot.config['plugins'].append(plugin_name)
                 logger.error(error(exc))
                 raise exc
 
@@ -318,7 +318,7 @@ class Plugins(commands.Cog):
                 details["repository"] + "/" + plugin_name + "@" + details["branch"]
             )
 
-        if plugin_name not in self.bot.config.plugins:
+        if plugin_name not in self.bot.config['plugins']:
             embed = discord.Embed(
                 description="That plugin is not installed.", color=self.bot.main_color
             )
@@ -368,8 +368,8 @@ class Plugins(commands.Cog):
     async def plugin_enabled(self, ctx):
         """Shows a list of currently enabled plugins."""
 
-        if self.bot.config.plugins:
-            msg = "```\n" + "\n".join(self.bot.config.plugins) + "\n```"
+        if self.bot.config['plugins']:
+            msg = "```\n" + "\n".join(self.bot.config['plugins']) + "\n```"
             embed = discord.Embed(description=msg, color=self.bot.main_color)
             await ctx.send(embed=embed)
         else:

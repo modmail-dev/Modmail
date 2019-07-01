@@ -5,6 +5,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+# v3.1.0
+
+### Breaking
+
+- `disable_recipient_thread_close` is removed, a new configuration variable `recipient_thread_close` replaces it which defaults to False.
+- Truthy and falsy values for binary configuration variables are now interpreted respectfully.
+
+
+### Changes
+
+- `thread_auto_close_response` has a configurable variable `{timeout}`.
+
+### Internal
+
+- Removed supporting code for GitHub interaction.
+
 # v3.0.3
 
 ### Added

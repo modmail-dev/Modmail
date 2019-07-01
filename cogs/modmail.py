@@ -35,8 +35,14 @@ class Modmail(commands.Cog):
         once after configuring Modmail.
         """
 
-        if self.bot.main_category:
+        if self.bot.main_category is not None:
             return await ctx.send(f"{self.bot.modmail_guild} is already set up.")
+
+        if self.bot.modmail_guild is None:
+            embed = discord.Embed(title='Error',
+                                  description='Modmail functioning guild not found.',
+                                  color=discord.Color.red())
+            return await ctx.send(embed=embed)
 
         category = await self.bot.modmail_guild.create_category(
             name="Modmail", overwrites=self.bot.overwrites(ctx)
@@ -65,7 +71,7 @@ class Modmail(commands.Cog):
         )
 
         embed.set_footer(
-            text=f'Type "{self.bot.prefix}help" ' "for a complete list of commands."
+            text=f'Type "{self.bot.prefix}help" for a complete list of commands.'
         )
         await log_channel.send(embed=embed)
 
@@ -80,7 +86,7 @@ class Modmail(commands.Cog):
             f"Type `{self.bot.prefix}permissions` for more info."
         )
 
-        if not self.bot.config.get("permissions"):
+        if not self.bot.config["permissions"]:
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
             await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
 
@@ -147,14 +153,14 @@ class Modmail(commands.Cog):
         {prefix}snippets add "two word" this is a two word snippet.
         ```
         """
-        if name in self.bot.config.snippets:
+        if name in self.bot.snippets:
             embed = discord.Embed(
                 title="Error",
                 color=discord.Color.red(),
                 description=f"Snippet `{name}` already exists.",
             )
         else:
-            self.bot.config.snippets[name] = value
+            self.bot.snippets[name] = value
             await self.bot.config.update()
 
             embed = discord.Embed(
@@ -170,13 +176,13 @@ class Modmail(commands.Cog):
     async def snippets_remove(self, ctx, *, name: str.lower):
         """Remove a snippet."""
 
-        if name in self.bot.config.snippets:
+        if name in self.bot.snippets:
             embed = discord.Embed(
                 title="Removed snippet",
                 color=self.bot.main_color,
                 description=f"`{name}` no longer exists.",
             )
-            del self.bot.config["snippets"][name]
+            self.bot.snippets.pop(name)
             await self.bot.config.update()
 
         else:
@@ -191,8 +197,8 @@ class Modmail(commands.Cog):
     @snippets.command(name="edit")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippets_edit(self, ctx, name: str.lower, *, value):
-        if name in self.bot.config.snippets:
-            self.bot.config.snippets[name] = value
+        if name in self.bot.snippets:
+            self.bot.snippets[name] = value
             await self.bot.config.update()
 
             embed = discord.Embed(
@@ -337,7 +343,7 @@ class Modmail(commands.Cog):
         if mention in mentions:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description=f"{mention} is already " "going to be mentioned.",
+                description=f"{mention} is already going to be mentioned.",
             )
         else:
             mentions.append(mention)
@@ -381,14 +387,14 @@ class Modmail(commands.Cog):
         if mention not in mentions:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description=f"{mention} does not have a " "pending notification.",
+                description=f"{mention} does not have a pending notification.",
             )
         else:
             mentions.remove(mention)
             await self.bot.config.update()
             embed = discord.Embed(
                 color=self.bot.main_color,
-                description=f"{mention} will no longer " "be notified.",
+                description=f"{mention} will no longer be notified.",
             )
         return await ctx.send(embed=embed)
 
@@ -510,11 +516,11 @@ class Modmail(commands.Cog):
 
             created_at = parser.parse(entry["created_at"])
 
-            prefix = os.getenv("LOG_URL_PREFIX", "/logs")
+            prefix = self.bot.config["log_url_prefix"]
             if prefix == "NONE":
                 prefix = ""
 
-            log_url = self.bot.config.log_url.strip("/") + f"{prefix}/{key}"
+            log_url = self.bot.config['log_url'].strip("/") + f"{prefix}/{key}"
 
             username = entry["recipient"]["name"] + "#"
             username += entry["recipient"]["discriminator"]
@@ -869,7 +875,7 @@ class Modmail(commands.Cog):
             msg = self.bot.blocked_users.get(str(user.id))
             if msg is None:
                 msg = ""
-            del self.bot.config.blocked[str(user.id)]
+            self.bot.blocked_users.pop(str(user.id))
 
         await self.bot.config.update()
 
@@ -967,7 +973,7 @@ class Modmail(commands.Cog):
                     color=self.bot.main_color,
                     description=f"{mention} is now blocked{extend}.",
                 )
-            self.bot.config.blocked[str(user.id)] = reason
+            self.bot.blocked_users[str(user.id)] = reason
             await self.bot.config.update()
         else:
             embed = discord.Embed(
@@ -1003,7 +1009,7 @@ class Modmail(commands.Cog):
             msg = self.bot.blocked_users.get(str(user.id))
             if msg is None:
                 msg = ""
-            del self.bot.config.blocked[str(user.id)]
+            self.bot.blocked_users.pop(str(user.id))
             await self.bot.config.update()
 
             if msg.startswith("System Message: "):

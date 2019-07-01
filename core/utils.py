@@ -1,5 +1,6 @@
 import re
 import typing
+from distutils.util import strtobool as _stb
 from urllib import parse
 
 from discord import Object
@@ -7,6 +8,12 @@ from discord.ext import commands
 
 from colorama import Fore, Style
 from core.models import PermissionLevel
+
+
+def strtobool(val):
+    if isinstance(val, bool):
+        return val
+    return _stb(str(val))
 
 
 def info(*msgs):

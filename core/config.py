@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import typing
+from copy import deepcopy
 
 import isodate
 
@@ -15,181 +16,113 @@ from core.time import UserFriendlyTime
 
 class ConfigManager:
 
-    allowed_to_change_in_command = {
+    public_keys = {
         # activity
-        "twitch_url",
+        "twitch_url": 'https://www.twitch.tv/discord-modmail/',
         # bot settings
-        "main_category_id",
-        "disable_autoupdates",
-        "prefix",
-        "mention",
-        "main_color",
-        "user_typing",
-        "mod_typing",
-        "account_age",
-        "guild_age",
-        "reply_without_command",
+        "main_category_id": None,
+        "prefix": '?',
+        "mention": '@here',
+        "main_color": discord.Color.blurple(),
+        "user_typing": False,
+        "mod_typing": False,
+        "account_age": isodate.Duration(),
+        "guild_age": isodate.Duration(),
+        "reply_without_command": False,
         # logging
-        "log_channel_id",
+        "log_channel_id": None,
         # threads
-        "sent_emoji",
-        "blocked_emoji",
-        "close_emoji",
-        "disable_recipient_thread_close",
-        "thread_auto_close",
-        "thread_auto_close_response",
-        "thread_creation_response",
-        "thread_creation_footer",
-        "thread_creation_title",
-        "thread_close_footer",
-        "thread_close_title",
-        "thread_close_response",
-        "thread_self_close_response",
+        "sent_emoji": '✅',
+        "blocked_emoji": '🚫',
+        "close_emoji": '🔒',
+        "recipient_thread_close": False,
+        "thread_auto_close": 0,
+        "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
+        "thread_creation_response": "The staff team will get back to you as soon as possible.",
+        "thread_creation_footer": None,
+        "thread_creation_title": 'Thread Created',
+        "thread_close_footer": 'Replying will create a new thread',
+        "thread_close_title": 'Thread Closed',
+        "thread_close_response": '{closer.mention} has closed this Modmail thread.',
+        "thread_self_close_response": 'You have closed this Modmail thread.',
         # moderation
-        "recipient_color",
-        "mod_tag",
-        "mod_color",
+        "recipient_color": discord.Color.gold(),
+        "mod_tag": None,
+        "mod_color": discord.Color.green(),
         # anonymous message
-        "anon_username",
-        "anon_avatar_url",
-        "anon_tag",
+        "anon_username": None,
+        "anon_avatar_url": None,
+        "anon_tag": 'Response',
     }
 
-    internal_keys = {
+    private_keys = {
         # bot presence
-        "activity_message",
-        "activity_type",
-        "status",
-        "oauth_whitelist",
+        "activity_message": '',
+        "activity_type": None,
+        "status": None,
+        "oauth_whitelist": [],
         # moderation
-        "blocked",
-        "blocked_whitelist",
-        "command_permissions",
-        "level_permissions",
+        "blocked": {},
+        "blocked_whitelist": [],
+        "command_permissions": {},
+        "level_permissions": {},
         # threads
-        "snippets",
-        "notification_squad",
-        "subscriptions",
-        "closures",
+        "snippets": {},
+        "notification_squad": {},
+        "subscriptions": {},
+        "closures": {},
         # misc
-        "aliases",
-        "plugins",
+        "plugins": [],
+        "aliases": {},
     }
 
     protected_keys = {
         # Modmail
-        "modmail_guild_id",
-        "guild_id",
-        "log_url",
-        "mongo_uri",
-        "owners",
+        "modmail_guild_id": None,
+        "guild_id": None,
+        "log_url": 'https://example.com/',
+        "log_url_prefix": '/logs',
+        "mongo_uri": None,
+        "owners": None,
         # bot
-        "token",
-        # GitHub
-        "github_access_token",
+        "token": None,
         # Logging
-        "log_level",
+        "log_level": "INFO",
     }
 
     colors = {"mod_color", "recipient_color", "main_color"}
 
     time_deltas = {"account_age", "guild_age", "thread_auto_close"}
 
-    valid_keys = allowed_to_change_in_command | internal_keys | protected_keys
+    defaults = {**public_keys, **private_keys, **protected_keys}
+    all_keys = set(defaults.keys())
 
     def __init__(self, bot):
         self.bot = bot
         self._cache = {}
-        self._ready_event = asyncio.Event()
+        self.ready_event = asyncio.Event()
         self.populate_cache()
 
     def __repr__(self):
-        return repr(self.cache)
+        return repr(self._cache)
 
     @property
     def api(self):
         return self.bot.api
 
-    @property
-    def ready_event(self) -> asyncio.Event:
-        return self._ready_event
-
-    @property
-    def cache(self) -> dict:
-        return self._cache
-
-    @cache.setter
-    def cache(self, val: dict):
-        self._cache = val
-
     def populate_cache(self) -> dict:
-        defaults = {
-            "snippets": {},
-            "plugins": [],
-            "aliases": {},
-            "blocked": {},
-            "blocked_whitelist": [],
-            "oauth_whitelist": [],
-            "command_permissions": {},
-            "level_permissions": {},
-            "notification_squad": {},
-            "subscriptions": {},
-            "closures": {},
-            "twitch_url": 'https://www.twitch.tv/discord-modmail/',
-            "main_category_id": None,
-            "disable_autoupdates": False,
-            "prefix": '?',
-            "mention": None,
-            "main_color": discord.Color.blurple(),
-            "user_typing": False,
-            "mod_typing": False,
-            "account_age": None,
-            "guild_age": None,
-            "reply_without_command": False,
-            "log_channel_id": None,
-            "sent_emoji": '✅',
-            "blocked_emoji": '🚫',
-            "close_emoji": '🔒',
-            "recipient_thread_close": False,
-            "thread_auto_close": 0,
-            "thread_auto_close_response": None,
-            "thread_creation_response": "The staff team will get back to you as soon as possible.",
-            "thread_creation_footer": None,
-            "thread_creation_title": 'Thread Created',
-            "thread_close_footer": 'Replying will create a new thread',
-            "thread_close_title": 'Thread Closed',
-            "thread_close_response": '{closer.mention} has closed this Modmail thread.',
-            "thread_self_close_response": 'You have closed this Modmail thread.',
-            "recipient_color": discord.Color.gold(),
-            "mod_tag": None,
-            "mod_color": discord.Color.green(),
-            "anon_username": None,
-            "anon_avatar_url": None,
-            "anon_tag": 'Response',
-            "activity_message": None,
-            "activity_type": None,
-            "status": None,
-            "modmail_guild_id": None,
-            "guild_id": None,
-            "mongo_uri": None,
-            "owners": None,
-            "token": None,
-            "github_access_token": None,
-            "log_url": 'https://example.com/',
-            "log_level": "INFO",
-        }
+        data = deepcopy(self.defaults)
 
-        defaults.update(os.environ)
+        # populate from env var and .env file
+        data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
 
         if os.path.exists("config.json"):
             with open("config.json") as f:
                 # Config json should override env vars
-                data.update(json.load(f))
+                data.update({k.lower(): v for k, v in json.load(f).items() if k.lower() in self.all_keys})
 
-        self.cache = {
-            k.lower(): v for k, v in data.items() if k.lower() in self.valid_keys
-        }
-        return self.cache
+        self._cache = data
+        return self._cache
 
     async def clean_data(self, key: str, val: typing.Any) -> typing.Tuple[str, str]:
         value_text = val
@@ -200,32 +133,17 @@ class ConfigManager:
             hex_ = ALL_COLORS.get(val)
 
             if hex_ is None:
-                if not isinstance(val, str):
+                hex_ = str(hex_)
+                if hex_.startswith("#"):
+                    hex_ = hex_[1:]
+                if len(hex_) == 3:
+                    hex_ = ''.join(s for s in hex_ for _ in range(2))
+                if len(hex_) != 6:
                     raise InvalidConfigError("Invalid color name or hex.")
-                if val.startswith("#"):
-                    val = val[1:]
-                if len(val) != 6:
+                try:
+                    int(val, 16)
+                except ValueError:
                     raise InvalidConfigError("Invalid color name or hex.")
-                for letter in val:
-                    if letter not in {
-                        "0",
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "a",
-                        "b",
-                        "c",
-                        "d",
-                        "e",
-                        "f",
-                    }:
-                        raise InvalidConfigError("Invalid color name or hex.")
                 clean_value = "#" + val
                 value_text = clean_value
             else:
@@ -253,31 +171,54 @@ class ConfigManager:
 
         return clean_value, value_text
 
-    async def update(self, data: typing.Optional[dict] = None) -> dict:
+    async def update(self):
         """Updates the config with data from the cache"""
-        if data is not None:
-            self.cache.update(data)
-        await self.api.update_config(self.cache)
-        return self.cache
+        await self.api.update_config(self._cache)
 
     async def refresh(self) -> dict:
         """Refreshes internal cache with data from database"""
         data = await self.api.get_config()
-        self.cache.update(data)
+        self._cache.update(data)
         self.ready_event.set()
-        return self.cache
+        return self._cache
 
     async def wait_until_ready(self) -> None:
         await self.ready_event.wait()
 
-    def __getattr__(self, value: str) -> typing.Any:
-        return self.cache[value]
-
     def __setitem__(self, key: str, item: typing.Any) -> None:
-        self.cache[key] = item
+        if key not in self.all_keys:
+            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
+        self._cache[key] = item
 
     def __getitem__(self, key: str) -> typing.Any:
-        return self.cache[key]
+        if key not in self.all_keys:
+            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
+        if key not in self._cache:
+            val = deepcopy(self.defaults[key])
+            self._cache[key] = val
+        return self._cache[key]
 
     def get(self, key: str, default: typing.Any = None) -> typing.Any:
-        return self.cache.get(key, default)
+        if key not in self.all_keys:
+            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
+        if key not in self._cache:
+            self._cache[key] = default
+        return self._cache[key]
+
+    def set(self, key: str, item: typing.Any) -> None:
+        if key not in self.all_keys:
+            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
+        self._cache[key] = item
+
+    def remove(self, key: str) -> typing.Any:
+        if key not in self.all_keys:
+            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
+        self._cache[key] = deepcopy(self.defaults[key])
+        return self._cache[key]
+
+    def items(self) -> typing.Iterable:
+        return self._cache.items()
+
+    def filter_valid(self, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+        return {k.lower(): v for k, v in data.items()
+                if k.lower() in self.public_keys or k.lower() in self.private_keys}
