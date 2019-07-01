@@ -4,6 +4,7 @@ import os
 import typing
 from copy import deepcopy
 
+from dotenv import load_dotenv
 import isodate
 
 import discord
@@ -12,6 +13,9 @@ from discord.ext.commands import BadArgument
 from core._color_data import ALL_COLORS
 from core.models import InvalidConfigError
 from core.time import UserFriendlyTime
+
+
+load_dotenv()
 
 
 class ConfigManager:
