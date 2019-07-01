@@ -22,7 +22,7 @@ from pkg_resources import parse_version
 
 from core import checks
 from core.changelog import Changelog
-from core.decorators import github_access_token_required, trigger_typing
+from core.decorators import trigger_typing
 from core.models import InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
 from core.utils import cleanup_code, info, error, User, get_perm_level
@@ -85,14 +85,14 @@ class ModmailHelpCommand(commands.HelpCommand):
         cogs = list(filter(None, cogs))
 
         bot = self.context.bot
-        
+
         # always come first
-        default_cogs = [ 
+        default_cogs = [
             bot.get_cog("Modmail"),
             bot.get_cog("Utility"),
             bot.get_cog("Plugins"),
         ]
-        
+
         default_cogs.extend(c for c in cogs if c not in default_cogs)
 
         for cog in default_cogs:
@@ -404,101 +404,6 @@ class Utility(commands.Cog):
                 color=self.bot.main_color, description="Cached logs are now cleared."
             )
         )
-
-    @commands.command()
-    @checks.has_permissions(PermissionLevel.OWNER)
-    @github_access_token_required
-    @trigger_typing
-    async def github(self, ctx):
-        """Shows the GitHub user your Github_Access_Token is linked to."""
-        data = await self.bot.api.get_user_info()
-
-        embed = Embed(
-            title="GitHub", description="Current User", color=self.bot.main_color
-        )
-        user = data["user"]
-        embed.set_author(
-            name=user["username"], icon_url=user["avatar_url"], url=user["url"]
-        )
-        embed.set_thumbnail(url=user["avatar_url"])
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    @checks.has_permissions(PermissionLevel.OWNER)
-    @github_access_token_required
-    @trigger_typing
-    async def update(self, ctx, *, flag: str = ""):
-        """
-        Update Modmail.
-
-        This only works for Heroku users who have configured their bot for updates.
-
-        To stay up-to-date with the latest commit
-        from GitHub, specify "force" as the flag.
-        """
-
-        changelog = await Changelog.from_url(self.bot)
-        latest = changelog.latest_version
-
-        desc = (
-            f"The latest version is [`{self.bot.version}`]"
-            "(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)"
-        )
-
-        if (
-            parse_version(self.bot.version) >= parse_version(latest.version)
-            and flag.lower() != "force"
-        ):
-            embed = Embed(
-                title="Already up to date", description=desc, color=self.bot.main_color
-            )
-
-            data = await self.bot.api.get_user_info()
-            if not data.get("error"):
-                user = data["user"]
-                embed.set_author(
-                    name=user["username"], icon_url=user["avatar_url"], url=user["url"]
-                )
-        else:
-            data = await self.bot.api.update_repository()
-
-            commit_data = data["data"]
-            user = data["user"]
-
-            if commit_data:
-                embed = Embed(color=self.bot.main_color)
-
-                embed.set_footer(
-                    text=f"Updating Modmail v{self.bot.version} "
-                    f"-> v{latest.version}"
-                )
-
-                embed.set_author(
-                    name=user["username"] + " - Updating bot",
-                    icon_url=user["avatar_url"],
-                    url=user["url"],
-                )
-
-                embed.description = latest.description
-                for name, value in latest.fields.items():
-                    embed.add_field(name=name, value=value)
-                # message = commit_data['commit']['message']
-                html_url = commit_data["html_url"]
-                short_sha = commit_data["sha"][:6]
-                embed.add_field(
-                    name="Merge Commit", value=f"[`{short_sha}`]({html_url})"
-                )
-            else:
-                embed = Embed(
-                    title="Already up to date with master repository.",
-                    description="No further updates required",
-                    color=self.bot.main_color,
-                )
-                embed.set_author(
-                    name=user["username"], icon_url=user["avatar_url"], url=user["url"]
-                )
-
-        return await ctx.send(embed=embed)
 
     @commands.command(aliases=["presence"])
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
@@ -933,7 +838,7 @@ class Utility(commands.Cog):
         if "aliases" not in self.bot.config.cache:
             self.bot.config["aliases"] = {}
 
-        if self.bot.get_command(name) or self.bot.config.aliases.get(name):
+        if self.bot.get_command(name) or name in self.bot.config.aliases:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
@@ -942,14 +847,14 @@ class Utility(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        if not self.bot.get_command(value.split()[0]):
+        linked_command = value.split()[0]
+        if not self.bot.get_command(linked_command):
             embed = Embed(
                 title="Error",
                 color=Color.red(),
                 description="The command you are attempting to point "
-                f"to does not exist: `{value.split()[0]}`.",
+                f"to does not exist: `{linked_command}`.",
             )
-            return await ctx.send(embed=embed)
 
         self.bot.config.aliases[name] = value
         await self.bot.config.update()
@@ -957,7 +862,7 @@ class Utility(commands.Cog):
         embed = Embed(
             title="Added alias",
             color=self.bot.main_color,
-            description=f"`{name}` points to: {value}",
+            description=f'`{name}` points to: "{value}".',
         )
 
         return await ctx.send(embed=embed)
@@ -970,7 +875,7 @@ class Utility(commands.Cog):
         if "aliases" not in self.bot.config.cache:
             self.bot.config["aliases"] = {}
 
-        if self.bot.config.aliases.get(name):
+        if name in self.bot.config.aliases:
             del self.bot.config["aliases"][name]
             await self.bot.config.update()
 
@@ -987,6 +892,50 @@ class Utility(commands.Cog):
                 description=f"Alias `{name}` does not exist.",
             )
 
+        return await ctx.send(embed=embed)
+
+    @alias.command(name="edit")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def alias_edit(self, ctx, name: str.lower, *, value):
+        if "aliases" not in self.bot.config.cache:
+            self.bot.config["aliases"] = {}
+
+        if name not in self.bot.config.aliases:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"Alias `{name}` does not exist.",
+            )
+
+            return await ctx.send(embed=embed)
+
+        if self.bot.get_command(name):
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description="A command or alias already exists "
+                f"with the same name: `{name}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        linked_command = value.split()[0]
+        if not self.bot.get_command(linked_command):
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description="The command you are attempting to point "
+                f"to does not exist: `{linked_command}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        self.bot.config.aliases[name] = value
+        await self.bot.config.update()
+
+        embed = Embed(
+            title="Edited alias",
+            color=self.bot.main_color,
+            description=f'`{name}` now points to: "{value}".',
+        )
         return await ctx.send(embed=embed)
 
     @commands.group(aliases=["perms"], invoke_without_command=True)
@@ -1343,9 +1292,7 @@ class Utility(commands.Cog):
         p_session = PaginatorSession(ctx, *embeds)
         return await p_session.run()
 
-    @commands.group(
-        invoke_without_command=True, aliases=["oauth2", "auth", "authentication"]
-    )
+    @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
         """Commands relating to Logviewer oauth2 login authentication.

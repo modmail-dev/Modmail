@@ -1,4 +1,4 @@
-__version__ = "2.24.1"
+__version__ = "3.0.3"
 
 import asyncio
 import logging
@@ -74,7 +74,6 @@ class ModmailBot(commands.Bot):
         self.plugin_db = PluginDatabaseClient(self)
 
         self.metadata_task = self.loop.create_task(self.metadata_loop())
-        self.autoupdate_task = self.loop.create_task(self.autoupdate_loop())
         self._load_extensions()
 
     @property
@@ -192,11 +191,6 @@ class ModmailBot(commands.Bot):
                 self.loop.run_until_complete(self.metadata_task)
             except asyncio.CancelledError:
                 logger.debug(info("data_task has been cancelled."))
-            try:
-                self.autoupdate_task.cancel()
-                self.loop.run_until_complete(self.autoupdate_task)
-            except asyncio.CancelledError:
-                logger.debug(info("autoupdate_task has been cancelled."))
 
             self.loop.run_until_complete(self.logout())
             for task in asyncio.Task.all_tasks():
@@ -276,6 +270,10 @@ class ModmailBot(commands.Bot):
     @property
     def blocked_users(self) -> typing.Dict[str, str]:
         return self.config.get("blocked", {})
+
+    @property
+    def blocked_whitelisted_users(self) -> typing.List[str]:
+        return self.config.get("blocked_whitelist", [])
 
     @property
     def prefix(self) -> str:
@@ -404,6 +402,7 @@ class ModmailBot(commands.Bot):
                 silent=items["silent"],
                 delete_channel=items["delete_channel"],
                 message=items["message"],
+                auto_close=items.get("auto_close", False),
             )
 
         logger.info(LINE)
@@ -445,9 +444,22 @@ class ModmailBot(commands.Bot):
 
         return sent_emoji, blocked_emoji
 
-    async def process_modmail(self, message: discord.Message) -> None:
-        """Processes messages sent to the bot."""
+    async def _process_blocked(self, message: discord.Message) -> bool:
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
+
+        if str(message.author.id) in self.blocked_whitelisted_users:
+            if str(message.author.id) in self.blocked_users:
+                del self.config.blocked[str(message.author.id)]
+                await self.config.update()
+
+            if sent_emoji != "disable":
+                try:
+                    await message.add_reaction(sent_emoji)
+                except (discord.HTTPException, discord.InvalidArgument):
+                    pass
+
+            return False
+
         now = datetime.utcnow()
 
         account_age = self.config.get("account_age")
@@ -584,8 +596,12 @@ class ModmailBot(commands.Bot):
                 await message.add_reaction(reaction)
             except (discord.HTTPException, discord.InvalidArgument):
                 pass
+        return str(message.author.id) in self.blocked_users
 
-        if str(message.author.id) not in self.blocked_users:
+    async def process_modmail(self, message: discord.Message) -> None:
+        """Processes messages sent to the bot."""
+        blocked = await self._process_blocked(message)
+        if not blocked:
             thread = await self.threads.find_or_create(message.author)
             await thread.send(message)
 
@@ -903,62 +919,6 @@ class ModmailBot(commands.Bot):
             return await self.logout()
         else:
             logger.info(info("Successfully connected to the database."))
-
-    async def autoupdate_loop(self):
-        await self.wait_until_ready()
-
-        if self.config.get("disable_autoupdates"):
-            logger.warning(info("Autoupdates disabled."))
-            logger.info(LINE)
-            return
-
-        if not self.config.get("github_access_token"):
-            logger.warning(info("GitHub access token not found."))
-            logger.warning(info("Autoupdates disabled."))
-            logger.info(LINE)
-            return
-
-        logger.info(info("Autoupdate loop started."))
-
-        while not self.is_closed():
-            changelog = await Changelog.from_url(self)
-            latest = changelog.latest_version
-
-            if parse_version(self.version) < parse_version(latest.version):
-                data = await self.api.update_repository()
-
-                embed = discord.Embed(color=discord.Color.green())
-
-                commit_data = data["data"]
-                user = data["user"]
-                embed.set_author(
-                    name=user["username"] + " - Updating Bot",
-                    icon_url=user["avatar_url"],
-                    url=user["url"],
-                )
-
-                embed.set_footer(
-                    text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
-                )
-
-                embed.description = latest.description
-                for name, value in latest.fields.items():
-                    embed.add_field(name=name, value=value)
-
-                if commit_data:
-                    message = commit_data["commit"]["message"]
-                    html_url = commit_data["html_url"]
-                    short_sha = commit_data["sha"][:6]
-                    embed.add_field(
-                        name="Merge Commit",
-                        value=f"[`{short_sha}`]({html_url}) "
-                        f"{message} - {user['username']}",
-                    )
-                    logger.info(info("Bot has been updated."))
-                    channel = self.log_channel
-                    await channel.send(embed=embed)
-
-            await asyncio.sleep(3600)
 
     async def metadata_loop(self):
         await self.wait_until_ready()
