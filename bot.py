@@ -304,37 +304,31 @@ class ModmailBot(commands.Bot):
         return str(self.config["prefix"])
 
     @property
-    def mod_color(self) -> typing.Union[discord.Color, int]:
+    def mod_color(self) -> int:
         color = self.config.get("mod_color")
-        if isinstance(color, discord.Color):
-            return color
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
             logger.error(error("Invalid mod_color provided."))
-        return self.config.remove('mod_color')
+        return int(self.config.remove('mod_color').lstrip("#"), base=16)
 
     @property
-    def recipient_color(self) -> typing.Union[discord.Color, int]:
+    def recipient_color(self) -> int:
         color = self.config.get("recipient_color")
-        if isinstance(color, discord.Color):
-            return color
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
             logger.error(error("Invalid recipient_color provided."))
-        return self.config.remove('recipient_color')
+        return int(self.config.remove('recipient_color').lstrip("#"), base=16)
 
     @property
-    def main_color(self) -> typing.Union[discord.Color, int]:
+    def main_color(self) -> int:
         color = self.config.get("main_color")
-        if isinstance(color, discord.Color):
-            return color
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
             logger.error(error("Invalid main_color provided."))
-        return self.config.remove('main_color')
+        return int(self.config.remove('main_color').lstrip("#"), base=16)
 
     async def on_connect(self):
         logger.info(LINE)
@@ -477,6 +471,11 @@ class ModmailBot(commands.Bot):
 
         account_age = self.config["account_age"]
         guild_age = self.config["guild_age"]
+
+        if account_age is None:
+            account_age = isodate.Duration()
+        if guild_age is None:
+            guild_age = isodate.Duration()
 
         if not isinstance(account_age, isodate.Duration):
             try:

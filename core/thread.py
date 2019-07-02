@@ -158,18 +158,15 @@ class Thread:
             timestamp=channel.created_at,
         )
 
-        footer = "Your message has been sent"
         try:
             recipient_thread_close = strtobool(self.bot.config["recipient_thread_close"])
         except ValueError:
             recipient_thread_close = self.bot.config.remove('recipient_thread_close')
 
         if recipient_thread_close:
-            footer = "Click the lock to close the thread"
-
-        _footer = self.bot.config["thread_creation_footer"]
-        if _footer is not None:
-            footer = _footer
+            footer = self.bot.config["thread_self_closable_creation_footer"]
+        else:
+            footer = self.bot.config["thread_creation_footer"]
 
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
         embed.title = self.bot.config["thread_creation_title"]

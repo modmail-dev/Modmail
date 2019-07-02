@@ -197,6 +197,13 @@ class Modmail(commands.Cog):
     @snippets.command(name="edit")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippets_edit(self, ctx, name: str.lower, *, value):
+        """
+        Edit a snippet.
+
+        To edit a multi-word snippet name, use quotes: ```
+        {prefix}snippets edit "two word" this is a new two word snippet.
+        ```
+        """
         if name in self.bot.snippets:
             self.bot.snippets[name] = value
             await self.bot.config.update()

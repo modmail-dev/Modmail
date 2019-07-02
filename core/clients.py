@@ -148,9 +148,18 @@ class ApiClient(RequestClient):
         toset = self.bot.config.filter_valid(data)
         unset = self.bot.config.filter_valid({k: 1 for k in self.bot.config.all_keys if k not in data})
 
-        return await self.db.config.update_one(
-            {"bot_id": self.bot.user.id}, {"$set": toset, "$unset": unset}
-        )
+        if toset and unset:
+            return await self.db.config.update_one(
+                {"bot_id": self.bot.user.id}, {"$set": toset, "$unset": unset}
+            )
+        if toset:
+            return await self.db.config.update_one(
+                {"bot_id": self.bot.user.id}, {"$set": toset}
+            )
+        if unset:
+            return await self.db.config.update_one(
+                {"bot_id": self.bot.user.id}, {"$unset": unset}
+            )
 
     async def edit_message(self, message_id: Union[int, str], new_content: str) -> None:
         await self.logs.update_one(
