@@ -24,3 +24,10 @@ class InvalidConfigError(commands.BadArgument):
     @property
     def embed(self):
         return Embed(title="Error", description=self.msg, color=Color.red())
+
+
+class _Default:
+    pass
+
+
+Default = _Default()

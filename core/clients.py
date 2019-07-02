@@ -2,14 +2,11 @@ import logging
 import secrets
 from datetime import datetime
 from json import JSONDecodeError
-from typing import Union, Optional
+from typing import Union
 
 from discord import Member, DMChannel, TextChannel, Message
-from discord.ext import commands
 
 from aiohttp import ClientResponseError, ClientResponse
-
-from core.utils import info
 
 logger = logging.getLogger("Modmail")
 

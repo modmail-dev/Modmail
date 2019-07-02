@@ -305,7 +305,7 @@ class ModmailBot(commands.Bot):
 
     @property
     def mod_color(self) -> int:
-        color = self.config.get("mod_color")
+        color = self.config["mod_color"]
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
@@ -314,7 +314,7 @@ class ModmailBot(commands.Bot):
 
     @property
     def recipient_color(self) -> int:
-        color = self.config.get("recipient_color")
+        color = self.config["recipient_color"]
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
@@ -323,7 +323,7 @@ class ModmailBot(commands.Bot):
 
     @property
     def main_color(self) -> int:
-        color = self.config.get("main_color")
+        color = self.config["main_color"]
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:

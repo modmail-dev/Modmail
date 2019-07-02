@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import typing
 from copy import deepcopy
@@ -11,10 +12,10 @@ import discord
 from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
-from core.models import InvalidConfigError
+from core.models import InvalidConfigError, Default
 from core.time import UserFriendlyTime
 
-
+logger = logging.getLogger("Modmail")
 load_dotenv()
 
 
@@ -27,7 +28,7 @@ class ConfigManager:
         "main_category_id": None,
         "prefix": '?',
         "mention": '@here',
-        "main_color": '#7289da',
+        "main_color": str(discord.Color.blurple()),
         "user_typing": False,
         "mod_typing": False,
         "account_age": None,
@@ -51,9 +52,9 @@ class ConfigManager:
         "thread_close_response": '{closer.mention} has closed this Modmail thread.',
         "thread_self_close_response": 'You have closed this Modmail thread.',
         # moderation
-        "recipient_color": '#f1c40f',
+        "recipient_color": str(discord.Color.gold()),
         "mod_tag": None,
-        "mod_color": '#2ecc71',
+        "mod_color": str(discord.Color.green()),
         # anonymous message
         "anon_username": None,
         "anon_avatar_url": None,
@@ -178,19 +179,22 @@ class ConfigManager:
 
     async def update(self):
         """Updates the config with data from the cache"""
-        await self.api.update_config(self._cache)
+        await self.api.update_config(self.filter_default(self._cache))
 
     async def refresh(self) -> dict:
         """Refreshes internal cache with data from database"""
-        data = await self.api.get_config()
+        data = {k.lower(): v for k, v in (await self.api.get_config()).items() if k.lower() in self.all_keys}
         self._cache.update(data)
-        self.ready_event.set()
+        if not self.ready_event.is_set():
+            self.ready_event.set()
+            logger.info('Config ready.')
         return self._cache
 
     async def wait_until_ready(self) -> None:
         await self.ready_event.wait()
 
     def __setitem__(self, key: str, item: typing.Any) -> None:
+        logger.info('Setting %s.', key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = item
@@ -199,23 +203,29 @@ class ConfigManager:
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         if key not in self._cache:
-            val = deepcopy(self.defaults[key])
-            self._cache[key] = val
+            self._cache[key] = deepcopy(self.defaults[key])
         return self._cache[key]
 
-    def get(self, key: str, default: typing.Any = None) -> typing.Any:
+    def get(self, key: str, default: typing.Any = Default) -> typing.Any:
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         if key not in self._cache:
-            self._cache[key] = default
+            self._cache[key] = deepcopy(self.defaults[key])
+            if default is Default:
+                return self._cache[key]
+            return default
+        if self._cache[key] == self.defaults[key] and default is not Default:
+            return default
         return self._cache[key]
 
     def set(self, key: str, item: typing.Any) -> None:
+        logger.info('Setting %s.', key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = item
 
     def remove(self, key: str) -> typing.Any:
+        logger.info('Removing %s.', key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = deepcopy(self.defaults[key])
@@ -224,6 +234,11 @@ class ConfigManager:
     def items(self) -> typing.Iterable:
         return self._cache.items()
 
-    def filter_valid(self, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+    @classmethod
+    def filter_valid(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
         return {k.lower(): v for k, v in data.items()
-                if k.lower() in self.public_keys or k.lower() in self.private_keys}
+                if k.lower() in cls.public_keys or k.lower() in cls.private_keys}
+
+    @classmethod
+    def filter_default(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+        return {k.lower(): v for k, v in data.items() if v != cls.defaults[k.lower()]}

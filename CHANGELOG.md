@@ -20,7 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Internal
 
 - Removed supporting code for GitHub interaction.
-- All default values moved to `core/config.py`.
+- All default config values moved to `core/config.py`.
+- `config.cache` is no longer accessible, use `config['key']` for getting, `config['key'] = value` for setting, `config.remove('key')` for removing.
+- Dynamic attribute for configs are removed, must use `config['key']` or `config.get('key')`.
 
 # v3.0.3
 
