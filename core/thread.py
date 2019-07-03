@@ -236,8 +236,8 @@ class Thread:
 
         # Cancel auto closing the thread if closed by any means.
 
-        if str(self.id) in self.bot.config['subscriptions']:
-            self.bot.config['subscriptions'].pop(str(self.id))
+        self.bot.config['subscriptions'].pop(str(self.id), None)
+        self.bot.config['notification_squad'].pop(str(self.id), None)
 
         # Logging
         log_data = await self.bot.api.post_log(

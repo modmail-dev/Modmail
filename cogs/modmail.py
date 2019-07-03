@@ -90,19 +90,19 @@ class Modmail(commands.Cog):
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
             await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(aliases=['snippets'], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def snippets(self, ctx):
+    async def snippet(self, ctx):
         """
         Create pre-defined messages for use in threads.
 
-        When `{prefix}snippets` is used by itself, this will retrieve
+        When `{prefix}snippet` is used by itself, this will retrieve
         a list of snippets that are currently set.
 
         To use snippets:
 
         First create a snippet using:
-        - `{prefix}snippets add snippet-name A pre-defined text.`
+        - `{prefix}snippet add snippet-name A pre-defined text.`
 
         Afterwards, you can use your snippet in a thread channel
         with `{prefix}snippet-name`, the message "A pre-defined text."
@@ -125,7 +125,7 @@ class Modmail(commands.Cog):
                 description="You dont have any snippets at the moment.",
             )
             embed.set_footer(
-                text=f"Do {self.bot.prefix}help snippets for more commands."
+                text=f"Do {self.bot.prefix}help snippet for more commands."
             )
 
         embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
@@ -143,14 +143,14 @@ class Modmail(commands.Cog):
         session = PaginatorSession(ctx, *embeds)
         await session.run()
 
-    @snippets.command(name="add")
+    @snippet.command(name="add")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def snippets_add(self, ctx, name: str.lower, *, value):
+    async def snippet_add(self, ctx, name: str.lower, *, value):
         """
         Add a snippet.
 
         To add a multi-word snippet name, use quotes: ```
-        {prefix}snippets add "two word" this is a two word snippet.
+        {prefix}snippet add "two word" this is a two word snippet.
         ```
         """
         if name in self.bot.snippets:
@@ -171,9 +171,9 @@ class Modmail(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @snippets.command(name="remove", aliases=["del", "delete", "rm"])
+    @snippet.command(name="remove", aliases=["del", "delete", "rm"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def snippets_remove(self, ctx, *, name: str.lower):
+    async def snippet_remove(self, ctx, *, name: str.lower):
         """Remove a snippet."""
 
         if name in self.bot.snippets:
@@ -194,14 +194,14 @@ class Modmail(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @snippets.command(name="edit")
+    @snippet.command(name="edit")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def snippets_edit(self, ctx, name: str.lower, *, value):
+    async def snippet_edit(self, ctx, name: str.lower, *, value):
         """
         Edit a snippet.
 
         To edit a multi-word snippet name, use quotes: ```
-        {prefix}snippets edit "two word" this is a new two word snippet.
+        {prefix}snippet edit "two word" this is a new two word snippet.
         ```
         """
         if name in self.bot.snippets:
@@ -500,6 +500,14 @@ class Modmail(commands.Cog):
     async def nsfw(self, ctx):
         """Flags a Modmail thread as NSFW (not safe for work)."""
         await ctx.channel.edit(nsfw=True)
+        await ctx.message.add_reaction("✅")
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def sfw(self, ctx):
+        """Flags a Modmail thread as SFW (safe for work)."""
+        await ctx.channel.edit(nsfw=False)
         await ctx.message.add_reaction("✅")
 
     @commands.command()

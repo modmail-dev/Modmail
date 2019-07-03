@@ -787,14 +787,14 @@ class Utility(commands.Cog):
 
         To use alias:
 
-        First create a snippet using:
+        First create an alias using:
         - `{prefix}alias add alias-name other-command`
 
         For example:
         - `{prefix}alias add r reply`
         - Now you can use `{prefix}r` as an replacement for `{prefix}reply`.
 
-        See also `{prefix}snippets`.
+        See also `{prefix}snippet`.
         """
 
         embeds = []
@@ -808,7 +808,7 @@ class Utility(commands.Cog):
                 description="You dont have any aliases at the moment.",
             )
         embed.set_author(name="Command aliases", icon_url=ctx.guild.icon_url)
-        embed.set_footer(text=f"Do {self.bot.prefix}" "help aliases for more commands.")
+        embed.set_footer(text=f"Do {self.bot.prefix}help alias for more commands.")
         embeds.append(embed)
 
         for name, value in self.bot.aliases.items():
@@ -816,7 +816,7 @@ class Utility(commands.Cog):
                 embed = Embed(color=self.bot.main_color, description=desc)
                 embed.set_author(name="Command aliases", icon_url=ctx.guild.icon_url)
                 embed.set_footer(
-                    text=f"Do {self.bot.prefix}help " "aliases for more commands."
+                    text=f"Do {self.bot.prefix}help alias for more commands."
                 )
 
                 embeds.append(embed)
@@ -886,6 +886,9 @@ class Utility(commands.Cog):
     @alias.command(name="edit")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_edit(self, ctx, name: str.lower, *, value):
+        """
+        Edit an alias.
+        """
         if name not in self.bot.aliases:
             embed = Embed(
                 title="Error",

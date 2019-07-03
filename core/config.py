@@ -241,4 +241,5 @@ class ConfigManager:
 
     @classmethod
     def filter_default(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+        # TODO: use .get to prevent errors
         return {k.lower(): v for k, v in data.items() if v != cls.defaults[k.lower()]}

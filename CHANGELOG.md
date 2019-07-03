@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `thread_auto_close_response` has a configurable variable `{timeout}`.
 - New configuration variable `thread_self_closable_creation_footer`, the footer when `recipient_thread_close` is enabled.
+- `?snippet` is now the default command name instead of `?snippets` (`?snippets` is still usable). This is to make this consistent with `?alias`/`?aliases`.
+
+### Fixes
+
+- `?notify` no longer carries over to the next thread.
+
+### Added
+
+- `?sfw`, mark a thread as "safe for work", undos `?nsfw`.
 
 ### Internal
 

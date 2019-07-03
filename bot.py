@@ -173,6 +173,8 @@ class ModmailBot(commands.Bot):
     def run(self, *args, **kwargs):
         try:
             self.loop.run_until_complete(self.start(self.token))
+        except KeyboardInterrupt:
+            pass
         except discord.LoginFailure:
             logger.critical(error("Invalid token"))
         except Exception:
@@ -391,7 +393,7 @@ class ModmailBot(commands.Bot):
             info(f"There are {len(closures)} thread(s) pending to be closed.")
         )
 
-        for recipient_id, items in closures.items():
+        for recipient_id, items in tuple(closures.items()):
             after = (
                 datetime.fromisoformat(items["time"]) - datetime.utcnow()
             ).total_seconds()
