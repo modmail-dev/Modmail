@@ -7,7 +7,7 @@ import random
 from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
-from io import StringIO
+from io import StringIO, BytesIO
 from typing import Union
 from types import SimpleNamespace as param
 from json import JSONDecodeError, loads
@@ -359,21 +359,26 @@ class Utility(commands.Cog):
                 os.path.dirname(os.path.abspath(__file__)),
                 f"../temp/{log_file_name}.log",
             ),
-            "r+",
+            "rb+",
         ) as f:
-            logs = f.read().strip()
+            logs = BytesIO(f.read().strip())
 
         try:
             async with self.bot.session.post(
                 haste_url + "/documents", data=logs
             ) as resp:
-                key = (await resp.json())["key"]
+                data = await resp.json()
+                try:
+                    key = data["key"]
+                except KeyError:
+                    logger.error(data['message'])
+                    raise
                 embed = Embed(
                     title="Debug Logs",
                     color=self.bot.main_color,
                     description=f"{haste_url}/" + key,
                 )
-        except (JSONDecodeError, ClientResponseError, IndexError):
+        except (JSONDecodeError, ClientResponseError, IndexError, KeyError):
             embed = Embed(
                 title="Debug Logs",
                 color=self.bot.main_color,
@@ -607,18 +612,19 @@ class Utility(commands.Cog):
 
         Type only `{prefix}mention` to retrieve your current "mention" message.
         """
+        # TODO: ability to disable mention.
         current = self.bot.config["mention"]
 
         if mention is None:
             embed = Embed(
-                title="Current text",
+                title="Current mention:",
                 color=self.bot.main_color,
                 description=str(current),
             )
         else:
             embed = Embed(
                 title="Changed mention!",
-                description=f"On thread creation the bot now says {mention}.",
+                description=f'On thread creation the bot now says "{mention}".',
                 color=self.bot.main_color,
             )
             self.bot.config["mention"] = mention
@@ -710,7 +716,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_remove(self, ctx, key: str.lower):
         """Delete a set configuration variable."""
-        keys = self.bot.config.allowed_to_change_in_command
+        keys = self.bot.config.public_keys
         if key in keys:
             self.bot.config.remove(key)
             await self.bot.config.update()
@@ -764,10 +770,11 @@ class Utility(commands.Cog):
                 "set configuration variables.",
             )
             embed.set_author(name="Current config", icon_url=self.bot.user.avatar_url)
-            config = self.bot.config.filter_defaults(self.bot.config.items())
+            config = self.bot.config.filter_default(self.bot.config)
 
-            for name, value in reversed(list(config.items())):
-                embed.add_field(name=name, value=f"`{value}`", inline=False)
+            for name, value in config.items():
+                if name in self.bot.config.public_keys:
+                    embed.add_field(name=name, value=f"`{value}`", inline=False)
 
         return await ctx.send(embed=embed)
 
