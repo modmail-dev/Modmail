@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 
 - `?notify` no longer carries over to the next thread.
-
+- `discord.NotFound` errors for `on_raw_reaction_add`.
 ### Added
 
 - `?sfw`, mark a thread as "safe for work", undos `?nsfw`.
@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All default config values moved to `core/config.py`.
 - `config.cache` is no longer accessible, use `config['key']` for getting, `config['key'] = value` for setting, `config.remove('key')` for removing.
 - Dynamic attribute for configs are removed, must use `config['key']` or `config.get('key')`.
+- Removed helper functions `info()` and `error()` for formatting logging, it's formatted automatically now.
 
 # v3.0.3
 

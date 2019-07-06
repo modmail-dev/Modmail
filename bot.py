@@ -17,20 +17,20 @@ from discord.ext.commands.view import StringView
 import isodate
 
 from aiohttp import ClientSession
-from colorama import init, Fore, Style
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.utils import info, error, human_join, strtobool
-from core.models import PermissionLevel
+from core.utils import human_join, strtobool
+from core.models import PermissionLevel, ModmailLogger
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
-init()
 
-logger = logging.getLogger("Modmail")
+logger: ModmailLogger = logging.getLogger("Modmail")
+logger.__class__ = ModmailLogger
+
 logger.setLevel(logging.INFO)
 
 ch = logging.StreamHandler(stream=sys.stdout)
@@ -52,17 +52,18 @@ temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
-LINE = Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL
-
 
 class ModmailBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=None)  # implemented in `get_prefix`
-        self._session = ClientSession(loop=self.loop)
-        self._config = ConfigManager(self)
-
-        self.start_time = datetime.utcnow()
+        self._session = None
+        self._api = None
         self._connected = asyncio.Event()
+        self.start_time = datetime.utcnow()
+
+        self.config = ConfigManager(self)
+        self.config.populate_cache()
+        self.threads = ThreadManager(self)
 
         self._configure_logging()
 
@@ -70,9 +71,7 @@ class ModmailBot(commands.Bot):
         if mongo_uri is None:
             raise ValueError('A Mongo URI is necessary for the bot to function.')
 
-        self._db = AsyncIOMotorClient(mongo_uri).modmail_bot
-        self._threads = ThreadManager(self)
-        self.api = ApiClient(self)
+        self.db = AsyncIOMotorClient(mongo_uri).modmail_bot
         self.plugin_db = PluginDatabaseClient(self)
 
         self.metadata_task = self.loop.create_task(self.metadata_loop())
@@ -116,59 +115,56 @@ class ModmailBot(commands.Bot):
         logger.addHandler(ch_debug)
 
         log_level = logging_levels.get(level_text)
-        logger.info(LINE)
+        if log_level is None:
+            log_level = self.config.remove('log_level')
+
+        logger.line()
         if log_level is not None:
             logger.setLevel(log_level)
             ch.setLevel(log_level)
-            logger.info(info("Logging level: " + level_text))
+            logger.info("Logging level: " + level_text)
         else:
-            logger.info(error("Invalid logging level set. "))
-            logger.info(info("Using default logging level: INFO"))
+            logger.info("Invalid logging level set. ")
+            logger.warning("Using default logging level: INFO")
 
     @property
     def version(self) -> str:
         return __version__
 
     @property
-    def db(self) -> AsyncIOMotorClient:
-        if self._db is None:
-            raise ValueError('No database instance found.')
-        return self._db
-
-    @property
-    def config(self) -> ConfigManager:
-        return self._config
-
-    @property
     def session(self) -> ClientSession:
+        if self._session is None:
+            self._session = ClientSession(loop=self.loop)
         return self._session
 
     @property
-    def threads(self) -> ThreadManager:
-        return self._threads
+    def api(self):
+        if self._api is None:
+            self._api = ApiClient(self)
+        return self._api
 
     async def get_prefix(self, message=None):
         return [self.prefix, f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
 
     def _load_extensions(self):
         """Adds commands automatically"""
-        logger.info(LINE)
-        logger.info(info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬"))
-        logger.info(info("││││ │ │││││├─┤││"))
-        logger.info(info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘"))
-        logger.info(info(f"v{__version__}"))
-        logger.info(info("Authors: kyb3r, fourjr, Taaku18"))
-        logger.info(LINE)
+        logger.line()
+        logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
+        logger.info("││││ │ │││││├─┤││")
+        logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
+        logger.info(f"v{__version__}")
+        logger.info("Authors: kyb3r, fourjr, Taaku18")
+        logger.line()
 
         for file in os.listdir("cogs"):
             if not file.endswith(".py"):
                 continue
             cog = f"cogs.{file[:-3]}"
-            logger.info(info(f"Loading {cog}"))
+            logger.info(f"Loading {cog}")
             try:
                 self.load_extension(cog)
             except Exception:
-                logger.exception(error(f"Failed to load {cog}"))
+                logger.exception(f"Failed to load {cog}")
 
     def run(self, *args, **kwargs):
         try:
@@ -176,27 +172,26 @@ class ModmailBot(commands.Bot):
         except KeyboardInterrupt:
             pass
         except discord.LoginFailure:
-            logger.critical(error("Invalid token"))
+            logger.critical("Invalid token")
         except Exception:
-            logger.critical(error("Fatal exception"), exc_info=True)
+            logger.critical("Fatal exception", exc_info=True)
         finally:
             try:
                 self.metadata_task.cancel()
                 self.loop.run_until_complete(self.metadata_task)
             except asyncio.CancelledError:
-                logger.debug(info("metadata_task has been cancelled."))
+                logger.debug("metadata_task has been cancelled.")
 
             self.loop.run_until_complete(self.logout())
-            for task in asyncio.Task.all_tasks():
+            for task in asyncio.all_tasks(self.loop):
                 task.cancel()
             try:
-                self.loop.run_until_complete(asyncio.gather(*asyncio.Task.all_tasks()))
+                self.loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(self.loop)))
             except asyncio.CancelledError:
-                logger.debug(info("All pending tasks has been cancelled."))
+                logger.debug("All pending tasks has been cancelled.")
             finally:
                 self.loop.run_until_complete(self.session.close())
-                self.loop.close()
-                logger.info(error(" - Shutting down bot - "))
+                logger.error(" - Shutting down bot - ")
 
     async def is_owner(self, user: discord.User) -> bool:
         owners = self.config['owners']
@@ -218,8 +213,8 @@ class ModmailBot(commands.Bot):
                 return self.main_category.channels[0]
             except IndexError:
                 pass
-        logger.info(info(f'No log channel set, set one with `%ssetup` or '
-                         f'`%sconfig set log_channel_id <id>`.'), self.prefix, self.prefix)
+        logger.info(f'No log channel set, set one with `%ssetup` or '
+                    f'`%sconfig set log_channel_id <id>`.', self.prefix, self.prefix)
 
     @property
     def is_connected(self) -> bool:
@@ -275,7 +270,7 @@ class ModmailBot(commands.Bot):
         if guild is not None:
             return guild
         self.config.remove('modmail_guild_id')
-        logger.error(error('Invalid modmail_guild_id set.'))
+        logger.error('Invalid modmail_guild_id set.')
         return self.guild
 
     @property
@@ -311,7 +306,7 @@ class ModmailBot(commands.Bot):
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
-            logger.error(error("Invalid mod_color provided."))
+            logger.error("Invalid mod_color provided.")
         return int(self.config.remove('mod_color').lstrip("#"), base=16)
 
     @property
@@ -320,7 +315,7 @@ class ModmailBot(commands.Bot):
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
-            logger.error(error("Invalid recipient_color provided."))
+            logger.error("Invalid recipient_color provided.")
         return int(self.config.remove('recipient_color').lstrip("#"), base=16)
 
     @property
@@ -329,18 +324,18 @@ class ModmailBot(commands.Bot):
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
-            logger.error(error("Invalid main_color provided."))
+            logger.error("Invalid main_color provided.")
         return int(self.config.remove('main_color').lstrip("#"), base=16)
 
     async def on_connect(self):
-        logger.info(LINE)
+        logger.line()
         try:
             await self.validate_database_connection()
         except Exception:
             return await self.logout()
 
-        logger.info(LINE)
-        logger.info(info("Connected to gateway."))
+        logger.line()
+        logger.info("Connected to gateway.")
         await self.config.refresh()
         await self.setup_indexes()
         self._connected.set()
@@ -355,12 +350,12 @@ class ModmailBot(commands.Bot):
         # Backwards compatibility
         old_index = "messages.content_text_messages.author.name_text"
         if old_index in index_info:
-            logger.info(info(f"Dropping old index: {old_index}"))
+            logger.info(f"Dropping old index: {old_index}")
             await coll.drop_index(old_index)
 
         if index_name not in index_info:
-            logger.info(info('Creating "text" index for logs collection.'))
-            logger.info(info("Name: " + index_name))
+            logger.info('Creating "text" index for logs collection.')
+            logger.info("Name: " + index_name)
             await coll.create_index(
                 [
                     ("messages.content", "text"),
@@ -375,23 +370,21 @@ class ModmailBot(commands.Bot):
         # Wait until config cache is populated with stuff from db and on_connect ran
         await self.wait_for_connected()
 
-        logger.info(LINE)
-        logger.info(info("Client ready."))
-        logger.info(LINE)
-        logger.info(info(f"Logged in as: {self.user}"))
-        logger.info(info(f"User ID: {self.user.id}"))
-        logger.info(info(f"Prefix: {self.prefix}"))
-        logger.info(info(f"Guild Name: {self.guild.name if self.guild else 'Invalid'}"))
-        logger.info(info(f"Guild ID: {self.guild.id if self.guild else 'Invalid'}"))
-        logger.info(LINE)
+        logger.line()
+        logger.info("Client ready.")
+        logger.line()
+        logger.info("Logged in as: %s", str(self.user))
+        logger.info("User ID: %s", str(self.user.id))
+        logger.info("Prefix: %s", str(self.prefix))
+        logger.info("Guild Name: %s", self.guild.name if self.guild else 'Invalid')
+        logger.info("Guild ID: %s", self.guild.id if self.guild else 'Invalid')
+        logger.line()
 
         await self.threads.populate_cache()
 
         # closures
         closures = self.config['closures']
-        logger.info(
-            info(f"There are {len(closures)} thread(s) pending to be closed.")
-        )
+        logger.info("There are %d thread(s) pending to be closed.", len(closures))
 
         for recipient_id, items in tuple(closures.items()):
             after = (
@@ -417,7 +410,7 @@ class ModmailBot(commands.Bot):
                 auto_close=items.get("auto_close", False),
             )
 
-        logger.info(LINE)
+        logger.line()
 
     async def convert_emoji(self, name: str) -> str:
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
@@ -427,7 +420,7 @@ class ModmailBot(commands.Bot):
             try:
                 name = await converter.convert(ctx, name.strip(":"))
             except commands.BadArgument:
-                logger.warning(info("%s is not a valid emoji."), name)
+                logger.warning("%s is not a valid emoji.", name)
                 raise
         return name
 
@@ -440,14 +433,14 @@ class ModmailBot(commands.Bot):
             try:
                 sent_emoji = await self.convert_emoji(sent_emoji)
             except commands.BadArgument:
-                logger.warning(error("Removed sent emoji (%s)."), sent_emoji)
+                logger.warning("Removed sent emoji (%s).", sent_emoji)
                 sent_emoji = self.config.remove("sent_emoji")
 
         if blocked_emoji != "disable":
             try:
                 blocked_emoji = await self.convert_emoji(blocked_emoji)
             except commands.BadArgument:
-                logger.warning(error("Removed blocked emoji (%s)."), blocked_emoji)
+                logger.warning("Removed blocked emoji (%s).", blocked_emoji)
                 blocked_emoji = self.config.remove("blocked_emoji")
 
         await self.config.update()
@@ -660,7 +653,7 @@ class ModmailBot(commands.Bot):
             else:
                 if value in permissions[name]:
                     permissions[name].remove(value)
-        logger.info(info(f"Updating permissions for {name}, {value} (add={add})."))
+        logger.info(f"Updating permissions for {name}, {value} (add={add}).")
         await self.config.update()
 
     async def on_message(self, message):
@@ -747,7 +740,11 @@ class ModmailBot(commands.Bot):
                 return
             channel = await _thread.recipient.create_dm()
 
-        message = await channel.fetch_message(payload.message_id)
+        try:
+            message = await channel.fetch_message(payload.message_id)
+        except discord.NotFound:
+            return
+
         reaction = payload.emoji
 
         close_emoji = await self.convert_emoji(self.config["close_emoji"])
@@ -859,8 +856,8 @@ class ModmailBot(commands.Bot):
                         break
 
     async def on_error(self, event_method, *args, **kwargs):
-        logger.error(error("Ignoring exception in {}".format(event_method)))
-        logger.error(error("Unexpected exception:"), exc_info=sys.exc_info())
+        logger.error("Ignoring exception in %s", str(event_method))
+        logger.error("Unexpected exception:", exc_info=sys.exc_info())
 
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.BadUnionArgument):
@@ -880,7 +877,7 @@ class ModmailBot(commands.Bot):
                 )
             )
         elif isinstance(exception, commands.CommandNotFound):
-            logger.warning(error("CommandNotFound: " + str(exception)))
+            logger.warning("CommandNotFound: %s", str(exception))
         elif isinstance(exception, commands.MissingRequiredArgument):
             await context.send_help(context.command)
         elif isinstance(exception, commands.CheckFailure):
@@ -891,9 +888,9 @@ class ModmailBot(commands.Bot):
                             color=discord.Color.red(), description=check.fail_msg
                         )
                     )
-            logger.warning(error("CheckFailure: " + str(exception)))
+            logger.warning("CheckFailure: %s", str(exception))
         else:
-            logger.error(error("Unexpected exception:"), exc_info=exception)
+            logger.error("Unexpected exception:", exc_info=exception)
 
     @staticmethod
     def overwrites(ctx: commands.Context) -> dict:
@@ -912,37 +909,22 @@ class ModmailBot(commands.Bot):
         try:
             await self.db.command("buildinfo")
         except Exception as exc:
-            logger.critical(
-                error("Something went wrong " "while connecting to the database.")
-            )
+            logger.critical("Something went wrong " "while connecting to the database.")
             message = f"{type(exc).__name__}: {str(exc)}"
-            logger.critical(error(message))
+            logger.critical(message)
 
             if "ServerSelectionTimeoutError" in message:
-                logger.critical(
-                    error(
-                        "This may have been caused by not whitelisting "
-                        "IPs correctly. Make sure to whitelist all "
-                        "IPs (0.0.0.0/0) https://i.imgur.com/mILuQ5U.png"
-                    )
-                )
+                logger.critical("This may have been caused by not whitelisting "
+                                "IPs correctly. Make sure to whitelist all "
+                                "IPs (0.0.0.0/0) https://i.imgur.com/mILuQ5U.png")
 
             if "OperationFailure" in message:
-                logger.critical(
-                    error(
-                        "This is due to having invalid credentials in your MONGO_URI."
-                    )
-                )
-                logger.critical(
-                    error(
-                        "Recheck the username/password and make sure to url encode them. "
-                        "https://www.urlencoder.io/"
-                    )
-                )
-
+                logger.critical("This is due to having invalid credentials in your MONGO_URI.")
+                logger.critical("Recheck the username/password and make sure to url encode them. "
+                                "https://www.urlencoder.io/")
             raise
         else:
-            logger.info(info("Successfully connected to the database."))
+            logger.info("Successfully connected to the database.")
 
     async def metadata_loop(self):
         await self.wait_for_connected()
@@ -969,7 +951,7 @@ class ModmailBot(commands.Bot):
             }
 
             async with self.session.post("https://api.modmail.tk/metadata", json=data):
-                logger.debug(info("Uploading metadata to Modmail server."))
+                logger.debug("Uploading metadata to Modmail server.")
 
             await asyncio.sleep(3600)
 

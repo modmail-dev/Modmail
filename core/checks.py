@@ -3,7 +3,6 @@ import logging
 from discord.ext import commands
 
 from core.models import PermissionLevel
-from core.utils import error
 
 logger = logging.getLogger("Modmail")
 
@@ -33,12 +32,8 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
         )
 
         if not has_perm and ctx.command.qualified_name != "help":
-            logger.error(
-                error(
-                    f"You does not have permission to use this command: "
-                    f"`{ctx.command.qualified_name}` ({permission_level.name})."
-                )
-            )
+            logger.error("You does not have permission to use this command: `%s` (%s).",
+                         str(ctx.command.qualified_name), str(permission_level.name))
         return has_perm
 
     predicate.permission_level = permission_level

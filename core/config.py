@@ -107,7 +107,6 @@ class ConfigManager:
         self.bot = bot
         self._cache = {}
         self.ready_event = asyncio.Event()
-        self.populate_cache()
 
     def __repr__(self):
         return repr(self._cache)
@@ -194,12 +193,14 @@ class ConfigManager:
         await self.ready_event.wait()
 
     def __setitem__(self, key: str, item: typing.Any) -> None:
+        key = key.lower()
         logger.info('Setting %s.', key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = item
 
     def __getitem__(self, key: str) -> typing.Any:
+        key = key.lower()
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         if key not in self._cache:
@@ -207,6 +208,7 @@ class ConfigManager:
         return self._cache[key]
 
     def get(self, key: str, default: typing.Any = Default) -> typing.Any:
+        key = key.lower()
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         if key not in self._cache:
@@ -219,12 +221,14 @@ class ConfigManager:
         return self._cache[key]
 
     def set(self, key: str, item: typing.Any) -> None:
+        key = key.lower()
         logger.info('Setting %s.', key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = item
 
     def remove(self, key: str) -> typing.Any:
+        key = key.lower()
         logger.info('Removing %s.', key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')

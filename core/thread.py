@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import re
 import string
 import typing
@@ -12,7 +11,7 @@ import isodate
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_user_id, truncate, ignore, error, strtobool
+from core.utils import is_image_url, days, match_user_id, truncate, ignore, strtobool
 
 logger = logging.getLogger("Modmail")
 
@@ -463,7 +462,7 @@ class Thread:
                 message, destination=self.recipient, from_mod=True, anonymous=anonymous
             )
         except Exception:
-            logger.info(error("Message delivery failed:"), exc_info=True)
+            logger.error("Message delivery failed:", exc_info=True)
             tasks.append(
                 message.channel.send(
                     embed=discord.Embed(

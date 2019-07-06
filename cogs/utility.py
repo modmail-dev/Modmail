@@ -25,7 +25,7 @@ from core.changelog import Changelog
 from core.decorators import trigger_typing
 from core.models import InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code, info, error, User, get_perm_level
+from core.utils import cleanup_code, User, get_perm_level
 
 logger = logging.getLogger("Modmail")
 
@@ -169,7 +169,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_error_message(self, msg):  # pylint: disable=W0221
-        logger.warning(error(f"CommandNotFound: {msg}"))
+        logger.warning("CommandNotFound: %s", str(msg))
 
         embed = Embed(color=Color.red())
         embed.set_footer(
@@ -518,7 +518,7 @@ class Utility(commands.Cog):
         except (KeyError, ValueError):
             if status_identifier is not None:
                 msg = f"Invalid status type: {status_identifier}"
-                logger.warning(error(msg))
+                logger.warning(msg)
 
         if activity_identifier is None:
             if activity_message is not None:
@@ -536,7 +536,7 @@ class Utility(commands.Cog):
         except (KeyError, ValueError):
             if activity_identifier is not None:
                 msg = f"Invalid activity type: {activity_identifier}"
-                logger.warning(error(msg))
+                logger.warning(msg)
         else:
             url = None
             activity_message = (
@@ -555,7 +555,7 @@ class Utility(commands.Cog):
                 activity = Activity(type=activity_type, name=activity_message, url=url)
             else:
                 msg = "You must supply an activity message to use custom activity."
-                logger.warning(error(msg))
+                logger.warning(msg)
 
         await self.bot.change_presence(activity=activity, status=status)
 
@@ -577,8 +577,8 @@ class Utility(commands.Cog):
     async def on_ready(self):
         # Wait until config cache is populated with stuff from db
         await self.bot.wait_for_connected()
-        logger.info(info(self.presence["activity"][1]))
-        logger.info(info(self.presence["status"][1]))
+        logger.info(self.presence["activity"][1])
+        logger.info(self.presence["status"][1])
 
     async def loop_presence(self):
         """Set presence to the configured value every hour."""
@@ -764,12 +764,7 @@ class Utility(commands.Cog):
                 "set configuration variables.",
             )
             embed.set_author(name="Current config", icon_url=self.bot.user.avatar_url)
-
-            config = {
-                key: val
-                for key, val in self.bot.config.items()
-                if val != self.bot.config.defaults['key'] and key in keys
-            }
+            config = self.bot.config.filter_defaults(self.bot.config.items())
 
             for name, value in reversed(list(config.items())):
                 embed.add_field(name=name, value=f"`{value}`", inline=False)

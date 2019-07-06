@@ -12,8 +12,6 @@ from discord.ext.commands import BadArgument, Converter
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 
-from core.utils import error
-
 logger = logging.getLogger("Modmail")
 
 
@@ -196,7 +194,7 @@ class UserFriendlyTime(Converter):
 
             return await self.check_constraints(ctx, self.now, remaining)
         except Exception:
-            logger.exception(error("Something went wrong while parsing the time"))
+            logger.exception("Something went wrong while parsing the time.")
             raise
 
 

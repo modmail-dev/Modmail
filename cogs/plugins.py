@@ -18,7 +18,6 @@ from pkg_resources import parse_version
 from core import checks
 from core.models import PermissionLevel
 from core.paginator import PaginatorSession
-from core.utils import error, info
 
 logger = logging.getLogger("Modmail")
 
@@ -84,13 +83,13 @@ class Plugins(commands.Cog):
                 await self.download_plugin_repo(username, repo, branch)
             except DownloadError as exc:
                 msg = f"{username}/{repo}@{branch} - {exc}"
-                logger.error(error(msg))
+                logger.error(msg)
             else:
                 try:
                     await self.load_plugin(username, repo, name, branch)
                 except DownloadError as exc:
                     msg = f"{username}/{repo}@{branch}[{name}] - {exc}"
-                    logger.error(error(msg))
+                    logger.error(msg)
 
     async def download_plugin_repo(self, username, repo, branch):
         try:
@@ -140,7 +139,7 @@ class Plugins(commands.Cog):
 
                 if err:
                     msg = f"Requirements Download Error: {username}/{repo}@{branch}[{plugin_name}]"
-                    logger.error(error(msg))
+                    logger.error(msg)
                     raise DownloadError(
                         f"Unable to download requirements: ```\n{err}\n```"
                     ) from exc
@@ -155,11 +154,11 @@ class Plugins(commands.Cog):
             self.bot.load_extension(ext)
         except commands.ExtensionError as exc:
             msg = f"Plugin Load Failure: {username}/{repo}@{branch}[{plugin_name}]"
-            logger.error(error(msg))
+            logger.error(msg)
             raise DownloadError("Invalid plugin") from exc
         else:
             msg = f"Loaded Plugin: {username}/{repo}@{branch}[{plugin_name}]"
-            logger.info(info(msg))
+            logger.info(msg)
 
     @commands.group(aliases=["plugins"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -291,7 +290,7 @@ class Plugins(commands.Cog):
             except Exception as exc:
                 logger.error(str(exc))
                 self.bot.config['plugins'].append(plugin_name)
-                logger.error(error(exc))
+                logger.error(exc)
                 raise exc
 
             await self.bot.config.update()

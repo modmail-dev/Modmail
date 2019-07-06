@@ -1,5 +1,4 @@
 import asyncio
-import os
 from datetime import datetime
 from typing import Optional, Union
 from types import SimpleNamespace as param
@@ -966,7 +965,9 @@ class Modmail(commands.Cog):
             reason = None
 
         extend = f" for `{reason}`" if reason is not None else ""
-        msg = self.bot.blocked_users.get(str(user.id), "")
+        msg = self.bot.blocked_users.get(str(user.id))
+        if msg is None:
+            msg = ''
 
         if (
             str(user.id) not in self.bot.blocked_users
@@ -1021,10 +1022,7 @@ class Modmail(commands.Cog):
         mention = getattr(user, "mention", f"`{user.id}`")
 
         if str(user.id) in self.bot.blocked_users:
-            msg = self.bot.blocked_users.get(str(user.id))
-            if msg is None:
-                msg = ""
-            self.bot.blocked_users.pop(str(user.id))
+            msg = self.bot.blocked_users.pop(str(user.id)) or ''
             await self.bot.config.update()
 
             if msg.startswith("System Message: "):

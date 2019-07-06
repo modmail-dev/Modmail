@@ -6,7 +6,6 @@ from urllib import parse
 from discord import Object
 from discord.ext import commands
 
-from colorama import Fore, Style
 from core.models import PermissionLevel
 
 
@@ -14,14 +13,6 @@ def strtobool(val):
     if isinstance(val, bool):
         return val
     return _stb(str(val))
-
-
-def info(*msgs):
-    return f'{Fore.CYAN}{" ".join(msgs)}{Style.RESET_ALL}'
-
-
-def error(*msgs):
-    return f'{Fore.RED}{" ".join(msgs)}{Style.RESET_ALL}'
 
 
 class User(commands.IDConverter):
