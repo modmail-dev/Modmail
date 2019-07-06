@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `?notify` no longer carries over to the next thread.
 - `discord.NotFound` errors for `on_raw_reaction_add`.
+
 ### Added
 
 - `?sfw`, mark a thread as "safe for work", undos `?nsfw`.

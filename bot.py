@@ -35,7 +35,7 @@ logger.setLevel(logging.INFO)
 
 ch = logging.StreamHandler(stream=sys.stdout)
 ch.setLevel(logging.INFO)
-formatter = logging.Formatter("%(filename)s - %(levelname)s: %(message)s")
+formatter = logging.Formatter("%(filename)s[%(lineno)d] - %(levelname)s: %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 

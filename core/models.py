@@ -50,22 +50,27 @@ class ModmailLogger(logging.Logger):
         return super().debug(self._debug_(msg), *args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
-        return super().info(self._info_(msg), *args, **kwargs)
+        if self.isEnabledFor(logging.INFO):
+            self._log(logging.INFO, self._info_(msg), args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
-        return super().warning(self._error_(msg), *args, **kwargs)
+        if self.isEnabledFor(logging.WARNING):
+            self._log(logging.WARNING, self._error_(msg), args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
-        return super().error(self._error_(msg), *args, **kwargs)
+        if self.isEnabledFor(logging.ERROR):
+            self._log(logging.ERROR, self._error_(msg), args, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
-        return super().critical(self._error_(msg), *args, **kwargs)
+        if self.isEnabledFor(logging.CRITICAL):
+            self._log(logging.CRITICAL, self._error_(msg), args, **kwargs)
 
     def exception(self, msg, *args, exc_info=True, **kwargs):
-        return super().exception(self._error_(msg), *args, exc_info, **kwargs)
+        self.error(msg, *args, exc_info=exc_info, **kwargs)
 
     def line(self):
-        super().info(Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL)
+        if self.isEnabledFor(logging.INFO):
+            self._log(logging.INFO, Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL, [])
 
 
 class _Default:
