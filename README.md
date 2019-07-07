@@ -35,7 +35,7 @@ Modmail is similar to Reddit's Modmail both in functionality and purpose. It ser
 ## How does it work?
 When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user. 
 
-All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example)
+All threads are logged and you can view previous threads through the corresponding generated log link. [**Example**](https://logs.modmail.tk/example)
 
 ## Features
 
@@ -45,7 +45,7 @@ All threads are logged and you can view previous threads through the correspondi
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
   * Minimum account/guild age in order to create a thread.
-* **Thread logs**
+* **Advanced Logging Functionality**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
   * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
@@ -56,7 +56,7 @@ All threads are logged and you can view previous threads through the correspondi
   * Editing and deleting messages is synced on both ends.
   * Support for the full range of message content (mutliple images, files).
   * Paginated commands interfaces via reactions.
-  
+
 This list is ever growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `help` command.
 
 ## Installation
@@ -89,6 +89,18 @@ If you don't want to go through the trouble of setting up your own bot, and want
 This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support.
 
 You can also set up autoupdates. To do this, [install the Pull app in your fork](https://github.com/apps/pull). Then go to the Deploy tab in your Heroku account, select GitHub and connect your fork. Turn on auto-deploy for the master branch.
+
+
+## Sponsors
+
+Sepcial thanks to our sponsors for supporting the project.
+
+<a href='https://flyaurora.xyz/'> 
+  <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
+</a>
+
+Become a [sponsor](https://patreon.com/kyber).
+
 
 ## Plugins
 
