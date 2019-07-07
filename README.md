@@ -51,18 +51,31 @@ All threads are logged and you can view previous threads through the correspondi
 </p>
 </details>
 
-* **Thread logs**
-  * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
-  * Rendered in styled HTML like Discord.
-  * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
-  * See past logs of a user with `?logs`
-  * Searchable by text queries using `?logs search`
-* **Robust implementation**
-  * Scheduled tasks in human time, e.g. `?close in 2 hours silently`.
-  * Editing and deleting messages is synced on both ends.
-  * Support for the full range of message content (mutliple images, files).
-  * Paginated commands interfaces via reactions.
+<details><summary>Advanced Logging Functionality</summary>
+<p>
   
+* When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
+* Rendered in styled HTML like Discord.
+* Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
+* See past logs of a user with `?logs`
+* Searchable by text queries using `?logs search`
+  
+</p>
+</details>
+
+
+<details><summary>Robust Implementation</summary>
+<p>
+  
+* Scheduled tasks in human time, e.g. `?close in 2 hours silently`.
+* Editing and deleting messages is synced on both ends.
+* Support for the full range of message content (mutliple images, files).
+* Paginated commands interfaces via reactions.
+  
+
+</p>
+</details>
+
 This list is ever growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `help` command.
 
 ## Installation
