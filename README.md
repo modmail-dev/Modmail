@@ -39,12 +39,16 @@ All threads are logged and you can view previous threads through the correspondi
 
 ## Features
 
-* **Highly Customisable**
+<details><summary>Highly Customisable</summary>
+<p>
   * Bot activity, prefix, category, log channel, etc.
   * Fully customisable command permission system.
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
   * Minimum account/guild age in order to create a thread.
+</p>
+</details>
+
 * **Thread logs**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
@@ -94,7 +98,9 @@ You can also set up autoupdates. To do this, [install the Pull app in your fork]
 
 Sepcial thanks to our sponsors for supporting the project.
 
-<a href='https://flyaurora.xyz/'> <img src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> </a>
+<a href='https://flyaurora.xyz/'> 
+  <img height=100 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
+</a>
 
 Become a [sponsor](https://patreon.com/kyber).
 
