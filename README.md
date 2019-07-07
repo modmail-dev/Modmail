@@ -41,11 +41,13 @@ All threads are logged and you can view previous threads through the correspondi
 
 <details><summary>Highly Customisable</summary>
 <p>
-  * Bot activity, prefix, category, log channel, etc.
-  * Fully customisable command permission system.
-  * Interface elements (color, responses, reactions, etc.)
-  * Snippets and *command aliases*
-  * Minimum account/guild age in order to create a thread.
+  
+* Bot activity, prefix, category, log channel, etc.
+* Fully customisable command permission system.
+* Interface elements (color, responses, reactions, etc.)
+* Snippets and *command aliases*
+* Minimum account/guild age in order to create a thread.
+  
 </p>
 </details>
 
