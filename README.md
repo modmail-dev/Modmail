@@ -35,7 +35,7 @@ Modmail is similar to Reddit's Modmail both in functionality and purpose. It ser
 ## How does it work?
 When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user. 
 
-All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example)
+All threads are logged and you can view previous threads through the corresponding generated log link. [**Example**](https://logs.modmail.tk/example)
 
 ## Features
 
@@ -45,7 +45,7 @@ All threads are logged and you can view previous threads through the correspondi
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
   * Minimum account/guild age in order to create a thread.
-* **Advance Logging Functionality**
+* **Advanced Logging Functionality**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
   * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
