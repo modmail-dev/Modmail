@@ -39,6 +39,8 @@ All threads are logged and you can view previous threads through the correspondi
 
 ## Features
 
+* Click to expand *
+
 <details><summary>Highly Customisable</summary>
 <p>
   
@@ -114,7 +116,7 @@ You can also set up autoupdates. To do this, [install the Pull app in your fork]
 Sepcial thanks to our sponsors for supporting the project.
 
 <a href='https://flyaurora.xyz/'> 
-  <img height=100 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
+  <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
 </a>
 
 Become a [sponsor](https://patreon.com/kyber).
