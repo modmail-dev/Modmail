@@ -37,9 +37,7 @@ When a member sends a direct message to the bot, a channel or "thread" is create
 
 All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example)
 
-<details><summary> <h2>Features</h2></summary>
-  
-<p>
+## Features
 
 * **Highly Customisable**
   * Bot activity, prefix, category, log channel, etc.
@@ -60,19 +58,6 @@ All threads are logged and you can view previous threads through the correspondi
   * Paginated commands interfaces via reactions.
 
 This list is ever growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `help` command.
-
-</p>
-</details>
-
-## Sponsors
-
-Sepcial thanks to our sponsors for supporting the project.
-
-<a href='https://flyaurora.xyz/'> 
-  <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
-</a>
-
-Become a [sponsor](https://patreon.com/kyber).
 
 ## Installation
 
@@ -104,6 +89,18 @@ If you don't want to go through the trouble of setting up your own bot, and want
 This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support.
 
 You can also set up autoupdates. To do this, [install the Pull app in your fork](https://github.com/apps/pull). Then go to the Deploy tab in your Heroku account, select GitHub and connect your fork. Turn on auto-deploy for the master branch.
+
+
+## Sponsors
+
+Sepcial thanks to our sponsors for supporting the project.
+
+<a href='https://flyaurora.xyz/'> 
+  <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
+</a>
+
+Become a [sponsor](https://patreon.com/kyber).
+
 
 ## Plugins
 
