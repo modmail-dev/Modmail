@@ -37,7 +37,9 @@ When a member sends a direct message to the bot, a channel or "thread" is create
 
 All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example)
 
-## Features
+<details><summary> <h2>Features</h2></summary>
+  
+<p>
 
 * **Highly Customisable**
   * Bot activity, prefix, category, log channel, etc.
@@ -45,7 +47,7 @@ All threads are logged and you can view previous threads through the correspondi
   * Interface elements (color, responses, reactions, etc.)
   * Snippets and *command aliases*
   * Minimum account/guild age in order to create a thread.
-* **Thread logs**
+* **Advance Logging Functionality**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Rendered in styled HTML like Discord.
   * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
@@ -59,6 +61,8 @@ All threads are logged and you can view previous threads through the correspondi
 
 This list is ever growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `help` command.
 
+</p>
+</details>
 
 ## Sponsors
 
