@@ -39,9 +39,7 @@ All threads are logged and you can view previous threads through the correspondi
 
 ## Features
 
-* Click to expand *
-
-<details><summary>Highly Customisable</summary>
+<details><summary>Fully Customisable</summary>
 <p>
   
 * Bot activity, prefix, category, log channel, etc.
