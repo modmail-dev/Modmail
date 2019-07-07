@@ -39,44 +39,36 @@ All threads are logged and you can view previous threads through the correspondi
 
 ## Features
 
-<details><summary>Fully Customisable</summary>
-<p>
-  
-* Bot activity, prefix, category, log channel, etc.
-* Fully customisable command permission system.
-* Interface elements (color, responses, reactions, etc.)
-* Snippets and *command aliases*
-* Minimum account/guild age in order to create a thread.
-  
-</p>
-</details>
-
-<details><summary>Advanced Logging Functionality</summary>
-<p>
-  
-* When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
-* Rendered in styled HTML like Discord.
-* Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
-* See past logs of a user with `?logs`
-* Searchable by text queries using `?logs search`
-  
-</p>
-</details>
-
-
-<details><summary>Robust Implementation</summary>
-<p>
-  
-* Scheduled tasks in human time, e.g. `?close in 2 hours silently`.
-* Editing and deleting messages is synced on both ends.
-* Support for the full range of message content (mutliple images, files).
-* Paginated commands interfaces via reactions.
-  
-
-</p>
-</details>
+* **Highly Customisable**
+  * Bot activity, prefix, category, log channel, etc.
+  * Fully customisable command permission system.
+  * Interface elements (color, responses, reactions, etc.)
+  * Snippets and *command aliases*
+  * Minimum account/guild age in order to create a thread.
+* **Thread logs**
+  * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
+  * Rendered in styled HTML like Discord.
+  * Login in via Discord to protect your logs ([Patron only feature](https://patreon.com/kyber)).
+  * See past logs of a user with `?logs`
+  * Searchable by text queries using `?logs search`
+* **Robust implementation**
+  * Scheduled tasks in human time, e.g. `?close in 2 hours silently`.
+  * Editing and deleting messages is synced on both ends.
+  * Support for the full range of message content (mutliple images, files).
+  * Paginated commands interfaces via reactions.
 
 This list is ever growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `help` command.
+
+
+## Sponsors
+
+Sepcial thanks to our sponsors for supporting the project.
+
+<a href='https://flyaurora.xyz/'> 
+  <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
+</a>
+
+Become a [sponsor](https://patreon.com/kyber).
 
 ## Installation
 
@@ -108,16 +100,6 @@ If you don't want to go through the trouble of setting up your own bot, and want
 This bot can be hosted on heroku. Installation via Heroku is done in your web browser. The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) will guide you through the entire installation process. If you run into any problems, join the [development server](https://discord.gg/etJNHCQ) for help and support.
 
 You can also set up autoupdates. To do this, [install the Pull app in your fork](https://github.com/apps/pull). Then go to the Deploy tab in your Heroku account, select GitHub and connect your fork. Turn on auto-deploy for the master branch.
-
-## Sponsors
-
-Sepcial thanks to our sponsors for supporting the project.
-
-<a href='https://flyaurora.xyz/'> 
-  <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
-</a>
-
-Become a [sponsor](https://patreon.com/kyber).
 
 ## Plugins
 
