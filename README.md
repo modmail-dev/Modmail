@@ -90,6 +90,14 @@ This bot can be hosted on heroku. Installation via Heroku is done in your web br
 
 You can also set up autoupdates. To do this, [install the Pull app in your fork](https://github.com/apps/pull). Then go to the Deploy tab in your Heroku account, select GitHub and connect your fork. Turn on auto-deploy for the master branch.
 
+## Sponsors
+
+Sepcial thanks to our sponsors for supporting the project.
+
+<a href='https://flyaurora.xyz/'> <img src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> </a>
+
+Become a [sponsor](https://patreon.com/kyber).
+
 ## Plugins
 
 Modmail supports the use of third party plugins to extend or add functionality to the bot. This allows the introduction of niche features as well as anything else outside of the scope of the core functionality of Modmail. A list of third party plugins can be found using the `plugins registry` command. To develop your own, check out the [documentation](https://github.com/kyb3r/modmail/wiki/Plugins) for plugins.
