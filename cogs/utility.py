@@ -767,9 +767,9 @@ class Utility(commands.Cog):
             embed = Embed(
                 color=self.bot.main_color,
                 description="Here is a list of currently "
-                "set configuration variables.",
+                "set configuration variable(s).",
             )
-            embed.set_author(name="Current config", icon_url=self.bot.user.avatar_url)
+            embed.set_author(name="Current config(s):", icon_url=self.bot.user.avatar_url)
             config = self.bot.config.filter_default(self.bot.config)
 
             for name, value in config.items():
@@ -809,7 +809,7 @@ class Utility(commands.Cog):
                 color=self.bot.main_color,
                 description="You dont have any aliases at the moment.",
             )
-        embed.set_author(name="Command aliases", icon_url=ctx.guild.icon_url)
+        embed.set_author(name="Command aliases:", icon_url=ctx.guild.icon_url)
         embed.set_footer(text=f"Do {self.bot.prefix}help alias for more commands.")
         embeds.append(embed)
 

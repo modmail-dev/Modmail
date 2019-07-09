@@ -85,7 +85,7 @@ class Modmail(commands.Cog):
             f"Type `{self.bot.prefix}permissions` for more info."
         )
 
-        if not self.bot.config["permissions"]:
+        if not self.bot.config["command_permissions"] and not self.bot.config["level_permissions"]:
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
             await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
 
@@ -1020,6 +1020,7 @@ class Modmail(commands.Cog):
                 raise commands.MissingRequiredArgument(param(name="user"))
 
         mention = getattr(user, "mention", f"`{user.id}`")
+        name = getattr(user, "name", f"`{user.id}`")
 
         if str(user.id) in self.bot.blocked_users:
             msg = self.bot.blocked_users.pop(str(user.id)) or ''
@@ -1037,8 +1038,8 @@ class Modmail(commands.Cog):
                 )
                 embed.set_footer(
                     text="However, if the original system block reason still apply, "
-                    f"{mention} will be automatically blocked again. Use "
-                    f'"{self.bot.prefix}blocked whitelist {mention}" to whitelist the user.'
+                    f"{name} will be automatically blocked again. Use "
+                    f'"{self.bot.prefix}blocked whitelist {user.id}" to whitelist the user.'
                 )
             else:
                 embed = discord.Embed(

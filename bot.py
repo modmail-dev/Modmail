@@ -210,11 +210,14 @@ class ModmailBot(commands.Bot):
             self.config.remove('log_channel_id')
         if self.main_category is not None:
             try:
-                return self.main_category.channels[0]
+                channel = self.main_category.channels[0]
+                self.config['log_channel_id'] = channel.id
+                logger.debug('No log channel set, however, one was found. Setting...')
+                return channel
             except IndexError:
                 pass
-        logger.info(f'No log channel set, set one with `%ssetup` or '
-                    f'`%sconfig set log_channel_id <id>`.', self.prefix, self.prefix)
+        logger.info('No log channel set, set one with `%ssetup` or '
+                    '`%sconfig set log_channel_id <id>`.', self.prefix, self.prefix)
 
     @property
     def is_connected(self) -> bool:
@@ -286,7 +289,11 @@ class ModmailBot(commands.Bot):
                 if cat is not None:
                     return cat
                 self.config.remove("main_category_id")
-            return discord.utils.get(self.modmail_guild.categories, name="Modmail")
+            cat = discord.utils.get(self.modmail_guild.categories, name="Modmail")
+            if cat is not None:
+                self.config['main_category_id'] = cat.id
+                logger.debug('No main category set, however, one was found. Setting...')
+                return cat
 
     @property
     def blocked_users(self) -> typing.Dict[str, str]:
@@ -705,7 +712,16 @@ class ModmailBot(commands.Bot):
 
         if user.bot:
             return
+
+        async def _(*args, **kwargs):
+            pass
+
         if isinstance(channel, discord.DMChannel):
+            if await self._process_blocked(SimpleNamespace(author=user,
+                                                           channel=SimpleNamespace(send=_),
+                                                           add_reaction=_)):
+                return
+
             try:
                 user_typing = strtobool(self.config["user_typing"])
             except ValueError:
@@ -714,6 +730,7 @@ class ModmailBot(commands.Bot):
                 return
 
             thread = await self.threads.find(recipient=user)
+
             if thread:
                 await thread.channel.trigger_typing()
         else:
@@ -726,6 +743,10 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.find(channel=channel)
             if thread is not None and thread.recipient:
+                if await self._process_blocked(SimpleNamespace(author=thread.recipient,
+                                                               channel=SimpleNamespace(send=_),
+                                                               add_reaction=_)):
+                    return
                 await thread.recipient.trigger_typing()
 
     async def on_raw_reaction_add(self, payload):

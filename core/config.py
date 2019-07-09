@@ -14,6 +14,7 @@ from discord.ext.commands import BadArgument
 from core._color_data import ALL_COLORS
 from core.models import InvalidConfigError, Default
 from core.time import UserFriendlyTime
+from core.utils import strtobool
 
 logger = logging.getLogger("Modmail")
 load_dotenv()
@@ -100,6 +101,8 @@ class ConfigManager:
 
     time_deltas = {"account_age", "guild_age", "thread_auto_close"}
 
+    booleans = {"user_typing", "mod_typing", "reply_without_command", "recipient_thread_close"}
+
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
 
@@ -174,6 +177,12 @@ class ConfigManager:
                 clean_value = isodate.duration_isoformat(time.dt - converter.now)
                 value_text = f"{val} ({clean_value})"
 
+        elif key in self.booleans:
+            try:
+                clean_value = value_text = strtobool(val)
+            except ValueError:
+                raise InvalidConfigError("Must be a yes/no value.")
+
         return clean_value, value_text
 
     async def update(self):
@@ -182,8 +191,10 @@ class ConfigManager:
 
     async def refresh(self) -> dict:
         """Refreshes internal cache with data from database"""
-        data = {k.lower(): v for k, v in (await self.api.get_config()).items() if k.lower() in self.all_keys}
-        self._cache.update(data)
+        for k, v in (await self.api.get_config()).items():
+            k = k.lower()
+            if k in self.all_keys:
+                self._cache[k] = v
         if not self.ready_event.is_set():
             self.ready_event.set()
             logger.info('Config ready.')
