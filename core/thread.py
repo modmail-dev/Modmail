@@ -164,11 +164,11 @@ class Thread:
 
         footer = "Your message has been sent"
         if not self.bot.config.get("disable_recipient_thread_close"):
-            footer = "Haz click en el candado para terminar el hilo"
+            footer = "Haz click en el candado para terminar la conversación"
 
         footer = self.bot.config.get("thread_creation_footer", footer)
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
-        embed.title = self.bot.config.get("thread_creation_title", "Hilo creado")
+        embed.title = self.bot.config.get("thread_creation_title", "Conversación creada")
 
         if creator is None:
             msg = await recipient.send(embed=embed)
@@ -301,7 +301,7 @@ class Thread:
         # Thread closed message
 
         embed = discord.Embed(
-            title=self.bot.config.get("thread_close_title", "Thread Closed"),
+            title=self.bot.config.get("thread_close_title", "Conversación Cerrada"),
             color=discord.Color.red(),
             timestamp=datetime.utcnow(),
         )
@@ -309,19 +309,19 @@ class Thread:
         if not message:
             if self.id == closer.id:
                 message = self.bot.config.get(
-                    "thread_self_close_response", "Este hilo ha sido cerrado"
+                    "thread_self_close_response", "Esta conversación ha sido cerrado"
                 )
             else:
                 message = self.bot.config.get(
                     "thread_close_response",
-                    "{closer.mention} Ha cerrado este hilo.",
+                    "{closer.mention} Ha cerrado esta conversación.",
                 )
 
         message = message.format(closer=closer, loglink=log_url, logkey=log_data["key"])
 
         embed.description = message
         footer = self.bot.config.get(
-            "thread_close_footer", "Si responde, se creará un nuevo hilo"
+            "thread_close_footer", "Si responde, se abrirá una nueva conversación"
         )
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
 
@@ -872,7 +872,7 @@ class ThreadManager:
         # if not role_names:
         #     embed.add_field(name='Mention', value=user.mention)
         # embed.add_field(name='Registered', value=created + days(created))
-        embed.description += f" was created {days(created)}"
+        embed.description += f" se registró {days(created)}"
 
         footer = "User ID: " + str(user.id)
         embed.set_footer(text=footer)
@@ -882,7 +882,7 @@ class ThreadManager:
         if member:
             joined = str((time - member.joined_at).days)
             # embed.add_field(name='Joined', value=joined + days(joined))
-            embed.description += f", joined {days(joined)}"
+            embed.description += f", se unió {days(joined)}"
 
             if member.nick:
                 embed.add_field(name="Nickname", value=member.nick, inline=True)
