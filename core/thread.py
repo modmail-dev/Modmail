@@ -309,7 +309,7 @@ class Thread:
         if not message:
             if self.id == closer.id:
                 message = self.bot.config.get(
-                    "thread_self_close_response", "Esta conversación ha sido cerrado"
+                    "thread_self_close_response", "Esta conversación ha sido cerrada"
                 )
             else:
                 message = self.bot.config.get(
