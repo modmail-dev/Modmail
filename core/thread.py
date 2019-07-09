@@ -164,11 +164,11 @@ class Thread:
 
         footer = "Your message has been sent"
         if not self.bot.config.get("disable_recipient_thread_close"):
-            footer = "Click the lock to close the thread"
+            footer = "Haz click en el candado para terminar el hilo"
 
         footer = self.bot.config.get("thread_creation_footer", footer)
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
-        embed.title = self.bot.config.get("thread_creation_title", "Thread Created")
+        embed.title = self.bot.config.get("thread_creation_title", "Hilo creado")
 
         if creator is None:
             msg = await recipient.send(embed=embed)
@@ -309,19 +309,19 @@ class Thread:
         if not message:
             if self.id == closer.id:
                 message = self.bot.config.get(
-                    "thread_self_close_response", "You have closed this Modmail thread."
+                    "thread_self_close_response", "Este hilo ha sido cerrado"
                 )
             else:
                 message = self.bot.config.get(
                     "thread_close_response",
-                    "{closer.mention} has closed this Modmail thread.",
+                    "{closer.mention} Ha cerrado este hilo.",
                 )
 
         message = message.format(closer=closer, loglink=log_url, logkey=log_data["key"])
 
         embed.description = message
         footer = self.bot.config.get(
-            "thread_close_footer", "Replying will create a new thread"
+            "thread_close_footer", "Si responde, se creará un nuevo hilo"
         )
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
 
@@ -663,7 +663,7 @@ class Thread:
             # noinspection PyUnresolvedReferences,PyDunderSlots
             embed.color = discord.Color.blurple()  # pylint: disable=E0237
         else:
-            embed.set_footer(text=f"Recipient")
+            embed.set_footer(text=f"Solicitante")
             # noinspection PyUnresolvedReferences,PyDunderSlots
             embed.color = self.bot.recipient_color  # pylint: disable=E0237
 
