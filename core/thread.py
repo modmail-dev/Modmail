@@ -317,7 +317,7 @@ class Thread:
                     "{closer.mention} has closed this Modmail thread.",
                 )
 
-        message = message.format(closer=closer, loglink=log_url, logkey=log_data["key"])
+        message = message.format(closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None)
 
         embed.description = message
         footer = self.bot.config.get(
