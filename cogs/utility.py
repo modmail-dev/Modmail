@@ -224,11 +224,24 @@ class Utility(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
-    async def changelog(self, ctx):
+    async def changelog(self, ctx, version=None):
         """Shows the changelog of the Modmail."""
         changelog = await Changelog.from_url(self.bot)
+        version = version.lstrip("vV") if version else changelog.latest_version.version
+
+        try:
+            index = [v.version for v in changelog.versions].index(version)
+        except ValueError:
+            return await ctx.send(
+                embed=Embed(
+                    color=Color.red(),
+                    description=f"The specified version `{version}` could not be found.",
+                )
+            )
+
         try:
             paginator = PaginatorSession(ctx, *changelog.embeds)
+            paginator.current = index
             await paginator.run()
         except:
             await ctx.send(changelog.CHANGELOG_URL)
