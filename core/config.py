@@ -24,11 +24,11 @@ class ConfigManager:
 
     public_keys = {
         # activity
-        "twitch_url": 'https://www.twitch.tv/discord-modmail/',
+        "twitch_url": "https://www.twitch.tv/discord-modmail/",
         # bot settings
         "main_category_id": None,
-        "prefix": '?',
-        "mention": '@here',
+        "prefix": "?",
+        "mention": "@here",
         "main_color": str(discord.Color.blurple()),
         "user_typing": False,
         "mod_typing": False,
@@ -38,20 +38,20 @@ class ConfigManager:
         # logging
         "log_channel_id": None,
         # threads
-        "sent_emoji": '✅',
-        "blocked_emoji": '🚫',
-        "close_emoji": '🔒',
+        "sent_emoji": "✅",
+        "blocked_emoji": "🚫",
+        "close_emoji": "🔒",
         "recipient_thread_close": False,
         "thread_auto_close": 0,
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
         "thread_creation_response": "The staff team will get back to you as soon as possible.",
-        "thread_creation_footer": 'Your message has been sent',
+        "thread_creation_footer": "Your message has been sent",
         "thread_self_closable_creation_footer": "Click the lock to close the thread",
-        "thread_creation_title": 'Thread Created',
-        "thread_close_footer": 'Replying will create a new thread',
-        "thread_close_title": 'Thread Closed',
-        "thread_close_response": '{closer.mention} has closed this Modmail thread.',
-        "thread_self_close_response": 'You have closed this Modmail thread.',
+        "thread_creation_title": "Thread Created",
+        "thread_close_footer": "Replying will create a new thread",
+        "thread_close_title": "Thread Closed",
+        "thread_close_response": "{closer.mention} has closed this Modmail thread.",
+        "thread_self_close_response": "You have closed this Modmail thread.",
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_tag": None,
@@ -59,12 +59,12 @@ class ConfigManager:
         # anonymous message
         "anon_username": None,
         "anon_avatar_url": None,
-        "anon_tag": 'Response',
+        "anon_tag": "Response",
     }
 
     private_keys = {
         # bot presence
-        "activity_message": '',
+        "activity_message": "",
         "activity_type": None,
         "status": None,
         "oauth_whitelist": [],
@@ -87,8 +87,8 @@ class ConfigManager:
         # Modmail
         "modmail_guild_id": None,
         "guild_id": None,
-        "log_url": 'https://example.com/',
-        "log_url_prefix": '/logs',
+        "log_url": "https://example.com/",
+        "log_url_prefix": "/logs",
         "mongo_uri": None,
         "owners": None,
         # bot
@@ -101,7 +101,12 @@ class ConfigManager:
 
     time_deltas = {"account_age", "guild_age", "thread_auto_close"}
 
-    booleans = {"user_typing", "mod_typing", "reply_without_command", "recipient_thread_close"}
+    booleans = {
+        "user_typing",
+        "mod_typing",
+        "reply_without_command",
+        "recipient_thread_close",
+    }
 
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
@@ -122,12 +127,20 @@ class ConfigManager:
         data = deepcopy(self.defaults)
 
         # populate from env var and .env file
-        data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
+        data.update(
+            {k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys}
+        )
 
         if os.path.exists("config.json"):
             with open("config.json") as f:
                 # Config json should override env vars
-                data.update({k.lower(): v for k, v in json.load(f).items() if k.lower() in self.all_keys})
+                data.update(
+                    {
+                        k.lower(): v
+                        for k, v in json.load(f).items()
+                        if k.lower() in self.all_keys
+                    }
+                )
 
         self._cache = data
         return self._cache
@@ -145,7 +158,7 @@ class ConfigManager:
                 if hex_.startswith("#"):
                     hex_ = hex_[1:]
                 if len(hex_) == 3:
-                    hex_ = ''.join(s for s in hex_ for _ in range(2))
+                    hex_ = "".join(s for s in hex_ for _ in range(2))
                 if len(hex_) != 6:
                     raise InvalidConfigError("Invalid color name or hex.")
                 try:
@@ -197,7 +210,7 @@ class ConfigManager:
                 self._cache[k] = v
         if not self.ready_event.is_set():
             self.ready_event.set()
-            logger.info('Config ready.')
+            logger.info("Config ready.")
         return self._cache
 
     async def wait_until_ready(self) -> None:
@@ -205,7 +218,7 @@ class ConfigManager:
 
     def __setitem__(self, key: str, item: typing.Any) -> None:
         key = key.lower()
-        logger.info('Setting %s.', key)
+        logger.info("Setting %s.", key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = item
@@ -233,14 +246,14 @@ class ConfigManager:
 
     def set(self, key: str, item: typing.Any) -> None:
         key = key.lower()
-        logger.info('Setting %s.', key)
+        logger.info("Setting %s.", key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = item
 
     def remove(self, key: str) -> typing.Any:
         key = key.lower()
-        logger.info('Removing %s.', key)
+        logger.info("Removing %s.", key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = deepcopy(self.defaults[key])
@@ -250,11 +263,18 @@ class ConfigManager:
         return self._cache.items()
 
     @classmethod
-    def filter_valid(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
-        return {k.lower(): v for k, v in data.items()
-                if k.lower() in cls.public_keys or k.lower() in cls.private_keys}
+    def filter_valid(
+        cls, data: typing.Dict[str, typing.Any]
+    ) -> typing.Dict[str, typing.Any]:
+        return {
+            k.lower(): v
+            for k, v in data.items()
+            if k.lower() in cls.public_keys or k.lower() in cls.private_keys
+        }
 
     @classmethod
-    def filter_default(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+    def filter_default(
+        cls, data: typing.Dict[str, typing.Any]
+    ) -> typing.Dict[str, typing.Any]:
         # TODO: use .get to prevent errors
         return {k.lower(): v for k, v in data.items() if v != cls.defaults[k.lower()]}

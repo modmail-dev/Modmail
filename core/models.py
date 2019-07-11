@@ -70,7 +70,14 @@ class ModmailLogger(logging.Logger):
 
     def line(self):
         if self.isEnabledFor(logging.INFO):
-            self._log(logging.INFO, Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL, [])
+            self._log(
+                logging.INFO,
+                Fore.BLACK
+                + Style.BRIGHT
+                + "-------------------------"
+                + Style.RESET_ALL,
+                [],
+            )
 
 
 class _Default:

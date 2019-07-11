@@ -371,7 +371,7 @@ class Utility(commands.Cog):
                 try:
                     key = data["key"]
                 except KeyError:
-                    logger.error(data['message'])
+                    logger.error(data["message"])
                     raise
                 embed = Embed(
                     title="Debug Logs",
@@ -769,7 +769,9 @@ class Utility(commands.Cog):
                 description="Here is a list of currently "
                 "set configuration variable(s).",
             )
-            embed.set_author(name="Current config(s):", icon_url=self.bot.user.avatar_url)
+            embed.set_author(
+                name="Current config(s):", icon_url=self.bot.user.avatar_url
+            )
             config = self.bot.config.filter_default(self.bot.config)
 
             for name, value in config.items():
@@ -1132,11 +1134,11 @@ class Utility(commands.Cog):
         cmds = []
         levels = []
         for cmd in self.bot.commands:
-            permissions = self.bot.config['command_permissions'].get(cmd.name, [])
+            permissions = self.bot.config["command_permissions"].get(cmd.name, [])
             if value in permissions:
                 cmds.append(cmd.name)
         for level in PermissionLevel:
-            permissions = self.bot.config['level_permissions'].get(level.name, [])
+            permissions = self.bot.config["level_permissions"].get(level.name, [])
             if value in permissions:
                 levels.append(level.name)
         mention = user_or_role.name if hasattr(user_or_role, "name") else user_or_role
@@ -1172,7 +1174,7 @@ class Utility(commands.Cog):
         """View currently-set permissions for a command."""
 
         def get_command(cmd):
-            permissions = self.bot.config['command_permissions'].get(cmd.name, [])
+            permissions = self.bot.config["command_permissions"].get(cmd.name, [])
             if not permissions:
                 embed = Embed(
                     title=f"Permission entries for command `{cmd.name}`:",
@@ -1230,7 +1232,7 @@ class Utility(commands.Cog):
         """View currently-set permissions for commands of a permission level."""
 
         def get_level(perm_level):
-            permissions = self.bot.config['level_permissions'].get(perm_level.name, [])
+            permissions = self.bot.config["level_permissions"].get(perm_level.name, [])
             if not permissions:
                 embed = Embed(
                     title="Permission entries for permission "

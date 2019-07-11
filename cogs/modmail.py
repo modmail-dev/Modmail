@@ -38,9 +38,11 @@ class Modmail(commands.Cog):
             return await ctx.send(f"{self.bot.modmail_guild} is already set up.")
 
         if self.bot.modmail_guild is None:
-            embed = discord.Embed(title='Error',
-                                  description='Modmail functioning guild not found.',
-                                  color=discord.Color.red())
+            embed = discord.Embed(
+                title="Error",
+                description="Modmail functioning guild not found.",
+                color=discord.Color.red(),
+            )
             return await ctx.send(embed=embed)
 
         category = await self.bot.modmail_guild.create_category(
@@ -85,11 +87,14 @@ class Modmail(commands.Cog):
             f"Type `{self.bot.prefix}permissions` for more info."
         )
 
-        if not self.bot.config["command_permissions"] and not self.bot.config["level_permissions"]:
+        if (
+            not self.bot.config["command_permissions"]
+            and not self.bot.config["level_permissions"]
+        ):
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
             await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
 
-    @commands.group(aliases=['snippets'], invoke_without_command=True)
+    @commands.group(aliases=["snippets"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippet(self, ctx):
         """
@@ -534,7 +539,7 @@ class Modmail(commands.Cog):
             if prefix == "NONE":
                 prefix = ""
 
-            log_url = self.bot.config['log_url'].strip("/") + f"{prefix}/{key}"
+            log_url = self.bot.config["log_url"].strip("/") + f"{prefix}/{key}"
 
             username = entry["recipient"]["name"] + "#"
             username += entry["recipient"]["discriminator"]
@@ -967,7 +972,7 @@ class Modmail(commands.Cog):
         extend = f" for `{reason}`" if reason is not None else ""
         msg = self.bot.blocked_users.get(str(user.id))
         if msg is None:
-            msg = ''
+            msg = ""
 
         if (
             str(user.id) not in self.bot.blocked_users
@@ -1023,7 +1028,7 @@ class Modmail(commands.Cog):
         name = getattr(user, "name", f"`{user.id}`")
 
         if str(user.id) in self.bot.blocked_users:
-            msg = self.bot.blocked_users.pop(str(user.id)) or ''
+            msg = self.bot.blocked_users.pop(str(user.id)) or ""
             await self.bot.config.update()
 
             if msg.startswith("System Message: "):

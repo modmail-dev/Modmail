@@ -186,7 +186,7 @@ class UserFriendlyTime(Converter):
                     if not (end < len(argument) and argument[end] == '"'):
                         raise BadArgument("If the time is quoted, you must unquote it.")
 
-                    remaining = argument[end + 1:].lstrip(" ,.!")
+                    remaining = argument[end + 1 :].lstrip(" ,.!")
                 else:
                     remaining = argument[end:].lstrip(" ,.!")
             elif len(argument) == end:

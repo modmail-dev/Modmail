@@ -158,9 +158,11 @@ class Thread:
         )
 
         try:
-            recipient_thread_close = strtobool(self.bot.config["recipient_thread_close"])
+            recipient_thread_close = strtobool(
+                self.bot.config["recipient_thread_close"]
+            )
         except ValueError:
-            recipient_thread_close = self.bot.config.remove('recipient_thread_close')
+            recipient_thread_close = self.bot.config.remove("recipient_thread_close")
 
         if recipient_thread_close:
             footer = self.bot.config["thread_self_closable_creation_footer"]
@@ -212,7 +214,7 @@ class Thread:
                 "message": message,
                 "auto_close": auto_close,
             }
-            self.bot.config['closures'][str(self.id)] = items
+            self.bot.config["closures"][str(self.id)] = items
             await self.bot.config.update()
 
             task = self.bot.loop.call_later(
@@ -235,8 +237,8 @@ class Thread:
 
         # Cancel auto closing the thread if closed by any means.
 
-        self.bot.config['subscriptions'].pop(str(self.id), None)
-        self.bot.config['notification_squad'].pop(str(self.id), None)
+        self.bot.config["subscriptions"].pop(str(self.id), None)
+        self.bot.config["notification_squad"].pop(str(self.id), None)
 
         # Logging
         log_data = await self.bot.api.post_log(
@@ -256,10 +258,12 @@ class Thread:
         )
 
         if log_data is not None and isinstance(log_data, dict):
-            prefix = self.bot.config['log_url_prefix']
+            prefix = self.bot.config["log_url_prefix"]
             if prefix == "NONE":
                 prefix = ""
-            log_url = f"{self.bot.config['log_url'].strip('/')}{prefix}/{log_data['key']}"
+            log_url = (
+                f"{self.bot.config['log_url'].strip('/')}{prefix}/{log_data['key']}"
+            )
 
             if log_data["messages"]:
                 content = str(log_data["messages"][0]["content"])
@@ -333,7 +337,7 @@ class Thread:
             self.auto_close_task.cancel()
             self.auto_close_task = None
 
-        to_update = self.bot.config['closures'].pop(str(self.id), None)
+        to_update = self.bot.config["closures"].pop(str(self.id), None)
         if to_update is not None:
             await self.bot.config.update()
 
@@ -392,7 +396,9 @@ class Thread:
         human_time = human_timedelta(dt=reset_time)
 
         # Grab message
-        close_message = self.bot.config["thread_auto_close_response"].format(timeout=human_time)
+        close_message = self.bot.config["thread_auto_close_response"].format(
+            timeout=human_time
+        )
 
         time_marker_regex = "%t"
         if len(re.findall(time_marker_regex, close_message)) == 1:
@@ -400,11 +406,14 @@ class Thread:
         elif len(re.findall(time_marker_regex, close_message)) > 1:
             logger.warning(
                 "The thread_auto_close_response should only contain one '%s' to specify time.",
-                time_marker_regex
+                time_marker_regex,
             )
 
         await self.close(
-            closer=self.bot.user, after=int(seconds), message=close_message, auto_close=True
+            closer=self.bot.user,
+            after=int(seconds),
+            message=close_message,
+            auto_close=True,
         )
 
     async def edit_message(self, message_id: int, message: str) -> None:
@@ -557,13 +566,13 @@ class Thread:
                 and not isinstance(destination, discord.TextChannel)
             ):
                 # Anonymously sending to the user.
-                tag = self.bot.config['mod_tag']
+                tag = self.bot.config["mod_tag"]
                 if tag is None:
                     tag = str(message.author.top_role)
-                name = self.bot.config['anon_username']
+                name = self.bot.config["anon_username"]
                 if name is None:
                     name = tag
-                avatar_url = self.bot.config['anon_avatar_url']
+                avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
                     avatar_url = self.bot.guild.icon_url
             else:
@@ -648,7 +657,7 @@ class Thread:
                 embed.set_footer(text="Anonymous Reply")
             # Normal messages
             elif not anonymous:
-                mod_tag = self.bot.config['mod_tag']
+                mod_tag = self.bot.config["mod_tag"]
                 if mod_tag is None:
                     mod_tag = str(message.author.top_role)
                 embed.set_footer(text=mod_tag)  # Normal messages

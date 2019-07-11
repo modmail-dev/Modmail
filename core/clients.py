@@ -143,7 +143,9 @@ class ApiClient(RequestClient):
 
     async def update_config(self, data: dict):
         toset = self.bot.config.filter_valid(data)
-        unset = self.bot.config.filter_valid({k: 1 for k in self.bot.config.all_keys if k not in data})
+        unset = self.bot.config.filter_valid(
+            {k: 1 for k in self.bot.config.all_keys if k not in data}
+        )
 
         if toset and unset:
             return await self.db.config.update_one(

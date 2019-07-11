@@ -32,8 +32,11 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
         )
 
         if not has_perm and ctx.command.qualified_name != "help":
-            logger.error("You does not have permission to use this command: `%s` (%s).",
-                         str(ctx.command.qualified_name), str(permission_level.name))
+            logger.error(
+                "You does not have permission to use this command: `%s` (%s).",
+                str(ctx.command.qualified_name),
+                str(permission_level.name),
+            )
         return has_perm
 
     predicate.permission_level = permission_level
@@ -53,7 +56,7 @@ async def check_permissions(ctx, command_name, permission_level) -> bool:
         # Administrators have permission to all non-owner commands
         return True
 
-    command_permissions = ctx.bot.config['command_permissions']
+    command_permissions = ctx.bot.config["command_permissions"]
     author_roles = ctx.author.roles
 
     if command_name in command_permissions:
@@ -66,7 +69,7 @@ async def check_permissions(ctx, command_name, permission_level) -> bool:
         has_perm_id = ctx.author.id in command_permissions[command_name]
         return has_perm_role or has_perm_id
 
-    level_permissions = ctx.bot.config['level_permissions']
+    level_permissions = ctx.bot.config["level_permissions"]
 
     for level in PermissionLevel:
         if level >= permission_level and level.name in level_permissions:
