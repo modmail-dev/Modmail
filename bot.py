@@ -1006,8 +1006,10 @@ class ModmailBot(commands.Bot):
 
 if __name__ == "__main__":
     if os.name != "nt":
-        import uvloop
-
-        uvloop.install()
+        try:
+            import uvloop
+            uvloop.install()
+        except ImportError:
+            pass
     bot = ModmailBot()
     bot.run()
