@@ -336,7 +336,7 @@ class Plugins(commands.Cog):
                 err = exc.stderr.decode("utf8").strip()
 
                 embed = discord.Embed(
-                    description=f"An error occured while updating: {err}.",
+                    description=f"An error occurred while updating: {err}.",
                     color=self.bot.main_color,
                 )
                 await ctx.send(embed=embed)
@@ -391,11 +391,6 @@ class Plugins(commands.Cog):
 
         registry = list(self.registry.items())
         random.shuffle(registry)
-
-        def find_index(find_name):
-            for i, (n, _) in enumerate(registry):
-                if find_name == n:
-                    return i
 
         index = next((i for i, (n, _) in enumerate(registry) if plugin_name == n), None)
 

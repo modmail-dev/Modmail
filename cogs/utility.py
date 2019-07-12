@@ -8,10 +8,10 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO, BytesIO
-from typing import Union
-from types import SimpleNamespace as param
 from json import JSONDecodeError, loads
 from textwrap import indent
+from types import SimpleNamespace as param
+from typing import Union
 
 from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
@@ -206,9 +206,12 @@ class Utility(commands.Cog):
             verify_checks=False, command_attrs={"help": "Shows this help message."}
         )
         # Looks a bit ugly
-        self.bot.help_command._command_impl = checks.has_permissions(
+        # noinspection PyProtectedMember
+        self.bot.help_command._command_impl = checks.has_permissions(  # pylint: disable=W0212
             PermissionLevel.REGULAR
-        )(self.bot.help_command._command_impl)
+        )(
+            self.bot.help_command._command_impl  # pylint: disable=W0212
+        )
 
         self.bot.help_command.cog = self
 
@@ -1299,7 +1302,7 @@ class Utility(commands.Cog):
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
-        """Commands relating to Logviewer oauth2 login authentication.
+        """Commands relating to logviewer oauth2 login authentication.
 
         This functionality on your logviewer site is a [**Patron**](https://patreon.com/kyber) only feature.
         """
@@ -1407,7 +1410,7 @@ class Utility(commands.Cog):
 
         try:
             exec(to_compile, env)  # pylint: disable=exec-used
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             await ctx.send(f"```py\n{exc.__class__.__name__}: {exc}\n```")
             return await ctx.message.add_reaction("\u2049")
 
@@ -1415,7 +1418,7 @@ class Utility(commands.Cog):
         try:
             with redirect_stdout(stdout):
                 ret = await func()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             value = stdout.getvalue()
             await ctx.send(f"```py\n{value}{traceback.format_exc()}\n```")
             return await ctx.message.add_reaction("\u2049")
@@ -1426,7 +1429,7 @@ class Utility(commands.Cog):
                 if value:
                     try:
                         await ctx.send(f"```py\n{value}\n```")
-                    except Exception:  # pylint: disable=broad-except
+                    except Exception:
                         paginated_text = paginate(value)
                         for page in paginated_text:
                             if page == paginated_text[-1]:
@@ -1436,7 +1439,7 @@ class Utility(commands.Cog):
             else:
                 try:
                     await ctx.send(f"```py\n{value}{ret}\n```")
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     paginated_text = paginate(f"{value}{ret}")
                     for page in paginated_text:
                         if page == paginated_text[-1]:

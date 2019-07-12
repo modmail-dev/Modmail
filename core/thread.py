@@ -330,7 +330,9 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
+    async def cancel_closure(
+        self, auto_close: bool = False, all: bool = False  # pylint: disable=W0622
+    ) -> None:
         if self.close_task is not None and (not auto_close or all):
             self.close_task.cancel()
             self.close_task = None
@@ -590,21 +592,23 @@ class Thread:
 
         delete_message = not bool(message.attachments)
 
-        attachments = [(a.url, a.filename) for a in message.attachments]
+        ext = [(a.url, a.filename) for a in message.attachments]
 
-        images = [x for x in attachments if is_image_url(*x)]
-        attachments = [x for x in attachments if not is_image_url(*x)]
+        images = []
+        attachments = []
+        for attachment in ext:
+            if is_image_url(attachment[0]):
+                images.append(attachment)
+            else:
+                attachments.append(attachment)
 
-        image_links = [
-            (link, None)
-            for link in re.findall(
-                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                message.content,
-            )
-        ]
+        image_urls = re.findall(
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            message.content,
+        )
 
-        image_links = [x for x in image_links if is_image_url(*x)]
-        images.extend(image_links)
+        image_urls = [(url, None) for url in image_urls if is_image_url(url)]
+        images.extend(image_urls)
 
         embedded_image = False
 
@@ -613,15 +617,15 @@ class Thread:
         additional_images = []
         additional_count = 1
 
-        for att in images:
+        for url, filename in images:
             if not prioritize_uploads or (
-                is_image_url(*att) and not embedded_image and att[1]
+                is_image_url(url) and not embedded_image and filename
             ):
-                embed.set_image(url=att[0])
-                if att[1]:
-                    embed.add_field(name="Image", value=f"[{att[1]}]({att[0]})")
+                embed.set_image(url=url)
+                if filename:
+                    embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
-            elif att[1] is not None:
+            elif filename is not None:
                 if note:
                     color = discord.Color.blurple()
                 elif from_mod:
@@ -630,9 +634,9 @@ class Thread:
                     color = self.bot.recipient_color
 
                 img_embed = discord.Embed(color=color)
-                img_embed.set_image(url=att[0])
-                img_embed.title = att[1]
-                img_embed.url = att[0]
+                img_embed.set_image(url=url)
+                img_embed.title = filename
+                img_embed.url = url
                 img_embed.set_footer(
                     text=f"Additional Image Upload ({additional_count})"
                 )
@@ -642,9 +646,9 @@ class Thread:
 
         file_upload_count = 1
 
-        for att in attachments:
+        for url, filename in attachments:
             embed.add_field(
-                name=f"File upload ({file_upload_count})", value=f"[{att[1]}]({att[0]})"
+                name=f"File upload ({file_upload_count})", value=f"[{filename}]({url})"
             )
             file_upload_count += 1
 
@@ -677,7 +681,7 @@ class Thread:
         else:
             mentions = None
 
-        _msg = await destination.send(mentions, embed=embed)
+        msg = await destination.send(mentions, embed=embed)
 
         if additional_images:
             self.ready = False
@@ -687,7 +691,7 @@ class Thread:
         if delete_message:
             self.bot.loop.create_task(ignore(message.delete()))
 
-        return _msg
+        return msg
 
     def get_notifications(self) -> str:
         key = str(self.id)

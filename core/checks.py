@@ -43,7 +43,9 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
     return commands.check(predicate)
 
 
-async def check_permissions(ctx, command_name, permission_level) -> bool:
+async def check_permissions(  # pylint: disable=R0911
+    ctx, command_name, permission_level
+) -> bool:
     """Logic for checking permissions for a command for a user"""
     if await ctx.bot.is_owner(ctx.author):
         # Direct bot owner (creator) has absolute power over the bot
@@ -79,8 +81,7 @@ async def check_permissions(ctx, command_name, permission_level) -> bool:
                 role.id in level_permissions[level.name] for role in author_roles
             )
             has_perm_id = ctx.author.id in level_permissions[level.name]
-            if has_perm_role or has_perm_id:
-                return True
+            return has_perm_role or has_perm_id
 
     return False
 

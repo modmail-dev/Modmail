@@ -224,6 +224,7 @@ class ModmailBot(commands.Bot):
             self.prefix,
             self.prefix,
         )
+        return None
 
     @property
     def is_connected(self) -> bool:
@@ -257,6 +258,7 @@ class ModmailBot(commands.Bot):
                 return int(str(guild_id))
             except ValueError:
                 raise ValueError("Invalid guild_id set.")
+        return None
 
     @property
     def guild(self) -> typing.Optional[discord.Guild]:
@@ -302,6 +304,7 @@ class ModmailBot(commands.Bot):
                 self.config["main_category_id"] = cat.id
                 logger.debug("No main category set, however, one was found. Setting...")
                 return cat
+        return None
 
     @property
     def blocked_users(self) -> typing.Dict[str, str]:
@@ -365,12 +368,12 @@ class ModmailBot(commands.Bot):
         # Backwards compatibility
         old_index = "messages.content_text_messages.author.name_text"
         if old_index in index_info:
-            logger.info(f"Dropping old index: {old_index}")
+            logger.info("Dropping old index: %s", old_index)
             await coll.drop_index(old_index)
 
         if index_name not in index_info:
             logger.info('Creating "text" index for logs collection.')
-            logger.info("Name: " + index_name)
+            logger.info("Name: %s", index_name)
             await coll.create_index(
                 [
                     ("messages.content", "text"),
@@ -638,7 +641,7 @@ class ModmailBot(commands.Bot):
         # Check if there is any aliases being called.
         alias = self.aliases.get(invoker)
         if alias is not None:
-            ctx._alias_invoked = True
+            ctx._alias_invoked = True  # pylint: disable=W0212
             len_ = len(f"{invoked_prefix}{invoker}")
             view = StringView(f"{alias}{ctx.message.content[len_:]}")
             ctx.view = view

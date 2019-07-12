@@ -1,6 +1,6 @@
 import re
 import typing
-from distutils.util import strtobool as _stb
+from distutils.util import strtobool as _stb  # pylint: disable=E0401
 from urllib import parse
 
 from discord import Object
@@ -37,7 +37,7 @@ class User(commands.IDConverter):
         return Object(int(match.group(1)))
 
 
-def truncate(text: str, max: int = 50) -> str:
+def truncate(text: str, max: int = 50) -> str:  # pylint: disable=W0622
     """
     Reduces the string to `max` length, by trimming the message into "...".
 
@@ -85,7 +85,7 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
     return out or "No Messages"
 
 
-def is_image_url(url: str, _=None) -> bool:
+def is_image_url(url: str) -> bool:
     """
     Check if the URL is pointing to an image.
 
