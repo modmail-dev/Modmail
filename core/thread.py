@@ -6,8 +6,9 @@ import typing
 from datetime import datetime, timedelta
 from types import SimpleNamespace as param
 
-import discord
 import isodate
+
+import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.time import human_timedelta
@@ -98,14 +99,14 @@ class Thread:
                 name=self.manager.format_channel_name(recipient),
                 category=category,
                 overwrites=overwrites,
-                reason="Creating a thread channel",
+                reason="Creating a thread channel.",
             )
         except discord.HTTPException as e:  # Failed to create due to 50 channel limit.
             self.manager.cache.pop(self.id)
 
             embed = discord.Embed(color=discord.Color.red())
-            embed.title = "Error while trying to create a thread"
-            embed.description = e.message
+            embed.title = "Error while trying to create a thread."
+            embed.description = str(e)
             embed.add_field(name="Recipient", value=recipient.mention)
 
             if self.bot.log_channel is not None:
@@ -361,9 +362,7 @@ class Thread:
         :returns: None if no timeout is set.
         """
         timeout = self.bot.config["thread_auto_close"]
-        if not timeout:
-            return timeout
-        else:
+        if timeout:
             try:
                 timeout = isodate.parse_duration(timeout)
             except isodate.ISO8601Error:

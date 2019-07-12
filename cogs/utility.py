@@ -78,11 +78,11 @@ class ModmailHelpCommand(commands.HelpCommand):
     def process_help_msg(self, help_: str):
         return help_.format(prefix=self.clean_prefix) if help_ else "No help message."
 
-    async def send_bot_help(self, cogs):
+    async def send_bot_help(self, mapping):
         embeds = []
         # TODO: Implement for no cog commands
 
-        cogs = list(filter(None, cogs))
+        cogs = list(filter(None, mapping))
 
         bot = self.context.bot
 
@@ -230,7 +230,7 @@ class Utility(commands.Cog):
         try:
             paginator = PaginatorSession(ctx, *changelog.embeds)
             await paginator.run()
-        except:
+        except Exception:
             await ctx.send(changelog.CHANGELOG_URL)
 
     @commands.command(aliases=["bot", "info"])
@@ -239,7 +239,11 @@ class Utility(commands.Cog):
     async def about(self, ctx):
         """Shows information about this bot."""
         embed = Embed(color=self.bot.main_color, timestamp=datetime.utcnow())
-        embed.set_author(name="Modmail - About", icon_url=self.bot.user.avatar_url)
+        embed.set_author(
+            name="Modmail - About",
+            icon_url=self.bot.user.avatar_url,
+            url="https://discord.gg/F34cRU8",
+        )
         embed.set_thumbnail(url=self.bot.user.avatar_url)
 
         desc = "This is an open source Discord bot that serves as a means for "
@@ -264,7 +268,14 @@ class Utility(commands.Cog):
             name="GitHub", value="https://github.com/kyb3r/modmail", inline=False
         )
 
-        embed.add_field(name="Donate", value="[Patreon](https://patreon.com/kyber)")
+        embed.add_field(
+            name="Discord Server", value="https://discord.gg/F34cRU8", inline=False
+        )
+
+        embed.add_field(
+            name="Donate",
+            value="Support this bot on [`Patreon`](https://patreon.com/kyber).",
+        )
 
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
@@ -1289,7 +1300,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
         """Commands relating to Logviewer oauth2 login authentication.
-        
+
         This functionality on your logviewer site is a [**Patron**](https://patreon.com/kyber) only feature.
         """
         await ctx.send_help(ctx.command)

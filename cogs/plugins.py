@@ -397,10 +397,9 @@ class Plugins(commands.Cog):
                 if find_name == n:
                     return i
 
-        index = 0
-        if plugin_name in self.registry:
-            index = find_index(plugin_name)
-        elif plugin_name is not None:
+        index = next((i for i, (n, _) in enumerate(registry) if plugin_name == n), None)
+
+        if index is None:
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description=f'Could not find a plugin with name "{plugin_name}" within the registry.',

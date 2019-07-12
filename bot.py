@@ -122,10 +122,10 @@ class ModmailBot(commands.Bot):
         if log_level is not None:
             logger.setLevel(log_level)
             ch.setLevel(log_level)
-            logger.info("Logging level: " + level_text)
+            logger.info("Logging level: %s", level_text)
         else:
-            logger.info("Invalid logging level set. ")
-            logger.warning("Using default logging level: INFO")
+            logger.info("Invalid logging level set.")
+            logger.warning("Using default logging level: INFO.")
 
     @property
     def version(self) -> str:
@@ -152,7 +152,7 @@ class ModmailBot(commands.Bot):
         logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
         logger.info("││││ │ │││││├─┤││")
         logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
-        logger.info(f"v{__version__}")
+        logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
 
@@ -160,11 +160,11 @@ class ModmailBot(commands.Bot):
             if not file.endswith(".py"):
                 continue
             cog = f"cogs.{file[:-3]}"
-            logger.info(f"Loading {cog}")
+            logger.info("Loading %s.", cog)
             try:
                 self.load_extension(cog)
             except Exception:
-                logger.exception(f"Failed to load {cog}")
+                logger.exception("Failed to load %s.", cog)
 
     def run(self, *args, **kwargs):
         try:
@@ -388,9 +388,9 @@ class ModmailBot(commands.Bot):
         logger.line()
         logger.info("Client ready.")
         logger.line()
-        logger.info("Logged in as: %s", str(self.user))
-        logger.info("User ID: %s", str(self.user.id))
-        logger.info("Prefix: %s", str(self.prefix))
+        logger.info("Logged in as: %s", self.user)
+        logger.info("User ID: %s", self.user.id)
+        logger.info("Prefix: %s", self.prefix)
         logger.info("Guild Name: %s", self.guild.name if self.guild else "Invalid")
         logger.info("Guild ID: %s", self.guild.id if self.guild else "Invalid")
         logger.line()
@@ -668,7 +668,7 @@ class ModmailBot(commands.Bot):
             else:
                 if value in permissions[name]:
                     permissions[name].remove(value)
-        logger.info(f"Updating permissions for {name}, {value} (add={add}).")
+        logger.info("Updating permissions for %s, %s (add=%s).", name, value, add)
         await self.config.update()
 
     async def on_message(self, message):
@@ -895,7 +895,7 @@ class ModmailBot(commands.Bot):
                         break
 
     async def on_error(self, event_method, *args, **kwargs):
-        logger.error("Ignoring exception in %s", str(event_method))
+        logger.error("Ignoring exception in %s.", event_method)
         logger.error("Unexpected exception:", exc_info=sys.exc_info())
 
     async def on_command_error(self, context, exception):
@@ -916,7 +916,7 @@ class ModmailBot(commands.Bot):
                 )
             )
         elif isinstance(exception, commands.CommandNotFound):
-            logger.warning("CommandNotFound: %s", str(exception))
+            logger.warning("CommandNotFound: %s", exception)
         elif isinstance(exception, commands.MissingRequiredArgument):
             await context.send_help(context.command)
         elif isinstance(exception, commands.CheckFailure):
@@ -927,7 +927,7 @@ class ModmailBot(commands.Bot):
                             color=discord.Color.red(), description=check.fail_msg
                         )
                     )
-            logger.warning("CheckFailure: %s", str(exception))
+            logger.warning("CheckFailure: %s", exception)
         else:
             logger.error("Unexpected exception:", exc_info=exception)
 

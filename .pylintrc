@@ -82,7 +82,8 @@ disable=raw-checker-failed,
         too-many-lines,
         line-too-long,
         bad-continuation,
-        invalid-name
+        invalid-name,
+        logging-too-many-args
 
 
 # Enable the message, report, category or checker with the given id(s). You can
