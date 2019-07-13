@@ -48,7 +48,7 @@ All threads are logged and you can view previous threads through the correspondi
   * Snippets and *command aliases*.
   * Minimum duration for accounts to be created before allowed to contact Modmail (`account_age`).
   * Minimum duration for member to be in the guild allowed to contact Modmail (`guild_age`). 
-* **Thread logs:**
+* **Advanced Logging Functionality:**
   * When you close a thread, a [log link](https://logs.modmail.tk/example) is generated and posted to your log channel.
   * Native Discord dark-mode feel.
   * Markdown/formatting support.
@@ -107,6 +107,20 @@ Finally, run the bot.
 ```console
 $ pipenv run bot
 ```
+
+## Sponsors
+
+Special thanks to our sponsors for supporting the project.
+
+- [flyAurora](https://flyaurora.xyz/):
+
+<a href='https://flyaurora.xyz/'> 
+  <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
+</a>
+<br>
+<br>
+
+Become a [sponsor](https://patreon.com/kyber).
 
 ## Plugins
 

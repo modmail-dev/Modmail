@@ -24,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `thread_auto_close_response` has a configurable variable `{timeout}`.
 - `?snippet` is now the default command name instead of `?snippets` (`?snippets` is still usable). This is to make this consistent with `?alias`/`?aliases`.
-- Colorama is no longer a necessity, this is due to some unsupported OS.
+- `colorama` is no longer a necessity, this is due to some unsupported OS.
+- Changelog command can now take a version argument to jump straight to specified version.
 
 ### Fixes
 
