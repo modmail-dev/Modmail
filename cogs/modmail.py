@@ -917,7 +917,7 @@ class Modmail(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(usage="[user] [duration] [close message]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
     async def block(
@@ -931,7 +931,7 @@ class Modmail(commands.Cog):
         Leave `user` blank when this command is used within a
         thread channel to block the current recipient.
         `user` may be a user ID, mention, or name.
-        `after` may be a simple "human-readable" time text. See `{prefix}help close` for examples.
+        `duration` may be a simple "human-readable" time text. See `{prefix}help close` for examples.
         """
 
         reason = ""

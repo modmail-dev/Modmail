@@ -42,6 +42,7 @@ class ConfigManager:
         "blocked_emoji": "🚫",
         "close_emoji": "🔒",
         "recipient_thread_close": False,
+        "thread_auto_close_silently": False,
         "thread_auto_close": 0,
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
         "thread_creation_response": "The staff team will get back to you as soon as possible.",
@@ -106,6 +107,7 @@ class ConfigManager:
         "mod_typing",
         "reply_without_command",
         "recipient_thread_close",
+        "thread_auto_close_silently"
     }
 
     defaults = {**public_keys, **private_keys, **protected_keys}

@@ -232,7 +232,11 @@ class Thread:
     async def _close(
         self, closer, silent=False, delete_channel=True, message=None, scheduled=False
     ):
-        self.manager.cache.pop(self.id)
+        try:
+            self.manager.cache.pop(self.id)
+        except KeyError:
+            logger.warning('Thread already closed.', exc_info=True)
+            return
 
         await self.cancel_closure(all=True)
 
@@ -395,6 +399,21 @@ class Thread:
         # seconds = 20  # Uncomment to debug with just 20 seconds
         reset_time = datetime.utcnow() + timedelta(seconds=seconds)
         human_time = human_timedelta(dt=reset_time)
+
+        try:
+            thread_auto_close_silently = strtobool(
+                self.bot.config["thread_auto_close_silently"]
+            )
+        except ValueError:
+            thread_auto_close_silently = self.bot.config.remove("thread_auto_close_silently")
+
+        if thread_auto_close_silently:
+            return await self.close(
+                closer=self.bot.user,
+                silent=True,
+                after=int(seconds),
+                auto_close=True,
+            )
 
         # Grab message
         close_message = self.bot.config["thread_auto_close_response"].format(
@@ -674,7 +693,11 @@ class Thread:
             # noinspection PyUnresolvedReferences,PyDunderSlots
             embed.color = self.bot.recipient_color  # pylint: disable=E0237
 
-        await destination.trigger_typing()
+        try:
+            await destination.trigger_typing()
+        except discord.NotFound:
+            logger.warning('Channel not found.', exc_info=True)
+            return
 
         if not from_mod and not note:
             mentions = self.get_notifications()
