@@ -17,11 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `?sfw`, mark a thread as "safe for work", undos `?nsfw`.
 - New config variable, `thread_auto_close_silently`, when set to a truthy value, no message will be sent when thread is auto-closed.
 - New configuration variable `thread_self_closable_creation_footer` — the footer when `recipient_thread_close` is enabled.
+- Added a minimalistic version of requirements.txt (named requirements.min.txt) that contains only the absolute minimum of Modmail.
+  - For users having trouble with pipenv or any other reason.
 
 ### Changes
 
 - `thread_auto_close_response` has a configurable variable `{timeout}`.
 - `?snippet` is now the default command name instead of `?snippets` (`?snippets` is still usable). This is to make this consistent with `?alias`/`?aliases`.
+- Colorama is no longer a necessity, this is due to some unsupported OS.
 
 ### Fixes
 
