@@ -4,7 +4,10 @@ from enum import IntEnum
 from discord import Color, Embed
 from discord.ext import commands
 
-from colorama import Fore, Style, init
+try:
+    from colorama import Fore, Style
+except ImportError:
+    Fore = Style = type('Dummy', (object,), {'__getattr__': lambda self, item: ''})()
 
 
 class PermissionLevel(IntEnum):
@@ -30,10 +33,6 @@ class InvalidConfigError(commands.BadArgument):
 
 
 class ModmailLogger(logging.Logger):
-    def __init__(self, *args, **kwargs):
-        init()
-        super().__init__(*args, **kwargs)
-
     @staticmethod
     def _debug_(*msgs):
         return f'{Fore.CYAN}{" ".join(msgs)}{Style.RESET_ALL}'

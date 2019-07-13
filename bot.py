@@ -20,6 +20,12 @@ from aiohttp import ClientSession
 from emoji import UNICODE_EMOJI
 from motor.motor_asyncio import AsyncIOMotorClient
 
+try:
+    from colorama import init
+    init()
+except ImportError:
+    pass
+
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import human_join, strtobool

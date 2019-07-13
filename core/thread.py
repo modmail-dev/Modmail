@@ -808,6 +808,7 @@ class ThreadManager:
             thread.ready = True
 
             return thread
+        return None
 
     def create(
         self,
