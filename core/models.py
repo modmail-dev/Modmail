@@ -7,7 +7,7 @@ from discord.ext import commands
 try:
     from colorama import Fore, Style
 except ImportError:
-    Fore = Style = type('Dummy', (object,), {'__getattr__': lambda self, item: ''})()
+    Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
 
 
 class PermissionLevel(IntEnum):

@@ -235,7 +235,7 @@ class Thread:
         try:
             self.manager.cache.pop(self.id)
         except KeyError:
-            logger.warning('Thread already closed.', exc_info=True)
+            logger.warning("Thread already closed.", exc_info=True)
             return
 
         await self.cancel_closure(all=True)
@@ -405,14 +405,13 @@ class Thread:
                 self.bot.config["thread_auto_close_silently"]
             )
         except ValueError:
-            thread_auto_close_silently = self.bot.config.remove("thread_auto_close_silently")
+            thread_auto_close_silently = self.bot.config.remove(
+                "thread_auto_close_silently"
+            )
 
         if thread_auto_close_silently:
             return await self.close(
-                closer=self.bot.user,
-                silent=True,
-                after=int(seconds),
-                auto_close=True,
+                closer=self.bot.user, silent=True, after=int(seconds), auto_close=True
             )
 
         # Grab message
@@ -696,7 +695,7 @@ class Thread:
         try:
             await destination.trigger_typing()
         except discord.NotFound:
-            logger.warning('Channel not found.', exc_info=True)
+            logger.warning("Channel not found.", exc_info=True)
             return
 
         if not from_mod and not note:

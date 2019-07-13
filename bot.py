@@ -22,6 +22,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 try:
     from colorama import init
+
     init()
 except ImportError:
     pass
@@ -1014,6 +1015,7 @@ if __name__ == "__main__":
     if os.name != "nt":
         try:
             import uvloop
+
             uvloop.install()
         except ImportError:
             pass
