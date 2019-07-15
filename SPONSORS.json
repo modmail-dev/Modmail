@@ -15,8 +15,14 @@
       "icon_url": "https://i.imgur.com/WyzaPKY.png"
     },
     "fields": [
-      {"name": "Subscribe!", 
-       "value": "[**Click Here**](https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1)"}
+      {
+        "name": "Subscribe!", 
+        "value": "[**Click Here**](https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1)"
+      },
+      {
+        "name": "Discord Server!", 
+        "value": "[**Click Here**](https://discord.gg/s8Ddphx)"
+      }
     ]
   }
 }]
