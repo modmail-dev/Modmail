@@ -1,26 +1,22 @@
 [{
   "embed": {
-    "title": "You can have a custom page for yourself here.",
-    "description": "Generate your own embed from [here](https://leovoel.github.io/embed-visualizer/) and make a pull request editing the `SPONSORS.json` file on [GitHub](https://github.com/kyb3r/modmail/blob/master/SPONSORS.json).",
-    "url": "https://patreon.com/kyber",
-    "color": 6071775,
+    "description": "This is a youtube channel that provides high quality reddit content. Videos are uploaded regularly so you are never out of funny, interesting or even creepy content!",
+    "color": 15114050,
     "footer": {
-      "icon_url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712",
-      "text": "footer text"
+      "icon_url": "https://i.imgur.com/fvNKUks.png",
+      "text": "I am a robot, son of Daniel (UK)"
     },
     "thumbnail": {
-      "url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712"
+      "url": "https://i.imgur.com/WyzaPKY.png"
     },
     "author": {
-      "name": "Nothing here yet!",
-      "url": "https://patreon.com/kyber",
-      "icon_url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712"
+      "name": "Sir Reddit",
+      "url": "https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1",
+      "icon_url": "https://i.imgur.com/WyzaPKY.png"
     },
     "fields": [
-      {
-        "name": "🤔",
-        "value": "This command lists the sponsors of this project on [**Patreon**](https://patreon.com/kyber)"
-      }
+      {"name": "Subscribe!", 
+       "value": "[**Click Here**](https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1)"}
     ]
   }
 }]
