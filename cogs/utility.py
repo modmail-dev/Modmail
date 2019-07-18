@@ -546,7 +546,7 @@ class Utility(commands.Cog):
             if status_by_key:
                 status = Status[status_identifier]
             else:
-                status = Status(status_identifier)
+                status = Status.try_value(status_identifier)
         except (KeyError, ValueError):
             if status_identifier is not None:
                 msg = f"Invalid status type: {status_identifier}"
@@ -564,7 +564,7 @@ class Utility(commands.Cog):
             if activity_by_key:
                 activity_type = ActivityType[activity_identifier]
             else:
-                activity_type = ActivityType(activity_identifier)
+                activity_type = ActivityType.try_value(activity_identifier)
         except (KeyError, ValueError):
             if activity_identifier is not None:
                 msg = f"Invalid activity type: {activity_identifier}"

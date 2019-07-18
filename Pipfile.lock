@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4c7d21c64125daa0eea6dfb5499eef9d589d2164d6955689e845c83e37d115ae"
+            "sha256": "46092f8b1032f2ac529f9b0df1aa725a4c6135d04826cd4cc4844af01879a4c2"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -82,10 +82,10 @@
         },
         "discord.py": {
             "hashes": [
-                "sha256:d0ab22f1fee1fcc02ac50a67ff49a5d1f6d7bc7eba77e34e35bd160b3ad3d7e8"
+                "sha256:4684733fa137cc7def18087ae935af615212e423e3dbbe3e84ef01d7ae8ed17d"
             ],
             "index": "pypi",
-            "version": "==1.1.1"
+            "version": "==1.2.3"
         },
         "dnspython": {
             "hashes": [
@@ -265,10 +265,10 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:b7335cddd9260a3dd214b73a2521ffc09647bde3e9457fcca31dc3be3999d04a",
-                "sha256:d28ca64c0f3f125f59cabf13e0a150e1c68e5eea60983cc4395d88c584495783"
+                "sha256:861bbce3a418110346c70f5c7a696fdcf23a261424e1d28aa4f9362fc2ccbc19",
+                "sha256:ba8ce6a961d842320681fb90a3d564d0e5134f41dacd0e2bae7f02441dde2d52"
             ],
-            "version": "==16.6.1"
+            "version": "==16.6.2"
         },
         "virtualenv-clone": {
             "hashes": [

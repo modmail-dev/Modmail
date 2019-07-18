@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `config.cache` is no longer accessible, use `config['key']` for getting, `config['key'] = value` for setting, `config.remove('key')` for removing.
 - Dynamic attribute for configs are removed, must use `config['key']` or `config.get('key')`.
 - Removed helper functions `info()` and `error()` for formatting logging, it's formatted automatically now.
+- Bumped discord.py version to 1.2.3.
 
 # v3.0.3
 
