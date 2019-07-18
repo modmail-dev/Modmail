@@ -107,15 +107,6 @@
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
-    "moderation": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Rule offenders in your server? Lift the ban hammer or warn them! Moderation plugin to the rescue :tada:",
-        "bot_version": "2.20.1",
-        "title": "Moderation Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
     "translator": {
         "repository": "officialpiyush/modmail-plugins",
         "branch": "master",
