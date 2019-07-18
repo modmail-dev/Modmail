@@ -95,9 +95,15 @@ You can also set up autoupdates. To do this, [install the Pull app in your fork]
 
 Sepcial thanks to our sponsors for supporting the project.
 
+<a href='https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ/featured'> 
+  <img height=150 src='https://i.imgur.com/WyzaPKY.png' style='margin:10'> 
+</a>
+
 <a href='https://flyaurora.xyz/'> 
   <img height=150 src='https://pbs.twimg.com/profile_images/1142307497115443200/whbHhb9B_400x400.jpg'> 
 </a>
+
+
 
 Become a [sponsor](https://patreon.com/kyber).
 
