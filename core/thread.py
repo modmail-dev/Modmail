@@ -127,7 +127,6 @@ class Thread:
             log_url = log_count = None
             # ensure core functionality still works
 
-        topic = f"User ID: {recipient.id}"
         if creator:
             mention = None
         else:
@@ -147,7 +146,7 @@ class Thread:
                 self.ready = True
                 self.bot.dispatch("thread_ready", self)
 
-        await channel.edit(topic=topic)
+        await channel.edit(topic=f"User ID: {recipient.id}")
         self.bot.loop.create_task(send_genesis_message())
 
         # Once thread is ready, tell the recipient.
@@ -735,7 +734,13 @@ class ThreadManager:
     ) -> Thread:
         """Finds a thread from cache or from discord channel topics."""
         if recipient is None and channel is not None:
-            return self._find_from_channel(channel)
+            thread = self._find_from_channel(channel)
+            if thread is None:
+                id, thread = next(((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None))
+                if thread is not None:
+                    logger.debug('Found thread with tempered ID.')
+                    await channel.edit(topic=f"User ID: {id}")
+            return thread
 
         thread = None
 
