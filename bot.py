@@ -11,7 +11,7 @@ from datetime import datetime
 from types import SimpleNamespace
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
 
 import isodate
@@ -70,6 +70,7 @@ class ModmailBot(commands.Bot):
 
         self.config = ConfigManager(self)
         self.config.populate_cache()
+
         self.threads = ThreadManager(self)
 
         self._configure_logging()
@@ -81,7 +82,8 @@ class ModmailBot(commands.Bot):
         self.db = AsyncIOMotorClient(mongo_uri).modmail_bot
         self.plugin_db = PluginDatabaseClient(self)
 
-        self.metadata_task = self.loop.create_task(self.metadata_loop())
+        self.metadata_loop = None
+
         self._load_extensions()
 
     @property
@@ -183,12 +185,6 @@ class ModmailBot(commands.Bot):
         except Exception:
             logger.critical("Fatal exception", exc_info=True)
         finally:
-            try:
-                self.metadata_task.cancel()
-                self.loop.run_until_complete(self.metadata_task)
-            except asyncio.CancelledError:
-                logger.debug("metadata_task has been cancelled.")
-
             self.loop.run_until_complete(self.logout())
             for task in asyncio.all_tasks(self.loop):
                 task.cancel()
@@ -436,6 +432,19 @@ class ModmailBot(commands.Bot):
             )
 
         logger.line()
+
+        self.metadata_loop = tasks.Loop(
+            self.post_metadata,
+            seconds=0,
+            minutes=0,
+            hours=1,
+            count=None,
+            reconnect=True,
+            loop=None,
+        )
+        self.metadata_loop.before_loop(self.before_post_metadata)
+        self.metadata_loop.after_loop(self.after_post_metadata)
+        self.metadata_loop.start()
 
     async def convert_emoji(self, name: str) -> str:
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
@@ -958,7 +967,7 @@ class ModmailBot(commands.Bot):
         try:
             await self.db.command("buildinfo")
         except Exception as exc:
-            logger.critical("Something went wrong " "while connecting to the database.")
+            logger.critical("Something went wrong while connecting to the database.")
             message = f"{type(exc).__name__}: {str(exc)}"
             logger.critical(message)
 
@@ -981,43 +990,44 @@ class ModmailBot(commands.Bot):
         else:
             logger.info("Successfully connected to the database.")
 
-    async def metadata_loop(self):
+    async def post_metadata(self):
+        owner = (await self.application_info()).owner
+        data = {
+            "owner_name": str(owner),
+            "owner_id": owner.id,
+            "bot_id": self.user.id,
+            "bot_name": str(self.user),
+            "avatar_url": str(self.user.avatar_url),
+            "guild_id": self.guild_id,
+            "guild_name": self.guild.name,
+            "member_count": len(self.guild.members),
+            "uptime": (datetime.utcnow() - self.start_time).total_seconds(),
+            "latency": f"{self.ws.latency * 1000:.4f}",
+            "version": self.version,
+            "selfhosted": True,
+            "last_updated": str(datetime.utcnow()),
+        }
+
+        async with self.session.post("https://api.modmail.tk/metadata", json=data):
+            logger.debug("Uploading metadata to Modmail server.")
+
+    async def before_post_metadata(self):
+        logger.info("Starting metadata loop.")
         await self.wait_for_connected()
         if not self.guild:
-            return
+            self.metadata_loop.cancel()
 
-        owner = (await self.application_info()).owner
-
-        while not self.is_closed():
-            data = {
-                "owner_name": str(owner),
-                "owner_id": owner.id,
-                "bot_id": self.user.id,
-                "bot_name": str(self.user),
-                "avatar_url": str(self.user.avatar_url),
-                "guild_id": self.guild_id,
-                "guild_name": self.guild.name,
-                "member_count": len(self.guild.members),
-                "uptime": (datetime.utcnow() - self.start_time).total_seconds(),
-                "latency": f"{self.ws.latency * 1000:.4f}",
-                "version": self.version,
-                "selfhosted": True,
-                "last_updated": str(datetime.utcnow()),
-            }
-
-            async with self.session.post("https://api.modmail.tk/metadata", json=data):
-                logger.debug("Uploading metadata to Modmail server.")
-
-            await asyncio.sleep(3600)
+    async def after_post_metadata(self):
+        logger.info("Metadata loop has been cancelled.")
 
 
 if __name__ == "__main__":
-    if os.name != "nt":
-        try:
-            import uvloop
+    try:
+        import uvloop
 
-            uvloop.install()
-        except ImportError:
-            pass
+        uvloop.install()
+    except ImportError:
+        pass
+
     bot = ModmailBot()
     bot.run()

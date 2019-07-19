@@ -227,7 +227,7 @@ class Utility(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
-    async def changelog(self, ctx, version: str.lower = ''):
+    async def changelog(self, ctx, version: str.lower = ""):
         """Shows the changelog of the Modmail."""
         changelog = await Changelog.from_url(self.bot)
         version = version.lstrip("vV") if version else changelog.latest_version.version

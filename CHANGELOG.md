@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dynamic attribute for configs are removed, must use `config['key']` or `config.get('key')`.
 - Removed helper functions `info()` and `error()` for formatting logging, it's formatted automatically now.
 - Bumped discord.py version to 1.2.3.
+- Use discord tasks for metadata loop.
 
 # v3.0.3
 

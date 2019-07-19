@@ -319,7 +319,9 @@ class Thread:
             else:
                 message = self.bot.config["thread_close_response"]
 
-        message = message.format(closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None)
+        message = message.format(
+            closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
+        )
 
         embed.description = message
         footer = self.bot.config["thread_close_footer"]
@@ -764,9 +766,12 @@ class ThreadManager:
         if recipient is None and channel is not None:
             thread = self._find_from_channel(channel)
             if thread is None:
-                id, thread = next(((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None))
+                id, thread = next(
+                    ((k, v) for k, v in self.cache.items() if v.channel == channel),
+                    (-1, None),
+                )
                 if thread is not None:
-                    logger.debug('Found thread with tempered ID.')
+                    logger.debug("Found thread with tempered ID.")
                     await channel.edit(topic=f"User ID: {id}")
             return thread
 
