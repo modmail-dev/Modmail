@@ -120,12 +120,15 @@ class Changelog:
         "https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md"
     )
     CHANGELOG_URL = "https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md"
-    VERSION_REGEX = re.compile(r"# ([vV]\d+\.\d+(?:\.\d+)?)(.*?(?=# (?:[vV]\d+\.\d+(?:\.\d+)?)|$))", flags=re.DOTALL)
+    VERSION_REGEX = re.compile(
+        r"# ([vV]\d+\.\d+(?:\.\d+)?)(.*?(?=# (?:[vV]\d+\.\d+(?:\.\d+)?)|$))",
+        flags=re.DOTALL,
+    )
 
     def __init__(self, bot, text: str):
         self.bot = bot
         self.text = text
-        logger.debug('Fetching changelog from GitHub.')
+        logger.debug("Fetching changelog from GitHub.")
         self.versions = [Version(bot, *m) for m in self.VERSION_REGEX.findall(text)]
 
     @property

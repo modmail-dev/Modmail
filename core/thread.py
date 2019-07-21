@@ -103,7 +103,7 @@ class Thread:
                 reason="Creating a thread channel.",
             )
         except discord.HTTPException as e:  # Failed to create due to 50 channel limit.
-            logger.critical('An error occurred while creating a thread.', exc_info=True)
+            logger.critical("An error occurred while creating a thread.", exc_info=True)
             self.manager.cache.pop(self.id)
 
             embed = discord.Embed(color=discord.Color.red())
@@ -125,7 +125,9 @@ class Thread:
 
             log_count = sum(1 for log in log_data if not log["open"])
         except Exception:
-            logger.error('An error occurred while posting logs to the database.', exc_info=True)
+            logger.error(
+                "An error occurred while posting logs to the database.", exc_info=True
+            )
             log_url = log_count = None
             # ensure core functionality still works
 
@@ -213,7 +215,11 @@ class Thread:
             role_names = separator.join(roles)
 
         created = str((time - user.created_at).days)
-        embed = discord.Embed(color=color, description=f"{user.mention} was created {days(created)}", timestamp=time)
+        embed = discord.Embed(
+            color=color,
+            description=f"{user.mention} was created {days(created)}",
+            timestamp=time,
+        )
 
         # if not role_names:
         #     embed.add_field(name='Mention', value=user.mention)
@@ -836,13 +842,13 @@ class ThreadManager:
         if recipient is None and channel is not None:
             thread = self._find_from_channel(channel)
             if thread is None:
-                id, thread = next(
+                user_id, thread = next(
                     ((k, v) for k, v in self.cache.items() if v.channel == channel),
                     (-1, None),
                 )
                 if thread is not None:
                     logger.debug("Found thread with tempered ID.")
-                    await channel.edit(topic=f"User ID: {id}")
+                    await channel.edit(topic=f"User ID: {user_id}")
             return thread
 
         thread = None
@@ -925,6 +931,6 @@ class ThreadManager:
 
         counter = 1
         while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:
-            new_name += f'-{counter}'  # two channels with same name
+            new_name += f"-{counter}"  # two channels with same name
 
         return new_name

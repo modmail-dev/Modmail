@@ -129,10 +129,12 @@ class ConfigManager:
         data.update(
             {k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys}
         )
-        configjson = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+        configjson = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "config.json"
+        )
         if os.path.exists(configjson):
-            logger.debug('Loading envs from config.json.')
-            with open(configjson, 'r') as f:
+            logger.debug("Loading envs from config.json.")
+            with open(configjson, "r") as f:
                 # Config json should override env vars
                 try:
                     data.update(
@@ -143,7 +145,9 @@ class ConfigManager:
                         }
                     )
                 except json.JSONDecodeError:
-                    logger.critical('Failed to load config.json env values.', exc_info=True)
+                    logger.critical(
+                        "Failed to load config.json env values.", exc_info=True
+                    )
 
         self._cache = data
         return self._cache
@@ -282,7 +286,7 @@ class ConfigManager:
         for k, v in data.items():
             default = cls.defaults.get(k.lower(), Default)
             if default is Default:
-                logger.error('Unexpected configuration detected: %s.', k)
+                logger.error("Unexpected configuration detected: %s.", k)
                 continue
             if v != default:
                 filtered[k.lower()] = v

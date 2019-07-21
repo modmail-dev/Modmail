@@ -88,17 +88,17 @@ class ApiClient(RequestClient):
     async def get_user_logs(self, user_id: Union[str, int]) -> list:
         query = {"recipient.id": str(user_id), "guild_id": str(self.bot.guild_id)}
         projection = {"messages": {"$slice": 5}}
-        logger.debug('Retrieving user %s logs.', user_id)
+        logger.debug("Retrieving user %s logs.", user_id)
 
         return await self.logs.find(query, projection).to_list(None)
 
     async def get_log(self, channel_id: Union[str, int]) -> dict:
-        logger.debug('Retrieving channel %s logs.', channel_id)
+        logger.debug("Retrieving channel %s logs.", channel_id)
         return await self.logs.find_one({"channel_id": str(channel_id)})
 
     async def get_log_link(self, channel_id: Union[str, int]) -> str:
         doc = await self.get_log(channel_id)
-        logger.debug('Retrieving log link for channel %s.', channel_id)
+        logger.debug("Retrieving log link for channel %s.", channel_id)
         return f"{self.bot.config['log_url'].strip('/')}{self.bot.config['log_url_prefix']}/{doc['key']}"
 
     async def create_log_entry(
@@ -134,13 +134,13 @@ class ApiClient(RequestClient):
                 "messages": [],
             }
         )
-        logger.debug('Created a log entry, key %s.', key)
+        logger.debug("Created a log entry, key %s.", key)
         return f"{self.bot.config['log_url'].strip('/')}{self.bot.config['log_url_prefix']}/{key}"
 
     async def get_config(self) -> dict:
         conf = await self.db.config.find_one({"bot_id": self.bot.user.id})
         if conf is None:
-            logger.debug('Creating a new config entry for bot %s.', self.bot.user.id)
+            logger.debug("Creating a new config entry for bot %s.", self.bot.user.id)
             await self.db.config.insert_one({"bot_id": self.bot.user.id})
             return {"bot_id": self.bot.user.id}
         return conf

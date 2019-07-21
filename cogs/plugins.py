@@ -136,7 +136,7 @@ class Plugins(commands.Cog):
                     # so there's no terminal output unless there's an error
             except subprocess.CalledProcessError as exc:
                 err = exc.stderr.decode("utf8").strip()
-                logger.error('Error.', exc_info=True)
+                logger.error("Error.", exc_info=True)
                 if err:
                     msg = f"Requirements Download Error: {username}/{repo}@{branch}[{plugin_name}]"
                     logger.error(msg)
@@ -174,7 +174,9 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            plugin_name = (
+                details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            )
 
             required_version = details["bot_version"]
 
@@ -213,7 +215,9 @@ class Plugins(commands.Cog):
                     await self.download_plugin_repo(username, repo, branch)
                 except Exception as exc:
                     if not isinstance(exc, DownloadError):
-                        logger.error('Unknown error when adding a plugin:', exc_info=True)
+                        logger.error(
+                            "Unknown error when adding a plugin:", exc_info=True
+                        )
                     embed = discord.Embed(
                         description=f"Unable to fetch this plugin from Github: `{exc}`.",
                         color=self.bot.main_color,
@@ -226,7 +230,9 @@ class Plugins(commands.Cog):
                     await self.load_plugin(username, repo, name, branch)
                 except Exception as exc:
                     if not isinstance(exc, DownloadError):
-                        logger.error('Unknown error when adding a plugin:', exc_info=True)
+                        logger.error(
+                            "Unknown error when adding a plugin:", exc_info=True
+                        )
                     embed = discord.Embed(
                         description=f"Unable to load this plugin: `{exc}`.",
                         color=self.bot.main_color,
@@ -249,7 +255,7 @@ class Plugins(commands.Cog):
             else:
                 embed = discord.Embed(
                     description="Invalid plugin name format: use plugin-name or "
-                                "username/repo/plugin or username/repo/plugin@branch.",
+                    "username/repo/plugin or username/repo/plugin@branch.",
                     color=self.bot.main_color,
                 )
                 await ctx.send(embed=embed)
@@ -272,7 +278,7 @@ class Plugins(commands.Cog):
                     f"plugins.{username}-{repo}-{branch}.{name}.{name}"
                 )
             except commands.ExtensionNotLoaded:
-                logger.error('Plugin was never loaded.')
+                logger.error("Plugin was never loaded.")
 
             self.bot.config["plugins"].remove(plugin_name)
 
@@ -291,8 +297,8 @@ class Plugins(commands.Cog):
                     shutil.rmtree(
                         f"plugins/{username}-{repo}-{branch}", onerror=onerror
                     )
-            except Exception as exc:
-                logger.error('Failed to remove plugin %s.', plugin_name, exc_info=True)
+            except Exception:
+                logger.error("Failed to remove plugin %s.", plugin_name, exc_info=True)
                 self.bot.config["plugins"].append(plugin_name)
                 return
 
@@ -316,7 +322,9 @@ class Plugins(commands.Cog):
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            plugin_name = (
+                details["repository"] + "/" + plugin_name + "@" + details["branch"]
+            )
 
         if plugin_name not in self.bot.config["plugins"]:
             embed = discord.Embed(
@@ -328,8 +336,10 @@ class Plugins(commands.Cog):
             username, repo, name, branch = self.parse_plugin(plugin_name)
 
             try:
-                cmd = f"cd plugins/{username}-{repo}-{branch} && " \
+                cmd = (
+                    f"cd plugins/{username}-{repo}-{branch} && "
                     f"git reset --hard origin/{branch} && git fetch --all && git pull"
+                )
                 cmd = await self.bot.loop.run_in_executor(
                     None, self._asubprocess_run, cmd
                 )
@@ -340,7 +350,7 @@ class Plugins(commands.Cog):
                     description=f"An error occurred while updating: {err}.",
                     color=self.bot.main_color,
                 )
-                logger.error('An error occurred while updating plugin:', exc_info=True)
+                logger.error("An error occurred while updating plugin:", exc_info=True)
                 await ctx.send(embed=embed)
 
             else:
@@ -363,7 +373,9 @@ class Plugins(commands.Cog):
                             description=f"Unable to start the plugin: `{exc}`.",
                             color=self.bot.main_color,
                         )
-                        logger.error('An error occurred while updating plugin:', exc_info=True)
+                        logger.error(
+                            "An error occurred while updating plugin:", exc_info=True
+                        )
                         await ctx.send(embed=embed)
 
     @plugin.command(name="enabled", aliases=["installed"])
@@ -408,7 +420,9 @@ class Plugins(commands.Cog):
             if index >= len(registry):
                 index = len(registry) - 1
         else:
-            index = next((i for i, (n, _) in enumerate(registry) if plugin_name == n), 0)
+            index = next(
+                (i for i, (n, _) in enumerate(registry) if plugin_name == n), 0
+            )
 
         if not index and plugin_name is not None:
             embed = discord.Embed(

@@ -246,6 +246,8 @@ class Utility(commands.Cog):
             paginator = PaginatorSession(ctx, *changelog.embeds)
             paginator.current = index
             await paginator.run()
+        except asyncio.CancelledError:
+            pass
         except Exception:
             await ctx.send(changelog.CHANGELOG_URL)
 

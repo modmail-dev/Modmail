@@ -86,7 +86,9 @@ class ModmailBot(commands.Bot):
         try:
             self.db = AsyncIOMotorClient(mongo_uri).modmail_bot
         except ConfigurationError as e:
-            logger.critical("Your MONGO_URI is copied wrong, try re-copying from the source again.")
+            logger.critical(
+                "Your MONGO_URI is copied wrong, try re-copying from the source again."
+            )
             logger.critical(str(e))
             sys.exit(0)
 
@@ -213,7 +215,9 @@ class ModmailBot(commands.Bot):
             owner_ids = set(map(int, str(owner_ids).split(",")))
         if self.owner_id is not None:
             owner_ids.add(self.owner_id)
-        permissions = self.config["level_permissions"].get(PermissionLevel.OWNER.name, [])
+        permissions = self.config["level_permissions"].get(
+            PermissionLevel.OWNER.name, []
+        )
         for perm in permissions:
             owner_ids.add(int(perm))
         return owner_ids
@@ -230,13 +234,16 @@ class ModmailBot(commands.Bot):
             channel = self.get_channel(int(channel_id))
             if channel is not None:
                 return channel
-            logger.debug('LOG_CHANNEL_ID was invalid, removed.')
+            logger.debug("LOG_CHANNEL_ID was invalid, removed.")
             self.config.remove("log_channel_id")
         if self.main_category is not None:
             try:
                 channel = self.main_category.channels[0]
                 self.config["log_channel_id"] = channel.id
-                logger.warning("No log channel set, setting #%s to be the log channel.", channel.name)
+                logger.warning(
+                    "No log channel set, setting #%s to be the log channel.",
+                    channel.name,
+                )
                 return channel
             except IndexError:
                 pass
@@ -268,7 +275,9 @@ class ModmailBot(commands.Bot):
     def token(self) -> str:
         token = self.config["token"]
         if token is None:
-            logger.critical("TOKEN must be set, set this as bot token found on the Discord Dev Portal.")
+            logger.critical(
+                "TOKEN must be set, set this as bot token found on the Discord Dev Portal."
+            )
             sys.exit(0)
         return token
 
@@ -321,11 +330,13 @@ class ModmailBot(commands.Bot):
                 if cat is not None:
                     return cat
                 self.config.remove("main_category_id")
-                logger.debug('MAIN_CATEGORY_ID was invalid, removed.')
+                logger.debug("MAIN_CATEGORY_ID was invalid, removed.")
             cat = discord.utils.get(self.modmail_guild.categories, name="Modmail")
             if cat is not None:
                 self.config["main_category_id"] = cat.id
-                logger.debug("No main category set explicitly, setting category \"Modmail\" as the main category.")
+                logger.debug(
+                    'No main category set explicitly, setting category "Modmail" as the main category.'
+                )
                 return cat
         return None
 
@@ -404,7 +415,7 @@ class ModmailBot(commands.Bot):
                     ("key", "text"),
                 ]
             )
-        logger.debug('Successfully set up database indexes.')
+        logger.debug("Successfully set up database indexes.")
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -413,7 +424,7 @@ class ModmailBot(commands.Bot):
         await self.wait_for_connected()
 
         if self.guild is None:
-            logger.debug('Logging out due to invalid GUILD_ID.')
+            logger.debug("Logging out due to invalid GUILD_ID.")
             return await self.logout()
 
         logger.line()
@@ -444,12 +455,12 @@ class ModmailBot(commands.Bot):
 
             if not thread:
                 # If the channel is deleted
-                logger.debug('Failed to close thread for recipient %s.', recipient_id)
+                logger.debug("Failed to close thread for recipient %s.", recipient_id)
                 self.config["closures"].pop(recipient_id)
                 await self.config.update()
                 continue
 
-            logger.debug('Closing thread for recipient %s.', recipient_id)
+            logger.debug("Closing thread for recipient %s.", recipient_id)
 
             await thread.close(
                 closer=self.get_user(items["closer_id"]),
@@ -579,7 +590,7 @@ class ModmailBot(commands.Bot):
             reaction = blocked_emoji
             changed = False
             delta = human_timedelta(min_account_age)
-            logger.debug('Blocked due to account age, user %s.', message.author.name)
+            logger.debug("Blocked due to account age, user %s.", message.author.name)
 
             if str(message.author.id) not in self.blocked_users:
                 new_reason = (
@@ -603,7 +614,7 @@ class ModmailBot(commands.Bot):
             reaction = blocked_emoji
             changed = False
             delta = human_timedelta(min_guild_age)
-            logger.debug('Blocked due to guild age, user %s.', message.author.name)
+            logger.debug("Blocked due to guild age, user %s.", message.author.name)
 
             if str(message.author.id) not in self.blocked_users:
                 new_reason = (
@@ -628,13 +639,15 @@ class ModmailBot(commands.Bot):
             ):
                 # Met the age limit already, otherwise it would've been caught by the previous if's
                 reaction = sent_emoji
-                logger.debug('No longer internally blocked, user %s.', message.author.name)
+                logger.debug(
+                    "No longer internally blocked, user %s.", message.author.name
+                )
                 self.blocked_users.pop(str(message.author.id))
             else:
                 reaction = blocked_emoji
                 end_time = re.search(r"%(.+?)%$", reason)
                 if end_time is not None:
-                    logger.debug('No longer blocked, user %s.', message.author.name)
+                    logger.debug("No longer blocked, user %s.", message.author.name)
                     after = (
                         datetime.fromisoformat(end_time.group(1)) - now
                     ).total_seconds()
@@ -643,7 +656,7 @@ class ModmailBot(commands.Bot):
                         reaction = sent_emoji
                         self.blocked_users.pop(str(message.author.id))
                 else:
-                    logger.debug('User blocked, user %s.', message.author.name)
+                    logger.debug("User blocked, user %s.", message.author.name)
         else:
             reaction = sent_emoji
 
@@ -652,7 +665,7 @@ class ModmailBot(commands.Bot):
             try:
                 await message.add_reaction(reaction)
             except (discord.HTTPException, discord.InvalidArgument):
-                logger.warning('Failed to add reaction %s.', reaction, exc_info=True)
+                logger.warning("Failed to add reaction %s.", reaction, exc_info=True)
         return str(message.author.id) in self.blocked_users
 
     async def process_modmail(self, message: discord.Message) -> None:
@@ -839,9 +852,13 @@ class ModmailBot(commands.Bot):
         if isinstance(channel, discord.DMChannel):
             if str(reaction) == str(close_emoji):  # closing thread
                 try:
-                    recipient_thread_close = strtobool(self.config["recipient_thread_close"])
+                    recipient_thread_close = strtobool(
+                        self.config["recipient_thread_close"]
+                    )
                 except ValueError:
-                    recipient_thread_close = self.config.remove("recipient_thread_close")
+                    recipient_thread_close = self.config.remove(
+                        "recipient_thread_close"
+                    )
                 if not recipient_thread_close:
                     return
                 thread = await self.threads.find(recipient=user)
@@ -875,7 +892,7 @@ class ModmailBot(commands.Bot):
 
         if isinstance(channel, discord.CategoryChannel):
             if self.main_category.id == channel.id:
-                logger.debug('Main category was deleted.')
+                logger.debug("Main category was deleted.")
                 self.config.remove("main_category_id")
                 await self.config.update()
             return
@@ -884,14 +901,14 @@ class ModmailBot(commands.Bot):
             return
 
         if self.log_channel is None or self.log_channel.id == channel.id:
-            logger.info('Log channel deleted.')
+            logger.info("Log channel deleted.")
             self.config.remove("log_channel_id")
             await self.config.update()
             return
 
         thread = await self.threads.find(channel=channel)
         if thread:
-            logger.debug('Manually closed channel %s.', channel.name)
+            logger.debug("Manually closed channel %s.", channel.name)
             await thread.close(closer=mod, silent=True, delete_channel=False)
 
     async def on_member_remove(self, member):
@@ -1062,7 +1079,8 @@ class ModmailBot(commands.Bot):
 if __name__ == "__main__":
     try:
         import uvloop
-        logger.debug('Setting up with uvloop.')
+
+        logger.debug("Setting up with uvloop.")
         uvloop.install()
     except ImportError:
         pass
