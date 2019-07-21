@@ -46,7 +46,8 @@ class ModmailLogger(logging.Logger):
         return f'{Fore.RED}{" ".join(msgs)}{Style.RESET_ALL}'
 
     def debug(self, msg, *args, **kwargs):
-        return super().debug(self._debug_(msg), *args, **kwargs)
+        if self.isEnabledFor(logging.DEBUG):
+            self._log(logging.DEBUG, self._debug_(msg), args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
         if self.isEnabledFor(logging.INFO):

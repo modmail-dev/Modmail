@@ -555,7 +555,7 @@ class Utility(commands.Cog):
         if activity_identifier is None:
             if activity_message is not None:
                 raise ValueError(
-                    "activity_message must be None " "if activity_identifier is None."
+                    "activity_message must be None if activity_identifier is None."
                 )
             activity_identifier = self.bot.config["activity_type"]
             activity_by_key = False

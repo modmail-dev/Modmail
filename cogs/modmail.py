@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import datetime
 from typing import Optional, Union
 from types import SimpleNamespace as param
@@ -15,6 +16,8 @@ from core.models import PermissionLevel
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import format_preview, User
+
+logger = logging.getLogger("Modmail")
 
 
 class Modmail(commands.Cog):
@@ -35,6 +38,7 @@ class Modmail(commands.Cog):
         """
 
         if self.bot.main_category is not None:
+            logger.debug("Can't re-setup server, main_category is found.")
             return await ctx.send(f"{self.bot.modmail_guild} is already set up.")
 
         if self.bot.modmail_guild is None:
@@ -58,9 +62,8 @@ class Modmail(commands.Cog):
         embed = discord.Embed(
             title="Friendly Reminder",
             description=f"You may use the `{self.bot.prefix}config set log_channel_id "
-            "<channel-id>` command to set up a custom log channel"
-            ", then you can delete the default "
-            f"{log_channel.mention} channel.",
+            "<channel-id>` command to set up a custom log channel, then you can delete this default "
+            f"{log_channel.mention} log channel.",
             color=self.bot.main_color,
         )
 
@@ -92,7 +95,8 @@ class Modmail(commands.Cog):
             and not self.bot.config["level_permissions"]
         ):
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
-            await self.bot.update_perms(PermissionLevel.OWNER, ctx.author.id)
+            for owner_ids in self.bot.owner_ids:
+                await self.bot.update_perms(PermissionLevel.OWNER, owner_ids)
 
     @commands.group(aliases=["snippets"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -504,7 +508,11 @@ class Modmail(commands.Cog):
     async def nsfw(self, ctx):
         """Flags a Modmail thread as NSFW (not safe for work)."""
         await ctx.channel.edit(nsfw=True)
-        await ctx.message.add_reaction("✅")
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        try:
+            await ctx.message.add_reaction(sent_emoji)
+        except (discord.HTTPException, discord.InvalidArgument):
+            pass
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -512,7 +520,11 @@ class Modmail(commands.Cog):
     async def sfw(self, ctx):
         """Flags a Modmail thread as SFW (safe for work)."""
         await ctx.channel.edit(nsfw=False)
-        await ctx.message.add_reaction("✅")
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        try:
+            await ctx.message.add_reaction(sent_emoji)
+        except (discord.HTTPException, discord.InvalidArgument):
+            pass
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -662,7 +674,7 @@ class Modmail(commands.Cog):
         if not embeds:
             embed = discord.Embed(
                 color=discord.Color.red(),
-                description="No log entries have been found for that query",
+                description="No log entries have been found for that query.",
             )
             return await ctx.send(embed=embed)
 
@@ -764,7 +776,11 @@ class Modmail(commands.Cog):
             self.bot.api.edit_message(linked_message_id, message),
         )
 
-        await ctx.message.add_reaction("✅")
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        try:
+            await ctx.message.add_reaction(sent_emoji)
+        except (discord.HTTPException, discord.InvalidArgument):
+            pass
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1093,7 +1109,11 @@ class Modmail(commands.Cog):
             )
 
         await thread.delete_message(linked_message_id)
-        await ctx.message.add_reaction("✅")
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        try:
+            await ctx.message.add_reaction(sent_emoji)
+        except (discord.HTTPException, discord.InvalidArgument):
+            pass
 
 
 def setup(bot):

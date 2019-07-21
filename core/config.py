@@ -115,15 +115,12 @@ class ConfigManager:
 
     def __init__(self, bot):
         self.bot = bot
+        self.api = self.bot.api
         self._cache = {}
         self.ready_event = asyncio.Event()
 
     def __repr__(self):
         return repr(self._cache)
-
-    @property
-    def api(self):
-        return self.bot.api
 
     def populate_cache(self) -> dict:
         data = deepcopy(self.defaults)
@@ -132,17 +129,21 @@ class ConfigManager:
         data.update(
             {k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys}
         )
-
-        if os.path.exists("config.json"):
-            with open("config.json") as f:
+        configjson = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+        if os.path.exists(configjson):
+            logger.debug('Loading envs from config.json.')
+            with open(configjson, 'r') as f:
                 # Config json should override env vars
-                data.update(
-                    {
-                        k.lower(): v
-                        for k, v in json.load(f).items()
-                        if k.lower() in self.all_keys
-                    }
-                )
+                try:
+                    data.update(
+                        {
+                            k.lower(): v
+                            for k, v in json.load(f).items()
+                            if k.lower() in self.all_keys
+                        }
+                    )
+                except json.JSONDecodeError:
+                    logger.critical('Failed to load config.json env values.', exc_info=True)
 
         self._cache = data
         return self._cache
@@ -212,7 +213,7 @@ class ConfigManager:
                 self._cache[k] = v
         if not self.ready_event.is_set():
             self.ready_event.set()
-            logger.info("Config ready.")
+            logger.info("Successfully fetched configurations from database.")
         return self._cache
 
     async def wait_until_ready(self) -> None:
@@ -238,12 +239,10 @@ class ConfigManager:
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         if key not in self._cache:
-            self._cache[key] = deepcopy(self.defaults[key])
             if default is Default:
-                return self._cache[key]
-            return default
-        if self._cache[key] == self.defaults[key] and default is not Default:
-            return default
+                self._cache[key] = deepcopy(self.defaults[key])
+        if default is not Default and self._cache[key] == self.defaults[key]:
+            self._cache[key] = default
         return self._cache[key]
 
     def set(self, key: str, item: typing.Any) -> None:
@@ -279,4 +278,12 @@ class ConfigManager:
         cls, data: typing.Dict[str, typing.Any]
     ) -> typing.Dict[str, typing.Any]:
         # TODO: use .get to prevent errors
-        return {k.lower(): v for k, v in data.items() if v != cls.defaults[k.lower()]}
+        filtered = {}
+        for k, v in data.items():
+            default = cls.defaults.get(k.lower(), Default)
+            if default is Default:
+                logger.error('Unexpected configuration detected: %s.', k)
+                continue
+            if v != default:
+                filtered[k.lower()] = v
+        return filtered

@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `?snippet` is now the default command name instead of `?snippets` (`?snippets` is still usable). This is to make this consistent with `?alias`/`?aliases`.
 - `colorama` is no longer a necessity, this is due to some unsupported OS.
 - Changelog command can now take a version argument to jump straight to specified version.
+- `?plugin enabled` results are now sorted alphabetically.
+- `?plugin registry` results are now sorted alphabetically, helps user find plugins more easily.
+- `?plugin registry page-number` plugin registry can specify a page number for quick access.
 
 ### Fixes
 
@@ -44,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed helper functions `info()` and `error()` for formatting logging, it's formatted automatically now.
 - Bumped discord.py version to 1.2.3.
 - Use discord tasks for metadata loop.
+- More debug based logging.
 
 # v3.0.3
 

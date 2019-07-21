@@ -72,6 +72,7 @@ class Thread:
     def ready(self, flag: bool):
         if flag:
             self._ready_event.set()
+            self.bot.dispatch("thread_ready", self)
         else:
             self._ready_event.clear()
 
@@ -102,6 +103,7 @@ class Thread:
                 reason="Creating a thread channel.",
             )
         except discord.HTTPException as e:  # Failed to create due to 50 channel limit.
+            logger.critical('An error occurred while creating a thread.', exc_info=True)
             self.manager.cache.pop(self.id)
 
             embed = discord.Embed(color=discord.Color.red())
@@ -122,7 +124,8 @@ class Thread:
             )
 
             log_count = sum(1 for log in log_data if not log["open"])
-        except Exception:  # Something went wrong with database?
+        except Exception:
+            logger.error('An error occurred while posting logs to the database.', exc_info=True)
             log_url = log_count = None
             # ensure core functionality still works
 
@@ -132,18 +135,17 @@ class Thread:
             mention = self.bot.config["mention"]
 
         async def send_genesis_message():
-            info_embed = self.manager.format_info_embed(
+            info_embed = self._format_info_embed(
                 recipient, log_url, log_count, discord.Color.green()
             )
             try:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self.genesis_message = msg
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(str(e))
             finally:
                 self.ready = True
-                self.bot.dispatch("thread_ready", self)
 
         await channel.edit(topic=f"User ID: {recipient.id}")
         self.bot.loop.create_task(send_genesis_message())
@@ -180,6 +182,75 @@ class Thread:
                 close_emoji = await self.bot.convert_emoji(close_emoji)
                 await msg.add_reaction(close_emoji)
 
+    def _format_info_embed(self, user, log_url, log_count, color):
+        """Get information about a member of a server
+        supports users from the guild or not."""
+        member = self.bot.guild.get_member(user.id)
+        time = datetime.utcnow()
+
+        # key = log_url.split('/')[-1]
+
+        role_names = ""
+        if member is None:
+            sep_server = self.bot.using_multiple_server_setup
+            separator = ", " if sep_server else " "
+
+            roles = []
+
+            for role in sorted(member.roles, key=lambda r: r.position):
+                if role.name == "@everyone":
+                    continue
+
+                fmt = role.name if sep_server else role.mention
+                roles.append(fmt)
+
+                if len(separator.join(roles)) > 1024:
+                    roles.append("...")
+                    while len(separator.join(roles)) > 1024:
+                        roles.pop(-2)
+                    break
+
+            role_names = separator.join(roles)
+
+        created = str((time - user.created_at).days)
+        embed = discord.Embed(color=color, description=f"{user.mention} was created {days(created)}", timestamp=time)
+
+        # if not role_names:
+        #     embed.add_field(name='Mention', value=user.mention)
+        # embed.add_field(name='Registered', value=created + days(created))
+
+        footer = "User ID: " + str(user.id)
+        embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
+        # embed.set_thumbnail(url=avi)
+
+        if member is None:
+            joined = str((time - member.joined_at).days)
+            # embed.add_field(name='Joined', value=joined + days(joined))
+            embed.description += f", joined {days(joined)}"
+
+            if member.nick:
+                embed.add_field(name="Nickname", value=member.nick, inline=True)
+            if role_names:
+                embed.add_field(name="Roles", value=role_names, inline=True)
+            embed.set_footer(text=footer)
+        else:
+            embed.set_footer(text=f"{footer} • (not in main server)")
+
+        if log_count is not None:
+            # embed.add_field(name='Past logs', value=f'{log_count}')
+            thread = "thread" if log_count == 1 else "threads"
+            embed.description += f" with **{log_count or 'no'}** past {thread}."
+        else:
+            embed.description += "."
+
+        mutual_guilds = [g for g in self.bot.guilds if user in g.members]
+        if member is None or len(mutual_guilds) > 1:
+            embed.add_field(
+                name="Mutual Server(s)", value=", ".join(g.name for g in mutual_guilds)
+            )
+
+        return embed
+
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
             self._close(closer, silent, delete_channel, message, True)
@@ -203,7 +274,6 @@ class Thread:
         if after > 0:
             # TODO: Add somewhere to clean up broken closures
             #  (when channel is already deleted)
-            await self.bot.config.update()
             now = datetime.utcnow()
             items = {
                 # 'initiation_time': now.isoformat(),
@@ -261,7 +331,7 @@ class Thread:
             },
         )
 
-        if log_data is not None and isinstance(log_data, dict):
+        if isinstance(log_data, dict):
             prefix = self.bot.config["log_url_prefix"]
             if prefix == "NONE":
                 prefix = ""
@@ -475,7 +545,7 @@ class Thread:
     async def reply(self, message: discord.Message, anonymous: bool = False) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(param(name="msg"))
-        if all(not g.get_member(self.id) for g in self.bot.guilds):
+        if not any(g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
@@ -853,77 +923,8 @@ class ThreadManager:
         )
         new_name += f"-{author.discriminator}"
 
+        counter = 1
         while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:
-            new_name += "-x"  # two channels with same name
+            new_name += f'-{counter}'  # two channels with same name
 
         return new_name
-
-    def format_info_embed(self, user, log_url, log_count, color):
-        """Get information about a member of a server
-        supports users from the guild or not."""
-        member = self.bot.guild.get_member(user.id)
-        time = datetime.utcnow()
-
-        # key = log_url.split('/')[-1]
-
-        role_names = ""
-        if member:
-            sep_server = self.bot.using_multiple_server_setup
-            separator = ", " if sep_server else " "
-
-            roles = []
-
-            for role in sorted(member.roles, key=lambda r: r.position):
-                if role.name == "@everyone":
-                    continue
-
-                fmt = role.name if sep_server else role.mention
-                roles.append(fmt)
-
-                if len(separator.join(roles)) > 1024:
-                    roles.append("...")
-                    while len(separator.join(roles)) > 1024:
-                        roles.pop(-2)
-                    break
-
-            role_names = separator.join(roles)
-
-        embed = discord.Embed(color=color, description=user.mention, timestamp=time)
-
-        created = str((time - user.created_at).days)
-        # if not role_names:
-        #     embed.add_field(name='Mention', value=user.mention)
-        # embed.add_field(name='Registered', value=created + days(created))
-        embed.description += f" was created {days(created)}"
-
-        footer = "User ID: " + str(user.id)
-        embed.set_footer(text=footer)
-        embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
-        # embed.set_thumbnail(url=avi)
-
-        if member:
-            joined = str((time - member.joined_at).days)
-            # embed.add_field(name='Joined', value=joined + days(joined))
-            embed.description += f", joined {days(joined)}"
-
-            if member.nick:
-                embed.add_field(name="Nickname", value=member.nick, inline=True)
-            if role_names:
-                embed.add_field(name="Roles", value=role_names, inline=True)
-        else:
-            embed.set_footer(text=f"{footer} • (not in main server)")
-
-        if log_count:
-            # embed.add_field(name='Past logs', value=f'{log_count}')
-            thread = "thread" if log_count == 1 else "threads"
-            embed.description += f" with **{log_count}** past {thread}."
-        else:
-            embed.description += "."
-
-        mutual_guilds = [g for g in self.bot.guilds if user in g.members]
-        if user not in self.bot.guild.members or len(mutual_guilds) > 1:
-            embed.add_field(
-                name="Mutual Servers", value=", ".join(g.name for g in mutual_guilds)
-            )
-
-        return embed
