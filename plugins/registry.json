@@ -107,15 +107,6 @@
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
-    "moderation": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Rule offenders in your server? Lift the ban hammer or warn them! Moderation plugin to the rescue :tada:",
-        "bot_version": "2.20.1",
-        "title": "Moderation Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
     "translator": {
         "repository": "officialpiyush/modmail-plugins",
         "branch": "master",
@@ -187,5 +178,14 @@
         "title": "Get Stats",
         "icon_url": "https://image.flaticon.com/icons/png/512/117/117761.png",
         "thumbnail_url": "http://www.pngmart.com/files/7/Statistics-PNG-Clipart.png"
-    }
+    },
+    "moderation": {
+        "repository": "xPolar/modmail-plugins",
+        "branch": "master",
+        "description": "Moderate your server with Modmail, bring the Mod to Modmail!",
+        "bot_version": "3.0.3",
+        "title": "Moderate your server",
+        "icon_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png"
+    } 
 }

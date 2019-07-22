@@ -188,7 +188,7 @@ def match_user_id(text: str) -> int:
     int
         The user ID if found. Otherwise, -1.
     """
-    match = re.match(r"^User ID: (\d+)$", text)
+    match = re.search(r"\bUser ID: (\d+)\b", text)
     if match is not None:
         return int(match.group(1))
     return -1
