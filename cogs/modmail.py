@@ -857,11 +857,11 @@ class Modmail(commands.Cog):
                     pass
 
         if users:
-            em = embeds[-1]
+            embed = embeds[-1]
 
             for mention, reason in users:
                 line = mention + f" - `{reason or 'No reason provided'}`\n"
-                if len(em.description) + len(line) > 2048:
+                if len(embed.description) + len(line) > 2048:
                     embeds.append(
                         discord.Embed(
                             title="Blocked Users (Continued)",
@@ -870,7 +870,7 @@ class Modmail(commands.Cog):
                         )
                     )
                 else:
-                    em.description += line
+                    embed.description += line
         else:
             embeds[-1].description = "Currently there are no blocked users."
 

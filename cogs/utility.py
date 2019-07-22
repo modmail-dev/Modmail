@@ -311,8 +311,8 @@ class Utility(commands.Cog):
         embeds = []
 
         for elem in data:
-            em = Embed.from_dict(elem["embed"])
-            embeds.append(em)
+            embed = Embed.from_dict(elem["embed"])
+            embeds.append(embed)
 
         random.shuffle(embeds)
 
