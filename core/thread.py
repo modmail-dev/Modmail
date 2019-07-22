@@ -108,7 +108,7 @@ class Thread:
 
             em = discord.Embed(color=discord.Color.red())
             em.title = "Error while trying to create a thread"
-            em.description = e.message
+            em.description = str(e)
             em.add_field(name="Recipient", value=recipient.mention)
 
             if log_channel is not None:
