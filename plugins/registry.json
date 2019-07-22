@@ -179,8 +179,8 @@
         "icon_url": "https://image.flaticon.com/icons/png/512/117/117761.png",
         "thumbnail_url": "http://www.pngmart.com/files/7/Statistics-PNG-Clipart.png"
     },
-    "moderation":{
-        "repository": "xPolar/modmail-plugins/Moderation/",
+    "moderation": {
+        "repository": "xPolar/modmail-plugins",
         "branch": "master",
         "description": "Moderate your server with Modmail, bring the Mod to Modmail!",
         "bot_version": "3.0.3",
