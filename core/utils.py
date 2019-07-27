@@ -1,4 +1,5 @@
 import re
+import shlex
 import typing
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=E0401
@@ -218,5 +219,37 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
     )
     val = get_close_matches(word, possibilities, n=n, cutoff=cutoff)
     if val:
-        embed.description += '\nHowever, perhaps you meant...\n' + '\n'.join(val)
+        embed.description += "\nHowever, perhaps you meant...\n" + "\n".join(val)
     return embed
+
+
+def parse_alias(alias):
+    if "&&" not in alias:
+        if alias.startswith('"') and alias.endswith('"'):
+            return [alias[1:-1]]
+        return [alias]
+
+    buffer = ""
+    cmd = []
+    try:
+        for token in shlex.shlex(alias, punctuation_chars="&"):
+            if token != "&&":
+                buffer += " " + token
+                continue
+
+            buffer = buffer.strip()
+            if buffer.startswith('"') and buffer.endswith('"'):
+                buffer = buffer[1:-1]
+            cmd += [buffer]
+            buffer = ""
+    except ValueError:
+        return []
+
+    buffer = buffer.strip()
+    if buffer.startswith('"') and buffer.endswith('"'):
+        buffer = buffer[1:-1]
+    cmd += [buffer]
+
+    if not all(cmd):
+        return []
+    return cmd

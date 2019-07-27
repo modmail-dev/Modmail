@@ -127,7 +127,9 @@ class Modmail(commands.Cog):
         if name is not None:
             val = self.bot.snippets.get(name)
             if val is None:
-                embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
+                embed = create_not_found_embed(
+                    name, self.bot.snippets.keys(), "Snippet"
+                )
                 return await ctx.send(embed=embed)
             return await ctx.send(escape_mentions(val))
 
@@ -163,9 +165,9 @@ class Modmail(commands.Cog):
     async def snippet_raw(self, ctx, *, name: str.lower):
         val = self.bot.snippets.get(name)
         if val is None:
-            embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
+            embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
             return await ctx.send(embed=embed)
-        return await ctx.send(escape_markdown(escape_mentions(val)).replace('<', '\\<'))
+        return await ctx.send(escape_markdown(escape_mentions(val)).replace("<", "\\<"))
 
     @snippet.command(name="add")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -207,7 +209,7 @@ class Modmail(commands.Cog):
         embed = discord.Embed(
             title="Added snippet",
             color=self.bot.main_color,
-            description=f'Successfully created snippet.',
+            description=f"Successfully created snippet.",
         )
         return await ctx.send(embed=embed)
 
@@ -225,7 +227,7 @@ class Modmail(commands.Cog):
             self.bot.snippets.pop(name)
             await self.bot.config.update()
         else:
-            embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
+            embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         await ctx.send(embed=embed)
 
     @snippet.command(name="edit")
@@ -248,7 +250,7 @@ class Modmail(commands.Cog):
                 description=f'`{name}` will now send "{value}".',
             )
         else:
-            embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
+            embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         await ctx.send(embed=embed)
 
     @commands.command()

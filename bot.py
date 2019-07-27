@@ -6,8 +6,8 @@ import os
 import re
 import sys
 import typing
-
 from datetime import datetime
+from itertools import zip_longest
 from types import SimpleNamespace
 
 import discord
@@ -30,7 +30,7 @@ except ImportError:
 
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.utils import human_join, strtobool
+from core.utils import human_join, strtobool, parse_alias
 from core.models import PermissionLevel, ModmailLogger
 from core.thread import ThreadManager
 from core.time import human_timedelta
@@ -669,24 +669,76 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to add reaction %s.", reaction, exc_info=True)
         return str(message.author.id) in self.blocked_users
 
-    async def process_modmail(self, message: discord.Message) -> None:
+    async def process_dm_modmail(self, message: discord.Message) -> None:
         """Processes messages sent to the bot."""
-        await self.wait_for_connected()
-
         blocked = await self._process_blocked(message)
         if not blocked:
             thread = await self.threads.find_or_create(message.author)
             await thread.send(message)
 
+    async def get_contexts(self, message, *, cls=commands.Context):
+        """
+        Returns all invocation contexts from the message.
+        Supports getting the prefix from database as well as command aliases.
+        """
+
+        view = StringView(message.content)
+        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        ctx.thread = await self.threads.find(channel=ctx.channel)
+
+        if self._skip_check(message.author.id, self.user.id):
+            return [ctx]
+
+        prefixes = await self.get_prefix()
+
+        invoked_prefix = discord.utils.find(view.skip_string, prefixes)
+        if invoked_prefix is None:
+            return [ctx]
+
+        invoker = view.get_word().lower()
+
+        # Check if there is any aliases being called.
+        alias = self.aliases.get(invoker)
+        if alias is not None:
+            aliases = parse_alias(alias)
+            if not aliases:
+                logger.warning("Alias %s is invalid, removing.", invoker)
+                self.aliases.pop(invoker)
+            else:
+                len_ = len(f"{invoked_prefix}{invoker}")
+                contents = parse_alias(message.content[len_:])
+                if not contents:
+                    contents = [message.content[len_:]]
+
+                ctxs = []
+                for alias, content in zip_longest(aliases, contents):
+                    if alias is None:
+                        break
+                    ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                    ctx.thread = await self.threads.find(channel=ctx.channel)
+
+                    if content is not None:
+                        view = StringView(f"{alias} {content.strip()}")
+                    else:
+                        view = StringView(alias)
+                    ctx.view = view
+                    ctx.invoked_with = view.get_word()
+                    ctx.command = self.all_commands.get(ctx.invoked_with)
+                    ctxs += [ctx]
+                return ctxs
+
+        ctx.invoked_with = invoker
+        ctx.command = self.all_commands.get(invoker)
+        return [ctx]
+
     async def get_context(self, message, *, cls=commands.Context):
         """
         Returns the invocation context from the message.
-        Supports getting the prefix from database as well as command aliases.
+        Supports getting the prefix from database.
         """
-        await self.wait_for_connected()
 
         view = StringView(message.content)
-        ctx = cls(prefix=None, view=view, bot=self, message=message)
+        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
 
         if self._skip_check(message.author.id, self.user.id):
             return ctx
@@ -701,17 +753,7 @@ class ModmailBot(commands.Bot):
 
         invoker = view.get_word().lower()
 
-        # Check if there is any aliases being called.
-        alias = self.aliases.get(invoker)
-        if alias is not None:
-            ctx._alias_invoked = True  # pylint: disable=W0212
-            len_ = len(f"{invoked_prefix}{invoker}")
-            view = StringView(f"{alias}{ctx.message.content[len_:]}")
-            ctx.view = view
-            invoker = view.get_word()
-
         ctx.invoked_with = invoker
-        ctx.prefix = self.prefix  # Sane prefix (No mentions)
         ctx.command = self.all_commands.get(invoker)
 
         return ctx
@@ -739,47 +781,52 @@ class ModmailBot(commands.Bot):
 
     async def on_message(self, message):
         await self.wait_for_connected()
-
         if message.type == discord.MessageType.pins_add and message.author == self.user:
             await message.delete()
+        await self.process_commands(message)
 
+    async def process_commands(self, message):
         if message.author.bot:
             return
 
         if isinstance(message.channel, discord.DMChannel):
-            return await self.process_modmail(message)
+            return await self.process_dm_modmail(message)
 
-        prefix = self.prefix
+        if message.content.startswith(self.prefix):
+            cmd = message.content[len(self.prefix) :].strip()
 
-        if message.content.startswith(prefix):
-            cmd = message.content[len(prefix) :].strip()
+            # Process snippets
             if cmd in self.snippets:
                 thread = await self.threads.find(channel=message.channel)
                 snippet = self.snippets[cmd]
                 if thread:
                     snippet = snippet.format(recipient=thread.recipient)
-                message.content = f"{prefix}reply {snippet}"
+                message.content = f"{self.prefix}reply {snippet}"
 
-        ctx = await self.get_context(message)
-        if ctx.command:
-            return await self.invoke(ctx)
+        ctxs = await self.get_contexts(message)
+        for ctx in ctxs:
+            if ctx.command:
+                await self.invoke(ctx)
+                continue
 
-        thread = await self.threads.find(channel=ctx.channel)
-        if thread is not None:
-            try:
-                reply_without_command = strtobool(self.config["reply_without_command"])
-            except ValueError:
-                reply_without_command = self.config.remove("reply_without_command")
+            thread = await self.threads.find(channel=ctx.channel)
+            if thread is not None:
+                try:
+                    reply_without_command = strtobool(
+                        self.config["reply_without_command"]
+                    )
+                except ValueError:
+                    reply_without_command = self.config.remove("reply_without_command")
 
-            if reply_without_command:
-                await thread.reply(message)
-            else:
-                await self.api.append_log(message, type_="internal")
-        elif ctx.invoked_with:
-            exc = commands.CommandNotFound(
-                'Command "{}" is not found'.format(ctx.invoked_with)
-            )
-            self.dispatch("command_error", ctx, exc)
+                if reply_without_command:
+                    await thread.reply(message)
+                else:
+                    await self.api.append_log(message, type_="internal")
+            elif ctx.invoked_with:
+                exc = commands.CommandNotFound(
+                    'Command "{}" is not found'.format(ctx.invoked_with)
+                )
+                self.dispatch("command_error", ctx, exc)
 
     async def on_typing(self, channel, user, _):
         await self.wait_for_connected()

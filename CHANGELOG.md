@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New configuration variable `thread_self_closable_creation_footer` — the footer when `recipient_thread_close` is enabled.
 - Added a minimalistic version of requirements.txt (named requirements.min.txt) that contains only the absolute minimum of Modmail.
   - For users having trouble with pipenv or any other reason.
+- Multi-step alias, see `?help alias add`. Public beta testing, might be unstable.
 
 ### Changes
 
