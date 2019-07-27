@@ -1,11 +1,13 @@
 import asyncio
 import logging
 from datetime import datetime
+from itertools import zip_longest, takewhile
 from typing import Optional, Union
 from types import SimpleNamespace as param
 
 import discord
 from discord.ext import commands
+from discord.utils import escape_markdown, escape_mentions
 
 from dateutil import parser
 from natural.date import duration
@@ -15,7 +17,7 @@ from core.decorators import trigger_typing
 from core.models import PermissionLevel
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User
+from core.utils import format_preview, User, create_not_found_embed
 
 logger = logging.getLogger("Modmail")
 
@@ -100,34 +102,36 @@ class Modmail(commands.Cog):
 
     @commands.group(aliases=["snippets"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def snippet(self, ctx):
+    async def snippet(self, ctx, *, name: str.lower = None):
         """
         Create pre-defined messages for use in threads.
 
         When `{prefix}snippet` is used by itself, this will retrieve
-        a list of snippets that are currently set.
+        a list of snippets that are currently set. `{prefix}snippet-name` will show what the
+        snippet point to.
 
-        To use snippets:
-
-        First create a snippet using:
+        To create a snippet:
         - `{prefix}snippet add snippet-name A pre-defined text.`
 
-        Afterwards, you can use your snippet in a thread channel
+        You can use your snippet in a thread channel
         with `{prefix}snippet-name`, the message "A pre-defined text."
         will be sent to the recipient.
+
+        Currently, there is not a default anonymous snippet command; however, a workaround
+        is available using `{prefix}alias`. Here is how:
+        - `{prefix}alias add snippet-name anonreply A pre-defined anonymous text.`
 
         See also `{prefix}alias`.
         """
 
-        embeds = []
+        if name is not None:
+            val = self.bot.snippets.get(name)
+            if val is None:
+                embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
+                return await ctx.send(embed=embed)
+            return await ctx.send(escape_mentions(val))
 
-        if self.bot.snippets:
-            embed = discord.Embed(
-                color=self.bot.main_color,
-                description="Here is a list of snippets "
-                "that are currently configured.",
-            )
-        else:
+        if not self.bot.snippets:
             embed = discord.Embed(
                 color=discord.Color.red(),
                 description="You dont have any snippets at the moment.",
@@ -135,25 +139,37 @@ class Modmail(commands.Cog):
             embed.set_footer(
                 text=f"Do {self.bot.prefix}help snippet for more commands."
             )
+            embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
+            return await ctx.send(embed=embed)
 
-        embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
-        embeds.append(embed)
+        embeds = []
 
-        for name, value in self.bot.snippets.items():
-            if len(embed.fields) == 5:
-                embed = discord.Embed(
-                    color=self.bot.main_color, description=embed.description
+        for names in zip_longest(*(iter(sorted(self.bot.snippets)),) * 15):
+            description = "\n".join(
+                ": ".join((str(a), b))
+                for a, b in enumerate(
+                    takewhile(lambda x: x is not None, names), start=1
                 )
-                embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
-                embeds.append(embed)
-            embed.add_field(name=name, value=value, inline=False)
+            )
+            embed = discord.Embed(color=self.bot.main_color, description=description)
+            embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
+            embeds.append(embed)
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
 
+    @snippet.command(name="raw")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def snippet_raw(self, ctx, *, name: str.lower):
+        val = self.bot.snippets.get(name)
+        if val is None:
+            embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
+            return await ctx.send(embed=embed)
+        return await ctx.send(escape_markdown(escape_mentions(val)).replace('<', '\\<'))
+
     @snippet.command(name="add")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def snippet_add(self, ctx, name: str.lower, *, value):
+    async def snippet_add(self, ctx, name: str.lower, *, value: commands.clean_content):
         """
         Add a snippet.
 
@@ -167,19 +183,35 @@ class Modmail(commands.Cog):
                 color=discord.Color.red(),
                 description=f"Snippet `{name}` already exists.",
             )
-        else:
-            self.bot.snippets[name] = value
-            await self.bot.config.update()
+            return await ctx.send(embed=embed)
 
+        if name in self.bot.aliases:
             embed = discord.Embed(
-                title="Added snippet",
-                color=self.bot.main_color,
-                description=f'`{name}` will now send "{value}".',
+                title="Error",
+                color=discord.Color.red(),
+                description=f"An alias with the same name already exists: `{name}`.",
             )
+            return await ctx.send(embed=embed)
 
-        await ctx.send(embed=embed)
+        if len(name) > 120:
+            embed = discord.Embed(
+                title="Error",
+                color=discord.Color.red(),
+                description=f"Snippet names cannot be longer than 120 characters.",
+            )
+            return await ctx.send(embed=embed)
 
-    @snippet.command(name="remove", aliases=["del", "delete", "rm"])
+        self.bot.snippets[name] = value
+        await self.bot.config.update()
+
+        embed = discord.Embed(
+            title="Added snippet",
+            color=self.bot.main_color,
+            description=f'Successfully created snippet.',
+        )
+        return await ctx.send(embed=embed)
+
+    @snippet.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippet_remove(self, ctx, *, name: str.lower):
         """Remove a snippet."""
@@ -188,18 +220,12 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Removed snippet",
                 color=self.bot.main_color,
-                description=f"`{name}` no longer exists.",
+                description=f"Snippet `{name}` is now deleted.",
             )
             self.bot.snippets.pop(name)
             await self.bot.config.update()
-
         else:
-            embed = discord.Embed(
-                title="Error",
-                color=discord.Color.red(),
-                description=f"Snippet `{name}` does not exist.",
-            )
-
+            embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
         await ctx.send(embed=embed)
 
     @snippet.command(name="edit")
@@ -221,13 +247,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
                 description=f'`{name}` will now send "{value}".',
             )
-
         else:
-            embed = discord.Embed(
-                title="Error",
-                color=discord.Color.red(),
-                description=f"Snippet `{name}` does not exist.",
-            )
+            embed = create_not_found_embed(name, self.bot.snippets.keys(), 'Snippet')
         await ctx.send(embed=embed)
 
     @commands.command()

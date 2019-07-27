@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `?plugin enabled` results are now sorted alphabetically.
 - `?plugin registry` results are now sorted alphabetically, helps user find plugins more easily.
 - `?plugin registry page-number` plugin registry can specify a page number for quick access.
+- A reworked interface for `?snippet` and `?alias`.
+  - Add an `?snippet raw <name>` command for viewing the raw content of a snippet (escaped markdown).
 
 ### Fixes
 
@@ -37,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `mod_typing` and `user_typing` will no longer show when user is blocked.
 - Better `?block` usage message.
 - Resolves errors when message was sent by mods after thread is closed somehow.
+- Recipient join/leave server messages are limited to only the guild set by `GUILD_ID`.
+- When creating snippets and aliases, it now checks if another snippets/aliases with the same name exists.
 
 ### Internal
 

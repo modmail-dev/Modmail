@@ -1,9 +1,10 @@
 import re
 import typing
+from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=E0401
 from urllib import parse
 
-from discord import Object
+import discord
 from discord.ext import commands
 
 from core.models import PermissionLevel
@@ -34,7 +35,7 @@ class User(commands.IDConverter):
         match = self._get_id_match(argument)
         if match is None:
             raise commands.BadArgument('User "{}" not found'.format(argument))
-        return Object(int(match.group(1)))
+        return discord.Object(int(match.group(1)))
 
 
 def truncate(text: str, max: int = 50) -> str:  # pylint: disable=W0622
@@ -186,7 +187,7 @@ def match_user_id(text: str) -> int:
     int
         The user ID if found. Otherwise, -1.
     """
-    match = re.search(r"\bUser ID: (\d+)\b", text)
+    match = re.search(r"\bUser ID: (\d{17,21})\b", text)
     if match is not None:
         return int(match.group(1))
     return -1
@@ -208,3 +209,14 @@ async def ignore(coro):
         await coro
     except Exception:
         pass
+
+
+def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
+    embed = discord.Embed(
+        color=discord.Color.red(),
+        description=f"**{name.capitalize()} `{word}` cannot be found.**",
+    )
+    val = get_close_matches(word, possibilities, n=n, cutoff=cutoff)
+    if val:
+        embed.description += '\nHowever, perhaps you meant...\n' + '\n'.join(val)
+    return embed

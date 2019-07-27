@@ -8,6 +8,7 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
 from io import StringIO, BytesIO
+from itertools import zip_longest, takewhile
 from json import JSONDecodeError, loads
 from textwrap import indent
 from types import SimpleNamespace as param
@@ -16,6 +17,7 @@ from typing import Union
 from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
 from discord.ext import commands
+from discord.utils import escape_mentions
 
 from aiohttp import ClientResponseError
 from pkg_resources import parse_version
@@ -25,7 +27,7 @@ from core.changelog import Changelog
 from core.decorators import trigger_typing
 from core.models import InvalidConfigError, PermissionLevel
 from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code, User, get_perm_level
+from core.utils import cleanup_code, User, get_perm_level, create_not_found_embed
 
 logger = logging.getLogger("Modmail")
 
@@ -811,12 +813,13 @@ class Utility(commands.Cog):
 
     @commands.group(aliases=["aliases"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def alias(self, ctx):
+    async def alias(self, ctx, *, name: str.lower = None):
         """
         Create shortcuts to bot commands.
 
         When `{prefix}alias` is used by itself, this will retrieve
-        a list of alias that are currently set.
+        a list of alias that are currently set. `{prefix}alias-name` will show what the
+        alias point to.
 
         To use alias:
 
@@ -830,44 +833,73 @@ class Utility(commands.Cog):
         See also `{prefix}snippet`.
         """
 
-        embeds = []
-        desc = "Here is a list of aliases that are currently configured."
+        if name is not None:
+            val = self.bot.aliases.get(name)
+            if val is None:
+                embed = create_not_found_embed(name, self.bot.aliases.keys(), 'Alias')
+                return await ctx.send(embed=embed)
+            return await ctx.send(escape_mentions(val))
 
-        if self.bot.aliases:
-            embed = Embed(color=self.bot.main_color, description=desc)
-        else:
+        if not self.bot.aliases:
             embed = Embed(
-                color=self.bot.main_color,
+                color=Color.red(),
                 description="You dont have any aliases at the moment.",
             )
-        embed.set_author(name="Command aliases:", icon_url=ctx.guild.icon_url)
-        embed.set_footer(text=f"Do {self.bot.prefix}help alias for more commands.")
-        embeds.append(embed)
+            embed.set_footer(
+                text=f"Do {self.bot.prefix}help alias for more commands."
+            )
+            embed.set_author(name="Aliases", icon_url=ctx.guild.icon_url)
+            return await ctx.send(embed=embed)
 
-        for name, value in self.bot.aliases.items():
-            if len(embed.fields) == 5:
-                embed = Embed(color=self.bot.main_color, description=desc)
-                embed.set_author(name="Command aliases", icon_url=ctx.guild.icon_url)
-                embed.set_footer(
-                    text=f"Do {self.bot.prefix}help alias for more commands."
+        embeds = []
+
+        for names in zip_longest(*(iter(sorted(self.bot.aliases)),) * 15):
+            description = "\n".join(
+                ": ".join((str(a), b))
+                for a, b in enumerate(
+                    takewhile(lambda x: x is not None, names), start=1
                 )
-
-                embeds.append(embed)
-            embed.add_field(name=name, value=value, inline=False)
+            )
+            embed = Embed(color=self.bot.main_color, description=description)
+            embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon_url)
+            embeds.append(embed)
 
         session = PaginatorSession(ctx, *embeds)
-        return await session.run()
+        await session.run()
 
     @alias.command(name="add")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_add(self, ctx, name: str.lower, *, value):
         """Add an alias."""
-        if self.bot.get_command(name) or name in self.bot.aliases:
+        if self.bot.get_command(name):
             embed = Embed(
                 title="Error",
                 color=Color.red(),
-                description="A command or alias already exists "
-                f"with the same name: `{name}`.",
+                description=f"A command with the same name already exists: `{name}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        if name in self.bot.aliases:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"Another alias with the same name already exists: `{name}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        if name in self.bot.snippets:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"A snippet with the same name already exists: `{name}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        if len(name) > 120:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"Alias names cannot be longer than 120 characters.",
             )
             return await ctx.send(embed=embed)
 
@@ -892,7 +924,7 @@ class Utility(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @alias.command(name="remove", aliases=["del", "delete", "rm"])
+    @alias.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_remove(self, ctx, *, name: str.lower):
         """Remove an alias."""
@@ -906,13 +938,8 @@ class Utility(commands.Cog):
                 color=self.bot.main_color,
                 description=f"`{name}` no longer exists.",
             )
-
         else:
-            embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description=f"Alias `{name}` does not exist.",
-            )
+            embed = create_not_found_embed(name, self.bot.aliases.keys(), 'Alias')
 
         return await ctx.send(embed=embed)
 
@@ -923,21 +950,7 @@ class Utility(commands.Cog):
         Edit an alias.
         """
         if name not in self.bot.aliases:
-            embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description=f"Alias `{name}` does not exist.",
-            )
-
-            return await ctx.send(embed=embed)
-
-        if self.bot.get_command(name):
-            embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description="A command or alias already exists "
-                f"with the same name: `{name}`.",
-            )
+            embed = create_not_found_embed(name, self.bot.aliases.keys(), 'Alias')
             return await ctx.send(embed=embed)
 
         linked_command = value.split()[0]

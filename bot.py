@@ -87,7 +87,8 @@ class ModmailBot(commands.Bot):
             self.db = AsyncIOMotorClient(mongo_uri).modmail_bot
         except ConfigurationError as e:
             logger.critical(
-                "Your MONGO_URI is copied wrong, try re-copying from the source again."
+                "Your MONGO_URI might be copied wrong, try re-copying from the source again. "
+                "Otherwise noted in the following message:"
             )
             logger.critical(str(e))
             sys.exit(0)
