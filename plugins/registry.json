@@ -187,5 +187,14 @@
         "title": "Moderate your server",
         "icon_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png"
+    },
+    "uptime": {
+        "repository": "matrix2113/modmail-plugins",
+        "branch": "master",
+        "description": "This command shows the bot’s uptime without using ?about",
+        "bot_version": "3.0.3",
+        "title": "Check your bot’s uptime!",
+        "icon_url": "https://i.imgur.com/9wzqZAy.png",
+        "thumbnail_url": "https://i.imgur.com/9wzqZAy.png”
     } 
 }
