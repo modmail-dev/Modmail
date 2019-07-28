@@ -43,7 +43,7 @@
     ]
   },
   "main_color": {
-    "default": "Discord Blurple ([#7289DA](https://placehold.it/100/7289da?text=+))",
+    "default": "Discord Blurple [#7289DA](https://placehold.it/100/7289da?text=+)",
     "description": "This is the main color for Modmail (help/about/ping embed messages, subscribe, move, etc.).",
     "examples": [
       "`{prefix}config set main_color olive green`",
@@ -54,7 +54,8 @@
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
       "See also: `mod_color`, `recipient_color`."
-    ]
+    ],
+    "thumbnail": "https://placehold.it/100/7289da?text=+"
   },
   "user_typing": {
     "default": "Disabled",
@@ -285,7 +286,7 @@
       "See also: `thread_close_title`, `thread_close_footer`, `thread_self_close_response`, `thread_creation_response`."
     ]
   },
-  "thread_self_close_response":  {
+  "thread_self_close_response": {
     "default": "\"You have closed this Modmail thread.\"",
     "description": "This is the message embed content sent to the recipient upon the closure of a their own thread.",
     "examples": [
@@ -300,7 +301,7 @@
     ]
   },
   "recipient_color": {
-    "default": "Discord Gold ([#F1C40F](https://placehold.it/100/f1c40f?text=+))",
+    "default": "Discord Gold [#F1C40F](https://placehold.it/100/f1c40f?text=+)",
     "description": "This is the color of the messages sent by the recipient, this applies to messages received in the thread channel.",
     "examples": [
       "`{prefix}config set recipient_color dark beige`",
@@ -311,10 +312,11 @@
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
       "See also: `main_color`, `mod_color`."
-    ]
+    ],
+    "thumbnail": "https://placehold.it/100/f1c40f?text=+"
   },
   "mod_color": {
-    "default": "Discord Green ([#2ECC71](https://placehold.it/100/2ecc71?text=+))",
+    "default": "Discord Green [#2ECC71](https://placehold.it/100/2ecc71?text=+)",
     "description": "This is the color of the messages sent by the moderators, this applies to messages within in the thread channel and the DM thread messages received by the recipient.",
     "examples": [
       "`{prefix}config set mod_color dark beige`",
@@ -325,7 +327,8 @@
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
       "See also: `main_color`, `recipient_color`."
-    ]
+    ],
+    "thumbnail": "https://placehold.it/100/2ecc71?text=+"
   },
   "mod_tag": {
     "default": "The moderator's highest role",
@@ -345,9 +348,9 @@
       "`{prefix}config set anon_username Incognito Mod`"
     ],
     "notes": [
-      "A detailed labeling of anonymous message configurations: https://i.imgur.com/SKOC42Z.png.",
       "See also: `anon_avatar_url`, `anon_tag`."
-    ]
+    ],
+    "image": "https://i.imgur.com/SKOC42Z.png"
   },
   "anon_avatar_url": {
     "default": "Server avatar",
@@ -356,9 +359,9 @@
       "`{prefix}config set anon_avatar_url https://path.to/your/avatar.png` (you will need to upload the avatar to somewhere)"
     ],
     "notes": [
-      "A detailed labeling of anonymous message configurations: https://i.imgur.com/SKOC42Z.png.",
       "See also: `anon_username`, `anon_tag`."
-    ]
+    ],
+    "image": "https://i.imgur.com/SKOC42Z.png"
   },
   "anon_tag": {
     "default": "\"Response\"",
@@ -367,8 +370,8 @@
       "`{prefix}config set anon_tag Support Agent`"
     ],
     "notes": [
-      "A detailed labeling of anonymous message configurations: https://i.imgur.com/SKOC42Z.png.",
       "See also: `anon_avatar_url`, `anon_username`, `mod_tag`."
-    ]
+    ],
+    "image": "https://i.imgur.com/SKOC42Z.png"
   }
 }

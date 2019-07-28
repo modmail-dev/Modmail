@@ -895,7 +895,14 @@ class Utility(commands.Cog):
         for note in info['notes']:
             note_text += f'- {fmt(note)}\n'
         if note_text:
-            embed.add_field(name='Notes(s):', value=note_text, inline=False)
+            embed.add_field(name='Note(s):', value=note_text, inline=False)
+
+        if info.get('image') is not None:
+            embed.set_image(url=fmt(info['image']))
+
+        if info.get('thumbnail') is not None:
+            embed.set_thumbnail(url=fmt(info['thumbnail']))
+
         return await ctx.send(embed=embed)
 
     @commands.group(aliases=["aliases"], invoke_without_command=True)
