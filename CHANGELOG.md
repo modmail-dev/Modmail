@@ -21,6 +21,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Added a minimalistic version of requirements.txt (named requirements.min.txt) that contains only the absolute minimum of Modmail.
   - For users having trouble with pipenv or any other reason.
 - Multi-step alias, see `?help alias add`. Public beta testing, might be unstable.
+- Misc commands without cogs are now displayed in `?help`.
 
 ### Changes
 
@@ -38,7 +39,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 
 - `?notify` no longer carries over to the next thread.
 - `discord.NotFound` errors for `on_raw_reaction_add`.
-- `mod_typing` and `user_typing` will no longer show when user is blocked.
+- `mod_typing` ~~and `user_typing`~~ (`user_typing` is by-design to show now) will no longer show when user is blocked.
 - Better `?block` usage message.
 - Resolves errors when message was sent by mods after thread is closed somehow.
 - Recipient join/leave server messages are limited to only the guild set by `GUILD_ID`.

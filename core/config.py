@@ -115,7 +115,6 @@ class ConfigManager:
 
     def __init__(self, bot):
         self.bot = bot
-        self.api = self.bot.api
         self._cache = {}
         self.ready_event = asyncio.Event()
 
@@ -207,11 +206,11 @@ class ConfigManager:
 
     async def update(self):
         """Updates the config with data from the cache"""
-        await self.api.update_config(self.filter_default(self._cache))
+        await self.bot.api.update_config(self.filter_default(self._cache))
 
     async def refresh(self) -> dict:
         """Refreshes internal cache with data from database"""
-        for k, v in (await self.api.get_config()).items():
+        for k, v in (await self.bot.api.get_config()).items():
             k = k.lower()
             if k in self.all_keys:
                 self._cache[k] = v

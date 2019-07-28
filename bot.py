@@ -838,13 +838,6 @@ class ModmailBot(commands.Bot):
             pass
 
         if isinstance(channel, discord.DMChannel):
-            if await self._process_blocked(
-                SimpleNamespace(
-                    author=user, channel=SimpleNamespace(send=_void), add_reaction=_void
-                )
-            ):
-                return
-
             try:
                 user_typing = strtobool(self.config["user_typing"])
             except ValueError:

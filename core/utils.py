@@ -8,8 +8,6 @@ from urllib import parse
 import discord
 from discord.ext import commands
 
-from core.models import PermissionLevel
-
 
 def strtobool(val):
     if isinstance(val, bool):
@@ -194,7 +192,9 @@ def match_user_id(text: str) -> int:
     return -1
 
 
-def get_perm_level(cmd) -> PermissionLevel:
+def get_perm_level(cmd):
+    from core.models import PermissionLevel
+
     for check in cmd.checks:
         perm = getattr(check, "permission_level", None)
         if perm is not None:

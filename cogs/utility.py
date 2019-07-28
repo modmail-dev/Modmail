@@ -39,13 +39,13 @@ logger = logging.getLogger("Modmail")
 
 
 class ModmailHelpCommand(commands.HelpCommand):
-    async def format_cog_help(self, cog):
+    async def format_cog_help(self, cog, *, no_cog=False):
         bot = self.context.bot
         prefix = self.clean_prefix
 
         formats = [""]
         for cmd in await self.filter_commands(
-            cog.get_commands(), sort=True, key=get_perm_level
+            cog.get_commands() if not no_cog else cog, sort=True, key=get_perm_level
         ):
             perm_level = get_perm_level(cmd)
             if perm_level is PermissionLevel.INVALID:
@@ -63,16 +63,19 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         embeds = []
         for format_ in formats:
+            description = cog.description or "No description." \
+                if not no_cog else "Miscellaneous commands without a category."
             embed = Embed(
-                description=f'*{cog.description or "No description."}*',
+                description=f'*{description}*',
                 color=bot.main_color,
             )
 
             embed.add_field(name="Commands", value=format_ or "No commands.")
 
             continued = " (Continued)" if embeds else ""
+            name = cog.qualified_name + " - Help" if not no_cog else "Miscellaneous Commands"
             embed.set_author(
-                name=cog.qualified_name + " - Help" + continued,
+                name=name + continued,
                 icon_url=bot.user.avatar_url,
             )
 
@@ -88,9 +91,8 @@ class ModmailHelpCommand(commands.HelpCommand):
 
     async def send_bot_help(self, mapping):
         embeds = []
-        # TODO: Implement for no cog commands
-
-        cogs = list(filter(None, mapping))
+        no_cog_commands = sorted(mapping.pop(None), key=lambda c: c.qualified_name)
+        cogs = sorted(mapping, key=lambda c: c.qualified_name)
 
         bot = self.context.bot
 
@@ -105,6 +107,8 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         for cog in default_cogs:
             embeds.extend(await self.format_cog_help(cog))
+        if no_cog_commands:
+            embeds.extend(await self.format_cog_help(no_cog_commands, no_cog=True))
 
         p_session = PaginatorSession(
             self.context, *embeds, destination=self.get_destination()
