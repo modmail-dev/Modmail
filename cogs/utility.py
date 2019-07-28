@@ -965,9 +965,9 @@ class Utility(commands.Cog):
 
         embeds = []
 
-        for names in zip_longest(*(iter(sorted(self.bot.aliases)),) * 15):
+        for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
             description = "\n".join(
-                ": ".join((str(a), b))
+                ": ".join((str(a + i * 15), b))
                 for a, b in enumerate(
                     takewhile(lambda x: x is not None, names), start=1
                 )
