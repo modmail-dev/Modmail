@@ -23,6 +23,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Multi-step alias, see `?help alias add`. Public beta testing, might be unstable.
 - Misc commands without cogs are now displayed in `?help`.
 - `?help` works for alias and snippets.
+- `?config help <config-name>` shows a help embed for the configuration.
 
 ### Changes
 
@@ -35,6 +36,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - `?plugin registry page-number` plugin registry can specify a page number for quick access.
 - A reworked interface for `?snippet` and `?alias`.
   - Add an `?snippet raw <name>` command for viewing the raw content of a snippet (escaped markdown).
+- The placeholder channel for the streaming status changed to https://www.twitch.tv/discordmodmail/.
 
 ### Fixes
 
@@ -45,6 +47,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Resolves errors when message was sent by mods after thread is closed somehow.
 - Recipient join/leave server messages are limited to only the guild set by `GUILD_ID`.
 - When creating snippets and aliases, it now checks if another snippets/aliases with the same name exists.
+- Was looking for `config.json` in the wrong directory.
 
 ### Internal
 

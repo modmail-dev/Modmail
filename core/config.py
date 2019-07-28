@@ -24,7 +24,7 @@ class ConfigManager:
 
     public_keys = {
         # activity
-        "twitch_url": "https://www.twitch.tv/discord-modmail/",
+        "twitch_url": "https://www.twitch.tv/discordmodmail/",
         # bot settings
         "main_category_id": None,
         "prefix": "?",
@@ -55,8 +55,8 @@ class ConfigManager:
         "thread_self_close_response": "You have closed this Modmail thread.",
         # moderation
         "recipient_color": str(discord.Color.gold()),
-        "mod_tag": None,
         "mod_color": str(discord.Color.green()),
+        "mod_tag": None,
         # anonymous message
         "anon_username": None,
         "anon_avatar_url": None,
@@ -117,6 +117,7 @@ class ConfigManager:
         self.bot = bot
         self._cache = {}
         self.ready_event = asyncio.Event()
+        self.config_help = {}
 
     def __repr__(self):
         return repr(self._cache)
@@ -129,7 +130,7 @@ class ConfigManager:
             {k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys}
         )
         configjson = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "config.json"
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
         )
         if os.path.exists(configjson):
             logger.debug("Loading envs from config.json.")
@@ -147,8 +148,13 @@ class ConfigManager:
                     logger.critical(
                         "Failed to load config.json env values.", exc_info=True
                     )
-
         self._cache = data
+
+        confighelpjson = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "config_help.json"
+        )
+        with open(confighelpjson, "r") as f:
+            self.config_help = json.load(f)
         return self._cache
 
     async def clean_data(self, key: str, val: typing.Any) -> typing.Tuple[str, str]:

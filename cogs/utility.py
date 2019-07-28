@@ -733,11 +733,14 @@ class Utility(commands.Cog):
         Type `{prefix}config options` to view a list
         of valid configuration variables.
 
+        Type `{prefix}config help config-name` for info
+         on a config.
+
         To set a configuration variable:
-        - `{prefix}config set varname value here`
+        - `{prefix}config set config-name value here`
 
         To remove a configuration variable:
-        - `{prefix}config remove varname`
+        - `{prefix}config remove config-name`
         """
         await ctx.send_help(ctx.command)
 
@@ -847,6 +850,52 @@ class Utility(commands.Cog):
                 if name in self.bot.config.public_keys:
                     embed.add_field(name=name, value=f"`{value}`", inline=False)
 
+        return await ctx.send(embed=embed)
+
+    @config.command(name="help", aliases=["info"])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def config_help(self, ctx, key: str.lower):
+        """
+        Show information on a specified configuration.
+        """
+        if key not in self.bot.config.public_keys:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"`{key}` is an invalid key.",
+            )
+            return await ctx.send(embed=embed)
+
+        config_help = self.bot.config.config_help
+        info = config_help.get(key)
+
+        if info is None:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"No help details found for `{key}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        def fmt(val):
+            return val.format(prefix=self.bot.prefix, bot=self.bot)
+
+        embed = Embed(
+            title=f"Configuration description on {key}:",
+            color=self.bot.main_color
+        )
+        embed.add_field(name='Default:', value=fmt(info['default']), inline=False)
+        embed.add_field(name='Information:', value=fmt(info['description']), inline=False)
+        example_text = ''
+        for example in info['examples']:
+            example_text += f'- {fmt(example)}\n'
+        embed.add_field(name='Example(s):', value=example_text, inline=False)
+
+        note_text = ''
+        for note in info['notes']:
+            note_text += f'- {fmt(note)}\n'
+        if note_text:
+            embed.add_field(name='Notes(s):', value=note_text, inline=False)
         return await ctx.send(embed=embed)
 
     @commands.group(aliases=["aliases"], invoke_without_command=True)
