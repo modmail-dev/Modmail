@@ -81,8 +81,8 @@ async def check_permissions(  # pylint: disable=R0911
                 role.id in level_permissions[level.name] for role in author_roles
             )
             has_perm_id = ctx.author.id in level_permissions[level.name]
-            return has_perm_role or has_perm_id
-
+            if has_perm_role or has_perm_id:
+                return True
     return False
 
 
