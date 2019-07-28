@@ -17,7 +17,7 @@ from typing import Union
 from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
 from discord.ext import commands
-from discord.utils import escape_markdown
+from discord.utils import escape_markdown, escape_mentions
 
 from aiohttp import ClientResponseError
 from pkg_resources import parse_version
@@ -180,12 +180,40 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         await self.get_destination().send(embed=embed)
 
-    async def send_error_message(self, msg):  # pylint: disable=W0221
-        logger.warning("CommandNotFound: %s", str(msg))
+    async def send_error_message(self, error):
+        command = self.context.kwargs.get("command")
+        val = self.context.bot.snippets.get(command)
+        if val is not None:
+            return await self.get_destination().send(escape_mentions(f'**`{command}` is a snippet, '
+                                                                     f'content:**\n\n{val}'))
+
+        val = self.context.bot.aliases.get(command)
+        if val is not None:
+            values = parse_alias(val)
+
+            if len(values) == 1:
+                embed = Embed(
+                    title=f"{command} is an alias.",
+                    color=self.context.bot.main_color,
+                    description=f"`{command}` points to `{escape_markdown(values[0])}`.",
+                )
+            else:
+                embed = Embed(
+                    title=f"{command} is an alias.",
+                    color=self.context.bot.main_color,
+                    description=f"**`{command}` points to the following steps:**",
+                )
+                for i, val in enumerate(values, start=1):
+                    embed.description += f"\n{i}: {escape_markdown(val)}"
+            embed.set_footer(text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} alias" for more '
+                                  'details on aliases.')
+            return await self.get_destination().send(embed=embed)
+
+        logger.warning("CommandNotFound: %s", str(error))
 
         embed = Embed(color=Color.red())
         embed.set_footer(
-            text=f'Command/Category "{self.context.kwargs.get("command")}" not found.'
+            text=f'Command/Category "{command}" not found.'
         )
 
         choices = set()
@@ -193,7 +221,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         for name, cmd in self.context.bot.all_commands.items():
             if not cmd.hidden:
                 choices.add(name)
-        command = self.context.kwargs.get("command")
+
         closest = get_close_matches(command, choices)
         if closest:
             embed.add_field(
@@ -870,7 +898,7 @@ class Utility(commands.Cog):
             else:
                 embed = Embed(
                     color=self.bot.main_color,
-                    description=f"`{name}` points to the following steps:",
+                    description=f"**`{name}` points to the following steps:**",
                 )
                 for i, val in enumerate(values, start=1):
                     embed.description += f"\n{i}: {escape_markdown(val)}"
