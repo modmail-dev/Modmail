@@ -57,7 +57,7 @@
     ]
   },
   "user_typing": {
-    "default": "No",
+    "default": "Disabled",
     "description": "When this is set to `yes`, whenever the recipient user starts to type in their DM channel, the moderator will see “{bot.user.display_name} is typing…” in the thread channel.",
     "examples": [
       "`{prefix}config set user_typing yes`",
@@ -68,7 +68,7 @@
     ]
   },
   "mod_typing": {
-    "default": "No",
+    "default": "Disabled",
     "description": "When this is set to `yes`, whenever a moderator starts to type in the thread channel, the recipient user will see \"{bot.user.display_name} is typing…\" in their DM channel.",
     "examples": [
       "`{prefix}config set mod_typing yes`",
@@ -159,7 +159,7 @@
     ]
   },
   "recipient_thread_close": {
-    "default": "No",
+    "default": "Disabled",
     "description": "Setting this configuration will allow recipients to use the `close_emoji` to close the thread themselves.",
     "examples": [
       "`{prefix}config set reply_without_command yes`",
