@@ -1,5 +1,8 @@
-FROM kennethreitz/pipenv
+ROM library/python:latest
+RUN apt update && apt install
+RUN apt install -y pipenv
+RUN mkdir -p /bot && cd /bot && git clone https://github.com/kyb3r/modmail .
+WORKDIR /bot
+RUN pipenv install
 
-COPY . /app
-
-CMD python3 bot.py
+CMD ["pipenv", "run", "python3", "bot.py"]
