@@ -25,6 +25,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - `?help` works for alias and snippets.
 - `?config help <config-name>` shows a help embed for the configuration.
 - Support setting permissions for sub commands.
+- Support numbers (1-5) as substitutes for Permission Level REGULAR - OWNER in `?perms` sub commands.
 
 ### Changes
 

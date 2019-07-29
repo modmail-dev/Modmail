@@ -1218,6 +1218,22 @@ class Utility(commands.Cog):
         else:
             raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
+    @staticmethod
+    def _parse_level(name):
+        name = name.upper()
+        try:
+            return PermissionLevel[name]
+        except KeyError:
+            pass
+        transform = {
+            "1": PermissionLevel.REGULAR,
+            "2": PermissionLevel.SUPPORTER,
+            "3": PermissionLevel.MODERATOR,
+            "4": PermissionLevel.ADMINISTRATOR,
+            "5": PermissionLevel.OWNER,
+        }
+        return transform.get(name)
+
     @permissions.command(name="add", usage="[command/level] [name] [user_or_role]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add(
@@ -1246,8 +1262,8 @@ class Utility(commands.Cog):
             command = self.bot.get_command(name.lower())
             check = command is not None
         else:
-            check = name.upper() in PermissionLevel.__members__
-            level = PermissionLevel[name.upper()] if check else None
+            level = self._parse_level(name)
+            check = level is not None
 
         if not check:
             embed = Embed(
@@ -1302,14 +1318,14 @@ class Utility(commands.Cog):
         if type_ == "command":
             name = getattr(self.bot.get_command(name.lower()), "qualified_name", name)
         else:
-            if name.upper() not in PermissionLevel.__members__:
+            level = self._parse_level(name)
+            if level is None:
                 embed = Embed(
                     title="Error",
                     color=Color.red(),
                     description=f"The referenced {type_} does not exist: `{name}`.",
                 )
                 return await ctx.send(embed=embed)
-            level = PermissionLevel[name.upper()]
             name = level.name
 
         value = self._verify_user_or_role(user_or_role)
@@ -1370,9 +1386,15 @@ class Utility(commands.Cog):
 
         To find a list of permission levels, see `{prefix}help perms`.
 
+        To view all command and level permissions:
+
         Examples:
         - `{prefix}perms get @user`
         - `{prefix}perms get 984301093849028`
+
+        To view all users and roles of a command or level permission:
+
+        Examples:
         - `{prefix}perms get command reply`
         - `{prefix}perms get command plugin remove`
         - `{prefix}perms get level SUPPORTER`
@@ -1401,7 +1423,9 @@ class Utility(commands.Cog):
                 if value in permissions:
                     levels.append(level.name)
 
-            mention = getattr(user_or_role, "name", user_or_role)
+            mention = getattr(
+                user_or_role, "name", getattr(user_or_role, "id", user_or_role)
+            )
             desc_cmd = (
                 ", ".join(map(lambda x: f"`{x}`", cmds))
                 if cmds
@@ -1436,8 +1460,8 @@ class Utility(commands.Cog):
                     command = self.bot.get_command(name.lower())
                     check = command is not None
                 else:
-                    check = name.upper() in PermissionLevel.__members__
-                    level = PermissionLevel[name.upper()] if check else None
+                    level = self._parse_level(name)
+                    check = level is not None
 
                 if not check:
                     embed = Embed(
