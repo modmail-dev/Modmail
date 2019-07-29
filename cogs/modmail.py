@@ -87,7 +87,7 @@ class Modmail(commands.Cog):
         await self.bot.config.update()
         await ctx.send(
             "Successfully set up server.\n"
-            "Consider setting permission groups to give access "
+            "Consider setting permission levels to give access "
             "to roles or users the ability to use Modmail.\n"
             f"Type `{self.bot.prefix}permissions` for more info."
         )

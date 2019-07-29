@@ -220,9 +220,9 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         choices = set()
 
-        for name, cmd in self.context.bot.all_commands.items():
+        for cmd in self.context.bot.walk_commands():
             if not cmd.hidden:
-                choices.add(name)
+                choices.add(cmd.name)
 
         closest = get_close_matches(command, choices)
         if closest:
@@ -1221,7 +1221,7 @@ class Utility(commands.Cog):
     @permissions.command(name="add", usage="[command/level] [name] [user_or_role]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add(
-        self, ctx, type_: str.lower, name: str, *, user_or_role: Union[User, Role, str]
+        self, ctx, type_: str.lower, name: str, *, user_or_role: Union[Role, User, str]
     ):
         """
         Add a permission to a command or a permission level.
@@ -1279,7 +1279,7 @@ class Utility(commands.Cog):
     )
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove(
-        self, ctx, type_: str.lower, name: str, *, user_or_role: Union[User, Role, str]
+        self, ctx, type_: str.lower, name: str, *, user_or_role: Union[Role, User, str]
     ):
         """
         Remove permission to use a command or permission level.
@@ -1300,8 +1300,7 @@ class Utility(commands.Cog):
 
         level = None
         if type_ == "command":
-            command = self.bot.get_command(name.lower())
-            name = command.qualified_name if command is not None else name
+            name = getattr(self.bot.get_command(name.lower()), "qualified_name", name)
         else:
             if name.upper() not in PermissionLevel.__members__:
                 embed = Embed(
@@ -1364,7 +1363,7 @@ class Utility(commands.Cog):
     @permissions.command(name="get", usage="[@user] or [command/level] [name]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get(
-        self, ctx, user_or_role: Union[User, Role, str], *, name: str = None
+        self, ctx, user_or_role: Union[Role, User, str], *, name: str = None
     ):
         """
         View the currently-set permissions.
@@ -1388,7 +1387,7 @@ class Utility(commands.Cog):
             levels = []
 
             done = set()
-            for _, command in self.bot.all_commands.items():
+            for command in self.bot.walk_commands():
                 if command not in done:
                     done.add(command)
                     permissions = self.bot.config["command_permissions"].get(
@@ -1421,7 +1420,7 @@ class Utility(commands.Cog):
                     color=self.bot.main_color,
                 ),
                 Embed(
-                    title=f"{mention} has permission with the following permission groups:",
+                    title=f"{mention} has permission with the following permission levels:",
                     description=desc_level,
                     color=self.bot.main_color,
                 ),
@@ -1457,7 +1456,7 @@ class Utility(commands.Cog):
             else:
                 if user_or_role == "command":
                     done = set()
-                    for _, command in self.bot.all_commands.items():
+                    for command in self.bot.walk_commands():
                         if command not in done:
                             done.add(command)
                             embeds.append(

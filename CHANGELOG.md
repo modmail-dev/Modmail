@@ -225,7 +225,7 @@ Un-deprecated the `OWNERS` config variable to support discord developer team acc
 ### New Permissions System
 
 - A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desired permission level specific to a command or a group of commands for a role or user.
-- There are five permission groups/levels:
+- There are five permission levels:
   - Owner [5]
   - Administrator [4]
   - Moderator [3]
@@ -247,7 +247,7 @@ The same applies to individual commands permissions:
 
 To revoke permission, use `remove` instead of `add`.
 
-To view all roles and users with permission for a permission group or command do:
+To view all roles and users with permission for a permission level or command do:
 -  `?permissions get command command-name`
 -  `?permissions get level owner`
 
