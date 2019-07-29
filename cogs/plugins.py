@@ -260,7 +260,7 @@ class Plugins(commands.Cog):
                 )
                 await ctx.send(embed=embed)
 
-    @plugin.command(name="remove", aliases=["del", "delete", "rm"])
+    @plugin.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def plugin_remove(self, ctx, *, plugin_name: str):
         """Remove a plugin."""

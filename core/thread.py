@@ -229,7 +229,7 @@ class Thread:
         embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
         # embed.set_thumbnail(url=avi)
 
-        if member is None:
+        if member is not None:
             joined = str((time - member.joined_at).days)
             # embed.add_field(name='Joined', value=joined + days(joined))
             embed.description += f", joined {days(joined)}"

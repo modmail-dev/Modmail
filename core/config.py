@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import typing
+from collections import namedtuple
 from copy import deepcopy
 
 from dotenv import load_dotenv
@@ -129,12 +130,12 @@ class ConfigManager:
         data.update(
             {k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys}
         )
-        configjson = os.path.join(
+        config_json = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
         )
-        if os.path.exists(configjson):
+        if os.path.exists(config_json):
             logger.debug("Loading envs from config.json.")
-            with open(configjson, "r") as f:
+            with open(config_json, "r") as f:
                 # Config json should override env vars
                 try:
                     data.update(
@@ -150,11 +151,13 @@ class ConfigManager:
                     )
         self._cache = data
 
-        confighelpjson = os.path.join(
+        config_help_json = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "config_help.json"
         )
-        with open(confighelpjson, "r") as f:
-            self.config_help = json.load(f)
+        with open(config_help_json, "r") as f:
+            Entry = namedtuple("Entry", ["index", "embed"])
+            self.config_help = dict(sorted(json.load(f).items()))
+
         return self._cache
 
     async def clean_data(self, key: str, val: typing.Any) -> typing.Tuple[str, str]:

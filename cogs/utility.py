@@ -63,21 +63,22 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         embeds = []
         for format_ in formats:
-            description = cog.description or "No description." \
-                if not no_cog else "Miscellaneous commands without a category."
-            embed = Embed(
-                description=f'*{description}*',
-                color=bot.main_color,
+            description = (
+                cog.description or "No description."
+                if not no_cog
+                else "Miscellaneous commands without a category."
             )
+            embed = Embed(description=f"*{description}*", color=bot.main_color)
 
             embed.add_field(name="Commands", value=format_ or "No commands.")
 
             continued = " (Continued)" if embeds else ""
-            name = cog.qualified_name + " - Help" if not no_cog else "Miscellaneous Commands"
-            embed.set_author(
-                name=name + continued,
-                icon_url=bot.user.avatar_url,
+            name = (
+                cog.qualified_name + " - Help"
+                if not no_cog
+                else "Miscellaneous Commands"
             )
+            embed.set_author(name=name + continued, icon_url=bot.user.avatar_url)
 
             embed.set_footer(
                 text=f'Type "{prefix}{self.command_attrs["name"]} command" '
@@ -184,8 +185,9 @@ class ModmailHelpCommand(commands.HelpCommand):
         command = self.context.kwargs.get("command")
         val = self.context.bot.snippets.get(command)
         if val is not None:
-            return await self.get_destination().send(escape_mentions(f'**`{command}` is a snippet, '
-                                                                     f'content:**\n\n{val}'))
+            return await self.get_destination().send(
+                escape_mentions(f"**`{command}` is a snippet, " f"content:**\n\n{val}")
+            )
 
         val = self.context.bot.aliases.get(command)
         if val is not None:
@@ -205,16 +207,16 @@ class ModmailHelpCommand(commands.HelpCommand):
                 )
                 for i, val in enumerate(values, start=1):
                     embed.description += f"\n{i}: {escape_markdown(val)}"
-            embed.set_footer(text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} alias" for more '
-                                  'details on aliases.')
+            embed.set_footer(
+                text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} alias" for more '
+                "details on aliases."
+            )
             return await self.get_destination().send(embed=embed)
 
         logger.warning("CommandNotFound: %s", str(error))
 
         embed = Embed(color=Color.red())
-        embed.set_footer(
-            text=f'Command/Category "{command}" not found.'
-        )
+        embed.set_footer(text=f'Command/Category "{command}" not found.')
 
         choices = set()
 
@@ -748,10 +750,20 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_options(self, ctx):
         """Return a list of valid configuration names you can change."""
-        allowed = self.bot.config.public_keys
-        valid = ", ".join(f"`{k}`" for k in allowed)
-        embed = Embed(title="Valid Keys", description=valid, color=self.bot.main_color)
-        return await ctx.send(embed=embed)
+        embeds = []
+        for names in zip_longest(*(iter(sorted(self.bot.config.public_keys)),) * 15):
+            description = "\n".join(
+                f"`{name}`" for name in takewhile(lambda x: x is not None, names)
+            )
+            embed = Embed(
+                title="Available configuration keys:",
+                color=self.bot.main_color,
+                description=description,
+            )
+            embeds.append(embed)
+
+        session = PaginatorSession(ctx, *embeds)
+        await session.run()
 
     @config.command(name="set", aliases=["add"])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -784,7 +796,7 @@ class Utility(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @config.command(name="remove", aliases=["del", "delete", "rm"])
+    @config.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_remove(self, ctx, key: str.lower):
         """Delete a set configuration variable."""
@@ -867,9 +879,8 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         config_help = self.bot.config.config_help
-        info = config_help.get(key)
 
-        if info is None:
+        if key not in config_help:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
@@ -880,30 +891,40 @@ class Utility(commands.Cog):
         def fmt(val):
             return val.format(prefix=self.bot.prefix, bot=self.bot)
 
-        embed = Embed(
-            title=f"Configuration description on {key}:",
-            color=self.bot.main_color
-        )
-        embed.add_field(name='Default:', value=fmt(info['default']), inline=False)
-        embed.add_field(name='Information:', value=fmt(info['description']), inline=False)
-        example_text = ''
-        for example in info['examples']:
-            example_text += f'- {fmt(example)}\n'
-        embed.add_field(name='Example(s):', value=example_text, inline=False)
+        index = 0
+        embeds = []
+        for i, (current_key, info) in enumerate(config_help.items()):
+            if current_key == key:
+                index = i
+            embed = Embed(
+                title=f"Configuration description on {current_key}:",
+                color=self.bot.main_color,
+            )
+            embed.add_field(name="Default:", value=fmt(info["default"]), inline=False)
+            embed.add_field(
+                name="Information:", value=fmt(info["description"]), inline=False
+            )
+            example_text = ""
+            for example in info["examples"]:
+                example_text += f"- {fmt(example)}\n"
+            embed.add_field(name="Example(s):", value=example_text, inline=False)
 
-        note_text = ''
-        for note in info['notes']:
-            note_text += f'- {fmt(note)}\n'
-        if note_text:
-            embed.add_field(name='Note(s):', value=note_text, inline=False)
+            note_text = ""
+            for note in info["notes"]:
+                note_text += f"- {fmt(note)}\n"
+            if note_text:
+                embed.add_field(name="Note(s):", value=note_text, inline=False)
 
-        if info.get('image') is not None:
-            embed.set_image(url=fmt(info['image']))
+            if info.get("image") is not None:
+                embed.set_image(url=fmt(info["image"]))
 
-        if info.get('thumbnail') is not None:
-            embed.set_thumbnail(url=fmt(info['thumbnail']))
+            if info.get("thumbnail") is not None:
+                embed.set_thumbnail(url=fmt(info["thumbnail"]))
+            embeds += [embed]
 
-        return await ctx.send(embed=embed)
+        paginator = PaginatorSession(ctx, *embeds)
+        paginator.current = index
+        await paginator.run()
 
     @commands.group(aliases=["aliases"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
@@ -1265,9 +1286,7 @@ class Utility(commands.Cog):
         return await ctx.send(embed=embed)
 
     @permissions.group(
-        name="remove",
-        aliases=["del", "delete", "rm", "revoke"],
-        invoke_without_command=True,
+        name="remove", aliases=["del", "delete", "revoke"], invoke_without_command=True
     )
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove(self, ctx):

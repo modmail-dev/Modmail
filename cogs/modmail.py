@@ -146,7 +146,9 @@ class Modmail(commands.Cog):
 
         embeds = []
 
-        for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)):
+        for i, names in enumerate(
+            zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)
+        ):
             description = "\n".join(
                 ": ".join((str(a + i * 15), b))
                 for a, b in enumerate(
