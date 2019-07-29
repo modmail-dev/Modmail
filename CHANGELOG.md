@@ -24,6 +24,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Misc commands without cogs are now displayed in `?help`.
 - `?help` works for alias and snippets.
 - `?config help <config-name>` shows a help embed for the configuration.
+- Support setting permissions for sub commands.
 
 ### Changes
 
@@ -61,7 +62,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Bumped discord.py version to 1.2.3.
 - Use discord tasks for metadata loop.
 - More debug based logging.
-
+- Reduce redundancies in `?perms` sub commands.
+ 
 # v3.0.3
 
 ### Added
