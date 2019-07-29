@@ -1,4 +1,4 @@
-ROM library/python:latest
+FROM library/python:latest
 RUN apt update && apt install
 RUN apt install -y pipenv
 RUN mkdir -p /bot && cd /bot && git clone https://github.com/kyb3r/modmail .
