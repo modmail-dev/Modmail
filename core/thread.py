@@ -193,7 +193,7 @@ class Thread:
         # key = log_url.split('/')[-1]
 
         role_names = ""
-        if member is None:
+        if member is not None:
             sep_server = self.bot.using_multiple_server_setup
             separator = ", " if sep_server else " "
 
