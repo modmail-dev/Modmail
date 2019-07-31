@@ -570,16 +570,12 @@ class Modmail(commands.Cog):
         title = f"Total Results Found ({len(logs)})"
 
         for entry in logs:
-
-            key = entry["key"]
-
             created_at = parser.parse(entry["created_at"])
 
-            prefix = self.bot.config["log_url_prefix"]
-            if prefix == "NONE":
-                prefix = ""
-
-            log_url = self.bot.config["log_url"].strip("/") + f"{prefix}/{key}"
+            prefix = self.bot.config['log_url_prefix'].strip('/')
+            if prefix == 'NONE':
+                prefix = ''
+            log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{entry['key']}"
 
             username = entry["recipient"]["name"] + "#"
             username += entry["recipient"]["discriminator"]

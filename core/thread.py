@@ -338,12 +338,10 @@ class Thread:
         )
 
         if isinstance(log_data, dict):
-            prefix = self.bot.config["log_url_prefix"]
-            if prefix == "NONE":
-                prefix = ""
-            log_url = (
-                f"{self.bot.config['log_url'].strip('/')}{prefix}/{log_data['key']}"
-            )
+            prefix = self.bot.config['log_url_prefix'].strip('/')
+            if prefix == 'NONE':
+                prefix = ''
+            log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
 
             if log_data["messages"]:
                 content = str(log_data["messages"][0]["content"])
