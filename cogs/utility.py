@@ -33,6 +33,7 @@ from core.utils import (
     get_perm_level,
     create_not_found_embed,
     parse_alias,
+    format_description,
 )
 
 logger = logging.getLogger("Modmail")
@@ -248,11 +249,10 @@ class Utility(commands.Cog):
             verify_checks=False, command_attrs={"help": "Shows this help message."}
         )
         # Looks a bit ugly
-        # noinspection PyProtectedMember
-        self.bot.help_command._command_impl = checks.has_permissions(  # pylint: disable=W0212
+        self.bot.help_command._command_impl = checks.has_permissions(  # pylint: disable=protected-access
             PermissionLevel.REGULAR
         )(
-            self.bot.help_command._command_impl  # pylint: disable=W0212
+            self.bot.help_command._command_impl  # pylint: disable=protected-access
         )
 
         self.bot.help_command.cog = self
@@ -998,18 +998,25 @@ class Utility(commands.Cog):
         embeds = []
 
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
-            description = "\n".join(
-                ": ".join((str(a + i * 15), b))
-                for a, b in enumerate(
-                    takewhile(lambda x: x is not None, names), start=1
-                )
-            )
+            description = format_description(i, names)
             embed = Embed(color=self.bot.main_color, description=description)
             embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon_url)
             embeds.append(embed)
 
         session = PaginatorSession(ctx, *embeds)
         await session.run()
+
+    @alias.command(name="raw")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def alias_raw(self, ctx, *, name: str.lower):
+        """
+        View the raw content of an alias.
+        """
+        val = self.bot.aliases.get(name)
+        if val is None:
+            embed = create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+            return await ctx.send(embed=embed)
+        return await ctx.send(escape_markdown(escape_mentions(val)).replace("<", "\\<"))
 
     @alias.command(name="add")
     @checks.has_permissions(PermissionLevel.MODERATOR)
@@ -1027,36 +1034,36 @@ class Utility(commands.Cog):
         - This will fail: `{prefix}alias add reply You'll need to type && to work`
         - Correct method: `{prefix}alias add reply "You'll need to type && to work"`
         """
+        embed = None
         if self.bot.get_command(name):
             embed = Embed(
                 title="Error",
                 color=Color.red(),
                 description=f"A command with the same name already exists: `{name}`.",
             )
-            return await ctx.send(embed=embed)
 
-        if name in self.bot.aliases:
+        elif name in self.bot.aliases:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
                 description=f"Another alias with the same name already exists: `{name}`.",
             )
-            return await ctx.send(embed=embed)
 
-        if name in self.bot.snippets:
+        elif name in self.bot.snippets:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
                 description=f"A snippet with the same name already exists: `{name}`.",
             )
-            return await ctx.send(embed=embed)
 
-        if len(name) > 120:
+        elif len(name) > 120:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
                 description=f"Alias names cannot be longer than 120 characters.",
             )
+
+        if embed is not None:
             return await ctx.send(embed=embed)
 
         values = parse_alias(value)
@@ -1106,7 +1113,7 @@ class Utility(commands.Cog):
                     return await ctx.send(embed=embed)
                 embed.description += f"\n{i}: {val}"
 
-        self.bot.aliases[name] = "&&".join(values)
+        self.bot.aliases[name] = " && ".join(values)
         await self.bot.config.update()
 
         return await ctx.send(embed=embed)
@@ -1217,10 +1224,9 @@ class Utility(commands.Cog):
     def _verify_user_or_role(user_or_role):
         if hasattr(user_or_role, "id"):
             return user_or_role.id
-        elif user_or_role in {"everyone", "all"}:
+        if user_or_role in {"everyone", "all"}:
             return -1
-        else:
-            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
+        raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
     @staticmethod
     def _parse_level(name):

@@ -2,7 +2,8 @@ import re
 import shlex
 import typing
 from difflib import get_close_matches
-from distutils.util import strtobool as _stb  # pylint: disable=E0401
+from distutils.util import strtobool as _stb
+from itertools import takewhile
 from urllib import parse
 
 import discord
@@ -37,7 +38,7 @@ class User(commands.IDConverter):
         return discord.Object(int(match.group(1)))
 
 
-def truncate(text: str, max: int = 50) -> str:  # pylint: disable=W0622
+def truncate(text: str, max: int = 50) -> str:  # pylint: disable=redefined-builtin
     """
     Reduces the string to `max` length, by trimming the message into "...".
 
@@ -253,3 +254,10 @@ def parse_alias(alias):
     if not all(cmd):
         return []
     return cmd
+
+
+def format_description(i, names):
+    return "\n".join(
+        ": ".join((str(a + i * 15), b))
+        for a, b in enumerate(takewhile(lambda x: x is not None, names), start=1)
+    )

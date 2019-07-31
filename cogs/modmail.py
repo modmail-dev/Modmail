@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
-from itertools import zip_longest, takewhile
+from itertools import zip_longest
 from typing import Optional, Union
 from types import SimpleNamespace as param
 
@@ -17,7 +17,7 @@ from core.decorators import trigger_typing
 from core.models import PermissionLevel
 from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User, create_not_found_embed
+from core.utils import format_preview, User, create_not_found_embed, format_description
 
 logger = logging.getLogger("Modmail")
 
@@ -149,12 +149,7 @@ class Modmail(commands.Cog):
         for i, names in enumerate(
             zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)
         ):
-            description = "\n".join(
-                ": ".join((str(a + i * 15), b))
-                for a, b in enumerate(
-                    takewhile(lambda x: x is not None, names), start=1
-                )
-            )
+            description = format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
             embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
             embeds.append(embed)

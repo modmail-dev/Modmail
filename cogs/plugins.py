@@ -288,7 +288,7 @@ class Plugins(commands.Cog):
                     for i in self.bot.config["plugins"]
                 ):
                     # if there are no more of such repos, delete the folder
-                    def onerror(func, path, exc_info):  # pylint: disable=W0613
+                    def onerror(func, path, _):
                         if not os.access(path, os.W_OK):
                             # Is the error an access error?
                             os.chmod(path, stat.S_IWUSR)

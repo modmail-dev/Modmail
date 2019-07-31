@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import typing
-from collections import namedtuple
 from copy import deepcopy
 
 from dotenv import load_dotenv
@@ -155,7 +154,6 @@ class ConfigManager:
             os.path.dirname(os.path.abspath(__file__)), "config_help.json"
         )
         with open(config_help_json, "r") as f:
-            Entry = namedtuple("Entry", ["index", "embed"])
             self.config_help = dict(sorted(json.load(f).items()))
 
         return self._cache

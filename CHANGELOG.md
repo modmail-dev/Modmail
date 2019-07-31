@@ -39,6 +39,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - `?plugin registry page-number` plugin registry can specify a page number for quick access.
 - A reworked interface for `?snippet` and `?alias`.
   - Add an `?snippet raw <name>` command for viewing the raw content of a snippet (escaped markdown).
+  - Add an `?alias raw <name>` command for viewing the raw content of a alias (escaped markdown).
 - The placeholder channel for the streaming status changed to https://www.twitch.tv/discordmodmail/.
 - Removed unclear `rm` alias for some `remove` commands.
 - Paginate `?config options`.

@@ -338,9 +338,9 @@ class Thread:
         )
 
         if isinstance(log_data, dict):
-            prefix = self.bot.config['log_url_prefix'].strip('/')
-            if prefix == 'NONE':
-                prefix = ''
+            prefix = self.bot.config["log_url_prefix"].strip("/")
+            if prefix == "NONE":
+                prefix = ""
             log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
 
             if log_data["messages"]:
@@ -410,7 +410,9 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def cancel_closure(
-        self, auto_close: bool = False, all: bool = False  # pylint: disable=W0622
+        self,
+        auto_close: bool = False,
+        all: bool = False,  # pylint: disable=redefined-builtin
     ) -> None:
         if self.close_task is not None and (not auto_close or all):
             self.close_task.cancel()
@@ -746,8 +748,7 @@ class Thread:
             file_upload_count += 1
 
         if from_mod:
-            # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = self.bot.mod_color  # pylint: disable=E0237
+            embed.colour = self.bot.mod_color
             # Anonymous reply sent in thread channel
             if anonymous and isinstance(destination, discord.TextChannel):
                 embed.set_footer(text="Anonymous Reply")
@@ -760,12 +761,10 @@ class Thread:
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
         elif note:
-            # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = discord.Color.blurple()  # pylint: disable=E0237
+            embed.colour = discord.Color.blurple()
         else:
             embed.set_footer(text=f"Recipient")
-            # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = self.bot.recipient_color  # pylint: disable=E0237
+            embed.colour = self.bot.recipient_color
 
         try:
             await destination.trigger_typing()
