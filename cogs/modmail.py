@@ -117,7 +117,7 @@ class Modmail(commands.Cog):
         with `{prefix}snippet-name`, the message "A pre-defined text."
         will be sent to the recipient.
 
-        Currently, there is not a default anonymous snippet command; however, a workaround
+        Currently, there is not a built-in anonymous snippet command; however, a workaround
         is available using `{prefix}alias`. Here is how:
         - `{prefix}alias add snippet-name anonreply A pre-defined anonymous text.`
 
@@ -165,6 +165,9 @@ class Modmail(commands.Cog):
     @snippet.command(name="raw")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippet_raw(self, ctx, *, name: str.lower):
+        """
+        View the raw content of a snippet.
+        """
         val = self.bot.snippets.get(name)
         if val is None:
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
