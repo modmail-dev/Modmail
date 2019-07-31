@@ -844,8 +844,9 @@ class Utility(commands.Cog):
                     color=Color.red(),
                     description=f"`{key}` is an invalid key.",
                 )
-                valid_keys = [f"`{k}`" for k in keys]
-                embed.add_field(name="Valid keys", value=", ".join(valid_keys))
+                embed.set_footer(
+                    text=f'Type "{self.bot.prefix}config options" for a list of config variables.'
+                )
 
         else:
             embed = Embed(
@@ -870,7 +871,9 @@ class Utility(commands.Cog):
         """
         Show information on a specified configuration.
         """
-        if key not in self.bot.config.public_keys:
+        if not (
+            key in self.bot.config.public_keys or key in self.bot.config.protected_keys
+        ):
             embed = Embed(
                 title="Error",
                 color=Color.red(),
@@ -904,10 +907,11 @@ class Utility(commands.Cog):
             embed.add_field(
                 name="Information:", value=fmt(info["description"]), inline=False
             )
-            example_text = ""
-            for example in info["examples"]:
-                example_text += f"- {fmt(example)}\n"
-            embed.add_field(name="Example(s):", value=example_text, inline=False)
+            if info["examples"]:
+                example_text = ""
+                for example in info["examples"]:
+                    example_text += f"- {fmt(example)}\n"
+                embed.add_field(name="Example(s):", value=example_text, inline=False)
 
             note_text = ""
             for note in info["notes"]:

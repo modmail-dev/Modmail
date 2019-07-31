@@ -373,5 +373,77 @@
       "See also: `anon_avatar_url`, `anon_username`, `mod_tag`."
     ],
     "image": "https://i.imgur.com/SKOC42Z.png"
+  },
+  "modmail_guild_id": {
+    "default": "Fallback on `GUILD_ID`",
+    "description": "The ID of the discord server where the threads channels should be created (receiving server).",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "guild_id": {
+    "default": "None, required",
+    "description": "The ID of the discord server where recipient users reside (users server).",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "log_url": {
+    "default": "https://example.com/",
+    "description": "The base log viewer URL link, leave this as-is to not configure a log viewer.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "log_url_prefix": {
+    "default": "`/logs`",
+    "description": "The path to your log viewer extending from your `LOG_URL`, set this to `/` to specify no extra path to the log viewer.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "mongo_uri": {
+    "default": "None, required",
+    "description": "A MongoDB SRV connection string.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "owners": {
+    "default": "None, required",
+    "description": "A list of definite bot owners, use `{prefix}perms add level OWNER @user` to set flexible bot owners.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+    ]
+  },
+  "token": {
+    "default": "None, required",
+    "description": "Your bot token as found in the Discord Developer Portal.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+    ]
+  },
+  "log_level": {
+    "default": "INFO",
+    "description": "The logging level for logging to stdout.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+    ]
   }
 }

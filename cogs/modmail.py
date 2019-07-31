@@ -572,9 +572,9 @@ class Modmail(commands.Cog):
         for entry in logs:
             created_at = parser.parse(entry["created_at"])
 
-            prefix = self.bot.config['log_url_prefix'].strip('/')
-            if prefix == 'NONE':
-                prefix = ''
+            prefix = self.bot.config["log_url_prefix"].strip("/")
+            if prefix == "NONE":
+                prefix = ""
             log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{entry['key']}"
 
             username = entry["recipient"]["name"] + "#"
