@@ -610,7 +610,7 @@ class Utility(commands.Cog):
         """Pong! Returns your websocket latency."""
         embed = Embed(
             title="Pong! Websocket Latency:",
-            description=f"{self.bot.ws.latency * 1000:.4f} ms",
+            description=f"{self.bot.ws.latency * 1000:.2f} ms",
             color=self.bot.main_color,
         )
         return await ctx.send(embed=embed)
