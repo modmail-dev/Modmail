@@ -194,18 +194,18 @@ class PaginatorSession:
         """
         self.running = False
 
+        sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
+        try:
+            await self.ctx.message.add_reaction(sent_emoji)
+        except (HTTPException, InvalidArgument):
+            pass
+
         if delete:
             return await self.base.delete()
 
         try:
             await self.base.clear_reactions()
         except HTTPException:
-            pass
-
-        sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
-        try:
-            await self.ctx.message.add_reaction(sent_emoji)
-        except (HTTPException, InvalidArgument):
             pass
 
     async def first_page(self) -> None:
@@ -391,7 +391,11 @@ class MessagePaginatorSession:
         """
         self.running = False
 
-        self.ctx.bot.loop.create_task(self.ctx.message.add_reaction("✅"))
+        sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
+        try:
+            await self.ctx.message.add_reaction(sent_emoji)
+        except (HTTPException, InvalidArgument):
+            pass
 
         if delete:
             return await self.base.delete()
