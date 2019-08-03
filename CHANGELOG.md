@@ -66,7 +66,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Use discord tasks for metadata loop.
 - More debug based logging.
 - Reduce redundancies in `?perms` sub commands.
- 
+- paginator been split into `EmbedPaginatorSession` and `MessagePaginatorSession`, both subclassing `PaginatorSession`.
+
 # v3.0.3
 
 ### Added

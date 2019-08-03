@@ -15,7 +15,7 @@ from natural.date import duration
 from core import checks
 from core.decorators import trigger_typing
 from core.models import PermissionLevel
-from core.paginator import PaginatorSession
+from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import format_preview, User, create_not_found_embed, format_description
 
@@ -154,7 +154,7 @@ class Modmail(commands.Cog):
             embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
             embeds.append(embed)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @snippet.command(name="raw")
@@ -631,7 +631,7 @@ class Modmail(commands.Cog):
 
         embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @logs.command(name="closed-by", aliases=["closeby"])
@@ -664,7 +664,7 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @logs.command(name="search", aliases=["find"])
@@ -697,7 +697,7 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @commands.command()
@@ -893,7 +893,8 @@ class Modmail(commands.Cog):
         else:
             embeds[-1].description = "Currently there are no blocked users."
 
-        await PaginatorSession(ctx, *embeds).run()
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
 
     @blocked.command(name="whitelist")
     @checks.has_permissions(PermissionLevel.MODERATOR)

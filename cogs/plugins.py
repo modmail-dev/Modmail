@@ -17,7 +17,7 @@ from pkg_resources import parse_version
 
 from core import checks
 from core.models import PermissionLevel
-from core.paginator import PaginatorSession
+from core.paginator import EmbedPaginatorSession
 
 logger = logging.getLogger("Modmail")
 
@@ -465,7 +465,7 @@ class Plugins(commands.Cog):
 
             embeds.append(embed)
 
-        paginator = PaginatorSession(ctx, *embeds)
+        paginator = EmbedPaginatorSession(ctx, *embeds)
         paginator.current = index
         await paginator.run()
 
@@ -499,7 +499,7 @@ class Plugins(commands.Cog):
             embed.set_author(name="Plugin Registry", icon_url=self.bot.user.avatar_url)
             embeds.append(embed)
 
-        paginator = PaginatorSession(ctx, *embeds)
+        paginator = EmbedPaginatorSession(ctx, *embeds)
         await paginator.run()
 
 

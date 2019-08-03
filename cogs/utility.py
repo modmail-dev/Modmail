@@ -26,7 +26,7 @@ from core import checks
 from core.changelog import Changelog
 from core.decorators import trigger_typing
 from core.models import InvalidConfigError, PermissionLevel
-from core.paginator import PaginatorSession, MessagePaginatorSession
+from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 from core.utils import (
     cleanup_code,
     User,
@@ -112,17 +112,17 @@ class ModmailHelpCommand(commands.HelpCommand):
         if no_cog_commands:
             embeds.extend(await self.format_cog_help(no_cog_commands, no_cog=True))
 
-        p_session = PaginatorSession(
+        session = EmbedPaginatorSession(
             self.context, *embeds, destination=self.get_destination()
         )
-        return await p_session.run()
+        return await session.run()
 
     async def send_cog_help(self, cog):
         embeds = await self.format_cog_help(cog)
-        p_session = PaginatorSession(
+        session = EmbedPaginatorSession(
             self.context, *embeds, destination=self.get_destination()
         )
-        return await p_session.run()
+        return await session.run()
 
     async def send_command_help(self, command):
         if not await self.filter_commands([command]):
@@ -285,7 +285,7 @@ class Utility(commands.Cog):
             )
 
         try:
-            paginator = PaginatorSession(ctx, *changelog.embeds)
+            paginator = EmbedPaginatorSession(ctx, *changelog.embeds)
             paginator.current = index
             await paginator.run()
         except asyncio.CancelledError:
@@ -358,7 +358,7 @@ class Utility(commands.Cog):
 
         random.shuffle(embeds)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @commands.group(invoke_without_command=True)
@@ -762,7 +762,7 @@ class Utility(commands.Cog):
             )
             embeds.append(embed)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @config.command(name="set", aliases=["add"])
@@ -926,7 +926,7 @@ class Utility(commands.Cog):
                 embed.set_thumbnail(url=fmt(info["thumbnail"]))
             embeds += [embed]
 
-        paginator = PaginatorSession(ctx, *embeds)
+        paginator = EmbedPaginatorSession(ctx, *embeds)
         paginator.current = index
         await paginator.run()
 
@@ -1003,7 +1003,7 @@ class Utility(commands.Cog):
             embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon_url)
             embeds.append(embed)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @alias.command(name="raw")
@@ -1500,8 +1500,8 @@ class Utility(commands.Cog):
                     for perm_level in PermissionLevel:
                         embeds.append(self._get_perm(ctx, perm_level.name, "level"))
 
-        p_session = PaginatorSession(ctx, *embeds)
-        return await p_session.run()
+        session = EmbedPaginatorSession(ctx, *embeds)
+        return await session.run()
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
