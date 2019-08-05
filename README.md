@@ -6,23 +6,23 @@
   <br>
 
   <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
-    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge">
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge&logo=Heroku">
   </a>
-  
+
   <a href="https://github.com/kyb3r/modmail/">
     <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances">
   </a>
 
   <a href="https://discord.gg/j5e9p8w">
-    <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support">
+    <img src="https://img.shields.io/discord/515071617815019520.svg?label=Discord&logo=Discord&style=for-the-badge" alt="Support">
   </a>
 
   <a href="https://patreon.com/kyber">
-    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7">
+    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge&logo=Patreon" alt="Python 3.7">
   </a>
 
   <a href="https://www.python.org/downloads/">
-    <img src="https://img.shields.io/badge/Made%20With-Python%203.7-blue.svg?style=for-the-badge" alt="Made with Python 3.7">
+    <img src="https://img.shields.io/badge/Made%20With-Python%203.7-blue.svg?style=for-the-badge&logo=Python" alt="Made with Python 3.7">
   </a>
 
   <a href="https://github.com/kyb3r/modmail/archive/master.zip">
