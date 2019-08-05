@@ -8,9 +8,11 @@
   <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
     <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge">
   </a>
+  
   <a href="https://github.com/kyb3r/modmail/">
     <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances">
   </a>
+
   <a href="https://discord.gg/j5e9p8w">
     <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support">
   </a>
