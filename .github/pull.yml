@@ -1,0 +1,8 @@
+version: "1"
+rules:
+  - base: master
+    upstream: kyb3r:master
+    mergeMethod: hardreset
+  - base: development
+    upstream: kyb3r:development
+    mergeMethod: hardreset
