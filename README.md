@@ -30,7 +30,7 @@
   </a>
 
   <a href="https://travis-ci.com/kyb3r/modmail">
-    <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge">
+    <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge&logo=Travis">
   </a>  
 
   <a href="https://github.com/ambv/black">
