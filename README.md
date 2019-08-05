@@ -23,9 +23,7 @@
     <img src="https://img.shields.io/badge/Made%20With-Python%203.7-blue.svg?style=for-the-badge" alt="Made with Python 3.7">
   </a>
 
-  <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
-    <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
-  </a>
+  <a img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge"/a> 
 
   <a href="https://travis-ci.com/kyb3r/modmail">
     <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge">
@@ -33,6 +31,10 @@
 
   <a href="https://github.com/ambv/black">
     <img src="https://img.shields.io/badge/Code%20Style-Black-black?style=for-the-badge">
+  </a>
+
+  <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
 <br>
