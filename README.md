@@ -14,7 +14,7 @@
   </a>
 
   <a href="https://discord.gg/j5e9p8w">
-    <img src="https://img.shields.io/discord/515071617815019520.svg?label=Discord&logo=Discord&style=for-the-badge" alt="Support">
+    <img src="https://img.shields.io/discord/515071617815019520.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge" alt="Support">
   </a>
 
   <a href="https://patreon.com/kyber">
