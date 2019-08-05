@@ -23,7 +23,8 @@
     <img src="https://img.shields.io/badge/Made%20With-Python%203.7-blue.svg?style=for-the-badge" alt="Made with Python 3.7">
   </a>
 
-  <a img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge"/a> 
+  <a img src="https://counter.modmail-plugins.ionadev.ml/embed/announcement">
+  </a>
 
   <a href="https://travis-ci.com/kyb3r/modmail">
     <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge">
