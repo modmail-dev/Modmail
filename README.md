@@ -27,14 +27,13 @@
     <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
-  </p>
   <p align="center">
     <a href="https://travis-ci.com/kyb3r/modmail">
-      <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge"
+      <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge">
     </a>  
 
     <a href="https://github.com/ambv/black">
-          <img src="https://img.shields.io/badge/Code%20Style-Black-black?style=for-the-badge"
+          <img src="https://img.shields.io/badge/Code%20Style-Black-black?style=for-the-badge">
     </a>
 
 <br>
