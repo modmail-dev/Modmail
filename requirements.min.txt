@@ -3,7 +3,7 @@
 # To install requirements.txt run: pip install -r requirements.min.txt
 
 aiohttp==3.5.4
-discord.py==1.1.1
+discord.py==1.2.3
 dnspython==1.16.0
 emoji==0.5.2
 isodate==0.6.0
