@@ -27,7 +27,6 @@
     <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
-  <p align="center">
     <a href="https://travis-ci.com/kyb3r/modmail">
       <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge">
     </a>  
