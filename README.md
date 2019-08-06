@@ -4,21 +4,39 @@
   <strong><i>A feature-rich Modmail bot for Discord.</i></strong>
   <br>
   <br>
-    
+
   <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
-    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge">
+    <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge&logo=Heroku">
   </a>
-  <a href="https://github.com/kyb3r/modmail/">	
-    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances">	
+
+  <a href="https://github.com/kyb3r/modmail/">
+    <img src="https://api.modmail.tk/badges/instances.svg" alt="Bot instances">
   </a>
+
   <a href="https://discord.gg/j5e9p8w">
-    <img src="https://img.shields.io/discord/515071617815019520.svg?style=for-the-badge&colorB=7289DA" alt="Support">
+    <img src="https://img.shields.io/discord/515071617815019520.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge" alt="Support">
   </a>
-  
+
   <a href="https://patreon.com/kyber">
-    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge" alt="Python 3.7">
+    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge&logo=Patreon" alt="Python 3.7">
   </a>
-  
+
+  <a href="https://www.python.org/downloads/">
+    <img src="https://img.shields.io/badge/Made%20With-Python%203.7-blue.svg?style=for-the-badge&logo=Python" alt="Made with Python 3.7">
+  </a>
+
+  <a href="https://github.com/kyb3r/modmail/archive/master.zip">
+    <img src="https://counter.modmail-plugins.ionadev.ml/embed/announcement">
+  </a>
+
+  <a href="https://travis-ci.com/kyb3r/modmail">
+    <img src="https://img.shields.io/travis/com/kyb3r/modmail?style=for-the-badge&logo=Travis">
+  </a>  
+
+  <a href="https://github.com/ambv/black">
+    <img src="https://img.shields.io/badge/Code%20Style-Black-black?style=for-the-badge">
+  </a>
+
   <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
@@ -35,7 +53,7 @@ Modmail is similar to Reddit's Modmail both in functionality and purpose. It ser
 This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, you can support us on **[Patreon](https://www.patreon.com/kyber)**, cool benefits included! 
 
 ## How does it work?
-When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user. 
+When a member sends a direct message to the bot, a channel or "thread" is created within an isolated category for that member. This channel is where messages will be relayed and where any available staff member can respond to that user.
 
 All threads are logged and you can view previous threads through the corresponding generated log link. Here is an [**example**](https://logs.modmail.tk/example).
 
@@ -65,6 +83,7 @@ This list is ever-growing thanks to active development and our exceptional contr
 
 ## Installation
 
+<<<<<<< HEAD
 ### Heroku
 
 This bot can be hosted on Heroku. 
@@ -112,8 +131,8 @@ $ pipenv run bot
 
 Special thanks to our sponsors for supporting the project.
 
-<a href='https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ/featured'> 
-  <img height=150 src='https://i.imgur.com/WyzaPKY.png' style='margin:10'> 
+<a href='https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ/featured'>
+  <img height=150 src='https://i.imgur.com/WyzaPKY.png' style='margin:10'>
 </a>
 
 Become a [sponsor](https://patreon.com/kyber).
@@ -125,3 +144,5 @@ Modmail supports the use of third-party plugins to extend or add functionality t
 ## Contributing
 
 Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started. 
+
+This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, here's the link to our **[Patreon Page](https://www.patreon.com/kyber)**!
