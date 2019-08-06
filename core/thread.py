@@ -4,7 +4,7 @@ import re
 import string
 import typing
 from datetime import datetime, timedelta
-from types import SimpleNamespace as param
+from types import SimpleNamespace
 
 import isodate
 
@@ -144,8 +144,8 @@ class Thread:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self.genesis_message = msg
-            except Exception as e:
-                logger.error(str(e))
+            except Exception:
+                logger.error("Failed unexpectedly:", exc_info=True)
             finally:
                 self.ready = True
 
@@ -539,7 +539,7 @@ class Thread:
 
     async def note(self, message: discord.Message) -> None:
         if not message.content and not message.attachments:
-            raise MissingRequiredArgument(param(name="msg"))
+            raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
         _, msg = await asyncio.gather(
             self.bot.api.append_log(message, self.channel.id, type_="system"),
@@ -550,7 +550,7 @@ class Thread:
 
     async def reply(self, message: discord.Message, anonymous: bool = False) -> None:
         if not message.content and not message.attachments:
-            raise MissingRequiredArgument(param(name="msg"))
+            raise MissingRequiredArgument(SimpleNamespace(name="msg"))
         if not any(g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
                 embed=discord.Embed(

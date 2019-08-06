@@ -62,9 +62,9 @@ class Plugins(commands.Cog):
             if "@" in result[2]:
                 # branch is specified
                 # for example, fourjr/modmail-plugins/welcomer@develop is a valid name
-                branchsplit_result = result[2].split("@")
-                result.append(branchsplit_result[-1])
-                result[2] = "@".join(branchsplit_result[:-1])
+                branch_split_result = result[2].split("@")
+                result.append(branch_split_result[-1])
+                result[2] = "@".join(branch_split_result[:-1])
             else:
                 result.append("master")
 

@@ -99,9 +99,9 @@ class ApiClient(RequestClient):
     async def get_log_link(self, channel_id: Union[str, int]) -> str:
         doc = await self.get_log(channel_id)
         logger.debug("Retrieving log link for channel %s.", channel_id)
-        prefix = self.bot.config['log_url_prefix'].strip('/')
-        if prefix == 'NONE':
-            prefix = ''
+        prefix = self.bot.config["log_url_prefix"].strip("/")
+        if prefix == "NONE":
+            prefix = ""
         return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{doc['key']}"
 
     async def create_log_entry(
@@ -138,9 +138,9 @@ class ApiClient(RequestClient):
             }
         )
         logger.debug("Created a log entry, key %s.", key)
-        prefix = self.bot.config['log_url_prefix'].strip('/')
-        if prefix == 'NONE':
-            prefix = ''
+        prefix = self.bot.config["log_url_prefix"].strip("/")
+        if prefix == "NONE":
+            prefix = ""
         return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{key}"
 
     async def get_config(self) -> dict:

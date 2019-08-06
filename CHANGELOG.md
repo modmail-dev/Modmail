@@ -43,6 +43,9 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - The placeholder channel for the streaming status changed to https://www.twitch.tv/discordmodmail/.
 - Removed unclear `rm` alias for some `remove` commands.
 - Paginate `?config options`.
+- All users configured with a permission level greater than REGULAR has access to the main Modmail category.
+  - Category overrides also changes when a level is removed or added to a user or role.
+- `@everyone` is now accepted for `?perms add`.
 
 ### Fixes
 

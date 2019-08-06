@@ -11,12 +11,12 @@ from io import StringIO, BytesIO
 from itertools import zip_longest, takewhile
 from json import JSONDecodeError, loads
 from textwrap import indent
-from types import SimpleNamespace as param
+from types import SimpleNamespace
 from typing import Union
 
 from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.utils import escape_markdown, escape_mentions
 
 from aiohttp import ClientResponseError
@@ -27,14 +27,7 @@ from core.changelog import Changelog
 from core.decorators import trigger_typing
 from core.models import InvalidConfigError, PermissionLevel
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
-from core.utils import (
-    cleanup_code,
-    User,
-    get_perm_level,
-    create_not_found_embed,
-    parse_alias,
-    format_description,
-)
+from core import utils
 
 logger = logging.getLogger("Modmail")
 
@@ -46,9 +39,11 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         formats = [""]
         for cmd in await self.filter_commands(
-            cog.get_commands() if not no_cog else cog, sort=True, key=get_perm_level
+            cog.get_commands() if not no_cog else cog,
+            sort=True,
+            key=utils.get_perm_level,
         ):
-            perm_level = get_perm_level(cmd)
+            perm_level = utils.get_perm_level(cmd)
             if perm_level is PermissionLevel.INVALID:
                 format_ = f"`{prefix + cmd.qualified_name}` "
             else:
@@ -127,7 +122,7 @@ class ModmailHelpCommand(commands.HelpCommand):
     async def send_command_help(self, command):
         if not await self.filter_commands([command]):
             return
-        perm_level = get_perm_level(command)
+        perm_level = utils.get_perm_level(command)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f"{perm_level.name} [{perm_level}]"
         else:
@@ -145,7 +140,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         if not await self.filter_commands([group]):
             return
 
-        perm_level = get_perm_level(group)
+        perm_level = utils.get_perm_level(group)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f"{perm_level.name} [{perm_level}]"
         else:
@@ -192,7 +187,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         val = self.context.bot.aliases.get(command)
         if val is not None:
-            values = parse_alias(val)
+            values = utils.parse_alias(val)
 
             if len(values) == 1:
                 embed = Embed(
@@ -246,22 +241,14 @@ class Utility(commands.Cog):
         self.bot = bot
         self._original_help_command = bot.help_command
         self.bot.help_command = ModmailHelpCommand(
-            verify_checks=False, command_attrs={"help": "Shows this help message."}
+            verify_checks=False,
+            command_attrs={
+                "help": "Shows this help message.",
+                "checks": [checks.has_permissions_help(PermissionLevel.REGULAR)],
+            },
         )
-        # Looks a bit ugly
-        self.bot.help_command._command_impl = checks.has_permissions(  # pylint: disable=protected-access
-            PermissionLevel.REGULAR
-        )(
-            self.bot.help_command._command_impl  # pylint: disable=protected-access
-        )
-
         self.bot.help_command.cog = self
-
-        # Class Variables
-        self.presence = None
-
-        # Tasks
-        self.presence_task = self.bot.loop.create_task(self.loop_presence())
+        self.loop_presence.start()
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
@@ -512,7 +499,7 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         if not message:
-            raise commands.MissingRequiredArgument(param(name="message"))
+            raise commands.MissingRequiredArgument(SimpleNamespace(name="message"))
 
         activity, msg = (
             await self.set_presence(
@@ -522,7 +509,7 @@ class Utility(commands.Cog):
             )
         )["activity"]
         if activity is None:
-            raise commands.MissingRequiredArgument(param(name="activity"))
+            raise commands.MissingRequiredArgument(SimpleNamespace(name="activity"))
 
         self.bot.config["activity_type"] = activity.type.value
         self.bot.config["activity_message"] = message
@@ -561,7 +548,7 @@ class Utility(commands.Cog):
             await self.set_presence(status_identifier=status_type, status_by_key=True)
         )["status"]
         if status is None:
-            raise commands.MissingRequiredArgument(param(name="status"))
+            raise commands.MissingRequiredArgument(SimpleNamespace(name="status"))
 
         self.bot.config["status"] = status.value
         await self.bot.config.update()
@@ -631,7 +618,7 @@ class Utility(commands.Cog):
                 activity = Activity(type=activity_type, name=activity_message, url=url)
             else:
                 msg = "You must supply an activity message to use custom activity."
-                logger.warning(msg)
+                logger.debug(msg)
 
         await self.bot.change_presence(activity=activity, status=status)
 
@@ -649,19 +636,18 @@ class Utility(commands.Cog):
             presence["status"] = (status, msg)
         return presence
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        # Wait until config cache is populated with stuff from db
-        await self.bot.wait_for_connected()
-        logger.info(self.presence["activity"][1])
-        logger.info(self.presence["status"][1])
-
+    @tasks.loop(minutes=45)
     async def loop_presence(self):
-        """Set presence to the configured value every hour."""
+        """Set presence to the configured value every 45 minutes."""
+        presence = await self.set_presence()
+        logger.line()
+        logger.info(presence["activity"][1])
+        logger.info(presence["status"][1])
+
+    @loop_presence.before_loop
+    async def before_loop_presence(self):
+        logger.info("Starting metadata loop.")
         await self.bot.wait_for_connected()
-        while not self.bot.is_closed():
-            self.presence = await self.set_presence()
-            await asyncio.sleep(600)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
@@ -867,11 +853,11 @@ class Utility(commands.Cog):
 
     @config.command(name="help", aliases=["info"])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def config_help(self, ctx, key: str.lower):
+    async def config_help(self, ctx, key: str.lower = None):
         """
         Show information on a specified configuration.
         """
-        if not (
+        if key is not None and not (
             key in self.bot.config.public_keys or key in self.bot.config.protected_keys
         ):
             embed = Embed(
@@ -883,7 +869,7 @@ class Utility(commands.Cog):
 
         config_help = self.bot.config.config_help
 
-        if key not in config_help:
+        if key is not None and key not in config_help:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
@@ -955,10 +941,12 @@ class Utility(commands.Cog):
         if name is not None:
             val = self.bot.aliases.get(name)
             if val is None:
-                embed = create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+                embed = utils.create_not_found_embed(
+                    name, self.bot.aliases.keys(), "Alias"
+                )
                 return await ctx.send(embed=embed)
 
-            values = parse_alias(val)
+            values = utils.parse_alias(val)
 
             if not values:
                 embed = Embed(
@@ -998,7 +986,7 @@ class Utility(commands.Cog):
         embeds = []
 
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
-            description = format_description(i, names)
+            description = utils.format_description(i, names)
             embed = Embed(color=self.bot.main_color, description=description)
             embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon_url)
             embeds.append(embed)
@@ -1014,7 +1002,7 @@ class Utility(commands.Cog):
         """
         val = self.bot.aliases.get(name)
         if val is None:
-            embed = create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+            embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
             return await ctx.send(embed=embed)
         return await ctx.send(escape_markdown(escape_mentions(val)).replace("<", "\\<"))
 
@@ -1066,7 +1054,7 @@ class Utility(commands.Cog):
         if embed is not None:
             return await ctx.send(embed=embed)
 
-        values = parse_alias(value)
+        values = utils.parse_alias(value)
 
         if not values:
             embed = Embed(
@@ -1133,7 +1121,7 @@ class Utility(commands.Cog):
                 description=f"Successfully deleted `{name}`.",
             )
         else:
-            embed = create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+            embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
 
         return await ctx.send(embed=embed)
 
@@ -1144,10 +1132,10 @@ class Utility(commands.Cog):
         Edit an alias.
         """
         if name not in self.bot.aliases:
-            embed = create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+            embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
             return await ctx.send(embed=embed)
 
-        values = parse_alias(value)
+        values = utils.parse_alias(value)
 
         if not values:
             embed = Embed(
@@ -1222,10 +1210,13 @@ class Utility(commands.Cog):
 
     @staticmethod
     def _verify_user_or_role(user_or_role):
+        if isinstance(user_or_role, Role):
+            if user_or_role.is_default():
+                return -1
+        elif user_or_role in {"everyone", "all"}:
+            return -1
         if hasattr(user_or_role, "id"):
             return user_or_role.id
-        if user_or_role in {"everyone", "all"}:
-            return -1
         raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
     @staticmethod
@@ -1247,7 +1238,12 @@ class Utility(commands.Cog):
     @permissions.command(name="add", usage="[command/level] [name] [user_or_role]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add(
-        self, ctx, type_: str.lower, name: str, *, user_or_role: Union[Role, User, str]
+        self,
+        ctx,
+        type_: str.lower,
+        name: str,
+        *,
+        user_or_role: Union[Role, utils.User, str],
     ):
         """
         Add a permission to a command or a permission level.
@@ -1290,6 +1286,18 @@ class Utility(commands.Cog):
         else:
             await self.bot.update_perms(level, value)
             name = level.name
+            if level > PermissionLevel.REGULAR:
+                if value == -1:
+                    key = self.bot.modmail_guild.default_role
+                elif isinstance(user_or_role, Role):
+                    key = user_or_role
+                else:
+                    key = self.bot.modmail_guild.get_member(value)
+                if key is not None:
+                    logger.info("Granting %s access to Modmail category.", key.name)
+                    await self.bot.main_category.set_permissions(
+                        key, read_messages=True
+                    )
 
         embed = Embed(
             title="Success",
@@ -1305,7 +1313,12 @@ class Utility(commands.Cog):
     )
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove(
-        self, ctx, type_: str.lower, name: str, *, user_or_role: Union[Role, User, str]
+        self,
+        ctx,
+        type_: str.lower,
+        name: str,
+        *,
+        user_or_role: Union[Role, utils.User, str],
     ):
         """
         Remove permission to use a command or permission level.
@@ -1340,6 +1353,30 @@ class Utility(commands.Cog):
 
         value = self._verify_user_or_role(user_or_role)
         await self.bot.update_perms(level or name, value, add=False)
+
+        if type_ == "level":
+            if level > PermissionLevel.REGULAR:
+                if value == -1:
+                    logger.info("Denying @everyone access to Modmail category.")
+                    await self.bot.main_category.set_permissions(
+                        self.bot.modmail_guild.default_role, read_messages=False
+                    )
+                elif isinstance(user_or_role, Role):
+                    logger.info(
+                        "Denying %s access to Modmail category.", user_or_role.name
+                    )
+                    await self.bot.main_category.set_permissions(
+                        user_or_role, overwrite=None
+                    )
+                else:
+                    member = self.bot.modmail_guild.get_member(value)
+                    if member is not None and member != self.bot.modmail_guild.me:
+                        logger.info(
+                            "Denying %s access to Modmail category.", member.name
+                        )
+                        await self.bot.main_category.set_permissions(
+                            member, overwrite=None
+                        )
 
         embed = Embed(
             title="Success",
@@ -1389,7 +1426,7 @@ class Utility(commands.Cog):
     @permissions.command(name="get", usage="[@user] or [command/level] [name]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get(
-        self, ctx, user_or_role: Union[Role, User, str], *, name: str = None
+        self, ctx, user_or_role: Union[Role, utils.User, str], *, name: str = None
     ):
         """
         View the currently-set permissions.
@@ -1514,7 +1551,7 @@ class Utility(commands.Cog):
 
     @oauth.command(name="whitelist")
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def oauth_whitelist(self, ctx, target: Union[User, Role]):
+    async def oauth_whitelist(self, ctx, target: Union[Role, utils.User]):
         """
         Whitelist or un-whitelist a user or role to have access to logs.
 
@@ -1593,7 +1630,7 @@ class Utility(commands.Cog):
 
         env.update(globals())
 
-        body = cleanup_code(body)
+        body = utils.cleanup_code(body)
         stdout = StringIO()
 
         to_compile = f'async def func():\n{indent(body, "  ")}'

@@ -7,6 +7,16 @@ from core.models import PermissionLevel
 logger = logging.getLogger("Modmail")
 
 
+def has_permissions_help(permission_level: PermissionLevel = PermissionLevel.REGULAR):
+    async def predicate(ctx):
+        return await check_permissions(
+            ctx, ctx.command.qualified_name, permission_level
+        )
+
+    predicate.permission_level = permission_level
+    return predicate
+
+
 def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR):
     """
     A decorator that checks if the author has the required permissions.

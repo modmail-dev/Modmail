@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from itertools import zip_longest
 from typing import Optional, Union
-from types import SimpleNamespace as param
+from types import SimpleNamespace
 
 import discord
 from discord.ext import commands
@@ -39,6 +39,11 @@ class Modmail(commands.Cog):
         once after configuring Modmail.
         """
 
+        if ctx.guild != self.bot.modmail_guild:
+            return await ctx.send(
+                f"You can only setup in the Modmail guild: {self.bot.modmail_guild}."
+            )
+
         if self.bot.main_category is not None:
             logger.debug("Can't re-setup server, main_category is found.")
             return await ctx.send(f"{self.bot.modmail_guild} is already set up.")
@@ -51,8 +56,31 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
+        overwrites = {
+            self.bot.modmail_guild.default_role: discord.PermissionOverwrite(
+                read_messages=False
+            ),
+            self.bot.modmail_guild.me: discord.PermissionOverwrite(read_messages=True),
+        }
+
+        for level in PermissionLevel:
+            if level <= PermissionLevel.REGULAR:
+                continue
+            permissions = self.bot.config["level_permissions"].get(level.name, [])
+            for perm in permissions:
+                perm = int(perm)
+                if perm == -1:
+                    key = self.bot.modmail_guild.default_role
+                else:
+                    key = self.bot.modmail_guild.get_member(perm)
+                    if key is None:
+                        key = self.bot.modmail_guild.get_role(perm)
+                if key is not None:
+                    logger.info("Granting %s access to Modmail category.", key.name)
+                    overwrites[key] = discord.PermissionOverwrite(read_messages=True)
+
         category = await self.bot.modmail_guild.create_category(
-            name="Modmail", overwrites=self.bot.overwrites(ctx)
+            name="Modmail", overwrites=overwrites
         )
 
         await category.edit(position=0)
@@ -86,10 +114,12 @@ class Modmail(commands.Cog):
 
         await self.bot.config.update()
         await ctx.send(
-            "Successfully set up server.\n"
-            "Consider setting permission levels to give access "
-            "to roles or users the ability to use Modmail.\n"
-            f"Type `{self.bot.prefix}permissions` for more info."
+            "**Successfully set up server.**\n"
+            "Consider setting permission levels "
+            "to give access to roles or users the ability to use Modmail.\n\n"
+            f"Type:\n- `{self.bot.prefix}permissions` and `{self.bot.prefix}permissions add` "
+            "for more info on setting permissions.\n"
+            f"- `{self.bot.prefix}config help` for a list of available customizations."
         )
 
         if (
@@ -612,7 +642,7 @@ class Modmail(commands.Cog):
         if not user:
             thread = ctx.thread
             if not thread:
-                raise commands.MissingRequiredArgument(param(name="member"))
+                raise commands.MissingRequiredArgument(SimpleNamespace(name="member"))
             user = thread.recipient
 
         default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
@@ -977,7 +1007,7 @@ class Modmail(commands.Cog):
             if thread:
                 user = thread.recipient
             elif after is None:
-                raise commands.MissingRequiredArgument(param(name="user"))
+                raise commands.MissingRequiredArgument(SimpleNamespace(name="user"))
             else:
                 raise commands.BadArgument(f'User "{after.arg}" not found')
 
@@ -1058,7 +1088,7 @@ class Modmail(commands.Cog):
             if thread:
                 user = thread.recipient
             else:
-                raise commands.MissingRequiredArgument(param(name="user"))
+                raise commands.MissingRequiredArgument(SimpleNamespace(name="user"))
 
         mention = getattr(user, "mention", f"`{user.id}`")
         name = getattr(user, "name", f"`{user.id}`")

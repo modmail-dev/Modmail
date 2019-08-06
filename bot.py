@@ -22,6 +22,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConfigurationError
 
 try:
+    # noinspection PyUnresolvedReferences
     from colorama import init
 
     init()
@@ -94,7 +95,17 @@ class ModmailBot(commands.Bot):
             sys.exit(0)
 
         self.plugin_db = PluginDatabaseClient(self)
+
+        logger.line()
+        logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
+        logger.info("││││ │ │││││├─┤││")
+        logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
+        logger.info("v%s", __version__)
+        logger.info("Authors: kyb3r, fourjr, Taaku18")
+        logger.line()
+
         self._load_extensions()
+        logger.line()
 
     @property
     def uptime(self) -> str:
@@ -168,14 +179,6 @@ class ModmailBot(commands.Bot):
 
     def _load_extensions(self):
         """Adds commands automatically"""
-        logger.line()
-        logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
-        logger.info("││││ │ │││││├─┤││")
-        logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
-        logger.info("v%s", __version__)
-        logger.info("Authors: kyb3r, fourjr, Taaku18")
-        logger.line()
-
         for file in os.listdir("cogs"):
             if not file.endswith(".py"):
                 continue
@@ -232,9 +235,12 @@ class ModmailBot(commands.Bot):
     def log_channel(self) -> typing.Optional[discord.TextChannel]:
         channel_id = self.config["log_channel_id"]
         if channel_id is not None:
-            channel = self.get_channel(int(channel_id))
-            if channel is not None:
-                return channel
+            try:
+                channel = self.get_channel(int(channel_id))
+                if channel is not None:
+                    return channel
+            except ValueError:
+                pass
             logger.debug("LOG_CHANNEL_ID was invalid, removed.")
             self.config.remove("log_channel_id")
         if self.main_category is not None:
@@ -255,10 +261,6 @@ class ModmailBot(commands.Bot):
         )
         return None
 
-    @property
-    def is_connected(self) -> bool:
-        return self._connected.is_set()
-
     async def wait_for_connected(self) -> None:
         await self.wait_until_ready()
         await self._connected.wait()
@@ -277,7 +279,7 @@ class ModmailBot(commands.Bot):
         token = self.config["token"]
         if token is None:
             logger.critical(
-                "TOKEN must be set, set this as bot token found on the Discord Dev Portal."
+                "TOKEN must be set, set this as bot token found on the Discord Developer Portal."
             )
             sys.exit(0)
         return token
@@ -289,6 +291,7 @@ class ModmailBot(commands.Bot):
             try:
                 return int(str(guild_id))
             except ValueError:
+                self.config.remove("guild_id")
                 logger.critical("Invalid GUILD_ID set.")
         return None
 
@@ -309,9 +312,12 @@ class ModmailBot(commands.Bot):
         modmail_guild_id = self.config["modmail_guild_id"]
         if modmail_guild_id is None:
             return self.guild
-        guild = discord.utils.get(self.guilds, id=int(modmail_guild_id))
-        if guild is not None:
-            return guild
+        try:
+            guild = discord.utils.get(self.guilds, id=int(modmail_guild_id))
+            if guild is not None:
+                return guild
+        except ValueError:
+            pass
         self.config.remove("modmail_guild_id")
         logger.critical("Invalid MODMAIL_GUILD_ID set.")
         return self.guild
@@ -325,11 +331,14 @@ class ModmailBot(commands.Bot):
         if self.modmail_guild is not None:
             category_id = self.config["main_category_id"]
             if category_id is not None:
-                cat = discord.utils.get(
-                    self.modmail_guild.categories, id=int(category_id)
-                )
-                if cat is not None:
-                    return cat
+                try:
+                    cat = discord.utils.get(
+                        self.modmail_guild.categories, id=int(category_id)
+                    )
+                    if cat is not None:
+                        return cat
+                except ValueError:
+                    pass
                 self.config.remove("main_category_id")
                 logger.debug("MAIN_CATEGORY_ID was invalid, removed.")
             cat = discord.utils.get(self.modmail_guild.categories, name="Modmail")
@@ -353,41 +362,34 @@ class ModmailBot(commands.Bot):
     def prefix(self) -> str:
         return str(self.config["prefix"])
 
-    @property
-    def mod_color(self) -> int:
-        color = self.config["mod_color"]
+    def _parse_color(self, conf_name):
+        color = self.config[conf_name]
         try:
             return int(color.lstrip("#"), base=16)
         except ValueError:
-            logger.error("Invalid mod_color provided.")
-        return int(self.config.remove("mod_color").lstrip("#"), base=16)
+            logger.error("Invalid %s provided.", conf_name)
+        return int(self.config.remove(conf_name).lstrip("#"), base=16)
+
+    @property
+    def mod_color(self) -> int:
+        return self._parse_color("mod_color")
 
     @property
     def recipient_color(self) -> int:
-        color = self.config["recipient_color"]
-        try:
-            return int(color.lstrip("#"), base=16)
-        except ValueError:
-            logger.error("Invalid recipient_color provided.")
-        return int(self.config.remove("recipient_color").lstrip("#"), base=16)
+        return self._parse_color("recipient_color")
 
     @property
     def main_color(self) -> int:
-        color = self.config["main_color"]
-        try:
-            return int(color.lstrip("#"), base=16)
-        except ValueError:
-            logger.error("Invalid main_color provided.")
-        return int(self.config.remove("main_color").lstrip("#"), base=16)
+        return self._parse_color("main_color")
 
     async def on_connect(self):
         logger.line()
         try:
             await self.validate_database_connection()
         except Exception:
+            logger.debug("Logging out due to failed database connection.")
             return await self.logout()
 
-        logger.line()
         logger.info("Connected to gateway.")
         await self.config.refresh()
         await self.setup_indexes()
@@ -436,6 +438,8 @@ class ModmailBot(commands.Bot):
         logger.info("Prefix: %s", self.prefix)
         logger.info("Guild Name: %s", self.guild.name)
         logger.info("Guild ID: %s", self.guild.id)
+        if self.using_multiple_server_setup:
+            logger.info("Receiving guild ID: %s", self.modmail_guild.id)
         logger.line()
 
         await self.threads.populate_cache()
@@ -508,6 +512,7 @@ class ModmailBot(commands.Bot):
             except commands.BadArgument:
                 logger.warning("Removed sent emoji (%s).", sent_emoji)
                 sent_emoji = self.config.remove("sent_emoji")
+                await self.config.update()
 
         if blocked_emoji != "disable":
             try:
@@ -515,8 +520,8 @@ class ModmailBot(commands.Bot):
             except commands.BadArgument:
                 logger.warning("Removed blocked emoji (%s).", blocked_emoji)
                 blocked_emoji = self.config.remove("blocked_emoji")
+                await self.config.update()
 
-        await self.config.update()
         return sent_emoji, blocked_emoji
 
     async def _process_blocked(self, message: discord.Message) -> bool:
@@ -531,7 +536,7 @@ class ModmailBot(commands.Bot):
                 try:
                     await message.add_reaction(sent_emoji)
                 except (discord.HTTPException, discord.InvalidArgument):
-                    pass
+                    logger.warning("Failed to add sent_emoji.", exc_info=True)
 
             return False
 
@@ -761,6 +766,7 @@ class ModmailBot(commands.Bot):
     async def update_perms(
         self, name: typing.Union[PermissionLevel, str], value: int, add: bool = True
     ) -> None:
+        value = int(value)
         if isinstance(name, PermissionLevel):
             permissions = self.config["level_permissions"]
             name = name.name
@@ -1043,19 +1049,6 @@ class ModmailBot(commands.Bot):
         else:
             logger.error("Unexpected exception:", exc_info=exception)
 
-    @staticmethod
-    def overwrites(ctx: commands.Context) -> dict:
-        """Permission overwrites for the guild."""
-        overwrites = {
-            ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            ctx.guild.me: discord.PermissionOverwrite(read_messages=True),
-        }
-
-        for role in ctx.guild.roles:
-            if role.permissions.administrator:
-                overwrites[role] = discord.PermissionOverwrite(read_messages=True)
-        return overwrites
-
     async def validate_database_connection(self):
         try:
             await self.db.command("buildinfo")
@@ -1113,12 +1106,14 @@ class ModmailBot(commands.Bot):
         if not self.guild:
             self.metadata_loop.cancel()
 
-    async def after_post_metadata(self):
+    @staticmethod
+    async def after_post_metadata():
         logger.info("Metadata loop has been cancelled.")
 
 
 if __name__ == "__main__":
     try:
+        # noinspection PyUnresolvedReferences
         import uvloop
 
         logger.debug("Setting up with uvloop.")

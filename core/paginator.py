@@ -228,7 +228,6 @@ class EmbedPaginatorSession(PaginatorSession):
 
 
 class MessagePaginatorSession(PaginatorSession):
-
     def __init__(
         self, ctx: commands.Context, *messages, embed: Embed = None, **options
     ):
