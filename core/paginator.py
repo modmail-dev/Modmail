@@ -94,7 +94,7 @@ class PaginatorSession:
         page = self.pages[index]
 
         if self.running:
-            return await self._show_page(page)
+            await self._show_page(page)
         else:
             await self.create_base(page)
 

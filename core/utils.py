@@ -2,7 +2,7 @@ import re
 import shlex
 import typing
 from difflib import get_close_matches
-from distutils.util import strtobool as _stb
+from distutils.util import strtobool as _stb  # pylint: disable=import-error
 from itertools import takewhile
 from urllib import parse
 
