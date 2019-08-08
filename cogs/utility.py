@@ -7,15 +7,17 @@ import random
 from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
-from io import StringIO
-from typing import Union
-from types import SimpleNamespace as param
+from io import StringIO, BytesIO
+from itertools import zip_longest, takewhile
 from json import JSONDecodeError, loads
 from textwrap import indent
+from types import SimpleNamespace
+from typing import Union
 
 from discord import Embed, Color, Activity, Role
 from discord.enums import ActivityType, Status
-from discord.ext import commands
+from discord.ext import commands, tasks
+from discord.utils import escape_markdown, escape_mentions
 
 from aiohttp import ClientResponseError
 from pkg_resources import parse_version
@@ -24,22 +26,24 @@ from core import checks
 from core.changelog import Changelog
 from core.decorators import trigger_typing
 from core.models import InvalidConfigError, PermissionLevel
-from core.paginator import PaginatorSession, MessagePaginatorSession
-from core.utils import cleanup_code, info, error, User, get_perm_level
+from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
+from core import utils
 
 logger = logging.getLogger("Modmail")
 
 
 class ModmailHelpCommand(commands.HelpCommand):
-    async def format_cog_help(self, cog):
+    async def format_cog_help(self, cog, *, no_cog=False):
         bot = self.context.bot
         prefix = self.clean_prefix
 
         formats = [""]
         for cmd in await self.filter_commands(
-            cog.get_commands(), sort=True, key=get_perm_level
+            cog.get_commands() if not no_cog else cog,
+            sort=True,
+            key=utils.get_perm_level,
         ):
-            perm_level = get_perm_level(cmd)
+            perm_level = utils.get_perm_level(cmd)
             if perm_level is PermissionLevel.INVALID:
                 format_ = f"`{prefix + cmd.qualified_name}` "
             else:
@@ -55,18 +59,22 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         embeds = []
         for format_ in formats:
-            embed = Embed(
-                description=f'*{cog.description or "No description."}*',
-                color=bot.main_color,
+            description = (
+                cog.description or "No description."
+                if not no_cog
+                else "Miscellaneous commands without a category."
             )
+            embed = Embed(description=f"*{description}*", color=bot.main_color)
 
             embed.add_field(name="Commands", value=format_ or "No commands.")
 
             continued = " (Continued)" if embeds else ""
-            embed.set_author(
-                name=cog.qualified_name + " - Help" + continued,
-                icon_url=bot.user.avatar_url,
+            name = (
+                cog.qualified_name + " - Help"
+                if not no_cog
+                else "Miscellaneous Commands"
             )
+            embed.set_author(name=name + continued, icon_url=bot.user.avatar_url)
 
             embed.set_footer(
                 text=f'Type "{prefix}{self.command_attrs["name"]} command" '
@@ -78,11 +86,10 @@ class ModmailHelpCommand(commands.HelpCommand):
     def process_help_msg(self, help_: str):
         return help_.format(prefix=self.clean_prefix) if help_ else "No help message."
 
-    async def send_bot_help(self, cogs):
+    async def send_bot_help(self, mapping):
         embeds = []
-        # TODO: Implement for no cog commands
-
-        cogs = list(filter(None, cogs))
+        no_cog_commands = sorted(mapping.pop(None), key=lambda c: c.qualified_name)
+        cogs = sorted(mapping, key=lambda c: c.qualified_name)
 
         bot = self.context.bot
 
@@ -97,23 +104,25 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         for cog in default_cogs:
             embeds.extend(await self.format_cog_help(cog))
+        if no_cog_commands:
+            embeds.extend(await self.format_cog_help(no_cog_commands, no_cog=True))
 
-        p_session = PaginatorSession(
+        session = EmbedPaginatorSession(
             self.context, *embeds, destination=self.get_destination()
         )
-        return await p_session.run()
+        return await session.run()
 
     async def send_cog_help(self, cog):
         embeds = await self.format_cog_help(cog)
-        p_session = PaginatorSession(
+        session = EmbedPaginatorSession(
             self.context, *embeds, destination=self.get_destination()
         )
-        return await p_session.run()
+        return await session.run()
 
     async def send_command_help(self, command):
         if not await self.filter_commands([command]):
             return
-        perm_level = get_perm_level(command)
+        perm_level = utils.get_perm_level(command)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f"{perm_level.name} [{perm_level}]"
         else:
@@ -131,7 +140,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         if not await self.filter_commands([group]):
             return
 
-        perm_level = get_perm_level(group)
+        perm_level = utils.get_perm_level(group)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f"{perm_level.name} [{perm_level}]"
         else:
@@ -168,20 +177,49 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         await self.get_destination().send(embed=embed)
 
-    async def send_error_message(self, msg):  # pylint: disable=W0221
-        logger.warning(error(f"CommandNotFound: {msg}"))
+    async def send_error_message(self, error):
+        command = self.context.kwargs.get("command")
+        val = self.context.bot.snippets.get(command)
+        if val is not None:
+            return await self.get_destination().send(
+                escape_mentions(f"**`{command}` is a snippet, " f"content:**\n\n{val}")
+            )
+
+        val = self.context.bot.aliases.get(command)
+        if val is not None:
+            values = utils.parse_alias(val)
+
+            if len(values) == 1:
+                embed = Embed(
+                    title=f"{command} is an alias.",
+                    color=self.context.bot.main_color,
+                    description=f"`{command}` points to `{escape_markdown(values[0])}`.",
+                )
+            else:
+                embed = Embed(
+                    title=f"{command} is an alias.",
+                    color=self.context.bot.main_color,
+                    description=f"**`{command}` points to the following steps:**",
+                )
+                for i, val in enumerate(values, start=1):
+                    embed.description += f"\n{i}: {escape_markdown(val)}"
+            embed.set_footer(
+                text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} alias" for more '
+                "details on aliases."
+            )
+            return await self.get_destination().send(embed=embed)
+
+        logger.warning("CommandNotFound: %s", str(error))
 
         embed = Embed(color=Color.red())
-        embed.set_footer(
-            text=f'Command/Category "{self.context.kwargs.get("command")}" not found.'
-        )
+        embed.set_footer(text=f'Command/Category "{command}" not found.')
 
         choices = set()
 
-        for name, cmd in self.context.bot.all_commands.items():
+        for cmd in self.context.bot.walk_commands():
             if not cmd.hidden:
-                choices.add(name)
-        command = self.context.kwargs.get("command")
+                choices.add(cmd.name)
+
         closest = get_close_matches(command, choices)
         if closest:
             embed.add_field(
@@ -203,20 +241,14 @@ class Utility(commands.Cog):
         self.bot = bot
         self._original_help_command = bot.help_command
         self.bot.help_command = ModmailHelpCommand(
-            verify_checks=False, command_attrs={"help": "Shows this help message."}
+            verify_checks=False,
+            command_attrs={
+                "help": "Shows this help message.",
+                "checks": [checks.has_permissions_help(PermissionLevel.REGULAR)],
+            },
         )
-        # Looks a bit ugly
-        self.bot.help_command._command_impl = checks.has_permissions(
-            PermissionLevel.REGULAR
-        )(self.bot.help_command._command_impl)
-
         self.bot.help_command.cog = self
-
-        # Class Variables
-        self.presence = None
-
-        # Tasks
-        self.presence_task = self.bot.loop.create_task(self.loop_presence())
+        self.loop_presence.start()
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
@@ -224,7 +256,7 @@ class Utility(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.REGULAR)
     @trigger_typing
-    async def changelog(self, ctx, version=None):
+    async def changelog(self, ctx, version: str.lower = ""):
         """Shows the changelog of the Modmail."""
         changelog = await Changelog.from_url(self.bot)
         version = version.lstrip("vV") if version else changelog.latest_version.version
@@ -240,10 +272,12 @@ class Utility(commands.Cog):
             )
 
         try:
-            paginator = PaginatorSession(ctx, *changelog.embeds)
+            paginator = EmbedPaginatorSession(ctx, *changelog.embeds)
             paginator.current = index
             await paginator.run()
-        except:
+        except asyncio.CancelledError:
+            pass
+        except Exception:
             await ctx.send(changelog.CHANGELOG_URL)
 
     @commands.command(aliases=["bot", "info"])
@@ -252,7 +286,11 @@ class Utility(commands.Cog):
     async def about(self, ctx):
         """Shows information about this bot."""
         embed = Embed(color=self.bot.main_color, timestamp=datetime.utcnow())
-        embed.set_author(name="Modmail - About", icon_url=self.bot.user.avatar_url)
+        embed.set_author(
+            name="Modmail - About",
+            icon_url=self.bot.user.avatar_url,
+            url="https://discord.gg/F34cRU8",
+        )
         embed.set_thumbnail(url=self.bot.user.avatar_url)
 
         desc = "This is an open source Discord bot that serves as a means for "
@@ -277,7 +315,14 @@ class Utility(commands.Cog):
             name="GitHub", value="https://github.com/kyb3r/modmail", inline=False
         )
 
-        embed.add_field(name="Donate", value="[Patreon](https://patreon.com/kyber)")
+        embed.add_field(
+            name="Discord Server", value="https://discord.gg/F34cRU8", inline=False
+        )
+
+        embed.add_field(
+            name="Donate",
+            value="Support this bot on [`Patreon`](https://patreon.com/kyber).",
+        )
 
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
@@ -295,12 +340,12 @@ class Utility(commands.Cog):
         embeds = []
 
         for elem in data:
-            em = Embed.from_dict(elem["embed"])
-            embeds.append(em)
+            embed = Embed.from_dict(elem["embed"])
+            embeds.append(embed)
 
         random.shuffle(embeds)
 
-        session = PaginatorSession(ctx, *embeds)
+        session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
     @commands.group(invoke_without_command=True)
@@ -309,7 +354,7 @@ class Utility(commands.Cog):
     async def debug(self, ctx):
         """Shows the recent application-logs of the bot."""
 
-        log_file_name = self.bot.config.token.split(".")[0]
+        log_file_name = self.bot.token.split(".")[0]
 
         with open(
             os.path.join(
@@ -365,28 +410,33 @@ class Utility(commands.Cog):
         """Posts application-logs to Hastebin."""
 
         haste_url = os.environ.get("HASTE_URL", "https://hasteb.in")
-        log_file_name = self.bot.config.token.split(".")[0]
+        log_file_name = self.bot.token.split(".")[0]
 
         with open(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
                 f"../temp/{log_file_name}.log",
             ),
-            "r+",
+            "rb+",
         ) as f:
-            logs = f.read().strip()
+            logs = BytesIO(f.read().strip())
 
         try:
             async with self.bot.session.post(
                 haste_url + "/documents", data=logs
             ) as resp:
-                key = (await resp.json())["key"]
+                data = await resp.json()
+                try:
+                    key = data["key"]
+                except KeyError:
+                    logger.error(data["message"])
+                    raise
                 embed = Embed(
                     title="Debug Logs",
                     color=self.bot.main_color,
                     description=f"{haste_url}/" + key,
                 )
-        except (JSONDecodeError, ClientResponseError, IndexError):
+        except (JSONDecodeError, ClientResponseError, IndexError, KeyError):
             embed = Embed(
                 title="Debug Logs",
                 color=self.bot.main_color,
@@ -402,7 +452,7 @@ class Utility(commands.Cog):
     async def debug_clear(self, ctx):
         """Clears the locally cached logs."""
 
-        log_file_name = self.bot.config.token.split(".")[0]
+        log_file_name = self.bot.token.split(".")[0]
 
         with open(
             os.path.join(
@@ -441,15 +491,15 @@ class Utility(commands.Cog):
         - `{prefix}activity clear`
         """
         if activity_type == "clear":
-            self.bot.config["activity_type"] = None
-            self.bot.config["activity_message"] = None
+            self.bot.config.remove("activity_type")
+            self.bot.config.remove("activity_message")
             await self.bot.config.update()
             await self.set_presence()
             embed = Embed(title="Activity Removed", color=self.bot.main_color)
             return await ctx.send(embed=embed)
 
         if not message:
-            raise commands.MissingRequiredArgument(param(name="message"))
+            raise commands.MissingRequiredArgument(SimpleNamespace(name="message"))
 
         activity, msg = (
             await self.set_presence(
@@ -459,7 +509,7 @@ class Utility(commands.Cog):
             )
         )["activity"]
         if activity is None:
-            raise commands.MissingRequiredArgument(param(name="activity"))
+            raise commands.MissingRequiredArgument(SimpleNamespace(name="activity"))
 
         self.bot.config["activity_type"] = activity.type.value
         self.bot.config["activity_message"] = message
@@ -487,7 +537,7 @@ class Utility(commands.Cog):
         - `{prefix}status clear`
         """
         if status_type == "clear":
-            self.bot.config["status"] = None
+            self.bot.config.remove("status")
             await self.bot.config.update()
             await self.set_presence()
             embed = Embed(title="Status Removed", color=self.bot.main_color)
@@ -498,7 +548,7 @@ class Utility(commands.Cog):
             await self.set_presence(status_identifier=status_type, status_by_key=True)
         )["status"]
         if status is None:
-            raise commands.MissingRequiredArgument(param(name="status"))
+            raise commands.MissingRequiredArgument(SimpleNamespace(name="status"))
 
         self.bot.config["status"] = status.value
         await self.bot.config.update()
@@ -520,40 +570,40 @@ class Utility(commands.Cog):
 
         activity = status = None
         if status_identifier is None:
-            status_identifier = self.bot.config.get("status", None)
+            status_identifier = self.bot.config["status"]
             status_by_key = False
 
         try:
             if status_by_key:
                 status = Status[status_identifier]
             else:
-                status = Status(status_identifier)
+                status = Status.try_value(status_identifier)
         except (KeyError, ValueError):
             if status_identifier is not None:
                 msg = f"Invalid status type: {status_identifier}"
-                logger.warning(error(msg))
+                logger.warning(msg)
 
         if activity_identifier is None:
             if activity_message is not None:
                 raise ValueError(
-                    "activity_message must be None " "if activity_identifier is None."
+                    "activity_message must be None if activity_identifier is None."
                 )
-            activity_identifier = self.bot.config.get("activity_type", None)
+            activity_identifier = self.bot.config["activity_type"]
             activity_by_key = False
 
         try:
             if activity_by_key:
                 activity_type = ActivityType[activity_identifier]
             else:
-                activity_type = ActivityType(activity_identifier)
+                activity_type = ActivityType.try_value(activity_identifier)
         except (KeyError, ValueError):
             if activity_identifier is not None:
                 msg = f"Invalid activity type: {activity_identifier}"
-                logger.warning(error(msg))
+                logger.warning(msg)
         else:
             url = None
             activity_message = (
-                activity_message or self.bot.config.get("activity_message", "")
+                activity_message or self.bot.config["activity_message"]
             ).strip()
 
             if activity_type == ActivityType.listening:
@@ -562,15 +612,13 @@ class Utility(commands.Cog):
                     # discord automatically add the "to"
                     activity_message = activity_message[3:].strip()
             elif activity_type == ActivityType.streaming:
-                url = self.bot.config.get(
-                    "twitch_url", "https://www.twitch.tv/discord-modmail/"
-                )
+                url = self.bot.config["twitch_url"]
 
             if activity_message:
                 activity = Activity(type=activity_type, name=activity_message, url=url)
             else:
                 msg = "You must supply an activity message to use custom activity."
-                logger.warning(error(msg))
+                logger.debug(msg)
 
         await self.bot.change_presence(activity=activity, status=status)
 
@@ -588,20 +636,18 @@ class Utility(commands.Cog):
             presence["status"] = (status, msg)
         return presence
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        # Wait until config cache is populated with stuff from db
-        await self.bot.config.wait_until_ready()
-        logger.info(info(self.presence["activity"][1]))
-        logger.info(info(self.presence["status"][1]))
-
+    @tasks.loop(minutes=45)
     async def loop_presence(self):
-        """Set presence to the configured value every hour."""
-        await self.bot.config.wait_until_ready()
-        await self.bot.wait_until_ready()
-        while not self.bot.is_closed():
-            self.presence = await self.set_presence()
-            await asyncio.sleep(600)
+        """Set presence to the configured value every 45 minutes."""
+        presence = await self.set_presence()
+        logger.line()
+        logger.info(presence["activity"][1])
+        logger.info(presence["status"][1])
+
+    @loop_presence.before_loop
+    async def before_loop_presence(self):
+        logger.info("Starting metadata loop.")
+        await self.bot.wait_for_connected()
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
@@ -623,18 +669,19 @@ class Utility(commands.Cog):
 
         Type only `{prefix}mention` to retrieve your current "mention" message.
         """
-        current = self.bot.config.get("mention", "@here")
+        # TODO: ability to disable mention.
+        current = self.bot.config["mention"]
 
         if mention is None:
             embed = Embed(
-                title="Current text",
+                title="Current mention:",
                 color=self.bot.main_color,
                 description=str(current),
             )
         else:
             embed = Embed(
                 title="Changed mention!",
-                description=f"On thread creation the bot now says {mention}.",
+                description=f'On thread creation the bot now says "{mention}".',
                 color=self.bot.main_color,
             )
             self.bot.config["mention"] = mention
@@ -674,11 +721,14 @@ class Utility(commands.Cog):
         Type `{prefix}config options` to view a list
         of valid configuration variables.
 
+        Type `{prefix}config help config-name` for info
+         on a config.
+
         To set a configuration variable:
-        - `{prefix}config set varname value here`
+        - `{prefix}config set config-name value here`
 
         To remove a configuration variable:
-        - `{prefix}config remove varname`
+        - `{prefix}config remove config-name`
         """
         await ctx.send_help(ctx.command)
 
@@ -686,17 +736,27 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_options(self, ctx):
         """Return a list of valid configuration names you can change."""
-        allowed = self.bot.config.allowed_to_change_in_command
-        valid = ", ".join(f"`{k}`" for k in allowed)
-        embed = Embed(title="Valid Keys", description=valid, color=self.bot.main_color)
-        return await ctx.send(embed=embed)
+        embeds = []
+        for names in zip_longest(*(iter(sorted(self.bot.config.public_keys)),) * 15):
+            description = "\n".join(
+                f"`{name}`" for name in takewhile(lambda x: x is not None, names)
+            )
+            embed = Embed(
+                title="Available configuration keys:",
+                color=self.bot.main_color,
+                description=description,
+            )
+            embeds.append(embed)
+
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
 
     @config.command(name="set", aliases=["add"])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_set(self, ctx, key: str.lower, *, value: str):
         """Set a configuration variable and its value."""
 
-        keys = self.bot.config.allowed_to_change_in_command
+        keys = self.bot.config.public_keys
 
         if key in keys:
             try:
@@ -704,7 +764,8 @@ class Utility(commands.Cog):
             except InvalidConfigError as exc:
                 embed = exc.embed
             else:
-                await self.bot.config.update({key: value})
+                self.bot.config[key] = value
+                await self.bot.config.update()
                 embed = Embed(
                     title="Success",
                     color=self.bot.main_color,
@@ -721,22 +782,18 @@ class Utility(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @config.command(name="remove", aliases=["del", "delete", "rm"])
+    @config.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.OWNER)
     async def config_remove(self, ctx, key: str.lower):
         """Delete a set configuration variable."""
-        keys = self.bot.config.allowed_to_change_in_command
+        keys = self.bot.config.public_keys
         if key in keys:
-            try:
-                del self.bot.config.cache[key]
-                await self.bot.config.update()
-            except KeyError:
-                # when no values were set
-                pass
+            self.bot.config.remove(key)
+            await self.bot.config.update()
             embed = Embed(
                 title="Success",
                 color=self.bot.main_color,
-                description=f"`{key}` had been deleted from the config.",
+                description=f"`{key}` had been reset to default.",
             )
         else:
             embed = Embed(
@@ -757,11 +814,11 @@ class Utility(commands.Cog):
 
         Leave `key` empty to show all currently set configuration variables.
         """
-        keys = self.bot.config.allowed_to_change_in_command
+        keys = self.bot.config.public_keys
 
         if key:
             if key in keys:
-                desc = f"`{key}` is set to `{self.bot.config.get(key)}`"
+                desc = f"`{key}` is set to `{self.bot.config[key]}`"
                 embed = Embed(color=self.bot.main_color, description=desc)
                 embed.set_author(
                     name="Config variable", icon_url=self.bot.user.avatar_url
@@ -773,182 +830,359 @@ class Utility(commands.Cog):
                     color=Color.red(),
                     description=f"`{key}` is an invalid key.",
                 )
-                valid_keys = [f"`{k}`" for k in keys]
-                embed.add_field(name="Valid keys", value=", ".join(valid_keys))
+                embed.set_footer(
+                    text=f'Type "{self.bot.prefix}config options" for a list of config variables.'
+                )
 
         else:
             embed = Embed(
                 color=self.bot.main_color,
                 description="Here is a list of currently "
-                "set configuration variables.",
+                "set configuration variable(s).",
             )
-            embed.set_author(name="Current config", icon_url=self.bot.user.avatar_url)
+            embed.set_author(
+                name="Current config(s):", icon_url=self.bot.user.avatar_url
+            )
+            config = self.bot.config.filter_default(self.bot.config)
 
-            config = {
-                key: val
-                for key, val in self.bot.config.cache.items()
-                if val and key in keys
-            }
-
-            for name, value in reversed(list(config.items())):
-                embed.add_field(name=name, value=f"`{value}`", inline=False)
+            for name, value in config.items():
+                if name in self.bot.config.public_keys:
+                    embed.add_field(name=name, value=f"`{value}`", inline=False)
 
         return await ctx.send(embed=embed)
 
+    @config.command(name="help", aliases=["info"])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def config_help(self, ctx, key: str.lower = None):
+        """
+        Show information on a specified configuration.
+        """
+        if key is not None and not (
+            key in self.bot.config.public_keys or key in self.bot.config.protected_keys
+        ):
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"`{key}` is an invalid key.",
+            )
+            return await ctx.send(embed=embed)
+
+        config_help = self.bot.config.config_help
+
+        if key is not None and key not in config_help:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"No help details found for `{key}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        def fmt(val):
+            return val.format(prefix=self.bot.prefix, bot=self.bot)
+
+        index = 0
+        embeds = []
+        for i, (current_key, info) in enumerate(config_help.items()):
+            if current_key == key:
+                index = i
+            embed = Embed(
+                title=f"Configuration description on {current_key}:",
+                color=self.bot.main_color,
+            )
+            embed.add_field(name="Default:", value=fmt(info["default"]), inline=False)
+            embed.add_field(
+                name="Information:", value=fmt(info["description"]), inline=False
+            )
+            if info["examples"]:
+                example_text = ""
+                for example in info["examples"]:
+                    example_text += f"- {fmt(example)}\n"
+                embed.add_field(name="Example(s):", value=example_text, inline=False)
+
+            note_text = ""
+            for note in info["notes"]:
+                note_text += f"- {fmt(note)}\n"
+            if note_text:
+                embed.add_field(name="Note(s):", value=note_text, inline=False)
+
+            if info.get("image") is not None:
+                embed.set_image(url=fmt(info["image"]))
+
+            if info.get("thumbnail") is not None:
+                embed.set_thumbnail(url=fmt(info["thumbnail"]))
+            embeds += [embed]
+
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        paginator.current = index
+        await paginator.run()
+
     @commands.group(aliases=["aliases"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    async def alias(self, ctx):
+    async def alias(self, ctx, *, name: str.lower = None):
         """
         Create shortcuts to bot commands.
 
         When `{prefix}alias` is used by itself, this will retrieve
-        a list of alias that are currently set.
+        a list of alias that are currently set. `{prefix}alias-name` will show what the
+        alias point to.
 
         To use alias:
 
-        First create a snippet using:
+        First create an alias using:
         - `{prefix}alias add alias-name other-command`
 
         For example:
         - `{prefix}alias add r reply`
         - Now you can use `{prefix}r` as an replacement for `{prefix}reply`.
 
-        See also `{prefix}snippets`.
+        See also `{prefix}snippet`.
         """
 
-        embeds = []
-        desc = "Here is a list of aliases that are currently configured."
+        if name is not None:
+            val = self.bot.aliases.get(name)
+            if val is None:
+                embed = utils.create_not_found_embed(
+                    name, self.bot.aliases.keys(), "Alias"
+                )
+                return await ctx.send(embed=embed)
 
-        if self.bot.aliases:
-            embed = Embed(color=self.bot.main_color, description=desc)
-        else:
+            values = utils.parse_alias(val)
+
+            if not values:
+                embed = Embed(
+                    title="Error",
+                    color=Color.red(),
+                    description=f"Alias `{name}` is invalid, it used to be `{escape_markdown(val)}`. "
+                    f"This alias will now be deleted.",
+                )
+                self.bot.aliases.pop(name)
+                await self.bot.config.update()
+                return await ctx.send(embed=embed)
+
+            if len(values) == 1:
+                embed = Embed(
+                    color=self.bot.main_color,
+                    description=f"`{name}` points to `{escape_markdown(values[0])}`.",
+                )
+            else:
+                embed = Embed(
+                    color=self.bot.main_color,
+                    description=f"**`{name}` points to the following steps:**",
+                )
+                for i, val in enumerate(values, start=1):
+                    embed.description += f"\n{i}: {escape_markdown(val)}"
+
+            return await ctx.send(embed=embed)
+
+        if not self.bot.aliases:
             embed = Embed(
-                color=self.bot.main_color,
+                color=Color.red(),
                 description="You dont have any aliases at the moment.",
             )
-        embed.set_author(name="Command aliases", icon_url=ctx.guild.icon_url)
-        embed.set_footer(text=f"Do {self.bot.prefix}" "help aliases for more commands.")
-        embeds.append(embed)
+            embed.set_footer(text=f"Do {self.bot.prefix}help alias for more commands.")
+            embed.set_author(name="Aliases", icon_url=ctx.guild.icon_url)
+            return await ctx.send(embed=embed)
 
-        for name, value in self.bot.aliases.items():
-            if len(embed.fields) == 5:
-                embed = Embed(color=self.bot.main_color, description=desc)
-                embed.set_author(name="Command aliases", icon_url=ctx.guild.icon_url)
-                embed.set_footer(
-                    text=f"Do {self.bot.prefix}help " "aliases for more commands."
-                )
+        embeds = []
 
-                embeds.append(embed)
-            embed.add_field(name=name, value=value, inline=False)
+        for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
+            description = utils.format_description(i, names)
+            embed = Embed(color=self.bot.main_color, description=description)
+            embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon_url)
+            embeds.append(embed)
 
-        session = PaginatorSession(ctx, *embeds)
-        return await session.run()
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
+
+    @alias.command(name="raw")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def alias_raw(self, ctx, *, name: str.lower):
+        """
+        View the raw content of an alias.
+        """
+        val = self.bot.aliases.get(name)
+        if val is None:
+            embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+            return await ctx.send(embed=embed)
+        return await ctx.send(escape_markdown(escape_mentions(val)).replace("<", "\\<"))
 
     @alias.command(name="add")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_add(self, ctx, name: str.lower, *, value):
-        """Add an alias."""
-        if "aliases" not in self.bot.config.cache:
-            self.bot.config["aliases"] = {}
+        """
+        Add an alias.
 
-        if self.bot.get_command(name) or name in self.bot.config.aliases:
+        Alias also supports multi-step aliases, to create a multi-step alias use quotes
+        to wrap each step and separate each step with `&&`. For example:
+
+        - `{prefix}alias add movenreply "move admin-category" && "reply Thanks for reaching out to the admins"`
+
+        However, if you run into problems, try wrapping the command with quotes. For example:
+
+        - This will fail: `{prefix}alias add reply You'll need to type && to work`
+        - Correct method: `{prefix}alias add reply "You'll need to type && to work"`
+        """
+        embed = None
+        if self.bot.get_command(name):
             embed = Embed(
                 title="Error",
                 color=Color.red(),
-                description="A command or alias already exists "
-                f"with the same name: `{name}`.",
+                description=f"A command with the same name already exists: `{name}`.",
             )
+
+        elif name in self.bot.aliases:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"Another alias with the same name already exists: `{name}`.",
+            )
+
+        elif name in self.bot.snippets:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"A snippet with the same name already exists: `{name}`.",
+            )
+
+        elif len(name) > 120:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"Alias names cannot be longer than 120 characters.",
+            )
+
+        if embed is not None:
             return await ctx.send(embed=embed)
 
-        linked_command = value.split()[0]
-        if not self.bot.get_command(linked_command):
+        values = utils.parse_alias(value)
+
+        if not values:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
-                description="The command you are attempting to point "
-                f"to does not exist: `{linked_command}`.",
+                description="Invalid multi-step alias, try wrapping each steps in quotes.",
+            )
+            embed.set_footer(text=f'See "{self.bot.prefix}alias add" for more details.')
+            return await ctx.send(embed=embed)
+
+        if len(values) == 1:
+            linked_command = values[0].split()[0]
+            if not self.bot.get_command(linked_command):
+                embed = Embed(
+                    title="Error",
+                    color=Color.red(),
+                    description="The command you are attempting to point "
+                    f"to does not exist: `{linked_command}`.",
+                )
+                return await ctx.send(embed=embed)
+
+            embed = Embed(
+                title="Added alias",
+                color=self.bot.main_color,
+                description=f'`{name}` points to: "{values[0]}".',
             )
 
-        self.bot.config.aliases[name] = value
-        await self.bot.config.update()
+        else:
+            embed = Embed(
+                title="Added alias",
+                color=self.bot.main_color,
+                description=f"`{name}` now points to the following steps:",
+            )
 
-        embed = Embed(
-            title="Added alias",
-            color=self.bot.main_color,
-            description=f'`{name}` points to: "{value}".',
-        )
+            for i, val in enumerate(values, start=1):
+                linked_command = val.split()[0]
+                if not self.bot.get_command(linked_command):
+                    embed = Embed(
+                        title="Error",
+                        color=Color.red(),
+                        description="The command you are attempting to point "
+                        f"to on step {i} does not exist: `{linked_command}`.",
+                    )
+                    return await ctx.send(embed=embed)
+                embed.description += f"\n{i}: {val}"
+
+        self.bot.aliases[name] = " && ".join(values)
+        await self.bot.config.update()
 
         return await ctx.send(embed=embed)
 
-    @alias.command(name="remove", aliases=["del", "delete", "rm"])
+    @alias.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_remove(self, ctx, *, name: str.lower):
         """Remove an alias."""
 
-        if "aliases" not in self.bot.config.cache:
-            self.bot.config["aliases"] = {}
-
-        if name in self.bot.config.aliases:
-            del self.bot.config["aliases"][name]
+        if name in self.bot.aliases:
+            self.bot.aliases.pop(name)
             await self.bot.config.update()
 
             embed = Embed(
                 title="Removed alias",
                 color=self.bot.main_color,
-                description=f"`{name}` no longer exists.",
+                description=f"Successfully deleted `{name}`.",
             )
-
         else:
-            embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description=f"Alias `{name}` does not exist.",
-            )
+            embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
 
         return await ctx.send(embed=embed)
 
     @alias.command(name="edit")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_edit(self, ctx, name: str.lower, *, value):
-        if "aliases" not in self.bot.config.cache:
-            self.bot.config["aliases"] = {}
+        """
+        Edit an alias.
+        """
+        if name not in self.bot.aliases:
+            embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+            return await ctx.send(embed=embed)
 
-        if name not in self.bot.config.aliases:
+        values = utils.parse_alias(value)
+
+        if not values:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
-                description=f"Alias `{name}` does not exist.",
+                description="Invalid multi-step alias, try wrapping each steps in quotes.",
             )
-
+            embed.set_footer(text=f'See "{self.bot.prefix}alias add" for more details.')
             return await ctx.send(embed=embed)
 
-        if self.bot.get_command(name):
+        if len(values) == 1:
+            linked_command = values[0].split()[0]
+            if not self.bot.get_command(linked_command):
+                embed = Embed(
+                    title="Error",
+                    color=Color.red(),
+                    description="The command you are attempting to point "
+                    f"to does not exist: `{linked_command}`.",
+                )
+                return await ctx.send(embed=embed)
             embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description="A command or alias already exists "
-                f"with the same name: `{name}`.",
+                title="Edited alias",
+                color=self.bot.main_color,
+                description=f'`{name}` now points to: "{values[0]}".',
             )
-            return await ctx.send(embed=embed)
 
-        linked_command = value.split()[0]
-        if not self.bot.get_command(linked_command):
+        else:
             embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description="The command you are attempting to point "
-                f"to does not exist: `{linked_command}`.",
+                title="Edited alias",
+                color=self.bot.main_color,
+                description=f"`{name}` now points to the following steps:",
             )
-            return await ctx.send(embed=embed)
 
-        self.bot.config.aliases[name] = value
+            for i, val in enumerate(values, start=1):
+                linked_command = val.split()[0]
+                if not self.bot.get_command(linked_command):
+                    embed = Embed(
+                        title="Error",
+                        color=Color.red(),
+                        description="The command you are attempting to point "
+                        f"to on step {i} does not exist: `{linked_command}`.",
+                    )
+                    return await ctx.send(embed=embed)
+                embed.description += f"\n{i}: {val}"
+
+        self.bot.aliases[name] = "&&".join(values)
         await self.bot.config.update()
-
-        embed = Embed(
-            title="Edited alias",
-            color=self.bot.main_color,
-            description=f'`{name}` now points to: "{value}".',
-        )
         return await ctx.send(embed=embed)
 
     @commands.group(aliases=["perms"], invoke_without_command=True)
@@ -974,349 +1208,350 @@ class Utility(commands.Cog):
         """
         await ctx.send_help(ctx.command)
 
-    @permissions.group(name="add", invoke_without_command=True)
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_add(self, ctx):
-        """Add a permission to a command or a permission level."""
-        await ctx.send_help(ctx.command)
+    @staticmethod
+    def _verify_user_or_role(user_or_role):
+        if isinstance(user_or_role, Role):
+            if user_or_role.is_default():
+                return -1
+        elif user_or_role in {"everyone", "all"}:
+            return -1
+        if hasattr(user_or_role, "id"):
+            return user_or_role.id
+        raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
 
-    @permissions_add.command(name="command")
+    @staticmethod
+    def _parse_level(name):
+        name = name.upper()
+        try:
+            return PermissionLevel[name]
+        except KeyError:
+            pass
+        transform = {
+            "1": PermissionLevel.REGULAR,
+            "2": PermissionLevel.SUPPORTER,
+            "3": PermissionLevel.MODERATOR,
+            "4": PermissionLevel.ADMINISTRATOR,
+            "5": PermissionLevel.OWNER,
+        }
+        return transform.get(name)
+
+    @permissions.command(name="add", usage="[command/level] [name] [user_or_role]")
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_add_command(
-        self, ctx, command: str, *, user_or_role: Union[User, Role, str]
+    async def permissions_add(
+        self,
+        ctx,
+        type_: str.lower,
+        name: str,
+        *,
+        user_or_role: Union[Role, utils.User, str],
     ):
         """
-        Add a user, role, or everyone permission to use a command.
+        Add a permission to a command or a permission level.
+
+        For sub commands, wrap the complete command name with quotes.
+        To find a list of permission levels, see `{prefix}help perms`.
+
+        Examples:
+        - `{prefix}perms add level REGULAR everyone`
+        - `{prefix}perms add command reply @user`
+        - `{prefix}perms add command "plugin enabled" @role`
+        - `{prefix}perms add command help 984301093849028`
 
         Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
-        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
         """
-        if command not in self.bot.all_commands:
+
+        if type_ not in {"command", "level"}:
+            return await ctx.send_help(ctx.command)
+
+        command = level = None
+        if type_ == "command":
+            command = self.bot.get_command(name.lower())
+            check = command is not None
+        else:
+            level = self._parse_level(name)
+            check = level is not None
+
+        if not check:
             embed = Embed(
                 title="Error",
                 color=Color.red(),
-                description="The command you are attempting to point "
-                f"to does not exist: `{command}`.",
+                description=f"The referenced {type_} does not exist: `{name}`.",
             )
             return await ctx.send(embed=embed)
 
-        if hasattr(user_or_role, "id"):
-            value = user_or_role.id
-        elif user_or_role in {"everyone", "all"}:
-            value = -1
+        value = self._verify_user_or_role(user_or_role)
+        if type_ == "command":
+            await self.bot.update_perms(command.qualified_name, value)
+            name = command.qualified_name
         else:
-            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
+            await self.bot.update_perms(level, value)
+            name = level.name
+            if level > PermissionLevel.REGULAR:
+                if value == -1:
+                    key = self.bot.modmail_guild.default_role
+                elif isinstance(user_or_role, Role):
+                    key = user_or_role
+                else:
+                    key = self.bot.modmail_guild.get_member(value)
+                if key is not None:
+                    logger.info("Granting %s access to Modmail category.", key.name)
+                    await self.bot.main_category.set_permissions(
+                        key, read_messages=True
+                    )
 
-        await self.bot.update_perms(self.bot.all_commands[command].name, value)
         embed = Embed(
             title="Success",
             color=self.bot.main_color,
-            description=f"Permission for {command} was successfully updated.",
+            description=f"Permission for `{name}` was successfully updated.",
         )
         return await ctx.send(embed=embed)
 
-    @permissions_add.command(name="level", aliases=["group"])
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_add_level(
-        self, ctx, level: str, *, user_or_role: Union[User, Role, str]
-    ):
-        """
-        Add a user, role, or everyone permission to use commands of a permission level.
-
-        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
-        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
-        """
-        if level.upper() not in PermissionLevel.__members__:
-            embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description="The permission level you are attempting to point "
-                f"to does not exist: `{level}`.",
-            )
-            return await ctx.send(embed=embed)
-
-        if hasattr(user_or_role, "id"):
-            value = user_or_role.id
-        elif user_or_role in {"everyone", "all"}:
-            value = -1
-        else:
-            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
-
-        await self.bot.update_perms(PermissionLevel[level.upper()], value)
-        embed = Embed(
-            title="Success",
-            color=self.bot.main_color,
-            description=f"Permission for {level} was successfully updated.",
-        )
-        return await ctx.send(embed=embed)
-
-    @permissions.group(
+    @permissions.command(
         name="remove",
-        aliases=["del", "delete", "rm", "revoke"],
-        invoke_without_command=True,
+        aliases=["del", "delete", "revoke"],
+        usage="[command/level] [name] [user_or_role]",
     )
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_remove(self, ctx):
-        """Remove permission to use a command or permission level."""
-        await ctx.send_help(ctx.command)
-
-    @permissions_remove.command(name="command")
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_remove_command(
-        self, ctx, command: str, *, user_or_role: Union[User, Role, str]
+    async def permissions_remove(
+        self,
+        ctx,
+        type_: str.lower,
+        name: str,
+        *,
+        user_or_role: Union[Role, utils.User, str],
     ):
         """
-        Remove a user, role, or everyone permission to use a command.
+        Remove permission to use a command or permission level.
+
+        For sub commands, wrap the complete command name with quotes.
+        To find a list of permission levels, see `{prefix}help perms`.
+
+        Examples:
+        - `{prefix}perms remove level REGULAR everyone`
+        - `{prefix}perms remove command reply @user`
+        - `{prefix}perms remove command "plugin enabled" @role`
+        - `{prefix}perms remove command help 984301093849028`
 
         Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
-        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
         """
-        if command not in self.bot.all_commands:
-            embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description="The command you are attempting to point "
-                f"to does not exist: `{command}`.",
-            )
-            return await ctx.send(embed=embed)
+        if type_ not in {"command", "level"}:
+            return await ctx.send_help(ctx.command)
 
-        if hasattr(user_or_role, "id"):
-            value = user_or_role.id
-        elif user_or_role in {"everyone", "all"}:
-            value = -1
+        level = None
+        if type_ == "command":
+            name = getattr(self.bot.get_command(name.lower()), "qualified_name", name)
         else:
-            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
+            level = self._parse_level(name)
+            if level is None:
+                embed = Embed(
+                    title="Error",
+                    color=Color.red(),
+                    description=f"The referenced {type_} does not exist: `{name}`.",
+                )
+                return await ctx.send(embed=embed)
+            name = level.name
 
-        await self.bot.update_perms(
-            self.bot.all_commands[command].name, value, add=False
-        )
+        value = self._verify_user_or_role(user_or_role)
+        await self.bot.update_perms(level or name, value, add=False)
+
+        if type_ == "level":
+            if level > PermissionLevel.REGULAR:
+                if value == -1:
+                    logger.info("Denying @everyone access to Modmail category.")
+                    await self.bot.main_category.set_permissions(
+                        self.bot.modmail_guild.default_role, read_messages=False
+                    )
+                elif isinstance(user_or_role, Role):
+                    logger.info(
+                        "Denying %s access to Modmail category.", user_or_role.name
+                    )
+                    await self.bot.main_category.set_permissions(
+                        user_or_role, overwrite=None
+                    )
+                else:
+                    member = self.bot.modmail_guild.get_member(value)
+                    if member is not None and member != self.bot.modmail_guild.me:
+                        logger.info(
+                            "Denying %s access to Modmail category.", member.name
+                        )
+                        await self.bot.main_category.set_permissions(
+                            member, overwrite=None
+                        )
+
         embed = Embed(
             title="Success",
             color=self.bot.main_color,
-            description=f"Permission for {command} was successfully updated.",
+            description=f"Permission for `{name}` was successfully updated.",
         )
         return await ctx.send(embed=embed)
 
-    @permissions_remove.command(name="level", aliases=["group"])
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_remove_level(
-        self, ctx, level: str, *, user_or_role: Union[User, Role, str]
-    ):
-        """
-        Remove a user, role, or everyone permission to use commands of a permission level.
-
-        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
-        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
-        """
-        if level.upper() not in PermissionLevel.__members__:
-            embed = Embed(
-                title="Error",
-                color=Color.red(),
-                description="The permission level you are attempting to point "
-                f"to does not exist: `{level}`.",
-            )
-            return await ctx.send(embed=embed)
-
-        if hasattr(user_or_role, "id"):
-            value = user_or_role.id
-        elif user_or_role in {"everyone", "all"}:
-            value = -1
+    def _get_perm(self, ctx, name, type_):
+        if type_ == "command":
+            permissions = self.bot.config["command_permissions"].get(name, [])
         else:
-            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
+            permissions = self.bot.config["level_permissions"].get(name, [])
+        if not permissions:
+            embed = Embed(
+                title=f"Permission entries for {type_} `{name}`:",
+                description="No permission entries found.",
+                color=self.bot.main_color,
+            )
+        else:
+            values = []
+            for perm in permissions:
+                if perm == -1:
+                    values.insert(0, "**everyone**")
+                    continue
+                member = ctx.guild.get_member(perm)
+                if member is not None:
+                    values.append(member.mention)
+                    continue
+                user = self.bot.get_user(perm)
+                if user is not None:
+                    values.append(user.mention)
+                    continue
+                role = ctx.guild.get_role(perm)
+                if role is not None:
+                    values.append(role.mention)
+                else:
+                    values.append(str(perm))
 
-        await self.bot.update_perms(PermissionLevel[level.upper()], value, add=False)
-        embed = Embed(
-            title="Success",
-            color=self.bot.main_color,
-            description=f"Permission for {level} was successfully updated.",
-        )
-        return await ctx.send(embed=embed)
+            embed = Embed(
+                title=f"Permission entries for {type_} `{name}`:",
+                description=", ".join(values),
+                color=self.bot.main_color,
+            )
+        return embed
 
-    @permissions.group(name="get", invoke_without_command=True)
+    @permissions.command(name="get", usage="[@user] or [command/level] [name]")
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_get(self, ctx, *, user_or_role: Union[User, Role, str]):
+    async def permissions_get(
+        self, ctx, user_or_role: Union[Role, utils.User, str], *, name: str = None
+    ):
         """
         View the currently-set permissions.
 
-        You can specify `user_or_role` as an alternative to get-by-command or get-by-level.
+        To find a list of permission levels, see `{prefix}help perms`.
+
+        To view all command and level permissions:
+
+        Examples:
+        - `{prefix}perms get @user`
+        - `{prefix}perms get 984301093849028`
+
+        To view all users and roles of a command or level permission:
+
+        Examples:
+        - `{prefix}perms get command reply`
+        - `{prefix}perms get command plugin remove`
+        - `{prefix}perms get level SUPPORTER`
 
         Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
-        `user_or_role` may be a role ID, name, mention, user ID, name, mention, "all", or "everyone".
         """
 
-        if hasattr(user_or_role, "id"):
-            value = user_or_role.id
-        elif user_or_role in {"everyone", "all"}:
-            value = -1
-        else:
-            raise commands.BadArgument(f'User or Role "{user_or_role}" not found')
+        if name is None and user_or_role not in {"command", "level"}:
+            value = self._verify_user_or_role(user_or_role)
 
-        cmds = []
-        levels = []
-        for cmd in self.bot.commands:
-            permissions = self.bot.config.command_permissions.get(cmd.name, [])
-            if value in permissions:
-                cmds.append(cmd.name)
-        for level in PermissionLevel:
-            permissions = self.bot.config.level_permissions.get(level.name, [])
-            if value in permissions:
-                levels.append(level.name)
-        mention = user_or_role.name if hasattr(user_or_role, "name") else user_or_role
-        desc_cmd = (
-            ", ".join(map(lambda x: f"`{x}`", cmds))
-            if cmds
-            else "No permission entries found."
-        )
-        desc_level = (
-            ", ".join(map(lambda x: f"`{x}`", levels))
-            if levels
-            else "No permission entries found."
-        )
+            cmds = []
+            levels = []
 
-        embeds = [
-            Embed(
-                title=f"{mention} has permission with the following commands:",
-                description=desc_cmd,
-                color=self.bot.main_color,
-            ),
-            Embed(
-                title=f"{mention} has permission with the following permission groups:",
-                description=desc_level,
-                color=self.bot.main_color,
-            ),
-        ]
-        p_session = PaginatorSession(ctx, *embeds)
-        return await p_session.run()
+            done = set()
+            for command in self.bot.walk_commands():
+                if command not in done:
+                    done.add(command)
+                    permissions = self.bot.config["command_permissions"].get(
+                        command.qualified_name, []
+                    )
+                    if value in permissions:
+                        cmds.append(command.qualified_name)
 
-    @permissions_get.command(name="command")
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_get_command(self, ctx, *, command: str = None):
-        """View currently-set permissions for a command."""
+            for level in PermissionLevel:
+                permissions = self.bot.config["level_permissions"].get(level.name, [])
+                if value in permissions:
+                    levels.append(level.name)
 
-        def get_command(cmd):
-            permissions = self.bot.config.command_permissions.get(cmd.name, [])
-            if not permissions:
-                embed = Embed(
-                    title=f"Permission entries for command `{cmd.name}`:",
-                    description="No permission entries found.",
+            mention = getattr(
+                user_or_role, "name", getattr(user_or_role, "id", user_or_role)
+            )
+            desc_cmd = (
+                ", ".join(map(lambda x: f"`{x}`", cmds))
+                if cmds
+                else "No permission entries found."
+            )
+            desc_level = (
+                ", ".join(map(lambda x: f"`{x}`", levels))
+                if levels
+                else "No permission entries found."
+            )
+
+            embeds = [
+                Embed(
+                    title=f"{mention} has permission with the following commands:",
+                    description=desc_cmd,
                     color=self.bot.main_color,
-                )
+                ),
+                Embed(
+                    title=f"{mention} has permission with the following permission levels:",
+                    description=desc_level,
+                    color=self.bot.main_color,
+                ),
+            ]
+        else:
+            if user_or_role not in {"command", "level"}:
+                return await ctx.send_help(ctx.command)
+            embeds = []
+            if name is not None:
+                name = name.strip('"')
+                command = level = None
+                if user_or_role == "command":
+                    command = self.bot.get_command(name.lower())
+                    check = command is not None
+                else:
+                    level = self._parse_level(name)
+                    check = level is not None
+
+                if not check:
+                    embed = Embed(
+                        title="Error",
+                        color=Color.red(),
+                        description=f"The referenced {user_or_role} does not exist: `{name}`.",
+                    )
+                    return await ctx.send(embed=embed)
+
+                if user_or_role == "command":
+                    embeds.append(
+                        self._get_perm(ctx, command.qualified_name, "command")
+                    )
+                else:
+                    embeds.append(self._get_perm(ctx, level.name, "level"))
             else:
-                values = []
-                for perm in permissions:
-                    if perm == -1:
-                        values.insert(0, "**everyone**")
-                        continue
-                    member = ctx.guild.get_member(perm)
-                    if member is not None:
-                        values.append(member.mention)
-                        continue
-                    user = self.bot.get_user(perm)
-                    if user is not None:
-                        values.append(user.mention)
-                        continue
-                    role = ctx.guild.get_role(perm)
-                    if role is not None:
-                        values.append(role.mention)
-                    else:
-                        values.append(str(perm))
+                if user_or_role == "command":
+                    done = set()
+                    for command in self.bot.walk_commands():
+                        if command not in done:
+                            done.add(command)
+                            embeds.append(
+                                self._get_perm(ctx, command.qualified_name, "command")
+                            )
+                else:
+                    for perm_level in PermissionLevel:
+                        embeds.append(self._get_perm(ctx, perm_level.name, "level"))
 
-                embed = Embed(
-                    title=f"Permission entries for command `{cmd.name}`:",
-                    description=", ".join(values),
-                    color=self.bot.main_color,
-                )
-            return embed
-
-        embeds = []
-        if command is not None:
-            if command not in self.bot.all_commands:
-                embed = Embed(
-                    title="Error",
-                    color=Color.red(),
-                    description="The command you are attempting to point "
-                    f"to does not exist: `{command}`.",
-                )
-                return await ctx.send(embed=embed)
-            embeds.append(get_command(self.bot.all_commands[command]))
-        else:
-            for cmd in self.bot.commands:
-                embeds.append(get_command(cmd))
-
-        p_session = PaginatorSession(ctx, *embeds)
-        return await p_session.run()
-
-    @permissions_get.command(name="level", aliases=["group"])
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_get_level(self, ctx, *, level: str = None):
-        """View currently-set permissions for commands of a permission level."""
-
-        def get_level(perm_level):
-            permissions = self.bot.config.level_permissions.get(perm_level.name, [])
-            if not permissions:
-                embed = Embed(
-                    title="Permission entries for permission "
-                    f"level `{perm_level.name}`:",
-                    description="No permission entries found.",
-                    color=self.bot.main_color,
-                )
-            else:
-                values = []
-                for perm in permissions:
-                    if perm == -1:
-                        values.insert(0, "**everyone**")
-                        continue
-                    member = ctx.guild.get_member(perm)
-                    if member is not None:
-                        values.append(member.mention)
-                        continue
-                    user = self.bot.get_user(perm)
-                    if user is not None:
-                        values.append(user.mention)
-                        continue
-                    role = ctx.guild.get_role(perm)
-                    if role is not None:
-                        values.append(role.mention)
-                    else:
-                        values.append(str(perm))
-
-                embed = Embed(
-                    title=f"Permission entries for permission level `{perm_level.name}`:",
-                    description=", ".join(values),
-                    color=self.bot.main_color,
-                )
-            return embed
-
-        embeds = []
-        if level is not None:
-            if level.upper() not in PermissionLevel.__members__:
-                embed = Embed(
-                    title="Error",
-                    color=Color.red(),
-                    description="The permission level you are attempting to point "
-                    f"to does not exist: `{level}`.",
-                )
-                return await ctx.send(embed=embed)
-            embeds.append(get_level(PermissionLevel[level.upper()]))
-        else:
-            for perm_level in PermissionLevel:
-                embeds.append(get_level(perm_level))
-
-        p_session = PaginatorSession(ctx, *embeds)
-        return await p_session.run()
+        session = EmbedPaginatorSession(ctx, *embeds)
+        return await session.run()
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
-        """Commands relating to Logviewer oauth2 login authentication.
-        
+        """Commands relating to logviewer oauth2 login authentication.
+
         This functionality on your logviewer site is a [**Patron**](https://patreon.com/kyber) only feature.
         """
         await ctx.send_help(ctx.command)
 
     @oauth.command(name="whitelist")
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def oauth_whitelist(self, ctx, target: Union[User, Role]):
+    async def oauth_whitelist(self, ctx, target: Union[Role, utils.User]):
         """
         Whitelist or un-whitelist a user or role to have access to logs.
 
@@ -1324,6 +1559,7 @@ class Utility(commands.Cog):
         """
         whitelisted = self.bot.config["oauth_whitelist"]
 
+        # target.id is not int??
         if target.id in whitelisted:
             whitelisted.remove(target.id)
             removed = True
@@ -1394,7 +1630,7 @@ class Utility(commands.Cog):
 
         env.update(globals())
 
-        body = cleanup_code(body)
+        body = utils.cleanup_code(body)
         stdout = StringIO()
 
         to_compile = f'async def func():\n{indent(body, "  ")}'
@@ -1415,7 +1651,7 @@ class Utility(commands.Cog):
 
         try:
             exec(to_compile, env)  # pylint: disable=exec-used
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             await ctx.send(f"```py\n{exc.__class__.__name__}: {exc}\n```")
             return await ctx.message.add_reaction("\u2049")
 
@@ -1423,7 +1659,7 @@ class Utility(commands.Cog):
         try:
             with redirect_stdout(stdout):
                 ret = await func()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             value = stdout.getvalue()
             await ctx.send(f"```py\n{value}{traceback.format_exc()}\n```")
             return await ctx.message.add_reaction("\u2049")
@@ -1434,7 +1670,7 @@ class Utility(commands.Cog):
                 if value:
                     try:
                         await ctx.send(f"```py\n{value}\n```")
-                    except Exception:  # pylint: disable=broad-except
+                    except Exception:
                         paginated_text = paginate(value)
                         for page in paginated_text:
                             if page == paginated_text[-1]:
@@ -1444,7 +1680,7 @@ class Utility(commands.Cog):
             else:
                 try:
                     await ctx.send(f"```py\n{value}{ret}\n```")
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     paginated_text = paginate(f"{value}{ret}")
                     for page in paginated_text:
                         if page == paginated_text[-1]:

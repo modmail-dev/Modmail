@@ -1,19 +1,18 @@
 import asyncio
 import logging
-import os
 import re
 import string
 import typing
 from datetime import datetime, timedelta
-from types import SimpleNamespace as param
+from types import SimpleNamespace
+
+import isodate
 
 import discord
-import isodate
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_user_id
-from core.utils import truncate, ignore, error
+from core.utils import is_image_url, days, match_user_id, truncate, ignore, strtobool
 
 logger = logging.getLogger("Modmail")
 
@@ -73,6 +72,7 @@ class Thread:
     def ready(self, flag: bool):
         if flag:
             self._ready_event.set()
+            self.bot.dispatch("thread_ready", self)
         else:
             self._ready_event.clear()
 
@@ -100,19 +100,20 @@ class Thread:
                 name=self.manager.format_channel_name(recipient),
                 category=category,
                 overwrites=overwrites,
-                reason="Creating a thread channel",
+                reason="Creating a thread channel.",
             )
         except discord.HTTPException as e:  # Failed to create due to 50 channel limit.
-            del self.manager.cache[self.id]
-            log_channel = self.bot.log_channel
+            logger.critical("An error occurred while creating a thread.", exc_info=True)
+            self.manager.cache.pop(self.id)
 
-            em = discord.Embed(color=discord.Color.red())
-            em.title = "Error while trying to create a thread"
-            em.description = str(e)
-            em.add_field(name="Recipient", value=recipient.mention)
+            embed = discord.Embed(color=discord.Color.red())
+            embed.title = "Error while trying to create a thread."
+            embed.description = str(e)
+            embed.add_field(name="Recipient", value=recipient.mention)
 
-            if log_channel is not None:
-                return await log_channel.send(embed=em)
+            if self.bot.log_channel is not None:
+                await self.bot.log_channel.send(embed=embed)
+            return
 
         self._channel = channel
 
@@ -123,37 +124,36 @@ class Thread:
             )
 
             log_count = sum(1 for log in log_data if not log["open"])
-        except:  # Something went wrong with database?
+        except Exception:
+            logger.error(
+                "An error occurred while posting logs to the database.", exc_info=True
+            )
             log_url = log_count = None
             # ensure core functionality still works
 
         if creator:
             mention = None
         else:
-            mention = self.bot.config.get("mention", "@here")
+            mention = self.bot.config["mention"]
 
         async def send_genesis_message():
-            info_embed = self.manager.format_info_embed(
+            info_embed = self._format_info_embed(
                 recipient, log_url, log_count, discord.Color.green()
             )
             try:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self.genesis_message = msg
-            except Exception as e:
-                pass
+            except Exception:
+                logger.error("Failed unexpectedly:", exc_info=True)
             finally:
                 self.ready = True
-                self.bot.dispatch("thread_ready", self)
 
         await channel.edit(topic=f"User ID: {recipient.id}")
         self.bot.loop.create_task(send_genesis_message())
 
         # Once thread is ready, tell the recipient.
-        thread_creation_response = self.bot.config.get(
-            "thread_creation_response",
-            "The staff team will get back to you as soon as possible.",
-        )
+        thread_creation_response = self.bot.config["thread_creation_response"]
 
         embed = discord.Embed(
             color=self.bot.mod_color,
@@ -161,20 +161,101 @@ class Thread:
             timestamp=channel.created_at,
         )
 
-        footer = "Your message has been sent"
-        if not self.bot.config.get("disable_recipient_thread_close"):
-            footer = "Click the lock to close the thread"
+        try:
+            recipient_thread_close = strtobool(
+                self.bot.config["recipient_thread_close"]
+            )
+        except ValueError:
+            recipient_thread_close = self.bot.config.remove("recipient_thread_close")
 
-        footer = self.bot.config.get("thread_creation_footer", footer)
+        if recipient_thread_close:
+            footer = self.bot.config["thread_self_closable_creation_footer"]
+        else:
+            footer = self.bot.config["thread_creation_footer"]
+
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
-        embed.title = self.bot.config.get("thread_creation_title", "Thread Created")
+        embed.title = self.bot.config["thread_creation_title"]
 
         if creator is None:
             msg = await recipient.send(embed=embed)
-            if not self.bot.config.get("disable_recipient_thread_close"):
-                close_emoji = self.bot.config.get("close_emoji", "🔒")
+
+            if recipient_thread_close:
+                close_emoji = self.bot.config["close_emoji"]
                 close_emoji = await self.bot.convert_emoji(close_emoji)
                 await msg.add_reaction(close_emoji)
+
+    def _format_info_embed(self, user, log_url, log_count, color):
+        """Get information about a member of a server
+        supports users from the guild or not."""
+        member = self.bot.guild.get_member(user.id)
+        time = datetime.utcnow()
+
+        # key = log_url.split('/')[-1]
+
+        role_names = ""
+        if member is not None:
+            sep_server = self.bot.using_multiple_server_setup
+            separator = ", " if sep_server else " "
+
+            roles = []
+
+            for role in sorted(member.roles, key=lambda r: r.position):
+                if role.name == "@everyone":
+                    continue
+
+                fmt = role.name if sep_server else role.mention
+                roles.append(fmt)
+
+                if len(separator.join(roles)) > 1024:
+                    roles.append("...")
+                    while len(separator.join(roles)) > 1024:
+                        roles.pop(-2)
+                    break
+
+            role_names = separator.join(roles)
+
+        created = str((time - user.created_at).days)
+        embed = discord.Embed(
+            color=color,
+            description=f"{user.mention} was created {days(created)}",
+            timestamp=time,
+        )
+
+        # if not role_names:
+        #     embed.add_field(name='Mention', value=user.mention)
+        # embed.add_field(name='Registered', value=created + days(created))
+
+        footer = "User ID: " + str(user.id)
+        embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
+        # embed.set_thumbnail(url=avi)
+
+        if member is not None:
+            joined = str((time - member.joined_at).days)
+            # embed.add_field(name='Joined', value=joined + days(joined))
+            embed.description += f", joined {days(joined)}"
+
+            if member.nick:
+                embed.add_field(name="Nickname", value=member.nick, inline=True)
+            if role_names:
+                embed.add_field(name="Roles", value=role_names, inline=True)
+            embed.set_footer(text=footer)
+        else:
+            embed.set_footer(text=f"{footer} • (not in main server)")
+
+        if log_count is not None:
+            # embed.add_field(name='Past logs', value=f'{log_count}')
+            thread = "thread" if log_count == 1 else "threads"
+            embed.description += f" with **{log_count or 'no'}** past {thread}."
+        else:
+            embed.description += "."
+
+        mutual_guilds = [g for g in self.bot.guilds if user in g.members]
+        if member is None or len(mutual_guilds) > 1:
+            embed.add_field(
+                name="Mutual Server(s)", value=", ".join(g.name for g in mutual_guilds)
+            )
+
+        return embed
 
     def _close_after(self, closer, silent, delete_channel, message):
         return self.bot.loop.create_task(
@@ -199,7 +280,6 @@ class Thread:
         if after > 0:
             # TODO: Add somewhere to clean up broken closures
             #  (when channel is already deleted)
-            await self.bot.config.update()
             now = datetime.utcnow()
             items = {
                 # 'initiation_time': now.isoformat(),
@@ -210,7 +290,7 @@ class Thread:
                 "message": message,
                 "auto_close": auto_close,
             }
-            self.bot.config.closures[str(self.id)] = items
+            self.bot.config["closures"][str(self.id)] = items
             await self.bot.config.update()
 
             task = self.bot.loop.call_later(
@@ -227,14 +307,18 @@ class Thread:
     async def _close(
         self, closer, silent=False, delete_channel=True, message=None, scheduled=False
     ):
-        del self.manager.cache[self.id]
+        try:
+            self.manager.cache.pop(self.id)
+        except KeyError:
+            logger.warning("Thread already closed.", exc_info=True)
+            return
 
         await self.cancel_closure(all=True)
 
         # Cancel auto closing the thread if closed by any means.
 
-        if str(self.id) in self.bot.config.subscriptions:
-            del self.bot.config.subscriptions[str(self.id)]
+        self.bot.config["subscriptions"].pop(str(self.id), None)
+        self.bot.config["notification_squad"].pop(str(self.id), None)
 
         # Logging
         log_data = await self.bot.api.post_log(
@@ -253,11 +337,11 @@ class Thread:
             },
         )
 
-        if log_data is not None and isinstance(log_data, dict):
-            prefix = os.getenv("LOG_URL_PREFIX", "/logs")
+        if isinstance(log_data, dict):
+            prefix = self.bot.config["log_url_prefix"].strip("/")
             if prefix == "NONE":
                 prefix = ""
-            log_url = f"{self.bot.config.log_url.strip('/')}{prefix}/{log_data['key']}"
+            log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
 
             if log_data["messages"]:
                 content = str(log_data["messages"][0]["content"])
@@ -292,38 +376,29 @@ class Thread:
 
         tasks = [self.bot.config.update()]
 
-        try:
+        if self.bot.log_channel is not None:
             tasks.append(self.bot.log_channel.send(embed=embed))
-        except (ValueError, AttributeError):
-            pass
 
         # Thread closed message
 
         embed = discord.Embed(
-            title=self.bot.config.get("thread_close_title", "Thread Closed"),
+            title=self.bot.config["thread_close_title"],
             color=discord.Color.red(),
             timestamp=datetime.utcnow(),
         )
 
         if not message:
             if self.id == closer.id:
-                message = self.bot.config.get(
-                    "thread_self_close_response", "You have closed this Modmail thread."
-                )
+                message = self.bot.config["thread_self_close_response"]
             else:
-                message = self.bot.config.get(
-                    "thread_close_response",
-                    "{closer.mention} has closed this Modmail thread.",
-                )
+                message = self.bot.config["thread_close_response"]
 
         message = message.format(
             closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
         )
 
         embed.description = message
-        footer = self.bot.config.get(
-            "thread_close_footer", "Replying will create a new thread"
-        )
+        footer = self.bot.config["thread_close_footer"]
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
 
         if not silent and self.recipient is not None:
@@ -334,7 +409,11 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
+    async def cancel_closure(
+        self,
+        auto_close: bool = False,
+        all: bool = False,  # pylint: disable=redefined-builtin
+    ) -> None:
         if self.close_task is not None and (not auto_close or all):
             self.close_task.cancel()
             self.close_task = None
@@ -342,7 +421,7 @@ class Thread:
             self.auto_close_task.cancel()
             self.auto_close_task = None
 
-        to_update = self.bot.config.closures.pop(str(self.id), None)
+        to_update = self.bot.config["closures"].pop(str(self.id), None)
         if to_update is not None:
             await self.bot.config.update()
 
@@ -365,10 +444,8 @@ class Thread:
 
         :returns: None if no timeout is set.
         """
-        timeout = self.bot.config.get("thread_auto_close")
-        if timeout is None:
-            return timeout
-        else:
+        timeout = self.bot.config["thread_auto_close"]
+        if timeout:
             try:
                 timeout = isodate.parse_duration(timeout)
             except isodate.ISO8601Error:
@@ -378,9 +455,9 @@ class Thread:
                     'greater than 0 days, not "%s".',
                     str(timeout),
                 )
-                del self.bot.config.cache["thread_auto_close"]
+                timeout = self.bot.config.remove("thread_auto_close")
                 await self.bot.config.update()
-                timeout = None
+
         return timeout
 
     async def _restart_close_timer(self):
@@ -391,7 +468,7 @@ class Thread:
         timeout = await self._fetch_timeout()
 
         # Exit if timeout was not set
-        if timeout is None:
+        if not timeout:
             return
 
         # Set timeout seconds
@@ -400,23 +477,39 @@ class Thread:
         reset_time = datetime.utcnow() + timedelta(seconds=seconds)
         human_time = human_timedelta(dt=reset_time)
 
+        try:
+            thread_auto_close_silently = strtobool(
+                self.bot.config["thread_auto_close_silently"]
+            )
+        except ValueError:
+            thread_auto_close_silently = self.bot.config.remove(
+                "thread_auto_close_silently"
+            )
+
+        if thread_auto_close_silently:
+            return await self.close(
+                closer=self.bot.user, silent=True, after=int(seconds), auto_close=True
+            )
+
         # Grab message
-        close_message = self.bot.config.get(
-            "thread_auto_close_response",
-            f"This thread has been closed automatically due to inactivity "
-            f"after {human_time}.",
+        close_message = self.bot.config["thread_auto_close_response"].format(
+            timeout=human_time
         )
+
         time_marker_regex = "%t"
         if len(re.findall(time_marker_regex, close_message)) == 1:
             close_message = re.sub(time_marker_regex, str(human_time), close_message)
         elif len(re.findall(time_marker_regex, close_message)) > 1:
             logger.warning(
-                "The thread_auto_close_response should only contain one"
-                f" '{time_marker_regex}' to specify time."
+                "The thread_auto_close_response should only contain one '%s' to specify time.",
+                time_marker_regex,
             )
 
         await self.close(
-            closer=self.bot.user, after=seconds, message=close_message, auto_close=True
+            closer=self.bot.user,
+            after=int(seconds),
+            message=close_message,
+            auto_close=True,
         )
 
     async def edit_message(self, message_id: int, message: str) -> None:
@@ -446,7 +539,7 @@ class Thread:
 
     async def note(self, message: discord.Message) -> None:
         if not message.content and not message.attachments:
-            raise MissingRequiredArgument(param(name="msg"))
+            raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
         _, msg = await asyncio.gather(
             self.bot.api.append_log(message, self.channel.id, type_="system"),
@@ -457,8 +550,8 @@ class Thread:
 
     async def reply(self, message: discord.Message, anonymous: bool = False) -> None:
         if not message.content and not message.attachments:
-            raise MissingRequiredArgument(param(name="msg"))
-        if all(not g.get_member(self.id) for g in self.bot.guilds):
+            raise MissingRequiredArgument(SimpleNamespace(name="msg"))
+        if not any(g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
                 embed=discord.Embed(
                     color=discord.Color.red(),
@@ -474,7 +567,7 @@ class Thread:
                 message, destination=self.recipient, from_mod=True, anonymous=anonymous
             )
         except Exception:
-            logger.info(error("Message delivery failed:"), exc_info=True)
+            logger.error("Message delivery failed:", exc_info=True)
             tasks.append(
                 message.channel.send(
                     embed=discord.Embed(
@@ -569,11 +662,15 @@ class Thread:
                 and not isinstance(destination, discord.TextChannel)
             ):
                 # Anonymously sending to the user.
-                tag = self.bot.config.get("mod_tag", str(message.author.top_role))
-                name = self.bot.config.get("anon_username", tag)
-                avatar_url = self.bot.config.get(
-                    "anon_avatar_url", self.bot.guild.icon_url
-                )
+                tag = self.bot.config["mod_tag"]
+                if tag is None:
+                    tag = str(message.author.top_role)
+                name = self.bot.config["anon_username"]
+                if name is None:
+                    name = tag
+                avatar_url = self.bot.config["anon_avatar_url"]
+                if avatar_url is None:
+                    avatar_url = self.bot.guild.icon_url
             else:
                 # Normal message
                 name = str(author)
@@ -590,21 +687,23 @@ class Thread:
 
         delete_message = not bool(message.attachments)
 
-        attachments = [(a.url, a.filename) for a in message.attachments]
+        ext = [(a.url, a.filename) for a in message.attachments]
 
-        images = [x for x in attachments if is_image_url(*x)]
-        attachments = [x for x in attachments if not is_image_url(*x)]
+        images = []
+        attachments = []
+        for attachment in ext:
+            if is_image_url(attachment[0]):
+                images.append(attachment)
+            else:
+                attachments.append(attachment)
 
-        image_links = [
-            (link, None)
-            for link in re.findall(
-                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                message.content,
-            )
-        ]
+        image_urls = re.findall(
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            message.content,
+        )
 
-        image_links = [x for x in image_links if is_image_url(*x)]
-        images.extend(image_links)
+        image_urls = [(url, None) for url in image_urls if is_image_url(url)]
+        images.extend(image_urls)
 
         embedded_image = False
 
@@ -613,15 +712,15 @@ class Thread:
         additional_images = []
         additional_count = 1
 
-        for att in images:
+        for url, filename in images:
             if not prioritize_uploads or (
-                is_image_url(*att) and not embedded_image and att[1]
+                is_image_url(url) and not embedded_image and filename
             ):
-                embed.set_image(url=att[0])
-                if att[1]:
-                    embed.add_field(name="Image", value=f"[{att[1]}]({att[0]})")
+                embed.set_image(url=url)
+                if filename:
+                    embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
-            elif att[1] is not None:
+            elif filename is not None:
                 if note:
                     color = discord.Color.blurple()
                 elif from_mod:
@@ -630,9 +729,9 @@ class Thread:
                     color = self.bot.recipient_color
 
                 img_embed = discord.Embed(color=color)
-                img_embed.set_image(url=att[0])
-                img_embed.title = att[1]
-                img_embed.url = att[0]
+                img_embed.set_image(url=url)
+                img_embed.title = filename
+                img_embed.url = url
                 img_embed.set_footer(
                     text=f"Additional Image Upload ({additional_count})"
                 )
@@ -642,40 +741,43 @@ class Thread:
 
         file_upload_count = 1
 
-        for att in attachments:
+        for url, filename in attachments:
             embed.add_field(
-                name=f"File upload ({file_upload_count})", value=f"[{att[1]}]({att[0]})"
+                name=f"File upload ({file_upload_count})", value=f"[{filename}]({url})"
             )
             file_upload_count += 1
 
         if from_mod:
-            # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = self.bot.mod_color  # pylint: disable=E0237
+            embed.colour = self.bot.mod_color
             # Anonymous reply sent in thread channel
             if anonymous and isinstance(destination, discord.TextChannel):
                 embed.set_footer(text="Anonymous Reply")
             # Normal messages
             elif not anonymous:
-                tag = self.bot.config.get("mod_tag", str(message.author.top_role))
-                embed.set_footer(text=tag)  # Normal messages
+                mod_tag = self.bot.config["mod_tag"]
+                if mod_tag is None:
+                    mod_tag = str(message.author.top_role)
+                embed.set_footer(text=mod_tag)  # Normal messages
             else:
-                embed.set_footer(text=self.bot.config.get("anon_tag", "Response"))
+                embed.set_footer(text=self.bot.config["anon_tag"])
         elif note:
-            # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = discord.Color.blurple()  # pylint: disable=E0237
+            embed.colour = discord.Color.blurple()
         else:
             embed.set_footer(text=f"Recipient")
-            # noinspection PyUnresolvedReferences,PyDunderSlots
-            embed.color = self.bot.recipient_color  # pylint: disable=E0237
+            embed.colour = self.bot.recipient_color
 
-        await destination.trigger_typing()
+        try:
+            await destination.trigger_typing()
+        except discord.NotFound:
+            logger.warning("Channel not found.", exc_info=True)
+            return
 
         if not from_mod and not note:
             mentions = self.get_notifications()
         else:
             mentions = None
 
-        _msg = await destination.send(mentions, embed=embed)
+        msg = await destination.send(mentions, embed=embed)
 
         if additional_images:
             self.ready = False
@@ -685,19 +787,18 @@ class Thread:
         if delete_message:
             self.bot.loop.create_task(ignore(message.delete()))
 
-        return _msg
+        return msg
 
     def get_notifications(self) -> str:
-        config = self.bot.config
         key = str(self.id)
 
         mentions = []
-        mentions.extend(config["subscriptions"].get(key, []))
+        mentions.extend(self.bot.config["subscriptions"].get(key, []))
 
-        if key in config["notification_squad"]:
-            mentions.extend(config["notification_squad"][key])
-            del config["notification_squad"][key]
-            self.bot.loop.create_task(config.update())
+        if key in self.bot.config["notification_squad"]:
+            mentions.extend(self.bot.config["notification_squad"][key])
+            self.bot.config["notification_squad"].pop(key)
+            self.bot.loop.create_task(self.bot.config.update())
 
         return " ".join(mentions)
 
@@ -738,13 +839,13 @@ class ThreadManager:
         if recipient is None and channel is not None:
             thread = self._find_from_channel(channel)
             if thread is None:
-                id, thread = next(
+                user_id, thread = next(
                     ((k, v) for k, v in self.cache.items() if v.channel == channel),
                     (-1, None),
                 )
                 if thread is not None:
                     logger.debug("Found thread with tempered ID.")
-                    await channel.edit(topic=f"User ID: {id}")
+                    await channel.edit(topic=f"User ID: {user_id}")
             return thread
 
         thread = None
@@ -795,6 +896,7 @@ class ThreadManager:
             thread.ready = True
 
             return thread
+        return None
 
     def create(
         self,
@@ -824,77 +926,8 @@ class ThreadManager:
         )
         new_name += f"-{author.discriminator}"
 
+        counter = 1
         while new_name in [c.name for c in self.bot.modmail_guild.text_channels]:
-            new_name += "-x"  # two channels with same name
+            new_name += f"-{counter}"  # two channels with same name
 
         return new_name
-
-    def format_info_embed(self, user, log_url, log_count, color):
-        """Get information about a member of a server
-        supports users from the guild or not."""
-        member = self.bot.guild.get_member(user.id)
-        time = datetime.utcnow()
-
-        # key = log_url.split('/')[-1]
-
-        role_names = ""
-        if member:
-            sep_server = self.bot.using_multiple_server_setup
-            separator = ", " if sep_server else " "
-
-            roles = []
-
-            for role in sorted(member.roles, key=lambda r: r.position):
-                if role.name == "@everyone":
-                    continue
-
-                fmt = role.name if sep_server else role.mention
-                roles.append(fmt)
-
-                if len(separator.join(roles)) > 1024:
-                    roles.append("...")
-                    while len(separator.join(roles)) > 1024:
-                        roles.pop(-2)
-                    break
-
-            role_names = separator.join(roles)
-
-        embed = discord.Embed(color=color, description=user.mention, timestamp=time)
-
-        created = str((time - user.created_at).days)
-        # if not role_names:
-        #     embed.add_field(name='Mention', value=user.mention)
-        # embed.add_field(name='Registered', value=created + days(created))
-        embed.description += f" was created {days(created)}"
-
-        footer = "User ID: " + str(user.id)
-        embed.set_footer(text=footer)
-        embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
-        # embed.set_thumbnail(url=avi)
-
-        if member:
-            joined = str((time - member.joined_at).days)
-            # embed.add_field(name='Joined', value=joined + days(joined))
-            embed.description += f", joined {days(joined)}"
-
-            if member.nick:
-                embed.add_field(name="Nickname", value=member.nick, inline=True)
-            if role_names:
-                embed.add_field(name="Roles", value=role_names, inline=True)
-        else:
-            embed.set_footer(text=f"{footer} • (not in main server)")
-
-        if log_count:
-            # embed.add_field(name='Past logs', value=f'{log_count}')
-            thread = "thread" if log_count == 1 else "threads"
-            embed.description += f" with **{log_count}** past {thread}."
-        else:
-            embed.description += "."
-
-        mutual_guilds = [g for g in self.bot.guilds if user in g.members]
-        if user not in self.bot.guild.members or len(mutual_guilds) > 1:
-            embed.add_field(
-                name="Mutual Servers", value=", ".join(g.name for g in mutual_guilds)
-            )
-
-        return embed
