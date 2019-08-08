@@ -906,22 +906,21 @@ class Modmail(commands.Cog):
                     pass
 
         if users:
-            embed = embeds[-1]
+            embed = embeds[0]
 
             for mention, reason in users:
                 line = mention + f" - `{reason or 'No reason provided'}`\n"
                 if len(embed.description) + len(line) > 2048:
-                    embeds.append(
-                        discord.Embed(
+                    embed = discord.Embed(
                             title="Blocked Users (Continued)",
                             color=self.bot.main_color,
                             description=line,
                         )
-                    )
+                    embeds.append(embed)
                 else:
                     embed.description += line
         else:
-            embeds[-1].description = "Currently there are no blocked users."
+            embeds[0].description = "Currently there are no blocked users."
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
