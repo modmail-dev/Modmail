@@ -124,6 +124,10 @@ dmypy.json
 # VS Code
 .vscode/
 
+# Node
+package-lock.json
+node_modules/
+
 # Modmail
 config.json
 plugins/

@@ -5,6 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 black = "==19.3b0"
+pylint = "*"
 
 [packages]
 colorama = ">=0.4.0"
@@ -17,10 +18,12 @@ isodate = ">=0.6.0"
 dnspython = "~=1.16.0"
 parsedatetime = "==2.4"
 aiohttp = "<3.6.0,>=3.3.0"
-pylint = "*"
 python-dotenv = ">=0.10.3"
 pipenv = "==2018.11.26"
-"discord.py" = "==1.1.1"
+"discord.py" = "==1.2.3"
 
 [requires]
 python_version = "3.7"
+
+[scripts]
+bot = "python bot.py"
