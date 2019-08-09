@@ -1,6 +1,5 @@
 import functools
 
-from discord import Embed, Color
 from discord.ext import commands
 
 

@@ -1,20 +1,19 @@
 import re
+import shlex
 import typing
+from difflib import get_close_matches
+from distutils.util import strtobool as _stb  # pylint: disable=import-error
+from itertools import takewhile
 from urllib import parse
 
-from discord import Object
+import discord
 from discord.ext import commands
 
-from colorama import Fore, Style
-from core.models import PermissionLevel
 
-
-def info(*msgs):
-    return f'{Fore.CYAN}{" ".join(msgs)}{Style.RESET_ALL}'
-
-
-def error(*msgs):
-    return f'{Fore.RED}{" ".join(msgs)}{Style.RESET_ALL}'
+def strtobool(val):
+    if isinstance(val, bool):
+        return val
+    return _stb(str(val))
 
 
 class User(commands.IDConverter):
@@ -36,10 +35,10 @@ class User(commands.IDConverter):
         match = self._get_id_match(argument)
         if match is None:
             raise commands.BadArgument('User "{}" not found'.format(argument))
-        return Object(int(match.group(1)))
+        return discord.Object(int(match.group(1)))
 
 
-def truncate(text: str, max: int = 50) -> str:
+def truncate(text: str, max: int = 50) -> str:  # pylint: disable=redefined-builtin
     """
     Reduces the string to `max` length, by trimming the message into "...".
 
@@ -87,7 +86,7 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
     return out or "No Messages"
 
 
-def is_image_url(url: str, _=None) -> bool:
+def is_image_url(url: str) -> bool:
     """
     Check if the URL is pointing to an image.
 
@@ -188,13 +187,15 @@ def match_user_id(text: str) -> int:
     int
         The user ID if found. Otherwise, -1.
     """
-    match = re.search(r"\bUser ID: (\d+)\b", text)
+    match = re.search(r"\bUser ID: (\d{17,21})\b", text)
     if match is not None:
         return int(match.group(1))
     return -1
 
 
-def get_perm_level(cmd) -> PermissionLevel:
+def get_perm_level(cmd):
+    from core.models import PermissionLevel
+
     for check in cmd.checks:
         perm = getattr(check, "permission_level", None)
         if perm is not None:
@@ -210,3 +211,53 @@ async def ignore(coro):
         await coro
     except Exception:
         pass
+
+
+def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
+    embed = discord.Embed(
+        color=discord.Color.red(),
+        description=f"**{name.capitalize()} `{word}` cannot be found.**",
+    )
+    val = get_close_matches(word, possibilities, n=n, cutoff=cutoff)
+    if val:
+        embed.description += "\nHowever, perhaps you meant...\n" + "\n".join(val)
+    return embed
+
+
+def parse_alias(alias):
+    if "&&" not in alias:
+        if alias.startswith('"') and alias.endswith('"'):
+            return [alias[1:-1]]
+        return [alias]
+
+    buffer = ""
+    cmd = []
+    try:
+        for token in shlex.shlex(alias, punctuation_chars="&"):
+            if token != "&&":
+                buffer += " " + token
+                continue
+
+            buffer = buffer.strip()
+            if buffer.startswith('"') and buffer.endswith('"'):
+                buffer = buffer[1:-1]
+            cmd += [buffer]
+            buffer = ""
+    except ValueError:
+        return []
+
+    buffer = buffer.strip()
+    if buffer.startswith('"') and buffer.endswith('"'):
+        buffer = buffer[1:-1]
+    cmd += [buffer]
+
+    if not all(cmd):
+        return []
+    return cmd
+
+
+def format_description(i, names):
+    return "\n".join(
+        ": ".join((str(a + i * 15), b))
+        for a, b in enumerate(takewhile(lambda x: x is not None, names), start=1)
+    )
