@@ -143,7 +143,7 @@ Become a sponsor on [Patreon](https://patreon.com/kyber).
 
 Modmail supports the use of third-party plugins to extend or add functionalities to the bot. This allows niche features as well as anything else outside of the scope of the core functionality of Modmail. A list of third-party plugins can be found using the `plugins registry` command. To develop your own, check out the [plugins documentation](https://github.com/kyb3r/modmail/wiki/Plugins).
 
-Plugins requests and support is available in our (Modmail Plugins Server)[https://discord.gg/4JE4XSW].
+Plugins requests and support is available in our [Modmail Plugins Server](https://discord.gg/4JE4XSW).
 
 ## Contributing
 
