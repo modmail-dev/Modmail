@@ -153,7 +153,7 @@ class ConfigManager:
         config_help_json = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "config_help.json"
         )
-        with open(config_help_json, "r") as f:
+        with open(config_help_json, "r", encoding="utf-8") as f:
             self.config_help = dict(sorted(json.load(f).items()))
 
         return self._cache
