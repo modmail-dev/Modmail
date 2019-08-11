@@ -1023,7 +1023,7 @@ class Modmail(commands.Cog):
             return await ctx.send(embed=embed)
 
         if after is not None:
-            reason = after.arg + f" by {moderator}"
+            reason = f"{after.arg} by {moderator}"
             if reason.startswith("System Message: "):
                 raise commands.BadArgument(
                     "The reason cannot start with `System Message:`."
