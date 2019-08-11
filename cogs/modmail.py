@@ -1048,7 +1048,7 @@ class Modmail(commands.Cog):
         ):
             if str(user.id) in self.bot.blocked_users:
 
-                old_reason = msg.strip().rstrip(".") or "Blocked by {moderator}"
+                old_reason = msg.strip().rstrip(".") or f"Blocked by {moderator}"
                 embed = discord.Embed(
                     title="Success",
                     description=f"{mention} was previously blocked for "
