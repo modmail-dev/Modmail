@@ -1294,6 +1294,11 @@ class Utility(commands.Cog):
             self.bot.config["override_command_level"][
                 command.qualified_name
             ] = level.name
+
+            if not any(check for check in command.checks if hasattr(check, "permission_level")):
+                logger.debug('Command %s has no permissions check, adding invalid.', command.qualified_name)
+                checks.has_permissions(PermissionLevel.INVALID)(command)
+
             await self.bot.config.update()
             embed = Embed(
                 title="Success",
