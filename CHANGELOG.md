@@ -1,9 +1,27 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
+
+# v3.2.0
+
+### Added
+
+- Ability to change permission levels of individual commands.
+  - See `?permissions override` for more information.
+
+### Fixed
+
+- `?help <some sub command>`, will return `Perhaps you meant: <some sub command>`, now its fixed.
+  - For example, `?help add` used to return `Perhaps you meant: add`, now it wouldn't do this.
+- Aliases and Permissions command names are always saved lowercase now.
+
+### Internal
+
+- Use regex to parse Changes, Added, Fixed, etc and description.
 
 # v3.1.1
 

@@ -1,4 +1,4 @@
-__version__ = "3.1.1"
+__version__ = "3.2.0"
 
 import asyncio
 import logging
@@ -381,6 +381,34 @@ class ModmailBot(commands.Bot):
     @property
     def main_color(self) -> int:
         return self._parse_color("main_color")
+
+    def command_perm(self, command_name: str) -> PermissionLevel:
+        level = self.config["override_command_level"].get(command_name)
+        if level is not None:
+            try:
+                return PermissionLevel[level.upper()]
+            except KeyError:
+                logger.warning(
+                    "Invalid override_command_level for command %s.", command_name
+                )
+                self.config["override_command_level"].pop(command_name)
+
+        command = self.get_command(command_name)
+        if command is None:
+            logger.debug("Command %s not found.", command_name)
+            return PermissionLevel.INVALID
+        level = next(
+            (
+                check.permission_level
+                for check in command.checks
+                if hasattr(check, "permission_level")
+            ),
+            None,
+        )
+        if level is None:
+            logger.debug("Command %s does not have a permission level.", command_name)
+            return PermissionLevel.INVALID
+        return level
 
     async def on_connect(self):
         logger.line()
@@ -1039,12 +1067,23 @@ class ModmailBot(commands.Bot):
             await context.send_help(context.command)
         elif isinstance(exception, commands.CheckFailure):
             for check in context.command.checks:
-                if not await check(context) and hasattr(check, "fail_msg"):
-                    await context.send(
-                        embed=discord.Embed(
-                            color=discord.Color.red(), description=check.fail_msg
+                if not await check(context):
+                    if hasattr(check, "fail_msg"):
+                        await context.send(
+                            embed=discord.Embed(
+                                color=discord.Color.red(), description=check.fail_msg
+                            )
                         )
-                    )
+                    if hasattr(check, 'permission_level'):
+                        corrected_permission_level = self.command_perm(
+                            context.command.qualified_name
+                        )
+                        logger.warning(
+                            "User %s does not have permission to use this command: `%s` (%s).",
+                            context.author.name,
+                            context.command.qualified_name,
+                            corrected_permission_level.name,
+                        )
             logger.warning("CheckFailure: %s", exception)
         else:
             logger.error("Unexpected exception:", exc_info=exception)

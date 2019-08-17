@@ -82,7 +82,9 @@ This list is ever-growing thanks to active development and our exceptional contr
 
 ## Installation
 
-Where is the Modmail bot invite link? Unfortunately, due to how this bot functions, it cannot be invited. This is to ensure the individuality to your server and grant you full control over your bot and data. Nonetheless, you can easily obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time):
+Where can I find the Modmail bot invite link? 
+
+Unfortunately, due to how this bot functions, it cannot be invited. This is to ensure the individuality to your server and grant you full control over your bot and data. Nonetheless, you can easily obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time)...
 
 ### Heroku
 
@@ -104,7 +106,7 @@ If you don't want to go through the trouble of setting up your very own Modmail 
 
 ### Locally
 
-Local hosting of Modmail is also possible, first you will need [`python 3.7`](https://www.python.org/downloads/).
+Local hosting of Modmail is also possible, first you will need [`Python 3.7`](https://www.python.org/downloads/).
 
 Follow the [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) and disregard deploying the Heroku bot application. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
 

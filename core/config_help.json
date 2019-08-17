@@ -412,7 +412,7 @@
   },
   "mongo_uri": {
     "default": "None, required",
-    "description": "A MongoDB SRV connection string.",
+    "description": "A MongoDB connection string.",
     "examples": [
     ],
     "notes": [
@@ -425,7 +425,7 @@
     "examples": [
     ],
     "notes": [
-      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+      "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   },
   "token": {
@@ -434,7 +434,7 @@
     "examples": [
     ],
     "notes": [
-      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+      "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   },
   "log_level": {
@@ -443,7 +443,7 @@
     "examples": [
     ],
     "notes": [
-      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+      "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   }
 }

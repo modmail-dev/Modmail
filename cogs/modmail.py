@@ -912,10 +912,10 @@ class Modmail(commands.Cog):
                 line = mention + f" - `{reason or 'No reason provided'}`\n"
                 if len(embed.description) + len(line) > 2048:
                     embed = discord.Embed(
-                            title="Blocked Users (Continued)",
-                            color=self.bot.main_color,
-                            description=line,
-                        )
+                        title="Blocked Users (Continued)",
+                        color=self.bot.main_color,
+                        description=line,
+                    )
                     embeds.append(embed)
                 else:
                     embed.description += line

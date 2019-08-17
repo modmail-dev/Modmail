@@ -74,6 +74,7 @@ class ConfigManager:
         "blocked_whitelist": [],
         "command_permissions": {},
         "level_permissions": {},
+        "override_command_level": {},
         # threads
         "snippets": {},
         "notification_squad": {},
