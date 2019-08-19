@@ -1012,6 +1012,8 @@ class Modmail(commands.Cog):
 
         mention = getattr(user, "mention", f"`{user.id}`")
 
+        moderator = ctx.author.name
+
         if str(user.id) in self.bot.blocked_whitelisted_users:
             embed = discord.Embed(
                 title="Error",
@@ -1021,7 +1023,7 @@ class Modmail(commands.Cog):
             return await ctx.send(embed=embed)
 
         if after is not None:
-            reason = after.arg
+            reason = f"{after.arg} by {moderator}"
             if reason.startswith("System Message: "):
                 raise commands.BadArgument(
                     "The reason cannot start with `System Message:`."
@@ -1029,10 +1031,10 @@ class Modmail(commands.Cog):
             if "%" in reason:
                 raise commands.BadArgument('The reason contains illegal character "%".')
             if after.dt > after.now:
-                reason = f"{reason} %{after.dt.isoformat()}%"
+                reason = f"{reason} %{after.dt.isoformat()}% by {moderator}"
 
         if not reason:
-            reason = None
+            reason = f"Blocked by {moderator}"
 
         extend = f" for `{reason}`" if reason is not None else ""
         msg = self.bot.blocked_users.get(str(user.id))
@@ -1046,7 +1048,7 @@ class Modmail(commands.Cog):
         ):
             if str(user.id) in self.bot.blocked_users:
 
-                old_reason = msg.strip().rstrip(".") or "no reason"
+                old_reason = msg.strip().rstrip(".") or f"Blocked by {moderator}"
                 embed = discord.Embed(
                     title="Success",
                     description=f"{mention} was previously blocked for "
