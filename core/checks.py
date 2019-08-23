@@ -7,7 +7,9 @@ from core.models import PermissionLevel
 logger = logging.getLogger("Modmail")
 
 
-def has_permissions_predicate(permission_level: PermissionLevel = PermissionLevel.REGULAR):
+def has_permissions_predicate(
+    permission_level: PermissionLevel = PermissionLevel.REGULAR
+):
     async def predicate(ctx):
         return await check_permissions(ctx, ctx.command.qualified_name)
 

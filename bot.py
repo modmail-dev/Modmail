@@ -29,6 +29,7 @@ try:
 except ImportError:
     pass
 
+from core import checks
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import human_join, strtobool, parse_alias
@@ -840,6 +841,17 @@ class ModmailBot(commands.Bot):
         ctxs = await self.get_contexts(message)
         for ctx in ctxs:
             if ctx.command:
+                if not any(
+                    1
+                    for check in ctx.command.checks
+                    if hasattr(check, "permission_level")
+                ):
+                    logger.debug(
+                        "Command %s has no permissions check, adding invalid level.",
+                        ctx.command.qualified_name,
+                    )
+                    checks.has_permissions(PermissionLevel.INVALID)(ctx.command)
+
                 await self.invoke(ctx)
                 continue
 
@@ -1074,7 +1086,7 @@ class ModmailBot(commands.Bot):
                                 color=discord.Color.red(), description=check.fail_msg
                             )
                         )
-                    if hasattr(check, 'permission_level'):
+                    if hasattr(check, "permission_level"):
                         corrected_permission_level = self.command_perm(
                             context.command.qualified_name
                         )

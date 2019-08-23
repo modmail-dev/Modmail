@@ -646,6 +646,7 @@ class Utility(commands.Cog):
     @tasks.loop(minutes=45)
     async def loop_presence(self):
         """Set presence to the configured value every 45 minutes."""
+        # TODO: Does this even work?
         presence = await self.set_presence()
         logger.debug(f'{presence["activity"][1]} {presence["status"][1]}')
 
@@ -1295,10 +1296,6 @@ class Utility(commands.Cog):
                 command.qualified_name
             ] = level.name
 
-            if not any(check for check in command.checks if hasattr(check, "permission_level")):
-                logger.debug('Command %s has no permissions check, adding invalid.', command.qualified_name)
-                checks.has_permissions(PermissionLevel.INVALID)(command)
-
             await self.bot.config.update()
             embed = Embed(
                 title="Success",
@@ -1618,25 +1615,37 @@ class Utility(commands.Cog):
                     for command in self.bot.walk_commands():
                         if command not in done:
                             done.add(command)
-                            level = self.bot.config["override_command_level"].get(command.qualified_name)
+                            level = self.bot.config["override_command_level"].get(
+                                command.qualified_name
+                            )
                             if level is not None:
                                 overrides[command.qualified_name] = level
 
                     embeds = []
                     if not overrides:
-                        embeds.append(Embed(
-                            title="Permission Overrides",
-                            description="You don't have any command level overrides at the moment.",
-                            color=Color.red()
-                        ))
+                        embeds.append(
+                            Embed(
+                                title="Permission Overrides",
+                                description="You don't have any command level overrides at the moment.",
+                                color=Color.red(),
+                            )
+                        )
                     else:
-                        for items in zip_longest(*(iter(sorted(overrides.items())),) * 15):
+                        for items in zip_longest(
+                            *(iter(sorted(overrides.items())),) * 15
+                        ):
                             description = "\n".join(
                                 ": ".join((f"`{name}`", level))
-                                for name, level in takewhile(lambda x: x is not None, items)
+                                for name, level in takewhile(
+                                    lambda x: x is not None, items
+                                )
                             )
-                            embed = Embed(color=self.bot.main_color, description=description)
-                            embed.set_author(name="Permission Overrides", icon_url=ctx.guild.icon_url)
+                            embed = Embed(
+                                color=self.bot.main_color, description=description
+                            )
+                            embed.set_author(
+                                name="Permission Overrides", icon_url=ctx.guild.icon_url
+                            )
                             embeds.append(embed)
 
                     session = EmbedPaginatorSession(ctx, *embeds)

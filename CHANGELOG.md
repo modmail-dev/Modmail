@@ -22,6 +22,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 ### Internal
 
 - Use regex to parse Changes, Added, Fixed, etc and description.
+- Adds `PermissionLevel.INVALID` when commands doesn't have a permission level.
 
 # v3.1.1
 
