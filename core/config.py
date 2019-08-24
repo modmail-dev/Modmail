@@ -53,6 +53,8 @@ class ConfigManager:
         "thread_close_title": "Thread Closed",
         "thread_close_response": "{closer.mention} has closed this Modmail thread.",
         "thread_self_close_response": "You have closed this Modmail thread.",
+        "thread_move_notify": False,
+        "thread_move_response": "This thread has been moved",
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -108,6 +110,7 @@ class ConfigManager:
         "reply_without_command",
         "recipient_thread_close",
         "thread_auto_close_silently",
+        "thread_move_notify"
     }
 
     defaults = {**public_keys, **private_keys, **protected_keys}

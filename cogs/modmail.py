@@ -294,6 +294,13 @@ class Modmail(commands.Cog):
         """
         thread = ctx.thread
         await thread.channel.edit(category=category, sync_permissions=True)
+        if self.bot.config["thread_move_notify"]:
+            embed = discord.Embed(
+                title="Thread Moved",
+                description=self.bot.config["thread_move_response"],
+                color=discord.Color.red())
+
+            await thread.recipient.send(embed=embed)
         sent_emoji, _ = await self.bot.retrieve_emoji()
         try:
             await ctx.message.add_reaction(sent_emoji)
