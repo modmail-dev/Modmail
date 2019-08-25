@@ -294,7 +294,11 @@ class Modmail(commands.Cog):
         """
         thread = ctx.thread
         await thread.channel.edit(category=category, sync_permissions=True)
-        if self.bot.config["thread_move_notify"]:
+        try:
+            thread_move_notify = strtobool(self.config["thread_move_notify"])
+        except ValueError:
+            thread_move_notify = self.config.remove("thread_move_notify")
+        if thread_move_notify:
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
