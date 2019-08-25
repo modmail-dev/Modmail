@@ -84,7 +84,7 @@
     "description": "The creation date of the recipient user account must be greater than the number of days, hours, minutes or any time-interval specified by this configuration.",
     "examples": [
       "`{prefix}config set account_age P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
-      "`{prefix}config set account_age 3 days and 5 hours` (accepted readable time)"
+      "`{prefix}config set account_age 3 days 5 hours` (accepted readable time)"
     ],
     "notes": [
       "To remove this restriction, do `{prefix}config del account_age`.",
@@ -96,7 +96,7 @@
     "description": "The join date of the recipient user into this server must be greater than the number of days, hours, minutes or any time-interval specified by this configuration.",
     "examples": [
       "`{prefix}config set guild_age P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
-      "`{prefix}config set guild_age 3 days and 5 hours` (accepted readable time)"
+      "`{prefix}config set guild_age 3 days 5 hours` (accepted readable time)"
     ],
     "notes": [
       "To remove this restriction, do `{prefix}config del guild_age`.",
@@ -188,7 +188,7 @@
     "description": "Setting this configuration will close threads automatically after the number of days, hours, minutes or any time-interval specified by this configuration.",
     "examples": [
       "`{prefix}config set thread_auto_close P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
-      "`{prefix}config set thread_auto_close 3 days and 5 hours` (accepted readable time)"
+      "`{prefix}config set thread_auto_close 3 days 5 hours` (accepted readable time)"
     ],
     "notes": [
       "To disable auto close, do `{prefix}config del thread_auto_close`.",
@@ -207,6 +207,18 @@
       "This will not have an effect when `thread_auto_close_silently` is enabled.",
       "Discord flavoured markdown is fully supported in `thread_auto_close_response`.",
       "See also: `thread_auto_close`, `thread_auto_close_silently`."
+    ]
+  },
+  "thread_cooldown": {
+    "default": "No cooldown threshold",
+    "description": "This will set a cooldown to limit incoming threads.",
+    "examples": [
+      "`{prefix}config set thread_cooldown P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
+      "`{prefix}config set thread_cooldown 3 days 5 hours` (accepted readable time)."
+    ],
+    "notes": [
+      "To remove this restriction, do `{prefix}config del thread_cooldown`.",
+      "See also: `account_age`, `guild_age`."
     ]
   },
   "thread_creation_response": {

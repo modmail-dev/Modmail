@@ -544,11 +544,14 @@ class ModmailBot(commands.Bot):
 
         account_age = self.config["account_age"]
         guild_age = self.config["guild_age"]
+        thread_cooldown = self.config["guild_age"]
 
         if account_age is None:
             account_age = isodate.Duration()
         if guild_age is None:
             guild_age = isodate.Duration()
+        if thread_cooldown is None:
+            thread_cooldown = isodate.Duration()
 
         if not isinstance(account_age, isodate.Duration):
             try:
@@ -574,6 +577,18 @@ class ModmailBot(commands.Bot):
                 )
                 guild_age = self.config.remove("guild_age")
 
+        if not isinstance(thread_cooldown, isodate.Duration):
+            try:
+                thread_cooldown = isodate.parse_duration(thread_cooldown)
+            except isodate.ISO8601Error:
+                logger.warning(
+                    "The account age limit needs to be a "
+                    "ISO-8601 duration formatted duration string "
+                    'greater than 0 days, not "%s".',
+                    str(thread_cooldown),
+                )
+                thread_cooldown = self.config.remove("thread_cooldown")
+
         reason = self.blocked_users.get(str(message.author.id)) or ""
         min_guild_age = min_account_age = now
 
@@ -590,6 +605,15 @@ class ModmailBot(commands.Bot):
         except ValueError:
             logger.warning("Error with 'guild_age'.", exc_info=True)
             self.config.remove("guild_age")
+
+        try:
+            last_log = (await self.api.get_user_logs(message.author.id))[-1]
+            cooldown = datetime.strptime(last_log["created_at"].split(".")[0], '%Y-%m-%d %H:%M:%S') + isodate.parse_duration(self.config["thread_cooldown"])
+        except IndexError:
+            pass
+        except ValueError:
+            logger.warning("Error with 'thread_cooldown'.", exc_info=True)
+            self.config.remove("thread_cooldown")
 
         if min_account_age > now:
             # User account has not reached the required time
@@ -663,6 +687,16 @@ class ModmailBot(commands.Bot):
                         self.blocked_users.pop(str(message.author.id))
                 else:
                     logger.debug("User blocked, user %s.", message.author.name)
+        elif cooldown > now:
+            delta = human_timedelta(cooldown)
+            await message.channel.send(
+                embed=discord.Embed(
+                    title="Thread not opened!",
+                    description=f"You must wait for {delta} "
+                    f"before you can message me again.",
+                    color=discord.Color.red(),
+                )
+            )
         else:
             reaction = sent_emoji
 

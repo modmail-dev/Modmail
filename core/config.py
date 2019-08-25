@@ -5,11 +5,11 @@ import os
 import typing
 from copy import deepcopy
 
-from dotenv import load_dotenv
 import isodate
 
 import discord
 from discord.ext.commands import BadArgument
+from dotenv import load_dotenv
 
 from core._color_data import ALL_COLORS
 from core.models import InvalidConfigError, Default
@@ -45,6 +45,7 @@ class ConfigManager:
         "thread_auto_close_silently": False,
         "thread_auto_close": None,
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
+        "thread_cooldown": None,
         "thread_creation_response": "The staff team will get back to you as soon as possible.",
         "thread_creation_footer": "Your message has been sent",
         "thread_self_closable_creation_footer": "Click the lock to close the thread",
@@ -100,7 +101,7 @@ class ConfigManager:
 
     colors = {"mod_color", "recipient_color", "main_color"}
 
-    time_deltas = {"account_age", "guild_age", "thread_auto_close"}
+    time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown"}
 
     booleans = {
         "user_typing",
@@ -153,7 +154,7 @@ class ConfigManager:
         config_help_json = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "config_help.json"
         )
-        with open(config_help_json, "r", encoding="utf-8") as f:
+        with open(config_help_json, "r", encoding="utf-8-sig") as f:
             self.config_help = dict(sorted(json.load(f).items()))
 
         return self._cache
