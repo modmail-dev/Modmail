@@ -308,7 +308,7 @@
       "`{prefix}config set thread_move_notify no`"
     ],
     "notes": [
-      "See also: `thread_move_response`"
+      "See also: `thread_move_response`."
     ]
   },
   "thread_move_response": {
