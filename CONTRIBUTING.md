@@ -15,7 +15,7 @@ We use github to host code, to track issues and feature requests, as well as acc
 
 ## We Use [Git Flow](https://atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
 
-![Simple Image Of A Git Flow Workflow](https://wac-cdn.atlassian.com/dam/jcr:61ccc620-5249-4338-be66-94d563f2843c/05%20(2).svg?cdnVersion=532)
+![Simple Image Of A Git Flow Workflow](https://camo.githubusercontent.com/6e7d3f4a1bd70a160ba817b88c47210c0799e1fb/68747470733a2f2f63646e2e646973636f72646170702e636f6d2f6174746163686d656e74732f3532383932373732303036333633313336302f3631353031373031383034363830383038342f686f746669782d6272616e6368657332782e706e67)
 When contributing to this project please make sure you follow this and name your branches appropriately! 
 
 ## All Code Changes Happen Through Pull Requests
