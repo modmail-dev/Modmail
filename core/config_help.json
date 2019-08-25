@@ -318,7 +318,8 @@
       "`{prefix}config set thread_move_response This thread has been moved to another category for review!`"
     ],
     "notes": [
-      "Only has an effect when thread_move_notify is on."
+      "Only has an effect when `thread_move_notify` is on.",
+      "See also: `thread_move_notify`."
     ]
   },
   "recipient_color": {
