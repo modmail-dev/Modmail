@@ -17,7 +17,7 @@ from core.decorators import trigger_typing
 from core.models import PermissionLevel
 from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User, create_not_found_embed, format_description
+from core.utils import format_preview, User, create_not_found_embed, format_description, strtobool
 
 logger = logging.getLogger("Modmail")
 
@@ -286,25 +286,34 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @checks.thread_only()
-    async def move(self, ctx, *, category: discord.CategoryChannel):
+    async def move(self, ctx, category: discord.CategoryChannel, *, specifics: str = None):
         """
         Move a thread to another category.
 
         `category` may be a category ID, mention, or name.
         """
         thread = ctx.thread
+        silent = False
+
+        if specifics:
+            silent_words = ['silent', 'quiet']
+            silent = any(word in specifics for word in silent_words)
+
         await thread.channel.edit(category=category, sync_permissions=True)
+
         try:
-            thread_move_notify = strtobool(self.config["thread_move_notify"])
+            thread_move_notify = strtobool(self.bot.config["thread_move_notify"])
         except ValueError:
-            thread_move_notify = self.config.remove("thread_move_notify")
-        if thread_move_notify:
+            thread_move_notify = self.bot.config.remove("thread_move_notify")
+
+        if thread_move_notify and not silent:
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
                 color=discord.Color.red())
 
             await thread.recipient.send(embed=embed)
+
         sent_emoji, _ = await self.bot.retrieve_emoji()
         try:
             await ctx.message.add_reaction(sent_emoji)
