@@ -312,7 +312,7 @@ class Modmail(commands.Cog):
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
                 color=self.bot.main_color
-
+            )
             await thread.recipient.send(embed=embed)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
