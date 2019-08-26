@@ -310,7 +310,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
-                color=discord.Color.red())
+                color=self.bot.main_color
 
             await thread.recipient.send(embed=embed)
 
