@@ -131,6 +131,41 @@ Finally, start Modmail.
 $ pipenv run bot
 ```
 
+#### Docker
+
+This repo supplies a Dockerfile for simplified deployment. 
+
+You can build your own Docker image:
+
+```console
+$ docker build . --tag=modmail
+```
+
+or run directly from a pre-built version from https://hub.docker.com/. Currently there are two community release of Modmail:
+
+- Kyber's:
+
+```console
+$ docker pull kyb3rr/modmail
+```
+
+- Taku's:
+
+```console
+$ docker pull taaku18/modmail
+# You can also choose one of the following:
+$ docker pull taaku18/modmail:dev
+$ docker pull taaku18/modmail:<version>  (<version> ex: 3.2.0, 3.2, etc.)
+```
+
+And to run your docker image:
+
+```console
+$ docker run --env-file .env user/modmail
+```
+- Replace `user/modmail` with `kyb3rr/modmail`, `taaku18/modmail`, `taaku18/modmail:3.2`, etc as above.
+- `.env` should be the path to your env file, you can also supply a path: `/path/to/.env`.
+
 ## Sponsors
 
 Special thanks to our sponsors for supporting the project.
