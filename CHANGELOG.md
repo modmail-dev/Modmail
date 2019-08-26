@@ -12,6 +12,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 
 - Ability to change permission levels of individual commands.
   - See `?permissions override` for more information.
+- `thread_move_notify` and `thread_move_response` to notify recipients if a thread is moved.
+- IDs of messages sent to Modmail are now viewable.
 
 ### Fixed
 
