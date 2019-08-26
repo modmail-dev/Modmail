@@ -291,13 +291,14 @@ class Modmail(commands.Cog):
         Move a thread to another category.
 
         `category` may be a category ID, mention, or name.
+        `specifics` is a string which takes in arguments on how to perform the move. Ex: "silently"
         """
         thread = ctx.thread
         silent = False
 
         if specifics:
-            silent_words = ['silent', 'quiet']
-            silent = any(word in specifics for word in silent_words)
+            silent_words = ['silent', 'silently']
+            silent = any(word in silent_words for word in specifics.split())
 
         await thread.channel.edit(category=category, sync_permissions=True)
 
