@@ -6,20 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
-# v3.2.0
+# UNRELEASED
 
 ### Added
 
 - Ability to change permission levels of individual commands.
   - See `?permissions override` for more information.
-- `thread_move_notify` and `thread_move_response` to notify recipients if a thread is moved.
-- IDs of messages sent to Modmail are now viewable.
+- `thread_move_notify` and `thread_move_response` to notify recipients if a thread is moved. (Thanks to Flufster PR#360)
+- IDs of messages sent to Modmail are now viewable. (Thanks to Flufster PR#360)
 
 ### Fixed
 
 - `?help <some sub command>`, will return `Perhaps you meant: <some sub command>`, now its fixed.
   - For example, `?help add` used to return `Perhaps you meant: add`, now it wouldn't do this.
 - Aliases and Permissions command names are always saved lowercase now.
+- An improved Dockerfile.
 
 ### Internal
 
