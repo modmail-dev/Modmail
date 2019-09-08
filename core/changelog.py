@@ -1,8 +1,11 @@
+import logging
 import re
 from collections import defaultdict
-from typing import List
+from typing import List, Union
 
 from discord import Embed, Color
+
+logger = logging.getLogger("Modmail")
 
 
 class Version:
@@ -32,10 +35,13 @@ class Version:
         General description of the version.
     """
 
-    def __init__(self, bot, version: str, lines: str):
+    def __init__(self, bot, version: str, lines: Union[List[str], str]):
         self.bot = bot
         self.version = version.lstrip("vV")
-        self.lines = [x for x in lines.splitlines() if x]
+        if isinstance(lines, list):
+            self.lines = lines
+        else:
+            self.lines = [x for x in lines.splitlines() if x]
         self.fields = defaultdict(str)
         self.description = ""
         self.parse()
@@ -114,11 +120,15 @@ class Changelog:
         "https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md"
     )
     CHANGELOG_URL = "https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md"
-    VERSION_REGEX = re.compile(r"# (v\d+\.\d+\.\d+)([\S\s]*?(?=# v|$))")
+    VERSION_REGEX = re.compile(
+        r"# ([vV]\d+\.\d+(?:\.\d+)?)(.*?(?=# (?:[vV]\d+\.\d+(?:\.\d+)?)|$))",
+        flags=re.DOTALL,
+    )
 
     def __init__(self, bot, text: str):
         self.bot = bot
         self.text = text
+        logger.debug("Fetching changelog from GitHub.")
         self.versions = [Version(bot, *m) for m in self.VERSION_REGEX.findall(text)]
 
     @property
