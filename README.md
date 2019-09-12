@@ -138,8 +138,10 @@ Special thanks to our sponsors for supporting the project.
 </a>
 
 <a href='https://discord.gg/PmHHVt9'>
-  <img height=150 src='https://imgur.com/gallery/dDKuq1l.png' style='margin:10'>
+  <img height=150 src='https://imgur.com/gallery/dDKuq1l.jpg' style='margin:10'>
 </a>
+
+
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
 ## Plugins
