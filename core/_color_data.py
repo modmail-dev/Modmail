@@ -15,6 +15,36 @@ BASE_COLORS = {
     "w": "#ffffff",
 }
 
+# Discord native colors
+DISCORD_COLORS = {
+    "default": "#000000",
+    "teal": "#1abc9c",
+    "dark teal": "#11806a",
+    "green": "#2ecc71",
+    "dark green": "#1f8b4c",
+    "blue": "#3498db",
+    "dark blue": "#206694",
+    "purple": "#9b59b6",
+    "dark purple": "#71368a",
+    "magenta": "#e91e63",
+    "dark magenta": "#ad1457",
+    "gold": "#f1c40f",
+    "dark gold": "#c27c0e",
+    "orange": "#e67e22",
+    "dark orange": "#a84300",
+    "red": "#e74c3c",
+    "dark red": "#992d22",
+    "lighter gray": "#95a5a6",
+    "darker gray": "#546e7a",
+    "light gray": "#979c9f",
+    "dark gray": "#607d8b",
+    "blurple": "#7289da",
+    "grayple": "#99aab5"
+}
+
+# Normalize name to "discord:<name>" to avoid name collisions.
+DISCORD_COLORS_NORM = {"discord:" + name: value for name, value in DISCORD_COLORS.items()}
+
 
 # These colors are from Tableau
 TABLEAU_COLORS = {
@@ -1160,3 +1190,5 @@ ALL_COLORS.update(XKCD_COLORS)
 ALL_COLORS.update(XKCD_COLORS_NORM)
 ALL_COLORS.update(TABLEAU_COLORS)
 ALL_COLORS.update(TABLEAU_COLORS_NORM)
+ALL_COLORS.update(DISCORD_COLORS)
+ALL_COLORS.update(DISCORD_COLORS_NORM)
