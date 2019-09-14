@@ -186,10 +186,11 @@ class ConfigManager:
                 value_text = clean_value = hex_
 
             except InvalidConfigError:
-                name = re.sub(r"[\-. ]+", " ", str(val))
+                name = str(val).lower()
+                name = re.sub(r"[\-+|. ]+", " ", name)
                 hex_ = ALL_COLORS.get(name)
                 if hex_ is None:
-                    name = re.sub(r"\W", "", str(val))
+                    name = re.sub(r"[\-+|. ]+", "", name)
                     hex_ = ALL_COLORS.get(name)
                     if hex_ is None:
                         raise
