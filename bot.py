@@ -294,6 +294,8 @@ class ModmailBot(commands.Bot):
             except ValueError:
                 self.config.remove("guild_id")
                 logger.critical("Invalid GUILD_ID set.")
+        else:
+            logger.debug("No GUILD_ID set.")
         return None
 
     @property
@@ -456,7 +458,7 @@ class ModmailBot(commands.Bot):
         await self.wait_for_connected()
 
         if self.guild is None:
-            logger.debug("Logging out due to invalid GUILD_ID.")
+            logger.error("Logging out due to invalid GUILD_ID.")
             return await self.logout()
 
         logger.line()
