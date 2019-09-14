@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
-# UNRELEASED
+# v3.2.0
 
 ### Added
 
