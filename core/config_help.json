@@ -300,6 +300,28 @@
       "See also: `thread_close_title`, `thread_close_footer`, `thread_close_response`."
     ]
   },
+  "thread_move_notify": {
+    "default": "No",
+    "description": "Notify the recipient if the thread was moved.",
+    "examples": [
+      "`{prefix}config set thread_move_notify yes`",
+      "`{prefix}config set thread_move_notify no`"
+    ],
+    "notes": [
+      "See also: `thread_move_response`."
+    ]
+  },
+  "thread_move_response": {
+    "default": "This thread has been moved.",
+    "description": "This is the message to display to the user when the thread is moved.",
+    "examples": [
+      "`{prefix}config set thread_move_response This thread has been moved to another category for review!`"
+    ],
+    "notes": [
+      "Only has an effect when `thread_move_notify` is on.",
+      "See also: `thread_move_notify`."
+    ]
+  },
   "recipient_color": {
     "default": "Discord Gold [#F1C40F](https://placehold.it/100/f1c40f?text=+)",
     "description": "This is the color of the messages sent by the recipient, this applies to messages received in the thread channel.",
@@ -412,7 +434,7 @@
   },
   "mongo_uri": {
     "default": "None, required",
-    "description": "A MongoDB SRV connection string.",
+    "description": "A MongoDB connection string.",
     "examples": [
     ],
     "notes": [
@@ -425,7 +447,7 @@
     "examples": [
     ],
     "notes": [
-      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+      "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   },
   "token": {
@@ -434,7 +456,7 @@
     "examples": [
     ],
     "notes": [
-      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+      "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   },
   "log_level": {
@@ -443,7 +465,7 @@
     "examples": [
     ],
     "notes": [
-      "This configuration can only to be set through `.env` file, ~~`config.json` file~~ (removed), or environment (config) variables."
+      "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   }
 }

@@ -1,9 +1,10 @@
 import logging
 import re
-from collections import defaultdict
-from typing import List, Union
+from typing import List
 
-from discord import Embed, Color
+from discord import Embed
+
+from core.utils import truncate
 
 logger = logging.getLogger("Modmail")
 
@@ -27,22 +28,29 @@ class Version:
         The Modmail bot.
     version : str
         The version string (ie. "v2.12.0").
-    lines : List[str]
+    lines : str
         A list of lines of changelog messages for this version.
-    fields : defaultdict[str, str]
+    fields : Dict[str, str]
         A dict of fields separated by "Fixed", "Changed", etc sections.
     description : str
         General description of the version.
+
+    Class Attributes
+    ----------------
+    ACTION_REGEX : str
+        The regex used to parse the actions.
+    DESCRIPTION_REGEX: str
+        The regex used to parse the description.
     """
 
-    def __init__(self, bot, version: str, lines: Union[List[str], str]):
+    ACTION_REGEX = r"###\s*(.+?)\s*\n(.*?)(?=###\s*.+?|$)"
+    DESCRIPTION_REGEX = r"^(.*?)(?=###\s*.+?|$)"
+
+    def __init__(self, bot, version: str, lines: str):
         self.bot = bot
         self.version = version.lstrip("vV")
-        if isinstance(lines, list):
-            self.lines = lines
-        else:
-            self.lines = [x for x in lines.splitlines() if x]
-        self.fields = defaultdict(str)
+        self.lines = lines.strip()
+        self.fields = {}
         self.description = ""
         self.parse()
 
@@ -53,26 +61,32 @@ class Version:
         """
         Parse the lines and split them into `description` and `fields`.
         """
-        curr_action = None
+        self.description = re.match(self.DESCRIPTION_REGEX, self.lines, re.DOTALL)
+        self.description = (
+            self.description.group(1).strip() if self.description is not None else ""
+        )
 
-        for line in self.lines:
-            if line.startswith("### "):
-                curr_action = line[4:]
-            elif curr_action is None:
-                self.description += line + "\n"
-            else:
-                self.fields[curr_action] += line + "\n"
+        matches = re.finditer(self.ACTION_REGEX, self.lines, re.DOTALL)
+        for m in matches:
+            try:
+                self.fields[m.group(1).strip()] = m.group(2).strip()
+            except AttributeError:
+                logger.error(
+                    "Something went wrong when parsing the changelog for version %s.",
+                    self.version,
+                    exc_info=True,
+                )
 
     @property
     def url(self) -> str:
-        return Changelog.CHANGELOG_URL + "#v" + self.version.replace(".", "")
+        return f"{Changelog.CHANGELOG_URL}#v{self.version[::2]}"
 
     @property
     def embed(self) -> Embed:
         """
         Embed: the formatted `Embed` of this `Version`.
         """
-        embed = Embed(color=Color.green(), description=self.description)
+        embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
             name=f"v{self.version} - Changelog",
             icon_url=self.bot.user.avatar_url,
@@ -80,7 +94,7 @@ class Version:
         )
 
         for name, value in self.fields.items():
-            embed.add_field(name=name, value=value)
+            embed.add_field(name=name, value=truncate(value, 1024))
         embed.set_footer(text=f"Current version: v{self.bot.version}")
         embed.set_thumbnail(url=self.bot.user.avatar_url)
         return embed
@@ -121,7 +135,7 @@ class Changelog:
     )
     CHANGELOG_URL = "https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md"
     VERSION_REGEX = re.compile(
-        r"# ([vV]\d+\.\d+(?:\.\d+)?)(.*?(?=# (?:[vV]\d+\.\d+(?:\.\d+)?)|$))",
+        r"#\s*([vV]\d+\.\d+(?:\.\d+)?)\s+(.*?)(?=#\s*[vV]\d+\.\d+(?:\.\d+)?|$)",
         flags=re.DOTALL,
     )
 

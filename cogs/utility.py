@@ -41,9 +41,9 @@ class ModmailHelpCommand(commands.HelpCommand):
         for cmd in await self.filter_commands(
             cog.get_commands() if not no_cog else cog,
             sort=True,
-            key=utils.get_perm_level,
+            key=lambda c: bot.command_perm(c.qualified_name),
         ):
-            perm_level = utils.get_perm_level(cmd)
+            perm_level = bot.command_perm(cmd.qualified_name)
             if perm_level is PermissionLevel.INVALID:
                 format_ = f"`{prefix + cmd.qualified_name}` "
             else:
@@ -122,11 +122,11 @@ class ModmailHelpCommand(commands.HelpCommand):
     async def send_command_help(self, command):
         if not await self.filter_commands([command]):
             return
-        perm_level = utils.get_perm_level(command)
+        perm_level = self.context.bot.command_perm(command.qualified_name)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f"{perm_level.name} [{perm_level}]"
         else:
-            perm_level = ""
+            perm_level = "NONE"
 
         embed = Embed(
             title=f"`{self.get_command_signature(command)}`",
@@ -140,11 +140,11 @@ class ModmailHelpCommand(commands.HelpCommand):
         if not await self.filter_commands([group]):
             return
 
-        perm_level = utils.get_perm_level(group)
+        perm_level = self.context.bot.command_perm(group.qualified_name)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f"{perm_level.name} [{perm_level}]"
         else:
-            perm_level = ""
+            perm_level = "NONE"
 
         embed = Embed(
             title=f"`{self.get_command_signature(group)}`",
@@ -153,7 +153,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         )
 
         if perm_level:
-            embed.add_field(name="Permission level", value=perm_level, inline=False)
+            embed.add_field(name="Permission Level", value=perm_level, inline=False)
 
         format_ = ""
         length = len(group.commands)
@@ -169,7 +169,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 branch = "├─"
             format_ += f"`{branch} {command.name}` - {command.short_doc}\n"
 
-        embed.add_field(name="Sub Commands", value=format_[:1024], inline=False)
+        embed.add_field(name="Sub Command(s)", value=format_[:1024], inline=False)
         embed.set_footer(
             text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
             "for more info on a command."
@@ -218,7 +218,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         for cmd in self.context.bot.walk_commands():
             if not cmd.hidden:
-                choices.add(cmd.name)
+                choices.add(cmd.qualified_name)
 
         closest = get_close_matches(command, choices)
         if closest:
@@ -244,7 +244,7 @@ class Utility(commands.Cog):
             verify_checks=False,
             command_attrs={
                 "help": "Shows this help message.",
-                "checks": [checks.has_permissions_help(PermissionLevel.REGULAR)],
+                "checks": [checks.has_permissions_predicate(PermissionLevel.REGULAR)],
             },
         )
         self.bot.help_command.cog = self
@@ -271,14 +271,21 @@ class Utility(commands.Cog):
                 )
             )
 
+        paginator = EmbedPaginatorSession(ctx, *changelog.embeds)
         try:
-            paginator = EmbedPaginatorSession(ctx, *changelog.embeds)
             paginator.current = index
             await paginator.run()
         except asyncio.CancelledError:
             pass
         except Exception:
-            await ctx.send(changelog.CHANGELOG_URL)
+            try:
+                await paginator.close()
+            except Exception:
+                pass
+            logger.warning("Failed to display changelog.", exc_info=True)
+            await ctx.send(
+                f"View the changelog here: {changelog.CHANGELOG_URL}#v{version[::2]}"
+            )
 
     @commands.command(aliases=["bot", "info"])
     @checks.has_permissions(PermissionLevel.REGULAR)
@@ -639,15 +646,19 @@ class Utility(commands.Cog):
     @tasks.loop(minutes=45)
     async def loop_presence(self):
         """Set presence to the configured value every 45 minutes."""
+        # TODO: Does this even work?
         presence = await self.set_presence()
-        logger.line()
-        logger.info(presence["activity"][1])
-        logger.info(presence["status"][1])
+        logger.debug(f'{presence["activity"][1]} {presence["status"][1]}')
 
     @loop_presence.before_loop
     async def before_loop_presence(self):
-        logger.info("Starting metadata loop.")
         await self.bot.wait_for_connected()
+        logger.debug("Starting metadata loop.")
+        logger.line()
+        presence = await self.set_presence()
+        logger.info(presence["activity"][1])
+        logger.info(presence["status"][1])
+        await asyncio.sleep(2700)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
@@ -1066,7 +1077,7 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         if len(values) == 1:
-            linked_command = values[0].split()[0]
+            linked_command = values[0].split()[0].lower()
             if not self.bot.get_command(linked_command):
                 embed = Embed(
                     title="Error",
@@ -1147,7 +1158,7 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         if len(values) == 1:
-            linked_command = values[0].split()[0]
+            linked_command = values[0].split()[0].lower()
             if not self.bot.get_command(linked_command):
                 embed = Embed(
                     title="Error",
@@ -1203,6 +1214,9 @@ class Utility(commands.Cog):
 
         By default, owner is set to the absolute bot owner and regular is `@everyone`.
 
+        To set permissions, see `{prefix}help permissions add`; and to change permission level for specific
+        commands see `{prefix}help permissions override`.
+
         Note: You will still have to manually give/take permission to the Modmail
         category to users/roles.
         """
@@ -1233,9 +1247,65 @@ class Utility(commands.Cog):
             "4": PermissionLevel.ADMINISTRATOR,
             "5": PermissionLevel.OWNER,
         }
-        return transform.get(name)
+        return transform.get(name, PermissionLevel.INVALID)
 
-    @permissions.command(name="add", usage="[command/level] [name] [user_or_role]")
+    @permissions.command(name="override")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def permissions_override(
+        self, ctx, command_name: str.lower, *, level_name: str
+    ):
+        """
+        Change a permission level for a specific command.
+
+        Examples:
+        - `{prefix}perms override reply administrator`
+        - `{prefix}perms override "plugin enabled" moderator`
+
+        To undo a permission override, see `{prefix}help permissions remove`.
+
+        Example:
+        - `{prefix}perms remove override reply`
+        - `{prefix}perms remove override plugin enabled`
+
+        You can retrieve a single or all command level override(s), see`{prefix}help permissions get`.
+        """
+
+        command = self.bot.get_command(command_name)
+        if command is None:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"The referenced command does not exist: `{command_name}`.",
+            )
+            return await ctx.send(embed=embed)
+
+        level = self._parse_level(level_name)
+        if level is PermissionLevel.INVALID:
+            embed = Embed(
+                title="Error",
+                color=Color.red(),
+                description=f"The referenced level does not exist: `{level_name}`.",
+            )
+        else:
+            logger.info(
+                "Updated command permission level for `%s` to `%s`.",
+                command.qualified_name,
+                level.name,
+            )
+            self.bot.config["override_command_level"][
+                command.qualified_name
+            ] = level.name
+
+            await self.bot.config.update()
+            embed = Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description="Successfully set command permission level for "
+                f"`{command.qualified_name}` to `{level.name}`.",
+            )
+        return await ctx.send(embed=embed)
+
+    @permissions.command(name="add", usage="[command/level] [name] [user/role]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add(
         self,
@@ -1265,11 +1335,12 @@ class Utility(commands.Cog):
 
         command = level = None
         if type_ == "command":
-            command = self.bot.get_command(name.lower())
+            name = name.lower()
+            command = self.bot.get_command(name)
             check = command is not None
         else:
             level = self._parse_level(name)
-            check = level is not None
+            check = level is not PermissionLevel.INVALID
 
         if not check:
             embed = Embed(
@@ -1281,8 +1352,8 @@ class Utility(commands.Cog):
 
         value = self._verify_user_or_role(user_or_role)
         if type_ == "command":
-            await self.bot.update_perms(command.qualified_name, value)
             name = command.qualified_name
+            await self.bot.update_perms(name, value)
         else:
             await self.bot.update_perms(level, value)
             name = level.name
@@ -1309,7 +1380,7 @@ class Utility(commands.Cog):
     @permissions.command(
         name="remove",
         aliases=["del", "delete", "revoke"],
-        usage="[command/level] [name] [user_or_role]",
+        usage="[command/level] [name] [user/role] or [override] [command name]",
     )
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_remove(
@@ -1318,10 +1389,10 @@ class Utility(commands.Cog):
         type_: str.lower,
         name: str,
         *,
-        user_or_role: Union[Role, utils.User, str],
+        user_or_role: Union[Role, utils.User, str] = None,
     ):
         """
-        Remove permission to use a command or permission level.
+        Remove permission to use a command, permission level, or command level override.
 
         For sub commands, wrap the complete command name with quotes.
         To find a list of permission levels, see `{prefix}help perms`.
@@ -1331,22 +1402,54 @@ class Utility(commands.Cog):
         - `{prefix}perms remove command reply @user`
         - `{prefix}perms remove command "plugin enabled" @role`
         - `{prefix}perms remove command help 984301093849028`
+        - `{prefix}perms remove override block`
+        - `{prefix}perms remove override "snippet add"`
 
         Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
         """
-        if type_ not in {"command", "level"}:
+        if type_ not in {"command", "level", "override"} or (
+            type_ != "override" and user_or_role is None
+        ):
             return await ctx.send_help(ctx.command)
 
-        level = None
-        if type_ == "command":
-            name = getattr(self.bot.get_command(name.lower()), "qualified_name", name)
-        else:
-            level = self._parse_level(name)
+        if type_ == "override":
+            extension = ctx.kwargs["user_or_role"]
+            if extension is not None:
+                name += f" {extension}"
+            name = name.lower()
+            name = getattr(self.bot.get_command(name), "qualified_name", name)
+            level = self.bot.config["override_command_level"].get(name)
             if level is None:
+                perm = self.bot.command_perm(name)
                 embed = Embed(
                     title="Error",
                     color=Color.red(),
-                    description=f"The referenced {type_} does not exist: `{name}`.",
+                    description=f"The command permission level was never overridden: `{name}`, "
+                    f"current permission level is {perm.name}.",
+                )
+            else:
+                logger.info("Restored command permission level for `%s`.", name)
+                self.bot.config["override_command_level"].pop(name)
+                await self.bot.config.update()
+                perm = self.bot.command_perm(name)
+                embed = Embed(
+                    title="Success",
+                    color=self.bot.main_color,
+                    description=f"Command permission level for `{name}` was successfully restored to {perm.name}.",
+                )
+            return await ctx.send(embed=embed)
+
+        level = None
+        if type_ == "command":
+            name = name.lower()
+            name = getattr(self.bot.get_command(name), "qualified_name", name)
+        else:
+            level = self._parse_level(name)
+            if level is PermissionLevel.INVALID:
+                embed = Embed(
+                    title="Error",
+                    color=Color.red(),
+                    description=f"The referenced level does not exist: `{name}`.",
                 )
                 return await ctx.send(embed=embed)
             name = level.name
@@ -1423,7 +1526,7 @@ class Utility(commands.Cog):
             )
         return embed
 
-    @permissions.command(name="get", usage="[@user] or [command/level] [name]")
+    @permissions.command(name="get", usage="[@user] or [command/level/override] [name]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get(
         self, ctx, user_or_role: Union[Role, utils.User, str], *, name: str = None
@@ -1446,10 +1549,16 @@ class Utility(commands.Cog):
         - `{prefix}perms get command plugin remove`
         - `{prefix}perms get level SUPPORTER`
 
+        To view command level overrides:
+
+        Examples:
+        - `{prefix}perms get override block`
+        - `{prefix}perms get override permissions add`
+
         Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
         """
 
-        if name is None and user_or_role not in {"command", "level"}:
+        if name is None and user_or_role not in {"command", "level", "override"}:
             value = self._verify_user_or_role(user_or_role)
 
             cmds = []
@@ -1497,6 +1606,71 @@ class Utility(commands.Cog):
                 ),
             ]
         else:
+            user_or_role = (user_or_role or "").lower()
+            if user_or_role == "override":
+                if name is None:
+                    done = set()
+
+                    overrides = {}
+                    for command in self.bot.walk_commands():
+                        if command not in done:
+                            done.add(command)
+                            level = self.bot.config["override_command_level"].get(
+                                command.qualified_name
+                            )
+                            if level is not None:
+                                overrides[command.qualified_name] = level
+
+                    embeds = []
+                    if not overrides:
+                        embeds.append(
+                            Embed(
+                                title="Permission Overrides",
+                                description="You don't have any command level overrides at the moment.",
+                                color=Color.red(),
+                            )
+                        )
+                    else:
+                        for items in zip_longest(
+                            *(iter(sorted(overrides.items())),) * 15
+                        ):
+                            description = "\n".join(
+                                ": ".join((f"`{name}`", level))
+                                for name, level in takewhile(
+                                    lambda x: x is not None, items
+                                )
+                            )
+                            embed = Embed(
+                                color=self.bot.main_color, description=description
+                            )
+                            embed.set_author(
+                                name="Permission Overrides", icon_url=ctx.guild.icon_url
+                            )
+                            embeds.append(embed)
+
+                    session = EmbedPaginatorSession(ctx, *embeds)
+                    return await session.run()
+
+                name = name.lower()
+                name = getattr(self.bot.get_command(name), "qualified_name", name)
+                level = self.bot.config["override_command_level"].get(name)
+                perm = self.bot.command_perm(name)
+                if level is None:
+                    embed = Embed(
+                        title="Error",
+                        color=Color.red(),
+                        description=f"The command permission level was never overridden: `{name}`, "
+                        f"current permission level is {perm.name}.",
+                    )
+                else:
+                    embed = Embed(
+                        title="Success",
+                        color=self.bot.main_color,
+                        description=f'Permission override for command "{name}" is "{perm.name}".',
+                    )
+
+                return await ctx.send(embed=embed)
+
             if user_or_role not in {"command", "level"}:
                 return await ctx.send_help(ctx.command)
             embeds = []
@@ -1504,11 +1678,12 @@ class Utility(commands.Cog):
                 name = name.strip('"')
                 command = level = None
                 if user_or_role == "command":
-                    command = self.bot.get_command(name.lower())
+                    name = name.lower()
+                    command = self.bot.get_command(name)
                     check = command is not None
                 else:
                     level = self._parse_level(name)
-                    check = level is not None
+                    check = level is not PermissionLevel.INVALID
 
                 if not check:
                     embed = Embed(
@@ -1543,7 +1718,8 @@ class Utility(commands.Cog):
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def oauth(self, ctx):
-        """Commands relating to logviewer oauth2 login authentication.
+        """
+        Commands relating to logviewer oauth2 login authentication.
 
         This functionality on your logviewer site is a [**Patron**](https://patreon.com/kyber) only feature.
         """

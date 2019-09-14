@@ -763,7 +763,7 @@ class Thread:
         elif note:
             embed.colour = discord.Color.blurple()
         else:
-            embed.set_footer(text=f"Recipient")
+            embed.set_footer(text=f"Message ID: {message.id}")
             embed.colour = self.bot.recipient_color
 
         try:

@@ -55,6 +55,7 @@ def truncate(text: str, max: int = 50) -> str:  # pylint: disable=redefined-buil
     str
         The truncated text.
     """
+    text = text.strip()
     return text[: max - 3].strip() + "..." if len(text) > max else text
 
 
@@ -75,7 +76,7 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
     messages = messages[:3]
     out = ""
     for message in messages:
-        if message.get("type") in ("note", "internal"):
+        if message.get("type") in {"note", "internal"}:
             continue
         author = message["author"]
         content = str(message["content"]).replace("\n", " ")
@@ -191,19 +192,6 @@ def match_user_id(text: str) -> int:
     if match is not None:
         return int(match.group(1))
     return -1
-
-
-def get_perm_level(cmd):
-    from core.models import PermissionLevel
-
-    for check in cmd.checks:
-        perm = getattr(check, "permission_level", None)
-        if perm is not None:
-            return perm
-    for check in cmd.checks:
-        if "is_owner" in str(check):
-            return PermissionLevel.OWNER
-    return PermissionLevel.INVALID
 
 
 async def ignore(coro):

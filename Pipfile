@@ -19,7 +19,7 @@ dnspython = "~=1.16.0"
 parsedatetime = "==2.4"
 aiohttp = "<3.6.0,>=3.3.0"
 python-dotenv = ">=0.10.3"
-pipenv = "==2018.11.26"
+pipenv = "*"
 "discord.py" = "==1.2.3"
 
 [requires]
