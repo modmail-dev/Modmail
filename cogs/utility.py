@@ -652,8 +652,8 @@ class Utility(commands.Cog):
 
     @loop_presence.before_loop
     async def before_loop_presence(self):
-        logger.info("Starting metadata loop.")
         await self.bot.wait_for_connected()
+        logger.debug("Starting metadata loop.")
         logger.line()
         presence = await self.set_presence()
         logger.info(presence["activity"][1])

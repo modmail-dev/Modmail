@@ -134,3 +134,4 @@ plugins/
 !plugins/registry.json
 temp/
 test.py
+stack.yml

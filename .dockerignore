@@ -152,3 +152,4 @@ pyproject.toml
 README.md
 runtime.txt
 SPONSORS.json
+stack.yml

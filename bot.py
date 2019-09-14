@@ -1152,8 +1152,9 @@ class ModmailBot(commands.Bot):
             logger.debug("Uploading metadata to Modmail server.")
 
     async def before_post_metadata(self):
-        logger.info("Starting metadata loop.")
         await self.wait_for_connected()
+        logger.debug("Starting metadata loop.")
+        logger.line()
         if not self.guild:
             self.metadata_loop.cancel()
 
