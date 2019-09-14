@@ -17,7 +17,7 @@ from core.decorators import trigger_typing
 from core.models import PermissionLevel
 from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User, create_not_found_embed, format_description
+from core.utils import format_preview, User, create_not_found_embed, format_description, strtobool
 
 logger = logging.getLogger("Modmail")
 
@@ -286,14 +286,35 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @checks.thread_only()
-    async def move(self, ctx, *, category: discord.CategoryChannel):
+    async def move(self, ctx, category: discord.CategoryChannel, *, specifics: str = None):
         """
         Move a thread to another category.
 
         `category` may be a category ID, mention, or name.
+        `specifics` is a string which takes in arguments on how to perform the move. Ex: "silently"
         """
         thread = ctx.thread
+        silent = False
+
+        if specifics:
+            silent_words = ['silent', 'silently']
+            silent = any(word in silent_words for word in specifics.split())
+
         await thread.channel.edit(category=category, sync_permissions=True)
+
+        try:
+            thread_move_notify = strtobool(self.bot.config["thread_move_notify"])
+        except ValueError:
+            thread_move_notify = self.bot.config.remove("thread_move_notify")
+
+        if thread_move_notify and not silent:
+            embed = discord.Embed(
+                title="Thread Moved",
+                description=self.bot.config["thread_move_response"],
+                color=self.bot.main_color
+            )
+            await thread.recipient.send(embed=embed)
+
         sent_emoji, _ = await self.bot.retrieve_emoji()
         try:
             await ctx.message.add_reaction(sent_emoji)
@@ -912,10 +933,10 @@ class Modmail(commands.Cog):
                 line = mention + f" - `{reason or 'No reason provided'}`\n"
                 if len(embed.description) + len(line) > 2048:
                     embed = discord.Embed(
-                            title="Blocked Users (Continued)",
-                            color=self.bot.main_color,
-                            description=line,
-                        )
+                        title="Blocked Users (Continued)",
+                        color=self.bot.main_color,
+                        description=line,
+                    )
                     embeds.append(embed)
                 else:
                     embed.description += line
