@@ -195,7 +195,7 @@ class ConfigManager:
                         raise
 
                 clean_value = hex_
-                value_text = f"{hex_} ({clean_value})"
+                value_text = f"{name} ({clean_value})"
 
         elif key in self.time_deltas:
             try:
