@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import typing
 from copy import deepcopy
 
@@ -168,10 +169,9 @@ class ConfigManager:
 
         # when setting a color
         if key in self.colors:
-            hex_ = ALL_COLORS.get(val)
+            try:
+                hex_ = str(val)
 
-            if hex_ is None:
-                hex_ = str(hex_)
                 if hex_.startswith("#"):
                     hex_ = hex_[1:]
                 if len(hex_) == 3:
@@ -179,14 +179,24 @@ class ConfigManager:
                 if len(hex_) != 6:
                     raise InvalidConfigError("Invalid color name or hex.")
                 try:
-                    int(val, 16)
+                    int(hex_, 16)
                 except ValueError:
                     raise InvalidConfigError("Invalid color name or hex.")
-                clean_value = "#" + val
-                value_text = clean_value
-            else:
+                hex_ = "#" + hex_
+                value_text = clean_value = hex_
+
+            except InvalidConfigError:
+                name = str(val).lower()
+                name = re.sub(r"[\-+|. ]+", " ", name)
+                hex_ = ALL_COLORS.get(name)
+                if hex_ is None:
+                    name = re.sub(r"[\-+|. ]+", "", name)
+                    hex_ = ALL_COLORS.get(name)
+                    if hex_ is None:
+                        raise
+
                 clean_value = hex_
-                value_text = f"{val} ({clean_value})"
+                value_text = f"{name} ({clean_value})"
 
         elif key in self.time_deltas:
             try:
