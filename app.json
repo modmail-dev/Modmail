@@ -12,7 +12,7 @@
       "required": true
     },
     "OWNERS": {
-      "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval and update).",
+      "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval).",
       "required": true
     },
     "MONGO_URI": {
