@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
+# v3.2.2
+
+Security update!
+
+### Important
+
+- Supporter permission users used to be able to "hack" snippets to reveal all your config vars, including your token and MongoURI.
+- Implemented some changes to address this bug:
+  - All customizable variables used in snippets, close messages, etc, using the `{}` syntax, now forbids chaining 2 or more attributes and attributes that starts with `_`.
+- It is advised to update to this version.
+- If you felt your credentials have been leaked, consider changing your bot token / mongo uri.
+
 # v3.2.1
 
 ### Fixed
