@@ -1,10 +1,12 @@
+import logging
 import re
-from collections import defaultdict
 from typing import List
 
-from discord import Embed, Color
+from discord import Embed
 
-from core.models import Bot
+from core.utils import truncate
+
+logger = logging.getLogger("Modmail")
 
 
 class Version:
@@ -26,54 +28,74 @@ class Version:
         The Modmail bot.
     version : str
         The version string (ie. "v2.12.0").
-    lines : List[str]
+    lines : str
         A list of lines of changelog messages for this version.
-    fields : defaultdict[str, str]
+    fields : Dict[str, str]
         A dict of fields separated by "Fixed", "Changed", etc sections.
     description : str
         General description of the version.
+
+    Class Attributes
+    ----------------
+    ACTION_REGEX : str
+        The regex used to parse the actions.
+    DESCRIPTION_REGEX: str
+        The regex used to parse the description.
     """
 
-    def __init__(self, bot: Bot, version: str, lines: str):
+    ACTION_REGEX = r"###\s*(.+?)\s*\n(.*?)(?=###\s*.+?|$)"
+    DESCRIPTION_REGEX = r"^(.*?)(?=###\s*.+?|$)"
+
+    def __init__(self, bot, version: str, lines: str):
         self.bot = bot
-        self.version = version
-        self.lines = [x for x in lines.splitlines() if x]
-        self.fields = defaultdict(str)
-        self.description = ''
+        self.version = version.lstrip("vV")
+        self.lines = lines.strip()
+        self.fields = {}
+        self.description = ""
         self.parse()
 
     def __repr__(self) -> str:
-        return f'Version({self.version}, description="{self.description}")'
+        return f'Version(v{self.version}, description="{self.description}")'
 
     def parse(self) -> None:
         """
         Parse the lines and split them into `description` and `fields`.
         """
-        curr_action = None
+        self.description = re.match(self.DESCRIPTION_REGEX, self.lines, re.DOTALL)
+        self.description = (
+            self.description.group(1).strip() if self.description is not None else ""
+        )
 
-        for line in self.lines:
-            if line.startswith('### '):
-                curr_action = line[4:]
-            elif curr_action is None:
-                self.description += line + '\n'
-            else:
-                self.fields[curr_action] += line + '\n'
+        matches = re.finditer(self.ACTION_REGEX, self.lines, re.DOTALL)
+        for m in matches:
+            try:
+                self.fields[m.group(1).strip()] = m.group(2).strip()
+            except AttributeError:
+                logger.error(
+                    "Something went wrong when parsing the changelog for version %s.",
+                    self.version,
+                    exc_info=True,
+                )
+
+    @property
+    def url(self) -> str:
+        return f"{Changelog.CHANGELOG_URL}#v{self.version[::2]}"
 
     @property
     def embed(self) -> Embed:
         """
         Embed: the formatted `Embed` of this `Version`.
         """
-        embed = Embed(color=Color.green(), description=self.description)
+        embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
-            name=f'{self.version} - Changelog',
+            name=f"v{self.version} - Changelog",
             icon_url=self.bot.user.avatar_url,
-            url='https://modmail.tk/changelog'
+            url=self.url,
         )
 
         for name, value in self.fields.items():
-            embed.add_field(name=name, value=value)
-        embed.set_footer(text=f'Current version: v{self.bot.version}')
+            embed.add_field(name=name, value=truncate(value, 1024))
+        embed.set_footer(text=f"Current version: v{self.bot.version}")
         embed.set_thumbnail(url=self.bot.user.avatar_url)
         return embed
 
@@ -100,21 +122,28 @@ class Changelog:
 
     Class Attributes
     ----------------
-    CHANGELOG_URL : str
+    RAW_CHANGELOG_URL : str
         The URL to Modmail changelog.
+    CHANGELOG_URL : str
+        The URL to Modmail changelog directly from in GitHub.
     VERSION_REGEX : re.Pattern
         The regex used to parse the versions.
     """
 
-    CHANGELOG_URL = ('https://raw.githubusercontent.com/'
-                     'kyb3r/modmail/master/CHANGELOG.md')
-    VERSION_REGEX = re.compile(r'# (v\d+\.\d+\.\d+)([\S\s]*?(?=# v|$))')
+    RAW_CHANGELOG_URL = (
+        "https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md"
+    )
+    CHANGELOG_URL = "https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md"
+    VERSION_REGEX = re.compile(
+        r"#\s*([vV]\d+\.\d+(?:\.\d+)?)\s+(.*?)(?=#\s*[vV]\d+\.\d+(?:\.\d+)?|$)",
+        flags=re.DOTALL,
+    )
 
-    def __init__(self, bot: Bot, text: str):
+    def __init__(self, bot, text: str):
         self.bot = bot
         self.text = text
-        self.versions = [Version(bot, *m)
-                         for m in self.VERSION_REGEX.findall(text)]
+        logger.debug("Fetching changelog from GitHub.")
+        self.versions = [Version(bot, *m) for m in self.VERSION_REGEX.findall(text)]
 
     @property
     def latest_version(self) -> Version:
@@ -131,7 +160,7 @@ class Changelog:
         return [v.embed for v in self.versions]
 
     @classmethod
-    async def from_url(cls, bot: Bot, url: str = '') -> 'Changelog':
+    async def from_url(cls, bot, url: str = "") -> "Changelog":
         """
         Create a `Changelog` from a URL.
 
@@ -140,7 +169,7 @@ class Changelog:
         bot : Bot
             The Modmail bot.
         url : str, optional
-            Defaults to `CHANGELOG_URL`.
+            Defaults to `RAW_CHANGELOG_URL`.
             The URL to the changelog.
 
         Returns
@@ -148,11 +177,6 @@ class Changelog:
         Changelog
             The newly created `Changelog` parsed from the `url`.
         """
-        url = url or cls.CHANGELOG_URL
+        url = url or cls.RAW_CHANGELOG_URL
         resp = await bot.session.get(url)
         return cls(bot, await resp.text())
-
-
-if __name__ == '__main__':
-    with open('../CHANGELOG.md') as f:
-        print(Changelog(..., f.read()).latest_version)

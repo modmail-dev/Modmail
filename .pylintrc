@@ -19,7 +19,7 @@ ignore-patterns=
 
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use.
-jobs=1
+jobs=0
 
 # Control the amount of potential inferred values when inferring a single
 # object. This can help the performance when dealing with large functions or
@@ -79,7 +79,11 @@ disable=raw-checker-failed,
         too-many-instance-attributes,
         too-many-arguments,
         too-few-public-methods,
-        too-many-lines
+        too-many-lines,
+        line-too-long,
+        bad-continuation,
+        invalid-name,
+        logging-too-many-args
 
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -358,15 +362,14 @@ function-naming-style=snake_case
 # Good variable names which should always be accepted, separated by a comma.
 good-names=i,
            j,
-           k,
            ex,
            _,
-           v,
            id,
            db,
            f,
            dt,
-           c
+           ch,
+           ts
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=yes
@@ -505,4 +508,4 @@ min-public-methods=2
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "Exception".
-overgeneral-exceptions=Exception
+overgeneral-exceptions=BaseException
