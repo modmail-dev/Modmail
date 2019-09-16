@@ -1,4 +1,4 @@
-__version__ = "3.2.1"
+__version__ = "3.2.2"
 
 import asyncio
 import logging
@@ -33,7 +33,7 @@ from core import checks
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import human_join, strtobool, parse_alias
-from core.models import PermissionLevel, ModmailLogger
+from core.models import PermissionLevel, ModmailLogger, SafeFormatter
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
@@ -69,6 +69,7 @@ class ModmailBot(commands.Bot):
         self._session = None
         self._api = None
         self.metadata_loop = None
+        self.formatter = SafeFormatter()
 
         self._connected = asyncio.Event()
         self.start_time = datetime.utcnow()
@@ -120,7 +121,7 @@ class ModmailBot(commands.Bot):
         if days:
             fmt = "{d}d " + fmt
 
-        return fmt.format(d=days, h=hours, m=minutes, s=seconds)
+        return self.formatter.format(fmt, d=days, h=hours, m=minutes, s=seconds)
 
     def _configure_logging(self):
         level_text = self.config["log_level"].upper()
@@ -294,6 +295,8 @@ class ModmailBot(commands.Bot):
             except ValueError:
                 self.config.remove("guild_id")
                 logger.critical("Invalid GUILD_ID set.")
+        else:
+            logger.debug("No GUILD_ID set.")
         return None
 
     @property
@@ -456,7 +459,7 @@ class ModmailBot(commands.Bot):
         await self.wait_for_connected()
 
         if self.guild is None:
-            logger.debug("Logging out due to invalid GUILD_ID.")
+            logger.error("Logging out due to invalid GUILD_ID.")
             return await self.logout()
 
         logger.line()
@@ -835,7 +838,7 @@ class ModmailBot(commands.Bot):
                 thread = await self.threads.find(channel=message.channel)
                 snippet = self.snippets[cmd]
                 if thread:
-                    snippet = snippet.format(recipient=thread.recipient)
+                    snippet = self.formatter.format(snippet, recipient=thread.recipient)
                 message.content = f"{self.prefix}reply {snippet}"
 
         ctxs = await self.get_contexts(message)

@@ -393,8 +393,8 @@ class Thread:
             else:
                 message = self.bot.config["thread_close_response"]
 
-        message = message.format(
-            closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
+        message = self.bot.formatter.format(
+            message, closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
         )
 
         embed.description = message
@@ -492,7 +492,8 @@ class Thread:
             )
 
         # Grab message
-        close_message = self.bot.config["thread_auto_close_response"].format(
+        close_message = self.bot.formatter.format(
+            self.bot.config["thread_auto_close_response"],
             timeout=human_time
         )
 

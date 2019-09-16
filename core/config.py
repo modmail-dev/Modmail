@@ -139,7 +139,7 @@ class ConfigManager:
         )
         if os.path.exists(config_json):
             logger.debug("Loading envs from config.json.")
-            with open(config_json, "r") as f:
+            with open(config_json, "r", encoding="utf-8") as f:
                 # Config json should override env vars
                 try:
                     data.update(
