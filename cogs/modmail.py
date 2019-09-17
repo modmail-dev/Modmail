@@ -894,12 +894,16 @@ class Modmail(commands.Cog):
             await thread.wait_until_ready()
             embed = discord.Embed(
                 title="Created thread",
-                description=f"Thread started in {thread.channel.mention} "
+                description=f"Thread started by {ctx.author.mention} "
                 f"for {user.mention}.",
                 color=self.bot.main_color,
             )
 
-        await ctx.send(embed=embed)
+        try: 
+            await thread.channel.send(embed=embed)
+        except:
+            await ctx.send(embed=embed)
+        await ctx.message.delete()
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
