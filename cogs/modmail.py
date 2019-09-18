@@ -886,24 +886,21 @@ class Modmail(commands.Cog):
                 description="A thread for this user already "
                 f"exists in {exists.channel.mention}.",
             )
+            await ctx.channel.send(embed=embed)
 
         else:
             thread = self.bot.threads.create(
                 user, creator=ctx.author, category=category
             )
-            await thread.wait_until_ready()
             embed = discord.Embed(
-                title="Created thread",
+                title="Created Thread",
                 description=f"Thread started by {ctx.author.mention} "
                 f"for {user.mention}.",
                 color=self.bot.main_color,
             )
-
-        try: 
+            await thread.wait_until_ready()
             await thread.channel.send(embed=embed)
-        except:
-            await ctx.send(embed=embed)
-        await ctx.message.delete()
+            await ctx.message.delete()
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
