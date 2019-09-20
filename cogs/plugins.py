@@ -173,13 +173,16 @@ class Plugins(commands.Cog):
                     f.write(raw)
 
         with zipfile.ZipFile(plugin_io) as zipf:
-            for member in zipf.namelist():
-                path = PurePath(member)
+            for info in zipf.infolist():
+                path = PurePath(info.filename)
                 if len(path.parts) >= 3 and path.parts[1] == plugin.name:
-                    with zipf.open(member) as src, (
-                        plugin.abs_path / Path(*path.parts[2:])
-                    ).open("wb") as dst:
-                        shutil.copyfileobj(src, dst)
+                    plugin_path = plugin.abs_path / Path(*path.parts[2:])
+                    if info.is_dir():
+                        plugin_path.mkdir(parents=True, exist_ok=True)
+                    else:
+                        plugin_path.parent.mkdir(parents=True, exist_ok=True)
+                        with zipf.open(info) as src, plugin_path.open("wb") as dst:
+                            shutil.copyfileobj(src, dst)
 
         plugin_io.close()
 
