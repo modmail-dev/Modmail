@@ -314,16 +314,16 @@ class Utility(commands.Cog):
         embed.add_field(
             name="Want Modmail in Your Server?",
             value="Follow the installation guide on [GitHub](https://github.com/kyb3r/modmail/) "
-                  "and join our [Discord server](https://discord.gg/F34cRU8/)!",
-            inline=False
+            "and join our [Discord server](https://discord.gg/F34cRU8/)!",
+            inline=False,
         )
 
         embed.add_field(
             name="Support the Developers",
             value="This bot is completely free for everyone. We rely on kind individuals "
-                  "like you to support us on [`Patreon`](https://patreon.com/kyber) (perks included) "
-                  "to keep this bot free forever!",
-            inline=False
+            "like you to support us on [`Patreon`](https://patreon.com/kyber) (perks included) "
+            "to keep this bot free forever!",
+            inline=False,
         )
 
         embed.set_footer(text=footer)
@@ -617,7 +617,9 @@ class Utility(commands.Cog):
                 url = self.bot.config["twitch_url"]
 
             if activity_message:
-                activity = discord.Activity(type=activity_type, name=activity_message, url=url)
+                activity = discord.Activity(
+                    type=activity_type, name=activity_message, url=url
+                )
             else:
                 msg = "You must supply an activity message to use custom activity."
                 logger.debug(msg)
@@ -643,7 +645,7 @@ class Utility(commands.Cog):
         """Set presence to the configured value every 45 minutes."""
         # TODO: Does this even work?
         presence = await self.set_presence()
-        logger.debug('Loop... %s - %s', presence["activity"][1], presence["status"][1])
+        logger.debug("Loop... %s - %s", presence["activity"][1], presence["status"][1])
 
     @loop_presence.before_loop
     async def before_loop_presence(self):
@@ -990,7 +992,7 @@ class Utility(commands.Cog):
 
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
             description = utils.format_description(i, names)
-            embed =discord.Embed(color=self.bot.main_color, description=description)
+            embed = discord.Embed(color=self.bot.main_color, description=description)
             embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon_url)
             embeds.append(embed)
 
@@ -1521,7 +1523,11 @@ class Utility(commands.Cog):
     @permissions.command(name="get", usage="[@user] or [command/level/override] [name]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get(
-        self, ctx, user_or_role: Union[discord.Role, utils.User, str], *, name: str = None
+        self,
+        ctx,
+        user_or_role: Union[discord.Role, utils.User, str],
+        *,
+        name: str = None,
     ):
         """
         View the currently-set permissions.

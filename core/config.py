@@ -115,7 +115,7 @@ class ConfigManager:
         "recipient_thread_close",
         "thread_auto_close_silently",
         "thread_move_notify",
-        "enable_plugins"
+        "enable_plugins",
     }
 
     defaults = {**public_keys, **private_keys, **protected_keys}
@@ -263,7 +263,7 @@ class ConfigManager:
                     hex_ = ALL_COLORS.get(name)
                     if hex_ is None:
                         raise
-            return self.__setitem__(key, '#' + hex_)
+            return self.__setitem__(key, "#" + hex_)
 
         if key in self.time_deltas:
             try:
@@ -271,7 +271,9 @@ class ConfigManager:
             except isodate.ISO8601Error:
                 try:
                     converter = UserFriendlyTime()
-                    time = self.bot.loop.run_until_complete(converter.convert(None, item))
+                    time = self.bot.loop.run_until_complete(
+                        converter.convert(None, item)
+                    )
                     if time.arg:
                         raise ValueError
                 except BadArgument as exc:

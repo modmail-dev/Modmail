@@ -32,7 +32,9 @@ class InvalidConfigError(commands.BadArgument):
     @property
     def embed(self):
         # Single reference of Color.red()
-        return discord.Embed(title="Error", description=self.msg, color=discord.Color.red())
+        return discord.Embed(
+            title="Error", description=self.msg, color=discord.Color.red()
+        )
 
 
 class ModmailLogger(logging.Logger):
@@ -91,7 +93,6 @@ Default = _Default()
 
 
 class SafeFormatter(Formatter):
-
     def get_field(self, field_name, args, kwargs):
         first, rest = _string.formatter_field_name_split(field_name)
 
@@ -108,7 +109,7 @@ class SafeFormatter(Formatter):
                 if n >= 2:
                     break
                 if is_attr:
-                    if str(i).startswith('_'):
+                    if str(i).startswith("_"):
                         break
                     obj = getattr(obj, i)
                 else:

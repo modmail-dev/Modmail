@@ -286,7 +286,9 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @checks.thread_only()
-    async def move(self, ctx, category: discord.CategoryChannel, *, specifics: str = None):
+    async def move(
+        self, ctx, category: discord.CategoryChannel, *, specifics: str = None
+    ):
         """
         Move a thread to another category.
 
@@ -297,16 +299,16 @@ class Modmail(commands.Cog):
         silent = False
 
         if specifics:
-            silent_words = ['silent', 'silently']
+            silent_words = ["silent", "silently"]
             silent = any(word in silent_words for word in specifics.split())
 
         await thread.channel.edit(category=category, sync_permissions=True)
 
-        if self.bot.config('thread_move_notify') and not silent:
+        if self.bot.config("thread_move_notify") and not silent:
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
-                color=self.bot.main_color
+                color=self.bot.main_color,
             )
             await thread.recipient.send(embed=embed)
 

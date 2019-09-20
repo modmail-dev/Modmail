@@ -71,7 +71,7 @@ class ModmailBot(commands.Bot):
         self._api = None
         self.metadata_loop = None
         self.formatter = SafeFormatter()
-        self.loaded_cogs = ['cogs.modmail', 'cogs.plugins', 'cogs.utility']
+        self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
 
         self._connected = asyncio.Event()
         self.start_time = datetime.utcnow()
@@ -829,7 +829,7 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.find(channel=ctx.channel)
             if thread is not None:
-                if self.config.get('reply_without_command'):
+                if self.config.get("reply_without_command"):
                     await thread.reply(message)
                 else:
                     await self.api.append_log(message, type_="internal")
@@ -857,7 +857,7 @@ class ModmailBot(commands.Bot):
             if thread:
                 await thread.channel.trigger_typing()
         else:
-            if not self.config.get('mod_typing'):
+            if not self.config.get("mod_typing"):
                 return
 
             thread = await self.threads.find(channel=channel)
@@ -895,7 +895,7 @@ class ModmailBot(commands.Bot):
 
         if isinstance(channel, discord.DMChannel):
             if str(reaction) == str(close_emoji):  # closing thread
-                if not self.config.get('recipient_thread_close'):
+                if not self.config.get("recipient_thread_close"):
                     return
                 thread = await self.threads.find(recipient=user)
                 ts = message.embeds[0].timestamp if message.embeds else None
@@ -953,8 +953,7 @@ class ModmailBot(commands.Bot):
         thread = await self.threads.find(recipient=member)
         if thread:
             embed = discord.Embed(
-                description="The recipient has left the server.",
-                color=self.error_color,
+                description="The recipient has left the server.", color=self.error_color
             )
             await thread.channel.send(embed=embed)
 
@@ -1018,9 +1017,7 @@ class ModmailBot(commands.Bot):
         elif isinstance(exception, commands.BadArgument):
             await context.trigger_typing()
             await context.send(
-                embed=discord.Embed(
-                    color=self.error_color, description=str(exception)
-                )
+                embed=discord.Embed(color=self.error_color, description=str(exception))
             )
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning("CommandNotFound: %s", exception)

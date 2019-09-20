@@ -39,11 +39,13 @@ DISCORD_COLORS = {
     "light gray": "979c9f",
     "dark gray": "607d8b",
     "blurple": "7289da",
-    "grayple": "99aab5"
+    "grayple": "99aab5",
 }
 
 # Normalize name to "discord:<name>" to avoid name collisions.
-DISCORD_COLORS_NORM = {"discord:" + name: value for name, value in DISCORD_COLORS.items()}
+DISCORD_COLORS_NORM = {
+    "discord:" + name: value for name, value in DISCORD_COLORS.items()
+}
 
 
 # These colors are from Tableau
