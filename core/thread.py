@@ -12,7 +12,7 @@ import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_user_id, truncate, ignore, strtobool
+from core.utils import is_image_url, days, match_user_id, truncate, ignore
 
 logger = logging.getLogger("Modmail")
 
@@ -161,12 +161,7 @@ class Thread:
             timestamp=channel.created_at,
         )
 
-        try:
-            recipient_thread_close = strtobool(
-                self.bot.config["recipient_thread_close"]
-            )
-        except ValueError:
-            recipient_thread_close = self.bot.config.remove("recipient_thread_close")
+        recipient_thread_close = self.bot.config.get("recipient_thread_close")
 
         if recipient_thread_close:
             footer = self.bot.config["thread_self_closable_creation_footer"]
@@ -444,20 +439,7 @@ class Thread:
 
         :returns: None if no timeout is set.
         """
-        timeout = self.bot.config["thread_auto_close"]
-        if timeout:
-            try:
-                timeout = isodate.parse_duration(timeout)
-            except isodate.ISO8601Error:
-                logger.warning(
-                    "The auto_close_thread limit needs to be a "
-                    "ISO-8601 duration formatted duration string "
-                    'greater than 0 days, not "%s".',
-                    str(timeout),
-                )
-                timeout = self.bot.config.remove("thread_auto_close")
-                await self.bot.config.update()
-
+        timeout = self.bot.config.get("thread_auto_close")
         return timeout
 
     async def _restart_close_timer(self):
@@ -477,16 +459,7 @@ class Thread:
         reset_time = datetime.utcnow() + timedelta(seconds=seconds)
         human_time = human_timedelta(dt=reset_time)
 
-        try:
-            thread_auto_close_silently = strtobool(
-                self.bot.config["thread_auto_close_silently"]
-            )
-        except ValueError:
-            thread_auto_close_silently = self.bot.config.remove(
-                "thread_auto_close_silently"
-            )
-
-        if thread_auto_close_silently:
+        if self.bot.config.get('thread_auto_close_silently'):
             return await self.close(
                 closer=self.bot.user, silent=True, after=int(seconds), auto_close=True
             )

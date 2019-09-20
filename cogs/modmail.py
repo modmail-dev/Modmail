@@ -17,7 +17,7 @@ from core.decorators import trigger_typing
 from core.models import PermissionLevel
 from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User, create_not_found_embed, format_description, strtobool
+from core.utils import format_preview, User, create_not_found_embed, format_description
 
 logger = logging.getLogger("Modmail")
 
@@ -302,12 +302,7 @@ class Modmail(commands.Cog):
 
         await thread.channel.edit(category=category, sync_permissions=True)
 
-        try:
-            thread_move_notify = strtobool(self.bot.config["thread_move_notify"])
-        except ValueError:
-            thread_move_notify = self.bot.config.remove("thread_move_notify")
-
-        if thread_move_notify and not silent:
+        if self.bot.config('thread_move_notify') and not silent:
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
@@ -398,6 +393,17 @@ class Modmail(commands.Cog):
             closer=ctx.author, after=close_after, message=message, silent=silent
         )
 
+    @staticmethod
+    def parse_user_or_role(ctx, user_or_role):
+        mention = None
+        if user_or_role is None:
+            mention = ctx.author.mention
+        elif hasattr(user_or_role, "mention"):
+            mention = user_or_role.mention
+        elif user_or_role in {"here", "everyone", "@here", "@everyone"}:
+            mention = "@" + user_or_role.lstrip("@")
+        return mention
+
     @commands.command(aliases=["alert"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
@@ -413,16 +419,11 @@ class Modmail(commands.Cog):
         `@here` and `@everyone` can be substituted with `here` and `everyone`.
         `user_or_role` may be a user ID, mention, name. role ID, mention, name, "everyone", or "here".
         """
-        thread = ctx.thread
-
-        if user_or_role is None:
-            mention = ctx.author.mention
-        elif hasattr(user_or_role, "mention"):
-            mention = user_or_role.mention
-        elif user_or_role in {"here", "everyone", "@here", "@everyone"}:
-            mention = "@" + user_or_role.lstrip("@")
-        else:
+        mention = self.parse_user_or_role(ctx, user_or_role)
+        if mention is None:
             raise commands.BadArgument(f"{user_or_role} is not a valid role.")
+
+        thread = ctx.thread
 
         if str(thread.id) not in self.bot.config["notification_squad"]:
             self.bot.config["notification_squad"][str(thread.id)] = []
@@ -457,16 +458,11 @@ class Modmail(commands.Cog):
         `@here` and `@everyone` can be substituted with `here` and `everyone`.
         `user_or_role` may be a user ID, mention, name, role ID, mention, name, "everyone", or "here".
         """
-        thread = ctx.thread
-
-        if user_or_role is None:
-            mention = ctx.author.mention
-        elif hasattr(user_or_role, "mention"):
-            mention = user_or_role.mention
-        elif user_or_role in {"here", "everyone", "@here", "@everyone"}:
-            mention = "@" + user_or_role.lstrip("@")
-        else:
+        mention = self.parse_user_or_role(ctx, user_or_role)
+        if mention is None:
             mention = f"`{user_or_role}`"
+
+        thread = ctx.thread
 
         if str(thread.id) not in self.bot.config["notification_squad"]:
             self.bot.config["notification_squad"][str(thread.id)] = []
@@ -502,16 +498,11 @@ class Modmail(commands.Cog):
         `@here` and `@everyone` can be substituted with `here` and `everyone`.
         `user_or_role` may be a user ID, mention, name, role ID, mention, name, "everyone", or "here".
         """
-        thread = ctx.thread
-
-        if user_or_role is None:
-            mention = ctx.author.mention
-        elif hasattr(user_or_role, "mention"):
-            mention = user_or_role.mention
-        elif user_or_role in {"here", "everyone", "@here", "@everyone"}:
-            mention = "@" + user_or_role.lstrip("@")
-        else:
+        mention = self.parse_user_or_role(ctx, user_or_role)
+        if mention is None:
             raise commands.BadArgument(f"{user_or_role} is not a valid role.")
+
+        thread = ctx.thread
 
         if str(thread.id) not in self.bot.config["subscriptions"]:
             self.bot.config["subscriptions"][str(thread.id)] = []
@@ -546,16 +537,11 @@ class Modmail(commands.Cog):
         `@here` and `@everyone` can be substituted with `here` and `everyone`.
         `user_or_role` may be a user ID, mention, name, role ID, mention, name, "everyone", or "here".
         """
-        thread = ctx.thread
-
-        if user_or_role is None:
-            mention = ctx.author.mention
-        elif hasattr(user_or_role, "mention"):
-            mention = user_or_role.mention
-        elif user_or_role in {"here", "everyone", "@here", "@everyone"}:
-            mention = "@" + user_or_role.lstrip("@")
-        else:
+        mention = self.parse_user_or_role(ctx, user_or_role)
+        if mention is None:
             mention = f"`{user_or_role}`"
+
+        thread = ctx.thread
 
         if str(thread.id) not in self.bot.config["subscriptions"]:
             self.bot.config["subscriptions"][str(thread.id)] = []
@@ -854,7 +840,6 @@ class Modmail(commands.Cog):
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    @trigger_typing
     async def contact(
         self,
         ctx,
@@ -900,6 +885,12 @@ class Modmail(commands.Cog):
             )
             await thread.wait_until_ready()
             await thread.channel.send(embed=embed)
+            sent_emoji, _ = await self.bot.retrieve_emoji()
+            try:
+                await ctx.message.add_reaction(sent_emoji)
+            except (discord.HTTPException, discord.InvalidArgument):
+                pass
+            await asyncio.sleep(3)
             await ctx.message.delete()
 
     @commands.group(invoke_without_command=True)

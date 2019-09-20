@@ -41,7 +41,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         for cmd in await self.filter_commands(
             cog.get_commands() if not no_cog else cog,
             sort=True,
-            key=lambda c: bot.command_perm(c.qualified_name),
+            key=lambda c: (bot.command_perm(c.qualified_name), c.qualified_name),
         ):
             perm_level = bot.command_perm(cmd.qualified_name)
             if perm_level is PermissionLevel.INVALID:
@@ -119,41 +119,34 @@ class ModmailHelpCommand(commands.HelpCommand):
         )
         return await session.run()
 
-    async def send_command_help(self, command):
-        if not await self.filter_commands([command]):
+    async def _get_help_embed(self, topic):
+        if not await self.filter_commands([topic]):
             return
-        perm_level = self.context.bot.command_perm(command.qualified_name)
+        perm_level = self.context.bot.command_perm(topic.qualified_name)
         if perm_level is not PermissionLevel.INVALID:
             perm_level = f"{perm_level.name} [{perm_level}]"
         else:
             perm_level = "NONE"
 
         embed = Embed(
-            title=f"`{self.get_command_signature(command)}`",
+            title=f"`{self.get_command_signature(topic)}`",
             color=self.context.bot.main_color,
-            description=self.process_help_msg(command.help),
+            description=self.process_help_msg(topic.help),
         )
-        embed.set_footer(text=f"Permission level: {perm_level}")
-        await self.get_destination().send(embed=embed)
+        return embed, perm_level
+
+    async def send_command_help(self, command):
+        topic = await self._get_help_embed(command)
+        if topic is not None:
+            topic[0].set_footer(text=f"Permission level: {topic[1]}")
+            await self.get_destination().send(embed=topic[0])
 
     async def send_group_help(self, group):
-        if not await self.filter_commands([group]):
+        topic = await self._get_help_embed(group)
+        if topic is None:
             return
-
-        perm_level = self.context.bot.command_perm(group.qualified_name)
-        if perm_level is not PermissionLevel.INVALID:
-            perm_level = f"{perm_level.name} [{perm_level}]"
-        else:
-            perm_level = "NONE"
-
-        embed = Embed(
-            title=f"`{self.get_command_signature(group)}`",
-            color=self.context.bot.main_color,
-            description=self.process_help_msg(group.help),
-        )
-
-        if perm_level:
-            embed.add_field(name="Permission Level", value=perm_level, inline=False)
+        embed = topic[0]
+        embed.add_field(name="Permission Level", value=topic[1], inline=False)
 
         format_ = ""
         length = len(group.commands)
@@ -284,7 +277,7 @@ class Utility(commands.Cog):
                 pass
             logger.warning("Failed to display changelog.", exc_info=True)
             await ctx.send(
-                f"View the changelog here: {changelog.CHANGELOG_URL}#v{version[::2]}"
+                f"View the changelog here: {changelog.latest_version.changelog_url}#v{version[::2]}"
             )
 
     @commands.command(aliases=["bot", "info"])
@@ -308,27 +301,27 @@ class Utility(commands.Cog):
         embed.add_field(name="Uptime", value=self.bot.uptime)
         embed.add_field(name="Latency", value=f"{self.bot.latency * 1000:.2f} ms")
         embed.add_field(name="Version", value=f"`{self.bot.version}`")
-        embed.add_field(name="Author", value="[`kyb3r`](https://github.com/kyb3r)")
+        embed.add_field(name="Author", value="[`kyb3r`, `Taki`, `4jr`](https://github.com/kyb3r)")
 
         changelog = await Changelog.from_url(self.bot)
         latest = changelog.latest_version
 
-        if parse_version(self.bot.version) < parse_version(latest.version):
+        if self.bot.version < parse_version(latest.version):
             footer = f"A newer version is available v{latest.version}"
         else:
             footer = "You are up to date with the latest version."
 
         embed.add_field(
-            name="GitHub", value="https://github.com/kyb3r/modmail", inline=False
+            name="Want Modmail in Your Server?",
+            value="Installation guide on GitHub (https://github.com/kyb3r/modmail) "
+                  "and join our discord server (https://discord.gg/F34cRU8)!", inline=False
         )
 
         embed.add_field(
-            name="Discord Server", value="https://discord.gg/F34cRU8", inline=False
-        )
-
-        embed.add_field(
-            name="Donate",
-            value="Support this bot on [`Patreon`](https://patreon.com/kyber).",
+            name="Support the Developers",
+            value="This bot is completely free for everyone. We rely on kind individuals "
+                  "like you to support us on [`Patreon`](https://patreon.com/kyber) (includes perks!) "
+                  "to keep this bot free forever!",
         )
 
         embed.set_footer(text=footer)
@@ -648,12 +641,11 @@ class Utility(commands.Cog):
         """Set presence to the configured value every 45 minutes."""
         # TODO: Does this even work?
         presence = await self.set_presence()
-        logger.debug(f'{presence["activity"][1]} {presence["status"][1]}')
+        logger.debug('Loop... %s - %s', presence["activity"][1], presence["status"][1])
 
     @loop_presence.before_loop
     async def before_loop_presence(self):
         await self.bot.wait_for_connected()
-        logger.debug("Starting metadata loop.")
         logger.line()
         presence = await self.set_presence()
         logger.info(presence["activity"][1])
@@ -771,17 +763,15 @@ class Utility(commands.Cog):
 
         if key in keys:
             try:
-                value, value_text = await self.bot.config.clean_data(key, value)
-            except InvalidConfigError as exc:
-                embed = exc.embed
-            else:
-                self.bot.config[key] = value
+                self.bot.config.set(key, value)
                 await self.bot.config.update()
                 embed = Embed(
                     title="Success",
                     color=self.bot.main_color,
-                    description=f"Set `{key}` to `{value_text}`",
+                    description=f"Set `{key}` to `{self.bot.config[key]}`.",
                 )
+            except InvalidConfigError as exc:
+                embed = exc.embed
         else:
             embed = Embed(
                 title="Error",
@@ -795,7 +785,7 @@ class Utility(commands.Cog):
 
     @config.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def config_remove(self, ctx, key: str.lower):
+    async def config_remove(self, ctx, *, key: str.lower):
         """Delete a set configuration variable."""
         keys = self.bot.config.public_keys
         if key in keys:
@@ -819,7 +809,7 @@ class Utility(commands.Cog):
 
     @config.command(name="get")
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def config_get(self, ctx, key: str.lower = None):
+    async def config_get(self, ctx, *, key: str.lower = None):
         """
         Show the configuration variables that are currently set.
 

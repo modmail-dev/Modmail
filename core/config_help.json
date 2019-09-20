@@ -467,5 +467,14 @@
     "notes": [
       "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
+  },
+  "load_plugins": {
+    "default": "Yes",
+    "description": "Whether plugins should be loaded into Modmail.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
   }
 }

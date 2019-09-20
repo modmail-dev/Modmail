@@ -12,6 +12,19 @@ however, insignificant breaking changes does not guarantee a major version bump,
 ### Changed
 
 - `?contact` no longer send the "thread created" message to where the command is ran, instead, it's now sent to the newly created thread channel. (Thanks to DAzVise)
+- Plugins update (mostly internal).
+  - `git` is no longer used to install plugins, it now downloads through zip files.
+  - `?plugins enabled` renamed to `?plugins loaded` while `enabled` is still an alias to that command.
+  - Reorganised plugins folder structure.
+  - Logging / plugin-related messages changes.
+  - Updating one plugin will not update all other plugins (plugins are no longer separated by repos, but the plugin name itself).
+- Help command is in alphabetical order grouped by permissions.
+
+### Internal
+
+- Reworked `config.get` and `config.set`, it feeds through the converters before setting/getting.
+  - To get/set the raw value, access through `config[]`.
+- Prerelease naming scheme is now `x.x.x-dev`.
 
 # v3.2.2
 
