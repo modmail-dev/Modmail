@@ -31,6 +31,7 @@ class ConfigManager:
         "prefix": "?",
         "mention": "@here",
         "main_color": str(discord.Color.blurple()),
+        "error_color": str(discord.Color.red()),
         "user_typing": False,
         "mod_typing": False,
         "account_age": None,
@@ -100,10 +101,10 @@ class ConfigManager:
         "token": None,
         # Logging
         "log_level": "INFO",
-        "load_plugins": True,
+        "enable_plugins": True,
     }
 
-    colors = {"mod_color", "recipient_color", "main_color"}
+    colors = {"mod_color", "recipient_color", "main_color", "error_color"}
 
     time_deltas = {"account_age", "guild_age", "thread_auto_close"}
 
@@ -114,7 +115,7 @@ class ConfigManager:
         "recipient_thread_close",
         "thread_auto_close_silently",
         "thread_move_notify",
-        "load_plugins"
+        "enable_plugins"
     }
 
     defaults = {**public_keys, **private_keys, **protected_keys}

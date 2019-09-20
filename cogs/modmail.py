@@ -52,7 +52,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Error",
                 description="Modmail functioning guild not found.",
-                color=discord.Color.red(),
+                color=self.bot.error_color,
             )
             return await ctx.send(embed=embed)
 
@@ -165,7 +165,7 @@ class Modmail(commands.Cog):
 
         if not self.bot.snippets:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description="You dont have any snippets at the moment.",
             )
             embed.set_footer(
@@ -212,7 +212,7 @@ class Modmail(commands.Cog):
         if name in self.bot.snippets:
             embed = discord.Embed(
                 title="Error",
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"Snippet `{name}` already exists.",
             )
             return await ctx.send(embed=embed)
@@ -220,7 +220,7 @@ class Modmail(commands.Cog):
         if name in self.bot.aliases:
             embed = discord.Embed(
                 title="Error",
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"An alias with the same name already exists: `{name}`.",
             )
             return await ctx.send(embed=embed)
@@ -228,7 +228,7 @@ class Modmail(commands.Cog):
         if len(name) > 120:
             embed = discord.Embed(
                 title="Error",
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"Snippet names cannot be longer than 120 characters.",
             )
             return await ctx.send(embed=embed)
@@ -316,8 +316,7 @@ class Modmail(commands.Cog):
         except (discord.HTTPException, discord.InvalidArgument):
             pass
 
-    @staticmethod
-    async def send_scheduled_close_message(ctx, after, silent=False):
+    async def send_scheduled_close_message(self, ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
 
         silent = "*silently* " if silent else ""
@@ -325,7 +324,7 @@ class Modmail(commands.Cog):
         embed = discord.Embed(
             title="Scheduled close",
             description=f"This thread will close {silent}in {human_delta}.",
-            color=discord.Color.red(),
+            color=self.bot.error_color,
         )
 
         if after.arg and not silent:
@@ -375,12 +374,12 @@ class Modmail(commands.Cog):
             if thread.close_task is not None or thread.auto_close_task is not None:
                 await thread.cancel_closure(all=True)
                 embed = discord.Embed(
-                    color=discord.Color.red(),
+                    color=self.bot.error_color,
                     description="Scheduled close has been cancelled.",
                 )
             else:
                 embed = discord.Embed(
-                    color=discord.Color.red(),
+                    color=self.bot.error_color,
                     description="This thread has not already been scheduled to close.",
                 )
 
@@ -432,7 +431,7 @@ class Modmail(commands.Cog):
 
         if mention in mentions:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"{mention} is already going to be mentioned.",
             )
         else:
@@ -471,7 +470,7 @@ class Modmail(commands.Cog):
 
         if mention not in mentions:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"{mention} does not have a pending notification.",
             )
         else:
@@ -511,7 +510,7 @@ class Modmail(commands.Cog):
 
         if mention in mentions:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"{mention} is already " "subscribed to this thread.",
             )
         else:
@@ -550,7 +549,7 @@ class Modmail(commands.Cog):
 
         if mention not in mentions:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"{mention} is not already " "subscribed to this thread.",
             )
         else:
@@ -659,7 +658,7 @@ class Modmail(commands.Cog):
 
         if not any(not log["open"] for log in logs):
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description="This user does not " "have any previous logs.",
             )
             return await ctx.send(embed=embed)
@@ -696,7 +695,7 @@ class Modmail(commands.Cog):
 
         if not embeds:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description="No log entries have been found for that query",
             )
             return await ctx.send(embed=embed)
@@ -729,7 +728,7 @@ class Modmail(commands.Cog):
 
         if not embeds:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description="No log entries have been found for that query.",
             )
             return await ctx.send(embed=embed)
@@ -788,11 +787,7 @@ class Modmail(commands.Cog):
         async for msg in ctx.channel.history():
             if message_id is None and msg.embeds:
                 embed = msg.embeds[0]
-                if isinstance(self.bot.mod_color, discord.Color):
-                    mod_color = self.bot.mod_color.value
-                else:
-                    mod_color = self.bot.mod_color
-                if embed.color.value != mod_color or not embed.author.url:
+                if embed.color.value != self.bot.mod_color or not embed.author.url:
                     continue
                 # TODO: use regex to find the linked message id
                 linked_message_id = str(embed.author.url).split("/")[-1]
@@ -823,7 +818,7 @@ class Modmail(commands.Cog):
                 embed=discord.Embed(
                     title="Failed",
                     description="Cannot find a message to edit.",
-                    color=discord.Color.red(),
+                    color=self.bot.error_color,
                 )
             )
 
@@ -859,7 +854,7 @@ class Modmail(commands.Cog):
 
         if user.bot:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description="Cannot start a thread with a bot.",
             )
             return await ctx.send(embed=embed)
@@ -867,7 +862,7 @@ class Modmail(commands.Cog):
         exists = await self.bot.threads.find(recipient=user)
         if exists:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description="A thread for this user already "
                 f"exists in {exists.channel.mention}.",
             )
@@ -1031,7 +1026,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Error",
                 description=f"Cannot block {mention}, user is whitelisted.",
-                color=discord.Color.red(),
+                color=self.bot.error_color,
             )
             return await ctx.send(embed=embed)
 
@@ -1079,7 +1074,7 @@ class Modmail(commands.Cog):
         else:
             embed = discord.Embed(
                 title="Error",
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"{mention} is already blocked.",
             )
 
@@ -1136,7 +1131,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Error",
                 description=f"{mention} is not blocked.",
-                color=discord.Color.red(),
+                color=self.bot.error_color,
             )
 
         return await ctx.send(embed=embed)
@@ -1168,7 +1163,7 @@ class Modmail(commands.Cog):
                 embed=discord.Embed(
                     title="Failed",
                     description="Cannot find a message to delete.",
-                    color=discord.Color.red(),
+                    color=self.bot.error_color,
                 )
             )
 

@@ -7,7 +7,13 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# [UNRELEASED]
+# v3.3.0-dev1
+
+### Added
+
+- Two new config vars:
+  - `ENABLE_PLUGINS` (yes/no default yes), when set to no, plugins will not be loaded into the bot.
+  - `ERROR_COLOR` (color format, defaults discord red), the color of error messages.
 
 ### Changed
 
@@ -19,6 +25,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
   - Logging / plugin-related messages changes.
   - Updating one plugin will not update all other plugins (plugins are no longer separated by repos, but the plugin name itself).
 - Help command is in alphabetical order grouped by permissions.
+- Notes are no longer always blurple, its set to `MAIN_COLOR` now.
 
 ### Internal
 

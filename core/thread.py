@@ -106,7 +106,7 @@ class Thread:
             logger.critical("An error occurred while creating a thread.", exc_info=True)
             self.manager.cache.pop(self.id)
 
-            embed = discord.Embed(color=discord.Color.red())
+            embed = discord.Embed(color=self.bot.error_color)
             embed.title = "Error while trying to create a thread."
             embed.description = str(e)
             embed.add_field(name="Recipient", value=recipient.mention)
@@ -138,7 +138,7 @@ class Thread:
 
         async def send_genesis_message():
             info_embed = self._format_info_embed(
-                recipient, log_url, log_count, discord.Color.green()
+                recipient, log_url, log_count, self.bot.main_color
             )
             try:
                 msg = await channel.send(mention, embed=info_embed)
@@ -350,7 +350,7 @@ class Thread:
             desc = "Could not resolve log url."
             log_url = None
 
-        embed = discord.Embed(description=desc, color=discord.Color.red())
+        embed = discord.Embed(description=desc, color=self.bot.error_color)
 
         if self.recipient is not None:
             user = f"{self.recipient} (`{self.id}`)"
@@ -378,7 +378,7 @@ class Thread:
 
         embed = discord.Embed(
             title=self.bot.config["thread_close_title"],
-            color=discord.Color.red(),
+            color=self.bot.error_color,
             timestamp=datetime.utcnow(),
         )
 
@@ -528,7 +528,7 @@ class Thread:
         if not any(g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
                 embed=discord.Embed(
-                    color=discord.Color.red(),
+                    color=self.bot.error_color,
                     description="Your message could not be delivered since "
                     "the recipient shares no servers with the bot.",
                 )
@@ -545,7 +545,7 @@ class Thread:
             tasks.append(
                 message.channel.send(
                     embed=discord.Embed(
-                        color=discord.Color.red(),
+                        color=self.bot.error_color,
                         description="Your message could not be delivered as "
                         "the recipient is only accepting direct "
                         "messages from friends, or the bot was "
@@ -578,7 +578,7 @@ class Thread:
                 tasks.append(
                     self.channel.send(
                         embed=discord.Embed(
-                            color=discord.Color.red(),
+                            color=self.bot.error_color,
                             description="Scheduled close has been cancelled.",
                         )
                     )
@@ -607,7 +607,7 @@ class Thread:
             self.bot.loop.create_task(
                 self.channel.send(
                     embed=discord.Embed(
-                        color=discord.Color.red(),
+                        color=self.bot.error_color,
                         description="Scheduled close has been cancelled.",
                     )
                 )
@@ -696,7 +696,7 @@ class Thread:
                 embedded_image = True
             elif filename is not None:
                 if note:
-                    color = discord.Color.blurple()
+                    color = self.bot.main_color
                 elif from_mod:
                     color = self.bot.mod_color
                 else:
@@ -735,7 +735,7 @@ class Thread:
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
         elif note:
-            embed.colour = discord.Color.blurple()
+            embed.colour = self.bot.main_color
         else:
             embed.set_footer(text=f"Message ID: {message.id}")
             embed.colour = self.bot.recipient_color

@@ -202,6 +202,7 @@ async def ignore(coro):
 
 
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
+    # Single reference of Color.red()
     embed = discord.Embed(
         color=discord.Color.red(),
         description=f"**{name.capitalize()} `{word}` cannot be found.**",

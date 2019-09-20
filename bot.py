@@ -1,4 +1,4 @@
-__version__ = "3.3.0-dev"
+__version__ = "3.3.0-dev1"
 
 import asyncio
 import logging
@@ -376,6 +376,10 @@ class ModmailBot(commands.Bot):
     def main_color(self) -> int:
         return self.config.get("main_color")
 
+    @property
+    def error_color(self) -> int:
+        return self.config.get("error_color")
+
     def command_perm(self, command_name: str) -> PermissionLevel:
         level = self.config["override_command_level"].get(command_name)
         if level is not None:
@@ -608,7 +612,7 @@ class ModmailBot(commands.Bot):
                         title="Message not sent!",
                         description=f"Your must wait for {delta} "
                         f"before you can contact me.",
-                        color=discord.Color.red(),
+                        color=self.error_color,
                     )
                 )
 
@@ -632,7 +636,7 @@ class ModmailBot(commands.Bot):
                         title="Message not sent!",
                         description=f"Your must wait for {delta} "
                         f"before you can contact me.",
-                        color=discord.Color.red(),
+                        color=self.error_color,
                     )
                 )
 
@@ -950,7 +954,7 @@ class ModmailBot(commands.Bot):
         if thread:
             embed = discord.Embed(
                 description="The recipient has left the server.",
-                color=discord.Color.red(),
+                color=self.error_color,
             )
             await thread.channel.send(embed=embed)
 
@@ -1008,14 +1012,14 @@ class ModmailBot(commands.Bot):
             )
             await context.trigger_typing()
             await context.send(
-                embed=discord.Embed(color=discord.Color.red(), description=msg)
+                embed=discord.Embed(color=self.error_color, description=msg)
             )
 
         elif isinstance(exception, commands.BadArgument):
             await context.trigger_typing()
             await context.send(
                 embed=discord.Embed(
-                    color=discord.Color.red(), description=str(exception)
+                    color=self.error_color, description=str(exception)
                 )
             )
         elif isinstance(exception, commands.CommandNotFound):
@@ -1028,7 +1032,7 @@ class ModmailBot(commands.Bot):
                     if hasattr(check, "fail_msg"):
                         await context.send(
                             embed=discord.Embed(
-                                color=discord.Color.red(), description=check.fail_msg
+                                color=self.error_color, description=check.fail_msg
                             )
                         )
                     if hasattr(check, "permission_level"):
