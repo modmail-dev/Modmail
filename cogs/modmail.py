@@ -13,11 +13,10 @@ from dateutil import parser
 from natural.date import duration
 
 from core import checks
-from core.decorators import trigger_typing
 from core.models import PermissionLevel
 from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User, create_not_found_embed, format_description
+from core.utils import format_preview, User, create_not_found_embed, format_description, trigger_typing
 
 logger = logging.getLogger("Modmail")
 

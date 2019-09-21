@@ -22,7 +22,7 @@ from pkg_resources import parse_version
 from core import checks
 from core.models import PermissionLevel
 from core.paginator import EmbedPaginatorSession
-from core.utils import truncate
+from core.utils import truncate, trigger_typing
 
 logger = logging.getLogger("Modmail")
 
@@ -235,6 +235,14 @@ class Plugins(commands.Cog):
 
     async def parse_user_input(self, ctx, plugin_name, check_version=False):
 
+        if not self._ready_event.is_set():
+            embed = discord.Embed(
+                description="Plugins are still loading, please try again later.",
+                color=self.bot.main_color,
+            )
+            await ctx.send(embed=embed)
+            return
+
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
             user, repo = details["repository"].split("/", maxsplit=1)
@@ -281,6 +289,7 @@ class Plugins(commands.Cog):
 
     @plugins.command(name="add", aliases=["install", "load"])
     @checks.has_permissions(PermissionLevel.OWNER)
+    @trigger_typing
     async def plugins_add(self, ctx, *, plugin_name: str):
         """
         Install a new plugin for the bot.
@@ -313,53 +322,51 @@ class Plugins(commands.Cog):
         )
         msg = await ctx.send(embed=embed)
 
-        async with ctx.typing():
+        try:
+            await self.download_plugin(plugin, force=True)
+        except Exception:
+            logger.warning(f"Unable to download plugin %s.", plugin, exc_info=True)
+
+            embed = discord.Embed(
+                description=f"Failed to download plugin, check logs for error.",
+                color=self.bot.error_color,
+            )
+
+            return await msg.edit(embed=embed)
+
+        self.bot.config["plugins"].append(str(plugin))
+        await self.bot.config.update()
+
+        if self.bot.config.get("enable_plugins"):
+
+            invalidate_caches()
+
             try:
-                await self.download_plugin(plugin, force=True)
+                await self.load_plugin(plugin)
             except Exception:
-                logger.warning(f"Unable to download plugin %s.", plugin, exc_info=True)
+                logger.warning(f"Unable to load plugin %s.", plugin, exc_info=True)
 
                 embed = discord.Embed(
                     description=f"Failed to download plugin, check logs for error.",
                     color=self.bot.error_color,
                 )
 
-                return await msg.edit(embed=embed)
-
-            self.bot.config["plugins"].append(str(plugin))
-            await self.bot.config.update()
-
-            if self.bot.config.get("enable_plugins"):
-
-                invalidate_caches()
-
-                try:
-                    await self.load_plugin(plugin)
-                except Exception:
-                    logger.warning(f"Unable to load plugin %s.", plugin, exc_info=True)
-
-                    embed = discord.Embed(
-                        description=f"Failed to download plugin, check logs for error.",
-                        color=self.bot.error_color,
-                    )
-
-                    return await msg.edit(embed=embed)
-
+            else:
                 embed = discord.Embed(
                     description="Successfully installed plugin.\n"
                     "*Friendly reminder, plugins have absolute control over your bot. "
                     "Please only install plugins from developers you trust.*",
                     color=self.bot.main_color,
                 )
-            else:
-                embed = discord.Embed(
-                    description="Successfully installed plugin.\n"
-                    "*Friendly reminder, plugins have absolute control over your bot. "
-                    "Please only install plugins from developers you trust.*\n\n"
-                    "This plugin is currently not enabled due to `ENABLE_PLUGINS=false`, "
-                    "to re-enable plugins, remove or change `ENABLE_PLUGINS=true` and restart your bot.",
-                    color=self.bot.main_color,
-                )
+        else:
+            embed = discord.Embed(
+                description="Successfully installed plugin.\n"
+                "*Friendly reminder, plugins have absolute control over your bot. "
+                "Please only install plugins from developers you trust.*\n\n"
+                "This plugin is currently not enabled due to `ENABLE_PLUGINS=false`, "
+                "to re-enable plugins, remove or change `ENABLE_PLUGINS=true` and restart your bot.",
+                color=self.bot.main_color,
+            )
         return await msg.edit(embed=embed)
 
     @plugins.command(name="remove", aliases=["del", "delete"])
@@ -390,6 +397,15 @@ class Plugins(commands.Cog):
 
         self.bot.config["plugins"].remove(str(plugin))
         await self.bot.config.update()
+        shutil.rmtree(
+            plugin.abs_path,
+            onerror=lambda *args: logger.warning('Failed to remove plugin files %s: %s', plugin, str(args[2]))
+        )
+        try:
+            plugin.abs_path.parent.rmdir()
+            plugin.abs_path.parent.parent.rmdir()
+        except OSError:
+            pass  # dir not empty
 
         embed = discord.Embed(
             description="The plugin is successfully uninstalled.",

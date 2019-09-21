@@ -1,3 +1,4 @@
+import functools
 import re
 import shlex
 import typing
@@ -250,3 +251,12 @@ def format_description(i, names):
         ": ".join((str(a + i * 15), b))
         for a, b in enumerate(takewhile(lambda x: x is not None, names), start=1)
     )
+
+
+def trigger_typing(func):
+    @functools.wraps(func)
+    async def wrapper(self, ctx: commands.Context, *args, **kwargs):
+        await ctx.trigger_typing()
+        return await func(self, ctx, *args, **kwargs)
+
+    return wrapper

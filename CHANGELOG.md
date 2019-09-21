@@ -31,7 +31,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 
 - Reworked `config.get` and `config.set`, it feeds through the converters before setting/getting.
   - To get/set the raw value, access through `config[]`.
-- Prerelease naming scheme is now `x.x.x-dev`.
+- Prerelease naming scheme is now `x.x.x-devN`.
+- `trigger_typing` has been moved to `core.utils.trigger_typing`, original location is deprecated.
 
 # v3.2.2
 
