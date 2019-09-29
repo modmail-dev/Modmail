@@ -90,7 +90,6 @@ Default = _Default()
 
 
 class SafeFormatter(Formatter):
-
     def get_field(self, field_name, args, kwargs):
         first, rest = _string.formatter_field_name_split(field_name)
 
@@ -107,7 +106,7 @@ class SafeFormatter(Formatter):
                 if n >= 2:
                     break
                 if is_attr:
-                    if str(i).startswith('_'):
+                    if str(i).startswith("_"):
                         break
                     obj = getattr(obj, i)
                 else:

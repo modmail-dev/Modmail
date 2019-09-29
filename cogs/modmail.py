@@ -17,7 +17,13 @@ from core.decorators import trigger_typing
 from core.models import PermissionLevel
 from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User, create_not_found_embed, format_description, strtobool
+from core.utils import (
+    format_preview,
+    User,
+    create_not_found_embed,
+    format_description,
+    strtobool,
+)
 
 logger = logging.getLogger("Modmail")
 
@@ -286,7 +292,9 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @checks.thread_only()
-    async def move(self, ctx, category: discord.CategoryChannel, *, specifics: str = None):
+    async def move(
+        self, ctx, category: discord.CategoryChannel, *, specifics: str = None
+    ):
         """
         Move a thread to another category.
 
@@ -297,7 +305,7 @@ class Modmail(commands.Cog):
         silent = False
 
         if specifics:
-            silent_words = ['silent', 'silently']
+            silent_words = ["silent", "silently"]
             silent = any(word in silent_words for word in specifics.split())
 
         await thread.channel.edit(category=category, sync_permissions=True)
@@ -311,7 +319,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
-                color=self.bot.main_color
+                color=self.bot.main_color,
             )
             await thread.recipient.send(embed=embed)
 
@@ -705,6 +713,43 @@ class Modmail(commands.Cog):
         projection = {"messages": {"$slice": 5}}
 
         entries = await self.bot.db.logs.find(query, projection).to_list(None)
+
+        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
+
+        if not embeds:
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                description="No log entries have been found for that query",
+            )
+            return await ctx.send(embed=embed)
+
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
+
+    @logs.command(name="responded")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def logs_responded(self, ctx, *, user: User = None):
+        """
+        Get all logs where the specified user has responded at least once.
+
+        If no `user` is provided, the user will be the person who sent this command.
+        `user` may be a user ID, mention, or name.
+        """
+        user = user if user is not None else ctx.author
+
+        entries = []
+        async for l in self.bot.db.logs.find(
+            {
+                "messages": {
+                    "$elemMatch": {
+                        "author.id": str(user.id),
+                        "author.mod": True,
+                        "type": {"$in": ["anonymous", "thread_message"]},
+                    }
+                }
+            }
+        ):
+            entries.append(l)
 
         embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
 
