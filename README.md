@@ -176,7 +176,7 @@ Special thanks to our sponsors for supporting the project.
 
 
 <a href='https://www.youtube.com/roomieofficial'>
-  <img height=150 src='https://imgur.com/RGEdvKU' style='margin:10'>
+  <img height=150 src='https://imgur.com/RGEdvKU.gif' style='margin:10'>
 </a>
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
