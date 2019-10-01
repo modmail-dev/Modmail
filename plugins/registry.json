@@ -187,5 +187,14 @@
         "title": "Moderate your server",
         "icon_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png"
+    },
+    "serverstats": {
+        "repository": "dazvise/modmail-plugins",
+        "branch": "master",
+        "description": "Interesting and accurate statistics about your server.",
+        "bot_version": "2.20.1",
+        "title": "Server Stats",
+        "icon_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png",
+        "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png" 
     } 
 }
