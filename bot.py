@@ -867,7 +867,16 @@ class ModmailBot(commands.Bot):
                 except ValueError:
                     reply_without_command = self.config.remove("reply_without_command")
 
-                if reply_without_command:
+                try:
+                    anon_reply_without_command = strtobool(
+                        self.config["anon_reply_without_command"]
+                    )
+                except ValueError:
+                    anon_reply_without_command = self.config.remove("anon_reply_without_command")
+
+                if anon_reply_without_command:
+                    await thread.reply(message, anonymous=True)
+                elif reply_without_command:
                     await thread.reply(message)
                 else:
                     await self.api.append_log(message, type_="internal")
