@@ -737,19 +737,7 @@ class Modmail(commands.Cog):
         """
         user = user if user is not None else ctx.author
 
-        entries = []
-        async for l in self.bot.db.logs.find(
-            {
-                "messages": {
-                    "$elemMatch": {
-                        "author.id": str(user.id),
-                        "author.mod": True,
-                        "type": {"$in": ["anonymous", "thread_message"]},
-                    }
-                }
-            }
-        ):
-            entries.append(l)
+        entries = await self.bot.api.get_responded_logs(user.id)
 
         embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
 
