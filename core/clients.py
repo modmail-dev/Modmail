@@ -103,7 +103,7 @@ class ApiClient(RequestClient):
                         "author.mod": True,
                         "type": {"$in": ["anonymous", "thread_message"]},
                     }
-                }
+                },
             }
         ):
             entries.append(l)
