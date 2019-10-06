@@ -39,7 +39,7 @@
       "`{prefix}mention Yo~ Here's a new thread for ya!`"
     ],
     "notes": [
-      "Unfortunately, its not currently possible to disable mention. You do not have to include a mention."
+      "Unfortunately, it's not currently possible to disable mention. You do not have to include a mention."
     ]
   },
   "main_color": {
