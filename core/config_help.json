@@ -39,7 +39,7 @@
       "`{prefix}mention Yo~ Here's a new thread for ya!`"
     ],
     "notes": [
-      "Unfortunately, its not currently possible to disable mention."
+      "Unfortunately, it's not currently possible to disable mention. You do not have to include a mention."
     ]
   },
   "main_color": {
@@ -178,8 +178,8 @@
     "default": "Disabled",
     "description": "Setting this configuration will allow recipients to use the `close_emoji` to close the thread themselves.",
     "examples": [
-      "`{prefix}config set reply_without_command yes`",
-      "`{prefix}config set reply_without_command no`"
+      "`{prefix}config set recipient_thread_close yes`",
+      "`{prefix}config set recipient_thread_close no`"
     ],
     "notes": [
       "The close emoji is dictated by the configuration `close_emoji`.",
