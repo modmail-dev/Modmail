@@ -53,9 +53,24 @@
     ],
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
-      "See also: `mod_color`, `recipient_color`."
+      "See also: `error_color`, `mod_color`, `recipient_color`."
     ],
     "thumbnail": "https://placehold.it/100/7289da?text=+"
+  },
+  "error_color": {
+    "default": "Discord Red [#E74C3C](https://placehold.it/100/e74c3c?text=+)",
+    "description": "This is the color for Modmail when anything goes wrong, unsuccessful commands, or a stern warning.",
+    "examples": [
+      "`{prefix}config set error_color ocean blue`",
+      "`{prefix}config set error_color ff1242`",
+      "`{prefix}config set error_color #ff1242`",
+      "`{prefix}config set error_color fa1`"
+    ],
+    "notes": [
+      "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
+      "See also: `main_color`, `mod_color`, `recipient_color`."
+    ],
+    "thumbnail": "https://placehold.it/100/e74c3c?text=+"
   },
   "user_typing": {
     "default": "Disabled",
@@ -344,7 +359,7 @@
     ],
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
-      "See also: `main_color`, `mod_color`."
+      "See also: `mod_color`, `main_color`, `error_color`."
     ],
     "thumbnail": "https://placehold.it/100/f1c40f?text=+"
   },
@@ -359,7 +374,7 @@
     ],
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
-      "See also: `main_color`, `recipient_color`."
+      "See also: `recipient_color`, `main_color`, `error_color`."
     ],
     "thumbnail": "https://placehold.it/100/2ecc71?text=+"
   },
@@ -473,6 +488,15 @@
   "log_level": {
     "default": "INFO",
     "description": "The logging level for logging to stdout.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "enable_plugins": {
+    "default": "Yes",
+    "description": "Whether plugins should be enabled and loaded into Modmail.",
     "examples": [
     ],
     "notes": [

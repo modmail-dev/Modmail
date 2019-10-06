@@ -1,3 +1,4 @@
+import functools
 import re
 import shlex
 import typing
@@ -202,6 +203,7 @@ async def ignore(coro):
 
 
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
+    # Single reference of Color.red()
     embed = discord.Embed(
         color=discord.Color.red(),
         description=f"**{name.capitalize()} `{word}` cannot be found.**",
@@ -249,3 +251,12 @@ def format_description(i, names):
         ": ".join((str(a + i * 15), b))
         for a, b in enumerate(takewhile(lambda x: x is not None, names), start=1)
     )
+
+
+def trigger_typing(func):
+    @functools.wraps(func)
+    async def wrapper(self, ctx: commands.Context, *args, **kwargs):
+        await ctx.trigger_typing()
+        return await func(self, ctx, *args, **kwargs)
+
+    return wrapper

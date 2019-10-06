@@ -3,7 +3,7 @@ import logging
 from enum import IntEnum
 from string import Formatter
 
-from discord import Color, Embed
+import discord
 from discord.ext import commands
 
 try:
@@ -31,7 +31,10 @@ class InvalidConfigError(commands.BadArgument):
 
     @property
     def embed(self):
-        return Embed(title="Error", description=self.msg, color=Color.red())
+        # Single reference of Color.red()
+        return discord.Embed(
+            title="Error", description=self.msg, color=discord.Color.red()
+        )
 
 
 class ModmailLogger(logging.Logger):

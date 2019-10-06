@@ -31,6 +31,7 @@ class ConfigManager:
         "prefix": "?",
         "mention": "@here",
         "main_color": str(discord.Color.blurple()),
+        "error_color": str(discord.Color.red()),
         "user_typing": False,
         "mod_typing": False,
         "account_age": None,
@@ -101,9 +102,10 @@ class ConfigManager:
         "token": None,
         # Logging
         "log_level": "INFO",
+        "enable_plugins": True,
     }
 
-    colors = {"mod_color", "recipient_color", "main_color"}
+    colors = {"mod_color", "recipient_color", "main_color", "error_color"}
 
     time_deltas = {"account_age", "guild_age", "thread_auto_close"}
 
@@ -115,6 +117,7 @@ class ConfigManager:
         "recipient_thread_close",
         "thread_auto_close_silently",
         "thread_move_notify",
+        "enable_plugins",
     }
 
     defaults = {**public_keys, **private_keys, **protected_keys}
@@ -165,68 +168,6 @@ class ConfigManager:
 
         return self._cache
 
-    async def clean_data(self, key: str, val: typing.Any) -> typing.Tuple[str, str]:
-        value_text = val
-        clean_value = val
-
-        # when setting a color
-        if key in self.colors:
-            try:
-                hex_ = str(val)
-
-                if hex_.startswith("#"):
-                    hex_ = hex_[1:]
-                if len(hex_) == 3:
-                    hex_ = "".join(s for s in hex_ for _ in range(2))
-                if len(hex_) != 6:
-                    raise InvalidConfigError("Invalid color name or hex.")
-                try:
-                    int(hex_, 16)
-                except ValueError:
-                    raise InvalidConfigError("Invalid color name or hex.")
-                hex_ = "#" + hex_
-                value_text = clean_value = hex_
-
-            except InvalidConfigError:
-                name = str(val).lower()
-                name = re.sub(r"[\-+|. ]+", " ", name)
-                hex_ = ALL_COLORS.get(name)
-                if hex_ is None:
-                    name = re.sub(r"[\-+|. ]+", "", name)
-                    hex_ = ALL_COLORS.get(name)
-                    if hex_ is None:
-                        raise
-
-                clean_value = hex_
-                value_text = f"{name} ({clean_value})"
-
-        elif key in self.time_deltas:
-            try:
-                isodate.parse_duration(val)
-            except isodate.ISO8601Error:
-                try:
-                    converter = UserFriendlyTime()
-                    time = await converter.convert(None, val)
-                    if time.arg:
-                        raise ValueError
-                except BadArgument as exc:
-                    raise InvalidConfigError(*exc.args)
-                except Exception:
-                    raise InvalidConfigError(
-                        "Unrecognized time, please use ISO-8601 duration format "
-                        'string or a simpler "human readable" time.'
-                    )
-                clean_value = isodate.duration_isoformat(time.dt - converter.now)
-                value_text = f"{val} ({clean_value})"
-
-        elif key in self.booleans:
-            try:
-                clean_value = value_text = strtobool(val)
-            except ValueError:
-                raise InvalidConfigError("Must be a yes/no value.")
-
-        return clean_value, value_text
-
     async def update(self):
         """Updates the config with data from the cache"""
         await self.bot.api.update_config(self.filter_default(self._cache))
@@ -260,29 +201,108 @@ class ConfigManager:
             self._cache[key] = deepcopy(self.defaults[key])
         return self._cache[key]
 
-    def get(self, key: str, default: typing.Any = Default) -> typing.Any:
-        key = key.lower()
-        if key not in self.all_keys:
-            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
-        if key not in self._cache:
-            if default is Default:
-                self._cache[key] = deepcopy(self.defaults[key])
-        if default is not Default and self._cache[key] == self.defaults[key]:
-            self._cache[key] = default
-        return self._cache[key]
+    def __delitem__(self, key: str) -> None:
+        return self.remove(key)
 
-    def set(self, key: str, item: typing.Any) -> None:
-        key = key.lower()
-        logger.info("Setting %s.", key)
-        if key not in self.all_keys:
-            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
-        self._cache[key] = item
+    def get(self, key: str, convert=True) -> typing.Any:
+        value = self.__getitem__(key)
+
+        if not convert:
+            return value
+
+        if key in self.colors:
+            try:
+                return int(value.lstrip("#"), base=16)
+            except ValueError:
+                logger.error("Invalid %s provided.", key)
+            value = int(self.remove(key).lstrip("#"), base=16)
+
+        elif key in self.time_deltas:
+            if value is None:
+                return
+            try:
+                value = isodate.parse_duration(value)
+            except isodate.ISO8601Error:
+                logger.warning(
+                    "The {account} age limit needs to be a "
+                    'ISO-8601 duration formatted duration, not "%s".',
+                    value,
+                )
+                value = self.remove(key)
+
+        elif key in self.booleans:
+            try:
+                value = strtobool(value)
+            except ValueError:
+                value = self.remove(key)
+
+        return value
+
+    def set(self, key: str, item: typing.Any, convert=True) -> None:
+        if not convert:
+            return self.__setitem__(key, item)
+
+        if key in self.colors:
+            try:
+                hex_ = str(item)
+                if hex_.startswith("#"):
+                    hex_ = hex_[1:]
+                if len(hex_) == 3:
+                    hex_ = "".join(s for s in hex_ for _ in range(2))
+                if len(hex_) != 6:
+                    raise InvalidConfigError("Invalid color name or hex.")
+                try:
+                    int(hex_, 16)
+                except ValueError:
+                    raise InvalidConfigError("Invalid color name or hex.")
+
+            except InvalidConfigError:
+                name = str(item).lower()
+                name = re.sub(r"[\-+|. ]+", " ", name)
+                hex_ = ALL_COLORS.get(name)
+                if hex_ is None:
+                    name = re.sub(r"[\-+|. ]+", "", name)
+                    hex_ = ALL_COLORS.get(name)
+                    if hex_ is None:
+                        raise
+            return self.__setitem__(key, "#" + hex_)
+
+        if key in self.time_deltas:
+            try:
+                isodate.parse_duration(item)
+            except isodate.ISO8601Error:
+                try:
+                    converter = UserFriendlyTime()
+                    time = self.bot.loop.run_until_complete(
+                        converter.convert(None, item)
+                    )
+                    if time.arg:
+                        raise ValueError
+                except BadArgument as exc:
+                    raise InvalidConfigError(*exc.args)
+                except Exception:
+                    raise InvalidConfigError(
+                        "Unrecognized time, please use ISO-8601 duration format "
+                        'string or a simpler "human readable" time.'
+                    )
+                item = isodate.duration_isoformat(time.dt - converter.now)
+            return self.__setitem__(key, item)
+
+        if key in self.booleans:
+            try:
+                return self.__setitem__(key, strtobool(item))
+            except ValueError:
+                raise InvalidConfigError("Must be a yes/no value.")
+
+        return self.__setitem__(key, item)
 
     def remove(self, key: str) -> typing.Any:
         key = key.lower()
         logger.info("Removing %s.", key)
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
+        if key in self._cache:
+            del self._cache[key]
         self._cache[key] = deepcopy(self.defaults[key])
         return self._cache[key]
 
