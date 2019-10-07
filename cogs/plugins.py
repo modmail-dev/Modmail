@@ -399,7 +399,9 @@ class Plugins(commands.Cog):
         await self.bot.config.update()
         shutil.rmtree(
             plugin.abs_path,
-            onerror=lambda *args: logger.warning('Failed to remove plugin files %s: %s', plugin, str(args[2]))
+            onerror=lambda *args: logger.warning(
+                "Failed to remove plugin files %s: %s", plugin, str(args[2])
+            ),
         )
         try:
             plugin.abs_path.parent.rmdir()
