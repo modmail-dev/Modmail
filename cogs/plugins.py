@@ -413,16 +413,8 @@ class Plugins(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @plugins.command(name="update")
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugins_update(self, ctx, *, plugin_name: str):
-        """
-        Update a plugin for the bot.
-
-        `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
-        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`).
-        """
-
+    async def update_plugin(self, ctx, plugin_name):
+        logger.debug("Updating %s.", plugin_name)
         plugin = await self.parse_user_input(ctx, plugin_name, check_version=True)
         if plugin is None:
             return
@@ -441,12 +433,30 @@ class Plugins(commands.Cog):
                 except commands.ExtensionError:
                     logger.warning("Plugin unload fail.", exc_info=True)
                 await self.load_plugin(plugin)
-
+            logger.debug("Updated %s.", plugin_name)
             embed = discord.Embed(
                 description=f"Successfully updated {plugin.name}.",
                 color=self.bot.main_color,
             )
             return await ctx.send(embed=embed)
+
+    @plugins.command(name="update")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def plugins_update(self, ctx, *, plugin_name: str = None):
+        """
+        Update a plugin for the bot.
+
+        `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
+        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`).
+
+        To update all plugins, do `{prefix}plugins update`.
+        """
+
+        if plugin_name is None:
+            for plugin_name in self.bot.config["plugins"]:
+                await self.update_plugin(ctx, plugin_name)
+        else:
+            await self.update_plugin(ctx, plugin_name)
 
     @plugins.command(name="loaded", aliases=["enabled", "installed"])
     @checks.has_permissions(PermissionLevel.OWNER)

@@ -26,6 +26,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
   - Updating one plugin will not update all other plugins (plugins are no longer separated by repos, but the plugin name itself).
 - Help command is in alphabetical order grouped by permissions.
 - Notes are no longer always blurple, its set to `MAIN_COLOR` now.
+- Added `?plugins update` for updating all installed plugins.
 
 ### Internal
 
