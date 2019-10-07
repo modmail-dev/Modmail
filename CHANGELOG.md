@@ -21,6 +21,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
     - This config takes precedence over `reply_without_command`.
 - `?logs responded [user]` command, it will show all logs that the user has sent an reply. (Thanks to papiersnipper PR#288)
   - `user` when not provided, defaults to the user who ran the command.
+- Open threads in limbo now auto closes if the channel cannot be found. This check is done every time the bot restarts.
 
 ### Changed
 

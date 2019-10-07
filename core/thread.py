@@ -762,8 +762,9 @@ class Thread:
 
         if delete_message:
             try:
-                await message.delete()
-            except discord.HTTPException:
+                if isinstance(message.channel, discord.TextChannel):
+                    await message.delete()
+            except Exception:
                 logger.warning('Cannot delete message.', exc_info=True)
         return msg
 

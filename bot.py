@@ -502,6 +502,29 @@ class ModmailBot(commands.Bot):
                 auto_close=items.get("auto_close", False),
             )
 
+        for log in await self.api.get_open_logs():
+            if self.get_channel(int(log['channel_id'])) is None:
+                logger.debug("Unable to resolve thread with channel %s.", log['channel_id'])
+                log_data = await self.api.post_log(
+                    log['channel_id'],
+                    {
+                        "open": False,
+                        "closed_at": str(datetime.utcnow()),
+                        "close_message": "Channel has been deleted, no closer found.",
+                        "closer": {
+                            "id": str(self.user.id),
+                            "name": self.user.name,
+                            "discriminator": self.user.discriminator,
+                            "avatar_url": str(self.user.avatar_url),
+                            "mod": True,
+                        },
+                    },
+                )
+                if log_data:
+                    logger.debug("Successfully closed thread with channel %s.", log['channel_id'])
+                else:
+                    logger.debug("Failed to close thread with channel %s, skipping.", log['channel_id'])
+
         self.metadata_loop = tasks.Loop(
             self.post_metadata,
             seconds=0,
