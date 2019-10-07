@@ -7,13 +7,20 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.0-dev1
+# v3.3.0-dev2
 
 ### Added
 
-- Two new config vars:
-  - `ENABLE_PLUGINS` (yes/no default yes), when set to no, plugins will not be loaded into the bot.
-  - `ERROR_COLOR` (color format, defaults discord red), the color of error messages.
+- Three new config vars:
+  - `enable_plugins` (yes/no default yes)
+    - When set to no, plugins will not be loaded into the bot.
+  - `error_color` (color format, defaults discord red)
+    - The color of error messages.
+  - `anon_reply_without_command` (yes/no default no) (Thanks to papiersnipper PR#288)
+    - When set, all non-command messages sent to thread channels are forwarded to the recipient anonymously without the need of `?anonreply`.
+    - This config takes precedence over `reply_without_command`.
+- `?logs responded [user]` command, it will show all logs that the user has sent an reply. (Thanks to papiersnipper PR#288)
+  - `user` when not provided, defaults to the user who ran the command.
 
 ### Changed
 
