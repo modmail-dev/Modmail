@@ -626,7 +626,12 @@ class Modmail(commands.Cog):
             embed.add_field(
                 name="Created", value=duration(created_at, now=datetime.utcnow())
             )
-            embed.add_field(name="Closed By", value=f"<@{entry['closer']['id']}>")
+            closer = entry.get('closer')
+            if closer is None:
+                closer = 'Unknown'
+            else:
+                closer = f"<@{closer['id']}>"
+            embed.add_field(name="Closed By", value=closer)
 
             if entry["recipient"]["id"] != entry["creator"]["id"]:
                 embed.add_field(name="Created by", value=f"<@{entry['creator']['id']}>")
