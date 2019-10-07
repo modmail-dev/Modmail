@@ -721,7 +721,7 @@ class Modmail(commands.Cog):
 
         if not embeds:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f"{getattr(user, 'mention', user.id)} has not responded to any threads.",
             )
             return await ctx.send(embed=embed)
