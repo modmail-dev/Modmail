@@ -628,10 +628,10 @@ class Modmail(commands.Cog):
             )
             closer = entry.get('closer')
             if closer is None:
-                closer = 'Unknown'
+                closer_msg = 'Unknown'
             else:
-                closer = f"<@{closer['id']}>"
-            embed.add_field(name="Closed By", value=closer)
+                closer_msg = f"<@{closer['id']}>"
+            embed.add_field(name="Closed By", value=closer_msg)
 
             if entry["recipient"]["id"] != entry["creator"]["id"]:
                 embed.add_field(name="Created by", value=f"<@{entry['creator']['id']}>")
@@ -639,7 +639,13 @@ class Modmail(commands.Cog):
             embed.add_field(
                 name="Preview", value=format_preview(entry["messages"]), inline=False
             )
-            embed.add_field(name="Link", value=log_url)
+
+            if closer is not None:
+                # BUG: Currently, logviewer can't display logs without a closer.
+                embed.add_field(name="Link", value=log_url)
+            else:
+                embed.add_field(name="Log Key", value=entry['key'])
+
             embed.set_footer(text="Recipient ID: " + str(entry["recipient"]["id"]))
             embeds.append(embed)
         return embeds
