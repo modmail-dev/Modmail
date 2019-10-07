@@ -16,7 +16,13 @@ from core import checks
 from core.models import PermissionLevel
 from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import format_preview, User, create_not_found_embed, format_description, trigger_typing
+from core.utils import (
+    format_preview,
+    User,
+    create_not_found_embed,
+    format_description,
+    trigger_typing,
+)
 
 logger = logging.getLogger("Modmail")
 
@@ -698,6 +704,31 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 color=self.bot.error_color,
                 description="No log entries have been found for that query",
+            )
+            return await ctx.send(embed=embed)
+
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
+
+    @logs.command(name="responded")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def logs_responded(self, ctx, *, user: User = None):
+        """
+        Get all logs where the specified user has responded at least once.
+
+        If no `user` is provided, the user will be the person who sent this command.
+        `user` may be a user ID, mention, or name.
+        """
+        user = user if user is not None else ctx.author
+
+        entries = await self.bot.api.get_responded_logs(user.id)
+
+        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
+
+        if not embeds:
+            embed = discord.Embed(
+                color=self.bot.error_color,
+                description=f"{getattr(user, 'mention', user.id)} has not responded to any threads.",
             )
             return await ctx.send(embed=embed)
 

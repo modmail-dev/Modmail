@@ -126,7 +126,18 @@
       "`{prefix}config set reply_without_command no`"
     ],
     "notes": [
-      "Unfortunately, anonymous `reply_without_command` is currently not possible."
+      "See also: `anon_reply_without_command`."
+    ]
+  },
+  "anon_reply_without_command": {
+    "default": "Disabled",
+    "description": "Setting this configuration will make all non-command messages sent in the thread channel to be anonymously forwarded to the recipient without the need of `{prefix}reply`.",
+    "examples": [
+      "`{prefix}config set anon_reply_without_command yes`",
+      "`{prefix}config set anon_reply_without_command no`"
+    ],
+    "notes": [
+      "See also: `reply_without_command`."
     ]
   },
   "log_channel_id": {

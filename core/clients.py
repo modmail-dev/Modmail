@@ -92,6 +92,23 @@ class ApiClient(RequestClient):
 
         return await self.logs.find(query, projection).to_list(None)
 
+    async def get_responded_logs(self, user_id: Union[str, int]) -> list:
+        entries = []
+        async for l in self.bot.db.logs.find(
+            {
+                "open": False,
+                "messages": {
+                    "$elemMatch": {
+                        "author.id": str(user_id),
+                        "author.mod": True,
+                        "type": {"$in": ["anonymous", "thread_message"]},
+                    }
+                },
+            }
+        ):
+            entries.append(l)
+        return entries
+
     async def get_log(self, channel_id: Union[str, int]) -> dict:
         logger.debug("Retrieving channel %s logs.", channel_id)
         return await self.logs.find_one({"channel_id": str(channel_id)})

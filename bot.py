@@ -652,7 +652,7 @@ class ModmailBot(commands.Bot):
                 self.blocked_users.pop(str(message.author.id))
             else:
                 reaction = blocked_emoji
-                end_time = re.search(r"%(.+?)%$", reason)
+                end_time = re.search(r"%(.+?)%", reason)
                 if end_time is not None:
                     logger.debug("No longer blocked, user %s.", message.author.name)
                     after = (
@@ -829,7 +829,9 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.find(channel=ctx.channel)
             if thread is not None:
-                if self.config.get("reply_without_command"):
+                if self.config.get("anon_reply_without_command"):
+                    await thread.reply(message, anonymous=True)
+                elif self.config.get("reply_without_command"):
                     await thread.reply(message)
                 else:
                     await self.api.append_log(message, type_="internal")
