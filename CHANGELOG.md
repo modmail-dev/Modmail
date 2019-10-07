@@ -27,6 +27,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Help command is in alphabetical order grouped by permissions.
 - Notes are no longer always blurple, its set to `MAIN_COLOR` now.
 - Added `?plugins update` for updating all installed plugins.
+- Reintroduce flake8 and use bandit for security issues detection.
+- Add travis checks for 3.6 in Linux and 3.7 for MacOS and Windows.
 
 ### Internal
 

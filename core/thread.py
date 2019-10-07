@@ -12,7 +12,7 @@ import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_user_id, truncate, ignore
+from core.utils import is_image_url, days, match_user_id, truncate
 
 logger = logging.getLogger("Modmail")
 
@@ -761,8 +761,10 @@ class Thread:
             self.ready = True
 
         if delete_message:
-            self.bot.loop.create_task(ignore(message.delete()))
-
+            try:
+                await message.delete()
+            except discord.HTTPException:
+                logger.warning('Cannot delete message.', exc_info=True)
         return msg
 
     def get_notifications(self) -> str:

@@ -195,13 +195,6 @@ def match_user_id(text: str) -> int:
     return -1
 
 
-async def ignore(coro):
-    try:
-        await coro
-    except Exception:
-        pass
-
-
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
     # Single reference of Color.red()
     embed = discord.Embed(

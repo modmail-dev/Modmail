@@ -272,12 +272,11 @@ class Utility(commands.Cog):
         except Exception:
             try:
                 await paginator.close()
-            except Exception:
-                pass
-            logger.warning("Failed to display changelog.", exc_info=True)
-            await ctx.send(
-                f"View the changelog here: {changelog.latest_version.changelog_url}#v{version[::2]}"
-            )
+            finally:
+                logger.warning("Failed to display changelog.", exc_info=True)
+                await ctx.send(
+                    f"View the changelog here: {changelog.latest_version.changelog_url}#v{version[::2]}"
+                )
 
     @commands.command(aliases=["bot", "info"])
     @checks.has_permissions(PermissionLevel.REGULAR)
