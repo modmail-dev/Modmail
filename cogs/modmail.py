@@ -644,7 +644,8 @@ class Modmail(commands.Cog):
                 # BUG: Currently, logviewer can't display logs without a closer.
                 embed.add_field(name="Link", value=log_url)
             else:
-                embed.add_field(name="Log Key", value=entry['key'])
+                logger.debug("Invalid log entry: no closer.")
+                embed.add_field(name="Log Key", value=f"`{entry['key']}`")
 
             embed.set_footer(text="Recipient ID: " + str(entry["recipient"]["id"]))
             embeds.append(embed)
