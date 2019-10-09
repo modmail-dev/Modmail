@@ -444,7 +444,7 @@ class ModmailBot(commands.Bot):
                     ("key", "text"),
                 ]
             )
-        logger.debug("Successfully set up database indexes.")
+        logger.debug("Successfully configured and verified database indexes.")
 
     async def on_ready(self):
         """Bot startup, sets uptime."""

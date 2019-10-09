@@ -661,8 +661,6 @@ class Thread:
                 url=message.jump_url,
             )
 
-        delete_message = not bool(message.attachments)
-
         ext = [(a.url, a.filename) for a in message.attachments]
 
         images = []
@@ -736,6 +734,12 @@ class Thread:
                 embed.set_footer(text=mod_tag)  # Normal messages
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
+            delete_message = not bool(message.attachments)
+            if delete_message:
+                try:
+                    await message.delete()
+                except Exception as e:
+                    logger.warning('Cannot delete message: %s.', str(e))
         elif note:
             embed.colour = self.bot.main_color
         else:
@@ -760,12 +764,6 @@ class Thread:
             await asyncio.gather(*additional_images)
             self.ready = True
 
-        if delete_message:
-            try:
-                if isinstance(message.channel, discord.TextChannel):
-                    await message.delete()
-            except Exception:
-                logger.warning('Cannot delete message.', exc_info=True)
         return msg
 
     def get_notifications(self) -> str:

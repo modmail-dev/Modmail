@@ -120,6 +120,8 @@ class ConfigManager:
         "enable_plugins",
     }
 
+    special_types = {"status", "activity_type"}
+
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
 
@@ -236,6 +238,26 @@ class ConfigManager:
             except ValueError:
                 value = self.remove(key)
 
+        elif key in self.special_types:
+            if value is None:
+                return
+
+            if key == "status":
+                try:
+                    # noinspection PyArgumentList
+                    value = discord.Status(value)
+                except ValueError:
+                    logger.warning("Invalid status %s.", value)
+                    value = self.remove(key)
+
+            elif key == "activity_type":
+                try:
+                    # noinspection PyArgumentList
+                    value = discord.ActivityType(value)
+                except ValueError:
+                    logger.warning("Invalid activity %s.", value)
+                    value = self.remove(key)
+
         return value
 
     def set(self, key: str, item: typing.Any, convert=True) -> None:
@@ -293,6 +315,9 @@ class ConfigManager:
                 return self.__setitem__(key, strtobool(item))
             except ValueError:
                 raise InvalidConfigError("Must be a yes/no value.")
+
+        # elif key in self.special_types:
+        #     if key == "status":
 
         return self.__setitem__(key, item)
 

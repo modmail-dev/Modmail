@@ -501,19 +501,22 @@ class Utility(commands.Cog):
         if not message:
             raise commands.MissingRequiredArgument(SimpleNamespace(name="message"))
 
-        activity, msg = (
-            await self.set_presence(
-                activity_identifier=activity_type,
-                activity_by_key=True,
-                activity_message=message,
-            )
-        )["activity"]
-        if activity is None:
+        try:
+            activity_type = ActivityType[activity_type]
+        except KeyError:
             raise commands.MissingRequiredArgument(SimpleNamespace(name="activity"))
 
+        activity, _ = await self.set_presence(activity_type=activity_type, activity_message=message)
+
         self.bot.config["activity_type"] = activity.type.value
-        self.bot.config["activity_message"] = message
+        self.bot.config["activity_message"] = activity.name
         await self.bot.config.update()
+
+        msg = f"Activity set to: {activity.type.name.capitalize()} "
+        if activity.type == ActivityType.listening:
+            msg += f"to {activity.name}."
+        else:
+            msg += f"{activity.name}."
 
         embed = discord.Embed(
             title="Activity Changed", description=msg, color=self.bot.main_color
@@ -529,8 +532,7 @@ class Utility(commands.Cog):
         Possible status types:
             - `online`
             - `idle`
-            - `dnd`
-            - `do_not_disturb` or `do not disturb`
+            - `dnd` or `do not disturb`
             - `invisible` or `offline`
 
         To remove the current status:
@@ -542,117 +544,85 @@ class Utility(commands.Cog):
             await self.set_presence()
             embed = discord.Embed(title="Status Removed", color=self.bot.main_color)
             return await ctx.send(embed=embed)
-        status_type = status_type.replace(" ", "_")
 
-        status, msg = (
-            await self.set_presence(status_identifier=status_type, status_by_key=True)
-        )["status"]
-        if status is None:
+        status_type = status_type.replace(" ", "_")
+        try:
+            status = Status[status_type]
+        except KeyError:
             raise commands.MissingRequiredArgument(SimpleNamespace(name="status"))
+
+        _, status = await self.set_presence(status=status)
 
         self.bot.config["status"] = status.value
         await self.bot.config.update()
 
+        msg = f"Status set to: {status.value}."
         embed = discord.Embed(
             title="Status Changed", description=msg, color=self.bot.main_color
         )
         return await ctx.send(embed=embed)
 
-    async def set_presence(
-        self,
-        *,
-        status_identifier=None,
-        status_by_key=True,
-        activity_identifier=None,
-        activity_by_key=True,
-        activity_message=None,
-    ):
+    async def set_presence(self, *, status=None, activity_type=None, activity_message=None):
 
-        activity = status = None
-        if status_identifier is None:
-            status_identifier = self.bot.config["status"]
-            status_by_key = False
+        if status is None:
+            status = self.bot.config.get("status")
 
-        try:
-            if status_by_key:
-                status = Status[status_identifier]
-            else:
-                status = Status.try_value(status_identifier)
-        except (KeyError, ValueError):
-            if status_identifier is not None:
-                msg = f"Invalid status type: {status_identifier}"
-                logger.warning(msg)
+        if activity_type is None:
+            activity_type = self.bot.config.get("activity_type")
 
-        if activity_identifier is None:
-            if activity_message is not None:
-                raise ValueError(
-                    "activity_message must be None if activity_identifier is None."
-                )
-            activity_identifier = self.bot.config["activity_type"]
-            activity_by_key = False
+        url = None
+        activity_message = (activity_message or self.bot.config["activity_message"]).strip()
+        if activity_type is not None and not activity_message:
+            logger.warning("No activity message found whilst activity is provided, defaults to \"Modmail\".")
+            activity_message = "Modmail"
 
-        try:
-            if activity_by_key:
-                activity_type = ActivityType[activity_identifier]
-            else:
-                activity_type = ActivityType.try_value(activity_identifier)
-        except (KeyError, ValueError):
-            if activity_identifier is not None:
-                msg = f"Invalid activity type: {activity_identifier}"
-                logger.warning(msg)
+        if activity_type == ActivityType.listening:
+            if activity_message.lower().startswith("to "):
+                # The actual message is after listening to [...]
+                # discord automatically add the "to"
+                activity_message = activity_message[3:].strip()
+        elif activity_type == ActivityType.streaming:
+            url = self.bot.config["twitch_url"]
+
+        if activity_type is not None:
+            activity = discord.Activity(
+                type=activity_type, name=activity_message, url=url
+            )
         else:
-            url = None
-            activity_message = (
-                activity_message or self.bot.config["activity_message"]
-            ).strip()
-
-            if activity_type == ActivityType.listening:
-                if activity_message.lower().startswith("to "):
-                    # The actual message is after listening to [...]
-                    # discord automatically add the "to"
-                    activity_message = activity_message[3:].strip()
-            elif activity_type == ActivityType.streaming:
-                url = self.bot.config["twitch_url"]
-
-            if activity_message:
-                activity = discord.Activity(
-                    type=activity_type, name=activity_message, url=url
-                )
-            else:
-                msg = "You must supply an activity message to use custom activity."
-                logger.debug(msg)
-
+            activity = None
         await self.bot.change_presence(activity=activity, status=status)
 
-        presence = {
-            "activity": (None, "No activity has been set."),
-            "status": (None, "No status has been set."),
-        }
-        if activity is not None:
-            use_to = "to " if activity.type == ActivityType.listening else ""
-            msg = f"Activity set to: {activity.type.name.capitalize()} "
-            msg += f"{use_to}{activity.name}."
-            presence["activity"] = (activity, msg)
-        if status is not None:
-            msg = f"Status set to: {status.value}."
-            presence["status"] = (status, msg)
-        return presence
+        return activity, status
 
-    @tasks.loop(minutes=45)
+    @tasks.loop(minutes=30)
     async def loop_presence(self):
         """Set presence to the configured value every 45 minutes."""
-        # TODO: Does this even work?
-        presence = await self.set_presence()
-        logger.debug("Loop... %s - %s", presence["activity"][1], presence["status"][1])
+        logger.debug("Resetting presence.")
+        await self.set_presence()
 
     @loop_presence.before_loop
     async def before_loop_presence(self):
         await self.bot.wait_for_connected()
         logger.line()
-        presence = await self.set_presence()
-        logger.info(presence["activity"][1])
-        logger.info(presence["status"][1])
-        await asyncio.sleep(2700)
+        activity, status = await self.set_presence()
+
+        if activity is not None:
+            msg = f"Activity set to: {activity.type.name.capitalize()} "
+            if activity.type == ActivityType.listening:
+                msg += f"to {activity.name}."
+            else:
+                msg += f"{activity.name}."
+            logger.info(msg)
+        else:
+            logger.info("No activity has been set.")
+        if status is not None:
+            msg = f"Status set to: {status.value}."
+            logger.info(msg)
+        else:
+            logger.info("No status has been set.")
+
+        await asyncio.sleep(1800)
+        logger.info("Starting presence loop.")
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
@@ -1788,6 +1758,8 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def eval_(self, ctx, *, body: str):
         """Evaluates Python code."""
+
+        logger.warning("Running eval command:\n%s", body)
 
         env = {
             "ctx": ctx,
