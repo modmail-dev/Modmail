@@ -911,7 +911,7 @@ class ModmailBot(commands.Bot):
 
         try:
             message = await channel.fetch_message(payload.message_id)
-        except discord.NotFound:
+        except (discord.NotFound, discord.Forbidden):
             return
 
         reaction = payload.emoji
