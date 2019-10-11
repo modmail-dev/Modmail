@@ -147,7 +147,7 @@ class Plugins(commands.Cog):
                 logger.error("Error when loading plugin %s.", plugin, exc_info=True)
                 continue
 
-        logger.info("Finished loading all plugins.")
+        logger.debug("Finished loading all plugins.")
         self._ready_event.set()
         await self.bot.config.update()
 
@@ -226,7 +226,7 @@ class Plugins(commands.Cog):
 
         try:
             self.bot.load_extension(plugin.ext_string)
-            logger.info("Loaded plugin: %s", plugin.ext_string)
+            logger.info("Loaded plugin: %s", plugin.ext_string.split('.')[-1])
             self.loaded_plugins.add(plugin)
 
         except commands.ExtensionError as exc:

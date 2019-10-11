@@ -603,7 +603,7 @@ class Utility(commands.Cog):
     @loop_presence.before_loop
     async def before_loop_presence(self):
         await self.bot.wait_for_connected()
-        logger.line()
+        logger.line('debug')
         activity, status = await self.set_presence()
 
         if activity is not None:

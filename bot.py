@@ -46,7 +46,8 @@ logger.setLevel(logging.INFO)
 
 ch = logging.StreamHandler(stream=sys.stdout)
 ch.setLevel(logging.INFO)
-formatter = logging.Formatter("%(filename)s[%(lineno)d] - %(levelname)s: %(message)s")
+formatter = logging.Formatter("%(asctime)s %(filename)s[%(lineno)d] - %(levelname)s: %(message)s",
+                              datefmt="%b %d %H:%M:%S")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
@@ -122,16 +123,16 @@ class ModmailBot(commands.Bot):
         logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
-        logger.line()
+        logger.line('debug')
 
         for cog in self.loaded_cogs:
-            logger.info("Loading %s.", cog)
+            logger.debug("Loading %s.", cog)
             try:
                 self.load_extension(cog)
-                logger.info("Successfully loaded %s.", cog)
+                logger.debug("Successfully loaded %s.", cog)
             except Exception:
                 logger.exception("Failed to load %s.", cog)
-        logger.line()
+        logger.line('debug')
 
     def _configure_logging(self):
         level_text = self.config["log_level"].upper()
@@ -409,14 +410,13 @@ class ModmailBot(commands.Bot):
         return level
 
     async def on_connect(self):
-        logger.line()
         try:
             await self.validate_database_connection()
         except Exception:
             logger.debug("Logging out due to failed database connection.")
             return await self.logout()
 
-        logger.info("Connected to gateway.")
+        logger.debug("Connected to gateway.")
         await self.config.refresh()
         await self.setup_indexes()
         self._connected.set()
@@ -457,10 +457,11 @@ class ModmailBot(commands.Bot):
             return await self.logout()
 
         logger.line()
-        logger.info("Client ready.")
-        logger.line()
+        logger.debug("Client ready.")
         logger.info("Logged in as: %s", self.user)
-        logger.info("User ID: %s", self.user.id)
+        logger.info("Bot ID: %s", self.user.id)
+        owners = ", ".join(getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.owner_ids)
+        logger.info("Owners: %s", owners)
         logger.info("Prefix: %s", self.prefix)
         logger.info("Guild Name: %s", self.guild.name)
         logger.info("Guild ID: %s", self.guild.id)
@@ -1099,7 +1100,8 @@ class ModmailBot(commands.Bot):
                 )
             raise
         else:
-            logger.info("Successfully connected to the database.")
+            logger.debug("Successfully connected to the database.")
+        logger.line('debug')
 
     async def post_metadata(self):
         owner = (await self.application_info()).owner
@@ -1125,7 +1127,7 @@ class ModmailBot(commands.Bot):
     async def before_post_metadata(self):
         await self.wait_for_connected()
         logger.debug("Starting metadata loop.")
-        logger.line()
+        logger.line('debug')
         if not self.guild:
             self.metadata_loop.cancel()
 

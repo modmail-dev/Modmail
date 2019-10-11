@@ -182,7 +182,7 @@ class ConfigManager:
                 self._cache[k] = v
         if not self.ready_event.is_set():
             self.ready_event.set()
-            logger.info("Successfully fetched configurations from database.")
+            logger.debug("Successfully fetched configurations from database.")
         return self._cache
 
     async def wait_until_ready(self) -> None:

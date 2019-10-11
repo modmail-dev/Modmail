@@ -44,7 +44,7 @@ class ModmailLogger(logging.Logger):
 
     @staticmethod
     def _info_(*msgs):
-        return f'{Fore.GREEN}{" ".join(msgs)}{Style.RESET_ALL}'
+        return f'{Fore.LIGHTMAGENTA_EX}{" ".join(msgs)}{Style.RESET_ALL}'
 
     @staticmethod
     def _error_(*msgs):
@@ -70,13 +70,16 @@ class ModmailLogger(logging.Logger):
         if self.isEnabledFor(logging.CRITICAL):
             self._log(logging.CRITICAL, self._error_(msg), args, **kwargs)
 
-    def exception(self, msg, *args, exc_info=True, **kwargs):
-        self.error(msg, *args, exc_info=exc_info, **kwargs)
-
-    def line(self):
-        if self.isEnabledFor(logging.INFO):
+    def line(self, level="info"):
+        if level == "info":
+            level = logging.INFO
+        elif level == "debug":
+            level = logging.DEBUG
+        else:
+            level = logging.INFO
+        if self.isEnabledFor(level):
             self._log(
-                logging.INFO,
+                level,
                 Fore.BLACK
                 + Style.BRIGHT
                 + "-------------------------"
