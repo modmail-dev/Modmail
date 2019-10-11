@@ -73,7 +73,6 @@ class ModmailBot(commands.Bot):
         self.metadata_loop = None
         self.formatter = SafeFormatter()
         self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
-        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
         self._connected = asyncio.Event()
         self.start_time = datetime.utcnow()
 
@@ -82,6 +81,7 @@ class ModmailBot(commands.Bot):
 
         self.threads = ThreadManager(self)
 
+        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
         self._configure_logging()
 
         mongo_uri = self.config["mongo_uri"]
