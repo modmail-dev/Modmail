@@ -152,15 +152,6 @@
         "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
         "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
     },
-    "logger": {
-        "repository": "Taaku18/modmail-plugins",
-        "branch": "master",
-        "description": "Moderation logger, logs message edits, message delete, channel changes, member join, etc.",
-        "bot_version": "2.20.1",
-        "title": "Server Activity Logger",
-        "icon_url": "https://i.imgur.com/dRqPq5M.png",
-        "thumbnail_url": "https://i.imgur.com/moQn7RC.png"
-    },
      "fun": {
         "repository": "TheKinG2149/modmail-plugins",
         "branch": "master",

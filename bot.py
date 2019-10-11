@@ -73,7 +73,7 @@ class ModmailBot(commands.Bot):
         self.metadata_loop = None
         self.formatter = SafeFormatter()
         self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
-
+        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
         self._connected = asyncio.Event()
         self.start_time = datetime.utcnow()
 
@@ -144,9 +144,8 @@ class ModmailBot(commands.Bot):
             "DEBUG": logging.DEBUG,
         }
 
-        log_file_name = self.token.split(".")[0]
         ch_debug = logging.FileHandler(
-            os.path.join(temp_dir, f"{log_file_name}.log"), mode="a+"
+            self.log_file_name, mode="a+"
         )
 
         ch_debug.setLevel(logging.DEBUG)
@@ -169,6 +168,7 @@ class ModmailBot(commands.Bot):
         else:
             logger.info("Invalid logging level set.")
             logger.warning("Using default logging level: %s.", level_text)
+        logger.info("Log file: %s", self.log_file_name)
         logger.debug("Successfully configured logging.")
 
     @property
@@ -545,8 +545,8 @@ class ModmailBot(commands.Bot):
         if name not in UNICODE_EMOJI:
             try:
                 name = await converter.convert(ctx, name.strip(":"))
-            except commands.BadArgument:
-                logger.warning("%s is not a valid emoji.", name)
+            except commands.BadArgument as e:
+                logger.warning("%s is not a valid emoji. %s.", str(e))
                 raise
         return name
 
