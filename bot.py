@@ -1151,7 +1151,7 @@ class ModmailBot(commands.Bot):
             "last_updated": str(datetime.utcnow()),
         }
 
-        async with self.session.post("https://api.modmail.tk/metadata", json=data):
+        async with self.session.post("https://api.logviewer.tech/metadata", json=data):
             logger.debug("Uploading metadata to Modmail server.")
 
     async def before_post_metadata(self):
