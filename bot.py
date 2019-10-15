@@ -54,7 +54,7 @@ class FileFormatter(logging.Formatter):
     ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
     def format(self, record):
-        record.msg = self.ansi_escape.sub("", record.msg)
+        record.msg = self.ansi_escape.sub(" ", record.msg)
         return super().format(record)
 
 
@@ -76,6 +76,10 @@ class ModmailBot(commands.Bot):
 
         self.config = ConfigManager(self)
         self.config.populate_cache()
+         def session(self) -> ClientSession:
+        if self._session is None:
+            self._session = ClientSession(loop=self.loop)
+        return self._session
 
         self.threads = ThreadManager(self)
 
@@ -108,7 +112,8 @@ class ModmailBot(commands.Bot):
 
         self._load_extensions()
         logger.line()
-
+    self.threads = ThreadManager(self)
+    
     @property
     def uptime(self) -> str:
         now = datetime.utcnow()
@@ -213,6 +218,10 @@ class ModmailBot(commands.Bot):
             finally:
                 self.loop.run_until_complete(self.session.close())
                 logger.error(" - Shutting down bot - ")
+                
+                h_debug.setFormatter(formatter_debug)
+        logger.addHandler(ch_debug)
+
 
     @property
     def owner_ids(self):
