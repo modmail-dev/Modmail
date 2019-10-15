@@ -9,6 +9,11 @@ however, insignificant breaking changes does not guarantee a major version bump,
 
 # v3.3.0-dev2
 
+
+### Important
+
+- Recommend all users to unblock and re-block all blocked users upon updating to this release.
+
 ### Added
 
 - Three new config vars:
@@ -39,6 +44,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Add travis checks for 3.6 in Linux and 3.7 for MacOS and Windows.
 - Eval commands are logged in debug logs.
 - Presence updates 30 minutes instead of 45 now.
+- Fixed an assortment of problems to do with block.
 
 ### Internal
 

@@ -1,4 +1,4 @@
-__version__ = "3.3.0-dev2"
+__version__ = "3.3.0-dev3"
 
 import asyncio
 import logging
@@ -676,9 +676,16 @@ class ModmailBot(commands.Bot):
                 self.blocked_users.pop(str(message.author.id))
             else:
                 reaction = blocked_emoji
-                end_time = re.search(r"%(.+?)%", reason)
+                # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
+                end_time = re.search(r"until ([^`]+?)\.$", reason)
+                if end_time is None:
+                    # backwards compat
+                    end_time = re.search(r"%([^%]+?)%", reason)
+                    if end_time is not None:
+                        logger.warning(r"Deprecated time message for user %s, block and unblock again to update.",
+                                       message.author)
+
                 if end_time is not None:
-                    logger.debug("No longer blocked, user %s.", message.author.name)
                     after = (
                         datetime.fromisoformat(end_time.group(1)) - now
                     ).total_seconds()
@@ -686,6 +693,9 @@ class ModmailBot(commands.Bot):
                         # No longer blocked
                         reaction = sent_emoji
                         self.blocked_users.pop(str(message.author.id))
+                        logger.debug("No longer blocked, user %s.", message.author.name)
+                    else:
+                        logger.debug("User blocked, user %s.", message.author.name)
                 else:
                     logger.debug("User blocked, user %s.", message.author.name)
         else:

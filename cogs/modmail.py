@@ -953,15 +953,15 @@ class Modmail(commands.Cog):
             else:
                 try:
                     user = await self.bot.fetch_user(id_)
-                    users.append((str(user), reason))
+                    users.append((user.mention, reason))
                 except discord.NotFound:
-                    pass
+                    users.append((id_, reason))
 
         if users:
             embed = embeds[0]
 
             for mention, reason in users:
-                line = mention + f" - `{reason or 'No reason provided'}`\n"
+                line = mention + f" - {reason or 'No Reason Provided'}\n"
                 if len(embed.description) + len(line) > 2048:
                     embed = discord.Embed(
                         title="Blocked Users (Continued)",
@@ -1008,9 +1008,7 @@ class Modmail(commands.Cog):
         self.bot.blocked_whitelisted_users.append(str(user.id))
 
         if str(user.id) in self.bot.blocked_users:
-            msg = self.bot.blocked_users.get(str(user.id))
-            if msg is None:
-                msg = ""
+            msg = self.bot.blocked_users.get(str(user.id)) or ""
             self.bot.blocked_users.pop(str(user.id))
 
         await self.bot.config.update()
@@ -1018,10 +1016,10 @@ class Modmail(commands.Cog):
         if msg.startswith("System Message: "):
             # If the user is blocked internally (for example: below minimum account age)
             # Show an extended message stating the original internal message
-            reason = msg[16:].strip().rstrip(".") or "no reason"
+            reason = msg[16:].strip().rstrip(".")
             embed = discord.Embed(
                 title="Success",
-                description=f"{mention} was previously blocked internally due to "
+                description=f"{mention} was previously blocked internally for "
                 f'"{reason}". {mention} is now whitelisted.',
                 color=self.bot.main_color,
             )
@@ -1051,8 +1049,6 @@ class Modmail(commands.Cog):
         `duration` may be a simple "human-readable" time text. See `{prefix}help close` for examples.
         """
 
-        reason = ""
-
         if user is None:
             thread = ctx.thread
             if thread:
@@ -1064,8 +1060,6 @@ class Modmail(commands.Cog):
 
         mention = getattr(user, "mention", f"`{user.id}`")
 
-        moderator = ctx.author.name
-
         if str(user.id) in self.bot.blocked_whitelisted_users:
             embed = discord.Embed(
                 title="Error",
@@ -1074,53 +1068,38 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
+        reason = f"by {escape_markdown(ctx.author.name)}#{ctx.author.discriminator}"
+
         if after is not None:
-            reason = f"{after.arg} by {moderator}"
-            if reason.startswith("System Message: "):
-                raise commands.BadArgument(
-                    "The reason cannot start with `System Message:`."
-                )
             if "%" in reason:
                 raise commands.BadArgument('The reason contains illegal character "%".')
+            if after.arg:
+                reason += f" for `{after.arg}`"
             if after.dt > after.now:
-                reason = f"{reason} %{after.dt.isoformat()}% by {moderator}"
+                reason += f" until {after.dt.isoformat()}"
 
-        if not reason:
-            reason = f"Blocked by {moderator}"
+        reason += "."
 
-        extend = f" for `{reason}`" if reason is not None else ""
         msg = self.bot.blocked_users.get(str(user.id))
         if msg is None:
             msg = ""
 
-        if (
-            str(user.id) not in self.bot.blocked_users
-            or reason is not None
-            or msg.startswith("System Message: ")
-        ):
-            if str(user.id) in self.bot.blocked_users:
-
-                old_reason = msg.strip().rstrip(".") or f"Blocked by {moderator}"
-                embed = discord.Embed(
-                    title="Success",
-                    description=f"{mention} was previously blocked for "
-                    f'"{old_reason}". {mention} is now blocked{extend}.',
-                    color=self.bot.main_color,
-                )
-            else:
-                embed = discord.Embed(
-                    title="Success",
-                    color=self.bot.main_color,
-                    description=f"{mention} is now blocked{extend}.",
-                )
-            self.bot.blocked_users[str(user.id)] = reason
-            await self.bot.config.update()
+        if str(user.id) in self.bot.blocked_users and msg:
+            old_reason = msg.strip().rstrip(".")
+            embed = discord.Embed(
+                title="Success",
+                description=f"{mention} was previously blocked "
+                f'{old_reason}.\n{mention} is now blocked {reason}',
+                color=self.bot.main_color,
+            )
         else:
             embed = discord.Embed(
-                title="Error",
-                color=self.bot.error_color,
-                description=f"{mention} is already blocked.",
+                title="Success",
+                color=self.bot.main_color,
+                description=f"{mention} is now blocked {reason}",
             )
+        self.bot.blocked_users[str(user.id)] = reason
+        await self.bot.config.update()
 
         return await ctx.send(embed=embed)
 
@@ -1156,12 +1135,12 @@ class Modmail(commands.Cog):
                 reason = msg[16:].strip().rstrip(".") or "no reason"
                 embed = discord.Embed(
                     title="Success",
-                    description=f"{mention} was previously blocked internally due to "
-                    f'"{reason}". {mention} is no longer blocked.',
+                    description=f"{mention} was previously blocked internally "
+                    f'{reason}.\n{mention} is no longer blocked.',
                     color=self.bot.main_color,
                 )
                 embed.set_footer(
-                    text="However, if the original system block reason still apply, "
+                    text="However, if the original system block reason still applies, "
                     f"{name} will be automatically blocked again. Use "
                     f'"{self.bot.prefix}blocked whitelist {user.id}" to whitelist the user.'
                 )
