@@ -100,9 +100,9 @@ To configure automatic updates:
  - Then go to the Deploy tab in your [Heroku account](https://dashboard.heroku.com/apps) of your bot app, select GitHub and connect your fork (usually by typing "Modmail"). 
  - Turn on auto-deploy for the `master` branch.
 
-### Hosting for patrons
+### Hosting for Patreons
 
-If you don't want to go through the trouble of setting up your very own Modmail bot, and/or want to support this project, we offer the all inclusive installation, hosting and maintenance of your Modmail with [**Patron**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for more info! 
+If you don't want to go through the trouble of setting up your very own Modmail bot, and/or want to support this project, we offer the all inclusive installation, hosting and maintenance of your Modmail with [**Patreon**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for more info! 
 
 ### Locally
 
