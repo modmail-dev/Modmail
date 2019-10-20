@@ -40,6 +40,7 @@ class ConfigManager:
         "anon_reply_without_command": False,
         # logging
         "log_channel_id": None,
+        "audit_channel_id": None,
         # threads
         "sent_emoji": "✅",
         "blocked_emoji": "🚫",
