@@ -130,7 +130,7 @@ class Changelog:
     """
 
     VERSION_REGEX = re.compile(
-        r"#\s*([vV]\d+\.\d+(?:\.\d+)?)\s+(.*?)(?=#\s*[vV]\d+\.\d+(?:\.\d+)?|$)",
+        r"#\s*([vV]\d+\.\d+(?:\.\d+)?(?:-\w+?)?)\s+(.*?)(?=#\s*[vV]\d+\.\d+(?:\.\d+)(?:-\w+?)?|$)",
         flags=re.DOTALL,
     )
 
