@@ -304,7 +304,10 @@ class Utility(commands.Cog):
         changelog = await Changelog.from_url(self.bot)
         latest = changelog.latest_version
 
-        if self.bot.version < parse_version(latest.version):
+        if self.bot.version.is_prerelease:
+            stable = next(filter(lambda v: not parse_version(v.version).is_prerelease, changelog.versions))
+            footer = f"You are on the prerelease version • the latest version is v{stable.version}."
+        elif self.bot.version < parse_version(latest.version):
             footer = f"A newer version is available v{latest.version}."
         else:
             footer = "You are up to date with the latest version."
