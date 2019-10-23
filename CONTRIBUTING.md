@@ -11,10 +11,10 @@ We love your input! We want to make contributing to this project as easy and tra
 If you are proposing new features, please discuss them with us in the [development server](https://discord.gg/etJNHCQ) before you start working on them!
 
 ## We Develop with Github
-We use github to host code, to track issues and feature requests, as well as accept pull requests.
+We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
 
 ## We Use [Git Flow](https://atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
-![Simple Image Of A Git Flow Workflow](https://nvie.com/img/hotfix-branches@2x.png)
+![Simple Image Of A Git Flow Workflow](https://nvie.com/img/hotfix-branches@2x.png)  
 When contributing to this project please make sure you follow this and name your branches appropriately! 
 
 ## All Code Changes Happen Through Pull Requests
