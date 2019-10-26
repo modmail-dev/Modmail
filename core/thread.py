@@ -735,7 +735,7 @@ class Thread:
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
             delete_message = not bool(message.attachments)
-            if delete_message and isinstance(message.channel, discord.TextChannel):
+            if delete_message and isinstance(destination, discord.TextChannel):
                 try:
                     await message.delete()
                 except Exception as e:
