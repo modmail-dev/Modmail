@@ -305,7 +305,12 @@ class Utility(commands.Cog):
         latest = changelog.latest_version
 
         if self.bot.version.is_prerelease:
-            stable = next(filter(lambda v: not parse_version(v.version).is_prerelease, changelog.versions))
+            stable = next(
+                filter(
+                    lambda v: not parse_version(v.version).is_prerelease,
+                    changelog.versions,
+                )
+            )
             footer = f"You are on the prerelease version • the latest version is v{stable.version}."
         elif self.bot.version < parse_version(latest.version):
             footer = f"A newer version is available v{latest.version}."
@@ -509,7 +514,9 @@ class Utility(commands.Cog):
         except KeyError:
             raise commands.MissingRequiredArgument(SimpleNamespace(name="activity"))
 
-        activity, _ = await self.set_presence(activity_type=activity_type, activity_message=message)
+        activity, _ = await self.set_presence(
+            activity_type=activity_type, activity_message=message
+        )
 
         self.bot.config["activity_type"] = activity.type.value
         self.bot.config["activity_message"] = activity.name
@@ -565,7 +572,9 @@ class Utility(commands.Cog):
         )
         return await ctx.send(embed=embed)
 
-    async def set_presence(self, *, status=None, activity_type=None, activity_message=None):
+    async def set_presence(
+        self, *, status=None, activity_type=None, activity_message=None
+    ):
 
         if status is None:
             status = self.bot.config.get("status")
@@ -574,9 +583,13 @@ class Utility(commands.Cog):
             activity_type = self.bot.config.get("activity_type")
 
         url = None
-        activity_message = (activity_message or self.bot.config["activity_message"]).strip()
+        activity_message = (
+            activity_message or self.bot.config["activity_message"]
+        ).strip()
         if activity_type is not None and not activity_message:
-            logger.warning("No activity message found whilst activity is provided, defaults to \"Modmail\".")
+            logger.warning(
+                'No activity message found whilst activity is provided, defaults to "Modmail".'
+            )
             activity_message = "Modmail"
 
         if activity_type == ActivityType.listening:
@@ -606,7 +619,7 @@ class Utility(commands.Cog):
     @loop_presence.before_loop
     async def before_loop_presence(self):
         await self.bot.wait_for_connected()
-        logger.line('debug')
+        logger.line("debug")
         activity, status = await self.set_presence()
 
         if activity is not None:

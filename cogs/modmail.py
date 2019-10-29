@@ -626,9 +626,9 @@ class Modmail(commands.Cog):
             embed.add_field(
                 name="Created", value=duration(created_at, now=datetime.utcnow())
             )
-            closer = entry.get('closer')
+            closer = entry.get("closer")
             if closer is None:
-                closer_msg = 'Unknown'
+                closer_msg = "Unknown"
             else:
                 closer_msg = f"<@{closer['id']}>"
             embed.add_field(name="Closed By", value=closer_msg)
@@ -1089,7 +1089,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Success",
                 description=f"{mention} was previously blocked "
-                f'{old_reason}.\n{mention} is now blocked {reason}',
+                f"{old_reason}.\n{mention} is now blocked {reason}",
                 color=self.bot.main_color,
             )
         else:
@@ -1136,7 +1136,7 @@ class Modmail(commands.Cog):
                 embed = discord.Embed(
                     title="Success",
                     description=f"{mention} was previously blocked internally "
-                    f'{reason}.\n{mention} is no longer blocked.',
+                    f"{reason}.\n{mention} is no longer blocked.",
                     color=self.bot.main_color,
                 )
                 embed.set_footer(

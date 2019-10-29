@@ -46,8 +46,10 @@ logger.setLevel(logging.INFO)
 
 ch = logging.StreamHandler(stream=sys.stdout)
 ch.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s %(filename)s[%(lineno)d] - %(levelname)s: %(message)s",
-                              datefmt="%b %d %H:%M:%S")
+formatter = logging.Formatter(
+    "%(asctime)s %(filename)s[%(lineno)d] - %(levelname)s: %(message)s",
+    datefmt="%b %d %H:%M:%S",
+)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
@@ -123,7 +125,7 @@ class ModmailBot(commands.Bot):
         logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
-        logger.line('debug')
+        logger.line("debug")
 
         for cog in self.loaded_cogs:
             logger.debug("Loading %s.", cog)
@@ -132,7 +134,7 @@ class ModmailBot(commands.Bot):
                 logger.debug("Successfully loaded %s.", cog)
             except Exception:
                 logger.exception("Failed to load %s.", cog)
-        logger.line('debug')
+        logger.line("debug")
 
     def _configure_logging(self):
         level_text = self.config["log_level"].upper()
@@ -144,9 +146,7 @@ class ModmailBot(commands.Bot):
             "DEBUG": logging.DEBUG,
         }
 
-        ch_debug = logging.FileHandler(
-            self.log_file_name, mode="a+"
-        )
+        ch_debug = logging.FileHandler(self.log_file_name, mode="a+")
 
         ch_debug.setLevel(logging.DEBUG)
         formatter_debug = FileFormatter(
@@ -460,7 +460,10 @@ class ModmailBot(commands.Bot):
         logger.debug("Client ready.")
         logger.info("Logged in as: %s", self.user)
         logger.info("Bot ID: %s", self.user.id)
-        owners = ", ".join(getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.owner_ids)
+        owners = ", ".join(
+            getattr(self.get_user(owner_id), "name", str(owner_id))
+            for owner_id in self.owner_ids
+        )
         logger.info("Owners: %s", owners)
         logger.info("Prefix: %s", self.prefix)
         logger.info("Guild Name: %s", self.guild.name)
@@ -504,10 +507,12 @@ class ModmailBot(commands.Bot):
             )
 
         for log in await self.api.get_open_logs():
-            if self.get_channel(int(log['channel_id'])) is None:
-                logger.debug("Unable to resolve thread with channel %s.", log['channel_id'])
+            if self.get_channel(int(log["channel_id"])) is None:
+                logger.debug(
+                    "Unable to resolve thread with channel %s.", log["channel_id"]
+                )
                 log_data = await self.api.post_log(
-                    log['channel_id'],
+                    log["channel_id"],
                     {
                         "open": False,
                         "closed_at": str(datetime.utcnow()),
@@ -522,9 +527,14 @@ class ModmailBot(commands.Bot):
                     },
                 )
                 if log_data:
-                    logger.debug("Successfully closed thread with channel %s.", log['channel_id'])
+                    logger.debug(
+                        "Successfully closed thread with channel %s.", log["channel_id"]
+                    )
                 else:
-                    logger.debug("Failed to close thread with channel %s, skipping.", log['channel_id'])
+                    logger.debug(
+                        "Failed to close thread with channel %s, skipping.",
+                        log["channel_id"],
+                    )
 
         self.metadata_loop = tasks.Loop(
             self.post_metadata,
@@ -682,8 +692,10 @@ class ModmailBot(commands.Bot):
                     # backwards compat
                     end_time = re.search(r"%([^%]+?)%", reason)
                     if end_time is not None:
-                        logger.warning(r"Deprecated time message for user %s, block and unblock again to update.",
-                                       message.author)
+                        logger.warning(
+                            r"Deprecated time message for user %s, block and unblock again to update.",
+                            message.author,
+                        )
 
                 if end_time is not None:
                     after = (
@@ -1111,7 +1123,7 @@ class ModmailBot(commands.Bot):
             raise
         else:
             logger.debug("Successfully connected to the database.")
-        logger.line('debug')
+        logger.line("debug")
 
     async def post_metadata(self):
         owner = (await self.application_info()).owner
@@ -1137,7 +1149,7 @@ class ModmailBot(commands.Bot):
     async def before_post_metadata(self):
         await self.wait_for_connected()
         logger.debug("Starting metadata loop.")
-        logger.line('debug')
+        logger.line("debug")
         if not self.guild:
             self.metadata_loop.cancel()
 

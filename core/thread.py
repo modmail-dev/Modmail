@@ -743,7 +743,7 @@ class Thread:
                 try:
                     await message.delete()
                 except Exception as e:
-                    logger.warning('Cannot delete message: %s.', str(e))
+                    logger.warning("Cannot delete message: %s.", str(e))
         elif note:
             embed.colour = self.bot.main_color
         else:

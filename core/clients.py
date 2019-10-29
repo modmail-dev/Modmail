@@ -106,9 +106,7 @@ class ApiClient(RequestClient):
         return await self.logs.find(query).to_list(None)
 
     async def get_open_logs(self) -> list:
-        query = {
-            "open": True
-        }
+        query = {"open": True}
         return await self.logs.find(query).to_list(None)
 
     async def get_log(self, channel_id: Union[str, int]) -> dict:
