@@ -507,11 +507,15 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def delete_message(self, message_id):
-        msg_recipient, msg_channel = await asyncio.gather(
+        recipient_msg, channel_msg = await asyncio.gather(
             self._find_thread_message(self.recipient, message_id),
             self._find_thread_message(self.channel, message_id),
         )
-        await asyncio.gather(msg_recipient.delete(), msg_channel.delete())
+
+        if recipient_msg:
+            await asyncio.gather(recipient_msg.delete(), channel_msg.delete())
+        else:
+            await channel_msg.delete()
 
     async def note(self, message: discord.Message) -> None:
         if not message.content and not message.attachments:
