@@ -309,7 +309,7 @@ class Modmail(commands.Cog):
 
         await thread.channel.edit(category=category, sync_permissions=True)
 
-        if self.bot.config("thread_move_notify") and not silent:
+        if self.bot.config["thread_move_notify"] and not silent:
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
