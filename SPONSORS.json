@@ -30,8 +30,8 @@
     {
         "embed": {
             "title": "Hey there!",
-            "description": "Nice to see you here! You can support us by subscribing on youtube -> [Youtube](https://www.youtube.com/user/RoomieOfficial) <- and also join our  [Discord](https://discord.gg/djwMSQ)!",
-            "url": "https://discord.gg/djwMSQ",
+            "description": "Nice to see you here! You can support us by subscribing on youtube -> [Youtube](https://www.youtube.com/user/RoomieOfficial) <- and also join our  [Discord](https://discord.gg/zaeVCaV)!",
+            "url": "https://discord.gg/zaeVCaV",
             "color": 13003681,
             "footer": {
                 "icon_url": "https://imgur.com/Mrc9pLd.gif",
@@ -45,7 +45,7 @@
             },
             "author": {
                 "name": "Roomieofficial",
-                "url": "https://discord.gg/djwMSQ",
+                "url": "https://discord.gg/zaeVCaV",
                 "icon_url": "https://imgur.com/6hBkt7Z.png"
             },
             "fields": [
@@ -59,7 +59,7 @@
                 },
                 {
                     "name": "Discord 😁",
-                    "value": "Make sure to join our [Discord](https://discord.gg/djwMSQ) We have weekly events, 24/7 chats and more!"
+                    "value": "Make sure to join our [Discord](https://discord.gg/zaeVCaV) We have weekly events, 24/7 chats and more!"
                 }
             ]
         }
