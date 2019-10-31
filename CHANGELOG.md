@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.0-dev2
+# v3.3.0-dev3
 
 
 ### Important
@@ -31,6 +31,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 ### Changed
 
 - `?contact` no longer send the "thread created" message to where the command is ran, instead, it's now sent to the newly created thread channel. (Thanks to DAzVise)
+- Automatically delete notes command `?note` when there's no attachments attached.
 - Plugins update (mostly internal).
   - `git` is no longer used to install plugins, it now downloads through zip files.
   - `?plugins enabled` renamed to `?plugins loaded` while `enabled` is still an alias to that command.

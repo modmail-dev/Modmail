@@ -734,17 +734,19 @@ class Thread:
                 embed.set_footer(text=mod_tag)  # Normal messages
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
+        elif note:
+            embed.colour = self.bot.main_color
+        else:
+            embed.set_footer(text=f"Message ID: {message.id}")
+            embed.colour = self.bot.recipient_color
+
+        if from_mod or note:
             delete_message = not bool(message.attachments)
             if delete_message and destination == self.channel:
                 try:
                     await message.delete()
                 except Exception as e:
                     logger.warning('Cannot delete message: %s.', str(e))
-        elif note:
-            embed.colour = self.bot.main_color
-        else:
-            embed.set_footer(text=f"Message ID: {message.id}")
-            embed.colour = self.bot.recipient_color
 
         try:
             await destination.trigger_typing()
