@@ -1270,19 +1270,19 @@ class Modmail(commands.Cog):
         if self.bot.config["dm_disabled"] == 1:
             embed = discord.Embed(
                 title="New Threads Disabled",
-                description=f"Modmail will not create any new threads.",
-                color=self.bot.main_color,
+                description=f"Modmail is not creating new threads.",
+                color=self.bot.error_color,
             )
         elif self.bot.config["dm_disabled"] == 2:
             embed = discord.Embed(
                 title="All DM Disabled",
-                description=f"Modmail will accept any DM messages for new and existing threads.",
-                color=self.bot.main_color,
+                description=f"Modmail is not accepting any DM messages for new and existing threads.",
+                color=self.bot.error_color,
             )
         else:
             embed = discord.Embed(
                 title="Enabled",
-                description=f"Modmail is receiving all DM messages.",
+                description=f"Modmail is accepting all DM messages.",
                 color=self.bot.main_color,
             )
 
