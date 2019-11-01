@@ -27,6 +27,18 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - `?logs responded [user]` command, it will show all logs that the user has sent an reply. (Thanks to papiersnipper PR#288)
   - `user` when not provided, defaults to the user who ran the command.
 - Open threads in limbo now auto closes if the channel cannot be found. This check is done every time the bot restarts.
+- Ability to disable new threads from getting created.
+  - `?disable`
+- Ability to fully disable Modmail DM.
+  - `?disable all`
+- To re-enable DM: `?enable`, and to see the current status: `?isenable`.
+- This disabled Modmail interface is customizable with the following config vars:
+  - `disabled_new_thread_title`
+  - `disabled_new_thread_response`
+  - `disabled_new_thread_footer`
+  - `disabled_current_thread_title`
+  - `disabled_current_thread_response`
+  - `disabled_current_thread_footer`
 
 ### Changed
 

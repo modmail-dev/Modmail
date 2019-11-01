@@ -647,19 +647,26 @@ class Thread:
                 avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
                     avatar_url = self.bot.guild.icon_url
-                embed.set_author(name=name, icon_url=avatar_url,
-                                 url=f"https://discordapp.com/channels/{self.bot.guild.id}")
+                embed.set_author(
+                    name=name,
+                    icon_url=avatar_url,
+                    url=f"https://discordapp.com/channels/{self.bot.guild.id}",
+                )
             else:
                 # Normal message
                 name = str(author)
                 avatar_url = author.avatar_url
-                embed.set_author(name=name, icon_url=avatar_url, url=f"https://discordapp.com/users/{author.id}")
+                embed.set_author(
+                    name=name,
+                    icon_url=avatar_url,
+                    url=f"https://discordapp.com/users/{author.id}",
+                )
         else:
             # Special note messages
             embed.set_author(
                 name=f"Note ({author.name})",
                 icon_url=system_avatar_url,
-                url=f"https://discordapp.com/users/{author.id}"
+                url=f"https://discordapp.com/users/{author.id}",
             )
 
         ext = [(a.url, a.filename) for a in message.attachments]
@@ -747,7 +754,16 @@ class Thread:
                 try:
                     await message.delete()
                 except Exception as e:
-                    logger.warning('Cannot delete message: %s.', str(e))
+                    logger.warning("Cannot delete message: %s.", str(e))
+
+        if (
+            from_mod
+            and self.bot.config["dm_disabled"] == 2
+            and destination != self.channel
+        ):
+            logger.info(
+                "Sending a message to %s when DM disabled is set.", self.recipient
+            )
 
         try:
             await destination.trigger_typing()
@@ -814,7 +830,7 @@ class ThreadManager:
         recipient: typing.Union[discord.Member, discord.User] = None,
         channel: discord.TextChannel = None,
         recipient_id: int = None,
-    ) -> Thread:
+    ) -> typing.Optional[Thread]:
         """Finds a thread from cache or from discord channel topics."""
         if recipient is None and channel is not None:
             thread = self._find_from_channel(channel)

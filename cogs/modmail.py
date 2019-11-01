@@ -626,9 +626,9 @@ class Modmail(commands.Cog):
             embed.add_field(
                 name="Created", value=duration(created_at, now=datetime.utcnow())
             )
-            closer = entry.get('closer')
+            closer = entry.get("closer")
             if closer is None:
-                closer_msg = 'Unknown'
+                closer_msg = "Unknown"
             else:
                 closer_msg = f"<@{closer['id']}>"
             embed.add_field(name="Closed By", value=closer_msg)
@@ -916,6 +916,9 @@ class Modmail(commands.Cog):
             thread = self.bot.threads.create(
                 user, creator=ctx.author, category=category
             )
+            if self.bot.config["dm_disabled"] >= 1:
+                logger.info("Contacting user %s when Modmail DM is disabled.", user)
+
             embed = discord.Embed(
                 title="Created Thread",
                 description=f"Thread started by {ctx.author.mention} "
@@ -1089,7 +1092,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 title="Success",
                 description=f"{mention} was previously blocked "
-                f'{old_reason}.\n{mention} is now blocked {reason}',
+                f"{old_reason}.\n{mention} is now blocked {reason}",
                 color=self.bot.main_color,
             )
         else:
@@ -1136,7 +1139,7 @@ class Modmail(commands.Cog):
                 embed = discord.Embed(
                     title="Success",
                     description=f"{mention} was previously blocked internally "
-                    f'{reason}.\n{mention} is no longer blocked.',
+                    f"{reason}.\n{mention} is no longer blocked.",
                     color=self.bot.main_color,
                 )
                 embed.set_footer(
@@ -1196,6 +1199,94 @@ class Modmail(commands.Cog):
             await ctx.message.add_reaction(sent_emoji)
         except (discord.HTTPException, discord.InvalidArgument):
             pass
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def enable(self, ctx):
+        """
+        Re-enables DM functionalities of Modmail.
+
+        Undo's the `{prefix}disable` command, all DM will be relayed after running this command.
+        """
+        embed = discord.Embed(
+            title="Success",
+            description=f"Modmail will now accept all DM messages.",
+            color=self.bot.main_color,
+        )
+
+        if self.bot.config["dm_disabled"] != 0:
+            self.bot.config["dm_disabled"] = 0
+            await self.bot.config.update()
+
+        return await ctx.send(embed=embed)
+
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def disable(self, ctx):
+        """
+        Stop accepting new Modmail threads.
+
+        No new threads can be created through DM.
+        To stop all existing threads from DMing Modmail, do `{prefix}disable all`.
+        """
+        embed = discord.Embed(
+            title="Success",
+            description=f"Modmail will not create any new threads.",
+            color=self.bot.main_color,
+        )
+        if self.bot.config["dm_disabled"] < 1:
+            self.bot.config["dm_disabled"] = 1
+            await self.bot.config.update()
+
+        return await ctx.send(embed=embed)
+
+    @disable.command(name="all")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def disable_all(self, ctx):
+        """
+        Disables all DM functionalities of Modmail.
+
+        No new threads can be created through DM nor no further DM messages will be relayed.
+        """
+        embed = discord.Embed(
+            title="Success",
+            description=f"Modmail will not accept any DM messages.",
+            color=self.bot.main_color,
+        )
+
+        if self.bot.config["dm_disabled"] != 2:
+            self.bot.config["dm_disabled"] = 2
+            await self.bot.config.update()
+
+        return await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def isenable(self, ctx):
+        """
+        Check if the DM functionalities of Modmail is enabled.
+        """
+
+        if self.bot.config["dm_disabled"] == 1:
+            embed = discord.Embed(
+                title="New Threads Disabled",
+                description=f"Modmail will not create any new threads.",
+                color=self.bot.main_color,
+            )
+        elif self.bot.config["dm_disabled"] == 2:
+            embed = discord.Embed(
+                title="All DM Disabled",
+                description=f"Modmail will accept any DM messages for new and existing threads.",
+                color=self.bot.main_color,
+            )
+        else:
+            embed = discord.Embed(
+                title="Enabled",
+                description=f"Modmail is receiving all DM messages.",
+                color=self.bot.main_color,
+            )
+
+        return await ctx.send(embed=embed)
 
 
 def setup(bot):
