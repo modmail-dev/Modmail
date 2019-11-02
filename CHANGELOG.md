@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.0-dev2
+# v3.3.0-dev5
 
 
 ### Important
@@ -27,10 +27,27 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - `?logs responded [user]` command, it will show all logs that the user has sent an reply. (Thanks to papiersnipper PR#288)
   - `user` when not provided, defaults to the user who ran the command.
 - Open threads in limbo now auto closes if the channel cannot be found. This check is done every time the bot restarts.
+- Ability to disable new threads from getting created.
+  - `?disable`
+- Ability to fully disable Modmail DM.
+  - `?disable all`
+- To re-enable DM: `?enable`, and to see the current status: `?isenable`.
+- This disabled Modmail interface is customizable with the following config vars:
+  - `disabled_new_thread_title`
+  - `disabled_new_thread_response`
+  - `disabled_new_thread_footer`
+  - `disabled_current_thread_title`
+  - `disabled_current_thread_response`
+  - `disabled_current_thread_footer`
 
 ### Changed
 
 - `?contact` no longer send the "thread created" message to where the command is ran, instead, it's now sent to the newly created thread channel. (Thanks to DAzVise)
+- Automatically delete notes command `?note` when there's no attachments attached.
+- Embed author links used to be inaccessible in many cases, now:
+  - `?anonreply`, `?reply`, and `?note` in thread channel will link to the sender's profile.
+  - `?reply` and recipient's DM will also link the sender's profile.
+  - `?anonreply` in DM channel will link to the first channel of the main guild.
 - Plugins update (mostly internal).
   - `git` is no longer used to install plugins, it now downloads through zip files.
   - `?plugins enabled` renamed to `?plugins loaded` while `enabled` is still an alias to that command.

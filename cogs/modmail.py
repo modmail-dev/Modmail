@@ -309,7 +309,7 @@ class Modmail(commands.Cog):
 
         await thread.channel.edit(category=category, sync_permissions=True)
 
-        if self.bot.config("thread_move_notify") and not silent:
+        if self.bot.config["thread_move_notify"] and not silent:
             embed = discord.Embed(
                 title="Thread Moved",
                 description=self.bot.config["thread_move_response"],
@@ -941,6 +941,9 @@ class Modmail(commands.Cog):
             thread = self.bot.threads.create(
                 user, creator=ctx.author, category=category
             )
+            if self.bot.config["dm_disabled"] >= 1:
+                logger.info("Contacting user %s when Modmail DM is disabled.", user)
+
             embed = discord.Embed(
                 title="Created Thread",
                 description=f"Thread started by {ctx.author.mention} "
@@ -1223,6 +1226,94 @@ class Modmail(commands.Cog):
             await ctx.message.add_reaction(sent_emoji)
         except (discord.HTTPException, discord.InvalidArgument):
             pass
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def enable(self, ctx):
+        """
+        Re-enables DM functionalities of Modmail.
+
+        Undo's the `{prefix}disable` command, all DM will be relayed after running this command.
+        """
+        embed = discord.Embed(
+            title="Success",
+            description=f"Modmail will now accept all DM messages.",
+            color=self.bot.main_color,
+        )
+
+        if self.bot.config["dm_disabled"] != 0:
+            self.bot.config["dm_disabled"] = 0
+            await self.bot.config.update()
+
+        return await ctx.send(embed=embed)
+
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def disable(self, ctx):
+        """
+        Stop accepting new Modmail threads.
+
+        No new threads can be created through DM.
+        To stop all existing threads from DMing Modmail, do `{prefix}disable all`.
+        """
+        embed = discord.Embed(
+            title="Success",
+            description=f"Modmail will not create any new threads.",
+            color=self.bot.main_color,
+        )
+        if self.bot.config["dm_disabled"] < 1:
+            self.bot.config["dm_disabled"] = 1
+            await self.bot.config.update()
+
+        return await ctx.send(embed=embed)
+
+    @disable.command(name="all")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def disable_all(self, ctx):
+        """
+        Disables all DM functionalities of Modmail.
+
+        No new threads can be created through DM nor no further DM messages will be relayed.
+        """
+        embed = discord.Embed(
+            title="Success",
+            description=f"Modmail will not accept any DM messages.",
+            color=self.bot.main_color,
+        )
+
+        if self.bot.config["dm_disabled"] != 2:
+            self.bot.config["dm_disabled"] = 2
+            await self.bot.config.update()
+
+        return await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def isenable(self, ctx):
+        """
+        Check if the DM functionalities of Modmail is enabled.
+        """
+
+        if self.bot.config["dm_disabled"] == 1:
+            embed = discord.Embed(
+                title="New Threads Disabled",
+                description=f"Modmail is not creating new threads.",
+                color=self.bot.error_color,
+            )
+        elif self.bot.config["dm_disabled"] == 2:
+            embed = discord.Embed(
+                title="All DM Disabled",
+                description=f"Modmail is not accepting any DM messages for new and existing threads.",
+                color=self.bot.error_color,
+            )
+        else:
+            embed = discord.Embed(
+                title="Enabled",
+                description=f"Modmail is accepting all DM messages.",
+                color=self.bot.main_color,
+            )
+
+        return await ctx.send(embed=embed)
 
 
 def setup(bot):

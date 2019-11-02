@@ -12,7 +12,7 @@ import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_user_id, truncate
+from core.utils import is_image_url, days, match_user_id, truncate, ignore, strtobool
 
 logger = logging.getLogger("Modmail")
 
@@ -106,7 +106,7 @@ class Thread:
             logger.critical("An error occurred while creating a thread.", exc_info=True)
             self.manager.cache.pop(self.id)
 
-            embed = discord.Embed(color=self.bot.error_color)
+            embed = discord.Embed(color=discord.Color.red())
             embed.title = "Error while trying to create a thread."
             embed.description = str(e)
             embed.add_field(name="Recipient", value=recipient.mention)
@@ -138,7 +138,7 @@ class Thread:
 
         async def send_genesis_message():
             info_embed = self._format_info_embed(
-                recipient, log_url, log_count, self.bot.main_color
+                recipient, log_url, log_count, discord.Color.green()
             )
             try:
                 msg = await channel.send(mention, embed=info_embed)
@@ -161,7 +161,12 @@ class Thread:
             timestamp=channel.created_at,
         )
 
-        recipient_thread_close = self.bot.config.get("recipient_thread_close")
+        try:
+            recipient_thread_close = strtobool(
+                self.bot.config["recipient_thread_close"]
+            )
+        except ValueError:
+            recipient_thread_close = self.bot.config.remove("recipient_thread_close")
 
         if recipient_thread_close:
             footer = self.bot.config["thread_self_closable_creation_footer"]
@@ -350,7 +355,7 @@ class Thread:
             desc = "Could not resolve log url."
             log_url = None
 
-        embed = discord.Embed(description=desc, color=self.bot.error_color)
+        embed = discord.Embed(description=desc, color=discord.Color.red())
 
         if self.recipient is not None:
             user = f"{self.recipient} (`{self.id}`)"
@@ -378,7 +383,7 @@ class Thread:
 
         embed = discord.Embed(
             title=self.bot.config["thread_close_title"],
-            color=self.bot.error_color,
+            color=discord.Color.red(),
             timestamp=datetime.utcnow(),
         )
 
@@ -389,10 +394,7 @@ class Thread:
                 message = self.bot.config["thread_close_response"]
 
         message = self.bot.formatter.format(
-            message,
-            closer=closer,
-            loglink=log_url,
-            logkey=log_data["key"] if log_data else None,
+            message, closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
         )
 
         embed.description = message
@@ -439,10 +441,22 @@ class Thread:
         """
         This grabs the timeout value for closing threads automatically
         from the ConfigManager and parses it for use internally.
-
         :returns: None if no timeout is set.
         """
-        timeout = self.bot.config.get("thread_auto_close")
+        timeout = self.bot.config["thread_auto_close"]
+        if timeout:
+            try:
+                timeout = isodate.parse_duration(timeout)
+            except isodate.ISO8601Error:
+                logger.warning(
+                    "The auto_close_thread limit needs to be a "
+                    "ISO-8601 duration formatted duration string "
+                    'greater than 0 days, not "%s".',
+                    str(timeout),
+                )
+                timeout = self.bot.config.remove("thread_auto_close")
+                await self.bot.config.update()
+
         return timeout
 
     async def _restart_close_timer(self):
@@ -462,14 +476,24 @@ class Thread:
         reset_time = datetime.utcnow() + timedelta(seconds=seconds)
         human_time = human_timedelta(dt=reset_time)
 
-        if self.bot.config.get("thread_auto_close_silently"):
+        try:
+            thread_auto_close_silently = strtobool(
+                self.bot.config["thread_auto_close_silently"]
+            )
+        except ValueError:
+            thread_auto_close_silently = self.bot.config.remove(
+                "thread_auto_close_silently"
+            )
+
+        if thread_auto_close_silently:
             return await self.close(
                 closer=self.bot.user, silent=True, after=int(seconds), auto_close=True
             )
 
         # Grab message
         close_message = self.bot.formatter.format(
-            self.bot.config["thread_auto_close_response"], timeout=human_time
+            self.bot.config["thread_auto_close_response"],
+            timeout=human_time
         )
 
         time_marker_regex = "%t"
@@ -507,15 +531,11 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def delete_message(self, message_id):
-        recipient_msg, channel_msg = await asyncio.gather(
+        msg_recipient, msg_channel = await asyncio.gather(
             self._find_thread_message(self.recipient, message_id),
             self._find_thread_message(self.channel, message_id),
         )
-
-        if recipient_msg:
-            await asyncio.gather(recipient_msg.delete(), channel_msg.delete())
-        else:
-            await channel_msg.delete()
+        await asyncio.gather(msg_recipient.delete(), msg_channel.delete())
 
     async def note(self, message: discord.Message) -> None:
         if not message.content and not message.attachments:
@@ -534,7 +554,7 @@ class Thread:
         if not any(g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
                 embed=discord.Embed(
-                    color=self.bot.error_color,
+                    color=discord.Color.red(),
                     description="Your message could not be delivered since "
                     "the recipient shares no servers with the bot.",
                 )
@@ -551,7 +571,7 @@ class Thread:
             tasks.append(
                 message.channel.send(
                     embed=discord.Embed(
-                        color=self.bot.error_color,
+                        color=discord.Color.red(),
                         description="Your message could not be delivered as "
                         "the recipient is only accepting direct "
                         "messages from friends, or the bot was "
@@ -584,7 +604,7 @@ class Thread:
                 tasks.append(
                     self.channel.send(
                         embed=discord.Embed(
-                            color=self.bot.error_color,
+                            color=discord.Color.red(),
                             description="Scheduled close has been cancelled.",
                         )
                     )
@@ -613,7 +633,7 @@ class Thread:
             self.bot.loop.create_task(
                 self.channel.send(
                     embed=discord.Embed(
-                        color=self.bot.error_color,
+                        color=discord.Color.red(),
                         description="Scheduled close has been cancelled.",
                     )
                 )
@@ -665,6 +685,8 @@ class Thread:
                 url=message.jump_url,
             )
 
+        delete_message = not bool(message.attachments)
+
         ext = [(a.url, a.filename) for a in message.attachments]
 
         images = []
@@ -700,7 +722,7 @@ class Thread:
                 embedded_image = True
             elif filename is not None:
                 if note:
-                    color = self.bot.main_color
+                    color = discord.Color.blurple()
                 elif from_mod:
                     color = self.bot.mod_color
                 else:
@@ -738,14 +760,8 @@ class Thread:
                 embed.set_footer(text=mod_tag)  # Normal messages
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
-            delete_message = not bool(message.attachments)
-            if delete_message and isinstance(message.channel, discord.TextChannel):
-                try:
-                    await message.delete()
-                except Exception as e:
-                    logger.warning("Cannot delete message: %s.", str(e))
         elif note:
-            embed.colour = self.bot.main_color
+            embed.colour = discord.Color.blurple()
         else:
             embed.set_footer(text=f"Message ID: {message.id}")
             embed.colour = self.bot.recipient_color
@@ -767,6 +783,9 @@ class Thread:
             self.ready = False
             await asyncio.gather(*additional_images)
             self.ready = True
+
+        if delete_message:
+            self.bot.loop.create_task(ignore(message.delete()))
 
         return msg
 
