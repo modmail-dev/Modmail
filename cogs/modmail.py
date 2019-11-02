@@ -1197,6 +1197,29 @@ class Modmail(commands.Cog):
         except (discord.HTTPException, discord.InvalidArgument):
             pass
 
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def wipe(self, ctx, key: str):
+        """
+        Wipe a log entry from the database.
+        """
+        success = await self.bot.api.delete_log_entry(key)
+
+        if not success:
+            embed = discord.Embed(
+                title="Error",
+                description=f"Log entry `{key}` not found.",
+                color=self.bot.error_color,
+            )
+        else:
+            embed = discord.Embed(
+                title="Success",
+                description=f"Log entry `{key}` successfully deleted.",
+                color=self.bot.main_color,
+            )
+
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Modmail(bot))
