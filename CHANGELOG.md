@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.0-dev5
+# v3.3.0-dev6
 
 
 ### Important
@@ -39,6 +39,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
   - `disabled_current_thread_title`
   - `disabled_current_thread_response`
   - `disabled_current_thread_footer`
+- Ability to delete notes when providing their ID. (Thanks to papiersnipper PR#402)
+- Ability to delete log entries. (Thanks to papiersnipper PR#402)
 
 ### Changed
 
@@ -62,6 +64,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Eval commands are logged in debug logs.
 - Presence updates 30 minutes instead of 45 now.
 - Fixed an assortment of problems to do with block.
+- Existing aliases can be used when creating new aliases. (Thanks to papiersnipper PR#402)
 
 ### Internal
 
