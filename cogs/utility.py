@@ -612,7 +612,7 @@ class Utility(commands.Cog):
 
     @tasks.loop(minutes=30)
     async def loop_presence(self):
-        """Set presence to the configured value every 45 minutes."""
+        """Set presence to the configured value every 30 minutes."""
         logger.debug("Resetting presence.")
         await self.set_presence()
 
