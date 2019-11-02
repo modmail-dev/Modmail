@@ -1057,13 +1057,16 @@ class Utility(commands.Cog):
         if len(values) == 1:
             linked_command = values[0].split()[0].lower()
             if not self.bot.get_command(linked_command):
-                embed = discord.Embed(
-                    title="Error",
-                    color=self.bot.error_color,
-                    description="The command you are attempting to point "
-                    f"to does not exist: `{linked_command}`.",
-                )
-                return await ctx.send(embed=embed)
+                if linked_command in self.bot.aliases:
+                    values = [self.bot.aliases.get(linked_command)]
+                else:
+                    embed = discord.Embed(
+                        title="Error",
+                        color=self.bot.error_color,
+                        description="The command you are attempting to point "
+                        f"to does not exist: `{linked_command}`.",
+                    )
+                    return await ctx.send(embed=embed)
 
             embed = discord.Embed(
                 title="Added alias",
@@ -1081,13 +1084,17 @@ class Utility(commands.Cog):
             for i, val in enumerate(values, start=1):
                 linked_command = val.split()[0]
                 if not self.bot.get_command(linked_command):
-                    embed = discord.Embed(
-                        title="Error",
-                        color=self.bot.error_color,
-                        description="The command you are attempting to point "
-                        f"to on step {i} does not exist: `{linked_command}`.",
-                    )
-                    return await ctx.send(embed=embed)
+                    if linked_command in self.bot.aliases:
+                        index = values.index(linked_command)
+                        values[index] = self.bot.aliases.get(linked_command)
+                    else:
+                        embed = discord.Embed(
+                            title="Error",
+                            color=self.bot.error_color,
+                            description="The command you are attempting to point "
+                            f"to on step {i} does not exist: `{linked_command}`.",
+                        )
+                        return await ctx.send(embed=embed)
                 embed.description += f"\n{i}: {val}"
 
         self.bot.aliases[name] = " && ".join(values)
