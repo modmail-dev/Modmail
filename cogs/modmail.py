@@ -1164,10 +1164,12 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def delete(self, ctx, message_id: Optional[int] = None):
         """
-        Delete a message that was sent using the reply command.
+        Delete a message that was sent using the reply command or a note.
 
         Deletes the previous message, unless a message ID is provided,
         which in that case, deletes the message with that message ID.
+
+        Notes can only be deleted when a note ID is provided.
         """
         thread = ctx.thread
 
