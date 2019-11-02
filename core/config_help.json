@@ -348,6 +348,72 @@
       "See also: `thread_move_notify`."
     ]
   },
+  "disabled_new_thread_title": {
+    "default": "Not Delivered.",
+    "description": "The title of the message embed when Modmail new thread creation is disabled and user tries to create a new thread.",
+    "examples": [
+      "`{prefix}config set disabled_new_thread_title Closed`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable` or `{prefix}disable all` is set.",
+      "See also: `disabled_new_thread_response`, `disabled_new_thread_footer`, `disabled_current_thread_title`."
+    ]
+  },
+  "disabled_new_thread_response": {
+    "default": "We are not accepting new threads.",
+    "description": "The body of the message embed when Modmail new thread creation is disabled and user tries to create a new thread.",
+    "examples": [
+      "`{prefix}config set disabled_new_thread_response Our working hours is between 8am - 6pm EST.`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable` or `{prefix}disable all` is set.",
+      "See also: `disabled_new_thread_title`, `disabled_new_thread_footer`, `disabled_current_thread_response`."
+    ]
+  },
+  "disabled_new_thread_footer": {
+    "default": "Please try again later...",
+    "description": "The footer of the message embed when Modmail new thread creation is disabled and user tries to create a new thread.",
+    "examples": [
+      "`{prefix}config set disabled_new_thread_footer Contact us later`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable` or `{prefix}disable all` is set.",
+      "See also: `disabled_new_thread_title`, `disabled_new_thread_response`, `disabled_current_thread_footer`."
+    ]
+  },
+  "disabled_current_thread_title": {
+    "default": "Not Delivered.",
+    "description": "The title of the message embed when Modmail DM is disabled and user DMs Modmail from existing thread.",
+    "examples": [
+      "`{prefix}config set disabled_current_thread_title Unavailable`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable all` is set.",
+      "See also: `disabled_current_thread_response`, `disabled_current_thread_footer`, `disabled_new_thread_title`."
+    ]
+  },
+  "disabled_current_thread_response": {
+    "default": "We are not accepting any messages.",
+    "description": "The body of the message embed when Modmail DM is disabled and user DMs Modmail from existing thread.",
+    "examples": [
+      "`{prefix}config set disabled_current_thread_response On break right now.`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable all` is set.",
+      "See also: `disabled_current_thread_title`, `disabled_current_thread_footer`, `disabled_new_thread_response`."
+    ]
+  },
+  "disabled_current_thread_footer": {
+    "default": "Please try again later...",
+    "description": "The footer of the message embed when Modmail DM is disabled and user DMs Modmail from existing thread.",
+    "examples": [
+      "`{prefix}config set disabled_current_thread_footer Message back!`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable all` is set.",
+      "See also: `disabled_current_thread_title`, `disabled_current_thread_response`, `disabled_new_thread_footer`."
+    ]
+  },
   "recipient_color": {
     "default": "Discord Gold [#F1C40F](https://placehold.it/100/f1c40f?text=+)",
     "description": "This is the color of the messages sent by the recipient, this applies to messages received in the thread channel.",

@@ -58,6 +58,12 @@ class ConfigManager:
         "thread_self_close_response": "You have closed this Modmail thread.",
         "thread_move_notify": False,
         "thread_move_response": "This thread has been moved.",
+        "disabled_new_thread_title": "Not Delivered",
+        "disabled_new_thread_response": "We are not accepting new threads.",
+        "disabled_new_thread_footer": "Please try again later...",
+        "disabled_current_thread_title": "Not Delivered",
+        "disabled_current_thread_response": "We are not accepting any messages.",
+        "disabled_current_thread_footer": "Please try again later...",
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -73,6 +79,9 @@ class ConfigManager:
         "activity_message": "",
         "activity_type": None,
         "status": None,
+        # dm_disabled 0 = none, 1 = new threads, 2 = all threads
+        # TODO: use emum
+        "dm_disabled": 0,
         "oauth_whitelist": [],
         # moderation
         "blocked": {},
