@@ -226,7 +226,7 @@ class Plugins(commands.Cog):
 
         try:
             self.bot.load_extension(plugin.ext_string)
-            logger.info("Loaded plugin: %s", plugin.ext_string.split('.')[-1])
+            logger.info("Loaded plugin: %s", plugin.ext_string.split(".")[-1])
             self.loaded_plugins.add(plugin)
 
         except commands.ExtensionError as exc:

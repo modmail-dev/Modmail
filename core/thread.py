@@ -439,7 +439,6 @@ class Thread:
         """
         This grabs the timeout value for closing threads automatically
         from the ConfigManager and parses it for use internally.
-
         :returns: None if no timeout is set.
         """
         timeout = self.bot.config.get("thread_auto_close")

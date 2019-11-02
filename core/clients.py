@@ -106,9 +106,7 @@ class ApiClient(RequestClient):
         return await self.logs.find(query).to_list(None)
 
     async def get_open_logs(self) -> list:
-        query = {
-            "open": True
-        }
+        query = {"open": True}
         return await self.logs.find(query).to_list(None)
 
     async def get_log(self, channel_id: Union[str, int]) -> dict:
@@ -161,6 +159,10 @@ class ApiClient(RequestClient):
         if prefix == "NONE":
             prefix = ""
         return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{key}"
+
+    async def delete_log_entry(self, key: str) -> bool:
+        result = await self.logs.delete_one({"key": key})
+        return result.deleted_count == 1
 
     async def get_config(self) -> dict:
         conf = await self.db.config.find_one({"bot_id": self.bot.user.id})

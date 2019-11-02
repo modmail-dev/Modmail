@@ -722,6 +722,31 @@ class Modmail(commands.Cog):
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
+    @logs.command(name="delete", aliases=["wipe"])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def logs_delete(self, ctx, key_or_link: str):
+        """
+        Wipe a log entry from the database.
+        """
+        key = key_or_link.split("/")[-1]
+
+        success = await self.bot.api.delete_log_entry(key)
+
+        if not success:
+            embed = discord.Embed(
+                title="Error",
+                description=f"Log entry `{key}` not found.",
+                color=self.bot.error_color,
+            )
+        else:
+            embed = discord.Embed(
+                title="Success",
+                description=f"Log entry `{key}` successfully deleted.",
+                color=self.bot.main_color,
+            )
+
+        await ctx.send(embed=embed)
+
     @logs.command(name="responded")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def logs_responded(self, ctx, *, user: User = None):
@@ -1167,10 +1192,12 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def delete(self, ctx, message_id: Optional[int] = None):
         """
-        Delete a message that was sent using the reply command.
+        Delete a message that was sent using the reply command or a note.
 
         Deletes the previous message, unless a message ID is provided,
         which in that case, deletes the message with that message ID.
+
+        Notes can only be deleted when a note ID is provided.
         """
         thread = ctx.thread
 
