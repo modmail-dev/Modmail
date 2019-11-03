@@ -1,12 +1,12 @@
-import logging
 import re
 from typing import List
 
 from discord import Embed
 
+from core.models import getLogger
 from core.utils import truncate
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
 class Version:
@@ -46,11 +46,14 @@ class Version:
     ACTION_REGEX = r"###\s*(.+?)\s*\n(.*?)(?=###\s*.+?|$)"
     DESCRIPTION_REGEX = r"^(.*?)(?=###\s*.+?|$)"
 
-    def __init__(self, bot, version: str, lines: str):
+    def __init__(self, bot, branch: str, version: str, lines: str):
         self.bot = bot
         self.version = version.lstrip("vV")
         self.lines = lines.strip()
         self.fields = {}
+        self.changelog_url = (
+            f"https://github.com/kyb3r/modmail/blob/{branch}/CHANGELOG.md"
+        )
         self.description = ""
         self.parse()
 
@@ -79,7 +82,7 @@ class Version:
 
     @property
     def url(self) -> str:
-        return f"{Changelog.CHANGELOG_URL}#v{self.version[::2]}"
+        return f"{self.changelog_url}#v{self.version[::2]}"
 
     @property
     def embed(self) -> Embed:
@@ -122,28 +125,22 @@ class Changelog:
 
     Class Attributes
     ----------------
-    RAW_CHANGELOG_URL : str
-        The URL to Modmail changelog.
-    CHANGELOG_URL : str
-        The URL to Modmail changelog directly from in GitHub.
     VERSION_REGEX : re.Pattern
         The regex used to parse the versions.
     """
 
-    RAW_CHANGELOG_URL = (
-        "https://raw.githubusercontent.com/kyb3r/modmail/master/CHANGELOG.md"
-    )
-    CHANGELOG_URL = "https://github.com/kyb3r/modmail/blob/master/CHANGELOG.md"
     VERSION_REGEX = re.compile(
-        r"#\s*([vV]\d+\.\d+(?:\.\d+)?)\s+(.*?)(?=#\s*[vV]\d+\.\d+(?:\.\d+)?|$)",
+        r"#\s*([vV]\d+\.\d+(?:\.\d+)?(?:-\w+?)?)\s+(.*?)(?=#\s*[vV]\d+\.\d+(?:\.\d+)(?:-\w+?)?|$)",
         flags=re.DOTALL,
     )
 
-    def __init__(self, bot, text: str):
+    def __init__(self, bot, branch: str, text: str):
         self.bot = bot
         self.text = text
         logger.debug("Fetching changelog from GitHub.")
-        self.versions = [Version(bot, *m) for m in self.VERSION_REGEX.findall(text)]
+        self.versions = [
+            Version(bot, branch, *m) for m in self.VERSION_REGEX.findall(text)
+        ]
 
     @property
     def latest_version(self) -> Version:
@@ -169,7 +166,6 @@ class Changelog:
         bot : Bot
             The Modmail bot.
         url : str, optional
-            Defaults to `RAW_CHANGELOG_URL`.
             The URL to the changelog.
 
         Returns
@@ -177,6 +173,11 @@ class Changelog:
         Changelog
             The newly created `Changelog` parsed from the `url`.
         """
-        url = url or cls.RAW_CHANGELOG_URL
-        resp = await bot.session.get(url)
-        return cls(bot, await resp.text())
+        branch = "master" if not bot.version.is_prerelease else "development"
+        url = (
+            url
+            or f"https://raw.githubusercontent.com/kyb3r/modmail/{branch}/CHANGELOG.md"
+        )
+
+        async with await bot.session.get(url) as resp:
+            return cls(bot, branch, await resp.text())

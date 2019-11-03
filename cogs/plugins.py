@@ -1,29 +1,92 @@
 import asyncio
-import importlib
+import io
 import json
-import logging
 import os
 import shutil
-import site
-import stat
-import subprocess
 import sys
 import typing
+import zipfile
+from importlib import invalidate_caches
 from difflib import get_close_matches
+from pathlib import Path, PurePath
+from re import match
+from site import USER_SITE
+from subprocess import PIPE
 
 import discord
 from discord.ext import commands
+
 from pkg_resources import parse_version
 
 from core import checks
-from core.models import PermissionLevel
+from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
+from core.utils import truncate, trigger_typing
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
-class DownloadError(Exception):
+class InvalidPluginError(commands.BadArgument):
     pass
+
+
+class Plugin:
+    def __init__(self, user, repo, name, branch=None):
+        self.user = user
+        self.repo = repo
+        self.name = name
+        self.branch = branch if branch is not None else "master"
+        self.url = f"https://github.com/{user}/{repo}/archive/{self.branch}.zip"
+        self.link = f"https://github.com/{user}/{repo}/tree/{self.branch}/{name}"
+
+    @property
+    def path(self):
+        return (
+            PurePath("plugins") / self.user / self.repo / f"{self.name}-{self.branch}"
+        )
+
+    @property
+    def abs_path(self):
+        return Path(__file__).absolute().parent.parent / self.path
+
+    @property
+    def cache_path(self):
+        return (
+            Path(__file__).absolute().parent.parent
+            / "temp"
+            / "plugins-cache"
+            / f"{self.user}-{self.repo}-{self.branch}.zip"
+        )
+
+    @property
+    def ext_string(self):
+        return f"plugins.{self.user}.{self.repo}.{self.name}-{self.branch}.{self.name}"
+
+    def __str__(self):
+        return f"{self.user}/{self.repo}/{self.name}@{self.branch}"
+
+    def __lt__(self, other):
+        return self.name.lower() < other.name.lower()
+
+    @classmethod
+    def from_string(cls, s, strict=False):
+        if not strict:
+            m = match(r"^(.+?)/(.+?)/(.+?)(?:@(.+?))?$", s)
+        else:
+            m = match(r"^(.+?)/(.+?)/(.+?)@(.+?)$", s)
+        if m is not None:
+            return Plugin(*m.groups())
+        else:
+            raise InvalidPluginError("Cannot decipher %s.", s)
+
+    def __hash__(self):
+        return hash((self.user, self.repo, self.name, self.branch))
+
+    def __repr__(self):
+        return f"<Plugins: {self.__str__()}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Plugin) and self.__str__() == other.__str__()
 
 
 class Plugins(commands.Cog):
@@ -39,365 +102,421 @@ class Plugins(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.registry = {}
-        self.bot.loop.create_task(self.download_initial_plugins())
+        self.loaded_plugins = set()
+        self._ready_event = asyncio.Event()
+
         self.bot.loop.create_task(self.populate_registry())
+
+        if self.bot.config.get("enable_plugins"):
+            self.bot.loop.create_task(self.initial_load_plugins())
+        else:
+            logger.info("Plugins not loaded since ENABLE_PLUGINS=false.")
 
     async def populate_registry(self):
         url = "https://raw.githubusercontent.com/kyb3r/modmail/master/plugins/registry.json"
         async with self.bot.session.get(url) as resp:
             self.registry = json.loads(await resp.text())
 
-    @staticmethod
-    def _asubprocess_run(cmd):
-        return subprocess.run(cmd, shell=True, check=True, capture_output=True)
-
-    @staticmethod
-    def parse_plugin(name):
-        # returns: (username, repo, plugin_name, branch)
-        # default branch = master
-        try:
-            # when names are formatted with inline code
-            result = name.split("/")
-            result[2] = "/".join(result[2:])
-            if "@" in result[2]:
-                # branch is specified
-                # for example, fourjr/modmail-plugins/welcomer@develop is a valid name
-                branch_split_result = result[2].split("@")
-                result.append(branch_split_result[-1])
-                result[2] = "@".join(branch_split_result[:-1])
-            else:
-                result.append("master")
-
-        except IndexError:
-            return None
-
-        return tuple(result)
-
-    async def download_initial_plugins(self):
+    async def initial_load_plugins(self):
         await self.bot.wait_for_connected()
 
-        for i in self.bot.config["plugins"]:
-            username, repo, name, branch = self.parse_plugin(i)
+        for plugin_name in list(self.bot.config["plugins"]):
+            try:
+                plugin = Plugin.from_string(plugin_name, strict=True)
+            except InvalidPluginError:
+                self.bot.config["plugins"].remove(plugin_name)
+                try:
+                    # For backwards compat
+                    plugin = Plugin.from_string(plugin_name)
+                except InvalidPluginError:
+                    logger.error(
+                        "Failed to parse plugin name: %s.", plugin_name, exc_info=True
+                    )
+                    continue
+
+                logger.info(
+                    "Migrated legacy plugin name: %s, now %s.", plugin_name, str(plugin)
+                )
+                self.bot.config["plugins"].append(str(plugin))
 
             try:
-                await self.download_plugin_repo(username, repo, branch)
-            except DownloadError as exc:
-                msg = f"{username}/{repo}@{branch} - {exc}"
-                logger.error(msg, exc_info=True)
-            else:
-                try:
-                    await self.load_plugin(username, repo, name, branch)
-                except DownloadError as exc:
-                    msg = f"{username}/{repo}@{branch}[{name}] - {exc}"
-                    logger.error(msg, exc_info=True)
+                await self.download_plugin(plugin)
+                await self.load_plugin(plugin)
+            except Exception:
+                logger.error("Error when loading plugin %s.", plugin, exc_info=True)
+                continue
 
-    async def download_plugin_repo(self, username, repo, branch):
-        try:
-            cmd = f"git clone https://github.com/{username}/{repo} "
-            cmd += f"plugins/{username}-{repo}-{branch} "
-            cmd += f"-b {branch} -q"
+        logger.debug("Finished loading all plugins.")
+        self._ready_event.set()
+        await self.bot.config.update()
 
-            await self.bot.loop.run_in_executor(None, self._asubprocess_run, cmd)
-            # -q (quiet) so there's no terminal output unless there's an error
-        except subprocess.CalledProcessError as exc:
-            err = exc.stderr.decode("utf-8").strip()
+    async def download_plugin(self, plugin, force=False):
+        if plugin.abs_path.exists() and not force:
+            return
 
-            if not err.endswith("already exists and is not an empty directory."):
-                # don't raise error if the plugin folder exists
-                msg = f"Download Error: {username}/{repo}@{branch}"
-                logger.error(msg)
-                raise DownloadError(err) from exc
+        plugin.abs_path.mkdir(parents=True, exist_ok=True)
 
-    async def load_plugin(self, username, repo, plugin_name, branch):
-        ext = f"plugins.{username}-{repo}-{branch}.{plugin_name}.{plugin_name}"
-        dirname = f"plugins/{username}-{repo}-{branch}/{plugin_name}"
+        if plugin.cache_path.exists() and not force:
+            plugin_io = plugin.cache_path.open("rb")
+            logger.debug("Loading cached %s.", plugin.cache_path)
 
-        if "requirements.txt" in os.listdir(dirname):
+        else:
+            async with self.bot.session.get(plugin.url) as resp:
+                logger.debug("Downloading %s.", plugin.url)
+                raw = await resp.read()
+                plugin_io = io.BytesIO(raw)
+                if not plugin.cache_path.parent.exists():
+                    plugin.cache_path.parent.mkdir(parents=True)
+
+                with plugin.cache_path.open("wb") as f:
+                    f.write(raw)
+
+        with zipfile.ZipFile(plugin_io) as zipf:
+            for info in zipf.infolist():
+                path = PurePath(info.filename)
+                if len(path.parts) >= 3 and path.parts[1] == plugin.name:
+                    plugin_path = plugin.abs_path / Path(*path.parts[2:])
+                    if info.is_dir():
+                        plugin_path.mkdir(parents=True, exist_ok=True)
+                    else:
+                        plugin_path.parent.mkdir(parents=True, exist_ok=True)
+                        with zipf.open(info) as src, plugin_path.open("wb") as dst:
+                            shutil.copyfileobj(src, dst)
+
+        plugin_io.close()
+
+    async def load_plugin(self, plugin):
+        if not (plugin.abs_path / f"{plugin.name}.py").exists():
+            raise InvalidPluginError(f"{plugin.name}.py not found.")
+
+        req_txt = plugin.abs_path / "requirements.txt"
+
+        if req_txt.exists():
             # Install PIP requirements
 
             venv = hasattr(sys, "real_prefix")  # in a virtual env
-            user_install = "--user" if not venv else ""
+            user_install = " --user" if not venv else ""
+            proc = await asyncio.create_subprocess_shell(
+                f"{sys.executable} -m pip install --upgrade{user_install} -r {req_txt} -q -q",
+                stderr=PIPE,
+                stdout=PIPE,
+            )
 
-            try:
-                if os.name == "nt":  # Windows
-                    await self.bot.loop.run_in_executor(
-                        None,
-                        self._asubprocess_run,
-                        f"pip install -r {dirname}/requirements.txt {user_install} -q -q",
-                    )
-                else:
-                    await self.bot.loop.run_in_executor(
-                        None,
-                        self._asubprocess_run,
-                        f"python3 -m pip install -U -r {dirname}/"
-                        f"requirements.txt {user_install} -q -q",
-                    )
-                    # -q -q (quiet)
-                    # so there's no terminal output unless there's an error
-            except subprocess.CalledProcessError as exc:
-                err = exc.stderr.decode("utf8").strip()
-                logger.error("Error.", exc_info=True)
-                if err:
-                    msg = f"Requirements Download Error: {username}/{repo}@{branch}[{plugin_name}]"
-                    logger.error(msg)
-                    raise DownloadError(
-                        f"Unable to download requirements: ```\n{err}\n```"
-                    ) from exc
-            else:
-                if not os.path.exists(site.USER_SITE):
-                    os.makedirs(site.USER_SITE)
+            logger.debug("Downloading requirements for %s.", plugin.ext_string)
 
-                sys.path.insert(0, site.USER_SITE)
+            stdout, stderr = await proc.communicate()
 
-        await asyncio.sleep(0.5)
+            if stdout:
+                logger.debug("[stdout]\n%s.", stdout.decode())
+
+            if stderr:
+                logger.debug("[stderr]\n%s.", stderr.decode())
+                logger.error(
+                    "Failed to download requirements for %s.",
+                    plugin.ext_string,
+                    exc_info=True,
+                )
+                raise InvalidPluginError(
+                    f"Unable to download requirements: ```\n{stderr.decode()}\n```"
+                )
+
+            if os.path.exists(USER_SITE):
+                sys.path.insert(0, USER_SITE)
+
         try:
-            self.bot.load_extension(ext)
+            self.bot.load_extension(plugin.ext_string)
+            logger.info("Loaded plugin: %s", plugin.ext_string.split(".")[-1])
+            self.loaded_plugins.add(plugin)
+
         except commands.ExtensionError as exc:
-            msg = f"Plugin Load Failure: {username}/{repo}@{branch}[{plugin_name}]"
-            logger.error(msg, exc_info=True)
-            raise DownloadError("Invalid plugin") from exc
-        else:
-            msg = f"Loaded Plugin: {username}/{repo}@{branch}[{plugin_name}]"
-            logger.info(msg)
+            logger.error("Plugin load failure: %s", plugin.ext_string, exc_info=True)
+            raise InvalidPluginError("Cannot load extension, plugin invalid.") from exc
 
-    @commands.group(aliases=["plugins"], invoke_without_command=True)
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin(self, ctx):
-        """Plugin handler. Controls the plugins in the bot."""
+    async def parse_user_input(self, ctx, plugin_name, check_version=False):
 
-        await ctx.send_help(ctx.command)
-
-    @plugin.command(name="add", aliases=["install"])
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_add(self, ctx, *, plugin_name: str):
-        """Add a plugin."""
+        if not self._ready_event.is_set():
+            embed = discord.Embed(
+                description="Plugins are still loading, please try again later.",
+                color=self.bot.main_color,
+            )
+            await ctx.send(embed=embed)
+            return
 
         if plugin_name in self.registry:
             details = self.registry[plugin_name]
-            plugin_name = (
-                details["repository"] + "/" + plugin_name + "@" + details["branch"]
-            )
+            user, repo = details["repository"].split("/", maxsplit=1)
+            branch = details.get("branch")
 
-            required_version = details["bot_version"]
+            if check_version:
+                required_version = details.get("bot_version", False)
 
-            if parse_version(self.bot.version) < parse_version(required_version):
+                if required_version and self.bot.version < parse_version(
+                    required_version
+                ):
+                    embed = discord.Embed(
+                        description="Your bot's version is too low. "
+                        f"This plugin requires version `{required_version}`.",
+                        color=self.bot.error_color,
+                    )
+                    await ctx.send(embed=embed)
+                    return
+
+            plugin = Plugin(user, repo, plugin_name, branch)
+
+        else:
+            try:
+                plugin = Plugin.from_string(plugin_name)
+            except InvalidPluginError:
                 embed = discord.Embed(
-                    description=f"Your bot's version is too low. This plugin requires version `{required_version}`.",
-                    color=self.bot.main_color,
+                    description="Invalid plugin name, double check the plugin name "
+                    "or use one of the following formats: "
+                    "username/repo/plugin, username/repo/plugin@branch.",
+                    color=self.bot.error_color,
                 )
-                return await ctx.send(embed=embed)
+                await ctx.send(embed=embed)
+                return
+        return plugin
 
-        if plugin_name in self.bot.config["plugins"]:
+    @commands.group(aliases=["plugin"], invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def plugins(self, ctx):
+        """
+        Manage plugins for Modmail.
+        """
+
+        await ctx.send_help(ctx.command)
+
+    @plugins.command(name="add", aliases=["install", "load"])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    @trigger_typing
+    async def plugins_add(self, ctx, *, plugin_name: str):
+        """
+        Install a new plugin for the bot.
+
+        `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference to a GitHub hosted plugin (in the format `user/repo/name[@branch]`).
+        """
+
+        plugin = await self.parse_user_input(ctx, plugin_name, check_version=True)
+        if plugin is None:
+            return
+
+        if str(plugin) in self.bot.config["plugins"]:
             embed = discord.Embed(
                 description="This plugin is already installed.",
-                color=self.bot.main_color,
+                color=self.bot.error_color,
             )
             return await ctx.send(embed=embed)
 
-        if plugin_name in self.bot.cogs.keys():
+        if plugin.name in self.bot.cogs:
             # another class with the same name
             embed = discord.Embed(
-                description="There's another cog installed with the same name.",
-                color=self.bot.main_color,
+                description="Cannot install this plugin (dupe cog name).",
+                color=self.bot.error_color,
             )
             return await ctx.send(embed=embed)
 
         embed = discord.Embed(
-            description="Downloading this plugin...", color=self.bot.main_color
+            description=f"Starting to download plugin from {plugin.link}...",
+            color=self.bot.main_color,
         )
-        await ctx.send(embed=embed)
+        msg = await ctx.send(embed=embed)
 
-        async with ctx.typing():
-            if len(plugin_name.split("/")) >= 3:
-                username, repo, name, branch = self.parse_plugin(plugin_name)
+        try:
+            await self.download_plugin(plugin, force=True)
+        except Exception:
+            logger.warning(f"Unable to download plugin %s.", plugin, exc_info=True)
 
-                try:
-                    await self.download_plugin_repo(username, repo, branch)
-                except Exception as exc:
-                    if not isinstance(exc, DownloadError):
-                        logger.error(
-                            "Unknown error when adding a plugin:", exc_info=True
-                        )
-                    embed = discord.Embed(
-                        description=f"Unable to fetch this plugin from Github: `{exc}`.",
-                        color=self.bot.main_color,
-                    )
-                    return await ctx.send(embed=embed)
+            embed = discord.Embed(
+                description=f"Failed to download plugin, check logs for error.",
+                color=self.bot.error_color,
+            )
 
-                importlib.invalidate_caches()
+            return await msg.edit(embed=embed)
 
-                try:
-                    await self.load_plugin(username, repo, name, branch)
-                except Exception as exc:
-                    if not isinstance(exc, DownloadError):
-                        logger.error(
-                            "Unknown error when adding a plugin:", exc_info=True
-                        )
-                    embed = discord.Embed(
-                        description=f"Unable to load this plugin: `{exc}`.",
-                        color=self.bot.main_color,
-                    )
-                    return await ctx.send(embed=embed)
+        self.bot.config["plugins"].append(str(plugin))
+        await self.bot.config.update()
 
-                # if it makes it here, it has passed all checks and should
-                # be entered into the config
+        if self.bot.config.get("enable_plugins"):
 
-                self.bot.config["plugins"].append(plugin_name)
-                await self.bot.config.update()
+            invalidate_caches()
+
+            try:
+                await self.load_plugin(plugin)
+            except Exception:
+                logger.warning(f"Unable to load plugin %s.", plugin, exc_info=True)
 
                 embed = discord.Embed(
-                    description="The plugin is installed.\n"
+                    description=f"Failed to download plugin, check logs for error.",
+                    color=self.bot.error_color,
+                )
+
+            else:
+                embed = discord.Embed(
+                    description="Successfully installed plugin.\n"
                     "*Friendly reminder, plugins have absolute control over your bot. "
                     "Please only install plugins from developers you trust.*",
                     color=self.bot.main_color,
                 )
-                await ctx.send(embed=embed)
-            else:
-                embed = discord.Embed(
-                    description="Invalid plugin name format: use plugin-name or "
-                    "username/repo/plugin or username/repo/plugin@branch.",
-                    color=self.bot.main_color,
-                )
-                await ctx.send(embed=embed)
-
-    @plugin.command(name="remove", aliases=["del", "delete"])
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_remove(self, ctx, *, plugin_name: str):
-        """Remove a plugin."""
-
-        if plugin_name in self.registry:
-            details = self.registry[plugin_name]
-            plugin_name = (
-                details["repository"] + "/" + plugin_name + "@" + details["branch"]
-            )
-
-        if plugin_name in self.bot.config["plugins"]:
-            username, repo, name, branch = self.parse_plugin(plugin_name)
-            try:
-                self.bot.unload_extension(
-                    f"plugins.{username}-{repo}-{branch}.{name}.{name}"
-                )
-            except commands.ExtensionNotLoaded:
-                logger.error("Plugin was never loaded.")
-
-            self.bot.config["plugins"].remove(plugin_name)
-
-            try:
-                if not any(
-                    i.startswith(f"{username}/{repo}")
-                    for i in self.bot.config["plugins"]
-                ):
-                    # if there are no more of such repos, delete the folder
-                    def onerror(func, path, _):
-                        if not os.access(path, os.W_OK):
-                            # Is the error an access error?
-                            os.chmod(path, stat.S_IWUSR)
-                            func(path)
-
-                    shutil.rmtree(
-                        f"plugins/{username}-{repo}-{branch}", onerror=onerror
-                    )
-            except Exception:
-                logger.error("Failed to remove plugin %s.", plugin_name, exc_info=True)
-                self.bot.config["plugins"].append(plugin_name)
-                return
-
-            await self.bot.config.update()
-
-            embed = discord.Embed(
-                description="The plugin is uninstalled and all its data is erased.",
-                color=self.bot.main_color,
-            )
-            await ctx.send(embed=embed)
         else:
             embed = discord.Embed(
-                description="That plugin is not installed.", color=self.bot.main_color
+                description="Successfully installed plugin.\n"
+                "*Friendly reminder, plugins have absolute control over your bot. "
+                "Please only install plugins from developers you trust.*\n\n"
+                "This plugin is currently not enabled due to `ENABLE_PLUGINS=false`, "
+                "to re-enable plugins, remove or change `ENABLE_PLUGINS=true` and restart your bot.",
+                color=self.bot.main_color,
             )
-            await ctx.send(embed=embed)
+        return await msg.edit(embed=embed)
 
-    @plugin.command(name="update")
+    @plugins.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_update(self, ctx, *, plugin_name: str):
-        """Update a plugin."""
+    async def plugins_remove(self, ctx, *, plugin_name: str):
+        """
+        Remove an installed plugin of the bot.
 
-        if plugin_name in self.registry:
-            details = self.registry[plugin_name]
-            plugin_name = (
-                details["repository"] + "/" + plugin_name + "@" + details["branch"]
-            )
+        `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
+        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`).
+        """
+        plugin = await self.parse_user_input(ctx, plugin_name)
+        if plugin is None:
+            return
 
-        if plugin_name not in self.bot.config["plugins"]:
+        if str(plugin) not in self.bot.config["plugins"]:
             embed = discord.Embed(
-                description="That plugin is not installed.", color=self.bot.main_color
+                description="Plugin is not installed.", color=self.bot.error_color
+            )
+            return await ctx.send(embed=embed)
+
+        if self.bot.config.get("enable_plugins"):
+            try:
+                self.bot.unload_extension(plugin.ext_string)
+                self.loaded_plugins.remove(plugin)
+            except (commands.ExtensionNotLoaded, KeyError):
+                logger.warning("Plugin was never loaded.")
+
+        self.bot.config["plugins"].remove(str(plugin))
+        await self.bot.config.update()
+        shutil.rmtree(
+            plugin.abs_path,
+            onerror=lambda *args: logger.warning(
+                "Failed to remove plugin files %s: %s", plugin, str(args[2])
+            ),
+        )
+        try:
+            plugin.abs_path.parent.rmdir()
+            plugin.abs_path.parent.parent.rmdir()
+        except OSError:
+            pass  # dir not empty
+
+        embed = discord.Embed(
+            description="The plugin is successfully uninstalled.",
+            color=self.bot.main_color,
+        )
+        await ctx.send(embed=embed)
+
+    async def update_plugin(self, ctx, plugin_name):
+        logger.debug("Updating %s.", plugin_name)
+        plugin = await self.parse_user_input(ctx, plugin_name, check_version=True)
+        if plugin is None:
+            return
+
+        if str(plugin) not in self.bot.config["plugins"]:
+            embed = discord.Embed(
+                description="Plugin is not installed.", color=self.bot.error_color
             )
             return await ctx.send(embed=embed)
 
         async with ctx.typing():
-            username, repo, name, branch = self.parse_plugin(plugin_name)
-
-            try:
-                cmd = (
-                    f"cd plugins/{username}-{repo}-{branch} && "
-                    f"git reset --hard origin/{branch} && git fetch --all && git pull"
-                )
-                cmd = await self.bot.loop.run_in_executor(
-                    None, self._asubprocess_run, cmd
-                )
-            except subprocess.CalledProcessError as exc:
-                err = exc.stderr.decode("utf8").strip()
-
-                embed = discord.Embed(
-                    description=f"An error occurred while updating: {err}.",
-                    color=self.bot.main_color,
-                )
-                logger.error("An error occurred while updating plugin:", exc_info=True)
-                await ctx.send(embed=embed)
-
-            else:
-                output = cmd.stdout.decode("utf8").strip()
-
-                embed = discord.Embed(
-                    description=f"```\n{output}\n```", color=self.bot.main_color
-                )
-                await ctx.send(embed=embed)
-
-                if output != "Already up to date.":
-                    # repo was updated locally, now perform the cog reload
-                    ext = f"plugins.{username}-{repo}-{branch}.{name}.{name}"
-                    self.bot.unload_extension(ext)
-
-                    try:
-                        await self.load_plugin(username, repo, name, branch)
-                    except DownloadError as exc:
-                        embed = discord.Embed(
-                            description=f"Unable to start the plugin: `{exc}`.",
-                            color=self.bot.main_color,
-                        )
-                        logger.error(
-                            "An error occurred while updating plugin:", exc_info=True
-                        )
-                        await ctx.send(embed=embed)
-
-    @plugin.command(name="enabled", aliases=["installed"])
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_enabled(self, ctx):
-        """Shows a list of currently enabled plugins."""
-
-        if self.bot.config["plugins"]:
-            msg = "```\n" + "\n".join(sorted(self.bot.config["plugins"])) + "\n```"
-            embed = discord.Embed(description=msg, color=self.bot.main_color)
-            await ctx.send(embed=embed)
-        else:
+            await self.download_plugin(plugin, force=True)
+            if self.bot.config.get("enable_plugins"):
+                try:
+                    self.bot.unload_extension(plugin.ext_string)
+                except commands.ExtensionError:
+                    logger.warning("Plugin unload fail.", exc_info=True)
+                await self.load_plugin(plugin)
+            logger.debug("Updated %s.", plugin_name)
             embed = discord.Embed(
-                description="There are no plugins installed.", color=self.bot.main_color
+                description=f"Successfully updated {plugin.name}.",
+                color=self.bot.main_color,
             )
-            await ctx.send(embed=embed)
+            return await ctx.send(embed=embed)
 
-    @plugin.group(
+    @plugins.command(name="update")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def plugins_update(self, ctx, *, plugin_name: str = None):
+        """
+        Update a plugin for the bot.
+
+        `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
+        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`).
+
+        To update all plugins, do `{prefix}plugins update`.
+        """
+
+        if plugin_name is None:
+            for plugin_name in self.bot.config["plugins"]:
+                await self.update_plugin(ctx, plugin_name)
+        else:
+            await self.update_plugin(ctx, plugin_name)
+
+    @plugins.command(name="loaded", aliases=["enabled", "installed"])
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def plugins_loaded(self, ctx):
+        """
+        Show a list of currently loaded plugins.
+        """
+
+        if not self.bot.config.get("enable_plugins"):
+            embed = discord.Embed(
+                description="No plugins are loaded due to `ENABLE_PLUGINS=false`, "
+                "to re-enable plugins, remove or set `ENABLE_PLUGINS=true` and restart your bot.",
+                color=self.bot.error_color,
+            )
+            return await ctx.send(embed=embed)
+
+        if not self._ready_event.is_set():
+            embed = discord.Embed(
+                description="Plugins are still loading, please try again later.",
+                color=self.bot.main_color,
+            )
+            return await ctx.send(embed=embed)
+
+        if not self.loaded_plugins:
+            embed = discord.Embed(
+                description="There are no plugins currently loaded.",
+                color=self.bot.error_color,
+            )
+            return await ctx.send(embed=embed)
+
+        loaded_plugins = map(str, sorted(self.loaded_plugins))
+        pages = ["```\n"]
+        for plugin in loaded_plugins:
+            msg = str(plugin) + "\n"
+            if len(msg) + len(pages[-1]) + 3 <= 2048:
+                pages[-1] += msg
+            else:
+                pages[-1] += "```"
+                pages.append(f"```\n{msg}")
+
+        if pages[-1][-3:] != "```":
+            pages[-1] += "```"
+
+        embeds = []
+        for page in pages:
+            embed = discord.Embed(
+                title="Loaded plugins:", description=page, color=self.bot.main_color
+            )
+            embeds.append(embed)
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        await paginator.run()
+
+    @plugins.group(
         invoke_without_command=True, name="registry", aliases=["list", "info"]
     )
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_registry(self, ctx, *, plugin_name: typing.Union[int, str] = None):
+    async def plugins_registry(
+        self, ctx, *, plugin_name: typing.Union[int, str] = None
+    ):
         """
         Shows a list of all approved plugins.
 
@@ -426,7 +545,7 @@ class Plugins(commands.Cog):
 
         if not index and plugin_name is not None:
             embed = discord.Embed(
-                color=discord.Color.red(),
+                color=self.bot.error_color,
                 description=f'Could not find a plugin with name "{plugin_name}" within the registry.',
             )
 
@@ -440,28 +559,48 @@ class Plugins(commands.Cog):
 
             return await ctx.send(embed=embed)
 
-        for name, details in registry:
-            repo = f"https://github.com/{details['repository']}"
-            url = f"{repo}/tree/master/{name}"
+        for plugin_name, details in registry:
+            details = self.registry[plugin_name]
+            user, repo = details["repository"].split("/", maxsplit=1)
+            branch = details.get("branch")
+
+            plugin = Plugin(user, repo, plugin_name, branch)
 
             embed = discord.Embed(
                 color=self.bot.main_color,
                 description=details["description"],
-                url=repo,
+                url=plugin.link,
                 title=details["repository"],
             )
 
             embed.add_field(
-                name="Installation", value=f"```{self.bot.prefix}plugins add {name}```"
+                name="Installation",
+                value=f"```{self.bot.prefix}plugins add {plugin_name}```",
             )
 
             embed.set_author(
-                name=details["title"], icon_url=details.get("icon_url"), url=url
+                name=details["title"], icon_url=details.get("icon_url"), url=plugin.link
             )
+
             if details.get("thumbnail_url"):
                 embed.set_thumbnail(url=details.get("thumbnail_url"))
+
             if details.get("image_url"):
                 embed.set_image(url=details.get("image_url"))
+
+            if plugin in self.loaded_plugins:
+                embed.set_footer(text="This plugin is currently loaded.")
+            else:
+                required_version = details.get("bot_version", False)
+                if required_version and self.bot.version < parse_version(
+                    required_version
+                ):
+                    embed.set_footer(
+                        text=f"Your bot is unable to install this plugin, "
+                        f"minimum required version is v{required_version}."
+                    )
+                else:
+                    embed.set_footer(text="Your bot is able to install this plugin.")
 
             embeds.append(embed)
 
@@ -469,10 +608,12 @@ class Plugins(commands.Cog):
         paginator.current = index
         await paginator.run()
 
-    @plugin_registry.command(name="compact")
+    @plugins_registry.command(name="compact", aliases=["slim"])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugin_registry_compact(self, ctx):
-        """Shows a compact view of all plugins within the registry."""
+    async def plugins_registry_compact(self, ctx):
+        """
+        Shows a compact view of all plugins within the registry.
+        """
 
         await self.populate_registry()
 
@@ -480,17 +621,37 @@ class Plugins(commands.Cog):
 
         pages = [""]
 
-        for name, details in registry:
-            repo = f"https://github.com/{details['repository']}"
-            url = f"{repo}/tree/{details['branch']}/{name}"
-            desc = details["description"].replace("\n", "")
-            fmt = f"[`{name}`]({url}) - {desc}"
-            length = len(fmt) - len(url) - 4
-            fmt = fmt[: 75 + len(url)].strip() + "..." if length > 75 else fmt
-            if len(fmt) + len(pages[-1]) >= 2048:
-                pages.append(fmt + "\n")
+        for plugin_name, details in registry:
+            details = self.registry[plugin_name]
+            user, repo = details["repository"].split("/", maxsplit=1)
+            branch = details.get("branch")
+
+            plugin = Plugin(user, repo, plugin_name, branch)
+
+            desc = discord.utils.escape_markdown(
+                details["description"].replace("\n", "")
+            )
+
+            name = f"[`{plugin.name}`]({plugin.link})"
+            fmt = f"{name} - {desc}"
+
+            if plugin_name in self.loaded_plugins:
+                limit = 75 - len(plugin_name) - 4 - 8 + len(name)
+                if limit < 0:
+                    fmt = plugin.name
+                    limit = 75
+                fmt = truncate(fmt, limit) + "[loaded]\n"
             else:
-                pages[-1] += fmt + "\n"
+                limit = 75 - len(plugin_name) - 4 + len(name)
+                if limit < 0:
+                    fmt = plugin.name
+                    limit = 75
+                fmt = truncate(fmt, limit) + "\n"
+
+            if len(fmt) + len(pages[-1]) <= 2048:
+                pages[-1] += fmt
+            else:
+                pages.append(fmt)
 
         embeds = []
 

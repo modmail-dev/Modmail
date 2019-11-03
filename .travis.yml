@@ -3,10 +3,27 @@ language: python
 matrix:
   include:
   - python: '3.7'
-    dist: xenial
+    name: "Python 3.7.1 on Xenial Linux"
+  - python: '3.6'
+    name: "Python 3.6.7 on Xenial Linux"
+  - name: "Python 3.7.4 on macOS"
+    os: osx
+    osx_image: xcode11.2
+    language: shell
+  - name: "Python 3.7.5 on Windows"
+    os: windows
+    language: shell
+    before_install:
+      - choco install python --version=3.7.5
+      - python -m pip install --upgrade pip
+    env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
 
 install:
+  - pip3 install --upgrade pip
+  - pip3 install pipenv
   - pipenv install -d
 
 script:
+  - pipenv run bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
   - pipenv run python .lint.py
+  - pipenv run flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503 --exit-zero

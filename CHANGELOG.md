@@ -6,6 +6,74 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
+
+# v3.3.0-dev6
+
+
+### Important
+
+- Recommend all users to unblock and re-block all blocked users upon updating to this release.
+
+### Added
+
+- Three new config vars:
+  - `enable_plugins` (yes/no default yes)
+    - When set to no, plugins will not be loaded into the bot.
+  - `error_color` (color format, defaults discord red)
+    - The color of error messages.
+  - `anon_reply_without_command` (yes/no default no) (Thanks to papiersnipper PR#288)
+    - When set, all non-command messages sent to thread channels are forwarded to the recipient anonymously without the need of `?anonreply`.
+    - This config takes precedence over `reply_without_command`.
+- `?logs responded [user]` command, it will show all logs that the user has sent an reply. (Thanks to papiersnipper PR#288)
+  - `user` when not provided, defaults to the user who ran the command.
+- Open threads in limbo now auto closes if the channel cannot be found. This check is done every time the bot restarts.
+- Ability to disable new threads from getting created.
+  - `?disable`
+- Ability to fully disable Modmail DM.
+  - `?disable all`
+- To re-enable DM: `?enable`, and to see the current status: `?isenable`.
+- This disabled Modmail interface is customizable with the following config vars:
+  - `disabled_new_thread_title`
+  - `disabled_new_thread_response`
+  - `disabled_new_thread_footer`
+  - `disabled_current_thread_title`
+  - `disabled_current_thread_response`
+  - `disabled_current_thread_footer`
+- Ability to delete notes when providing their ID. (Thanks to papiersnipper PR#402)
+- Ability to delete log entries. (Thanks to papiersnipper PR#402)
+
+### Changed
+
+- `?contact` no longer send the "thread created" message to where the command is ran, instead, it's now sent to the newly created thread channel. (Thanks to DAzVise)
+- Automatically delete notes command `?note` when there's no attachments attached.
+- Embed author links used to be inaccessible in many cases, now:
+  - `?anonreply`, `?reply`, and `?note` in thread channel will link to the sender's profile.
+  - `?reply` and recipient's DM will also link the sender's profile.
+  - `?anonreply` in DM channel will link to the first channel of the main guild.
+- Plugins update (mostly internal).
+  - `git` is no longer used to install plugins, it now downloads through zip files.
+  - `?plugins enabled` renamed to `?plugins loaded` while `enabled` is still an alias to that command.
+  - Reorganised plugins folder structure.
+  - Logging / plugin-related messages changes.
+  - Updating one plugin will not update all other plugins (plugins are no longer separated by repos, but the plugin name itself).
+- Help command is in alphabetical order grouped by permissions.
+- Notes are no longer always blurple, its set to `MAIN_COLOR` now.
+- Added `?plugins update` for updating all installed plugins.
+- Reintroduce flake8 and use bandit for security issues detection.
+- Add travis checks for 3.6 in Linux and 3.7 for MacOS and Windows.
+- Eval commands are logged in debug logs.
+- Presence updates 30 minutes instead of 45 now.
+- Fixed an assortment of problems to do with block.
+- Existing aliases can be used when creating new aliases. (Thanks to papiersnipper PR#402)
+
+### Internal
+
+- Reworked `config.get` and `config.set`, it feeds through the converters before setting/getting.
+  - To get/set the raw value, access through `config[]`.
+- Prerelease naming scheme is now `x.x.x-devN`.
+- `trigger_typing` has been moved to `core.utils.trigger_typing`, original location is deprecated.
+- Simpler status and activity logic.
+
 # v3.2.2
 
 Security update!

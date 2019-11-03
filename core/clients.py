@@ -1,4 +1,3 @@
-import logging
 import secrets
 from datetime import datetime
 from json import JSONDecodeError
@@ -8,7 +7,9 @@ from discord import Member, DMChannel, TextChannel, Message
 
 from aiohttp import ClientResponseError, ClientResponse
 
-logger = logging.getLogger("Modmail")
+from core.models import getLogger
+
+logger = getLogger(__name__)
 
 
 class RequestClient:
@@ -92,6 +93,23 @@ class ApiClient(RequestClient):
 
         return await self.logs.find(query, projection).to_list(None)
 
+    async def get_responded_logs(self, user_id: Union[str, int]) -> list:
+        query = {
+            "open": False,
+            "messages": {
+                "$elemMatch": {
+                    "author.id": str(user_id),
+                    "author.mod": True,
+                    "type": {"$in": ["anonymous", "thread_message"]},
+                }
+            },
+        }
+        return await self.logs.find(query).to_list(None)
+
+    async def get_open_logs(self) -> list:
+        query = {"open": True}
+        return await self.logs.find(query).to_list(None)
+
     async def get_log(self, channel_id: Union[str, int]) -> dict:
         logger.debug("Retrieving channel %s logs.", channel_id)
         return await self.logs.find_one({"channel_id": str(channel_id)})
@@ -142,6 +160,10 @@ class ApiClient(RequestClient):
         if prefix == "NONE":
             prefix = ""
         return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{key}"
+
+    async def delete_log_entry(self, key: str) -> bool:
+        result = await self.logs.delete_one({"key": key})
+        return result.deleted_count == 1
 
     async def get_config(self) -> dict:
         conf = await self.db.config.find_one({"bot_id": self.bot.user.id})

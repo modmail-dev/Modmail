@@ -1,10 +1,8 @@
-import logging
-
 from discord.ext import commands
 
-from core.models import PermissionLevel
+from core.models import PermissionLevel, getLogger
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
 def has_permissions_predicate(

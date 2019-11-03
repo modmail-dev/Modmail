@@ -39,7 +39,7 @@
       "`{prefix}mention Yo~ Here's a new thread for ya!`"
     ],
     "notes": [
-      "Unfortunately, its not currently possible to disable mention."
+      "Unfortunately, it's not currently possible to disable mention. You do not have to include a mention."
     ]
   },
   "main_color": {
@@ -53,9 +53,24 @@
     ],
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
-      "See also: `mod_color`, `recipient_color`."
+      "See also: `error_color`, `mod_color`, `recipient_color`."
     ],
     "thumbnail": "https://placehold.it/100/7289da?text=+"
+  },
+  "error_color": {
+    "default": "Discord Red [#E74C3C](https://placehold.it/100/e74c3c?text=+)",
+    "description": "This is the color for Modmail when anything goes wrong, unsuccessful commands, or a stern warning.",
+    "examples": [
+      "`{prefix}config set error_color ocean blue`",
+      "`{prefix}config set error_color ff1242`",
+      "`{prefix}config set error_color #ff1242`",
+      "`{prefix}config set error_color fa1`"
+    ],
+    "notes": [
+      "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
+      "See also: `main_color`, `mod_color`, `recipient_color`."
+    ],
+    "thumbnail": "https://placehold.it/100/e74c3c?text=+"
   },
   "user_typing": {
     "default": "Disabled",
@@ -111,7 +126,18 @@
       "`{prefix}config set reply_without_command no`"
     ],
     "notes": [
-      "Unfortunately, anonymous `reply_without_command` is currently not possible."
+      "See also: `anon_reply_without_command`."
+    ]
+  },
+  "anon_reply_without_command": {
+    "default": "Disabled",
+    "description": "Setting this configuration will make all non-command messages sent in the thread channel to be anonymously forwarded to the recipient without the need of `{prefix}reply`.",
+    "examples": [
+      "`{prefix}config set anon_reply_without_command yes`",
+      "`{prefix}config set anon_reply_without_command no`"
+    ],
+    "notes": [
+      "See also: `reply_without_command`."
     ]
   },
   "log_channel_id": {
@@ -163,8 +189,8 @@
     "default": "Disabled",
     "description": "Setting this configuration will allow recipients to use the `close_emoji` to close the thread themselves.",
     "examples": [
-      "`{prefix}config set reply_without_command yes`",
-      "`{prefix}config set reply_without_command no`"
+      "`{prefix}config set recipient_thread_close yes`",
+      "`{prefix}config set recipient_thread_close no`"
     ],
     "notes": [
       "The close emoji is dictated by the configuration `close_emoji`.",
@@ -322,6 +348,72 @@
       "See also: `thread_move_notify`."
     ]
   },
+  "disabled_new_thread_title": {
+    "default": "Not Delivered.",
+    "description": "The title of the message embed when Modmail new thread creation is disabled and user tries to create a new thread.",
+    "examples": [
+      "`{prefix}config set disabled_new_thread_title Closed`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable` or `{prefix}disable all` is set.",
+      "See also: `disabled_new_thread_response`, `disabled_new_thread_footer`, `disabled_current_thread_title`."
+    ]
+  },
+  "disabled_new_thread_response": {
+    "default": "We are not accepting new threads.",
+    "description": "The body of the message embed when Modmail new thread creation is disabled and user tries to create a new thread.",
+    "examples": [
+      "`{prefix}config set disabled_new_thread_response Our working hours is between 8am - 6pm EST.`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable` or `{prefix}disable all` is set.",
+      "See also: `disabled_new_thread_title`, `disabled_new_thread_footer`, `disabled_current_thread_response`."
+    ]
+  },
+  "disabled_new_thread_footer": {
+    "default": "Please try again later...",
+    "description": "The footer of the message embed when Modmail new thread creation is disabled and user tries to create a new thread.",
+    "examples": [
+      "`{prefix}config set disabled_new_thread_footer Contact us later`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable` or `{prefix}disable all` is set.",
+      "See also: `disabled_new_thread_title`, `disabled_new_thread_response`, `disabled_current_thread_footer`."
+    ]
+  },
+  "disabled_current_thread_title": {
+    "default": "Not Delivered.",
+    "description": "The title of the message embed when Modmail DM is disabled and user DMs Modmail from existing thread.",
+    "examples": [
+      "`{prefix}config set disabled_current_thread_title Unavailable`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable all` is set.",
+      "See also: `disabled_current_thread_response`, `disabled_current_thread_footer`, `disabled_new_thread_title`."
+    ]
+  },
+  "disabled_current_thread_response": {
+    "default": "We are not accepting any messages.",
+    "description": "The body of the message embed when Modmail DM is disabled and user DMs Modmail from existing thread.",
+    "examples": [
+      "`{prefix}config set disabled_current_thread_response On break right now.`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable all` is set.",
+      "See also: `disabled_current_thread_title`, `disabled_current_thread_footer`, `disabled_new_thread_response`."
+    ]
+  },
+  "disabled_current_thread_footer": {
+    "default": "Please try again later...",
+    "description": "The footer of the message embed when Modmail DM is disabled and user DMs Modmail from existing thread.",
+    "examples": [
+      "`{prefix}config set disabled_current_thread_footer Message back!`"
+    ],
+    "notes": [
+      "Only has an effect when `{prefix}disable all` is set.",
+      "See also: `disabled_current_thread_title`, `disabled_current_thread_response`, `disabled_new_thread_footer`."
+    ]
+  },
   "recipient_color": {
     "default": "Discord Gold [#F1C40F](https://placehold.it/100/f1c40f?text=+)",
     "description": "This is the color of the messages sent by the recipient, this applies to messages received in the thread channel.",
@@ -333,7 +425,7 @@
     ],
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
-      "See also: `main_color`, `mod_color`."
+      "See also: `mod_color`, `main_color`, `error_color`."
     ],
     "thumbnail": "https://placehold.it/100/f1c40f?text=+"
   },
@@ -348,7 +440,7 @@
     ],
     "notes": [
       "Available color names can be found on [Taki's Blog](https://taaku18.github.io/modmail/colors/).",
-      "See also: `main_color`, `recipient_color`."
+      "See also: `recipient_color`, `main_color`, `error_color`."
     ],
     "thumbnail": "https://placehold.it/100/2ecc71?text=+"
   },
@@ -462,6 +554,15 @@
   "log_level": {
     "default": "INFO",
     "description": "The logging level for logging to stdout.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "enable_plugins": {
+    "default": "Yes",
+    "description": "Whether plugins should be enabled and loaded into Modmail.",
     "examples": [
     ],
     "notes": [
