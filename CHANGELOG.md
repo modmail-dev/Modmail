@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.0-dev6
+# v3.3.0
 
 
 ### Important
@@ -73,6 +73,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Prerelease naming scheme is now `x.x.x-devN`.
 - `trigger_typing` has been moved to `core.utils.trigger_typing`, original location is deprecated.
 - Simpler status and activity logic.
+- New logging logic.
 
 # v3.2.2
 

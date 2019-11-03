@@ -1,4 +1,4 @@
-__version__ = "3.3.0-dev6"
+__version__ = "3.3.0"
 
 import asyncio
 import logging
