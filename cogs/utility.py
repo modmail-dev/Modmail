@@ -1,6 +1,5 @@
 import asyncio
 import inspect
-import logging
 import os
 import traceback
 import random
@@ -24,11 +23,11 @@ from pkg_resources import parse_version
 
 from core import checks
 from core.changelog import Changelog
-from core.models import InvalidConfigError, PermissionLevel
+from core.models import InvalidConfigError, PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 from core import utils
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
 class ModmailHelpCommand(commands.HelpCommand):
@@ -619,7 +618,7 @@ class Utility(commands.Cog):
     @loop_presence.before_loop
     async def before_loop_presence(self):
         await self.bot.wait_for_connected()
-        logger.line("debug")
+        logger.line()
         activity, status = await self.set_presence()
 
         if activity is not None:

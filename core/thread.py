@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import re
 import string
 import typing
@@ -11,10 +10,11 @@ import isodate
 import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
+from core.models import getLogger
 from core.time import human_timedelta
 from core.utils import is_image_url, days, match_user_id, truncate
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
 class Thread:

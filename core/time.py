@@ -3,7 +3,6 @@ UserFriendlyTime by Rapptz
 Source:
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 """
-import logging
 import re
 from datetime import datetime
 
@@ -12,7 +11,9 @@ from discord.ext.commands import BadArgument, Converter
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 
-logger = logging.getLogger("Modmail")
+from core.models import getLogger
+
+logger = getLogger(__name__)
 
 
 class ShortTime:

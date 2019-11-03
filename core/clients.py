@@ -1,4 +1,3 @@
-import logging
 import secrets
 from datetime import datetime
 from json import JSONDecodeError
@@ -8,7 +7,9 @@ from discord import Member, DMChannel, TextChannel, Message
 
 from aiohttp import ClientResponseError, ClientResponse
 
-logger = logging.getLogger("Modmail")
+from core.models import getLogger
+
+logger = getLogger(__name__)
 
 
 class RequestClient:

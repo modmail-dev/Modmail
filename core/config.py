@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import os
 import re
 import typing
@@ -13,11 +12,11 @@ import discord
 from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
-from core.models import InvalidConfigError, Default
+from core.models import InvalidConfigError, Default, getLogger
 from core.time import UserFriendlyTime
 from core.utils import strtobool
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 load_dotenv()
 
 

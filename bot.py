@@ -34,33 +34,12 @@ from core import checks
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import human_join, parse_alias
-from core.models import PermissionLevel, ModmailLogger, SafeFormatter
+from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
 
-logger: ModmailLogger = logging.getLogger("Modmail")
-logger.__class__ = ModmailLogger
-
-logger.setLevel(logging.INFO)
-
-ch = logging.StreamHandler(stream=sys.stdout)
-ch.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "%(asctime)s %(filename)s[%(lineno)d] - %(levelname)s: %(message)s",
-    datefmt="%b %d %H:%M:%S",
-)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
-
-class FileFormatter(logging.Formatter):
-    ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
-
-    def format(self, record):
-        record.msg = self.ansi_escape.sub("", record.msg)
-        return super().format(record)
-
+logger = getLogger(__name__)
 
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
@@ -125,7 +104,7 @@ class ModmailBot(commands.Bot):
         logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
-        logger.line("debug")
+        logger.line()
 
         for cog in self.loaded_cogs:
             logger.debug("Loading %s.", cog)
@@ -145,30 +124,18 @@ class ModmailBot(commands.Bot):
             "INFO": logging.INFO,
             "DEBUG": logging.DEBUG,
         }
-
-        ch_debug = logging.FileHandler(self.log_file_name, mode="a+")
-
-        ch_debug.setLevel(logging.DEBUG)
-        formatter_debug = FileFormatter(
-            "%(asctime)s %(filename)s[%(lineno)d] - %(levelname)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-        ch_debug.setFormatter(formatter_debug)
-        logger.addHandler(ch_debug)
+        logger.line()
 
         log_level = logging_levels.get(level_text)
         if log_level is None:
             log_level = self.config.remove("log_level")
-
-        logger.line()
-        if log_level is not None:
-            logger.setLevel(log_level)
-            ch.setLevel(log_level)
-            logger.info("Logging level: %s", level_text)
+            logger.warning("Invalid logging level set: %s.", level_text)
+            logger.warning("Using default logging level: INFO.")
         else:
-            logger.info("Invalid logging level set.")
-            logger.warning("Using default logging level: %s.", level_text)
+            logger.info("Logging level: %s", level_text)
+
         logger.info("Log file: %s", self.log_file_name)
+        configure_logging(self.log_file_name, log_level)
         logger.debug("Successfully configured logging.")
 
     @property

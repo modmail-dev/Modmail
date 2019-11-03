@@ -1,7 +1,6 @@
 import asyncio
 import io
 import json
-import logging
 import os
 import shutil
 import sys
@@ -20,11 +19,11 @@ from discord.ext import commands
 from pkg_resources import parse_version
 
 from core import checks
-from core.models import PermissionLevel
+from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.utils import truncate, trigger_typing
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
 class InvalidPluginError(commands.BadArgument):

@@ -1,5 +1,7 @@
 import _string
 import logging
+import re
+import sys
 from enum import IntEnum
 from string import Formatter
 
@@ -86,6 +88,60 @@ class ModmailLogger(logging.Logger):
                 + Style.RESET_ALL,
                 [],
             )
+
+
+logging.setLoggerClass(ModmailLogger)
+log_level = logging.INFO
+loggers = set()
+
+ch = logging.StreamHandler(stream=sys.stdout)
+ch.setLevel(log_level)
+formatter = logging.Formatter(
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+    datefmt="%m/%d/%y %H:%M:%S",
+)
+ch.setFormatter(formatter)
+
+ch_debug = None
+
+
+def getLogger(name=None) -> ModmailLogger:
+    logger = logging.getLogger(name)
+    logger.setLevel(log_level)
+    logger.addHandler(ch)
+    if ch_debug is not None:
+        logger.addHandler(ch_debug)
+    loggers.add(logger)
+    return logger
+
+
+class FileFormatter(logging.Formatter):
+    ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+    def format(self, record):
+        record.msg = self.ansi_escape.sub("", record.msg)
+        return super().format(record)
+
+
+def configure_logging(name, level=None):
+    global ch_debug, log_level
+    ch_debug = logging.FileHandler(name, mode="a+")
+
+    formatter_debug = FileFormatter(
+        "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    ch_debug.setFormatter(formatter_debug)
+    ch_debug.setLevel(logging.DEBUG)
+
+    if level is not None:
+        log_level = level
+
+    ch.setLevel(log_level)
+
+    for logger in loggers:
+        logger.setLevel(log_level)
+        logger.addHandler(ch_debug)
 
 
 class _Default:

@@ -1,12 +1,12 @@
-import logging
 import re
 from typing import List
 
 from discord import Embed
 
+from core.models import getLogger
 from core.utils import truncate
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
 class Version:

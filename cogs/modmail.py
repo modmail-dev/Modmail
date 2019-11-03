@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from datetime import datetime
 from itertools import zip_longest
 from typing import Optional, Union
@@ -13,7 +12,7 @@ from dateutil import parser
 from natural.date import duration
 
 from core import checks
-from core.models import PermissionLevel
+from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import (
@@ -24,7 +23,7 @@ from core.utils import (
     trigger_typing,
 )
 
-logger = logging.getLogger("Modmail")
+logger = getLogger(__name__)
 
 
 class Modmail(commands.Cog):
