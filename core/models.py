@@ -1,4 +1,3 @@
-import _string
 import logging
 import re
 import sys
@@ -7,6 +6,8 @@ from string import Formatter
 
 import discord
 from discord.ext import commands
+
+import _string
 
 try:
     from colorama import Fore, Style
@@ -34,9 +35,7 @@ class InvalidConfigError(commands.BadArgument):
     @property
     def embed(self):
         # Single reference of Color.red()
-        return discord.Embed(
-            title="Error", description=self.msg, color=discord.Color.red()
-        )
+        return discord.Embed(title="Error", description=self.msg, color=discord.Color.red())
 
 
 class ModmailLogger(logging.Logger):
@@ -82,10 +81,7 @@ class ModmailLogger(logging.Logger):
         if self.isEnabledFor(level):
             self._log(
                 level,
-                Fore.BLACK
-                + Style.BRIGHT
-                + "-------------------------"
-                + Style.RESET_ALL,
+                Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL,
                 [],
             )
 
@@ -97,8 +93,7 @@ loggers = set()
 ch = logging.StreamHandler(stream=sys.stdout)
 ch.setLevel(log_level)
 formatter = logging.Formatter(
-    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
-    datefmt="%m/%d/%y %H:%M:%S",
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
 )
 ch.setFormatter(formatter)
 

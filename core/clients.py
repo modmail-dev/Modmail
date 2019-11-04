@@ -66,9 +66,7 @@ class RequestClient:
             `str` if the returned data is not a valid json data,
             the raw response.
         """
-        async with self.session.request(
-            method, url, headers=headers, json=payload
-        ) as resp:
+        async with self.session.request(method, url, headers=headers, json=payload) as resp:
             if return_response:
                 return resp
             try:
@@ -120,7 +118,9 @@ class ApiClient(RequestClient):
         prefix = self.bot.config["log_url_prefix"].strip("/")
         if prefix == "NONE":
             prefix = ""
-        return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{doc['key']}"
+        return (
+            f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{doc['key']}"
+        )
 
     async def create_log_entry(
         self, recipient: Member, channel: TextChannel, creator: Member
@@ -184,13 +184,9 @@ class ApiClient(RequestClient):
                 {"bot_id": self.bot.user.id}, {"$set": toset, "$unset": unset}
             )
         if toset:
-            return await self.db.config.update_one(
-                {"bot_id": self.bot.user.id}, {"$set": toset}
-            )
+            return await self.db.config.update_one({"bot_id": self.bot.user.id}, {"$set": toset})
         if unset:
-            return await self.db.config.update_one(
-                {"bot_id": self.bot.user.id}, {"$unset": unset}
-            )
+            return await self.db.config.update_one({"bot_id": self.bot.user.id}, {"$unset": unset})
 
     async def edit_message(self, message_id: Union[int, str], new_content: str) -> None:
         await self.logs.update_one(
@@ -199,10 +195,7 @@ class ApiClient(RequestClient):
         )
 
     async def append_log(
-        self,
-        message: Message,
-        channel_id: Union[str, int] = "",
-        type_: str = "thread_message",
+        self, message: Message, channel_id: Union[str, int] = "", type_: str = "thread_message"
     ) -> dict:
         channel_id = str(channel_id) or str(message.channel.id)
         data = {
@@ -230,9 +223,7 @@ class ApiClient(RequestClient):
         }
 
         return await self.logs.find_one_and_update(
-            {"channel_id": channel_id},
-            {"$push": {f"messages": data}},
-            return_document=True,
+            {"channel_id": channel_id}, {"$push": {"messages": data}}, return_document=True
         )
 
     async def post_log(self, channel_id: Union[int, str], data: dict) -> dict:

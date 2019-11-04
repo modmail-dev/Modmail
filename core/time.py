@@ -58,10 +58,7 @@ class HumanTime:
         if not status.hasTime:
             # replace it with the current time
             dt = dt.replace(
-                hour=now.hour,
-                minute=now.minute,
-                second=now.second,
-                microsecond=now.microsecond,
+                hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond
             )
 
         self.dt = dt

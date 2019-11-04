@@ -146,9 +146,7 @@ class ConfigManager:
         data = deepcopy(self.defaults)
 
         # populate from env var and .env file
-        data.update(
-            {k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys}
-        )
+        data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
         config_json = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
         )
@@ -165,9 +163,7 @@ class ConfigManager:
                         }
                     )
                 except json.JSONDecodeError:
-                    logger.critical(
-                        "Failed to load config.json env values.", exc_info=True
-                    )
+                    logger.critical("Failed to load config.json env values.", exc_info=True)
         self._cache = data
 
         config_help_json = os.path.join(
@@ -229,7 +225,7 @@ class ConfigManager:
 
         elif key in self.time_deltas:
             if value is None:
-                return
+                return None
             try:
                 value = isodate.parse_duration(value)
             except isodate.ISO8601Error:
@@ -248,7 +244,7 @@ class ConfigManager:
 
         elif key in self.special_types:
             if value is None:
-                return
+                return None
 
             if key == "status":
                 try:
@@ -303,9 +299,7 @@ class ConfigManager:
             except isodate.ISO8601Error:
                 try:
                     converter = UserFriendlyTime()
-                    time = self.bot.loop.run_until_complete(
-                        converter.convert(None, item)
-                    )
+                    time = self.bot.loop.run_until_complete(converter.convert(None, item))
                     if time.arg:
                         raise ValueError
                 except BadArgument as exc:
@@ -343,9 +337,7 @@ class ConfigManager:
         return self._cache.items()
 
     @classmethod
-    def filter_valid(
-        cls, data: typing.Dict[str, typing.Any]
-    ) -> typing.Dict[str, typing.Any]:
+    def filter_valid(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
         return {
             k.lower(): v
             for k, v in data.items()
@@ -353,9 +345,7 @@ class ConfigManager:
         }
 
     @classmethod
-    def filter_default(
-        cls, data: typing.Dict[str, typing.Any]
-    ) -> typing.Dict[str, typing.Any]:
+    def filter_default(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
         # TODO: use .get to prevent errors
         filtered = {}
         for k, v in data.items():

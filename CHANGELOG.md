@@ -14,6 +14,10 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - "enable" and "disable" support for yes or no config vars.
 - Added "perhaps you meant" section to `?config help`.
 
+### Internal
+
+- Commit to black format line width max = 99, consistent with pylint.
+
 # v3.3.0
 
 
