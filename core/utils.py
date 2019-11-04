@@ -14,7 +14,15 @@ from discord.ext import commands
 def strtobool(val):
     if isinstance(val, bool):
         return val
-    return _stb(str(val))
+    try:
+        return _stb(str(val))
+    except ValueError:
+        val = val.lower()
+        if val == "enable":
+            return 1
+        elif val == "disable":
+            return 0
+        raise
 
 
 class User(commands.IDConverter):

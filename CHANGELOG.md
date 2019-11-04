@@ -7,6 +7,13 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
+# v3.3.1-dev0
+
+### Added
+
+- "enable" and "disable" support for yes or no config vars.
+- Added "perhaps you meant" section to `?config help`.
+
 # v3.3.0
 
 
