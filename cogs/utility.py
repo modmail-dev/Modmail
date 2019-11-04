@@ -848,11 +848,19 @@ class Utility(commands.Cog):
         if key is not None and not (
             key in self.bot.config.public_keys or key in self.bot.config.protected_keys
         ):
+            closest = get_close_matches(
+                key, {**self.bot.config.public_keys, **self.bot.config.protected_keys}
+            )
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
                 description=f"`{key}` is an invalid key.",
             )
+            if closest:
+                embed.add_field(
+                    name=f"Perhaps you meant:",
+                    value="\n".join(f"`{x}`" for x in closest),
+                )
             return await ctx.send(embed=embed)
 
         config_help = self.bot.config.config_help
