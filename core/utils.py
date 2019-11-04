@@ -20,7 +20,7 @@ def strtobool(val):
         val = val.lower()
         if val == "enable":
             return 1
-        elif val == "disable":
+        if val == "disable":
             return 0
         raise
 
@@ -206,8 +206,7 @@ def match_user_id(text: str) -> int:
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
     # Single reference of Color.red()
     embed = discord.Embed(
-        color=discord.Color.red(),
-        description=f"**{name.capitalize()} `{word}` cannot be found.**",
+        color=discord.Color.red(), description=f"**{name.capitalize()} `{word}` cannot be found.**"
     )
     val = get_close_matches(word, possibilities, n=n, cutoff=cutoff)
     if val:

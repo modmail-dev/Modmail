@@ -51,9 +51,7 @@ class Version:
         self.version = version.lstrip("vV")
         self.lines = lines.strip()
         self.fields = {}
-        self.changelog_url = (
-            f"https://github.com/kyb3r/modmail/blob/{branch}/CHANGELOG.md"
-        )
+        self.changelog_url = f"https://github.com/kyb3r/modmail/blob/{branch}/CHANGELOG.md"
         self.description = ""
         self.parse()
 
@@ -91,9 +89,7 @@ class Version:
         """
         embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
-            name=f"v{self.version} - Changelog",
-            icon_url=self.bot.user.avatar_url,
-            url=self.url,
+            name=f"v{self.version} - Changelog", icon_url=self.bot.user.avatar_url, url=self.url
         )
 
         for name, value in self.fields.items():
@@ -138,9 +134,7 @@ class Changelog:
         self.bot = bot
         self.text = text
         logger.debug("Fetching changelog from GitHub.")
-        self.versions = [
-            Version(bot, branch, *m) for m in self.VERSION_REGEX.findall(text)
-        ]
+        self.versions = [Version(bot, branch, *m) for m in self.VERSION_REGEX.findall(text)]
 
     @property
     def latest_version(self) -> Version:
@@ -174,10 +168,7 @@ class Changelog:
             The newly created `Changelog` parsed from the `url`.
         """
         branch = "master" if not bot.version.is_prerelease else "development"
-        url = (
-            url
-            or f"https://raw.githubusercontent.com/kyb3r/modmail/{branch}/CHANGELOG.md"
-        )
+        url = url or f"https://raw.githubusercontent.com/kyb3r/modmail/{branch}/CHANGELOG.md"
 
         async with await bot.session.get(url) as resp:
             return cls(bot, branch, await resp.text())

@@ -43,10 +43,7 @@ class Thread:
         self.auto_close_task = None
 
     def __repr__(self):
-        return (
-            f'Thread(recipient="{self.recipient or self.id}", '
-            f"channel={self.channel.id})"
-        )
+        return f'Thread(recipient="{self.recipient or self.id}", ' f"channel={self.channel.id})"
 
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
@@ -85,9 +82,7 @@ class Thread:
 
         # in case it creates a channel outside of category
         overwrites = {
-            self.bot.modmail_guild.default_role: discord.PermissionOverwrite(
-                read_messages=False
-            )
+            self.bot.modmail_guild.default_role: discord.PermissionOverwrite(read_messages=False)
         }
 
         category = category or self.bot.main_category
@@ -125,9 +120,7 @@ class Thread:
 
             log_count = sum(1 for log in log_data if not log["open"])
         except Exception:
-            logger.error(
-                "An error occurred while posting logs to the database.", exc_info=True
-            )
+            logger.error("An error occurred while posting logs to the database.", exc_info=True)
             log_url = log_count = None
             # ensure core functionality still works
 
@@ -211,9 +204,7 @@ class Thread:
 
         created = str((time - user.created_at).days)
         embed = discord.Embed(
-            color=color,
-            description=f"{user.mention} was created {days(created)}",
-            timestamp=time,
+            color=color, description=f"{user.mention} was created {days(created)}", timestamp=time
         )
 
         # if not role_names:
@@ -238,7 +229,7 @@ class Thread:
             embed.set_footer(text=f"{footer} • (not in main server)")
 
         if log_count is not None:
-            # embed.add_field(name='Past logs', value=f'{log_count}')
+            # embed.add_field(name="Past logs", value=f"{log_count}")
             thread = "thread" if log_count == 1 else "threads"
             embed.description += f" with **{log_count or 'no'}** past {thread}."
         else:
@@ -365,7 +356,7 @@ class Thread:
         embed.title = user
 
         event = "Thread Closed as Scheduled" if scheduled else "Thread Closed"
-        # embed.set_author(name=f'Event: {event}', url=log_url)
+        # embed.set_author(name=f"Event: {event}", url=log_url)
         embed.set_footer(text=f"{event} by {_closer}")
         embed.timestamp = datetime.utcnow()
 
@@ -389,10 +380,7 @@ class Thread:
                 message = self.bot.config["thread_close_response"]
 
         message = self.bot.formatter.format(
-            message,
-            closer=closer,
-            loglink=log_url,
-            logkey=log_data["key"] if log_data else None,
+            message, closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
         )
 
         embed.description = message
@@ -408,9 +396,7 @@ class Thread:
         await asyncio.gather(*tasks)
 
     async def cancel_closure(
-        self,
-        auto_close: bool = False,
-        all: bool = False,  # pylint: disable=redefined-builtin
+        self, auto_close: bool = False, all: bool = False  # pylint: disable=redefined-builtin
     ) -> None:
         if self.close_task is not None and (not auto_close or all):
             self.close_task.cancel()
@@ -433,9 +419,7 @@ class Thread:
                 if str(message_id) == str(embed.author.url).split("/")[-1]:
                     return msg
 
-    async def _fetch_timeout(
-        self
-    ) -> typing.Union[None, isodate.duration.Duration, timedelta]:
+    async def _fetch_timeout(self) -> typing.Union[None, isodate.duration.Duration, timedelta]:
         """
         This grabs the timeout value for closing threads automatically
         from the ConfigManager and parses it for use internally.
@@ -481,10 +465,7 @@ class Thread:
             )
 
         await self.close(
-            closer=self.bot.user,
-            after=int(seconds),
-            message=close_message,
-            auto_close=True,
+            closer=self.bot.user, after=int(seconds), message=close_message, auto_close=True
         )
 
     async def edit_message(self, message_id: int, message: str) -> None:
@@ -557,19 +538,12 @@ class Thread:
         else:
             # Send the same thing in the thread channel.
             tasks.append(
-                self.send(
-                    message,
-                    destination=self.channel,
-                    from_mod=True,
-                    anonymous=anonymous,
-                )
+                self.send(message, destination=self.channel, from_mod=True, anonymous=anonymous)
             )
 
             tasks.append(
                 self.bot.api.append_log(
-                    message,
-                    self.channel.id,
-                    type_="anonymous" if anonymous else "thread_message",
+                    message, self.channel.id, type_="anonymous" if anonymous else "thread_message"
                 )
             )
 
@@ -626,16 +600,10 @@ class Thread:
 
         embed = discord.Embed(description=message.content, timestamp=message.created_at)
 
-        system_avatar_url = (
-            "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
-        )
+        system_avatar_url = "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
 
         if not note:
-            if (
-                anonymous
-                and from_mod
-                and not isinstance(destination, discord.TextChannel)
-            ):
+            if anonymous and from_mod and not isinstance(destination, discord.TextChannel):
                 # Anonymously sending to the user.
                 tag = self.bot.config["mod_tag"]
                 if tag is None:
@@ -656,9 +624,7 @@ class Thread:
                 name = str(author)
                 avatar_url = author.avatar_url
                 embed.set_author(
-                    name=name,
-                    icon_url=avatar_url,
-                    url=f"https://discordapp.com/users/{author.id}",
+                    name=name, icon_url=avatar_url, url=f"https://discordapp.com/users/{author.id}"
                 )
         else:
             # Special note messages
@@ -694,9 +660,7 @@ class Thread:
         additional_count = 1
 
         for url, filename in images:
-            if not prioritize_uploads or (
-                is_image_url(url) and not embedded_image and filename
-            ):
+            if not prioritize_uploads or (is_image_url(url) and not embedded_image and filename):
                 embed.set_image(url=url)
                 if filename:
                     embed.add_field(name="Image", value=f"[{filename}]({url})")
@@ -713,9 +677,7 @@ class Thread:
                 img_embed.set_image(url=url)
                 img_embed.title = filename
                 img_embed.url = url
-                img_embed.set_footer(
-                    text=f"Additional Image Upload ({additional_count})"
-                )
+                img_embed.set_footer(text=f"Additional Image Upload ({additional_count})")
                 img_embed.timestamp = message.created_at
                 additional_images.append(destination.send(embed=img_embed))
                 additional_count += 1
@@ -755,14 +717,8 @@ class Thread:
                 except Exception as e:
                     logger.warning("Cannot delete message: %s.", str(e))
 
-        if (
-            from_mod
-            and self.bot.config["dm_disabled"] == 2
-            and destination != self.channel
-        ):
-            logger.info(
-                "Sending a message to %s when DM disabled is set.", self.recipient
-            )
+        if from_mod and self.bot.config["dm_disabled"] == 2 and destination != self.channel:
+            logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
         try:
             await destination.trigger_typing()
@@ -835,8 +791,7 @@ class ThreadManager:
             thread = self._find_from_channel(channel)
             if thread is None:
                 user_id, thread = next(
-                    ((k, v) for k, v in self.cache.items() if v.channel == channel),
-                    (-1, None),
+                    ((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None)
                 )
                 if thread is not None:
                     logger.debug("Found thread with tempered ID.")
@@ -852,9 +807,7 @@ class ThreadManager:
             thread = self.cache[recipient_id]
             if not thread.channel or not self.bot.get_channel(thread.channel.id):
                 self.bot.loop.create_task(
-                    thread.close(
-                        closer=self.bot.user, silent=True, delete_channel=False
-                    )
+                    thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                 )
                 thread = None
         except KeyError:
@@ -916,8 +869,7 @@ class ThreadManager:
         """Sanitises a username for use with text channel names"""
         name = author.name.lower()
         new_name = (
-            "".join(l for l in name if l not in string.punctuation and l.isprintable())
-            or "null"
+            "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
         )
         new_name += f"-{author.discriminator}"
 
