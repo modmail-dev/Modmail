@@ -7,7 +7,6 @@ import re
 import sys
 import typing
 from datetime import datetime
-from itertools import zip_longest
 from types import SimpleNamespace
 
 import discord
@@ -34,7 +33,7 @@ except ImportError:
 from core import checks
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.utils import human_join, parse_alias, normalize_alias
+from core.utils import human_join, normalize_alias
 from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
 from core.thread import ThreadManager
 from core.time import human_timedelta
