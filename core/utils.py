@@ -1,6 +1,6 @@
+import base64
 import functools
 import re
-import shlex
 import typing
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
@@ -215,35 +215,21 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
 
 
 def parse_alias(alias):
-    if "&&" not in alias:
-        if alias.startswith('"') and alias.endswith('"'):
-            return [alias[1:-1]]
-        return [alias]
+    def encode_alias(m):
+        return "\x1AU" + base64.b64encode(m.group(1).encode()).decode() + "\x1AU"
 
-    buffer = ""
-    cmd = []
-    try:
-        for token in shlex.shlex(alias, punctuation_chars="&"):
-            if token != "&&":
-                buffer += " " + token
-                continue
+    def decode_alias(m):
+        return base64.b64decode(m.group(1).encode()).decode()
 
-            buffer = buffer.strip()
-            if buffer.startswith('"') and buffer.endswith('"'):
-                buffer = buffer[1:-1]
-            cmd += [buffer]
-            buffer = ""
-    except ValueError:
-        return []
+    alias = re.sub(r"(?:(?<=^)(?:\s*(?<!\\)(?:\")\s*)|(?<=&&)(?:\s*(?<!\\)(?:\")\s*))(.+?)"
+                   r"(?:(?:\s*(?<!\\)(?:\")\s*)(?=&&)|(?:\s*(?<!\\)(?:\")\s*)(?=$))",
+                   encode_alias, alias)
 
-    buffer = buffer.strip()
-    if buffer.startswith('"') and buffer.endswith('"'):
-        buffer = buffer[1:-1]
-    cmd += [buffer]
+    aliases = []
+    for alias in re.split(r"\s*&&\s*", alias):
+        aliases.append(re.sub("\x1AU(.+?)\x1AU", decode_alias, alias))
 
-    if not all(cmd):
-        return []
-    return cmd
+    return aliases
 
 
 def format_description(i, names):
