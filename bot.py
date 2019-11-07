@@ -34,7 +34,7 @@ except ImportError:
 from core import checks
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.utils import human_join, parse_alias
+from core.utils import human_join, parse_alias, normalize_alias
 from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
 from core.thread import ThreadManager
 from core.time import human_timedelta
@@ -723,32 +723,20 @@ class ModmailBot(commands.Bot):
         # Check if there is any aliases being called.
         alias = self.aliases.get(invoker)
         if alias is not None:
-            aliases = parse_alias(alias)
+            ctxs = []
+            aliases = normalize_alias(alias, message.content[len(f"{invoked_prefix}{invoker}") :])
             if not aliases:
                 logger.warning("Alias %s is invalid, removing.", invoker)
                 self.aliases.pop(invoker)
-            else:
-                len_ = len(f"{invoked_prefix}{invoker}")
-                contents = parse_alias(message.content[len_:])
-                if not contents:
-                    contents = [message.content[len_:]]
-
-                ctxs = []
-                for alias, content in zip_longest(aliases, contents):
-                    if alias is None:
-                        break
-                    ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
-                    ctx.thread = await self.threads.find(channel=ctx.channel)
-
-                    if content is not None:
-                        view = StringView(f"{alias} {content.strip()}")
-                    else:
-                        view = StringView(alias)
-                    ctx.view = view
-                    ctx.invoked_with = view.get_word()
-                    ctx.command = self.all_commands.get(ctx.invoked_with)
-                    ctxs += [ctx]
-                return ctxs
+            for alias in aliases:
+                view = StringView(alias)
+                ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                ctx.thread = await self.threads.find(channel=ctx.channel)
+                ctx.view = view
+                ctx.invoked_with = view.get_word()
+                ctx.command = self.all_commands.get(ctx.invoked_with)
+                ctxs += [ctx]
+            return ctxs
 
         ctx.invoked_with = invoker
         ctx.command = self.all_commands.get(invoker)

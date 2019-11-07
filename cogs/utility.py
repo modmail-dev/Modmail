@@ -1016,34 +1016,35 @@ class Utility(commands.Cog):
 
         multiple_alias = len(values) > 1
 
-        embed = discord.Embed(
-            title="Added alias",
-            color=self.bot.main_color
-        )
+        embed = discord.Embed(title="Added alias", color=self.bot.main_color)
 
-        if multiple_alias:
+        if not multiple_alias:
             embed.description = f'`{name}` points to: "{values[0]}".'
         else:
             embed.description = f"`{name}` now points to the following steps:"
 
         for i, val in enumerate(values, start=1):
             view = StringView(val)
-            linked_command = view.get_word()
+            linked_command = view.get_word().lower()
             message = view.read_rest()
 
             if not self.bot.get_command(linked_command):
                 alias_command = self.bot.aliases.get(linked_command)
                 if alias_command is not None:
-                    save_aliases.append(f"{alias_command} {message}".strip())
+                    save_aliases.extend(utils.normalize_alias(alias_command, message))
                 else:
                     embed = discord.Embed(title="Error", color=self.bot.error_color)
 
                     if multiple_alias:
-                        embed.description = ("The command you are attempting to point "
-                                             f"to does not exist: `{linked_command}`.")
+                        embed.description = (
+                            "The command you are attempting to point "
+                            f"to does not exist: `{linked_command}`."
+                        )
                     else:
-                        embed.description = ("The command you are attempting to point "
-                                             f"to n step {i} does not exist: `{linked_command}`.")
+                        embed.description = (
+                            "The command you are attempting to point "
+                            f"to n step {i} does not exist: `{linked_command}`."
+                        )
 
                     return await ctx.send(embed=embed)
             else:
@@ -1051,7 +1052,7 @@ class Utility(commands.Cog):
 
             embed.description += f"\n{i}: {val}"
 
-        self.bot.aliases[name] = " && ".join(f"\"{a}\"" for a in save_aliases)
+        self.bot.aliases[name] = " && ".join(f'"{a}"' for a in save_aliases)
         await self.bot.config.update()
         return await ctx.send(embed=embed)
 
@@ -1098,34 +1099,35 @@ class Utility(commands.Cog):
 
         multiple_alias = len(values) > 1
 
-        embed = discord.Embed(
-            title="Edited alias",
-            color=self.bot.main_color
-        )
+        embed = discord.Embed(title="Edited alias", color=self.bot.main_color)
 
-        if multiple_alias:
+        if not multiple_alias:
             embed.description = f'`{name}` points to: "{values[0]}".'
         else:
             embed.description = f"`{name}` now points to the following steps:"
 
         for i, val in enumerate(values, start=1):
             view = StringView(val)
-            linked_command = view.get_word()
+            linked_command = view.get_word().lower()
             message = view.read_rest()
 
             if not self.bot.get_command(linked_command):
                 alias_command = self.bot.aliases.get(linked_command)
                 if alias_command is not None:
-                    save_aliases.append(f"{alias_command} {message}".strip())
+                    save_aliases.extend(utils.normalize_alias(alias_command, message))
                 else:
                     embed = discord.Embed(title="Error", color=self.bot.error_color)
 
                     if multiple_alias:
-                        embed.description = ("The command you are attempting to point "
-                                             f"to does not exist: `{linked_command}`.")
+                        embed.description = (
+                            "The command you are attempting to point "
+                            f"to does not exist: `{linked_command}`."
+                        )
                     else:
-                        embed.description = ("The command you are attempting to point "
-                                             f"to n step {i} does not exist: `{linked_command}`.")
+                        embed.description = (
+                            "The command you are attempting to point "
+                            f"to n step {i} does not exist: `{linked_command}`."
+                        )
 
                     return await ctx.send(embed=embed)
             else:
@@ -1133,7 +1135,7 @@ class Utility(commands.Cog):
 
             embed.description += f"\n{i}: {val}"
 
-        self.bot.aliases[name] = " && ".join(f"\"{a}\"" for a in save_aliases)
+        self.bot.aliases[name] = " && ".join(f'"{a}"' for a in save_aliases)
         await self.bot.config.update()
         return await ctx.send(embed=embed)
 

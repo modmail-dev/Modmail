@@ -4,7 +4,7 @@ import re
 import typing
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
-from itertools import takewhile
+from itertools import takewhile, zip_longest
 from urllib import parse
 
 import discord
@@ -221,15 +221,35 @@ def parse_alias(alias):
     def decode_alias(m):
         return base64.b64decode(m.group(1).encode()).decode()
 
-    alias = re.sub(r"(?:(?<=^)(?:\s*(?<!\\)(?:\")\s*)|(?<=&&)(?:\s*(?<!\\)(?:\")\s*))(.+?)"
-                   r"(?:(?:\s*(?<!\\)(?:\")\s*)(?=&&)|(?:\s*(?<!\\)(?:\")\s*)(?=$))",
-                   encode_alias, alias)
+    alias = re.sub(
+        r"(?:(?<=^)(?:\s*(?<!\\)(?:\")\s*)|(?<=&&)(?:\s*(?<!\\)(?:\")\s*))(.+?)"
+        r"(?:(?:\s*(?<!\\)(?:\")\s*)(?=&&)|(?:\s*(?<!\\)(?:\")\s*)(?=$))",
+        encode_alias,
+        alias,
+    )
 
     aliases = []
     for alias in re.split(r"\s*&&\s*", alias):
         aliases.append(re.sub("\x1AU(.+?)\x1AU", decode_alias, alias))
 
     return aliases
+
+
+def normalize_alias(alias, message):
+    aliases = parse_alias(alias)
+    contents = parse_alias(message)
+
+    final_aliases = []
+    for alias, content in zip_longest(aliases, contents):
+        if alias is None:
+            break
+
+        if content:
+            final_aliases.append(f"{alias} {content}")
+        else:
+            final_aliases.append(alias)
+
+    return final_aliases
 
 
 def format_description(i, names):
