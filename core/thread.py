@@ -295,8 +295,8 @@ class Thread:
     ):
         try:
             self.manager.cache.pop(self.id)
-        except KeyError:
-            logger.warning("Thread already closed.", exc_info=True)
+        except KeyError as e:
+            logger.error("Thread already closed: %s.", str(e))
             return
 
         await self.cancel_closure(all=True)
@@ -436,7 +436,7 @@ class Thread:
         timeout = await self._fetch_timeout()
 
         # Exit if timeout was not set
-        if not timeout:
+        if timeout == isodate.Duration():
             return
 
         # Set timeout seconds
@@ -723,8 +723,8 @@ class Thread:
         try:
             await destination.trigger_typing()
         except discord.NotFound:
-            logger.warning("Channel not found.", exc_info=True)
-            return
+            logger.warning("Channel not found.")
+            raise
 
         if not from_mod and not note:
             mentions = self.get_notifications()
@@ -804,12 +804,12 @@ class ThreadManager:
             recipient_id = recipient.id
 
         try:
-            thread = self.cache[recipient_id]
-            if not thread.channel or not self.bot.get_channel(thread.channel.id):
-                self.bot.loop.create_task(
-                    thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-                )
-                thread = None
+            return self.cache[recipient_id]
+            # if not thread.channel or not self.bot.get_channel(thread.channel.id):
+            #     self.bot.loop.create_task(
+            #         thread.close(closer=self.bot.user, silent=True, delete_channel=False)
+            #     )
+            #     thread = None
         except KeyError:
             channel = discord.utils.get(
                 self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"

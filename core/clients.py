@@ -91,6 +91,13 @@ class ApiClient(RequestClient):
 
         return await self.logs.find(query, projection).to_list(None)
 
+    async def get_latest_user_logs(self, user_id: Union[str, int]):
+        query = {"recipient.id": str(user_id), "guild_id": str(self.bot.guild_id), "open": False}
+        projection = {"messages": {"$slice": 5}}
+        logger.debug("Retrieving user %s latest logs.", user_id)
+
+        return await self.logs.find_one(query, projection, limit=1, sort=[("closed_at", -1)])
+
     async def get_responded_logs(self, user_id: Union[str, int]) -> list:
         query = {
             "open": False,
