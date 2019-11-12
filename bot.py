@@ -1,4 +1,4 @@
-__version__ = "3.3.1-dev1"
+__version__ = "3.3.1-dev2"
 
 import asyncio
 import logging
@@ -529,122 +529,171 @@ class ModmailBot(commands.Bot):
 
         return sent_emoji, blocked_emoji
 
-    async def _process_blocked(self, message: discord.Message) -> typing.Tuple[bool, str]:
-        sent_emoji, blocked_emoji = await self.retrieve_emoji()
-
-        if str(message.author.id) in self.blocked_whitelisted_users:
-            if str(message.author.id) in self.blocked_users:
-                self.blocked_users.pop(str(message.author.id))
-                await self.config.update()
-
-            return False, sent_emoji
-
+    def check_account_age(self, author: discord.Member) -> bool:
+        account_age = self.config.get("account_age")
         now = datetime.utcnow()
 
-        account_age = self.config.get("account_age")
-        guild_age = self.config.get("guild_age")
-
-        if account_age is None:
-            account_age = isodate.Duration()
-        if guild_age is None:
-            guild_age = isodate.Duration()
-
-        reason = self.blocked_users.get(str(message.author.id)) or ""
-        min_guild_age = min_account_age = now
-
         try:
-            min_account_age = message.author.created_at + account_age
+            min_account_age = author.created_at + account_age
         except ValueError:
             logger.warning("Error with 'account_age'.", exc_info=True)
-            self.config.remove("account_age")
-
-        try:
-            joined_at = getattr(message.author, "joined_at", None)
-            if joined_at is not None:
-                min_guild_age = joined_at + guild_age
-        except ValueError:
-            logger.warning("Error with 'guild_age'.", exc_info=True)
-            self.config.remove("guild_age")
+            min_account_age = author.created_at + self.config.remove("account_age")
 
         if min_account_age > now:
             # User account has not reached the required time
-            reaction = blocked_emoji
-            changed = False
             delta = human_timedelta(min_account_age)
-            logger.debug("Blocked due to account age, user %s.", message.author.name)
+            logger.debug("Blocked due to account age, user %s.", author.name)
 
-            if str(message.author.id) not in self.blocked_users:
+            if str(author.id) not in self.blocked_users:
                 new_reason = f"System Message: New Account. Required to wait for {delta}."
-                self.blocked_users[str(message.author.id)] = new_reason
-                changed = True
+                self.blocked_users[str(author.id)] = new_reason
 
-            if reason.startswith("System Message: New Account.") or changed:
-                await message.channel.send(
-                    embed=discord.Embed(
-                        title="Message not sent!",
-                        description=f"Your must wait for {delta} before you can contact me.",
-                        color=self.error_color,
-                    )
-                )
+            return False
+        return True
 
-        elif min_guild_age > now:
+    def check_guild_age(self, author: discord.Member) -> bool:
+        guild_age = self.config.get("guild_age")
+        now = datetime.utcnow()
+
+        if not hasattr(author, "joined_at"):
+            logger.warning("Not in guild, cannot verify guild_age, %s.", author.name)
+            return True
+
+        try:
+            min_guild_age = author.joined_at + guild_age
+        except ValueError:
+            logger.warning("Error with 'guild_age'.", exc_info=True)
+            min_guild_age = author.joined_at + self.config.remove("guild_age")
+
+        if min_guild_age > now:
             # User has not stayed in the guild for long enough
-            reaction = blocked_emoji
-            changed = False
             delta = human_timedelta(min_guild_age)
-            logger.debug("Blocked due to guild age, user %s.", message.author.name)
+            logger.debug("Blocked due to guild age, user %s.", author.name)
 
-            if str(message.author.id) not in self.blocked_users:
+            if str(author.id) not in self.blocked_users:
                 new_reason = f"System Message: Recently Joined. Required to wait for {delta}."
-                self.blocked_users[str(message.author.id)] = new_reason
-                changed = True
+                self.blocked_users[str(author.id)] = new_reason
 
-            if reason.startswith("System Message: Recently Joined.") or changed:
-                await message.channel.send(
-                    embed=discord.Embed(
-                        title="Message not sent!",
-                        description=f"Your must wait for {delta} before you can contact me.",
-                        color=self.error_color,
-                    )
+            return False
+        return True
+
+    def check_manual_blocked(self, author: discord.Member) -> bool:
+        if str(author.id) not in self.blocked_users:
+            return True
+
+        blocked_reason = self.blocked_users.get(str(author.id)) or ""
+        now = datetime.utcnow()
+
+        if blocked_reason.startswith("System Message:"):
+            # Met the limits already, otherwise it would've been caught by the previous checks
+            logger.debug("No longer internally blocked, user %s.", author.name)
+            self.blocked_users.pop(str(author.id))
+            return True
+        # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
+        end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
+        if end_time is None:
+            # backwards compat
+            end_time = re.search(r"%([^%]+?)%", blocked_reason)
+            if end_time is not None:
+                logger.warning(
+                    r"Deprecated time message for user %s, block and unblock again to update.",
+                    author.name,
                 )
 
-        elif str(message.author.id) in self.blocked_users:
-            if reason.startswith("System Message: New Account.") or reason.startswith(
-                "System Message: Recently Joined."
-            ):
-                # Met the age limit already, otherwise it would've been caught by the previous if's
-                reaction = sent_emoji
-                logger.debug("No longer internally blocked, user %s.", message.author.name)
-                self.blocked_users.pop(str(message.author.id))
-            else:
-                reaction = blocked_emoji
-                # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
-                end_time = re.search(r"until ([^`]+?)\.$", reason)
-                if end_time is None:
-                    # backwards compat
-                    end_time = re.search(r"%([^%]+?)%", reason)
-                    if end_time is not None:
-                        logger.warning(
-                            r"Deprecated time message for user %s, block and unblock again to update.",
-                            message.author,
-                        )
+        if end_time is not None:
+            after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
+            if after <= 0:
+                # No longer blocked
+                self.blocked_users.pop(str(author.id))
+                logger.debug("No longer blocked, user %s.", author.name)
+                return True
+        logger.debug("User blocked, user %s.", author.name)
+        return False
 
-                if end_time is not None:
-                    after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
-                    if after <= 0:
-                        # No longer blocked
-                        reaction = sent_emoji
-                        self.blocked_users.pop(str(message.author.id))
-                        logger.debug("No longer blocked, user %s.", message.author.name)
-                    else:
-                        logger.debug("User blocked, user %s.", message.author.name)
-                else:
-                    logger.debug("User blocked, user %s.", message.author.name)
+    async def _process_blocked(self, message):
+        sent_emoji, blocked_emoji = await self.retrieve_emoji()
+        if await self.is_blocked(message.author, channel=message.channel, send_message=True):
+            await self.add_reaction(message, blocked_emoji)
+            return True
+        return False
+
+    async def is_blocked(
+        self,
+        author: discord.User,
+        *,
+        channel: discord.TextChannel = None,
+        send_message: bool = False,
+    ) -> typing.Tuple[bool, str]:
+
+        member = self.guild.get_member(author.id)
+        if member is None:
+            logger.debug("User not in guild, %s.", author.id)
         else:
-            reaction = sent_emoji
+            author = member
+
+        if str(author.id) in self.blocked_whitelisted_users:
+            if str(author.id) in self.blocked_users:
+                self.blocked_users.pop(str(author.id))
+                await self.config.update()
+            return False
+
+        blocked_reason = self.blocked_users.get(str(author.id)) or ""
+
+        if (
+            not self.check_account_age(author)
+            or not self.check_guild_age(author)
+        ):
+            new_reason = self.blocked_users.get(str(author.id))
+            if new_reason != blocked_reason:
+                if send_message:
+                    await channel.send(
+                        embed=discord.Embed(
+                            title="Message not sent!",
+                            description=new_reason,
+                            color=self.error_color,
+                        )
+                    )
+            return True
+
+        if not self.check_manual_blocked(author):
+            return True
 
         await self.config.update()
-        return str(message.author.id) in self.blocked_users, reaction
+        return False
+
+    async def get_thread_cooldown(self, author: discord.Member):
+        thread_cooldown = self.config.get("thread_cooldown")
+        now = datetime.utcnow()
+
+        if thread_cooldown == isodate.Duration():
+            return
+
+        last_log = await self.api.get_latest_user_logs(author.id)
+
+        if last_log is None:
+            logger.debug("Last thread wasn't found, %s.", author.name)
+            return
+
+        last_log_closed_at = last_log.get("closed_at")
+
+        if not last_log_closed_at:
+            logger.debug("Last thread was not closed, %s.", author.name)
+            return
+
+        try:
+            cooldown = datetime.fromisoformat(last_log_closed_at) + thread_cooldown
+        except ValueError:
+            logger.warning("Error with 'thread_cooldown'.", exc_info=True)
+            cooldown = datetime.fromisoformat(last_log_closed_at) + self.config.remove(
+                "thread_cooldown"
+            )
+
+        if cooldown > now:
+            # User messaged before thread cooldown ended
+            delta = human_timedelta(cooldown)
+            logger.debug("Blocked due to thread cooldown, user %s.", author.name)
+            return delta
+        return
 
     @staticmethod
     async def add_reaction(msg, reaction):
@@ -656,11 +705,24 @@ class ModmailBot(commands.Bot):
 
     async def process_dm_modmail(self, message: discord.Message) -> None:
         """Processes messages sent to the bot."""
-        blocked, reaction = await self._process_blocked(message)
+        blocked = await self._process_blocked(message)
         if blocked:
-            return await self.add_reaction(message, reaction)
+            return
+        sent_emoji, blocked_emoji = await self.retrieve_emoji()
+
         thread = await self.threads.find(recipient=message.author)
         if thread is None:
+            delta = await self.get_thread_cooldown(message.author)
+            if delta:
+                await message.channel.send(
+                    embed=discord.Embed(
+                        title="Message not sent!",
+                        description=f"You must wait for {delta} before you can contact me again.",
+                        color=self.error_color,
+                    )
+                )
+                return
+
             if self.config["dm_disabled"] >= 1:
                 embed = discord.Embed(
                     title=self.config["disabled_new_thread_title"],
@@ -673,9 +735,9 @@ class ModmailBot(commands.Bot):
                 logger.info(
                     "A new thread was blocked from %s due to disabled Modmail.", message.author
                 )
-                _, blocked_emoji = await self.retrieve_emoji()
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
+
             thread = self.threads.create(message.author)
         else:
             if self.config["dm_disabled"] == 2:
@@ -691,12 +753,16 @@ class ModmailBot(commands.Bot):
                 logger.info(
                     "A message was blocked from %s due to disabled Modmail.", message.author
                 )
-                _, blocked_emoji = await self.retrieve_emoji()
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
 
-        await self.add_reaction(message, reaction)
-        await thread.send(message)
+        try:
+            await thread.send(message)
+        except Exception:
+            logger.error("Failed to send message:", exc_info=True)
+            await self.add_reaction(message, blocked_emoji)
+        else:
+            await self.add_reaction(message, sent_emoji)
 
     async def get_contexts(self, message, *, cls=commands.Context):
         """
@@ -849,9 +915,6 @@ class ModmailBot(commands.Bot):
         if user.bot:
             return
 
-        async def _void(*_args, **_kwargs):
-            pass
-
         if isinstance(channel, discord.DMChannel):
             if not self.config.get("user_typing"):
                 return
@@ -866,13 +929,7 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.find(channel=channel)
             if thread is not None and thread.recipient:
-                if (
-                    await self._process_blocked(
-                        SimpleNamespace(
-                            author=thread.recipient, channel=SimpleNamespace(send=_void)
-                        )
-                    )
-                )[0]:
+                if await self.is_blocked(thread.recipient):
                     return
                 await thread.recipient.trigger_typing()
 

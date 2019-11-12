@@ -13,7 +13,7 @@ from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
 from core.models import InvalidConfigError, Default, getLogger
-from core.time import UserFriendlyTime
+from core.time import UserFriendlyTimeSync
 from core.utils import strtobool
 
 logger = getLogger(__name__)
@@ -33,8 +33,9 @@ class ConfigManager:
         "error_color": str(discord.Color.red()),
         "user_typing": False,
         "mod_typing": False,
-        "account_age": None,
-        "guild_age": None,
+        "account_age": isodate.Duration(),
+        "guild_age": isodate.Duration(),
+        "thread_cooldown": isodate.Duration(),
         "reply_without_command": False,
         "anon_reply_without_command": False,
         # logging
@@ -45,7 +46,7 @@ class ConfigManager:
         "close_emoji": "🔒",
         "recipient_thread_close": False,
         "thread_auto_close_silently": False,
-        "thread_auto_close": None,
+        "thread_auto_close": isodate.Duration(),
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
         "thread_creation_response": "The staff team will get back to you as soon as possible.",
         "thread_creation_footer": "Your message has been sent",
@@ -115,7 +116,7 @@ class ConfigManager:
 
     colors = {"mod_color", "recipient_color", "main_color", "error_color"}
 
-    time_deltas = {"account_age", "guild_age", "thread_auto_close"}
+    time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown"}
 
     booleans = {
         "user_typing",
@@ -224,17 +225,16 @@ class ConfigManager:
             value = int(self.remove(key).lstrip("#"), base=16)
 
         elif key in self.time_deltas:
-            if value is None:
-                return None
-            try:
-                value = isodate.parse_duration(value)
-            except isodate.ISO8601Error:
-                logger.warning(
-                    "The {account} age limit needs to be a "
-                    'ISO-8601 duration formatted duration, not "%s".',
-                    value,
-                )
-                value = self.remove(key)
+            if not isinstance(value, isodate.Duration):
+                try:
+                    value = isodate.parse_duration(value)
+                except isodate.ISO8601Error:
+                    logger.warning(
+                        "The {account} age limit needs to be a "
+                        'ISO-8601 duration formatted duration, not "%s".',
+                        value,
+                    )
+                    value = self.remove(key)
 
         elif key in self.booleans:
             try:
@@ -298,13 +298,14 @@ class ConfigManager:
                 isodate.parse_duration(item)
             except isodate.ISO8601Error:
                 try:
-                    converter = UserFriendlyTime()
-                    time = self.bot.loop.run_until_complete(converter.convert(None, item))
+                    converter = UserFriendlyTimeSync()
+                    time = converter.convert(None, item)
                     if time.arg:
                         raise ValueError
                 except BadArgument as exc:
                     raise InvalidConfigError(*exc.args)
-                except Exception:
+                except Exception as e:
+                    logger.debug(e)
                     raise InvalidConfigError(
                         "Unrecognized time, please use ISO-8601 duration format "
                         'string or a simpler "human readable" time.'

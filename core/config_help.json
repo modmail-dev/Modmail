@@ -222,6 +222,17 @@
       "See also: `thread_auto_close_silently`, `thread_auto_close_response`."
     ]
   },
+  "thread_cooldown": {
+    "default": "Never",
+    "description": "Specify the time required for the recipient to wait before allowed to create a new thread.",
+    "examples": [
+      "`{prefix}config set thread_cooldown P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
+      "`{prefix}config set thread_cooldown 3 days and 5 hours` (accepted readable time)"
+    ],
+    "notes": [
+      "To disable thread cooldown, do `{prefix}config del thread_cooldown`."
+    ]
+  },
   "thread_auto_close_response": {
     "default": "\"This thread has been closed automatically due to inactivity after {{timeout}}.\"",
     "description": "This is the message to display when the thread when the thread auto-closes.",
