@@ -1,17 +1,409 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
+however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v2.17.1
+# v3.3.0
+
+
+### Important
+
+- Recommend all users to unblock and re-block all blocked users upon updating to this release.
+
+### Added
+
+- Three new config vars:
+  - `enable_plugins` (yes/no default yes)
+    - When set to no, plugins will not be loaded into the bot.
+  - `error_color` (color format, defaults discord red)
+    - The color of error messages.
+  - `anon_reply_without_command` (yes/no default no) (Thanks to papiersnipper PR#288)
+    - When set, all non-command messages sent to thread channels are forwarded to the recipient anonymously without the need of `?anonreply`.
+    - This config takes precedence over `reply_without_command`.
+- `?logs responded [user]` command, it will show all logs that the user has sent an reply. (Thanks to papiersnipper PR#288)
+  - `user` when not provided, defaults to the user who ran the command.
+- Open threads in limbo now auto closes if the channel cannot be found. This check is done every time the bot restarts.
+- Ability to disable new threads from getting created.
+  - `?disable`
+- Ability to fully disable Modmail DM.
+  - `?disable all`
+- To re-enable DM: `?enable`, and to see the current status: `?isenable`.
+- This disabled Modmail interface is customizable with the following config vars:
+  - `disabled_new_thread_title`
+  - `disabled_new_thread_response`
+  - `disabled_new_thread_footer`
+  - `disabled_current_thread_title`
+  - `disabled_current_thread_response`
+  - `disabled_current_thread_footer`
+- Ability to delete notes when providing their ID. (Thanks to papiersnipper PR#402)
+- Ability to delete log entries. (Thanks to papiersnipper PR#402)
 
 ### Changed
 
-- Stricter fallback genesis embed search. This update shouldn't affect anyone.
+- `?contact` no longer send the "thread created" message to where the command is ran, instead, it's now sent to the newly created thread channel. (Thanks to DAzVise)
+- Automatically delete notes command `?note` when there's no attachments attached.
+- Embed author links used to be inaccessible in many cases, now:
+  - `?anonreply`, `?reply`, and `?note` in thread channel will link to the sender's profile.
+  - `?reply` and recipient's DM will also link the sender's profile.
+  - `?anonreply` in DM channel will link to the first channel of the main guild.
+- Plugins update (mostly internal).
+  - `git` is no longer used to install plugins, it now downloads through zip files.
+  - `?plugins enabled` renamed to `?plugins loaded` while `enabled` is still an alias to that command.
+  - Reorganised plugins folder structure.
+  - Logging / plugin-related messages changes.
+  - Updating one plugin will not update all other plugins (plugins are no longer separated by repos, but the plugin name itself).
+- Help command is in alphabetical order grouped by permissions.
+- Notes are no longer always blurple, its set to `MAIN_COLOR` now.
+- Added `?plugins update` for updating all installed plugins.
+- Reintroduce flake8 and use bandit for security issues detection.
+- Add travis checks for 3.6 in Linux and 3.7 for MacOS and Windows.
+- Eval commands are logged in debug logs.
+- Presence updates 30 minutes instead of 45 now.
+- Fixed an assortment of problems to do with block.
+- Existing aliases can be used when creating new aliases. (Thanks to papiersnipper PR#402)
 
-### Info
+### Internal
+
+- Reworked `config.get` and `config.set`, it feeds through the converters before setting/getting.
+  - To get/set the raw value, access through `config[]`.
+- Prerelease naming scheme is now `x.x.x-devN`.
+- `trigger_typing` has been moved to `core.utils.trigger_typing`, original location is deprecated.
+- Simpler status and activity logic.
+- New logging logic.
+
+# v3.2.2
+
+Security update!
+
+### Important
+
+- Supporter permission users used to be able to "hack" snippets to reveal all your config vars, including your token and MongoURI.
+- Implemented some changes to address this bug:
+  - All customizable variables used in snippets, close messages, etc, using the `{}` syntax, now forbids chaining 2 or more attributes and attributes that starts with `_`.
+- It is advised to update to this version.
+- If you felt your credentials have been leaked, consider changing your bot token / mongo uri.
+
+# v3.2.1
+
+### Fixed
+
+- Can't set hex for main_color, recipient_color, etc.
+
+### Added
+
+- Discord colors by default when addressing them by names.
+
+# v3.2.0
+
+### Added
+
+- Ability to change permission levels of individual commands.
+  - See `?permissions override` for more information.
+- `thread_move_notify` and `thread_move_response` to notify recipients if a thread is moved. (Thanks to Flufster PR#360)
+- IDs of messages sent to Modmail are now viewable. (Thanks to Flufster PR#360)
+
+### Fixed
+
+- `?help <some sub command>`, will return `Perhaps you meant: <some sub command>`, now its fixed.
+  - For example, `?help add` used to return `Perhaps you meant: add`, now it wouldn't do this.
+- Aliases and Permissions command names are always saved lowercase now.
+- An improved Dockerfile.
+
+### Internal
+
+- Use regex to parse Changes, Added, Fixed, etc and description.
+- Adds `PermissionLevel.INVALID` when commands doesn't have a permission level.
+
+# v3.1.1
+
+### Fixed
+
+- An issue when reading `config_help.json` for Windows users due to an encoding problem.
+
+# v3.1.0
+
+### Breaking
+
+- `disable_recipient_thread_close` is removed, a new configuration variable `recipient_thread_close` replaces it which defaults to False.
+- Truthy and falsy values for binary configuration variables are now interpreted respectfully.
+- `LOG_URL_PREFIX` cannot be set to "NONE" to specify no additional path in the future, "/" is the new method.
+
+### Added
+
+- `?sfw`, mark a thread as "safe for work", undos `?nsfw`.
+- New config variable, `thread_auto_close_silently`, when set to a truthy value, no message will be sent when thread is auto-closed.
+- New configuration variable `thread_self_closable_creation_footer` — the footer when `recipient_thread_close` is enabled.
+- Added a minimalistic version of requirements.txt (named requirements.min.txt) that contains only the absolute minimum of Modmail.
+  - For users having trouble with pipenv or any other reason.
+- Multi-step alias, see `?help alias add`. Public beta testing, might be unstable.
+- Misc commands without cogs are now displayed in `?help`.
+- `?help` works for alias and snippets.
+- `?config help <config-name>` shows a help embed for the configuration.
+- Support setting permissions for sub commands.
+- Support numbers (1-5) as substitutes for Permission Level REGULAR - OWNER in `?perms` sub commands.
+
+### Changes
+
+- `thread_auto_close_response` has a configurable variable `{timeout}`.
+- `?snippet` is now the default command name instead of `?snippets` (`?snippets` is still usable). This is to make this consistent with `?alias`/`?aliases`.
+- `colorama` is no longer a necessity, this is due to some unsupported OS.
+- Changelog command can now take a version argument to jump straight to specified version.
+- `?plugin enabled` results are now sorted alphabetically.
+- `?plugin registry` results are now sorted alphabetically, helps user find plugins more easily.
+- `?plugin registry page-number` plugin registry can specify a page number for quick access.
+- A reworked interface for `?snippet` and `?alias`.
+  - Add an `?snippet raw <name>` command for viewing the raw content of a snippet (escaped markdown).
+  - Add an `?alias raw <name>` command for viewing the raw content of a alias (escaped markdown).
+- The placeholder channel for the streaming status changed to https://www.twitch.tv/discordmodmail/.
+- Removed unclear `rm` alias for some `remove` commands.
+- Paginate `?config options`.
+- All users configured with a permission level greater than REGULAR has access to the main Modmail category.
+  - Category overrides also changes when a level is removed or added to a user or role.
+- `@everyone` is now accepted for `?perms add`.
+
+### Fixes
+
+- `?notify` no longer carries over to the next thread.
+- `discord.NotFound` errors for `on_raw_reaction_add`.
+- `mod_typing` ~~and `user_typing`~~ (`user_typing` is now by-design to show) will no longer show when user is blocked.
+- Better `?block` usage message.
+- Resolves errors when message was sent by mods after thread is closed somehow.
+- Recipient join/leave server messages are limited to only the guild set by `GUILD_ID`.
+- When creating snippets and aliases, it now checks if another snippets/aliases with the same name exists.
+- Was looking for `config.json` in the wrong directory.
+
+### Internal
+
+- Removed supporting code for GitHub interaction.
+- All default config values moved to `core/config.py`.
+- `config.cache` is no longer accessible, use `config['key']` for getting, `config['key'] = value` for setting, `config.remove('key')` for removing.
+- Dynamic attribute for configs are removed, must use `config['key']` or `config.get('key')`.
+- Removed helper functions `info()` and `error()` for formatting logging, it's formatted automatically now.
+- Bumped discord.py version to 1.2.3.
+- Use discord tasks for metadata loop.
+- More debug based logging.
+- Reduce redundancies in `?perms` sub commands.
+- paginator been split into `EmbedPaginatorSession` and `MessagePaginatorSession`, both subclassing `PaginatorSession`.
+
+# v3.0.3
+
+### Added
+
+- New commands, `?alias edit <name> <target>` and `?snippets edit <name> <target>`.
+  - They can be used to edit aliases and snippets respectively.
+
+# v3.0.2
+
+### Added
+
+- New command, `?blocked whitelist <user>`, this command prevents users from getting blocked by any means.
+
+### Changed
+
+- Removed some aliases from `?oauth`.
+
+# v3.0.1
+
+### Fixed
+
+- A lot of bugs with `thread_auto_close` 😅
+
+
+# v3.0.0
+
+### Added 
+
+- Sponsors command that will list sponsors.
+- An alert will now be sent to the log channel if a thread channel fails to create. This could be due to a variety of problems such as insufficient permissions or the category channel limit is met. 
+- Threads will close automatically after some time when `thread_auto_close` is set.
+- Custom closing message can be set with `thread_auto_close_response`.
+
+### Breaking Changes
+
+- Removed autoupdate functionality and the `?update` command in favour of the [Pull app](https://github.com/apps/pull).
+
+Read more about updating your bot [here](https://github.com/kyb3r/modmail/wiki/updating)
+
+### Changed
+- Channel names now can contain unicode characters.
+- Debug logs are now located in a unique file for each bot. (Internal change) 
+- Default cogs always appear first in the help command now.
+
+### Fixed
+- Editing notes now works, minor bug with edit command is fixed.
+- Bug in the `?oauth` command where the response message fails to send when an ID is provided.
+- Plugin requirement installation now works in virtual environments
+
+
+# v2.24.1
+
+### Fixed
+
+Fixed a bug with branches and `?plugin update`.
+
+# v2.24.0
+
+### Added
+
+Branch support for `?plugin add` and in registry. Typically for developers.    
+
+# v2.23.0
+
+### Added 
+
+Added a "Mutual servers" field to the genesis embed if:
+a) The user is not in the main guild.
+b) The user shares more than 1 server with the bot.
+
+### Changed
+
+Notes taken using the `?note` command are now automatically pinned within the thread channel.
+
+# v2.22.0
+
+### Added
+
+Added a 🛑 reaction to the paginators to delete the embed.  
+
+### Fixed
+
+`?blocked` is now paginated using reactions. This fixes [#249](https://github.com/kyb3r/modmail/issues/249)
+
+# v2.21.0
+
+### Added 
+
+New `?plugin registry compact` command which shows a more compact view of all plugins.
+
+# v2.20.2
+
+### Plugin Registry
+
+Plugin developers can now make a PR to include their plugin in the `plugin registry` command.
+Add your plugin in the `plugins/registry.json` file in the main repository.
+
+### Changed
+
+`?debug` command now shows the most recent logs first. (Starts at the last page)
+
+# v2.20.1
+
+### What's new?
+
+  - New error message when using thread-only commands outside of threads.
+  - `?unnotify`, ability to undo `?notify`.
+  - `?notify` and `?subscribe` now accepts other users.
+
+### Changes
+
+This update contains mostly internal changes.
+  - Implemented support for the new discord.py v1.1.1.
+  - Improved help text for most commands.
+  - Completely revamped help command, few user changes.
+  - Removed abc (internal).
+
+# v2.20.0
+
+### What's new? 
+
+New `oauth` whitelist command which allows you to whitelist users so they can log in via discord to view logs. To set up oauth login for your logviewer app check the logviewer [repo](https://github.com/kyb3r/logviewer).
+
+# v2.19.1
+
+### Changed
+
+- Ability to force an update despite having the same version number. Helpful to keep up-to-date with the latest GitHub commit.
+  - `?update force`.
+- Plugin developers now have a new event called `on_plugin_ready`, this is coroutine is awaited when all plugins are loaded. Use `on_plugin_ready` instead of `on_ready` since `on_ready` will not get called in plugins.
+
+# v2.19.0
+
+### What's new?
+
+- New config variable `guild_age`, similar to `account_age`, `guild_age` sets a limit as to how long a user has to wait after they joined the server to message Modmail.
+- `guild_age` can be set the same way as `account_age`.
+
+# v2.18.5
+
+Fix help command bug when using external plugins.
+
+# v2.18.4
+
+Fix the teams permission bug.
+
+# v2.18.2
+
+### Changed
+
+Commands now have better error messages, instead of just sending the help message for a command when an argument fails to be converted to its specified object, the bot now says things like "User 'bob' not found" instead.
+
+# v2.18.1
+
+Un-deprecated the `OWNERS` config variable to support discord developer team accounts.
+
+# v2.18.0
+
+### New Permissions System
+
+- A brand new permission system! Replacing the old guild-based permissions (ie. manage channels, manage messages), the new system enables you to customize your desired permission level specific to a command or a group of commands for a role or user.
+- There are five permission levels:
+  - Owner [5]
+  - Administrator [4]
+  - Moderator [3]
+  - Supporter [2]
+  - Regular [1]
+
+### Usage 
+
+You may add a role or user to a permission group through any of the following methods:
+- `?permissions add level owner @role`
+- `?permissions add level supporter member-name`
+- `?permissions add level moderator everyone`
+- `?permissions add level moderator @member#1234`
+- `?permissions add level administrator 78912384930291853`
+
+The same applies to individual commands permissions:
+- `?permissions add command command-name @member#1234`
+- ... and the other methods listed above.
+
+To revoke permission, use `remove` instead of `add`.
+
+To view all roles and users with permission for a permission level or command do:
+-  `?permissions get command command-name`
+-  `?permissions get level owner`
+
+By default, all newly set up Modmail will have `OWNER` set to the owner of the bot, and `REGULAR` set to @everyone.
+
+### Breaking
+
+When updating to this version, all prior permission settings with guild-based permissions will be invalidated. You will need to convert to the above system.
+`OWNERS` will also get removed, you will need to set owners through `?permissions add level owner 212931293123129` or any way listed above.
+
+### New Command
+
+- A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer require manage messages permission to recall thread messages.
+
+### Changed
+
+- The help message no longer conceals inaccessible commands due to check failures.
+
+# v2.17.2
+
+### Changed
+
+- Logs search command will search through log keys as well now. 
+- For example, `?logs search e7499e82f8ff`.
+
+# v2.17.1
+### What's new?
+
+Stricter fallback genesis embed search.
+
+### Changed
 How modmail checks if a channel is a thread: 
 
 1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
@@ -39,9 +431,20 @@ An issue where a scheduled close would not execute over a long period of time if
 
 # v2.16.0
 
-### What's new?
+### Changed
+
+All support for Modmail API (api.modmail.tk) has terminated. 
+If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
+option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the 
+installation tutorial for information regarding self-hosted Modmail.
 
 If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occured.
+
+# v2.15.1
+
+### Fixed
+
+Emergency patch of a SyntaxError.
 
 # v2.15.0
 
@@ -230,7 +633,7 @@ Huge thanks to Sasiko for reporting these issues.
 
 # v2.12.0
 
-### Important 
+### Important
 **In the future, the Modmail API (https://modmail.tk) will be deprecated. This is due to the fact that we are providing a free service without getting anything in return, and thus we do not have the resources to scale to accommodate for more users. 
 We recommend using your own database for logs. In the future you will soon get a `backup` command so you can download all your pre-existing data and migrate to your own database.** 
 
