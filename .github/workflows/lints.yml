@@ -19,17 +19,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install virtualenv
-        pip install pipenv
+        python -m pip install pipenv
     - name: Configure environment
-      run: virtualenv modmail
-    - run: pipenv install -d
-      working-directory: ./modmail
+      run: pipenv install --python ${{ env.pythonLocation }}/bin/python -d
     - name: Bandit syntax check
       run: pipenv run bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
-      working-directory: ./modmail
     - name: Lint with pylint and flake8
       run: |
         pipenv run python .lint.py
         pipenv run flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503 --exit-zero
-      working-directory: ./modmail
