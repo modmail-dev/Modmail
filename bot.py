@@ -738,7 +738,7 @@ class ModmailBot(commands.Bot):
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
 
-            thread = self.threads.create(message.author)
+            thread = await self.threads.create(message.author)
         else:
             if self.config["dm_disabled"] == 2:
                 embed = discord.Embed(
