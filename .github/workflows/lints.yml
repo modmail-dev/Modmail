@@ -1,0 +1,30 @@
+name: Modmail Workflow
+
+on: [push, pull_request, pull_request_review]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest, ubuntu-16.04]
+        python-version: [3.6, 3.7]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pipenv
+        python -m pipenv install --python python -d
+    - name: Bandit syntax check
+      run: |
+        pipenv run bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
+    - name: Lint with pylint and flake8
+      run: |
+        pipenv run python .lint.py
+        pipenv run flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503 --exit-zero

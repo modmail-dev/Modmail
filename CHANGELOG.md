@@ -45,19 +45,19 @@ however, insignificant breaking changes does not guarantee a major version bump,
 ### Changed
 
 - `?contact` no longer send the "thread created" message to where the command is ran, instead, it's now sent to the newly created thread channel. (Thanks to DAzVise)
-- Automatically delete notes command `?note` when there's no attachments attached.
+- Automatically delete notes command `?note` when there're no attachments attached.
 - Embed author links used to be inaccessible in many cases, now:
-  - `?anonreply`, `?reply`, and `?note` in thread channel will link to the sender's profile.
+  - `?anonreply`, `?reply`, and `?note` in the thread channel will link to the sender's profile.
   - `?reply` and recipient's DM will also link the sender's profile.
   - `?anonreply` in DM channel will link to the first channel of the main guild.
 - Plugins update (mostly internal).
   - `git` is no longer used to install plugins, it now downloads through zip files.
   - `?plugins enabled` renamed to `?plugins loaded` while `enabled` is still an alias to that command.
-  - Reorganised plugins folder structure.
-  - Logging / plugin-related messages changes.
+  - Reorganized plugins folder structure.
+  - Logging / plugin-related messages change.
   - Updating one plugin will not update all other plugins (plugins are no longer separated by repos, but the plugin name itself).
 - Help command is in alphabetical order grouped by permissions.
-- Notes are no longer always blurple, its set to `MAIN_COLOR` now.
+- Notes are no longer always blurple, it's set to `MAIN_COLOR` now.
 - Added `?plugins update` for updating all installed plugins.
 - Reintroduce flake8 and use bandit for security issues detection.
 - Add travis checks for 3.6 in Linux and 3.7 for MacOS and Windows.
@@ -71,7 +71,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Reworked `config.get` and `config.set`, it feeds through the converters before setting/getting.
   - To get/set the raw value, access through `config[]`.
 - Prerelease naming scheme is now `x.x.x-devN`.
-- `trigger_typing` has been moved to `core.utils.trigger_typing`, original location is deprecated.
+- `trigger_typing` has been moved to `core.utils.trigger_typing`, the original location is deprecated.
 - Simpler status and activity logic.
 - New logging logic.
 
@@ -108,7 +108,7 @@ Security update!
 
 ### Fixed
 
-- `?help <some sub command>`, will return `Perhaps you meant: <some sub command>`, now its fixed.
+- `?help <some sub command>`, will return `Perhaps you meant: <some sub command>`, now it's fixed.
   - For example, `?help add` used to return `Perhaps you meant: add`, now it wouldn't do this.
 - Aliases and Permissions command names are always saved lowercase now.
 - An improved Dockerfile.
@@ -116,7 +116,7 @@ Security update!
 ### Internal
 
 - Use regex to parse Changes, Added, Fixed, etc and description.
-- Adds `PermissionLevel.INVALID` when commands doesn't have a permission level.
+- Adds `PermissionLevel.INVALID` when commands don't have a permission level.
 
 # v3.1.1
 
@@ -212,7 +212,6 @@ Security update!
 
 - A lot of bugs with `thread_auto_close` 😅
 
-
 # v3.0.0
 
 ### Added 
@@ -261,7 +260,7 @@ b) The user shares more than 1 server with the bot.
 
 ### Changed
 
-Notes taken using the `?note` command are now automatically pinned within the thread channel.
+Notes taken with the `?note` command are now automatically pinned within the thread channel.
 
 # v2.22.0
 
@@ -385,7 +384,7 @@ When updating to this version, all prior permission settings with guild-based pe
 
 ### New Command
 
-- A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer require manage messages permission to recall thread messages.
+- A `?delete` command, which is an alternative to manually deleting a message. This command is created to no longer requires manage messages permission to recall thread messages.
 
 ### Changed
 
@@ -399,16 +398,17 @@ When updating to this version, all prior permission settings with guild-based pe
 - For example, `?logs search e7499e82f8ff`.
 
 # v2.17.1
+
 ### What's new?
 
 Stricter fallback genesis embed search.
 
 ### Changed
+
 How modmail checks if a channel is a thread: 
 
-1. First the bot checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
-2. If a channel topic is not found, the bot searches through message history of a channel to find the thread creation embed. This step should never yield a thread for a normal user, but in the case of a another bot messing up the channel topic (happened to a user before) this extra step was added. 
-
+1. The bot first checks if the channel topic is in the format `User ID: xxxx`, this means it is a thread.
+2. If a channel topic is not found, the bot searches through the message history of a channel to find the thread creation embed. This step should never yield a thread for a normal user, but in the case of another bot messing up the channel topic (happened to a user before) this extra step was added. 
 
 # v2.17.0
 
@@ -417,7 +417,6 @@ How modmail checks if a channel is a thread:
 Added a config option `reply_without_command` which when present, enables the bot to forward any message sent in a thread channel to the recipient. (Replying without using a command)
 
 To enable this functionality, do `?config set reply_without_command true` and to disable it, use `?config del reply_without_command`.
-
 
 ### Changed
 
@@ -435,10 +434,9 @@ An issue where a scheduled close would not execute over a long period of time if
 
 All support for Modmail API (api.modmail.tk) has terminated. 
 If you're still using api.modmail.tk, you will need to migrate to the self-hosted database
-option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the 
-installation tutorial for information regarding self-hosted Modmail.
+option ASAP. Your bot will not work unless you switch to the self-hosted option. Refer to the installation tutorial for information regarding self-hosted Modmail.
 
-If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occured.
+If a member leaves/joins (again) while they are a recipient of a thread, a message will be sent to notify you that this has occurred.
 
 # v2.15.1
 
@@ -497,8 +495,8 @@ You can do this via `?config set sent_emoji disable`
 The bot now handles having too many roles to show in the thread created embed. 
 
 # v2.13.12
-### What's new?
 
+### What's new?
 Added image link in title in case discord fails to embed an image.
 
 # v2.13.11
@@ -511,12 +509,12 @@ Added image link in title in case discord fails to embed an image.
 
 ### Changed
 - `block` reason cannot start with `System Message: ` as it is now reserved for internal user blocking.
-- `block`, like `close`, now support a block duration (temp blocking).
+- `block`, like `close`, now supports a block duration (temp blocking).
 
 # v2.13.10
 
 ### Fixed
-- Fixed an issue where status and activity does not work if they were modified wrongly in the database.
+- Fixed an issue where status and activity do not work if they were modified wrongly in the database.
   - This was especially an issue for older Modmail users, as the old `status` configuration variable clashes with the new `status` variable.
 
 # v2.13.9
