@@ -875,8 +875,6 @@ class ThreadManager:
 
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread
-        self.bot.loop.create_task(thread.setup(creator=creator, category=category))
-        return thread
 
     async def find_or_create(self, recipient) -> Thread:
         return await self.find(recipient=recipient) or await self.create(recipient)
