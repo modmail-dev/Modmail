@@ -25,5 +25,6 @@ jobs:
       run: |
         pipenv run bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
     - name: Lint with pylint and flake8
+      run: |
         pipenv run python .lint.py
         pipenv run flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503 --exit-zero
