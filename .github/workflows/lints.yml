@@ -26,7 +26,7 @@ jobs:
       run: bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
     - name: Pylint
       run: pylint ./bot.py cogs/*.py core/*.py --disable=import-error  --exit-zero -r y
-    - name: Flake8 and black lint
+    - name: Black and flake8
       run: |
-        flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503
         black . --check
+        flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503
