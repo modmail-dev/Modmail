@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest, ubuntu-16.04]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
         python-version: [3.6, 3.7]
 
     steps:
@@ -20,11 +20,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install bandit flake8 pylint
+        python -m pip install bandit flake8 pylint black
       continue-on-error: true
     - name: Bandit syntax check
       run: bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
-    - name: Lint with pylint and flake8
-      run: |
-        pylint ./bot.py cogs/*.py core/*.py --disable=import-error  --exit-zero -r y
+    - name: Pylint
+      run: pylint ./bot.py cogs/*.py core/*.py --disable=import-error  --exit-zero -r y
+    - name: Flake8 and black lint
         flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503
+        black . --check
