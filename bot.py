@@ -639,10 +639,7 @@ class ModmailBot(commands.Bot):
 
         blocked_reason = self.blocked_users.get(str(author.id)) or ""
 
-        if (
-            not self.check_account_age(author)
-            or not self.check_guild_age(author)
-        ):
+        if not self.check_account_age(author) or not self.check_guild_age(author):
             new_reason = self.blocked_users.get(str(author.id))
             if new_reason != blocked_reason:
                 if send_message:
