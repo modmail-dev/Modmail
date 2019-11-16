@@ -27,5 +27,6 @@ jobs:
     - name: Pylint
       run: pylint ./bot.py cogs/*.py core/*.py --disable=import-error  --exit-zero -r y
     - name: Flake8 and black lint
+      run: |
         flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503
         black . --check
