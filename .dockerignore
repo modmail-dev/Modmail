@@ -145,8 +145,7 @@ app.json
 CHANGELOG.md
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
-Pipfile
-Pipfile.lock
+requirements.min.txt
 Procfile
 pyproject.toml
 README.md
