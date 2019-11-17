@@ -178,5 +178,14 @@
         "title": "Server Stats",
         "icon_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png",
         "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png" 
+    },
+     "rules": {
+        "repository": "StephenDaDev/modmail-plugins",
+        "branch": "master",
+        "description": "Do you need serverrules? Just started a server and want a set of rules to expand upon an modify as your server grows? Or You are just too lazy to make your own? Well this plugin is for you!",
+        "bot_version": "2.20.1",
+        "title": "Server Rules",
+        "icon_url": "https://i.imgur.com/H4oM5jT.jpg?1",
+        "thumbnail_url": "https://i.imgur.com/H4oM5jT.jpg?1" 
     } 
 }
