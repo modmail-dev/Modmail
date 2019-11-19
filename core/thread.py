@@ -97,7 +97,7 @@ class Thread:
                 overwrites=overwrites,
                 reason="Creating a thread channel.",
             )
-        except discord.HTTPException as e:  # Failed to create due to 50 channel limit.
+        except discord.HTTPException as e:  # Failed to create due to missing perms.
             logger.critical("An error occurred while creating a thread.", exc_info=True)
             self.manager.cache.pop(self.id)
 
@@ -860,18 +860,17 @@ class ThreadManager:
 
         # Schedule thread setup for later
         cat = self.bot.main_category
-        if len(cat.channels) == 50:
+        if category is None and len(cat.channels) == 50:
             fallback_id = self.bot.config["fallback_category_id"]
-            fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
-            if fallback and len(fallback.channels) != 50:
-                self.bot.loop.create_task(thread.setup(creator=creator, category=fallback))
-                return thread
+            if fallback_id:
+                fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
+                if fallback and len(fallback.channels) != 50:
+                    category = fallback
 
-            fallback = await cat.clone(name="Fallback Modmail")
-            self.bot.config.set("fallback_category_id", fallback.id)
-            await self.bot.config.update()
-            self.bot.loop.create_task(thread.setup(creator=creator, category=fallback))
-            return thread
+            if not category:
+                category = await cat.clone(name="Fallback Modmail")
+                self.bot.config.set("fallback_category_id", category.id)
+                await self.bot.config.update()
 
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread
