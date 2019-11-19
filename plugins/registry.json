@@ -71,15 +71,6 @@
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
-    "code": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Run Codes from discord bot. Similar to R.Danny's longue Commands",
-        "bot_version": "2.20.1",
-        "title": "Code Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
     "dm-on-join": {
         "repository": "officialpiyush/modmail-plugins",
         "branch": "master",
@@ -104,15 +95,6 @@
         "description": "Don't want your bot in a server? Did someone invite it without your permission? If so, this plugin is useful for you!",
         "bot_version": "2.20.1",
         "title": "Leave-server Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
-    "moderation": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Rule offenders in your server? Lift the ban hammer or warn them! Moderation plugin to the rescue :tada:",
-        "bot_version": "2.20.1",
-        "title": "Moderation Plugin",
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
@@ -161,15 +143,6 @@
         "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
         "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
     },
-    "logger": {
-        "repository": "Taaku18/modmail-plugins",
-        "branch": "master",
-        "description": "Moderation logger, logs message edits, message delete, channel changes, member join, etc.",
-        "bot_version": "2.20.1",
-        "title": "Server Activity Logger",
-        "icon_url": "https://i.imgur.com/dRqPq5M.png",
-        "thumbnail_url": "https://i.imgur.com/moQn7RC.png"
-    },
      "fun": {
         "repository": "TheKinG2149/modmail-plugins",
         "branch": "master",
@@ -187,5 +160,23 @@
         "title": "Get Stats",
         "icon_url": "https://image.flaticon.com/icons/png/512/117/117761.png",
         "thumbnail_url": "http://www.pngmart.com/files/7/Statistics-PNG-Clipart.png"
-    }
+    },
+    "moderation": {
+        "repository": "xPolar/modmail-plugins",
+        "branch": "master",
+        "description": "Moderate your server with Modmail, bring the Mod to Modmail!",
+        "bot_version": "3.0.3",
+        "title": "Moderate your server",
+        "icon_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/539943767562780704/601485194196680704/wGFmzZq.png"
+    },
+    "serverstats": {
+        "repository": "dazvise/modmail-plugins",
+        "branch": "master",
+        "description": "Interesting and accurate statistics about your server.",
+        "bot_version": "2.20.1",
+        "title": "Server Stats",
+        "icon_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png",
+        "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png" 
+    } 
 }
