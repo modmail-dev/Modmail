@@ -134,4 +134,22 @@ plugins/
 !plugins/registry.json
 temp/
 test.py
+
+# Other stuff
+.env.example
+.gitignore
+.lint.py
+.pylintrc
+.travis.yml
+app.json
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+Pipfile
+Pipfile.lock
+Procfile
+pyproject.toml
+README.md
+runtime.txt
+SPONSORS.json
 stack.yml
