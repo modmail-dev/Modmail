@@ -7,8 +7,13 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.0
+# v3.3.1
 
+### Emergency Patch
+
+- Fixed a recent issue with an animation KeyError due to Discord API update.
+
+# v3.3.0
 
 ### Important
 

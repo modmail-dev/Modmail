@@ -22,7 +22,7 @@ parsedatetime = "==2.4"
 aiohttp = "<3.6.0,>=3.3.0"
 python-dotenv = ">=0.10.3"
 pipenv = "*"
-"discord.py" = "==1.2.4"
+"discord.py" = "==1.2.5"
 
 [requires]
 python_version = "3.7"
