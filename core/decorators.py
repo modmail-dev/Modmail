@@ -1,12 +1,12 @@
-import functools
+import warnings
 
-from discord.ext import commands
+from core.utils import trigger_typing as _trigger_typing
 
 
 def trigger_typing(func):
-    @functools.wraps(func)
-    async def wrapper(self, ctx: commands.Context, *args, **kwargs):
-        await ctx.trigger_typing()
-        return await func(self, ctx, *args, **kwargs)
-
-    return wrapper
+    warnings.warn(
+        "trigger_typing has been moved to core.utils.trigger_typing, this will be removed.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _trigger_typing(func)

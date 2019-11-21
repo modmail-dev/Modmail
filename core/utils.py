@@ -1,3 +1,4 @@
+import functools
 import re
 import shlex
 import typing
@@ -55,6 +56,7 @@ def truncate(text: str, max: int = 50) -> str:  # pylint: disable=redefined-buil
     str
         The truncated text.
     """
+    text = text.strip()
     return text[: max - 3].strip() + "..." if len(text) > max else text
 
 
@@ -75,7 +77,7 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
     messages = messages[:3]
     out = ""
     for message in messages:
-        if message.get("type") in ("note", "internal"):
+        if message.get("type") in {"note", "internal"}:
             continue
         author = message["author"]
         content = str(message["content"]).replace("\n", " ")
@@ -193,27 +195,8 @@ def match_user_id(text: str) -> int:
     return -1
 
 
-def get_perm_level(cmd):
-    from core.models import PermissionLevel
-
-    for check in cmd.checks:
-        perm = getattr(check, "permission_level", None)
-        if perm is not None:
-            return perm
-    for check in cmd.checks:
-        if "is_owner" in str(check):
-            return PermissionLevel.OWNER
-    return PermissionLevel.INVALID
-
-
-async def ignore(coro):
-    try:
-        await coro
-    except Exception:
-        pass
-
-
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
+    # Single reference of Color.red()
     embed = discord.Embed(
         color=discord.Color.red(),
         description=f"**{name.capitalize()} `{word}` cannot be found.**",
@@ -261,3 +244,12 @@ def format_description(i, names):
         ": ".join((str(a + i * 15), b))
         for a, b in enumerate(takewhile(lambda x: x is not None, names), start=1)
     )
+
+
+def trigger_typing(func):
+    @functools.wraps(func)
+    async def wrapper(self, ctx: commands.Context, *args, **kwargs):
+        await ctx.trigger_typing()
+        return await func(self, ctx, *args, **kwargs)
+
+    return wrapper

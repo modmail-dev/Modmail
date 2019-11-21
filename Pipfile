@@ -6,6 +6,8 @@ verify_ssl = true
 [dev-packages]
 black = "==19.3b0"
 pylint = "*"
+bandit = "==1.6.2"
+flake8 = "==3.7.8"
 
 [packages]
 colorama = ">=0.4.0"
@@ -19,8 +21,8 @@ dnspython = "~=1.16.0"
 parsedatetime = "==2.4"
 aiohttp = "<3.6.0,>=3.3.0"
 python-dotenv = ">=0.10.3"
-pipenv = "==2018.11.26"
-"discord.py" = "==1.2.3"
+pipenv = "*"
+"discord.py" = "==1.2.5"
 
 [requires]
 python_version = "3.7"
