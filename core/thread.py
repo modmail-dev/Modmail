@@ -97,7 +97,7 @@ class Thread:
                 overwrites=overwrites,
                 reason="Creating a thread channel.",
             )
-        except discord.HTTPException as e:  # Failed to create due to 50 channel limit.
+        except discord.HTTPException as e:  # Failed to create due to missing perms.
             logger.critical("An error occurred while creating a thread.", exc_info=True)
             self.manager.cache.pop(self.id)
 
@@ -846,7 +846,7 @@ class ThreadManager:
             return thread
         return None
 
-    def create(
+    async def create(
         self,
         recipient: typing.Union[discord.Member, discord.User],
         *,
@@ -859,11 +859,24 @@ class ThreadManager:
         self.cache[recipient.id] = thread
 
         # Schedule thread setup for later
+        cat = self.bot.main_category
+        if category is None and len(cat.channels) == 50:
+            fallback_id = self.bot.config["fallback_category_id"]
+            if fallback_id:
+                fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
+                if fallback and len(fallback.channels) != 50:
+                    category = fallback
+
+            if not category:
+                category = await cat.clone(name="Fallback Modmail")
+                self.bot.config.set("fallback_category_id", category.id)
+                await self.bot.config.update()
+
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread
 
     async def find_or_create(self, recipient) -> Thread:
-        return await self.find(recipient=recipient) or self.create(recipient)
+        return await self.find(recipient=recipient) or await self.create(recipient)
 
     def format_channel_name(self, author):
         """Sanitises a username for use with text channel names"""
