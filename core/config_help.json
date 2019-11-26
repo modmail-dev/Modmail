@@ -17,7 +17,9 @@
       "`{prefix}config set main_category_id 9234932582312` (`9234932582312` is the category ID)"
     ],
     "notes": [
-      "If the Modmail category ended up being non-existent/invalid, Modmail will break. To fix this, run `{prefix}setup` again or set `main_category_id` to a valid category."
+      "If the Modmail category ended up being non-existent/invalid, Modmail will break. To fix this, run `{prefix}setup` again or set `main_category_id` to a valid category.",
+      "When the Modmail category is full, new channels will be created in the fallback category.",
+      "See also: `fallback_category_id`."
     ]
   },
   "fallback_category_id": {
@@ -27,7 +29,8 @@
       "`{prefix}config set fallback_category_id 9234932582312` (`9234932582312` is the category ID)"
     ],
     "notes": [
-      "If the Fallback category ended up being non-existent/invalid, Modmail will create a new one. To fix this, set `fallback_category_id` to a valid category."
+      "If the Fallback category ended up being non-existent/invalid, Modmail will create a new one. To fix this, set `fallback_category_id` to a valid category.",
+      "See also: `main_category_id`."
     ]
   },
   "prefix": {

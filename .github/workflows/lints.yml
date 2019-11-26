@@ -1,14 +1,21 @@
 name: Modmail Workflow
 
-on: [push, pull_request, pull_request_review]
+on: [push, pull_request]
 
 jobs:
   code-style:
-    runs-on: ${{ matrix.os }}
+
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        os: [ubuntu-latest, windows-latest, macOS-latest]
+#        python-version: [3.6, 3.7]
+
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
         python-version: [3.6, 3.7]
 
     steps:
