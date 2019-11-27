@@ -43,7 +43,7 @@ class Thread:
         self.auto_close_task = None
 
     def __repr__(self):
-        return f'Thread(recipient="{self.recipient or self.id}", ' f"channel={self.channel.id})"
+        return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id})'
 
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
