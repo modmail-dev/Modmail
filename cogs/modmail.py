@@ -1015,7 +1015,7 @@ class Modmail(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @commands.command(usage="[user] [duration] [close message]")
+    @commands.command(usage="[user] [duration] [reason]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
     async def block(self, ctx, user: Optional[User] = None, *, after: UserFriendlyTime = None):
