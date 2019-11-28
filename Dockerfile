@@ -1,4 +1,4 @@
-FROM python:3.7-alpine
+FROM python:3.8-alpine
 WORKDIR /modmailbot
 COPY . /modmailbot
 RUN  export PIP_NO_CACHE_DIR=false \

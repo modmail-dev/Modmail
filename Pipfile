@@ -4,28 +4,27 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "==19.3b0"
+black = "==19.10b0"
 pylint = "*"
-bandit = "==1.6.2"
-flake8 = "==3.7.8"
+bandit = ">=1.6.2"
+flake8 = "*"
 
 [packages]
-colorama = ">=0.4.0"
-python-dateutil = ">=2.7.0"
-emoji = ">=0.2"
-uvloop = {version=">=0.12.0", sys_platform = "!= 'win32'"}
+colorama = ">=0.4"
+python-dateutil = ">=2.8"
+emoji = "~=0.5"
+uvloop = {version = "*",sys_platform = "!= 'win32'"}
 motor = ">=2.0.0"
-natural = "==0.2.0"
-isodate = ">=0.6.0"
-dnspython = "~=1.16.0"
-parsedatetime = "==2.4"
-aiohttp = "<3.6.0,>=3.3.0"
-python-dotenv = ">=0.10.3"
-pipenv = "*"
-"discord.py" = "==1.2.5"
-
-[requires]
-python_version = "3.7"
+natural = ">=0.2.0"
+isodate = "~=0.6"
+# required by motor
+dnspython = "*"
+parsedatetime = ">=2.5"
+aiohttp = "*"
+python-dotenv = "*"
+# required by discord.py
+pipenv = ">=3.6.0,<3.7.0"
+"discord.py" = {git = "https://github.com/Rapptz/discord.py.git",ref = "c62b6c3e8815cec6f73ec20aa4d0ebd9b68a0f14"}
 
 [scripts]
 bot = "python bot.py"

@@ -1,4 +1,4 @@
-__version__ = "3.3.2-dev3"
+__version__ = "3.3.3-dev1"
 
 
 import asyncio
@@ -180,19 +180,19 @@ class ModmailBot(commands.Bot):
                 logger.error(" - Shutting down bot - ")
 
     @property
-    def owner_ids(self):
-        owner_ids = self.config["owners"]
-        if owner_ids is not None:
-            owner_ids = set(map(int, str(owner_ids).split(",")))
+    def modmail_owner_ids(self):
+        modmail_owner_ids = self.config["owners"]
+        if modmail_owner_ids is not None:
+            modmail_owner_ids = set(map(int, str(modmail_owner_ids).split(",")))
         if self.owner_id is not None:
-            owner_ids.add(self.owner_id)
+            modmail_owner_ids.add(self.owner_id)
         permissions = self.config["level_permissions"].get(PermissionLevel.OWNER.name, [])
         for perm in permissions:
-            owner_ids.add(int(perm))
-        return owner_ids
+            modmail_owner_ids.add(int(perm))
+        return modmail_owner_ids
 
     async def is_owner(self, user: discord.User) -> bool:
-        if user.id in self.owner_ids:
+        if user.id in self.modmail_owner_ids:
             return True
         return await super().is_owner(user)
 
@@ -416,7 +416,7 @@ class ModmailBot(commands.Bot):
         logger.info("Logged in as: %s", self.user)
         logger.info("Bot ID: %s", self.user.id)
         owners = ", ".join(
-            getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.owner_ids
+            getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.modmail_owner_ids
         )
         logger.info("Owners: %s", owners)
         logger.info("Prefix: %s", self.prefix)

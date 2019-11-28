@@ -7,6 +7,14 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
+# v3.3.3-dev1
+
+Python 3.8 support.
+
+### Changed
+- Updated `parsedatetime` library.
+- `bot.owner_ids` renamed to `bot.modmail_owner_ids`
+
 # v3.3.2-dev3
 
 ### Added

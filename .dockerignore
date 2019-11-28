@@ -93,6 +93,7 @@ celerybeat-schedule
 .venv
 env/
 venv/
+venv2/
 ENV/
 env.bak/
 venv.bak/
@@ -140,7 +141,6 @@ test.py
 .gitignore
 .lint.py
 .pylintrc
-.travis.yml
 app.json
 CHANGELOG.md
 CODE_OF_CONDUCT.md

@@ -40,12 +40,6 @@ class ShortTime:
         self.dt = now + relativedelta(**data)
 
 
-# Monkey patch mins and secs into the units
-units = pdt.pdtLocales["en_US"].units
-units["minutes"].append("mins")
-units["seconds"].append("secs")
-
-
 class HumanTime:
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)
 
@@ -120,9 +114,6 @@ class UserFriendlyTimeSync(Converter):
             # so let me handle the 'now' case
             if argument.endswith(" from now"):
                 argument = argument[:-9].strip()
-            # handles "for xxx hours"
-            if argument.startswith("for "):
-                argument = argument[4:].strip()
 
             elements = calendar.nlp(argument, sourceTime=self.now)
             if elements is None or not elements:

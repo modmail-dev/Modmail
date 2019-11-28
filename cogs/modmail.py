@@ -124,8 +124,8 @@ class Modmail(commands.Cog):
 
         if not self.bot.config["command_permissions"] and not self.bot.config["level_permissions"]:
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
-            for owner_ids in self.bot.owner_ids:
-                await self.bot.update_perms(PermissionLevel.OWNER, owner_ids)
+            for modmail_owner_ids in self.bot.modmail_owner_ids:
+                await self.bot.update_perms(PermissionLevel.OWNER, modmail_owner_ids)
 
     @commands.group(aliases=["snippets"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
