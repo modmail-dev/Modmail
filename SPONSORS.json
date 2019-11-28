@@ -1,26 +1,67 @@
-[{
-  "embed": {
-    "title": "You can have a custom page for yourself here.",
-    "description": "Generate your own embed from [here](https://leovoel.github.io/embed-visualizer/) and make a pull request editing the `SPONSORS.json` file on [GitHub](https://github.com/kyb3r/modmail/blob/master/SPONSORS.json).",
-    "url": "https://patreon.com/kyber",
-    "color": 6071775,
-    "footer": {
-      "icon_url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712",
-      "text": "footer text"
+[
+    {
+        "embed": {
+            "description": "This is a youtube channel that provides high quality reddit content. Videos are uploaded regularly so you are never out of funny, interesting or even creepy content!",
+            "color": 15114050,
+            "footer": {
+                "icon_url": "https://i.imgur.com/fvNKUks.png",
+                "text": "I am a robot, son of Daniel (UK)"
+            },
+            "thumbnail": {
+                "url": "https://i.imgur.com/WyzaPKY.png"
+            },
+            "author": {
+                "name": "Sir Reddit",
+                "url": "https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1",
+                "icon_url": "https://i.imgur.com/WyzaPKY.png"
+            },
+            "fields": [
+                {
+                    "name": "Subscribe!",
+                    "value": "[**Click Here**](https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1)"
+                },
+                {
+                    "name": "Discord Server!",
+                    "value": "[**Click Here**](https://discord.gg/V8ErqHb)"
+                }
+            ]
+        }
     },
-    "thumbnail": {
-      "url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712"
-    },
-    "author": {
-      "name": "Nothing here yet!",
-      "url": "https://patreon.com/kyber",
-      "icon_url": "https://vignette.wikia.nocookie.net/smashtopia/images/c/c9/Insert_Image_Here.jpg/revision/latest?cb=20170827054712"
-    },
-    "fields": [
-      {
-        "name": "🤔",
-        "value": "This command lists the sponsors of this project on [**Patreon**](https://patreon.com/kyber)"
-      }
-    ]
-  }
-}]
+    {
+        "embed": {
+            "title": "Hey there!",
+            "description": "Nice to see you here! You can support us by subscribing on youtube -> [Youtube](https://www.youtube.com/user/RoomieOfficial) <- and also join our  [Discord](https://discord.gg/zaeVCaV)!",
+            "url": "https://discord.gg/zaeVCaV",
+            "color": 13003681,
+            "footer": {
+                "icon_url": "https://imgur.com/Mrc9pLd.gif",
+                "text": "everyone is a clown"
+            },
+            "thumbnail": {
+                "url": "https://imgur.com/Mrc9pLd.gif"
+            },
+            "image": {
+                "url": "https://imgur.com/ZUFiL6b.gif"
+            },
+            "author": {
+                "name": "Roomieofficial",
+                "url": "https://discord.gg/zaeVCaV",
+                "icon_url": "https://imgur.com/6hBkt7Z.png"
+            },
+            "fields": [
+                {
+                    "name": "What is all this about 🤔",
+                    "value": "We are mainly focused on everything that has anything to do with music or singing! "
+                },
+                {
+                    "name": "Youtube 🙄",
+                    "value": "U will get great content if you follow our [Youtube](https://www.youtube.com/user/RoomieOfficial) with weekly uploads."
+                },
+                {
+                    "name": "Discord 😁",
+                    "value": "Make sure to join our [Discord](https://discord.gg/zaeVCaV) We have weekly events, 24/7 chats and more!"
+                }
+            ]
+        }
+    }
+]
