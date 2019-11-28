@@ -184,8 +184,8 @@ class ModmailHelpCommand(commands.HelpCommand):
                 for i, val in enumerate(values, start=1):
                     embed.description += f"\n{i}: {escape_markdown(val)}"
             embed.set_footer(
-                text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} alias" for more '
-                "details on aliases."
+                text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} alias" '
+                "for more details on aliases."
             )
             return await self.get_destination().send(embed=embed)
 
@@ -237,7 +237,7 @@ class Utility(commands.Cog):
     async def changelog(self, ctx, version: str.lower = ""):
         """Shows the changelog of the Modmail."""
         changelog = await Changelog.from_url(self.bot)
-        version = version.lstrip("vV") if version else changelog.latest_version.version
+        version = version.lstrip("v") if version else changelog.latest_version.version
 
         try:
             index = [v.version for v in changelog.versions].index(version)
@@ -264,7 +264,7 @@ class Utility(commands.Cog):
                     f"View the changelog here: {changelog.latest_version.changelog_url}#v{version[::2]}"
                 )
 
-    @commands.command(aliases=["bot", "info"])
+    @commands.command(aliases=["info"])
     @checks.has_permissions(PermissionLevel.REGULAR)
     @utils.trigger_typing
     async def about(self, ctx):
@@ -345,7 +345,7 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     @utils.trigger_typing
     async def debug(self, ctx):
-        """Shows the recent application-logs of the bot."""
+        """Shows the recent application logs of the bot."""
 
         log_file_name = self.bot.token.split(".")[0]
 
@@ -368,23 +368,23 @@ class Utility(commands.Cog):
 
         messages = []
 
-        # Using Scala formatting because it's similar to Python for exceptions
+        # Using Haskell formatting because it's similar to Python for exceptions
         # and it does a fine job formatting the logs.
-        msg = "```Scala\n"
+        msg = "```Haskell\n"
 
         for line in logs.splitlines(keepends=True):
-            if msg != "```Scala\n":
+            if msg != "```Haskell\n":
                 if len(line) + len(msg) + 3 > 2000:
                     msg += "```"
                     messages.append(msg)
-                    msg = "```Scala\n"
+                    msg = "```Haskell\n"
             msg += line
             if len(msg) + 3 > 2000:
                 msg = msg[:1993] + "[...]```"
                 messages.append(msg)
-                msg = "```Scala\n"
+                msg = "```Haskell\n"
 
-        if msg != "```Scala\n":
+        if msg != "```Haskell\n":
             msg += "```"
             messages.append(msg)
 
@@ -1043,7 +1043,7 @@ class Utility(commands.Cog):
                     else:
                         embed.description = (
                             "The command you are attempting to point "
-                            f"to n step {i} does not exist: `{linked_command}`."
+                            f"to in step {i} does not exist: `{linked_command}`."
                         )
 
                     return await ctx.send(embed=embed)
@@ -1266,7 +1266,7 @@ class Utility(commands.Cog):
         - `{prefix}perms add command "plugin enabled" @role`
         - `{prefix}perms add command help 984301093849028`
 
-        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead.
         """
 
         if type_ not in {"command", "level"}:
@@ -1342,7 +1342,7 @@ class Utility(commands.Cog):
         - `{prefix}perms remove override block`
         - `{prefix}perms remove override "snippet add"`
 
-        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead.
         """
         if type_ not in {"command", "level", "override"} or (
             type_ != "override" and user_or_role is None
@@ -1484,7 +1484,7 @@ class Utility(commands.Cog):
         - `{prefix}perms get override block`
         - `{prefix}perms get override permissions add`
 
-        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead,
+        Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead.
         """
 
         if name is None and user_or_role not in {"command", "level", "override"}:

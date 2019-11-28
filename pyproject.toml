@@ -9,6 +9,7 @@ exclude = '''
     | \.git
     | \.venv
     | venv
+    | venv2
     | _build
     | build
     | dist

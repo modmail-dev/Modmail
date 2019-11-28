@@ -120,9 +120,9 @@ class UserFriendlyTimeSync(Converter):
             # so let me handle the 'now' case
             if argument.endswith(" from now"):
                 argument = argument[:-9].strip()
-            # handles "for xxx hours"
-            if argument.startswith("for "):
-                argument = argument[4:].strip()
+            # handles "in xxx hours"
+            if argument.startswith("in "):
+                argument = argument[3:].strip()
 
             elements = calendar.nlp(argument, sourceTime=self.now)
             if elements is None or not elements:
