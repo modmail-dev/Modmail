@@ -26,6 +26,14 @@
         "icon_url": "https://i.imgur.com/67bEi82.png",
         "thumbnail_url": "https://i.imgur.com/67bEi82.png"
     },
+    "anti-steal-close": {
+      "repository": "officialpiyush/modmail-plugins",
+      "branch": "master",
+      "description": "Don't let anyone steal ya close.",
+      "title": "Anti Steal Close",
+      "icon_url": "https://i.imgur.com/LovxyV3.png",
+      "thumbnail_url": "https://i.imgur.com/LovxyV3.png"
+    },
     "embedder": {
         "repository": "papiersnipper/modmail-plugins",
         "branch": "master",
@@ -177,6 +185,6 @@
         "bot_version": "2.20.1",
         "title": "Server Stats",
         "icon_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png",
-        "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png" 
-    } 
+        "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png"
+    }
 }
