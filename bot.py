@@ -1,4 +1,4 @@
-__version__ = "3.3.2-dev3"
+__version__ = "3.3.2-dev4"
 
 
 import asyncio
@@ -612,7 +612,7 @@ class ModmailBot(commands.Bot):
         return False
 
     async def _process_blocked(self, message):
-        sent_emoji, blocked_emoji = await self.retrieve_emoji()
+        _, blocked_emoji = await self.retrieve_emoji()
         if await self.is_blocked(message.author, channel=message.channel, send_message=True):
             await self.add_reaction(message, blocked_emoji)
             return True
@@ -770,7 +770,7 @@ class ModmailBot(commands.Bot):
 
         view = StringView(message.content)
         ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
-        ctx.thread = await self.threads.find(channel=ctx.channel)
+        thread = await self.threads.find(channel=ctx.channel)
 
         if self._skip_check(message.author.id, self.user.id):
             return [ctx]
@@ -791,16 +791,18 @@ class ModmailBot(commands.Bot):
             if not aliases:
                 logger.warning("Alias %s is invalid, removing.", invoker)
                 self.aliases.pop(invoker)
+
             for alias in aliases:
-                view = StringView(alias)
-                ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
-                ctx.thread = await self.threads.find(channel=ctx.channel)
-                ctx.view = view
-                ctx.invoked_with = view.get_word()
-                ctx.command = self.all_commands.get(ctx.invoked_with)
-                ctxs += [ctx]
+                view = StringView(invoked_prefix + alias)
+                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                ctx_.thread = thread
+                discord.utils.find(view.skip_string, prefixes)
+                ctx_.invoked_with = view.get_word().lower()
+                ctx_.command = self.all_commands.get(ctx_.invoked_with)
+                ctxs += [ctx_]
             return ctxs
 
+        ctx.thread = thread
         ctx.invoked_with = invoker
         ctx.command = self.all_commands.get(invoker)
         return [ctx]
@@ -872,11 +874,8 @@ class ModmailBot(commands.Bot):
 
             # Process snippets
             if cmd in self.snippets:
-                thread = await self.threads.find(channel=message.channel)
                 snippet = self.snippets[cmd]
-                if thread:
-                    snippet = self.formatter.format(snippet, recipient=thread.recipient)
-                message.content = f"{self.prefix}reply {snippet}"
+                message.content = f"{self.prefix}freply {snippet}"
 
         ctxs = await self.get_contexts(message)
         for ctx in ctxs:

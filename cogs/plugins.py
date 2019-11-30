@@ -539,12 +539,12 @@ class Plugins(commands.Cog):
 
             return await ctx.send(embed=embed)
 
-        for plugin_name, details in registry:
-            details = self.registry[plugin_name]
+        for name, details in registry:
+            details = self.registry[name]
             user, repo = details["repository"].split("/", maxsplit=1)
             branch = details.get("branch")
 
-            plugin = Plugin(user, repo, plugin_name, branch)
+            plugin = Plugin(user, repo, name, branch)
 
             embed = discord.Embed(
                 color=self.bot.main_color,
@@ -554,7 +554,7 @@ class Plugins(commands.Cog):
             )
 
             embed.add_field(
-                name="Installation", value=f"```{self.bot.prefix}plugins add {plugin_name}```"
+                name="Installation", value=f"```{self.bot.prefix}plugins add {name}```"
             )
 
             embed.set_author(

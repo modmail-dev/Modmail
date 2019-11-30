@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import discord
 from discord.ext import commands
-from discord.utils import escape_markdown, escape_mentions
+from discord.utils import escape_markdown
 
 from dateutil import parser
 from natural.date import duration
@@ -21,6 +21,7 @@ from core.utils import (
     create_not_found_embed,
     format_description,
     trigger_typing,
+    escape_code_block,
 )
 
 logger = getLogger(__name__)
@@ -155,8 +156,10 @@ class Modmail(commands.Cog):
             val = self.bot.snippets.get(name)
             if val is None:
                 embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
-                return await ctx.send(embed=embed)
-            return await ctx.send(escape_mentions(val))
+            else:
+                embed = discord.Embed(color=self.bot.main_color)
+                embed.add_field(name=f"`{name}` will send:", value=val)
+            return await ctx.send(embed=embed)
 
         if not self.bot.snippets:
             embed = discord.Embed(
@@ -186,8 +189,11 @@ class Modmail(commands.Cog):
         val = self.bot.snippets.get(name)
         if val is None:
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
-            return await ctx.send(embed=embed)
-        return await ctx.send(escape_markdown(escape_mentions(val)).replace("<", "\\<"))
+        else:
+            embed = discord.Embed(color=self.bot.main_color)
+            val = escape_code_block(val)
+            embed.add_field(name=f"`{name}` will send:", value=f"```\n{val}```")
+        return await ctx.send(embed=embed)
 
     @snippet.command(name="add")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -782,10 +788,32 @@ class Modmail(commands.Cog):
         async with ctx.typing():
             await ctx.thread.reply(ctx.message)
 
-    @commands.command()
+    @commands.command(aliases=["formatreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def anonreply(self, ctx, *, msg: str = ""):
+    async def freply(self, ctx, *, msg: str = ""):
+        """
+        Reply to a Modmail thread with variables.
+
+        Works just like `{prefix}reply`, however with the addition of three variables:
+          - `{channel}` - the `discord.TextChannel` object
+          - `{recipient}` - the `discord.User` object of the recipient
+          - `{author}` - the `discord.User` object of the author
+
+        Supports attachments and images as well as
+        automatically embedding image URLs.
+        """
+        msg = self.bot.formatter.format(
+            msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
+        )
+        ctx.message.content = msg
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message)
+
+    @commands.command(aliases=["anonreply", "anonymousreply"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def areply(self, ctx, *, msg: str = ""):
         """
         Reply to a thread anonymously.
 
@@ -823,11 +851,10 @@ class Modmail(commands.Cog):
                     continue
                 # TODO: use regex to find the linked message id
                 linked_message_id = str(embed.author.url).split("/")[-1]
-                break
+
             elif message_id and msg.id == message_id:
                 url = msg.embeds[0].author.url
                 linked_message_id = str(url).split("/")[-1]
-                break
 
         return linked_message_id
 

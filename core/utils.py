@@ -226,11 +226,17 @@ def parse_alias(alias):
         r"(?:(?:\s*(?<!\\)(?:\")\s*)(?=&&)|(?:\s*(?<!\\)(?:\")\s*)(?=$))",
         encode_alias,
         alias,
-    )
+    ).strip()
 
     aliases = []
-    for alias in re.split(r"\s*&&\s*", alias):
-        aliases.append(re.sub("\x1AU(.+?)\x1AU", decode_alias, alias))
+    if not alias:
+        return aliases
+
+    for a in re.split(r"\s*&&\s*", alias):
+        a = re.sub("\x1AU(.+?)\x1AU", decode_alias, a)
+        if a[0] == a[-1] == '"':
+            a = a[1:-1]
+        aliases.append(a)
 
     return aliases
 
@@ -240,14 +246,14 @@ def normalize_alias(alias, message):
     contents = parse_alias(message)
 
     final_aliases = []
-    for alias, content in zip_longest(aliases, contents):
-        if alias is None:
+    for a, content in zip_longest(aliases, contents):
+        if a is None:
             break
 
         if content:
-            final_aliases.append(f"{alias} {content}")
+            final_aliases.append(f"{a} {content}")
         else:
-            final_aliases.append(alias)
+            final_aliases.append(a)
 
     return final_aliases
 
@@ -266,3 +272,7 @@ def trigger_typing(func):
         return await func(self, ctx, *args, **kwargs)
 
     return wrapper
+
+
+def escape_code_block(text):
+    return re.sub(r"```", "`\u200b``", text)

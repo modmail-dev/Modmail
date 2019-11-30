@@ -235,9 +235,7 @@ class ApiClient(RequestClient):
 
     async def post_log(self, channel_id: Union[int, str], data: dict) -> dict:
         return await self.logs.find_one_and_update(
-            {"channel_id": str(channel_id)},
-            {"$set": {k: v for k, v in data.items()}},
-            return_document=True,
+            {"channel_id": str(channel_id)}, {"$set": data}, return_document=True
         )
 
 

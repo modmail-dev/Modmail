@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.2-dev3
+# v3.3.2-dev4
 
 ### Added
 
@@ -20,10 +20,16 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - "enable" and "disable" support for yes or no config vars.
 - Added "perhaps you meant" section to `?config help`.
 - Multi-command alias is now more stable. With support for a single quote escape `\"`.
+- New command `?freply`, which behaves exactly like `?reply` with the addition that you can substitute `{channel}`, `{recipient}`, and `{author}` to be their respective values. 
+
+### Changed
+
+- The look of alias and snippet when previewing.
 
 ### Fixed
 
 - Setting config vars using human time wasn't working.
+- Fixed some bugs with aliases.
 
 ### Internal
 
