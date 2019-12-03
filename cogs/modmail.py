@@ -796,9 +796,9 @@ class Modmail(commands.Cog):
         Reply to a Modmail thread with variables.
 
         Works just like `{prefix}reply`, however with the addition of three variables:
-          - `{channel}` - the `discord.TextChannel` object
-          - `{recipient}` - the `discord.User` object of the recipient
-          - `{author}` - the `discord.User` object of the author
+          - `{{channel}}` - the `discord.TextChannel` object
+          - `{{recipient}}` - the `discord.User` object of the recipient
+          - `{{author}}` - the `discord.User` object of the author
 
         Supports attachments and images as well as
         automatically embedding image URLs.
