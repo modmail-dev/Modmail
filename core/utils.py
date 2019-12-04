@@ -11,6 +11,11 @@ from urllib import parse
 import discord
 from discord.ext import commands
 
+__all__ = ['strtobool', 'User', 'truncate', 'format_preview', 'is_image_url',
+           'parse_image_url', 'human_join', 'days', 'cleanup_code', 'match_user_id',
+           'create_not_found_embed', 'parse_alias', 'normalize_alias', 'format_description', 'trigger_typing',
+           'escape_code_block', 'format_channel_name']
+
 
 def strtobool(val):
     if isinstance(val, bool):

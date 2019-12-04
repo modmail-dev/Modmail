@@ -17,16 +17,7 @@ from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.thread import Thread
 from core.time import UserFriendlyTime, human_timedelta
-from core.utils import (
-    format_preview,
-    User,
-    create_not_found_embed,
-    format_description,
-    trigger_typing,
-    escape_code_block,
-    match_user_id,
-    format_channel_name,
-)
+from core.utils import *
 
 logger = getLogger(__name__)
 
@@ -161,15 +152,18 @@ class Modmail(commands.Cog):
             if val is None:
                 embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
             else:
-                embed = discord.Embed(color=self.bot.main_color)
-                embed.add_field(name=f"`{name}` will send:", value=val)
+                embed = discord.Embed(
+                    title=f'Snippet - "{name}":',
+                    description=val,
+                    color=self.bot.main_color
+                )
             return await ctx.send(embed=embed)
 
         if not self.bot.snippets:
             embed = discord.Embed(
                 color=self.bot.error_color, description="You dont have any snippets at the moment."
             )
-            embed.set_footer(text=f'Check "{self.bot.prefix}help snippet" to add a snippet.')
+            embed.set_footer(text=f'Check "{self.bot.prefix}help snippet add" to add a snippet.')
             embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
             return await ctx.send(embed=embed)
 
@@ -194,9 +188,11 @@ class Modmail(commands.Cog):
         if val is None:
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         else:
-            embed = discord.Embed(color=self.bot.main_color)
-            val = escape_code_block(val)
-            embed.add_field(name=f"`{name}` will send:", value=f"```\n{val}```")
+            val = truncate(escape_code_block(val), 2048 - 7)
+            embed = discord.Embed(title=f'Raw snippet - "{name}":',
+                                  description=f"```\n{val}```",
+                                  color=self.bot.main_color)
+
         return await ctx.send(embed=embed)
 
     @snippet.command(name="add")
@@ -204,6 +200,11 @@ class Modmail(commands.Cog):
     async def snippet_add(self, ctx, name: str.lower, *, value: commands.clean_content):
         """
         Add a snippet.
+
+        Simply to add a snippet, do: ```
+        {prefix}snippet add hey hello there :)
+        ```
+        then when you type `{prefix}hey`, "hello there :)" will get sent to the recipient.
 
         To add a multi-word snippet name, use quotes: ```
         {prefix}snippet add "two word" this is a two word snippet.
@@ -1245,7 +1246,7 @@ class Modmail(commands.Cog):
                 )
             )
             if len(users) == 1:
-                user = users[0]
+                user = users.pop()
                 name = format_channel_name(
                     user, self.bot.modmail_guild, exclude_channel=ctx.channel
                 )

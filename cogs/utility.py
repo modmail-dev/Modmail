@@ -916,23 +916,30 @@ class Utility(commands.Cog):
                     description=f"Alias `{name}` is invalid, this alias will now be deleted."
                     "This alias will now be deleted.",
                 )
-                embed.add_field(name=f"{name}` used to be:", value=val)
+                embed.add_field(name=f"{name}` used to be:", value=utils.truncate(val, 1024))
                 self.bot.aliases.pop(name)
                 await self.bot.config.update()
                 return await ctx.send(embed=embed)
 
             if len(values) == 1:
-                embed = discord.Embed(color=self.bot.main_color)
-                embed.add_field(name=f"`{name}` points to:", value=values[0])
-            else:
                 embed = discord.Embed(
-                    color=self.bot.main_color,
-                    description=f"**`{name}` points to the following steps:**",
+                    title=f'Alias - "{name}":',
+                    description=values[0],
+                    color=self.bot.main_color
                 )
-                for i, val in enumerate(values, start=1):
-                    embed.add_field(name=f"Step {i}:", value=val)
+                return await ctx.send(embed=embed)
 
-            return await ctx.send(embed=embed)
+            else:
+                embeds = []
+                for i, val in enumerate(values, start=1):
+                    embed = discord.Embed(
+                        color=self.bot.main_color,
+                        title=f'Alias - "{name}" - Step {i}:',
+                        description=val
+                    )
+                    embeds += [embed]
+                session = EmbedPaginatorSession(ctx, *embeds)
+                return await session.run()
 
         if not self.bot.aliases:
             embed = discord.Embed(
@@ -964,15 +971,15 @@ class Utility(commands.Cog):
             embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
             return await ctx.send(embed=embed)
 
-        embed = discord.Embed(color=self.bot.main_color)
-        val = utils.escape_code_block(val)
-        embed.add_field(name=f"`{name}` points to:", value=f"```\n{val}```")
+        val = utils.truncate(utils.escape_code_block(val), 2048-7)
+        embed = discord.Embed(title=f'Raw alias - "{name}":',
+                              description=f"```\n{val}```",
+                              color=self.bot.main_color)
+
         return await ctx.send(embed=embed)
 
     async def make_alias(self, name, value, action):
         values = utils.parse_alias(value)
-        save_aliases = []
-
         if not values:
             embed = discord.Embed(
                 title="Error",
@@ -982,12 +989,20 @@ class Utility(commands.Cog):
             embed.set_footer(text=f'See "{self.bot.prefix}alias add" for more details.')
             return embed
 
+        if len(values) > 25:
+            embed = discord.Embed(title="Error",
+                                  description="Too many steps, max=25.",
+                                  color=self.bot.error_color)
+            return embed
+
+        save_aliases = []
+
         multiple_alias = len(values) > 1
 
         embed = discord.Embed(title=f"{action} alias", color=self.bot.main_color)
 
         if not multiple_alias:
-            embed.add_field(name=f"`{name}` points to:", value=values[0])
+            embed.add_field(name=f"`{name}` points to:", value=utils.truncate(values[0], 1024))
         else:
             embed.description = f"`{name}` now points to the following steps:"
 
@@ -1018,7 +1033,7 @@ class Utility(commands.Cog):
             else:
                 save_aliases.append(val)
             if multiple_alias:
-                embed.add_field(name=f"Step {i}:", value=val)
+                embed.add_field(name=f"Step {i}:", value=utils.truncate(val, 1024))
 
         self.bot.aliases[name] = " && ".join(f'"{a}"' for a in save_aliases)
         await self.bot.config.update()

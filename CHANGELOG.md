@@ -31,6 +31,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - The look of alias and snippet when previewing.
 - Message ID of the thread embed is saved in DB, instead of the original message.
 - Swapped the position of user and category for `?contact`.
+- The log file will no longer grow infinitely large.
+- Hard limit of maximum 25 steps for alias.
 
 ### Fixed
 

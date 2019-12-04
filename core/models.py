@@ -2,6 +2,7 @@ import logging
 import re
 import sys
 from enum import IntEnum
+from logging.handlers import RotatingFileHandler
 from string import Formatter
 
 import discord
@@ -120,7 +121,7 @@ class FileFormatter(logging.Formatter):
 
 def configure_logging(name, level=None):
     global ch_debug, log_level
-    ch_debug = logging.FileHandler(name, mode="a+")
+    ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=48000, backupCount=1)
 
     formatter_debug = FileFormatter(
         "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
