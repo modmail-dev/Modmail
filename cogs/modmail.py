@@ -907,7 +907,6 @@ class Modmail(commands.Cog):
         self,
         ctx,
         category: Optional[discord.CategoryChannel] = None,
-        *,
         user: Union[discord.Member, discord.User],
     ):
         """
