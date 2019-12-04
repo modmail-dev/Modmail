@@ -24,7 +24,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Multi-command alias is now more stable. With support for a single quote escape `\"`.
 - New command `?freply`, which behaves exactly like `?reply` with the addition that you can substitute `{channel}`, `{recipient}`, and `{author}` to be their respective values. 
 - New command `?repair`, repair any broken Modmail thread (with help from @officialpiyush).
-- Recipients gets a feedback when they edit message.
+- Recipient get feedback when they edit message.
 
 ### Changed
 
