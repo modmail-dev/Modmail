@@ -986,7 +986,7 @@ class ModmailBot(commands.Bot):
             mod = entry.user
         except AttributeError as e:
             # discord.py broken implementation with discord API
-            logger.warning("Failed to retrieve audit log.", str(e))
+            logger.warning("Failed to retrieve audit log: %s.", str(e))
             return
 
         if mod == self.user:

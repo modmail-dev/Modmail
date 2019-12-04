@@ -878,9 +878,9 @@ class Modmail(commands.Cog):
     async def contact(
         self,
         ctx,
-        category: Optional[discord.CategoryChannel] = None,
-        *,
         user: Union[discord.Member, discord.User],
+        *,
+        category: discord.CategoryChannel = None
     ):
         """
         Create a thread with a specified member.

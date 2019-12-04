@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.2-dev5
+# v3.3.2-dev6
 
 (Development update, very likely to be unstable!)
 
@@ -30,6 +30,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 
 - The look of alias and snippet when previewing.
 - Message ID of the thread embed is saved in DB, instead of the original message.
+- Swapped the position of user and category for `?contact`.
 
 ### Fixed
 
