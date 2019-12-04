@@ -1,6 +1,7 @@
 import base64
 import functools
 import re
+import string
 import typing
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
@@ -183,6 +184,9 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
+TOPIC_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
+
+
 def match_user_id(text: str) -> int:
     """
     Matches a user ID in the format of "User ID: 12345".
@@ -197,7 +201,7 @@ def match_user_id(text: str) -> int:
     int
         The user ID if found. Otherwise, -1.
     """
-    match = re.search(r"\bUser ID: (\d{17,21})\b", text)
+    match = TOPIC_REGEX.search(text)
     if match is not None:
         return int(match.group(1))
     return -1
@@ -276,3 +280,19 @@ def trigger_typing(func):
 
 def escape_code_block(text):
     return re.sub(r"```", "`\u200b``", text)
+
+
+def format_channel_name(author, guild, exclude_channel=None):
+    """Sanitises a username for use with text channel names"""
+    name = author.name.lower()
+    name = new_name = (
+        "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
+    ) + f"-{author.discriminator}"
+
+    counter = 1
+    existed = set(c.name for c in guild.text_channels if c != exclude_channel)
+    while new_name in existed:
+        new_name = f"{name}_{counter}"  # multiple channels with same name
+        counter += 1
+
+    return new_name

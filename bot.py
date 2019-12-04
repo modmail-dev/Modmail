@@ -1,4 +1,4 @@
-__version__ = "3.3.2-dev4"
+__version__ = "3.3.2-dev5"
 
 
 import asyncio
@@ -150,7 +150,7 @@ class ModmailBot(commands.Bot):
         return self._session
 
     @property
-    def api(self):
+    def api(self) -> ApiClient:
         if self._api is None:
             self._api = ApiClient(self)
         return self._api
@@ -435,8 +435,13 @@ class ModmailBot(commands.Bot):
 
         for recipient_id, items in tuple(closures.items()):
             after = (datetime.fromisoformat(items["time"]) - datetime.utcnow()).total_seconds()
-            if after < 0:
+            if after <= 0:
+                logger.debug("Closing thread for recipient %s.", recipient_id)
                 after = 0
+            else:
+                logger.debug(
+                    "Thread for recipient %s will be closed after %s seconds.", recipient_id, after
+                )
 
             thread = await self.threads.find(recipient_id=int(recipient_id))
 
@@ -446,8 +451,6 @@ class ModmailBot(commands.Bot):
                 self.config["closures"].pop(recipient_id)
                 await self.config.update()
                 continue
-
-            logger.debug("Closing thread for recipient %s.", recipient_id)
 
             await thread.close(
                 closer=self.get_user(items["closer_id"]),
@@ -977,15 +980,20 @@ class ModmailBot(commands.Bot):
         if channel.guild != self.modmail_guild:
             return
 
-        audit_logs = self.modmail_guild.audit_logs()
-        entry = await audit_logs.find(lambda e: e.target.id == channel.id)
-        mod = entry.user
+        try:
+            audit_logs = self.modmail_guild.audit_logs()
+            entry = await audit_logs.find(lambda a: a.target == channel)
+            mod = entry.user
+        except AttributeError as e:
+            # discord.py broken implementation with discord API
+            logger.warning("Failed to retrieve audit log.", str(e))
+            return
 
         if mod == self.user:
             return
 
         if isinstance(channel, discord.CategoryChannel):
-            if self.main_category.id == channel.id:
+            if self.main_category == channel:
                 logger.debug("Main category was deleted.")
                 self.config.remove("main_category_id")
                 await self.config.update()
@@ -994,14 +1002,14 @@ class ModmailBot(commands.Bot):
         if not isinstance(channel, discord.TextChannel):
             return
 
-        if self.log_channel is None or self.log_channel.id == channel.id:
+        if self.log_channel is None or self.log_channel == channel:
             logger.info("Log channel deleted.")
             self.config.remove("log_channel_id")
             await self.config.update()
             return
 
         thread = await self.threads.find(channel=channel)
-        if thread:
+        if thread and thread.channel == channel:
             logger.debug("Manually closed channel %s.", channel.name)
             await thread.close(closer=mod, silent=True, delete_channel=False)
 
@@ -1044,19 +1052,24 @@ class ModmailBot(commands.Bot):
         await discord.utils.async_all(self.on_message_delete(msg) for msg in messages)
 
     async def on_message_edit(self, before, after):
-        if before.author.bot:
+        if after.author.bot:
             return
-        if isinstance(before.channel, discord.DMChannel):
+        if isinstance(after.channel, discord.DMChannel):
             thread = await self.threads.find(recipient=before.author)
-            async for msg in thread.channel.history():
-                if msg.embeds:
-                    embed = msg.embeds[0]
-                    matches = str(embed.author.url).split("/")
-                    if matches and matches[-1] == str(before.id):
-                        embed.description = after.content
-                        await msg.edit(embed=embed)
-                        await self.api.edit_message(str(after.id), after.content)
-                        break
+            try:
+                await thread.edit_dm_message(after, after.content)
+            except ValueError:
+                _, blocked_emoji = await self.retrieve_emoji()
+                try:
+                    await after.add_reaction(blocked_emoji)
+                except (discord.HTTPException, discord.InvalidArgument):
+                    pass
+            else:
+                embed = discord.Embed(
+                    description="Successfully Edited Message", color=self.main_color
+                )
+                embed.set_footer(text=f"Message ID: {after.id}")
+                await after.channel.send(embed=embed)
 
     async def on_error(self, event_method, *args, **kwargs):
         logger.error("Ignoring exception in %s.", event_method)

@@ -202,12 +202,19 @@ class ApiClient(RequestClient):
         )
 
     async def append_log(
-        self, message: Message, channel_id: Union[str, int] = "", type_: str = "thread_message"
+        self,
+        message: Message,
+        *,
+        message_id: str = "",
+        channel_id: str = "",
+        type_: str = "thread_message",
     ) -> dict:
         channel_id = str(channel_id) or str(message.channel.id)
+        message_id = str(message_id) or str(message.id)
+
         data = {
             "timestamp": str(message.created_at),
-            "message_id": str(message.id),
+            "message_id": message_id,
             "author": {
                 "id": str(message.author.id),
                 "name": message.author.name,

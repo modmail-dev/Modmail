@@ -1,4 +1,5 @@
 import asyncio
+import re
 from datetime import datetime
 from itertools import zip_longest
 from typing import Optional, Union
@@ -14,6 +15,7 @@ from natural.date import duration
 from core import checks
 from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
+from core.thread import Thread
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import (
     format_preview,
@@ -22,6 +24,8 @@ from core.utils import (
     format_description,
     trigger_typing,
     escape_code_block,
+    match_user_id,
+    format_channel_name,
 )
 
 logger = getLogger(__name__)
@@ -841,23 +845,6 @@ class Modmail(commands.Cog):
             msg = await ctx.thread.note(ctx.message)
             await msg.pin()
 
-    async def find_linked_message(self, ctx, message_id):
-        linked_message_id = None
-
-        async for msg in ctx.channel.history():
-            if message_id is None and msg.embeds:
-                embed = msg.embeds[0]
-                if embed.color.value != self.bot.mod_color or not embed.author.url:
-                    continue
-                # TODO: use regex to find the linked message id
-                linked_message_id = str(embed.author.url).split("/")[-1]
-
-            elif message_id and msg.id == message_id:
-                url = msg.embeds[0].author.url
-                linked_message_id = str(url).split("/")[-1]
-
-        return linked_message_id
-
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
@@ -867,12 +854,14 @@ class Modmail(commands.Cog):
 
         If no `message_id` is provided,
         the last message sent by a staff will be edited.
+
+        Note: attachments **cannot** be edited.
         """
         thread = ctx.thread
 
-        linked_message_id = await self.find_linked_message(ctx, message_id)
-
-        if linked_message_id is None:
+        try:
+            await thread.edit_message(message_id, message)
+        except ValueError:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
@@ -881,16 +870,8 @@ class Modmail(commands.Cog):
                 )
             )
 
-        await asyncio.gather(
-            thread.edit_message(linked_message_id, message),
-            self.bot.api.edit_message(linked_message_id, message),
-        )
-
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        try:
-            await ctx.message.add_reaction(sent_emoji)
-        except (discord.HTTPException, discord.InvalidArgument):
-            pass
+        return await ctx.message.add_reaction(sent_emoji)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1168,7 +1149,7 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def delete(self, ctx, message_id: Optional[int] = None):
+    async def delete(self, ctx, message_id: int = None):
         """
         Delete a message that was sent using the reply command or a note.
 
@@ -1179,15 +1160,9 @@ class Modmail(commands.Cog):
         """
         thread = ctx.thread
 
-        if message_id is not None:
-            try:
-                message_id = int(message_id)
-            except ValueError:
-                raise commands.BadArgument("A message ID needs to be specified.")
-
-        linked_message_id = await self.find_linked_message(ctx, message_id)
-
-        if linked_message_id is None:
+        try:
+            await thread.delete_message(message_id)
+        except ValueError:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
@@ -1196,12 +1171,119 @@ class Modmail(commands.Cog):
                 )
             )
 
-        await thread.delete_message(linked_message_id)
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        try:
-            await ctx.message.add_reaction(sent_emoji)
-        except (discord.HTTPException, discord.InvalidArgument):
-            pass
+        return await ctx.message.add_reaction(sent_emoji)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def repair(self, ctx):
+        """
+        Repair a thread broken by Discord.
+        """
+        sent_emoji, blocked_emoji = await self.bot.retrieve_emoji()
+
+        if ctx.thread:
+            user_id = match_user_id(ctx.channel.topic)
+            if user_id == -1:
+                logger.info("Setting current channel's topic to User ID.")
+                await ctx.channel.edit(topic=f"User ID: {ctx.thread.id}")
+            return await ctx.message.add_reaction(sent_emoji)
+
+        logger.info("Attempting to fix a broken thread %s.", ctx.channel.name)
+
+        # Search cache for channel
+        user_id, thread = next(
+            ((k, v) for k, v in self.bot.threads.cache.items() if v.channel == ctx.channel),
+            (-1, None),
+        )
+        if thread is not None:
+            logger.debug("Found thread with tempered ID.")
+            await ctx.channel.edit(reason="Fix broken Modmail thread", topic=f"User ID: {user_id}")
+            return await ctx.message.add_reaction(sent_emoji)
+
+        # find genesis message to retrieve User ID
+        async for message in ctx.channel.history(limit=10, oldest_first=True):
+            if (
+                message.author == self.bot.user
+                and message.embeds
+                and message.embeds[0].color
+                and message.embeds[0].color.value == self.bot.main_color
+                and message.embeds[0].footer.text
+            ):
+                user_id = match_user_id(message.embeds[0].footer.text)
+                if user_id != -1:
+                    recipient = self.bot.get_user(user_id)
+                    if recipient is None:
+                        self.bot.threads.cache[user_id] = thread = Thread(
+                            self.bot.threads, user_id, ctx.channel
+                        )
+                    else:
+                        self.bot.threads.cache[user_id] = thread = Thread(
+                            self.bot.threads, recipient, ctx.channel
+                        )
+                    thread.ready = True
+                    logger.info(
+                        "Setting current channel's topic to User ID and created new thread."
+                    )
+                    await ctx.channel.edit(
+                        reason="Fix broken Modmail thread", topic=f"User ID: {user_id}"
+                    )
+                    return await ctx.message.add_reaction(sent_emoji)
+
+        else:
+            logger.warning("No genesis message found.")
+
+        # match username from channel name
+        # username-1234, username-1234_1, username-1234_2
+        m = re.match(r"^(.+)-(\d{4})(?:_\d+)?$", ctx.channel.name)
+        if m is not None:
+            users = set(
+                filter(
+                    lambda member: member.name == m.group(1)
+                    and member.discriminator == m.group(2),
+                    ctx.guild.members,
+                )
+            )
+            if len(users) == 1:
+                user = users[0]
+                name = format_channel_name(
+                    user, self.bot.modmail_guild, exclude_channel=ctx.channel
+                )
+                recipient = self.bot.get_user(user.id)
+                if user.id in self.bot.threads.cache:
+                    thread = self.bot.threads.cache[user.id]
+                    if thread.channel:
+                        embed = discord.Embed(
+                            title="Delete Channel",
+                            description="This thread channel is no longer in use. "
+                            f"All messages will be directed to {ctx.channel.mention} instead.",
+                            color=self.bot.error_color,
+                        )
+                        embed.set_footer(
+                            text='Please manually delete this channel, do not use "{prefix}close".'
+                        )
+                        try:
+                            await thread.channel.send(embed=embed)
+                        except discord.HTTPException:
+                            pass
+                if recipient is None:
+                    self.bot.threads.cache[user.id] = thread = Thread(
+                        self.bot.threads, user_id, ctx.channel
+                    )
+                else:
+                    self.bot.threads.cache[user.id] = thread = Thread(
+                        self.bot.threads, recipient, ctx.channel
+                    )
+                thread.ready = True
+                logger.info("Setting current channel's topic to User ID and created new thread.")
+                await ctx.channel.edit(
+                    reason="Fix broken Modmail thread", name=name, topic=f"User ID: {user.id}"
+                )
+                return await ctx.message.add_reaction(sent_emoji)
+
+            elif len(users) >= 2:
+                logger.info("Multiple users with the same name and discriminator.")
+        return await ctx.message.add_reaction(blocked_emoji)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)

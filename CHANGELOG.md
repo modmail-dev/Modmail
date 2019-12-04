@@ -7,7 +7,9 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.3.2-dev4
+# v3.3.2-dev5
+
+(Development update, very likely to be unstable!)
 
 ### Added
 
@@ -21,20 +23,27 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Added "perhaps you meant" section to `?config help`.
 - Multi-command alias is now more stable. With support for a single quote escape `\"`.
 - New command `?freply`, which behaves exactly like `?reply` with the addition that you can substitute `{channel}`, `{recipient}`, and `{author}` to be their respective values. 
+- New command `?repair`, repair any broken Modmail thread (with help from @officialpiyush).
+- Recipients gets a feedback when they edit message.
 
 ### Changed
 
 - The look of alias and snippet when previewing.
+- Message ID of the thread embed is saved in DB, instead of the original message.
 
 ### Fixed
 
 - Setting config vars using human time wasn't working.
 - Fixed some bugs with aliases.
+- Fixed a lot of issues with `?edit` and `?delete` and recipient message edit.
+- Masked the error: "AttributeError: 'int' object has no attribute 'name'"
+  - Channel delete event will not be checked until discord.py fixes this issue.
 
 ### Internal
 
 - Commit to black format line width max = 99, consistent with pylint.
 - Alias parser is rewritten without shlex.
+- New checks with thread create / find.
 
 # v3.3.1
 
