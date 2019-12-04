@@ -1,0 +1,28 @@
+name: Build Docker to GPR and Release
+
+on: release:
+      types: [published]
+
+jobs:
+  build-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull source
+        uses: actions/checkout@v1
+
+      - name: Build Docker image
+        uses: actions/docker/cli@master
+        with:
+          args: build . -t modmail:{{ GITHUB_REF }}
+
+      - name: Save the image
+        uses: actions/docker/cli@master
+        with:
+          args: save my-image:latest
+
+      - name: Upload to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: my-image.tar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
