@@ -88,6 +88,15 @@
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
+    "giveaway": {
+        "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
+        "description": "Host giveaways on your server",
+        "bot_version": "2.20.1",
+        "title": "\uD83C\uDF89 Giveaway Plugin \uD83C\uDF89",
+        "icon_url": "https://i.imgur.com/qk85xdi.png",
+        "thumbnail_url": "https://i.imgur.com/gUHB91v.png"
+    },
     "hastebin": {
         "repository": "officialpiyush/modmail-plugins",
         "branch": "master",
