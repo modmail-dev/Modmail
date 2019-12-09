@@ -48,6 +48,12 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Alias parser is rewritten without shlex.
 - New checks with thread create / find.
 
+# v3.3.2
+
+### Fixed
+
+- An oversight with the permission system.
+
 # v3.3.1
 
 ### Emergency Patch
