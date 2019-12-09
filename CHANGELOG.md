@@ -33,6 +33,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Swapped the position of user and category for `?contact`.
 - The log file will no longer grow infinitely large.
 - Hard limit of maximum 25 steps for alias.
+- `?disable` is now `?disable new`.
 
 ### Fixed
 

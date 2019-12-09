@@ -153,9 +153,7 @@ class Modmail(commands.Cog):
                 embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
             else:
                 embed = discord.Embed(
-                    title=f'Snippet - "{name}":',
-                    description=val,
-                    color=self.bot.main_color
+                    title=f'Snippet - "{name}":', description=val, color=self.bot.main_color
                 )
             return await ctx.send(embed=embed)
 
@@ -189,9 +187,11 @@ class Modmail(commands.Cog):
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         else:
             val = truncate(escape_code_block(val), 2048 - 7)
-            embed = discord.Embed(title=f'Raw snippet - "{name}":',
-                                  description=f"```\n{val}```",
-                                  color=self.bot.main_color)
+            embed = discord.Embed(
+                title=f'Raw snippet - "{name}":',
+                description=f"```\n{val}```",
+                color=self.bot.main_color,
+            )
 
         return await ctx.send(embed=embed)
 
@@ -1310,10 +1310,21 @@ class Modmail(commands.Cog):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     async def disable(self, ctx):
         """
+        Disable partial or full Modmail thread functions.
+
+        To stop all new threads from being created, do `{prefix}disable new`.
+        To stop all existing threads from DMing Modmail, do `{prefix}disable all`.
+        To check if the DM function for Modmail is enabled, do `{prefix}isenable`.
+        """
+        await ctx.send_help(ctx.command)
+
+    @disable.command(name="new")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def disable_new(self, ctx):
+        """
         Stop accepting new Modmail threads.
 
         No new threads can be created through DM.
-        To stop all existing threads from DMing Modmail, do `{prefix}disable all`.
         """
         embed = discord.Embed(
             title="Success",

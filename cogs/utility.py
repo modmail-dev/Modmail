@@ -923,9 +923,7 @@ class Utility(commands.Cog):
 
             if len(values) == 1:
                 embed = discord.Embed(
-                    title=f'Alias - "{name}":',
-                    description=values[0],
-                    color=self.bot.main_color
+                    title=f'Alias - "{name}":', description=values[0], color=self.bot.main_color
                 )
                 return await ctx.send(embed=embed)
 
@@ -935,7 +933,7 @@ class Utility(commands.Cog):
                     embed = discord.Embed(
                         color=self.bot.main_color,
                         title=f'Alias - "{name}" - Step {i}:',
-                        description=val
+                        description=val,
                     )
                     embeds += [embed]
                 session = EmbedPaginatorSession(ctx, *embeds)
@@ -971,10 +969,10 @@ class Utility(commands.Cog):
             embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
             return await ctx.send(embed=embed)
 
-        val = utils.truncate(utils.escape_code_block(val), 2048-7)
-        embed = discord.Embed(title=f'Raw alias - "{name}":',
-                              description=f"```\n{val}```",
-                              color=self.bot.main_color)
+        val = utils.truncate(utils.escape_code_block(val), 2048 - 7)
+        embed = discord.Embed(
+            title=f'Raw alias - "{name}":', description=f"```\n{val}```", color=self.bot.main_color
+        )
 
         return await ctx.send(embed=embed)
 
@@ -990,9 +988,9 @@ class Utility(commands.Cog):
             return embed
 
         if len(values) > 25:
-            embed = discord.Embed(title="Error",
-                                  description="Too many steps, max=25.",
-                                  color=self.bot.error_color)
+            embed = discord.Embed(
+                title="Error", description="Too many steps, max=25.", color=self.bot.error_color
+            )
             return embed
 
         save_aliases = []
