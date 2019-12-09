@@ -1,14 +1,21 @@
 name: Modmail Workflow
 
-on: [push, pull_request, pull_request_review]
+on: [push, pull_request]
 
 jobs:
   code-style:
-    runs-on: ${{ matrix.os }}
+
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        os: [ubuntu-latest, windows-latest, macOS-latest]
+#        python-version: [3.6, 3.7]
+
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
         python-version: [3.6, 3.7]
 
     steps:
@@ -26,7 +33,8 @@ jobs:
       run: bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
     - name: Pylint
       run: pylint ./bot.py cogs/*.py core/*.py --disable=import-error  --exit-zero -r y
-    - name: Flake8 and black lint
+      continue-on-error: true
+    - name: Black and flake8
       run: |
-        flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503
         black . --check
+        flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503

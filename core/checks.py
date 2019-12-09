@@ -52,8 +52,9 @@ async def check_permissions(ctx, command_name) -> bool:
     if (
         permission_level is not PermissionLevel.OWNER
         and ctx.channel.permissions_for(ctx.author).administrator
+        and ctx.guild == ctx.bot.modmail_guild
     ):
-        # Administrators have permission to all non-owner commands
+        # Administrators have permission to all non-owner commands in the Modmail Guild
         logger.debug("Allowed due to administrator.")
         return True
 
