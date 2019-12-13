@@ -31,7 +31,7 @@ try:
 except ImportError:
     pass
 
-from core import checks
+from core import checks, translations
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import human_join, normalize_alias
@@ -469,7 +469,7 @@ class ModmailBot(commands.Bot):
                     {
                         "open": False,
                         "closed_at": str(datetime.utcnow()),
-                        "close_message": "Channel has been deleted, no closer found.",
+                        "close_message": _("Channel has been deleted, no closer found."),
                         "closer": {
                             "id": str(self.user.id),
                             "name": self.user.name,
@@ -549,7 +549,7 @@ class ModmailBot(commands.Bot):
             logger.debug("Blocked due to account age, user %s.", author.name)
 
             if str(author.id) not in self.blocked_users:
-                new_reason = f"System Message: New Account. Required to wait for {delta}."
+                new_reason = _("System Message: New Account. Required to wait for {time}.").format(time=delta)
                 self.blocked_users[str(author.id)] = new_reason
 
             return False
@@ -1218,6 +1218,7 @@ def main():
     except ImportError:
         pass
 
+    translations.init()
     bot = ModmailBot()
     bot.run()
 
