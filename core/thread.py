@@ -172,7 +172,7 @@ class Thread:
                 if recipient_thread_close:
                     close_emoji = self.bot.config["close_emoji"]
                     close_emoji = await self.bot.convert_emoji(close_emoji)
-                    await msg.add_reaction(close_emoji)
+                    await self.bot.add_reaction(msg, close_emoji)
 
         await asyncio.gather(send_genesis_message(), send_recipient_genesis_message())
 
@@ -301,7 +301,7 @@ class Thread:
         try:
             self.manager.cache.pop(self.id)
         except KeyError as e:
-            logger.error("Thread already closed: %s.", str(e))
+            logger.error("Thread already closed: %s.", e)
             return
 
         await self.cancel_closure(all=True)
@@ -453,9 +453,16 @@ class Thread:
         )
 
     async def find_linked_messages(
-        self, message_id: typing.Optional[int] = None
+        self,
+        message_id: typing.Optional[int] = None,
+        either_direction: bool = False,
+        message1: discord.Message = None,
     ) -> typing.Tuple[discord.Message, typing.Optional[discord.Message]]:
-        if message_id is not None:
+        if message1 is not None:
+            if not message1.embeds or not message1.embeds[0].author.url:
+                raise ValueError("Malformed thread message.")
+
+        elif message_id is not None:
             try:
                 message1 = await self.channel.fetch_message(message_id)
             except discord.NotFound:
@@ -471,7 +478,9 @@ class Thread:
             ].author.name.startswith("Note"):
                 return message1, None
 
-            if message1.embeds[0].color.value != self.bot.mod_color:
+            if message1.embeds[0].color.value != self.bot.mod_color and not (
+                either_direction and message1.embeds[0].color.value == self.bot.recipient_color
+            ):
                 raise ValueError("Thread message not found.")
         else:
             async for message1 in self.channel.history():
@@ -479,7 +488,13 @@ class Thread:
                     message1.embeds
                     and message1.embeds[0].author.url
                     and message1.embeds[0].color
-                    and message1.embeds[0].color.value == self.bot.mod_color
+                    and (
+                        message1.embeds[0].color.value == self.bot.mod_color
+                        or (
+                            either_direction
+                            and message1.embeds[0].color.value == self.bot.recipient_color
+                        )
+                    )
                 ):
                     break
             else:
@@ -491,6 +506,10 @@ class Thread:
             raise ValueError("Malformed thread message.")
 
         async for msg in self.recipient.history():
+            if either_direction:
+                if msg.id == joint_id:
+                    return message1, msg
+
             if not (msg.embeds and msg.embeds[0].author.url):
                 continue
             try:
@@ -518,35 +537,53 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def delete_message(self, message_id: typing.Optional[int]) -> None:
+    async def delete_message(self, message: typing.Union[int, discord.Message] = None) -> None:
         try:
-            message1, message2 = await self.find_linked_messages(message_id)
-        except ValueError:
-            logger.warning("Failed to delete message.", exc_info=True)
+            if isinstance(message, discord.Message):
+                message1, message2 = await self.find_linked_messages(message1=message)
+            else:
+                message1, message2 = await self.find_linked_messages(message)
+        except ValueError as e:
+            logger.warning("Failed to delete message: %s.", e)
             raise
 
-        tasks = [message1.delete()]
+        tasks = []
+        if not isinstance(message, discord.Message):
+            tasks += [message1.delete()]
         if message2 is not None:
             tasks += [message2.delete()]
-        await asyncio.gather(*tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
 
-    async def edit_dm_message(self, message: discord.Message, content: str) -> None:
+    async def find_linked_message_from_dm(self, message, either_direction=False):
+        if either_direction and message.embeds:
+            compare_url = message.embeds[0].author.url
+        else:
+            compare_url = None
+
         async for linked_message in self.channel.history():
             if not linked_message.embeds:
                 continue
             url = linked_message.embeds[0].author.url
             if not url:
                 continue
+            if url == compare_url:
+                return linked_message
+
             msg_id = url.split("#")[-1]
             try:
                 if int(msg_id) == message.id:
-                    break
+                    return linked_message
             except ValueError:
-                logger.warning("Failed to edit message.", exc_info=True)
-                raise ValueError("Malformed current channel message.")
-        else:
+                raise ValueError("Malformed dm channel message.")
+        raise ValueError("DM channel message not found.")
+
+    async def edit_dm_message(self, message: discord.Message, content: str) -> None:
+        try:
+            linked_message = await self.find_linked_message_from_dm(message)
+        except ValueError:
             logger.warning("Failed to edit message.", exc_info=True)
-            raise ValueError("Current channel message not found.")
+            raise
         embed = linked_message.embeds[0]
         embed.add_field(name="**Edited, former message:**", value=embed.description)
         embed.description = content
@@ -784,7 +821,7 @@ class Thread:
                 try:
                     await message.delete()
                 except Exception as e:
-                    logger.warning("Cannot delete message: %s.", str(e))
+                    logger.warning("Cannot delete message: %s.", e)
 
         if from_mod and self.bot.config["dm_disabled"] == 2 and destination != self.channel:
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)

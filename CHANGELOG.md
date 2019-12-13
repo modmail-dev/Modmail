@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.4.0-dev6
+# v3.4.0-dev7
 
 (Development update, very likely to be unstable!)
 
@@ -25,6 +25,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - New command `?freply`, which behaves exactly like `?reply` with the addition that you can substitute `{channel}`, `{recipient}`, and `{author}` to be their respective values. 
 - New command `?repair`, repair any broken Modmail thread (with help from @officialpiyush).
 - Recipient get feedback when they edit message.
+- Chained delete for DMs now comes with a message.
+- poetry (in case someone needs it).
 
 ### Changed
 
@@ -42,6 +44,8 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Fixed a lot of issues with `?edit` and `?delete` and recipient message edit.
 - Masked the error: "AttributeError: 'int' object has no attribute 'name'"
   - Channel delete event will not be checked until discord.py fixes this issue.
+- Chained reaction.
+- Chained delete for thread channels.
 
 ### Internal
 

@@ -1,4 +1,4 @@
-__version__ = "3.4.0-dev6"
+__version__ = "3.4.0-dev7"
 
 
 import asyncio
@@ -78,7 +78,7 @@ class ModmailBot(commands.Bot):
                 "Your MONGO_URI might be copied wrong, try re-copying from the source again. "
                 "Otherwise noted in the following message:"
             )
-            logger.critical(str(e))
+            logger.critical(e)
             sys.exit(0)
 
         self.plugin_db = PluginDatabaseClient(self)
@@ -506,7 +506,7 @@ class ModmailBot(commands.Bot):
             try:
                 name = await converter.convert(ctx, name.strip(":"))
             except commands.BadArgument as e:
-                logger.warning("%s is not a valid emoji. %s.", str(e))
+                logger.warning("%s is not a valid emoji. %s.", e)
                 raise
         return name
 
@@ -697,12 +697,14 @@ class ModmailBot(commands.Bot):
         return
 
     @staticmethod
-    async def add_reaction(msg, reaction):
+    async def add_reaction(msg, reaction: discord.Reaction) -> bool:
         if reaction != "disable":
             try:
                 await msg.add_reaction(reaction)
-            except (discord.HTTPException, discord.InvalidArgument):
-                logger.warning("Failed to add reaction %s.", reaction, exc_info=True)
+            except (discord.HTTPException, discord.InvalidArgument) as e:
+                logger.warning("Failed to add reaction %s: %s.", reaction, e)
+                return False
+        return True
 
     async def process_dm_modmail(self, message: discord.Message) -> None:
         """Processes messages sent to the bot."""
@@ -955,26 +957,43 @@ class ModmailBot(commands.Bot):
         close_emoji = await self.convert_emoji(self.config["close_emoji"])
 
         if isinstance(channel, discord.DMChannel):
-            if str(reaction) == str(close_emoji):  # closing thread
-                if not self.config.get("recipient_thread_close"):
-                    return
-                thread = await self.threads.find(recipient=user)
-                ts = message.embeds[0].timestamp if message.embeds else None
+            thread = await self.threads.find(recipient=user)
+            if not thread:
+                return
+
+            if (
+                message.embeds
+                and str(reaction) == str(close_emoji)
+                and self.config.get("recipient_thread_close")
+            ):
+                ts = message.embeds[0].timestamp
                 if thread and ts == thread.channel.created_at:
                     # the reacted message is the corresponding thread creation embed
-                    await thread.close(closer=user)
-        else:
-            if not message.embeds:
+                    # closing thread
+                    return await thread.close(closer=user)
+            if not thread.recipient.dm_channel:
+                await thread.recipient.create_dm()
+            try:
+                linked_message = await thread.find_linked_message_from_dm(
+                    message, either_direction=True
+                )
+            except ValueError as e:
+                logger.warning("Failed to find linked message for reactions: %s", e)
                 return
-            message_id = str(message.embeds[0].author.url).split("/")[-1]
-            if message_id.isdigit():
-                thread = await self.threads.find(channel=message.channel)
-                channel = thread.recipient.dm_channel
-                if not channel:
-                    channel = await thread.recipient.create_dm()
-                async for msg in channel.history():
-                    if msg.id == int(message_id):
-                        await msg.add_reaction(reaction)
+        else:
+            thread = await self.threads.find(channel=channel)
+            if not thread:
+                return
+            try:
+                _, linked_message = await thread.find_linked_messages(
+                    message.id, either_direction=True
+                )
+            except ValueError as e:
+                logger.warning("Failed to find linked message for reactions: %s", e)
+                return
+
+        if await self.add_reaction(linked_message, reaction):
+            await self.add_reaction(message, reaction)
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
@@ -986,7 +1005,8 @@ class ModmailBot(commands.Bot):
             mod = entry.user
         except AttributeError as e:
             # discord.py broken implementation with discord API
-            logger.warning("Failed to retrieve audit log: %s.", str(e))
+            # TODO: waiting for dpy
+            logger.warning("Failed to retrieve audit log: %s.", e)
             return
 
         if mod == self.user:
@@ -1035,18 +1055,20 @@ class ModmailBot(commands.Bot):
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
+        # TODO: use audit log to check if modmail deleted the message
         if message.embeds and not isinstance(message.channel, discord.DMChannel):
-            message_id = str(message.embeds[0].author.url).split("/")[-1]
-            if message_id.isdigit():
-                thread = await self.threads.find(channel=message.channel)
-
-                channel = thread.recipient.dm_channel
-
-                async for msg in channel.history():
-                    if msg.embeds and msg.embeds[0].author:
-                        url = str(msg.embeds[0].author.url)
-                        if message_id == url.split("/")[-1]:
-                            return await msg.delete()
+            thread = await self.threads.find(channel=message.channel)
+            try:
+                await thread.delete_message(message)
+            except ValueError as e:
+                if str(e) not in {"DM message not found.", " Malformed thread message."}:
+                    logger.warning("Failed to find linked message to delete: %s", e)
+        else:
+            thread = await self.threads.find(recipient=message.author)
+            message = await thread.find_linked_message_from_dm(message)
+            embed = message.embeds[0]
+            embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=embed.footer.icon_url)
+            await message.edit(embed=embed)
 
     async def on_bulk_message_delete(self, messages):
         await discord.utils.async_all(self.on_message_delete(msg) for msg in messages)
@@ -1054,16 +1076,16 @@ class ModmailBot(commands.Bot):
     async def on_message_edit(self, before, after):
         if after.author.bot:
             return
+        if before.content == after.content:
+            return
+
         if isinstance(after.channel, discord.DMChannel):
             thread = await self.threads.find(recipient=before.author)
             try:
                 await thread.edit_dm_message(after, after.content)
             except ValueError:
                 _, blocked_emoji = await self.retrieve_emoji()
-                try:
-                    await after.add_reaction(blocked_emoji)
-                except (discord.HTTPException, discord.InvalidArgument):
-                    pass
+                await self.add_reaction(after, blocked_emoji)
             else:
                 embed = discord.Embed(
                     description="Successfully Edited Message", color=self.main_color
@@ -1173,7 +1195,7 @@ class ModmailBot(commands.Bot):
             self.metadata_loop.cancel()
 
 
-if __name__ == "__main__":
+def main():
     try:
         # noinspection PyUnresolvedReferences
         import uvloop
@@ -1185,3 +1207,7 @@ if __name__ == "__main__":
 
     bot = ModmailBot()
     bot.run()
+
+
+if __name__ == "__main__":
+    main()

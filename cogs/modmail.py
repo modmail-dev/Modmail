@@ -312,10 +312,7 @@ class Modmail(commands.Cog):
             await thread.recipient.send(embed=embed)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        try:
-            await ctx.message.add_reaction(sent_emoji)
-        except (discord.HTTPException, discord.InvalidArgument):
-            pass
+        await self.bot.add_reaction(ctx.message, sent_emoji)
 
     async def send_scheduled_close_message(self, ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
@@ -561,10 +558,7 @@ class Modmail(commands.Cog):
         """Flags a Modmail thread as NSFW (not safe for work)."""
         await ctx.channel.edit(nsfw=True)
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        try:
-            await ctx.message.add_reaction(sent_emoji)
-        except (discord.HTTPException, discord.InvalidArgument):
-            pass
+        await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -573,10 +567,7 @@ class Modmail(commands.Cog):
         """Flags a Modmail thread as SFW (safe for work)."""
         await ctx.channel.edit(nsfw=False)
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        try:
-            await ctx.message.add_reaction(sent_emoji)
-        except (discord.HTTPException, discord.InvalidArgument):
-            pass
+        await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -872,7 +863,7 @@ class Modmail(commands.Cog):
             )
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        return await ctx.message.add_reaction(sent_emoji)
+        await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -921,10 +912,7 @@ class Modmail(commands.Cog):
             await thread.wait_until_ready()
             await thread.channel.send(embed=embed)
             sent_emoji, _ = await self.bot.retrieve_emoji()
-            try:
-                await ctx.message.add_reaction(sent_emoji)
-            except (discord.HTTPException, discord.InvalidArgument):
-                pass
+            await self.bot.add_reaction(ctx.message, sent_emoji)
             await asyncio.sleep(3)
             await ctx.message.delete()
 
@@ -1173,7 +1161,7 @@ class Modmail(commands.Cog):
             )
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        return await ctx.message.add_reaction(sent_emoji)
+        await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1188,7 +1176,7 @@ class Modmail(commands.Cog):
             if user_id == -1:
                 logger.info("Setting current channel's topic to User ID.")
                 await ctx.channel.edit(topic=f"User ID: {ctx.thread.id}")
-            return await ctx.message.add_reaction(sent_emoji)
+            return await self.bot.add_reaction(ctx.message, sent_emoji)
 
         logger.info("Attempting to fix a broken thread %s.", ctx.channel.name)
 
@@ -1200,7 +1188,7 @@ class Modmail(commands.Cog):
         if thread is not None:
             logger.debug("Found thread with tempered ID.")
             await ctx.channel.edit(reason="Fix broken Modmail thread", topic=f"User ID: {user_id}")
-            return await ctx.message.add_reaction(sent_emoji)
+            return await self.bot.add_reaction(ctx.message, sent_emoji)
 
         # find genesis message to retrieve User ID
         async for message in ctx.channel.history(limit=10, oldest_first=True):
@@ -1229,7 +1217,7 @@ class Modmail(commands.Cog):
                     await ctx.channel.edit(
                         reason="Fix broken Modmail thread", topic=f"User ID: {user_id}"
                     )
-                    return await ctx.message.add_reaction(sent_emoji)
+                    return await self.bot.add_reaction(ctx.message, sent_emoji)
 
         else:
             logger.warning("No genesis message found.")
@@ -1280,11 +1268,11 @@ class Modmail(commands.Cog):
                 await ctx.channel.edit(
                     reason="Fix broken Modmail thread", name=name, topic=f"User ID: {user.id}"
                 )
-                return await ctx.message.add_reaction(sent_emoji)
+                return await self.bot.add_reaction(ctx.message, sent_emoji)
 
             elif len(users) >= 2:
                 logger.info("Multiple users with the same name and discriminator.")
-        return await ctx.message.add_reaction(blocked_emoji)
+        return await self.bot.add_reaction(ctx.message, blocked_emoji)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)

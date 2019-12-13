@@ -73,7 +73,7 @@ class PaginatorSession:
         for reaction in self.reaction_map:
             if len(self.pages) == 2 and reaction in "⏮⏭":
                 continue
-            await self.base.add_reaction(reaction)
+            await self.ctx.bot.add_reaction(self.base, reaction)
 
     async def _create_base(self, item) -> None:
         raise NotImplementedError
@@ -177,10 +177,7 @@ class PaginatorSession:
         self.running = False
 
         sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
-        try:
-            await self.ctx.message.add_reaction(sent_emoji)
-        except (HTTPException, InvalidArgument):
-            pass
+        await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
 
         if delete:
             return await self.base.delete()

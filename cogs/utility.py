@@ -201,7 +201,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             )
             return await self.get_destination().send(embed=embed)
 
-        logger.warning("CommandNotFound: %s", str(error))
+        logger.warning("CommandNotFound: %s", error)
 
         embed = discord.Embed(color=self.context.bot.error_color)
         embed.set_footer(text=f'Command/Category "{command}" not found.')
@@ -1723,7 +1723,7 @@ class Utility(commands.Cog):
             exec(to_compile, env)  # pylint: disable=exec-used
         except Exception as exc:
             await ctx.send(f"```py\n{exc.__class__.__name__}: {exc}\n```")
-            return await ctx.message.add_reaction("\u2049")
+            return await self.bot.add_reaction(ctx.message, "\u2049")
 
         func = env["func"]
         try:
@@ -1732,7 +1732,7 @@ class Utility(commands.Cog):
         except Exception:
             value = stdout.getvalue()
             await ctx.send(f"```py\n{value}{traceback.format_exc()}\n```")
-            return await ctx.message.add_reaction("\u2049")
+            return await self.bot.add_reaction(ctx.message, "\u2049")
 
         else:
             value = stdout.getvalue()
