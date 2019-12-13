@@ -30,7 +30,7 @@ try:
 except ImportError:
     pass
 
-from core import checks
+from core import checks, translations
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import human_join, parse_alias
@@ -483,7 +483,7 @@ class ModmailBot(commands.Bot):
                     {
                         "open": False,
                         "closed_at": str(datetime.utcnow()),
-                        "close_message": "Channel has been deleted, no closer found.",
+                        "close_message": _("Channel has been deleted, no closer found."),
                         "closer": {
                             "id": str(self.user.id),
                             "name": self.user.name,
@@ -598,7 +598,7 @@ class ModmailBot(commands.Bot):
 
             if str(message.author.id) not in self.blocked_users:
                 new_reason = (
-                    f"System Message: New Account. Required to wait for {delta}."
+                    _('System Message: Required to wait for {delta}').format(delta=delta)
                 )
                 self.blocked_users[str(message.author.id)] = new_reason
                 changed = True
@@ -606,9 +606,8 @@ class ModmailBot(commands.Bot):
             if reason.startswith("System Message: New Account.") or changed:
                 await message.channel.send(
                     embed=discord.Embed(
-                        title="Message not sent!",
-                        description=f"Your must wait for {delta} "
-                        f"before you can contact me.",
+                        title=_('Message not sent!'),
+                        description=_('You must wait for {delta} before you can contact me').format(delta=delta),
                         color=self.error_color,
                     )
                 )
@@ -1170,5 +1169,6 @@ if __name__ == "__main__":
     except ImportError:
         pass
 
+    translations.init()
     bot = ModmailBot()
     bot.run()
