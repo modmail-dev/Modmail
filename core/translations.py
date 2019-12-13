@@ -5,7 +5,7 @@ import os
 
 class Translator:
     def __init__(self):
-        self.language = os.getenv('language')
+        self.language = os.getenv('language', 'en')
         self.texts = {}
         self.generate_texts()
 

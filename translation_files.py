@@ -3,9 +3,18 @@ import glob
 import re
 import string
 
+from discord.ext import commands
+
+from core import translations
+from cogs.modmail import Modmail
+from cogs.plugins import Plugins
+from cogs.utility import Utility
+
+
 data = [('Identifier', 'English', 'Context')]
 all_identifiers = []
 identifiers = {}
+
 
 class FormatError(Exception):
     def __init__(self, reason, string):
@@ -85,6 +94,24 @@ for filename in glob.glob('**/*.py') + glob.glob('*.py'):
             identifiers[identifier] = len(data) - 1
 
     print(filename)
+
+translations.init()
+done = set()
+bot = commands.Bot(command_prefix=None)
+cogs = [Modmail(bot), Plugins(bot), Utility(bot)]
+for i in cogs:
+    if i.description:
+        data.append([i.description, i.description, f'Cog: {i.__cog_name__}'])
+
+    for cmd in i.walk_commands():
+        if cmd not in done:
+            if cmd.short_doc:
+                print(cmd)
+                data.append([cmd.short_doc, cmd.short_doc, f'Cog: {i.__cog_name__}\nCommand: {cmd.qualified_name}'])
+                data.append([cmd.help, cmd.help, f'Cog: {i.__cog_name__}\nCommand: {cmd.qualified_name}'])
+
+            done.add(cmd)
+
 
 with open('languages/en.csv', 'w+') as f:
     csv.writer(f, dialect='unix').writerows(data)

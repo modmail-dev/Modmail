@@ -47,7 +47,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             else:
                 format_ = f"`[{perm_level}] {prefix + cmd.qualified_name}` "
 
-            format_ += f"- {cmd.short_doc}\n"
+            format_ += f"- {_(cmd.short_doc)}\n"
             if not format_.strip():
                 continue
             if len(format_) + len(formats[-1]) >= 1024:
@@ -58,7 +58,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         embeds = []
         for format_ in formats:
             description = (
-                cog.description or _("No description.")
+                _(cog.description) or _("No description.")
                 if not no_cog
                 else _("Miscellaneous commands without a category.")
             )
@@ -121,7 +121,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         embed = discord.Embed(
             title=f"`{self.get_command_signature(topic)}`",
             color=self.context.bot.main_color,
-            description=self.process_help_msg(topic.help),
+            description=self.process_help_msg(_(topic.help)),
         )
         return embed, perm_level
 
@@ -150,7 +150,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                 branch = "└─"
             else:
                 branch = "├─"
-            format_ += f"`{branch} {command.name}` - {command.short_doc}\n"
+            format_ += f"`{branch} {command.name}` - {_(command.short_doc)}\n"
 
         embed.add_field(name=_("Sub Command(s)"), value=format_[:1024], inline=False)
         embed.set_footer(
@@ -1673,11 +1673,6 @@ class Utility(commands.Cog):
         if not hasattr(target, "mention"):
             target = self.bot.get_user(target.id) or self.bot.modmail_guild.get_role(target.id)
 
-<<<<<<< HEAD
-        embed.description = (
-            f"{'Un-w' if removed else 'W'}hitelisted {target.mention} to view logs."
-        )
-=======
         if removed:
             embed.description = (
                 _("Un-whitelisted {target_mention} to view logs.").format(target_mention=target.mention)
@@ -1686,7 +1681,6 @@ class Utility(commands.Cog):
             embed.description = (
                 _("Whitelisted {target_mention} to view logs.").format(target_mention=target.mention)
             )
->>>>>>> translations
 
         await ctx.send(embed=embed)
 

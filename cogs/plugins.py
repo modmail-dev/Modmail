@@ -104,7 +104,7 @@ class Plugins(commands.Cog):
 
         self.bot.loop.create_task(self.populate_registry())
 
-        if self.bot.config.get("enable_plugins"):
+        if getattr(self.bot, 'config', None) and self.bot.config.get("enable_plugins"):
             self.bot.loop.create_task(self.initial_load_plugins())
         else:
             logger.info("Plugins not loaded since ENABLE_PLUGINS=false.")
