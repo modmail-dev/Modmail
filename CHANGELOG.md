@@ -44,7 +44,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Fixed a lot of issues with `?edit` and `?delete` and recipient message edit.
 - Masked the error: "AttributeError: 'int' object has no attribute 'name'"
   - Channel delete event will not be checked until discord.py fixes this issue.
-- Chained reaction.
+- Chained reaction add / remove.
 - Chained delete for thread channels.
 
 ### Internal

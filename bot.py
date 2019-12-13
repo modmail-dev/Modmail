@@ -935,7 +935,7 @@ class ModmailBot(commands.Bot):
                     return
                 await thread.recipient.trigger_typing()
 
-    async def on_raw_reaction_add(self, payload):
+    async def handle_reaction_events(self, payload, *, add):
         user = self.get_user(payload.user_id)
         if user.bot:
             return
@@ -960,9 +960,9 @@ class ModmailBot(commands.Bot):
             thread = await self.threads.find(recipient=user)
             if not thread:
                 return
-
             if (
-                message.embeds
+                add
+                and message.embeds
                 and str(reaction) == str(close_emoji)
                 and self.config.get("recipient_thread_close")
             ):
@@ -992,8 +992,21 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if await self.add_reaction(linked_message, reaction):
-            await self.add_reaction(message, reaction)
+        if add:
+            if await self.add_reaction(linked_message, reaction):
+                await self.add_reaction(message, reaction)
+        else:
+            try:
+                await linked_message.remove_reaction(reaction, self.user)
+                await message.remove_reaction(reaction, self.user)
+            except (discord.HTTPException, discord.InvalidArgument) as e:
+                logger.warning("Failed to remove reaction: %s", e)
+
+    async def on_raw_reaction_add(self, payload):
+        await self.handle_reaction_events(payload, add=True)
+
+    async def on_raw_reaction_remove(self, payload):
+        await self.handle_reaction_events(payload, add=False)
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
