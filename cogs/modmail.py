@@ -1282,15 +1282,20 @@ class Modmail(commands.Cog):
 
         Undo's the `{prefix}disable` command, all DM will be relayed after running this command.
         """
-        embed = discord.Embed(
-            title="Success",
-            description="Modmail will now accept all DM messages.",
-            color=self.bot.main_color,
-        )
 
         if self.bot.config["dm_disabled"] != 0:
+            embed = discord.Embed(
+                title="Success",
+                description="Modmail will now accept **all** DM messages.",
+                color=self.bot.main_color,
+            )
             self.bot.config["dm_disabled"] = 0
             await self.bot.config.update()
+        else:
+            embed = discord.Embed(
+                description="Modmail is already accepting all DM messages.",
+                color=self.bot.error_color,
+            )
 
         return await ctx.send(embed=embed)
 
@@ -1314,12 +1319,26 @@ class Modmail(commands.Cog):
 
         No new threads can be created through DM.
         """
-        embed = discord.Embed(
-            title="Success",
-            description="Modmail will not create any new threads.",
-            color=self.bot.main_color,
-        )
+
         if self.bot.config["dm_disabled"] < 1:
+            embed = discord.Embed(
+                title="Success",
+                description="Modmail will not create any **new** threads.",
+                color=self.bot.main_color,
+            )
+            self.bot.config["dm_disabled"] = 1
+            await self.bot.config.update()
+        elif self.bot.config["dm_disabled"] == 1:
+            embed = discord.Embed(
+                description="Modmail is already not creating any new threads.",
+                color=self.bot.error_color,
+            )
+        else:
+            embed = discord.Embed(
+                title="Success",
+                description="Modmail will not create **new** threads, but existing threads will now be functioning.",
+                color=self.bot.main_color,
+            )
             self.bot.config["dm_disabled"] = 1
             await self.bot.config.update()
 
@@ -1333,15 +1352,20 @@ class Modmail(commands.Cog):
 
         No new threads can be created through DM nor no further DM messages will be relayed.
         """
-        embed = discord.Embed(
-            title="Success",
-            description="Modmail will not accept any DM messages.",
-            color=self.bot.main_color,
-        )
 
-        if self.bot.config["dm_disabled"] != 2:
+        if self.bot.config["dm_disabled"] < 2:
+            embed = discord.Embed(
+                title="Success",
+                description="Modmail will not accept **any** DM messages.",
+                color=self.bot.main_color,
+            )
             self.bot.config["dm_disabled"] = 2
             await self.bot.config.update()
+        else:
+            embed = discord.Embed(
+                description="Modmail is already not accepting any DM messages.",
+                color=self.bot.error_color,
+            )
 
         return await ctx.send(embed=embed)
 
