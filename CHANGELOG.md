@@ -7,9 +7,8 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.4.0-dev7
+# v3.4.0
 
-(Development update, very likely to be unstable!)
 
 ### Added
 
@@ -52,6 +51,7 @@ however, insignificant breaking changes does not guarantee a major version bump,
 - Commit to black format line width max = 99, consistent with pylint.
 - Alias parser is rewritten without shlex.
 - New checks with thread create / find.
+- No more flake8 and travis.
 
 # v3.3.2
 
