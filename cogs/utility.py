@@ -509,7 +509,7 @@ class Utility(commands.Cog):
         except KeyError:
             raise commands.MissingRequiredArgument(SimpleNamespace(name="activity"))
 
-        activity, _ = await self.set_presence(
+        activity, x = await self.set_presence(
             activity_type=activity_type, activity_message=message
         )
 
@@ -556,7 +556,7 @@ class Utility(commands.Cog):
         except KeyError:
             raise commands.MissingRequiredArgument(SimpleNamespace(name="status"))
 
-        _, status = await self.set_presence(status=status)
+        x, status = await self.set_presence(status=status)
 
         self.bot.config["status"] = status.value
         await self.bot.config.update()

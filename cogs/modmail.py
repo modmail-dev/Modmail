@@ -313,7 +313,7 @@ class Modmail(commands.Cog):
             )
             await thread.recipient.send(embed=embed)
 
-        sent_emoji, _ = await self.bot.retrieve_emoji()
+        sent_emoji, x = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
     async def send_scheduled_close_message(self, ctx, after, silent=False):
@@ -565,7 +565,7 @@ class Modmail(commands.Cog):
     async def nsfw(self, ctx):
         """Flags a Modmail thread as NSFW (not safe for work)."""
         await ctx.channel.edit(nsfw=True)
-        sent_emoji, _ = await self.bot.retrieve_emoji()
+        sent_emoji, x = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()
@@ -574,7 +574,7 @@ class Modmail(commands.Cog):
     async def sfw(self, ctx):
         """Flags a Modmail thread as SFW (safe for work)."""
         await ctx.channel.edit(nsfw=False)
-        sent_emoji, _ = await self.bot.retrieve_emoji()
+        sent_emoji, x = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()
@@ -872,7 +872,7 @@ class Modmail(commands.Cog):
                 )
             )
 
-        sent_emoji, _ = await self.bot.retrieve_emoji()
+        sent_emoji, x = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()
@@ -923,7 +923,7 @@ class Modmail(commands.Cog):
             )
             await thread.wait_until_ready()
             await thread.channel.send(embed=embed)
-            sent_emoji, _ = await self.bot.retrieve_emoji()
+            sent_emoji, x = await self.bot.retrieve_emoji()
             await self.bot.add_reaction(ctx.message, sent_emoji)
             await asyncio.sleep(3)
             await ctx.message.delete()
@@ -1180,7 +1180,7 @@ class Modmail(commands.Cog):
                 )
             )
 
-        sent_emoji, _ = await self.bot.retrieve_emoji()
+        sent_emoji, x = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
     @commands.command()

@@ -1,4 +1,4 @@
-__version__ = "3.4.0"
+__version__ = "3.5.0-dev0"
 
 
 import asyncio
@@ -615,7 +615,7 @@ class ModmailBot(commands.Bot):
         return False
 
     async def _process_blocked(self, message):
-        _, blocked_emoji = await self.retrieve_emoji()
+        x, blocked_emoji = await self.retrieve_emoji()
         if await self.is_blocked(message.author, channel=message.channel, send_message=True):
             await self.add_reaction(message, blocked_emoji)
             return True
@@ -985,7 +985,7 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
-                _, linked_message = await thread.find_linked_messages(
+                x, linked_message = await thread.find_linked_messages(
                     message.id, either_direction=True
                 )
             except ValueError as e:
@@ -1097,7 +1097,7 @@ class ModmailBot(commands.Bot):
             try:
                 await thread.edit_dm_message(after, after.content)
             except ValueError:
-                _, blocked_emoji = await self.retrieve_emoji()
+                x, blocked_emoji = await self.retrieve_emoji()
                 await self.add_reaction(after, blocked_emoji)
             else:
                 embed = discord.Embed(
