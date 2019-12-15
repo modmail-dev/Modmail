@@ -1,20 +1,49 @@
+import base64
 import functools
 import re
-import shlex
+import string
 import typing
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
-from itertools import takewhile
+from itertools import takewhile, zip_longest
 from urllib import parse
 
 import discord
 from discord.ext import commands
 
+__all__ = [
+    "strtobool",
+    "User",
+    "truncate",
+    "format_preview",
+    "is_image_url",
+    "parse_image_url",
+    "human_join",
+    "days",
+    "cleanup_code",
+    "match_user_id",
+    "create_not_found_embed",
+    "parse_alias",
+    "normalize_alias",
+    "format_description",
+    "trigger_typing",
+    "escape_code_block",
+    "format_channel_name",
+]
+
 
 def strtobool(val):
     if isinstance(val, bool):
         return val
-    return _stb(str(val))
+    try:
+        return _stb(str(val))
+    except ValueError:
+        val = val.lower()
+        if val == "enable":
+            return 1
+        if val == "disable":
+            return 0
+        raise
 
 
 class User(commands.IDConverter):
@@ -175,6 +204,9 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
+TOPIC_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
+
+
 def match_user_id(text: str) -> int:
     """
     Matches a user ID in the format of "User ID: 12345".
@@ -189,7 +221,7 @@ def match_user_id(text: str) -> int:
     int
         The user ID if found. Otherwise, -1.
     """
-    match = re.search(r"\bUser ID: (\d{17,21})\b", text)
+    match = TOPIC_REGEX.search(text)
     if match is not None:
         return int(match.group(1))
     return -1
@@ -198,8 +230,7 @@ def match_user_id(text: str) -> int:
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
     # Single reference of Color.red()
     embed = discord.Embed(
-        color=discord.Color.red(),
-        description=f"**{name.capitalize()} `{word}` cannot be found.**",
+        color=discord.Color.red(), description=f"**{name.capitalize()} `{word}` cannot be found.**"
     )
     val = get_close_matches(word, possibilities, n=n, cutoff=cutoff)
     if val:
@@ -208,35 +239,47 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
 
 
 def parse_alias(alias):
-    if "&&" not in alias:
-        if alias.startswith('"') and alias.endswith('"'):
-            return [alias[1:-1]]
-        return [alias]
+    def encode_alias(m):
+        return "\x1AU" + base64.b64encode(m.group(1).encode()).decode() + "\x1AU"
 
-    buffer = ""
-    cmd = []
-    try:
-        for token in shlex.shlex(alias, punctuation_chars="&"):
-            if token != "&&":
-                buffer += " " + token
-                continue
+    def decode_alias(m):
+        return base64.b64decode(m.group(1).encode()).decode()
 
-            buffer = buffer.strip()
-            if buffer.startswith('"') and buffer.endswith('"'):
-                buffer = buffer[1:-1]
-            cmd += [buffer]
-            buffer = ""
-    except ValueError:
-        return []
+    alias = re.sub(
+        r"(?:(?<=^)(?:\s*(?<!\\)(?:\")\s*)|(?<=&&)(?:\s*(?<!\\)(?:\")\s*))(.+?)"
+        r"(?:(?:\s*(?<!\\)(?:\")\s*)(?=&&)|(?:\s*(?<!\\)(?:\")\s*)(?=$))",
+        encode_alias,
+        alias,
+    ).strip()
 
-    buffer = buffer.strip()
-    if buffer.startswith('"') and buffer.endswith('"'):
-        buffer = buffer[1:-1]
-    cmd += [buffer]
+    aliases = []
+    if not alias:
+        return aliases
 
-    if not all(cmd):
-        return []
-    return cmd
+    for a in re.split(r"\s*&&\s*", alias):
+        a = re.sub("\x1AU(.+?)\x1AU", decode_alias, a)
+        if a[0] == a[-1] == '"':
+            a = a[1:-1]
+        aliases.append(a)
+
+    return aliases
+
+
+def normalize_alias(alias, message):
+    aliases = parse_alias(alias)
+    contents = parse_alias(message)
+
+    final_aliases = []
+    for a, content in zip_longest(aliases, contents):
+        if a is None:
+            break
+
+        if content:
+            final_aliases.append(f"{a} {content}")
+        else:
+            final_aliases.append(a)
+
+    return final_aliases
 
 
 def format_description(i, names):
@@ -253,3 +296,23 @@ def trigger_typing(func):
         return await func(self, ctx, *args, **kwargs)
 
     return wrapper
+
+
+def escape_code_block(text):
+    return re.sub(r"```", "`\u200b``", text)
+
+
+def format_channel_name(author, guild, exclude_channel=None):
+    """Sanitises a username for use with text channel names"""
+    name = author.name.lower()
+    name = new_name = (
+        "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
+    ) + f"-{author.discriminator}"
+
+    counter = 1
+    existed = set(c.name for c in guild.text_channels if c != exclude_channel)
+    while new_name in existed:
+        new_name = f"{name}_{counter}"  # multiple channels with same name
+        counter += 1
+
+    return new_name

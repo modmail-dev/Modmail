@@ -13,21 +13,16 @@ jobs:
 #        python-version: [3.6, 3.7]
 
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [3.6, 3.7]
-
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install bandit flake8 pylint black
+        python -m pip install bandit pylint black
       continue-on-error: true
     - name: Bandit syntax check
       run: bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
@@ -37,4 +32,3 @@ jobs:
     - name: Black and flake8
       run: |
         black . --check
-        flake8 ./bot.py cogs/*.py core/*.py --ignore=E501,E203,W503

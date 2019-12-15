@@ -7,6 +7,52 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
+# v3.4.0
+
+
+### Added
+
+- Thread cooldown!
+  - Set via the new config var `thread_cooldown`.
+  - Specify a time for the recipient to wait before allowed to create another thread.
+- Fallback Category (thanks to DAzVise PR#636)
+  - Automatically created upon reaching the 50 channels limit.
+  - Manually set fallback category with the config var `fallback_category_id`.
+- "enable" and "disable" support for yes or no config vars.
+- Added "perhaps you meant" section to `?config help`.
+- Multi-command alias is now more stable. With support for a single quote escape `\"`.
+- New command `?freply`, which behaves exactly like `?reply` with the addition that you can substitute `{channel}`, `{recipient}`, and `{author}` to be their respective values. 
+- New command `?repair`, repair any broken Modmail thread (with help from @officialpiyush).
+- Recipient get feedback when they edit message.
+- Chained delete for DMs now comes with a message.
+- poetry (in case someone needs it).
+
+### Changed
+
+- The look of alias and snippet when previewing.
+- Message ID of the thread embed is saved in DB, instead of the original message.
+- Swapped the position of user and category for `?contact`.
+- The log file will no longer grow infinitely large.
+- Hard limit of maximum 25 steps for alias.
+- `?disable` is now `?disable new`.
+
+### Fixed
+
+- Setting config vars using human time wasn't working.
+- Fixed some bugs with aliases.
+- Fixed a lot of issues with `?edit` and `?delete` and recipient message edit.
+- Masked the error: "AttributeError: 'int' object has no attribute 'name'"
+  - Channel delete event will not be checked until discord.py fixes this issue.
+- Chained reaction add / remove.
+- Chained delete for thread channels.
+
+### Internal
+
+- Commit to black format line width max = 99, consistent with pylint.
+- Alias parser is rewritten without shlex.
+- New checks with thread create / find.
+- No more flake8 and travis.
+
 # v3.3.2
 
 ### Fixed

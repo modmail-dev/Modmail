@@ -17,7 +17,20 @@
       "`{prefix}config set main_category_id 9234932582312` (`9234932582312` is the category ID)"
     ],
     "notes": [
-      "If the Modmail category ended up being non-existent/invalid, Modmail will break. To fix this, run `{prefix}setup` again or set `main_category_id` to a valid category."
+      "If the Modmail category ended up being non-existent/invalid, Modmail will break. To fix this, run `{prefix}setup` again or set `main_category_id` to a valid category.",
+      "When the Modmail category is full, new channels will be created in the fallback category.",
+      "See also: `fallback_category_id`."
+    ]
+  },
+  "fallback_category_id": {
+    "default": "`Fallback Modmail` (created when the main category is full)",
+    "description": "This is the category that will hold the threads when the main category is full.\n\nTo change the Fallback category, you will need to find the [category’s ID](https://support.discordapp.com/hc/en-us/articles/206346498).",
+    "examples": [
+      "`{prefix}config set fallback_category_id 9234932582312` (`9234932582312` is the category ID)"
+    ],
+    "notes": [
+      "If the Fallback category ended up being non-existent/invalid, Modmail will create a new one. To fix this, set `fallback_category_id` to a valid category.",
+      "See also: `main_category_id`."
     ]
   },
   "prefix": {
@@ -220,6 +233,17 @@
       "To disable auto close, do `{prefix}config del thread_auto_close`.",
       "To prevent a thread from auto-closing, do `{prefix}close cancel`.",
       "See also: `thread_auto_close_silently`, `thread_auto_close_response`."
+    ]
+  },
+  "thread_cooldown": {
+    "default": "Never",
+    "description": "Specify the time required for the recipient to wait before allowed to create a new thread.",
+    "examples": [
+      "`{prefix}config set thread_cooldown P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
+      "`{prefix}config set thread_cooldown 3 days and 5 hours` (accepted readable time)"
+    ],
+    "notes": [
+      "To disable thread cooldown, do `{prefix}config del thread_cooldown`."
     ]
   },
   "thread_auto_close_response": {

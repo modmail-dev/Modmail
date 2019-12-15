@@ -7,7 +7,6 @@ verify_ssl = true
 black = "==19.3b0"
 pylint = "*"
 bandit = "==1.6.2"
-flake8 = "==3.7.8"
 
 [packages]
 colorama = ">=0.4.0"
@@ -18,7 +17,7 @@ motor = ">=2.0.0"
 natural = "==0.2.0"
 isodate = ">=0.6.0"
 dnspython = "~=1.16.0"
-parsedatetime = "==2.4"
+parsedatetime = "==2.5"
 aiohttp = "<3.6.0,>=3.3.0"
 python-dotenv = ">=0.10.3"
 pipenv = "*"

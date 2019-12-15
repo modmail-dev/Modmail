@@ -1,15 +1,15 @@
 [tool.black]
-line-length = 88
-target-version = ['py37']
+line-length = 99
+target-version = ['py36']
 include = '\.pyi?$'
 exclude = '''
-
 (
   /(
       \.eggs
     | \.git
     | \.venv
     | venv
+    | venv2
     | _build
     | build
     | dist
@@ -18,3 +18,39 @@ exclude = '''
   )/
 )
 '''
+
+[tool.poetry]
+name = 'Modmail'
+version = '3.4.0'
+description = 'Modmail is similar to Reddits Modmail both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.'
+license = 'AGPL-3.0-only'
+authors = [
+    'kyb3r <noemail@example.com>',
+    '4jr <noemail@example.com>',
+    'Taki <noemail@example.com>'
+]
+readme = 'README.md'
+repository = 'https://github.com/kyb3r/modmail'
+homepage = 'https://github.com/kyb3r/modmail'
+keywords = ['discord', 'modmail']
+
+[tool.poetry.dependencies]
+python = "^3.7"
+"discord.py" = "=1.2.5"
+uvloop = "^0.14.0"
+python-dotenv = "^0.10.3"
+parsedatetime = "^2.5"
+dnspython = "^1.16"
+isodate = "^0.6.0"
+natural = "^0.2.0"
+motor = {version = "^2.1", optional = true}
+emoji = "^0.5.4"
+python-dateutil = "^2.8"
+colorama = "^0.4.3"
+aiohttp = "<3.6.0,>=3.3.0"
+
+[tool.poetry.dev-dependencies]
+black = {version = "=19.3b0", allows-prereleases = true}
+pylint = "^2.4"
+bandit = "^1.6"
+
