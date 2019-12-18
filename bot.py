@@ -1,4 +1,4 @@
-__version__ = "3.4.0"
+__version__ = "3.4.1"
 
 
 import asyncio
@@ -1069,19 +1069,32 @@ class ModmailBot(commands.Bot):
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
         # TODO: use audit log to check if modmail deleted the message
-        if message.embeds and not isinstance(message.channel, discord.DMChannel):
-            thread = await self.threads.find(channel=message.channel)
-            try:
-                await thread.delete_message(message)
-            except ValueError as e:
-                if str(e) not in {"DM message not found.", " Malformed thread message."}:
-                    logger.warning("Failed to find linked message to delete: %s", e)
-        else:
+        if isinstance(message.channel, discord.DMChannel):
             thread = await self.threads.find(recipient=message.author)
-            message = await thread.find_linked_message_from_dm(message)
+            if not thread:
+                return
+            try:
+                message = await thread.find_linked_message_from_dm(message)
+            except ValueError as e:
+                if str(e) != "Thread channel message not found.":
+                    logger.warning("Failed to find linked message to delete: %s", e)
+                return
             embed = message.embeds[0]
             embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=embed.footer.icon_url)
             await message.edit(embed=embed)
+            return
+
+        thread = await self.threads.find(channel=message.channel)
+        if not thread:
+            return
+        try:
+            await thread.delete_message(message, note=False)
+        except ValueError as e:
+            if str(e) not in {"DM message not found.", "Malformed thread message."}:
+                logger.warning("Failed to find linked message to delete: %s", e)
+            return
+        except discord.NotFound:
+            return
 
     async def on_bulk_message_delete(self, messages):
         await discord.utils.async_all(self.on_message_delete(msg) for msg in messages)
@@ -1094,6 +1107,9 @@ class ModmailBot(commands.Bot):
 
         if isinstance(after.channel, discord.DMChannel):
             thread = await self.threads.find(recipient=before.author)
+            if not thread:
+                return
+
             try:
                 await thread.edit_dm_message(after, after.content)
             except ValueError:

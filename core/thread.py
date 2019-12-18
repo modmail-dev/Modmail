@@ -72,15 +72,13 @@ class Thread:
     def ready(self, flag: bool):
         if flag:
             self._ready_event.set()
-            self.bot.dispatch("thread_ready", self)
+            self.bot.dispatch("thread_create", self)
         else:
             self._ready_event.clear()
 
     async def setup(self, *, creator=None, category=None):
         """Create the thread channel and other io related initialisation tasks"""
-
-        self.bot.dispatch("thread_create", self)
-
+        self.bot.dispatch("thread_initiate", self)
         recipient = self.recipient
 
         # in case it creates a channel outside of category
@@ -175,6 +173,7 @@ class Thread:
                     await self.bot.add_reaction(msg, close_emoji)
 
         await asyncio.gather(send_genesis_message(), send_recipient_genesis_message())
+        self.bot.dispatch("thread_ready", self)
 
     def _format_info_embed(self, user, log_url, log_count, color):
         """Get information about a member of a server
@@ -457,9 +456,14 @@ class Thread:
         message_id: typing.Optional[int] = None,
         either_direction: bool = False,
         message1: discord.Message = None,
+        note: bool = True,
     ) -> typing.Tuple[discord.Message, typing.Optional[discord.Message]]:
         if message1 is not None:
-            if not message1.embeds or not message1.embeds[0].author.url:
+            if (
+                not message1.embeds
+                or not message1.embeds[0].author.url
+                or message1.author != self.bot.user
+            ):
                 raise ValueError("Malformed thread message.")
 
         elif message_id is not None:
@@ -469,13 +473,18 @@ class Thread:
                 raise ValueError("Thread message not found.")
 
             if not (
-                message1.embeds and message1.embeds[0].author.url and message1.embeds[0].color
+                message1.embeds
+                and message1.embeds[0].author.url
+                and message1.embeds[0].color
+                and message1.author == self.bot.user
             ):
                 raise ValueError("Thread message not found.")
 
             if message1.embeds[0].color.value == self.bot.main_color and message1.embeds[
                 0
             ].author.name.startswith("Note"):
+                if not note:
+                    raise ValueError("Thread message not found.")
                 return message1, None
 
             if message1.embeds[0].color.value != self.bot.mod_color and not (
@@ -495,6 +504,8 @@ class Thread:
                             and message1.embeds[0].color.value == self.bot.recipient_color
                         )
                     )
+                    and message1.embeds[0].author.url.split("#")[-1].isdigit()
+                    and message1.author == self.bot.user
                 ):
                     break
             else:
@@ -516,7 +527,7 @@ class Thread:
                 if int(msg.embeds[0].author.url.split("#")[-1]) == joint_id:
                     return message1, msg
             except ValueError:
-                raise ValueError("DM message not found.")
+                continue
         raise ValueError("DM message not found.")
 
     async def edit_message(self, message_id: typing.Optional[int], message: str) -> None:
@@ -537,16 +548,13 @@ class Thread:
 
         await asyncio.gather(*tasks)
 
-    async def delete_message(self, message: typing.Union[int, discord.Message] = None) -> None:
-        try:
-            if isinstance(message, discord.Message):
-                message1, message2 = await self.find_linked_messages(message1=message)
-            else:
-                message1, message2 = await self.find_linked_messages(message)
-        except ValueError as e:
-            logger.warning("Failed to delete message: %s.", e)
-            raise
-
+    async def delete_message(
+        self, message: typing.Union[int, discord.Message] = None, note: bool = True
+    ) -> None:
+        if isinstance(message, discord.Message):
+            message1, message2 = await self.find_linked_messages(message1=message, note=note)
+        else:
+            message1, message2 = await self.find_linked_messages(message, note=note)
         tasks = []
         if not isinstance(message, discord.Message):
             tasks += [message1.delete()]
@@ -571,12 +579,12 @@ class Thread:
                 return linked_message
 
             msg_id = url.split("#")[-1]
-            try:
-                if int(msg_id) == message.id:
-                    return linked_message
-            except ValueError:
-                raise ValueError("Malformed dm channel message.")
-        raise ValueError("DM channel message not found.")
+            if not msg_id.isdigit():
+                continue
+            msg_id = int(msg_id)
+            if int(msg_id) == message.id:
+                return linked_message
+        raise ValueError("Thread channel message not found.")
 
     async def edit_dm_message(self, message: discord.Message, content: str) -> None:
         try:

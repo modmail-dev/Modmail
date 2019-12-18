@@ -7,8 +7,21 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes does not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319).
 
 
-# v3.4.0
+# v3.4.1
 
+### Fixed
+
+- Masked a bunch of noise errors when deleting messages.
+- Added more checks for deleting messages.
+
+### Breaking
+
+- `thread_initiate` is now dispatched at the beginning of the setup process.
+- `thread_create` is dispatched when the thread is registered as a thread by Modmail (ie. when channel topic is edited).
+- `thread_ready` is dispatched when a thread finishes its setup steps.
+
+
+# v3.4.0
 
 ### Added
 

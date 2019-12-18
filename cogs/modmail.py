@@ -1150,8 +1150,9 @@ class Modmail(commands.Cog):
         thread = ctx.thread
 
         try:
-            await thread.delete_message(message_id)
-        except ValueError:
+            await thread.delete_message(message_id, note=True)
+        except ValueError as e:
+            logger.warning("Failed to delete message: %s.", e)
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
