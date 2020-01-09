@@ -190,7 +190,7 @@
     "serverstats": {
         "repository": "dazvise/modmail-plugins",
         "branch": "master",
-        "description": "Interesting and accurate statistics about your server.",
+        "description": "Voice channels containing interesting and accurate statistics about your server such as Member Count.",
         "bot_version": "2.20.1",
         "title": "Server Stats",
         "icon_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png",
