@@ -46,25 +46,25 @@
 
 ## What is Modmail?
 
-Modmail is similar to Reddit's Modmail both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.
+Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.
 
 This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, you can support us on **[Patreon](https://www.patreon.com/kyber)**, cool benefits included! 
 
 ## How does it work?
 
-When a member sends a direct message to the bot, Modmail will create a channel or "thread" within an isolated category. All further DM messages will automatically relay to that channel, for any available staff can respond within the channel.
+When a member sends a direct message to the bot, Modmail will create a channel or "thread" into a designated category. All further DM messages will automatically relay to that channel; any available staff can respond within the channel.
 
-All threads are logged and you can view previous threads through their corresponding log link. Here is an [**example**](https://logs.logviewer.tech/example).
+Our Logviewer will save the threads so you can view previous threads through their corresponding log link. Here is an [**example**](https://logs.logviewer.tech/example).
 
 ## Features
 
 * **Highly Customisable:**
   * Bot activity, prefix, category, log channel, etc.
   * Command permission system.
-  * Interface elements (color, responses, reactions, etc).
+  * Interface elements (color, responses, reactions, etc.).
   * Snippets and *command aliases*.
   * Minimum duration for accounts to be created before allowed to contact Modmail (`account_age`).
-  * Minimum duration for members to be in the guild before allowed to contact Modmail (`guild_age`). 
+  * Minimum length for members to be in the guild before allowed to contact Modmail (`guild_age`). 
 
 * **Advanced Logging Functionality:**
   * When you close a thread, Modmail will generate a [log link](https://logs.logviewer.tech/example) and post it to your log channel.
@@ -86,11 +86,11 @@ This list is ever-growing thanks to active development and our exceptional contr
 
 Where can I find the Modmail bot invite link? 
 
-Unfortunately, due to how this bot functions, it cannot be invited. This is to ensure the individuality to your server and grant you full control over your bot and data. Nonetheless, you can easily obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time)...
+Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time).
 
 ### Heroku
 
-This bot can be hosted on Heroku.
+You can host this bot on Heroku.
 
 Installation via Heroku is possible with your web browser alone. 
 The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) (which includes a video tutorial!) will guide you through the entire installation process. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
@@ -104,11 +104,11 @@ To configure automatic updates:
 
 ### Hosting for Patreons
 
-If you don't want to go through the trouble of setting up your very own Modmail bot, and/or want to support this project, we offer the all inclusive installation, hosting and maintenance of your Modmail with [**Patreon**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for more info! 
+If you don't want to go through the trouble of setting up your very own Modmail bot or wish to support this project, we got a solution for you! We offer the complete installation, hosting, and maintenance of your Modmail with [**Patreon**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for more info! 
 
 ### Locally
 
-Local hosting of Modmail is also possible, first you will need [`Python 3.7`](https://www.python.org/downloads/).
+Local hosting of Modmail is also possible. First, you will need [`Python 3.7`](https://www.python.org/downloads/).
 
 Follow the [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) and disregard deploying the Heroku bot application. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
 
@@ -143,7 +143,7 @@ You can build your own Docker image:
 $ docker build . --tag=modmail
 ```
 
-or run directly from a pre-built version from https://hub.docker.com/.
+Or run directly from a pre-built version from https://hub.docker.com/.
 
 - Kyber's:
 
@@ -156,7 +156,7 @@ And to run your docker image:
 ```console
 $ docker run --env-file .env kyb3rr/modmail
 ```
-- `.env` should be the path to your env file, you can also supply a path: `/path/to/.env`.
+- `.env` should be the path to your env file; you can also supply a path: `/path/to/.env`.
 
 ## Sponsors
 
@@ -175,9 +175,9 @@ Become a sponsor on [Patreon](https://patreon.com/kyber).
 ## Plugins
 
 Modmail supports the use of third-party plugins to extend or add functionalities to the bot.
-This allows niche features as well as anything else outside of the scope of the core functionality of Modmail. 
+Plugins allow niche features as well as anything else outside of the scope of the core functionality of Modmail. 
 
-A list of third-party plugins can be found using the `?plugins registry` command or visit the [Unofficial List of Plugins](https://github.com/kyb3r/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
+You can find a list of third-party plugins using the `?plugins registry`  command or visit the [Unofficial List of Plugins](https://github.com/kyb3r/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
 
 To develop your own, check out the [plugins documentation](https://github.com/kyb3r/modmail/wiki/Plugins).
 
@@ -185,6 +185,6 @@ Plugins requests and support is available in our [Modmail Plugins Server](https:
 
 ## Contributing
 
-Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our contribution [guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started.
+Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our [contributing guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started.
 
 If you like this project and would like to show your appreciation, support us on **[Patreon](https://www.patreon.com/kyber)**!

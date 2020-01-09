@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 99
-target-version = ['py36']
+target-version = ['py37']
 include = '\.pyi?$'
 exclude = '''
 (
@@ -22,7 +22,7 @@ exclude = '''
 [tool.poetry]
 name = 'Modmail'
 version = '3.4.1'
-description = 'Modmail is similar to Reddits Modmail both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.'
+description = "Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way."
 license = 'AGPL-3.0-only'
 authors = [
     'kyb3r <noemail@example.com>',
