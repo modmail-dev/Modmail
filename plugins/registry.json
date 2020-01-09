@@ -170,7 +170,7 @@
         "thumbnail_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png"
    },
     "stats": {
-        "repository": "MiTonder/modmail-plugins",
+        "repository": "KarateWumpus/modmail-plugins",
         "branch": "master",
         "description": "Get useful stats directly in an embed about either the Modmail bot, a user or the server.",
         "bot_version": "2.24.1",
