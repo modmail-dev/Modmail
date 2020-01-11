@@ -158,7 +158,7 @@
 "Latency","Latency","File: cogs\utility.py/L304"
 "Version","Version","File: cogs\utility.py/L305"
 "Authors","Authors","File: cogs\utility.py/L306"
-"You are on the prerelease version • the latest version is v{version}.","You are on the prerelease version • the latest version is v{version}.","File: cogs\utility.py/L315"
+"You are on the prerelease version â€¢ the latest version is v{version}.","You are on the prerelease version â€¢ the latest version is v{version}.","File: cogs\utility.py/L315"
 "A newer version is available v{version}.","A newer version is available v{version}.","File: cogs\utility.py/L317"
 "You are up to date with the latest version.","You are up to date with the latest version.","File: cogs\utility.py/L319"
 "Want Modmail in Your Server?","Want Modmail in Your Server?","File: cogs\utility.py/L322"
