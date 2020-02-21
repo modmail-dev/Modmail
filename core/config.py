@@ -110,6 +110,8 @@ class ConfigManager:
         "owners": None,
         # bot
         "token": None,
+        # github access token for private repositories
+        "github_token": None
         # Logging
         "log_level": "INFO",
         "enable_plugins": True,
