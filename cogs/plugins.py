@@ -154,7 +154,10 @@ class Plugins(commands.Cog):
             logger.debug("Loading cached %s.", plugin.cache_path)
 
         else:
-            async with self.bot.session.get(plugin.url) as resp:
+            headers = {}
+            if self.bot.config.get("github_token") is not None:
+                headers["Authorization"] = f"token {self.bot.config.get('github_token')}"
+            async with self.bot.session.get(plugin.url, headers=headers) as resp:
                 logger.debug("Downloading %s.", plugin.url)
                 raw = await resp.read()
                 plugin_io = io.BytesIO(raw)
