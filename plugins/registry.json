@@ -210,6 +210,7 @@
         "branch": "master",
         "description": "Github statistics in discord",
         "bot_version": "2.20.1",
+        "title": "Github Stats",
         "icon_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg",
         "thumbnail_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg"
     }
