@@ -204,5 +204,13 @@
         "title": "Suggest stuff.",
         "icon_url": "https://i.imgur.com/qtE7AH8.png",
         "thumbnail_url": "https://i.imgur.com/qtE7AH8.png"
+    },
+    "githubstats": {
+        "repository": "mischievousdev/modmail-plugins",
+        "branch": "master",
+        "description": "Github statistics in discord",
+        "bot_version": "2.20.1",
+        "icon_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg",
+        "thumbnail_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg"
     }
 }
