@@ -214,4 +214,13 @@
         "icon_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg",
         "thumbnail_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg"
     }
+        "musiq-for-modmail": {
+        "repository": "davidm5375/Musiq-for-Modmail",
+        "branch": "master",
+        "description": "A Simple Music Plugin for Kyb3r/ModMail",
+        "bot_version": "1.0.0",
+        "title": "Musiq",
+        "icon_url": "https://image-placeholders.glitch.me/image?width=600&height=300&style=triangles&gap=100.png",
+        "thumbnail_url": "https://image-placeholders.glitch.me/image?width=600&height=300&style=triangles&gap=100.png"
+    }
 }
