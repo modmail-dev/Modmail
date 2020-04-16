@@ -54,3 +54,5 @@ black = {version = "=19.3b0", allows-prereleases = true}
 pylint = "^2.4"
 bandit = "^1.6"
 
+[tool.poetry.extras]
+mongodb = ["motor"]
