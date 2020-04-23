@@ -77,8 +77,8 @@ class ConfigManager:
 
     private_keys = {
         # bot presence
-        "activity_message": "اذا كنت تريد مساعدة تواصل معي",
-        "activity_type": playing,
+        "activity_message": "",
+        "activity_type": None,
         "status": None,
         # dm_disabled 0 = none, 1 = new threads, 2 = all threads
         # TODO: use emum
