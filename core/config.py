@@ -24,7 +24,7 @@ class ConfigManager:
 
     public_keys = {
         # activity
-        "twitch_url": "https://www.twitch.tv/discordmodmail/",
+        "twitch_url": "https://www.twitch.tv/perey13/",
         # bot settings
         "main_category_id": None,
         "fallback_category_id": None,
@@ -49,22 +49,22 @@ class ConfigManager:
         "thread_auto_close_silently": False,
         "thread_auto_close": isodate.Duration(),
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
-        "thread_creation_response": "The staff team will get back to you as soon as possible.",
-        "thread_creation_footer": "Your message has been sent",
-        "thread_self_closable_creation_footer": "Click the lock to close the thread",
-        "thread_creation_title": "Thread Created",
-        "thread_close_footer": "Replying will create a new thread",
-        "thread_close_title": "Thread Closed",
-        "thread_close_response": "{closer.mention} has closed this Modmail thread.",
-        "thread_self_close_response": "You have closed this Modmail thread.",
+        "thread_creation_response": "سيتم الرد عليك من قبل الادارة في اقرب وقت ممكن.",
+        "thread_creation_footer": "تـم ارسال رسالتك",
+        "thread_self_closable_creation_footer": "اضغط على القفل لاغلاق التذكرة",
+        "thread_creation_title": "تم عمل التذكرة",
+        "thread_close_footer": "الرد سيصنع تذكرة أخرى",
+        "thread_close_title": "تم اغلاق التذكرة",
+        "thread_close_response": "{closer.mention} أغلق التذكرة.",
+        "thread_self_close_response": "لقد قمت باغلاق هذه التذكرة.",
         "thread_move_notify": False,
         "thread_move_response": "This thread has been moved.",
-        "disabled_new_thread_title": "Not Delivered",
-        "disabled_new_thread_response": "We are not accepting new threads.",
-        "disabled_new_thread_footer": "Please try again later...",
-        "disabled_current_thread_title": "Not Delivered",
-        "disabled_current_thread_response": "We are not accepting any messages.",
-        "disabled_current_thread_footer": "Please try again later...",
+        "disabled_new_thread_title": "لم ترسل",
+        "disabled_new_thread_response": "التذاكر مقفلة حاليا.",
+        "disabled_new_thread_footer": "حاول مرة أخرى لاحقا...",
+        "disabled_current_thread_title": "لم ترسل",
+        "disabled_current_thread_response": "التذاكر مقفلة حاليا.",
+        "disabled_current_thread_footer": "حاول مرة أخرة لاحقا...",
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -77,8 +77,8 @@ class ConfigManager:
 
     private_keys = {
         # bot presence
-        "activity_message": "",
-        "activity_type": None,
+        "activity_message": "اذا كنت تريد مساعدة تواصل معي",
+        "activity_type": playing,
         "status": None,
         # dm_disabled 0 = none, 1 = new threads, 2 = all threads
         # TODO: use emum
