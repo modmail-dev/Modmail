@@ -1,4 +1,5 @@
 <div align="center">
+  [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
   <img src="https://i.imgur.com/o558Qnq.png" align="center">
   <br>
   <strong><i>A feature-rich Modmail bot for Discord.</i></strong>
