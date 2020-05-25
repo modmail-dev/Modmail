@@ -436,11 +436,11 @@ class ModmailBot(commands.Bot):
         for recipient_id, items in tuple(closures.items()):
             after = (datetime.fromisoformat(items["time"]) - datetime.utcnow()).total_seconds()
             if after <= 0:
-                logger.debug("Closing thread for recipient %s.", recipient_id)
+                logger.debug("جار اغلاق تذكرة العضو %s.", recipient_id)
                 after = 0
             else:
                 logger.debug(
-                    "Thread for recipient %s will be closed after %s seconds.", recipient_id, after
+                    "تذكرة العضو %s ستغلق بعد %s ثانية.", recipient_id, after
                 )
 
             thread = await self.threads.find(recipient_id=int(recipient_id))
@@ -480,10 +480,10 @@ class ModmailBot(commands.Bot):
                     },
                 )
                 if log_data:
-                    logger.debug("Successfully closed thread with channel %s.", log["channel_id"])
+                    logger.debug("تم اغلاق تذكرة %s.", log["channel_id"])
                 else:
                     logger.debug(
-                        "Failed to close thread with channel %s, skipping.", log["channel_id"]
+                        "فشل اغلاق تذكرة %s, جار التخطي.", log["channel_id"]
                     )
 
         self.metadata_loop = tasks.Loop(
@@ -609,9 +609,9 @@ class ModmailBot(commands.Bot):
             if after <= 0:
                 # No longer blocked
                 self.blocked_users.pop(str(author.id))
-                logger.debug("No longer blocked, user %s.", author.name)
+                logger.debug("تم ازالة البلوك, من العضو %s.", author.name)
                 return True
-        logger.debug("User blocked, user %s.", author.name)
+        logger.debug("تم اعطاء بلوك, للعضو %s.", author.name)
         return False
 
     async def _process_blocked(self, message):
@@ -631,7 +631,7 @@ class ModmailBot(commands.Bot):
 
         member = self.guild.get_member(author.id)
         if member is None:
-            logger.debug("User not in guild, %s.", author.id)
+            logger.debug("العضو ليس في السيرفر, %s.", author.id)
         else:
             author = member
 
@@ -719,8 +719,8 @@ class ModmailBot(commands.Bot):
             if delta:
                 await message.channel.send(
                     embed=discord.Embed(
-                        title="Message not sent!",
-                        description=f"You must wait for {delta} before you can contact me again.",
+                        title="لم يتم ارسال الرسالة!",
+                        description=f"يجب عليك انتظار {delta} للتواصل معنا مجددا.",
                         color=self.error_color,
                     )
                 )
@@ -1052,7 +1052,7 @@ class ModmailBot(commands.Bot):
         thread = await self.threads.find(recipient=member)
         if thread:
             embed = discord.Embed(
-                description="The recipient has left the server.", color=self.error_color
+                description="صاحب التذكرة غادر السيرفر.", color=self.error_color
             )
             await thread.channel.send(embed=embed)
 
@@ -1062,7 +1062,7 @@ class ModmailBot(commands.Bot):
         thread = await self.threads.find(recipient=member)
         if thread:
             embed = discord.Embed(
-                description="The recipient has joined the server.", color=self.mod_color
+                description="صاحب التذكرة دخل (رجع) الى السيرفر.", color=self.mod_color
             )
             await thread.channel.send(embed=embed)
 
