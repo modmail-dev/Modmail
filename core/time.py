@@ -19,13 +19,13 @@ logger = getLogger(__name__)
 class ShortTime:
     compiled = re.compile(
         r"""
-                   (?:(?P<years>[0-9])(?:years?|y))?             # e.g. 2y
-                   (?:(?P<months>[0-9]{1,2})(?:months?|mo))?     # e.g. 9mo
-                   (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?        # e.g. 10w
-                   (?:(?P<days>[0-9]{1,5})(?:days?|d))?          # e.g. 14d
-                   (?:(?P<hours>[0-9]{1,5})(?:hours?|h))?        # e.g. 12h
-                   (?:(?P<minutes>[0-9]{1,5})(?:min(?:ute)?s?|m))?  # e.g. 10m
-                   (?:(?P<seconds>[0-9]{1,5})(?:sec(?:ond)?s?|s))?  # e.g. 15s
+                   (?:(?P<y>[0-9])(?:years?|y))?             # e.g. 2y
+                   (?:(?P<mo>[0-9]{1,2})(?:months?|mo))?     # e.g. 9mo
+                   (?:(?P<wee>[0-9]{1,4})(?:weeks?|w))?        # e.g. 10w
+                   (?:(?P<da>[0-9]{1,5})(?:days?|d))?          # e.g. 14d
+                   (?:(?P<ho>[0-9]{1,5})(?:hours?|h))?        # e.g. 12h
+                   (?:(?P<minus>[0-9]{1,5})(?:min(?:ute)?s?|m))?  # e.g. 10m
+                   (?:(?P<secs>[0-9]{1,5})(?:sec(?:ond)?s?|s))?  # e.g. 15s
                           """,
         re.VERBOSE,
     )
