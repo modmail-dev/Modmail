@@ -24,7 +24,7 @@ class ConfigManager:
 
     public_keys = {
         # activity
-        "twitch_url": "https://www.twitch.tv/perey13/",
+        "twitch_url": "https://www.twitch.tv/peery13/",
         # bot settings
         "main_category_id": None,
         "fallback_category_id": None,
@@ -48,7 +48,7 @@ class ConfigManager:
         "recipient_thread_close": False,
         "thread_auto_close_silently": False,
         "thread_auto_close": isodate.Duration(),
-        "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
+        "thread_auto_close_response": "تم اغلاق هذه التذكرة بسبب خمول وانتهاء الوقت {timeout}.",
         "thread_creation_response": "سيتم الرد عليك من قبل الادارة في اقرب وقت ممكن.",
         "thread_creation_footer": "تـم ارسال رسالتك",
         "thread_self_closable_creation_footer": "اضغط على القفل لاغلاق التذكرة",
@@ -58,7 +58,7 @@ class ConfigManager:
         "thread_close_response": "{closer.mention} أغلق التذكرة.",
         "thread_self_close_response": "لقد قمت باغلاق هذه التذكرة.",
         "thread_move_notify": False,
-        "thread_move_response": "This thread has been moved.",
+        "thread_move_response": "تم نقل التذكرة.",
         "disabled_new_thread_title": "لم ترسل",
         "disabled_new_thread_response": "التذاكر مقفلة حاليا.",
         "disabled_new_thread_footer": "حاول مرة أخرى لاحقا...",
