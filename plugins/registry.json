@@ -213,5 +213,14 @@
         "title": "Github Stats",
         "icon_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg",
         "thumbnail_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg"
+    },
+        "slowmode": {
+        "repository": "teen1/modmail-plugins",
+        "branch": "master",
+        "description": "Configure slow mode for your channels with Modmail!",
+        "bot_version": "2.20.1",
+        "title": "Slow Mode",
+        "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
     }
 }
