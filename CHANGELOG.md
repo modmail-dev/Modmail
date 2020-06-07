@@ -7,6 +7,15 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
 
+# v3.5.0dev1
+
+### Changed
+
+- Bump discord.py version to v1.3.3.
+- Renamed `bot.owner_ids` to `bot.bot_owner_ids` as the attribute is now defined interally for team support.
+- Deleting channel manually will now close the thread.
+- Deleting messages will no longer cause the bot to produce warnings.
+
 # v3.4.1
 
 ### Fixed
