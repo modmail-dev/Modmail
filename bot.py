@@ -1069,8 +1069,10 @@ class ModmailBot(commands.Bot):
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
-        # TODO: use audit log to check if modmail deleted the message
+
         if isinstance(message.channel, discord.DMChannel):
+            if message.author == self.user:
+                return
             thread = await self.threads.find(recipient=message.author)
             if not thread:
                 return
@@ -1078,7 +1080,7 @@ class ModmailBot(commands.Bot):
                 message = await thread.find_linked_message_from_dm(message)
             except ValueError as e:
                 if str(e) != "Thread channel message not found.":
-                    logger.warning("Failed to find linked message to delete: %s", e)
+                    logger.debug("Failed to find linked message to delete: %s", e)
                 return
             embed = message.embeds[0]
             embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=embed.footer.icon_url)
@@ -1088,14 +1090,34 @@ class ModmailBot(commands.Bot):
         thread = await self.threads.find(channel=message.channel)
         if not thread:
             return
+
+        audit_logs = self.modmail_guild.audit_logs()
+        entry = await audit_logs.find(
+            lambda a: a.target == message and a.action == discord.AuditLogAction.message_delete
+        )
+
+        if entry is None:
+            logger.debug("Cannot find the audit log entry for message delete of %d.", message.id)
+        elif entry.user == self.user:
+            return
+
         try:
             await thread.delete_message(message, note=False)
+            embed = discord.Embed(
+                description="Successfully deleted message.", color=self.main_color
+            )
         except ValueError as e:
             if str(e) not in {"DM message not found.", "Malformed thread message."}:
-                logger.warning("Failed to find linked message to delete: %s", e)
-            return
+                logger.debug("Failed to find linked message to delete: %s", e)
+                embed = discord.Embed(
+                    description="Failed to delete message.", color=self.error_color
+                )
+            else:
+                return
         except discord.NotFound:
             return
+        embed.set_footer(text=f"Message ID: {message.id} from {message.author}.")
+        return await message.channel.send(embed=embed)
 
     async def on_bulk_message_delete(self, messages):
         await discord.utils.async_all(self.on_message_delete(msg) for msg in messages)
