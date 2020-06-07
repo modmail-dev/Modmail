@@ -7,7 +7,12 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
 
-# v3.5.0dev1
+# v3.5.0dev2
+
+### Added
+
+- A confirmation when you manually delete a thread message embed.
+- Config var `enable_eval` defaults true, set `enable_eval=no` to disable the eval command. (GH #2803)
 
 ### Changed
 

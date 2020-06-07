@@ -1,4 +1,4 @@
-__version__ = "3.5.0-dev1"
+__version__ = "3.5.0-dev2"
 
 
 import asyncio
@@ -1200,6 +1200,10 @@ class ModmailBot(commands.Bot):
                             corrected_permission_level.name,
                         )
             logger.warning("CheckFailure: %s", exception)
+        elif isinstance(exception, commands.DisabledCommand):
+            logger.info(
+                "DisabledCommand: %s is trying to run eval but it's disabled", context.author.name
+            )
         else:
             logger.error("Unexpected exception:", exc_info=exception)
 
