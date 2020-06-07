@@ -502,7 +502,7 @@ class Modmail(commands.Cog):
         if mention in mentions:
             embed = discord.Embed(
                 color=self.bot.error_color,
-                description=f"{mention} is already subscribed to this thread.",
+                description=f"{mention} is not subscribed to this thread.",
             )
         else:
             mentions.append(mention)

@@ -14,4 +14,4 @@ jobs:
         stale-issue-message: 'This issue is stale because it has been open for 100 days with no activity. Remove stale label or comment or this will be closed in 5 days. Please do not un-stale this issue unless it carries significant contribution.'
         days-before-stale: 100
         days-before-close: 5
-        exempt-issue-label: 'high priority'
+        exempt-issue-label: 'priority: high,approved,security,bug'
