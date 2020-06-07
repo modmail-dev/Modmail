@@ -180,7 +180,7 @@ class ModmailBot(commands.Bot):
                 logger.error(" - Shutting down bot - ")
 
     @property
-    def owner_ids(self):
+    def bot_owner_ids(self):
         owner_ids = self.config["owners"]
         if owner_ids is not None:
             owner_ids = set(map(int, str(owner_ids).split(",")))
@@ -192,7 +192,7 @@ class ModmailBot(commands.Bot):
         return owner_ids
 
     async def is_owner(self, user: discord.User) -> bool:
-        if user.id in self.owner_ids:
+        if user.id in self.bot_owner_ids:
             return True
         return await super().is_owner(user)
 
@@ -416,7 +416,8 @@ class ModmailBot(commands.Bot):
         logger.info("Logged in as: %s", self.user)
         logger.info("Bot ID: %s", self.user.id)
         owners = ", ".join(
-            getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.owner_ids
+            getattr(self.get_user(owner_id), "name", str(owner_id))
+            for owner_id in self.bot_owner_ids
         )
         logger.info("Owners: %s", owners)
         logger.info("Prefix: %s", self.prefix)
@@ -935,7 +936,7 @@ class ModmailBot(commands.Bot):
                     return
                 await thread.recipient.trigger_typing()
 
-    async def handle_reaction_events(self, payload, *, add):
+    async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
         if user.bot:
             return
@@ -961,7 +962,7 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             if (
-                add
+                payload.event_type == "REACTION_ADD"
                 and message.embeds
                 and str(reaction) == str(close_emoji)
                 and self.config.get("recipient_thread_close")
@@ -992,7 +993,7 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if add:
+        if payload.event_type == "REACTION_ADD":
             if await self.add_reaction(linked_message, reaction):
                 await self.add_reaction(message, reaction)
         else:
@@ -1003,10 +1004,10 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to remove reaction: %s", e)
 
     async def on_raw_reaction_add(self, payload):
-        await self.handle_reaction_events(payload, add=True)
+        await self.handle_reaction_events(payload)
 
     async def on_raw_reaction_remove(self, payload):
-        await self.handle_reaction_events(payload, add=False)
+        await self.handle_reaction_events(payload)
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
