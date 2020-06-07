@@ -499,6 +499,17 @@ class ModmailBot(commands.Bot):
         self.metadata_loop.before_loop(self.before_post_metadata)
         self.metadata_loop.start()
 
+        other_guilds = [
+            guild for guild in self.guilds if guild not in {self.guild, self.modmail_guild}
+        ]
+        if any(other_guilds):
+            logger.warning(
+                "The bot is in more servers other than the main and staff server."
+                "This may cause data compromise (%s).",
+                ", ".join(guild.name for guild in other_guilds),
+            )
+            logger.warning("If the external servers are valid, you may ignore this message.")
+
     async def convert_emoji(self, name: str) -> str:
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
@@ -1029,10 +1040,10 @@ class ModmailBot(commands.Bot):
             await self.config.update()
             return
 
-        audit_logs = self.modmail_guild.audit_logs()
-        entry = await audit_logs.find(
-            lambda a: a.target == channel and a.action == discord.AuditLogAction.channel_delete
+        audit_logs = self.modmail_guild.audit_logs(
+            limit=10, action=discord.AuditLogAction.channel_delete
         )
+        entry = await audit_logs.find(lambda a: int(a.target.id) == channel.id)
 
         if entry is None:
             logger.debug("Cannot find the audit log entry for channel delete of %d.", channel.id)
@@ -1070,6 +1081,9 @@ class ModmailBot(commands.Bot):
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
 
+        if message.is_system():
+            return
+
         if isinstance(message.channel, discord.DMChannel):
             if message.author == self.user:
                 return
@@ -1087,18 +1101,20 @@ class ModmailBot(commands.Bot):
             await message.edit(embed=embed)
             return
 
+        if message.author != self.user:
+            return
+
         thread = await self.threads.find(channel=message.channel)
         if not thread:
             return
 
-        audit_logs = self.modmail_guild.audit_logs()
-        entry = await audit_logs.find(
-            lambda a: a.target == message and a.action == discord.AuditLogAction.message_delete
+        audit_logs = self.modmail_guild.audit_logs(
+            limit=10, action=discord.AuditLogAction.message_delete
         )
 
+        entry = await audit_logs.find(lambda a: a.target == self.user)
+
         if entry is None:
-            logger.debug("Cannot find the audit log entry for message delete of %d.", message.id)
-        elif entry.user == self.user:
             return
 
         try:
@@ -1235,7 +1251,7 @@ class ModmailBot(commands.Bot):
             "last_updated": str(datetime.utcnow()),
         }
 
-        if discord.AppInfo.team is not None:
+        if info.team is not None:
             data.update(
                 {
                     "owner_name": info.team.owner.name
