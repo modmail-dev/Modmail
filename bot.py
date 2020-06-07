@@ -1196,10 +1196,9 @@ class ModmailBot(commands.Bot):
         logger.line("debug")
 
     async def post_metadata(self):
-        owner = (await self.application_info()).owner
+        info = await self.application_info()
+
         data = {
-            "owner_name": str(owner),
-            "owner_id": owner.id,
             "bot_id": self.user.id,
             "bot_name": str(self.user),
             "avatar_url": str(self.user.avatar_url),
@@ -1212,6 +1211,19 @@ class ModmailBot(commands.Bot):
             "selfhosted": True,
             "last_updated": str(datetime.utcnow()),
         }
+
+        if discord.AppInfo.team is not None:
+            data.update(
+                {
+                    "owner_name": info.team.owner.name
+                    if info.team.owner is not None
+                    else "No Owner",
+                    "owner_id": info.team.owner_id,
+                    "team": True,
+                }
+            )
+        else:
+            data.update({"owner_name": info.owner.name, "owner_id": info.owner.id, "team": False})
 
         async with self.session.post("https://api.logviewer.tech/metadata", json=data):
             logger.debug("Uploading metadata to Modmail server.")
