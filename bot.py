@@ -1013,19 +1013,6 @@ class ModmailBot(commands.Bot):
         if channel.guild != self.modmail_guild:
             return
 
-        try:
-            audit_logs = self.modmail_guild.audit_logs()
-            entry = await audit_logs.find(lambda a: a.target == channel)
-            mod = entry.user
-        except AttributeError as e:
-            # discord.py broken implementation with discord API
-            # TODO: waiting for dpy
-            logger.warning("Failed to retrieve audit log: %s.", e)
-            return
-
-        if mod == self.user:
-            return
-
         if isinstance(channel, discord.CategoryChannel):
             if self.main_category == channel:
                 logger.debug("Main category was deleted.")
@@ -1040,6 +1027,19 @@ class ModmailBot(commands.Bot):
             logger.info("Log channel deleted.")
             self.config.remove("log_channel_id")
             await self.config.update()
+            return
+
+        audit_logs = self.modmail_guild.audit_logs()
+        entry = await audit_logs.find(
+            lambda a: a.target == channel and a.action == discord.AuditLogAction.channel_delete
+        )
+
+        if entry is None:
+            logger.debug("Cannot find the audit log entry for channel delete of %d.", channel.id)
+            return
+
+        mod = entry.user
+        if mod == self.user:
             return
 
         thread = await self.threads.find(channel=channel)
