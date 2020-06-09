@@ -1,4 +1,4 @@
-__version__ = "3.4.1"
+__version__ = "3.5.0-dev3"
 
 
 import asyncio
@@ -180,7 +180,7 @@ class ModmailBot(commands.Bot):
                 logger.error(" - Shutting down bot - ")
 
     @property
-    def owner_ids(self):
+    def bot_owner_ids(self):
         owner_ids = self.config["owners"]
         if owner_ids is not None:
             owner_ids = set(map(int, str(owner_ids).split(",")))
@@ -192,7 +192,7 @@ class ModmailBot(commands.Bot):
         return owner_ids
 
     async def is_owner(self, user: discord.User) -> bool:
-        if user.id in self.owner_ids:
+        if user.id in self.bot_owner_ids:
             return True
         return await super().is_owner(user)
 
@@ -416,7 +416,8 @@ class ModmailBot(commands.Bot):
         logger.info("Logged in as: %s", self.user)
         logger.info("Bot ID: %s", self.user.id)
         owners = ", ".join(
-            getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.owner_ids
+            getattr(self.get_user(owner_id), "name", str(owner_id))
+            for owner_id in self.bot_owner_ids
         )
         logger.info("Owners: %s", owners)
         logger.info("Prefix: %s", self.prefix)
@@ -497,6 +498,17 @@ class ModmailBot(commands.Bot):
         )
         self.metadata_loop.before_loop(self.before_post_metadata)
         self.metadata_loop.start()
+
+        other_guilds = [
+            guild for guild in self.guilds if guild not in {self.guild, self.modmail_guild}
+        ]
+        if any(other_guilds):
+            logger.warning(
+                "The bot is in more servers other than the main and staff server."
+                "This may cause data compromise (%s).",
+                ", ".join(guild.name for guild in other_guilds),
+            )
+            logger.warning("If the external servers are valid, you may ignore this message.")
 
     async def convert_emoji(self, name: str) -> str:
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
@@ -935,7 +947,7 @@ class ModmailBot(commands.Bot):
                     return
                 await thread.recipient.trigger_typing()
 
-    async def handle_reaction_events(self, payload, *, add):
+    async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
         if user.bot:
             return
@@ -961,7 +973,7 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             if (
-                add
+                payload.event_type == "REACTION_ADD"
                 and message.embeds
                 and str(reaction) == str(close_emoji)
                 and self.config.get("recipient_thread_close")
@@ -992,7 +1004,7 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if add:
+        if payload.event_type == "REACTION_ADD":
             if await self.add_reaction(linked_message, reaction):
                 await self.add_reaction(message, reaction)
         else:
@@ -1003,26 +1015,13 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to remove reaction: %s", e)
 
     async def on_raw_reaction_add(self, payload):
-        await self.handle_reaction_events(payload, add=True)
+        await self.handle_reaction_events(payload)
 
     async def on_raw_reaction_remove(self, payload):
-        await self.handle_reaction_events(payload, add=False)
+        await self.handle_reaction_events(payload)
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
-            return
-
-        try:
-            audit_logs = self.modmail_guild.audit_logs()
-            entry = await audit_logs.find(lambda a: a.target == channel)
-            mod = entry.user
-        except AttributeError as e:
-            # discord.py broken implementation with discord API
-            # TODO: waiting for dpy
-            logger.warning("Failed to retrieve audit log: %s.", e)
-            return
-
-        if mod == self.user:
             return
 
         if isinstance(channel, discord.CategoryChannel):
@@ -1039,6 +1038,19 @@ class ModmailBot(commands.Bot):
             logger.info("Log channel deleted.")
             self.config.remove("log_channel_id")
             await self.config.update()
+            return
+
+        audit_logs = self.modmail_guild.audit_logs(
+            limit=10, action=discord.AuditLogAction.channel_delete
+        )
+        entry = await audit_logs.find(lambda a: int(a.target.id) == channel.id)
+
+        if entry is None:
+            logger.debug("Cannot find the audit log entry for channel delete of %d.", channel.id)
+            return
+
+        mod = entry.user
+        if mod == self.user:
             return
 
         thread = await self.threads.find(channel=channel)
@@ -1068,8 +1080,13 @@ class ModmailBot(commands.Bot):
 
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
-        # TODO: use audit log to check if modmail deleted the message
+
+        if message.is_system():
+            return
+
         if isinstance(message.channel, discord.DMChannel):
+            if message.author == self.user:
+                return
             thread = await self.threads.find(recipient=message.author)
             if not thread:
                 return
@@ -1077,24 +1094,46 @@ class ModmailBot(commands.Bot):
                 message = await thread.find_linked_message_from_dm(message)
             except ValueError as e:
                 if str(e) != "Thread channel message not found.":
-                    logger.warning("Failed to find linked message to delete: %s", e)
+                    logger.debug("Failed to find linked message to delete: %s", e)
                 return
             embed = message.embeds[0]
             embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=embed.footer.icon_url)
             await message.edit(embed=embed)
             return
 
+        if message.author != self.user:
+            return
+
         thread = await self.threads.find(channel=message.channel)
         if not thread:
             return
+
+        audit_logs = self.modmail_guild.audit_logs(
+            limit=10, action=discord.AuditLogAction.message_delete
+        )
+
+        entry = await audit_logs.find(lambda a: a.target == self.user)
+
+        if entry is None:
+            return
+
         try:
             await thread.delete_message(message, note=False)
+            embed = discord.Embed(
+                description="Successfully deleted message.", color=self.main_color
+            )
         except ValueError as e:
             if str(e) not in {"DM message not found.", "Malformed thread message."}:
-                logger.warning("Failed to find linked message to delete: %s", e)
-            return
+                logger.debug("Failed to find linked message to delete: %s", e)
+                embed = discord.Embed(
+                    description="Failed to delete message.", color=self.error_color
+                )
+            else:
+                return
         except discord.NotFound:
             return
+        embed.set_footer(text=f"Message ID: {message.id} from {message.author}.")
+        return await message.channel.send(embed=embed)
 
     async def on_bulk_message_delete(self, messages):
         await discord.utils.async_all(self.on_message_delete(msg) for msg in messages)
@@ -1161,6 +1200,10 @@ class ModmailBot(commands.Bot):
                             corrected_permission_level.name,
                         )
             logger.warning("CheckFailure: %s", exception)
+        elif isinstance(exception, commands.DisabledCommand):
+            logger.info(
+                "DisabledCommand: %s is trying to run eval but it's disabled", context.author.name
+            )
         else:
             logger.error("Unexpected exception:", exc_info=exception)
 
@@ -1196,10 +1239,9 @@ class ModmailBot(commands.Bot):
         logger.line("debug")
 
     async def post_metadata(self):
-        owner = (await self.application_info()).owner
+        info = await self.application_info()
+
         data = {
-            "owner_name": str(owner),
-            "owner_id": owner.id,
             "bot_id": self.user.id,
             "bot_name": str(self.user),
             "avatar_url": str(self.user.avatar_url),
@@ -1212,6 +1254,19 @@ class ModmailBot(commands.Bot):
             "selfhosted": True,
             "last_updated": str(datetime.utcnow()),
         }
+
+        if info.team is not None:
+            data.update(
+                {
+                    "owner_name": info.team.owner.name
+                    if info.team.owner is not None
+                    else "No Owner",
+                    "owner_id": info.team.owner_id,
+                    "team": True,
+                }
+            )
+        else:
+            data.update({"owner_name": info.owner.name, "owner_id": info.owner.id, "team": False})
 
         async with self.session.post("https://api.logviewer.tech/metadata", json=data):
             logger.debug("Uploading metadata to Modmail server.")
