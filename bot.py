@@ -1,4 +1,4 @@
-__version__ = "3.5.0-dev4"
+__version__ = "3.5.0-dev5"
 
 
 import asyncio
@@ -47,7 +47,10 @@ if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
 if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except AttributeError:
+        logger.error('Failed to use WindowsProactorEventLoopPolicy.', exc_info=True)
 
 
 class ModmailBot(commands.Bot):

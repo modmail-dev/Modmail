@@ -7,7 +7,7 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
 
-# v3.5.0dev4
+# v3.5.0dev5
 
 ### Added
 
@@ -23,6 +23,11 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Deleting channel manually will now close the thread.
 - Deleting messages will no longer cause the bot to produce warnings.
 - Plugins will automatically be removed when it fails to load.
+
+### Fixed
+
+- Plugins not loading in Windows OS. Now uses proactor event loop for asyncio which should fix this.
+
 
 # v3.4.1
 

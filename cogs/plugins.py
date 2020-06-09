@@ -159,7 +159,7 @@ class Plugins(commands.Cog):
             logger.debug("Loading cached %s.", plugin.cache_path)
         else:
             headers = {}
-            github_token = self.bot.config.get("github_token")
+            github_token = self.bot.config["github_token"]
             if github_token is not None:
                 headers["Authorization"] = f"token {github_token}"
 
