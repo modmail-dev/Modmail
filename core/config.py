@@ -112,6 +112,8 @@ class ConfigManager:
         "token": None,
         "enable_plugins": True,
         "enable_eval": False,
+        # github access token for private repositories
+        "github_token": None,
         # Logging
         "log_level": "INFO",
     }
