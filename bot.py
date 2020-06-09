@@ -18,8 +18,6 @@ import isodate
 
 from aiohttp import ClientSession
 from emoji import UNICODE_EMOJI
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import ConfigurationError
 
 from pkg_resources import parse_version
 
@@ -32,7 +30,7 @@ except ImportError:
     pass
 
 from core import checks
-from core.clients import ApiClient, PluginDatabaseClient
+from core.clients import ApiClient, PluginDatabaseClient, MongoDBClient
 from core.config import ConfigManager
 from core.utils import human_join, normalize_alias
 from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
@@ -72,22 +70,7 @@ class ModmailBot(commands.Bot):
         self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
         self._configure_logging()
 
-        mongo_uri = self.config["mongo_uri"]
-        if mongo_uri is None:
-            logger.critical("A Mongo URI is necessary for the bot to function.")
-            raise RuntimeError
-
-        try:
-            self.db = AsyncIOMotorClient(mongo_uri).modmail_bot
-        except ConfigurationError as e:
-            logger.critical(
-                "Your MONGO_URI might be copied wrong, try re-copying from the source again. "
-                "Otherwise noted in the following message:"
-            )
-            logger.critical(e)
-            sys.exit(0)
-
-        self.plugin_db = PluginDatabaseClient(self)
+        self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
     @property
@@ -158,7 +141,11 @@ class ModmailBot(commands.Bot):
     @property
     def api(self) -> ApiClient:
         if self._api is None:
-            self._api = ApiClient(self)
+            if self.config["database_type"].lower() == "mongodb":
+                self._api = MongoDBClient(self)
+            else:
+                logger.critical("Invalid database type.")
+                raise RuntimeError
         return self._api
 
     async def get_prefix(self, message=None):
@@ -376,36 +363,15 @@ class ModmailBot(commands.Bot):
 
     async def on_connect(self):
         try:
-            await self.validate_database_connection()
+            await self.api.validate_database_connection()
         except Exception:
             logger.debug("Logging out due to failed database connection.")
             return await self.logout()
 
         logger.debug("Connected to gateway.")
         await self.config.refresh()
-        await self.setup_indexes()
+        await self.api.setup_indexes()
         self._connected.set()
-
-    async def setup_indexes(self):
-        """Setup text indexes so we can use the $search operator"""
-        coll = self.db.logs
-        index_name = "messages.content_text_messages.author.name_text_key_text"
-
-        index_info = await coll.index_information()
-
-        # Backwards compatibility
-        old_index = "messages.content_text_messages.author.name_text"
-        if old_index in index_info:
-            logger.info("Dropping old index: %s", old_index)
-            await coll.drop_index(old_index)
-
-        if index_name not in index_info:
-            logger.info('Creating "text" index for logs collection.')
-            logger.info("Name: %s", index_name)
-            await coll.create_index(
-                [("messages.content", "text"), ("messages.author.name", "text"), ("key", "text")]
-            )
-        logger.debug("Successfully configured and verified database indexes.")
 
     async def on_ready(self):
         """Bot startup, sets uptime."""
@@ -1212,37 +1178,6 @@ class ModmailBot(commands.Bot):
             )
         else:
             logger.error("Unexpected exception:", exc_info=exception)
-
-    async def validate_database_connection(self):
-        try:
-            await self.db.command("buildinfo")
-        except Exception as exc:
-            logger.critical("Something went wrong while connecting to the database.")
-            message = f"{type(exc).__name__}: {str(exc)}"
-            logger.critical(message)
-
-            if "ServerSelectionTimeoutError" in message:
-                logger.critical(
-                    "This may have been caused by not whitelisting "
-                    "IPs correctly. Make sure to whitelist all "
-                    "IPs (0.0.0.0/0) https://i.imgur.com/mILuQ5U.png"
-                )
-
-            if "OperationFailure" in message:
-                logger.critical(
-                    "This is due to having invalid credentials in your MONGO_URI. "
-                    "Remember you need to substitute `<password>` with your actual password."
-                )
-                logger.critical(
-                    "Be sure to URL encode your username and password (not the entire URL!!), "
-                    "https://www.urlencoder.io/, if this issue persists, try changing your username and password "
-                    "to only include alphanumeric characters, no symbols."
-                    ""
-                )
-            raise
-        else:
-            logger.debug("Successfully connected to the database.")
-        logger.line("debug")
 
     async def post_metadata(self):
         info = await self.application_info()

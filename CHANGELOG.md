@@ -19,10 +19,12 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Changed
 
 - Bump discord.py version to v1.3.3.
-- Renamed `bot.owner_ids` to `bot.bot_owner_ids` as the attribute is now defined interally for team support.
+- Renamed `bot.owner_ids` to `bot.bot_owner_ids` as the attribute is now defined internally for team support.
 - Deleting channel manually will now close the thread.
 - Deleting messages will no longer cause the bot to produce warnings.
 - Plugins will automatically be removed when it fails to load.
+- Moved all database-related activities to clients.py under MongoDBClient, with possible future hook for additional database support.
+- Deprecated `bot.plugin_db.get_partition` in favour of `bot.api.get_plugin_partition` (not final).
 
 ### Fixed
 

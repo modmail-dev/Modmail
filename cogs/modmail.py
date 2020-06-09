@@ -669,12 +669,7 @@ class Modmail(commands.Cog):
         """
         user = user if user is not None else ctx.author
 
-        query = {"guild_id": str(self.bot.guild_id), "open": False, "closer.id": str(user.id)}
-
-        projection = {"messages": {"$slice": 5}}
-
-        entries = await self.bot.db.logs.find(query, projection).to_list(None)
-
+        entries = await self.bot.api.search_closed_by(user.id)
         embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
 
         if not embeds:
@@ -748,15 +743,7 @@ class Modmail(commands.Cog):
 
         await ctx.trigger_typing()
 
-        query = {
-            "guild_id": str(self.bot.guild_id),
-            "open": False,
-            "$text": {"$search": f'"{query}"'},
-        }
-
-        projection = {"messages": {"$slice": 5}}
-
-        entries = await self.bot.db.logs.find(query, projection).to_list(limit)
+        entries = await self.bot.api.search_by_text(query, limit)
 
         embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
 
