@@ -7,13 +7,14 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
 
-# v3.5.0dev3
+# v3.5.0dev4
 
 ### Added
 
 - A confirmation when you manually delete a thread message embed.
 - Config var `enable_eval` defaults true, set `enable_eval=no` to disable the eval command. (GH #2803)
 - Added `?plugins reset` command to completely reset everything related to plugins. This will fix some problems caused by broken plugins in the file system.
+- Support private GitHub repos for plugins (thanks to @officialpiyush pr#2767)
 
 ### Changed
 
