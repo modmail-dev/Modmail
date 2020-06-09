@@ -25,6 +25,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Plugins will automatically be removed when it fails to load.
 - Moved all database-related activities to clients.py under MongoDBClient, with possible future hook for additional database support.
 - Deprecated `bot.plugin_db.get_partition` in favour of `bot.api.get_plugin_partition` (not final).
+- Deprecated `MONGO_URI` config var (but will keep support in the future) in favour of `CONNECTION_URI` and `DATABASE_TYPE`. Right now there is one supported database - "mongodb", which is the default.
 
 ### Fixed
 
