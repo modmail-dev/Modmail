@@ -46,11 +46,11 @@ temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     try:
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     except AttributeError:
-        logger.error('Failed to use WindowsProactorEventLoopPolicy.', exc_info=True)
+        logger.error("Failed to use WindowsProactorEventLoopPolicy.", exc_info=True)
 
 
 class ModmailBot(commands.Bot):
