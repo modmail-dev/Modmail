@@ -5,6 +5,7 @@ import re
 import typing
 from copy import deepcopy
 
+from dotenv import load_dotenv
 import isodate
 
 import discord
@@ -133,12 +134,13 @@ class ConfigManager:
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
 
-    def __init__(self, bot, config_file = "config.json"):
+    def __init__(self, bot, config_path = os.path.dirname(os.path.abspath(__file__))):
         self.bot = bot
         self._cache = {}
         self.ready_event = asyncio.Event()
         self.config_help = {}
-        self.config_file = config_file
+        self.config_path = config_path
+        load_dotenv(dotenv_path=os.path.join(self.config_path, ".env"))
 
     def __repr__(self):
         return repr(self._cache)
@@ -147,12 +149,10 @@ class ConfigManager:
         data = deepcopy(self.defaults)
 
         # populate from env var and .env file
-        # data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
-        config_json = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), self.config_file
-        )
+        data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
+        config_json = os.path.join(self.config_path, "config.json")
         if os.path.exists(config_json):
-            logger.debug("Loading envs from {}".format(self.config_file))
+            logger.debug("Loading envs from {}".format(config_json))
             with open(config_json, "r", encoding="utf-8") as f:
                 # Config json should override env vars
                 try:
