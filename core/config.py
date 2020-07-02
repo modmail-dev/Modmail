@@ -107,6 +107,7 @@ class ConfigManager:
         "log_url": "https://example.com/",
         "log_url_prefix": "/logs",
         "mongo_uri": None,
+        "mongo_db_name": "modmail_bot",
         "owners": None,
         # bot
         "token": None,

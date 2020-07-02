@@ -557,6 +557,15 @@
       "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   },
+  "mongo_db_name": {
+    "default": "modmail_bot",
+    "description": "Optional MongoDB database name.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
   "owners": {
     "default": "None, required",
     "description": "A list of definite bot owners, use `{prefix}perms add level OWNER @user` to set flexible bot owners.",

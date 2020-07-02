@@ -16,8 +16,12 @@
       "required": true
     },
     "MONGO_URI": {
-      "description": "Mongo DB connection URI for self-hosting your data.",
+      "description": "MongoDB connection URI for self-hosting your data.",
       "required": true
+    },
+    "MONGO_DB_NAME": {
+      "description": "Optional MongoDB database name.",
+      "required": false
     },
     "LOG_URL": {
       "description": "The url of the log viewer app for viewing self-hosted logs.",

@@ -71,8 +71,10 @@ class ModmailBot(commands.Bot):
             logger.critical("A Mongo URI is necessary for the bot to function.")
             raise RuntimeError
 
+        db_name = self.config["mongo_db_name"]
+
         try:
-            self.db = AsyncIOMotorClient(mongo_uri).modmail_bot
+            self.db = AsyncIOMotorClient(mongo_uri)[db_name]
         except ConfigurationError as e:
             logger.critical(
                 "Your MONGO_URI might be copied wrong, try re-copying from the source again. "
