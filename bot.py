@@ -48,7 +48,7 @@ if not os.path.exists(temp_dir):
 
 
 class ModmailBot(commands.Bot):
-    def __init__(self):
+    def __init__(self, args):
         super().__init__(command_prefix=None)  # implemented in `get_prefix`
         self._session = None
         self._api = None
@@ -58,7 +58,10 @@ class ModmailBot(commands.Bot):
         self._connected = asyncio.Event()
         self.start_time = datetime.utcnow()
 
-        self.config = ConfigManager(self)
+        if len(args):
+            self.config = ConfigManager(self, args[0])
+        else: 
+            self.config = ConfigManager(self)
         self.config.populate_cache()
 
         self.threads = ThreadManager(self)
@@ -1224,7 +1227,7 @@ class ModmailBot(commands.Bot):
             self.metadata_loop.cancel()
 
 
-def main():
+def main(args):
     try:
         # noinspection PyUnresolvedReferences
         import uvloop
@@ -1234,9 +1237,9 @@ def main():
     except ImportError:
         pass
 
-    bot = ModmailBot()
+    bot = ModmailBot(args)
     bot.run()
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
