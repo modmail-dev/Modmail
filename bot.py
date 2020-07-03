@@ -60,7 +60,7 @@ class ModmailBot(commands.Bot):
 
         if len(args):
             self.config = ConfigManager(self, args[0])
-        else: 
+        else:
             self.config = ConfigManager(self)
         self.config.populate_cache()
 
