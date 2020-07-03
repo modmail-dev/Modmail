@@ -76,7 +76,7 @@ class Thread:
         else:
             self._ready_event.clear()
 
-    async def setup(self, *, creator=None, category=None):
+    async def setup(self, *, creator, category=None):
         """Create the thread channel and other io related initialisation tasks"""
         self.bot.dispatch("thread_initiate", self)
         recipient = self.recipient
@@ -115,7 +115,7 @@ class Thread:
 
         try:
             log_url, log_data = await asyncio.gather(
-                self.bot.api.create_log_entry(recipient, channel, creator or recipient),
+                self.bot.api.create_log_entry(recipient, channel, creator),
                 self.bot.api.get_user_logs(recipient.id),
             )
 
@@ -128,16 +128,15 @@ class Thread:
         await channel.edit(topic=f"User ID: {recipient.id}")
         self.ready = True
 
-        if creator:
-            mention = None
-        else:
-            mention = self.bot.config["mention"]
-
         async def send_genesis_message():
             info_embed = self._format_info_embed(
                 recipient, log_url, log_count, self.bot.main_color
             )
             try:
+                mention = None
+                if creator.id == recipient.id:
+                    mention = self.bot.config["mention"]
+
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self.genesis_message = msg
@@ -164,7 +163,7 @@ class Thread:
             embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
             embed.title = self.bot.config["thread_creation_title"]
 
-            if creator is None:
+            if creator.id == recipient.id:
                 msg = await recipient.send(embed=embed)
 
                 if recipient_thread_close:
@@ -962,7 +961,7 @@ class ThreadManager:
         self,
         recipient: typing.Union[discord.Member, discord.User],
         *,
-        creator: typing.Union[discord.Member, discord.User] = None,
+        creator: typing.Union[discord.Member, discord.User],
         category: discord.CategoryChannel = None,
     ) -> Thread:
         """Creates a Modmail thread"""

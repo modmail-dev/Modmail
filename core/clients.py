@@ -166,6 +166,7 @@ class ApiClient(RequestClient):
         prefix = self.bot.config["log_url_prefix"].strip("/")
         if prefix == "NONE":
             prefix = ""
+
         return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{key}"
 
     async def delete_log_entry(self, key: str) -> bool:
