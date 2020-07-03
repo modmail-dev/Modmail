@@ -132,6 +132,10 @@ class ApiClient(RequestClient):
     async def create_log_entry(
         self, recipient: Member, channel: TextChannel, creator: Member
     ) -> str:
+        log_url = self.bot.config["log_url"]
+        if not log_url:
+            return ""
+
         key = secrets.token_hex(6)
 
         await self.logs.insert_one(
@@ -166,8 +170,7 @@ class ApiClient(RequestClient):
         prefix = self.bot.config["log_url_prefix"].strip("/")
         if prefix == "NONE":
             prefix = ""
-
-        return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{key}"
+        return f"{log_url.strip('/')}{'/' + prefix if prefix else ''}/{key}"
 
     async def delete_log_entry(self, key: str) -> bool:
         result = await self.logs.delete_one({"key": key})
