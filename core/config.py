@@ -134,7 +134,7 @@ class ConfigManager:
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
 
-    def __init__(self, bot, config_path = os.path.dirname(os.path.abspath(__file__))):
+    def __init__(self, bot, config_path=os.path.dirname(os.path.abspath(__file__))):
         self.bot = bot
         self._cache = {}
         self.ready_event = asyncio.Event()
