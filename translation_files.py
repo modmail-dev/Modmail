@@ -11,27 +11,29 @@ from cogs.plugins import Plugins
 from cogs.utility import Utility
 
 
-data = [('Identifier', 'English', 'Context')]
+data = [("Identifier", "English", "Context")]
 all_identifiers = []
 identifiers = {}
 
 
 class FormatError(Exception):
     def __init__(self, reason, string):
-        super().__init__(f'Unable to parse {reason}: {string}')
+        super().__init__(f"Unable to parse {reason}: {string}")
 
 
-for filename in glob.glob('**/*.py') + glob.glob('*.py'):
-    if filename == 'translation_files.py':
+for filename in glob.glob("**/*.py") + glob.glob("*.py"):
+    if filename == "translation_files.py":
         continue
-    with open(filename, encoding='utf8') as f:
+    with open(filename, encoding="utf8") as f:
         filedata = f.read()
-    regex_matches = re.findall(r'(?:^|[^A-z])_\(.+?(?:\'|\")\)+?', filedata, flags=re.DOTALL | re.MULTILINE)
+    regex_matches = re.findall(
+        r"(?:^|[^A-z])_\(.+?(?:\'|\")\)+?", filedata, flags=re.DOTALL | re.MULTILINE
+    )
 
     for i in regex_matches:
         if "f'" in i or 'f"' in i:
-            print(FormatError('f-string', i))
-        identifier = ''
+            print(FormatError("f-string", i))
+        identifier = ""
         read = False
         ignore_inverted = False
         newline = False
@@ -48,7 +50,7 @@ for filename in glob.glob('**/*.py') + glob.glob('*.py'):
                     read = not read
                     triggered = True
 
-            if x == '\n':
+            if x == "\n":
                 newline = True
 
             if read and not triggered:
@@ -62,7 +64,7 @@ for filename in glob.glob('**/*.py') + glob.glob('*.py'):
             else:
                 counter = 0
 
-            if x == '\\':
+            if x == "\\":
                 ignore_inverted = True
             elif ignore_inverted:
                 ignore_inverted = False
@@ -81,16 +83,16 @@ for filename in glob.glob('**/*.py') + glob.glob('*.py'):
 
         if identifier in identifiers.keys():
             if filename not in data[identifiers[identifier]][2]:
-                data[identifiers[identifier]][2] += f' {filename}/L{linenum}'
+                data[identifiers[identifier]][2] += f" {filename}/L{linenum}"
             elif str(linenum) not in data[identifiers[identifier]][2]:
-                split_space = data[identifiers[identifier]][2].split(' ')
+                split_space = data[identifiers[identifier]][2].split(" ")
                 for nx, x in enumerate(split_space):
                     if filename in x:
-                        split_space[nx] += f'/L{linenum}'
+                        split_space[nx] += f"/L{linenum}"
                         break
-                data[identifiers[identifier]][2] = (' ').join(split_space)
+                data[identifiers[identifier]][2] = (" ").join(split_space)
         else:
-            data.append([identifier, identifier, f'File: {filename}/L{linenum}'])
+            data.append([identifier, identifier, f"File: {filename}/L{linenum}"])
             identifiers[identifier] = len(data) - 1
 
     print(filename)
@@ -101,17 +103,25 @@ bot = commands.Bot(command_prefix=None)
 cogs = [Modmail(bot), Plugins(bot), Utility(bot)]
 for i in cogs:
     if i.description:
-        data.append([i.description, i.description, f'Cog: {i.__cog_name__}'])
+        data.append([i.description, i.description, f"Cog: {i.__cog_name__}"])
 
     for cmd in i.walk_commands():
         if cmd not in done:
             if cmd.short_doc:
                 print(cmd)
-                data.append([cmd.short_doc, cmd.short_doc, f'Cog: {i.__cog_name__}\nCommand: {cmd.qualified_name}'])
-                data.append([cmd.help, cmd.help, f'Cog: {i.__cog_name__}\nCommand: {cmd.qualified_name}'])
+                data.append(
+                    [
+                        cmd.short_doc,
+                        cmd.short_doc,
+                        f"Cog: {i.__cog_name__}\nCommand: {cmd.qualified_name}",
+                    ]
+                )
+                data.append(
+                    [cmd.help, cmd.help, f"Cog: {i.__cog_name__}\nCommand: {cmd.qualified_name}"]
+                )
 
             done.add(cmd)
 
 
-with open('languages/en.csv', 'w+') as f:
-    csv.writer(f, dialect='unix').writerows(data)
+with open("languages/en.csv", "w+") as f:
+    csv.writer(f, dialect="unix").writerows(data)

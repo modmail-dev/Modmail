@@ -549,7 +549,9 @@ class ModmailBot(commands.Bot):
             logger.debug("Blocked due to account age, user %s.", author.name)
 
             if str(author.id) not in self.blocked_users:
-                new_reason = _("System Message: New Account. Required to wait for {time}.").format(time=delta)
+                new_reason = _("System Message: New Account. Required to wait for {time}.").format(
+                    time=delta
+                )
                 self.blocked_users[str(author.id)] = new_reason
 
             return False
