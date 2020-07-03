@@ -134,7 +134,7 @@ class UserFriendlyTimeSync(Converter):
             # foo date time
 
             # first the first two cases:
-            dt, status, begin, end, _ = elements[0]
+            dt, status, begin, end, x = elements[0]
 
             if not status.hasDateOrTime:
                 return self.check_constraints(self.now, argument)

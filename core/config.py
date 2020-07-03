@@ -17,6 +17,7 @@ from core.time import UserFriendlyTimeSync
 from core.utils import strtobool
 
 logger = getLogger(__name__)
+load_dotenv()
 
 
 class ConfigManager:
@@ -134,13 +135,11 @@ class ConfigManager:
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
 
-    def __init__(self, bot, config_path=os.path.dirname(os.path.abspath(__file__))):
+    def __init__(self, bot):
         self.bot = bot
         self._cache = {}
         self.ready_event = asyncio.Event()
         self.config_help = {}
-        self.config_path = config_path
-        load_dotenv(dotenv_path=os.path.join(self.config_path, ".env"))
 
     def __repr__(self):
         return repr(self._cache)
@@ -150,9 +149,11 @@ class ConfigManager:
 
         # populate from env var and .env file
         data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
-        config_json = os.path.join(self.config_path, "config.json")
+        config_json = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
+        )
         if os.path.exists(config_json):
-            logger.debug("Loading envs from {}".format(config_json))
+            logger.debug("Loading envs from config.json.")
             with open(config_json, "r", encoding="utf-8") as f:
                 # Config json should override env vars
                 try:

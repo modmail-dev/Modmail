@@ -1,4 +1,4 @@
-__version__ = "3.4.1"
+__version__ = "3.5.0-dev0"
 
 
 import asyncio
@@ -31,7 +31,7 @@ try:
 except ImportError:
     pass
 
-from core import checks
+from core import checks, translations
 from core.clients import ApiClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.utils import human_join, normalize_alias
@@ -48,7 +48,7 @@ if not os.path.exists(temp_dir):
 
 
 class ModmailBot(commands.Bot):
-    def __init__(self, args):
+    def __init__(self):
         super().__init__(command_prefix=None)  # implemented in `get_prefix`
         self._session = None
         self._api = None
@@ -58,10 +58,7 @@ class ModmailBot(commands.Bot):
         self._connected = asyncio.Event()
         self.start_time = datetime.utcnow()
 
-        if len(args):
-            self.config = ConfigManager(self, args[0])
-        else:
-            self.config = ConfigManager(self)
+        self.config = ConfigManager(self)
         self.config.populate_cache()
 
         self.threads = ThreadManager(self)
@@ -472,7 +469,7 @@ class ModmailBot(commands.Bot):
                     {
                         "open": False,
                         "closed_at": str(datetime.utcnow()),
-                        "close_message": "Channel has been deleted, no closer found.",
+                        "close_message": _("Channel has been deleted, no closer found."),
                         "closer": {
                             "id": str(self.user.id),
                             "name": self.user.name,
@@ -552,7 +549,7 @@ class ModmailBot(commands.Bot):
             logger.debug("Blocked due to account age, user %s.", author.name)
 
             if str(author.id) not in self.blocked_users:
-                new_reason = f"System Message: New Account. Required to wait for {delta}."
+                new_reason = _("System Message: New Account. Required to wait for {time}.").format(time=delta)
                 self.blocked_users[str(author.id)] = new_reason
 
             return False
@@ -618,7 +615,7 @@ class ModmailBot(commands.Bot):
         return False
 
     async def _process_blocked(self, message):
-        _, blocked_emoji = await self.retrieve_emoji()
+        x, blocked_emoji = await self.retrieve_emoji()
         if await self.is_blocked(message.author, channel=message.channel, send_message=True):
             await self.add_reaction(message, blocked_emoji)
             return True
@@ -988,7 +985,7 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
-                _, linked_message = await thread.find_linked_messages(
+                x, linked_message = await thread.find_linked_messages(
                     message.id, either_direction=True
                 )
             except ValueError as e:
@@ -1072,32 +1069,19 @@ class ModmailBot(commands.Bot):
     async def on_message_delete(self, message):
         """Support for deleting linked messages"""
         # TODO: use audit log to check if modmail deleted the message
-        if isinstance(message.channel, discord.DMChannel):
-            thread = await self.threads.find(recipient=message.author)
-            if not thread:
-                return
+        if message.embeds and not isinstance(message.channel, discord.DMChannel):
+            thread = await self.threads.find(channel=message.channel)
             try:
-                message = await thread.find_linked_message_from_dm(message)
+                await thread.delete_message(message)
             except ValueError as e:
-                if str(e) != "Thread channel message not found.":
+                if str(e) not in {"DM message not found.", " Malformed thread message."}:
                     logger.warning("Failed to find linked message to delete: %s", e)
-                return
+        else:
+            thread = await self.threads.find(recipient=message.author)
+            message = await thread.find_linked_message_from_dm(message)
             embed = message.embeds[0]
             embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=embed.footer.icon_url)
             await message.edit(embed=embed)
-            return
-
-        thread = await self.threads.find(channel=message.channel)
-        if not thread:
-            return
-        try:
-            await thread.delete_message(message, note=False)
-        except ValueError as e:
-            if str(e) not in {"DM message not found.", "Malformed thread message."}:
-                logger.warning("Failed to find linked message to delete: %s", e)
-            return
-        except discord.NotFound:
-            return
 
     async def on_bulk_message_delete(self, messages):
         await discord.utils.async_all(self.on_message_delete(msg) for msg in messages)
@@ -1110,13 +1094,10 @@ class ModmailBot(commands.Bot):
 
         if isinstance(after.channel, discord.DMChannel):
             thread = await self.threads.find(recipient=before.author)
-            if not thread:
-                return
-
             try:
                 await thread.edit_dm_message(after, after.content)
             except ValueError:
-                _, blocked_emoji = await self.retrieve_emoji()
+                x, blocked_emoji = await self.retrieve_emoji()
                 await self.add_reaction(after, blocked_emoji)
             else:
                 embed = discord.Embed(
@@ -1227,7 +1208,7 @@ class ModmailBot(commands.Bot):
             self.metadata_loop.cancel()
 
 
-def main(args):
+def main():
     try:
         # noinspection PyUnresolvedReferences
         import uvloop
@@ -1237,9 +1218,10 @@ def main(args):
     except ImportError:
         pass
 
-    bot = ModmailBot(args)
+    translations.init()
+    bot = ModmailBot()
     bot.run()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

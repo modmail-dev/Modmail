@@ -1,7 +1,7 @@
 ---
 name: Command request
 about: Request a new command
-title: "your title here"
+title: "[COMMAND-REQUEST] your title here"
 labels: command-request
 assignees: ''
 
