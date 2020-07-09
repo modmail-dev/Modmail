@@ -13,7 +13,7 @@ from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
 from core.models import InvalidConfigError, Default, getLogger
-from core.time import UserFriendlyTime
+from core.time import UserFriendlyTimeSync
 from core.utils import strtobool
 
 logger = getLogger(__name__)
@@ -27,14 +27,16 @@ class ConfigManager:
         "twitch_url": "https://www.twitch.tv/discordmodmail/",
         # bot settings
         "main_category_id": None,
+        "fallback_category_id": None,
         "prefix": "?",
         "mention": "@here",
         "main_color": str(discord.Color.blurple()),
         "error_color": str(discord.Color.red()),
         "user_typing": False,
         "mod_typing": False,
-        "account_age": None,
-        "guild_age": None,
+        "account_age": isodate.Duration(),
+        "guild_age": isodate.Duration(),
+        "thread_cooldown": isodate.Duration(),
         "reply_without_command": False,
         "anon_reply_without_command": False,
         # logging
@@ -45,7 +47,7 @@ class ConfigManager:
         "close_emoji": "🔒",
         "recipient_thread_close": False,
         "thread_auto_close_silently": False,
-        "thread_auto_close": None,
+        "thread_auto_close": isodate.Duration(),
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
         "thread_creation_response": "The staff team will get back to you as soon as possible.",
         "thread_creation_footer": "Your message has been sent",
@@ -79,7 +81,7 @@ class ConfigManager:
         "activity_type": None,
         "status": None,
         # dm_disabled 0 = none, 1 = new threads, 2 = all threads
-        # TODO: use emum
+        # TODO: use enum
         "dm_disabled": 0,
         "oauth_whitelist": [],
         # moderation
@@ -105,17 +107,22 @@ class ConfigManager:
         "log_url": "https://example.com/",
         "log_url_prefix": "/logs",
         "mongo_uri": None,
+        "database_type": "mongodb",
+        "connection_uri": None,  # replace mongo uri in the future
         "owners": None,
         # bot
         "token": None,
+        "enable_plugins": True,
+        "enable_eval": False,
+        # github access token for private repositories
+        "github_token": None,
         # Logging
         "log_level": "INFO",
-        "enable_plugins": True,
     }
 
     colors = {"mod_color", "recipient_color", "main_color", "error_color"}
 
-    time_deltas = {"account_age", "guild_age", "thread_auto_close"}
+    time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown"}
 
     booleans = {
         "user_typing",
@@ -126,6 +133,7 @@ class ConfigManager:
         "thread_auto_close_silently",
         "thread_move_notify",
         "enable_plugins",
+        "enable_eval",
     }
 
     special_types = {"status", "activity_type"}
@@ -146,9 +154,7 @@ class ConfigManager:
         data = deepcopy(self.defaults)
 
         # populate from env var and .env file
-        data.update(
-            {k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys}
-        )
+        data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
         config_json = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
         )
@@ -165,9 +171,7 @@ class ConfigManager:
                         }
                     )
                 except json.JSONDecodeError:
-                    logger.critical(
-                        "Failed to load config.json env values.", exc_info=True
-                    )
+                    logger.critical("Failed to load config.json env values.", exc_info=True)
         self._cache = data
 
         config_help_json = os.path.join(
@@ -228,17 +232,16 @@ class ConfigManager:
             value = int(self.remove(key).lstrip("#"), base=16)
 
         elif key in self.time_deltas:
-            if value is None:
-                return
-            try:
-                value = isodate.parse_duration(value)
-            except isodate.ISO8601Error:
-                logger.warning(
-                    "The {account} age limit needs to be a "
-                    'ISO-8601 duration formatted duration, not "%s".',
-                    value,
-                )
-                value = self.remove(key)
+            if not isinstance(value, isodate.Duration):
+                try:
+                    value = isodate.parse_duration(value)
+                except isodate.ISO8601Error:
+                    logger.warning(
+                        "The {account} age limit needs to be a "
+                        'ISO-8601 duration formatted duration, not "%s".',
+                        value,
+                    )
+                    value = self.remove(key)
 
         elif key in self.booleans:
             try:
@@ -248,7 +251,7 @@ class ConfigManager:
 
         elif key in self.special_types:
             if value is None:
-                return
+                return None
 
             if key == "status":
                 try:
@@ -302,15 +305,14 @@ class ConfigManager:
                 isodate.parse_duration(item)
             except isodate.ISO8601Error:
                 try:
-                    converter = UserFriendlyTime()
-                    time = self.bot.loop.run_until_complete(
-                        converter.convert(None, item)
-                    )
+                    converter = UserFriendlyTimeSync()
+                    time = converter.convert(None, item)
                     if time.arg:
                         raise ValueError
                 except BadArgument as exc:
                     raise InvalidConfigError(*exc.args)
-                except Exception:
+                except Exception as e:
+                    logger.debug(e)
                     raise InvalidConfigError(
                         "Unrecognized time, please use ISO-8601 duration format "
                         'string or a simpler "human readable" time.'
@@ -343,9 +345,7 @@ class ConfigManager:
         return self._cache.items()
 
     @classmethod
-    def filter_valid(
-        cls, data: typing.Dict[str, typing.Any]
-    ) -> typing.Dict[str, typing.Any]:
+    def filter_valid(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
         return {
             k.lower(): v
             for k, v in data.items()
@@ -353,9 +353,7 @@ class ConfigManager:
         }
 
     @classmethod
-    def filter_default(
-        cls, data: typing.Dict[str, typing.Any]
-    ) -> typing.Dict[str, typing.Any]:
+    def filter_default(cls, data: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
         # TODO: use .get to prevent errors
         filtered = {}
         for k, v in data.items():

@@ -26,6 +26,14 @@
         "icon_url": "https://i.imgur.com/67bEi82.png",
         "thumbnail_url": "https://i.imgur.com/67bEi82.png"
     },
+    "anti-steal-close": {
+      "repository": "officialpiyush/modmail-plugins",
+      "branch": "master",
+      "description": "Don't let anyone steal ya close.",
+      "title": "Anti Steal Close",
+      "icon_url": "https://i.imgur.com/LovxyV3.png",
+      "thumbnail_url": "https://i.imgur.com/LovxyV3.png"
+    },
     "embedder": {
         "repository": "papiersnipper/modmail-plugins",
         "branch": "master",
@@ -79,6 +87,15 @@
         "title": "DM-on-join Plugin",
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+    },
+    "giveaway": {
+        "repository": "officialpiyush/modmail-plugins",
+        "branch": "master",
+        "description": "Host giveaways on your server",
+        "bot_version": "2.20.1",
+        "title": "\uD83C\uDF89 Giveaway Plugin \uD83C\uDF89",
+        "icon_url": "https://i.imgur.com/qk85xdi.png",
+        "thumbnail_url": "https://i.imgur.com/gUHB91v.png"
     },
     "hastebin": {
         "repository": "officialpiyush/modmail-plugins",
@@ -153,7 +170,7 @@
         "thumbnail_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png"
    },
     "stats": {
-        "repository": "MiTonder/modmail-plugins",
+        "repository": "KarateWumpus/modmail-plugins",
         "branch": "master",
         "description": "Get useful stats directly in an embed about either the Modmail bot, a user or the server.",
         "bot_version": "2.24.1",
@@ -173,10 +190,37 @@
     "serverstats": {
         "repository": "dazvise/modmail-plugins",
         "branch": "master",
-        "description": "Interesting and accurate statistics about your server.",
+        "description": "Voice channels containing interesting and accurate statistics about your server such as Member Count.",
         "bot_version": "2.20.1",
         "title": "Server Stats",
         "icon_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png",
-        "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png" 
-    } 
+        "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png"
+    },
+    "suggest": {
+        "repository": "realcyguy/modmail-plugins",
+        "branch": "master",
+        "description": "Send suggestions to a selected server! It even has moderation...",
+        "bot_version": "3.4.1",
+        "title": "Suggest stuff.",
+        "icon_url": "https://i.imgur.com/qtE7AH8.png",
+        "thumbnail_url": "https://i.imgur.com/qtE7AH8.png"
+    },
+    "githubstats": {
+        "repository": "mischievousdev/modmail-plugins",
+        "branch": "master",
+        "description": "Github statistics in discord",
+        "bot_version": "2.20.1",
+        "title": "Github Stats",
+        "icon_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg",
+        "thumbnail_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg"
+    },
+        "slowmode": {
+        "repository": "teen1/modmail-plugins",
+        "branch": "master",
+        "description": "Configure slow mode for your channels with Modmail!",
+        "bot_version": "2.20.1",
+        "title": "Slow Mode",
+        "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
+    }
 }

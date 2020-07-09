@@ -43,9 +43,7 @@ DISCORD_COLORS = {
 }
 
 # Normalize name to "discord:<name>" to avoid name collisions.
-DISCORD_COLORS_NORM = {
-    "discord:" + name: value for name, value in DISCORD_COLORS.items()
-}
+DISCORD_COLORS_NORM = {"discord:" + name: value for name, value in DISCORD_COLORS.items()}
 
 
 # These colors are from Tableau

@@ -73,7 +73,7 @@ class PaginatorSession:
         for reaction in self.reaction_map:
             if len(self.pages) == 2 and reaction in "⏮⏭":
                 continue
-            await self.base.add_reaction(reaction)
+            await self.ctx.bot.add_reaction(self.base, reaction)
 
     async def _create_base(self, item) -> None:
         raise NotImplementedError
@@ -177,10 +177,7 @@ class PaginatorSession:
         self.running = False
 
         sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
-        try:
-            await self.ctx.message.add_reaction(sent_emoji)
-        except (HTTPException, InvalidArgument):
-            pass
+        await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
 
         if delete:
             return await self.base.delete()
@@ -214,30 +211,28 @@ class EmbedPaginatorSession(PaginatorSession):
                     footer_text = footer_text + " • " + embed.footer.text
                 embed.set_footer(text=footer_text, icon_url=embed.footer.icon_url)
 
-    def add_page(self, embed: Embed) -> None:
-        if isinstance(embed, Embed):
-            self.pages.append(embed)
+    def add_page(self, item: Embed) -> None:
+        if isinstance(item, Embed):
+            self.pages.append(item)
         else:
             raise TypeError("Page must be an Embed object.")
 
-    async def _create_base(self, embed: Embed) -> None:
-        self.base = await self.destination.send(embed=embed)
+    async def _create_base(self, item: Embed) -> None:
+        self.base = await self.destination.send(embed=item)
 
     async def _show_page(self, page):
         await self.base.edit(embed=page)
 
 
 class MessagePaginatorSession(PaginatorSession):
-    def __init__(
-        self, ctx: commands.Context, *messages, embed: Embed = None, **options
-    ):
+    def __init__(self, ctx: commands.Context, *messages, embed: Embed = None, **options):
         self.embed = embed
         self.footer_text = self.embed.footer.text if embed is not None else None
         super().__init__(ctx, *messages, **options)
 
-    def add_page(self, msg: str) -> None:
-        if isinstance(msg, str):
-            self.pages.append(msg)
+    def add_page(self, item: str) -> None:
+        if isinstance(item, str):
+            self.pages.append(item)
         else:
             raise TypeError("Page must be a str object.")
 
@@ -248,9 +243,9 @@ class MessagePaginatorSession(PaginatorSession):
                 footer_text = footer_text + " • " + self.footer_text
             self.embed.set_footer(text=footer_text, icon_url=self.embed.footer.icon_url)
 
-    async def _create_base(self, msg: str) -> None:
+    async def _create_base(self, item: str) -> None:
         self._set_footer()
-        self.base = await self.ctx.send(content=msg, embed=self.embed)
+        self.base = await self.ctx.send(content=item, embed=self.embed)
 
     async def _show_page(self, page) -> None:
         self._set_footer()
