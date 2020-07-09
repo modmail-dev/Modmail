@@ -136,7 +136,12 @@ class Plugins(commands.Cog):
                 await self.download_plugin(plugin)
                 await self.load_plugin(plugin)
             except Exception:
-                logger.error("Error when loading plugin %s.", plugin, exc_info=True)
+                self.bot.config["plugins"].remove(plugin_name)
+                logger.error(
+                    "Error when loading plugin %s. Plugin removed from config.",
+                    plugin,
+                    exc_info=True,
+                )
                 continue
 
         logger.debug("Finished loading all plugins.")
@@ -152,9 +157,13 @@ class Plugins(commands.Cog):
         if plugin.cache_path.exists() and not force:
             plugin_io = plugin.cache_path.open("rb")
             logger.debug("Loading cached %s.", plugin.cache_path)
-
         else:
-            async with self.bot.session.get(plugin.url) as resp:
+            headers = {}
+            github_token = self.bot.config["github_token"]
+            if github_token is not None:
+                headers["Authorization"] = f"token {github_token}"
+
+            async with self.bot.session.get(plugin.url, headers=headers) as resp:
                 logger.debug("Downloading %s.", plugin.url)
                 raw = await resp.read()
                 plugin_io = io.BytesIO(raw)
@@ -415,17 +424,28 @@ class Plugins(commands.Cog):
             return await ctx.send(embed=embed)
 
         async with ctx.typing():
+            embed = discord.Embed(
+                description=f"Successfully updated {plugin.name}.", color=self.bot.main_color
+            )
             await self.download_plugin(plugin, force=True)
             if self.bot.config.get("enable_plugins"):
                 try:
                     self.bot.unload_extension(plugin.ext_string)
                 except commands.ExtensionError:
                     logger.warning("Plugin unload fail.", exc_info=True)
-                await self.load_plugin(plugin)
-            logger.debug("Updated %s.", plugin_name)
-            embed = discord.Embed(
-                description=f"Successfully updated {plugin.name}.", color=self.bot.main_color
-            )
+                try:
+                    await self.load_plugin(plugin)
+                except Exception:
+                    embed = discord.Embed(
+                        description=f"Failed to update {plugin.name}. This plugin will now be removed from your bot.",
+                        color=self.bot.error_color,
+                    )
+                    self.bot.config["plugins"].remove(plugin_name)
+                    logger.debug("Failed to update %s. Removed plugin from config.", plugin_name)
+                else:
+                    logger.debug("Updated %s.", plugin_name)
+            else:
+                logger.debug("Updated %s.", plugin_name)
             return await ctx.send(embed=embed)
 
     @plugins.command(name="update")
@@ -442,10 +462,44 @@ class Plugins(commands.Cog):
 
         if plugin_name is None:
             # pylint: disable=redefined-argument-from-local
-            for plugin_name in self.bot.config["plugins"]:
+            for plugin_name in list(self.bot.config["plugins"]):
                 await self.update_plugin(ctx, plugin_name)
         else:
             await self.update_plugin(ctx, plugin_name)
+
+    @plugins.command(name="reset")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def plugins_reset(self, ctx):
+        """
+        Reset all plugins for the bot.
+
+        Deletes all cache and plugins from config and unloads from the bot.
+        """
+        logger.warning("Purging plugins.")
+        for ext in list(self.bot.extensions):
+            if not ext.startswith("plugins."):
+                continue
+            try:
+                logger.error("Unloading plugin: %s.", ext)
+                self.bot.unload_extension(ext)
+            except Exception:
+                logger.error("Failed to unload plugin: %s.", ext)
+        self.bot.config["plugins"].clear()
+
+        cache_path = Path(__file__).absolute().parent.parent / "temp" / "plugins-cache"
+        if cache_path.exists():
+            logger.warning("Removing cache path.")
+            shutil.rmtree(cache_path)
+
+        for entry in os.scandir(Path(__file__).absolute().parent.parent / "plugins"):
+            if entry.is_dir():
+                shutil.rmtree(entry.path)
+                logger.warning("Removing %s.", entry.name)
+
+        embed = discord.Embed(
+            description=f"Successfully purged all plugins from the bot.", color=self.bot.main_color
+        )
+        return await ctx.send(embed=embed)
 
     @plugins.command(name="loaded", aliases=["enabled", "installed"])
     @checks.has_permissions(PermissionLevel.OWNER)

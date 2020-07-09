@@ -120,8 +120,8 @@ class Modmail(commands.Cog):
 
         if not self.bot.config["command_permissions"] and not self.bot.config["level_permissions"]:
             await self.bot.update_perms(PermissionLevel.REGULAR, -1)
-            for owner_ids in self.bot.owner_ids:
-                await self.bot.update_perms(PermissionLevel.OWNER, owner_ids)
+            for owner_id in self.bot.bot_owner_ids:
+                await self.bot.update_perms(PermissionLevel.OWNER, owner_id)
 
     @commands.group(aliases=["snippets"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -669,12 +669,7 @@ class Modmail(commands.Cog):
         """
         user = user if user is not None else ctx.author
 
-        query = {"guild_id": str(self.bot.guild_id), "open": False, "closer.id": str(user.id)}
-
-        projection = {"messages": {"$slice": 5}}
-
-        entries = await self.bot.db.logs.find(query, projection).to_list(None)
-
+        entries = await self.bot.api.search_closed_by(user.id)
         embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
 
         if not embeds:
@@ -748,15 +743,7 @@ class Modmail(commands.Cog):
 
         await ctx.trigger_typing()
 
-        query = {
-            "guild_id": str(self.bot.guild_id),
-            "open": False,
-            "$text": {"$search": f'"{query}"'},
-        }
-
-        projection = {"messages": {"$slice": 5}}
-
-        entries = await self.bot.db.logs.find(query, projection).to_list(limit)
+        entries = await self.bot.api.search_by_text(query, limit)
 
         embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
 

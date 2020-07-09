@@ -239,6 +239,9 @@ class Utility(commands.Cog):
         )
         self.bot.help_command.cog = self
         self.loop_presence.start()  # pylint: disable=no-member
+        if not self.bot.config.get("enable_eval"):
+            self.eval_.enabled = False
+            logger.info("Eval disabled. enable_eval=False")
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
