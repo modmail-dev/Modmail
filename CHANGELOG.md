@@ -7,7 +7,9 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
 
-# v3.5.0dev5
+# v3.5.0
+
+Fixed discord.py issue.
 
 ### Added
 
@@ -23,7 +25,8 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Deleting channel manually will now close the thread.
 - Deleting messages will no longer cause the bot to produce warnings.
 - Plugins will automatically be removed when it fails to load.
-- Moved all database-related activities to clients.py under MongoDBClient, with possible future hook for additional database support.
+- Moved all database-related activities to clients.py under MongoDBClient, with possible future hook for additional database support. 
+- `bot.db` is deprecated in favour of `bot.api.db` and will be removed in the future.
 - Deprecated `bot.plugin_db.get_partition` in favour of `bot.api.get_plugin_partition` (not final).
 - Deprecated `MONGO_URI` config var (but will keep support in the future) in favour of `CONNECTION_URI` and `DATABASE_TYPE`. Right now there is one supported database - "mongodb", which is the default.
 

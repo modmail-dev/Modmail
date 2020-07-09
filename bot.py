@@ -1,4 +1,4 @@
-__version__ = "3.5.0-dev5"
+__version__ = "3.5.0"
 
 
 import asyncio
@@ -147,6 +147,11 @@ class ModmailBot(commands.Bot):
                 logger.critical("Invalid database type.")
                 raise RuntimeError
         return self._api
+
+    @property
+    def db(self):
+        # deprecated
+        return self.api.db
 
     async def get_prefix(self, message=None):
         return [self.prefix, f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
