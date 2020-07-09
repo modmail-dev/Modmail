@@ -113,7 +113,7 @@ class ConfigManager:
         # bot
         "token": None,
         "enable_plugins": True,
-        "enable_eval": False,
+        "enable_eval": True,
         # github access token for private repositories
         "github_token": None,
         # Logging
