@@ -4,7 +4,7 @@
   "repository": "https://github.com/kyb3r/modmail",
   "env": {
     "TOKEN": {
-      "description": "Your discord bot's token.",
+      "description": "NzM0OTAwNDI2MTUwOTAzODI5.XxYi9w.S2utWJf8PJD_lqe0LSwhc_dwb9I",
       "required": true
     },
     "GUILD_ID": {
@@ -12,7 +12,7 @@
       "required": true
     },
     "OWNERS": {
-      "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval).",
+      "description": "NotKillZone",
       "required": true
     },
     "CONNECTION_URI": {
