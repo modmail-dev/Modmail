@@ -222,5 +222,14 @@
         "title": "Slow Mode",
         "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
+    },
+        "translate": {
+        "repository": "WebKide/modmail-plugins",
+        "branch": "master",
+        "description": "(∩｀-´)⊃━☆ﾟ.*･｡ﾟ translate text from one language to another (defaults to English)\n\nGet full list of available languages at: https://github.com/WebKide/modmail-plugins/blob/master/translate/langs.json\n\nThis command conflicts with Translator-plugin",
+        "bot_version": "3.5.0",
+        "title": "Translate",
+        "icon_url": "https://i.imgur.com/yeHFKgl.png",
+        "thumbnail_url": "https://i.imgur.com/yeHFKgl.png"
     }
 }
