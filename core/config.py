@@ -81,7 +81,7 @@ class ConfigManager:
         "activity_type": None,
         "status": None,
         # dm_disabled 0 = none, 1 = new threads, 2 = all threads
-        # TODO: use emum
+        # TODO: use enum
         "dm_disabled": 0,
         "oauth_whitelist": [],
         # moderation
@@ -107,12 +107,17 @@ class ConfigManager:
         "log_url": "https://example.com/",
         "log_url_prefix": "/logs",
         "mongo_uri": None,
+        "database_type": "mongodb",
+        "connection_uri": None,  # replace mongo uri in the future
         "owners": None,
         # bot
         "token": None,
+        "enable_plugins": True,
+        "enable_eval": True,
+        # github access token for private repositories
+        "github_token": None,
         # Logging
         "log_level": "INFO",
-        "enable_plugins": True,
     }
 
     colors = {"mod_color", "recipient_color", "main_color", "error_color"}
@@ -128,6 +133,7 @@ class ConfigManager:
         "thread_auto_close_silently",
         "thread_move_notify",
         "enable_plugins",
+        "enable_eval",
     }
 
     special_types = {"status", "activity_type"}
