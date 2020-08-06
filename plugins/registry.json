@@ -7,8 +7,8 @@
         "title": "Profanity Filter Plugin",
         "icon_url": "https://i.imgur.com/951szZ3.jpg",
         "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
-    },
-        "music": {
+    },    
+       "music": {
         "repository": "lorenzo132/modmail-plugins",
         "branch": "master",
         "description": "Play your favourite music on your bot! Note: Only works on VPS follow this guide: https://gist.github.com/lorenzo132/5ef328e5dfcfaec19cb81dc7a63eaffa",
