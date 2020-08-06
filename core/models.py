@@ -274,7 +274,9 @@ class MessageMongoModel(Document):
     timestamp = fields.DateTimeField(required=True)
     author = fields.ReferenceField("UserMongoModel", required=True)
     author_mod = fields.BooleanField(required=True)
-    content = fields.StringField(validate=validate.Length(max=2048), default="")  # models.TextField()
+    content = fields.StringField(
+        validate=validate.Length(max=2048), default=""
+    )  # models.TextField()
     type = fields.StringField(
         validate=validate.Length(max=20), default="thread_message", allow_none=False
     )  # models.CharField(max_length=20, null=True, default='thread_message')
@@ -314,7 +316,7 @@ Index("idx_message_content", func.lower(MessageSQLModel.c.content), MessageSQLMo
 
 class LogMongoModel(Document):
     class Meta:
-        collection_name = "logs_test"
+        collection_name = "logs"
         indexes = [
             IndexModel([("channel_id", ASCENDING), ("bot", ASCENDING)]),
             IndexModel([("recipient", ASCENDING), ("bot", ASCENDING)]),
@@ -389,7 +391,7 @@ Index("idx_logs_channel", LogSQLModel.c.channel_id, LogSQLModel.c.bot_id)
 
 class ConfigMongoModel(Document):
     class Meta:
-        collection_name = "config_test"
+        collection_name = "config"
 
     _id = fields.ObjectIdField(default=fields.ObjectId)
     id = fields.StringField(

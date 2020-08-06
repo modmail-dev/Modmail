@@ -142,7 +142,7 @@ class ModmailBot(commands.Bot):
             database_type = self.config["database_type"].lower()
             if database_type == "mongodb":
                 self._api = MongoDBClient(self)
-            elif database_type in {'sqlite', 'postgres', 'postgresql', 'mysql', 'sql'}:
+            elif database_type in {"sqlite", "postgres", "postgresql", "mysql", "sql"}:
                 self._api = SQLClient(self)
             else:
                 logger.critical("Invalid database type.")

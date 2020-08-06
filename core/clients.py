@@ -195,8 +195,8 @@ class SQLClient(ApiClient):
         connection_uri = DatabaseURL(bot.config["connection_uri"])
         try:
             db = Database(connection_uri)
-            if connection_uri.dialect == 'mysql':
-                connection_uri = connection_uri.replace(dialect='mysql+pymysql')
+            if connection_uri.dialect == "mysql":
+                connection_uri = connection_uri.replace(dialect="mysql+pymysql")
             self.engine = create_engine(str(connection_uri))
         except Exception as e:
             logger.critical("Invalid connection URI:")
@@ -217,7 +217,6 @@ class SQLClient(ApiClient):
 
     async def disconnect(self) -> None:
         await self.db.disconnect()
-
 
     async def get_config(self) -> dict:
         query = select([self.Config]).where(self.Config.c.id == str(self.bot.user.id))
@@ -777,7 +776,7 @@ class MongoDBClient(ApiClient):
                 conf["id"] = str(conf["bot_id"])
                 conf.pop("bot_id", None)
                 conf.pop("_id", None)
-                result = await self.db.config_test.insert_one(conf, session=s)
+                result = await self.db.config.insert_one(conf, session=s)
                 bots[conf["id"]] = result.inserted_id
                 if this_bot is None or conf["id"] == str(self.bot.user.id):
                     this_bot = result.inserted_id
@@ -898,7 +897,7 @@ class MongoDBClient(ApiClient):
                     )
                     creator_mod = log["creator"]["mod"]
                     bot = bots.get(log.get("bot_id")) or this_bot
-                    log_result = await self.db.logs_test.insert_one(
+                    log_result = await self.db.logs.insert_one(
                         dict(
                             key=log["key"],
                             bot=bot,
@@ -996,14 +995,14 @@ class MongoDBClient(ApiClient):
             return  # no config, new database probably
 
         if not await self.db.config_migrate.find_one({}):
-            await self.db.config_test.rename("config_migrate")
+            await self.db.config.rename("config_migrate")
         if not await self.db.logs_migrate.find_one({}):
-            await self.db.logs_test.rename("logs_migrate")
+            await self.db.logs.rename("logs_migrate")
 
         await self.db.logs_migrate.create_index([("created_at", -1)])
 
-        await self.db.config_test.drop()
-        await self.db.logs_test.drop()
+        await self.db.config.drop()
+        await self.db.logs.drop()
         await self.db.logs_user.drop()
         await self.db.logs_attachment.drop()
         await self.db.logs_message.drop()
@@ -1056,14 +1055,14 @@ class MongoDBClient(ApiClient):
             logger.critical("Failed to migrate database", exc_info=True)
             try:
                 if await self.db.config_migrate.find_one({}):
-                    await self.db.config_test.drop()
-                    await self.db.config_migrate.rename("config_test")
+                    await self.db.config.drop()
+                    await self.db.config_migrate.rename("config")
             except:
                 pass
             try:
                 if await self.db.logs_migrate.find_one({}):
-                    await self.db.logs_test.drop()
-                    await self.db.logs_migrate.rename("logs_test")
+                    await self.db.logs.drop()
+                    await self.db.logs_migrate.rename("logs")
             except:
                 pass
         else:
