@@ -11,7 +11,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 DONT UPDATE TO THIS VERSION YET UNLESS YOU KNOW WHAT YOU'RE DOING.
 
-IRREVERSIBLE DATABASE CHANGES.
+IRREVERSIBLE DATABASE CHANGES FOR MONGODB.
 
 ### Added
 
@@ -19,7 +19,8 @@ IRREVERSIBLE DATABASE CHANGES.
 - Uses ORM/ODM for the database models.
 - `PluginClient`, how plugin should interact with the database. Implements `.get` and `.set` methods. Support all serializable values.
   - To obtain a `PluginClient`, use `await bot.api.get_plugin_client(cog)`
-
+- Fixed thread channels not creating when username is not allowed for server discovery.
+  - Channel name would be replaced by `#user_<userid>`.
 
 ### Changed
 

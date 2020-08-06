@@ -418,7 +418,7 @@ class SQLClient(ApiClient):
                 self.Log.c.bot_id == str(self.bot.user.id),
             )
         )
-        key = (await self.db.fetch_one(query))['key']
+        key = (await self.db.fetch_one(query))["key"]
         prefix = self.bot.config["log_url_prefix"].strip("/")
         if prefix == "NONE":
             prefix = ""
@@ -639,7 +639,7 @@ class SQLPluginClient(PluginClient):
         val = await self.db.fetch_one(query)
         if val is None:
             return default
-        return ujson.loads(val['value'])
+        return ujson.loads(val["value"])
 
     async def set(self, key: str, value):
         query = select([self.Plugin]).where(self.Plugin.c.key == key)

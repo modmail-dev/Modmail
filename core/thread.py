@@ -91,25 +91,32 @@ class Thread:
         if category is not None:
             overwrites = None
 
-        try:
-            channel = await self.bot.modmail_guild.create_text_channel(
-                name=format_channel_name(recipient, self.bot.modmail_guild),
-                category=category,
-                overwrites=overwrites,
-                reason="Creating a thread channel.",
-            )
-        except discord.HTTPException as e:  # Failed to create due to missing perms.
-            logger.critical("An error occurred while creating a thread.", exc_info=True)
-            self.manager.cache.pop(self.id)
+        name = format_channel_name(recipient, self.bot.modmail_guild)
+        channel = None
 
-            embed = discord.Embed(color=self.bot.error_color)
-            embed.title = "Error while trying to create a thread."
-            embed.description = str(e)
-            embed.add_field(name="Recipient", value=recipient.mention)
+        for _ in range(2):
+            try:
+                channel = await self.bot.modmail_guild.create_text_channel(
+                    name=name,
+                    category=category,
+                    overwrites=overwrites,
+                    reason="Creating a thread channel.",
+                )
+            except discord.HTTPException as e:  # Failed to create due to missing perms.
+                logger.critical("An error occurred while creating a thread.", exc_info=True)
+                if "Contains words not allowed" in str(e):
+                    name = f"user_{recipient.id}"
+                    continue
+                self.manager.cache.pop(self.id)
 
-            if self.bot.log_channel is not None:
-                await self.bot.log_channel.send(embed=embed)
-            return
+                embed = discord.Embed(color=self.bot.error_color)
+                embed.title = "Error while trying to create a thread."
+                embed.description = str(e)
+                embed.add_field(name="Recipient", value=recipient.mention)
+
+                if self.bot.log_channel is not None:
+                    await self.bot.log_channel.send(embed=embed)
+                return
 
         self._channel = channel
 
