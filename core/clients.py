@@ -1058,16 +1058,15 @@ class MongoDBClient(ApiClient):
                     await self.db.config.drop()
                     await self.db.config_migrate.rename("config")
             except Exception:
-                pass
+                logger.warning("Failed to rename config_migrate back to config", exc_info=True)
             try:
                 if await self.db.logs_migrate.find_one({}):
                     await self.db.logs.drop()
                     await self.db.logs_migrate.rename("logs")
             except Exception:
-                pass
-        else:
-            return True
-        sys.exit(0)
+                logger.warning("Failed to rename logs_migrate back to logs", exc_info=True)
+            sys.exit(0)
+        return True
 
     async def get_config(self) -> dict:
         conf = await self.Config.find_one({"id": str(self.bot.user.id)})
