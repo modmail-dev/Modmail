@@ -15,7 +15,6 @@ __all__ = [
     "strtobool",
     "User",
     "truncate",
-    "format_preview",
     "is_image_url",
     "parse_image_url",
     "human_join",
@@ -87,34 +86,6 @@ def truncate(text: str, max: int = 50) -> str:  # pylint: disable=redefined-buil
     """
     text = text.strip()
     return text[: max - 3].strip() + "..." if len(text) > max else text
-
-
-def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
-    """
-    Used to format previews.
-
-    Parameters
-    ----------
-    messages : List[Dict[str, Any]]
-        A list of messages.
-
-    Returns
-    -------
-    str
-        A formatted string preview.
-    """
-    messages = messages[:3]
-    out = ""
-    for message in messages:
-        if message.get("type") in {"note", "internal"}:
-            continue
-        author = message["author"]
-        content = str(message["content"]).replace("\n", " ")
-        name = author["name"] + "#" + str(author["discriminator"])
-        prefix = "[M]" if author["mod"] else "[R]"
-        out += truncate(f"`{prefix} {name}:` {content}", max=75) + "\n"
-
-    return out or "No Messages"
 
 
 def is_image_url(url: str) -> bool:

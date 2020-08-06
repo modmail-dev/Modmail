@@ -7,6 +7,31 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
 
+# v3.5.1-dev0
+
+DONT UPDATE TO THIS VERSION YET UNLESS YOU KNOW WHAT YOU'RE DOING.
+
+IRREVERSIBLE DATABASE CHANGES.
+
+### Added
+
+- Support for SQL databases: sqlite, postgresql, mysql (all need tests).
+- Uses ORM/ODM for the database models.
+- `PluginClient`, how plugin should interact with the database. Implements `.get` and `.set` methods. Support all serializable values.
+  - To obtain a `PluginClient`, use `await bot.api.get_plugin_client(cog)`
+
+
+### Changed
+
+- A reworked interface for MongoDB database format, removed lists and embed types in favour of separate collections (need tests).
+  - To increase compatibility with SQL database types.
+- Removed `bot.plugin_db.get_partition`, to get a database client use (async) `bot.api.get_plugin_client`.
+  - All existing plugins using the old api needs to be updated. Plugins that required a database partition will break after this update.
+- Lots of changes in api methods.
+- User models in database are updated.
+  - Whenever their name/discriminator/avatar_url is changed, all the user references are updated as well.
+
+
 # v3.5.0
 
 Fixed discord.py issue.

@@ -311,20 +311,8 @@ class Thread:
         self.bot.config["notification_squad"].pop(str(self.id), None)
 
         # Logging
-        log_data = await self.bot.api.post_log(
-            self.channel.id,
-            {
-                "open": False,
-                "closed_at": str(datetime.utcnow()),
-                "close_message": message if not silent else None,
-                "closer": {
-                    "id": str(closer.id),
-                    "name": closer.name,
-                    "discriminator": closer.discriminator,
-                    "avatar_url": str(closer.avatar_url),
-                    "mod": True,
-                },
-            },
+        log_data = await self.bot.api.close_log(
+            self.channel.id, message if not silent else None, closer
         )
 
         if isinstance(log_data, dict):
@@ -333,8 +321,9 @@ class Thread:
                 prefix = ""
             log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
 
-            if log_data["messages"]:
-                content = str(log_data["messages"][0]["content"])
+            peak_message = await self.bot.api.get_log_messages(channel_id=self.channel.id, limit=1)
+            if peak_message:
+                content = str(peak_message[0]["content"])
                 sneak_peak = content.replace("\n", "")
             else:
                 sneak_peak = "No content"
@@ -551,15 +540,16 @@ class Thread:
     async def delete_message(
         self, message: typing.Union[int, discord.Message] = None, note: bool = True
     ) -> None:
+        tasks = []
         if isinstance(message, discord.Message):
             message1, message2 = await self.find_linked_messages(message1=message, note=note)
+            tasks += [self.bot.api.delete_message(message1.id)]
+            if message2 is not None:
+                tasks += [message2.delete()]
         else:
             message1, message2 = await self.find_linked_messages(message, note=note)
-        tasks = []
-        if not isinstance(message, discord.Message):
-            tasks += [message1.delete()]
-        if message2 is not None:
-            tasks += [message2.delete()]
+            tasks += [message1.delete(), self.bot.api.delete_message(message1.id)]
+
         if tasks:
             await asyncio.gather(*tasks)
 
@@ -997,7 +987,7 @@ class ThreadManager:
                 self.bot.config.set("fallback_category_id", category.id)
                 await self.bot.config.update()
 
-        self.bot.loop.create_task(thread.setup(creator=creator, category=category))
+        await thread.setup(creator=creator, category=category)
         return thread
 
     async def find_or_create(self, recipient) -> Thread:

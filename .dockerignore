@@ -153,3 +153,5 @@ README.md
 runtime.txt
 SPONSORS.json
 stack.yml
+*.db
+*.sqlite

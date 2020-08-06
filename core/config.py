@@ -5,8 +5,9 @@ import re
 import typing
 from copy import deepcopy
 
-from dotenv import load_dotenv
 import isodate
+import ujson
+from dotenv import load_dotenv
 
 import discord
 from discord.ext.commands import BadArgument
@@ -114,6 +115,7 @@ class ConfigManager:
         "token": None,
         "enable_plugins": True,
         "enable_eval": True,
+        "force_migrate": False,
         # github access token for private repositories
         "github_token": None,
         # Logging
@@ -134,6 +136,30 @@ class ConfigManager:
         "thread_move_notify",
         "enable_plugins",
         "enable_eval",
+        "force_migrate",
+    }
+
+    ids = {
+        "main_category_id",
+        "log_channel_id",
+        "fallback_category_id",
+        "guild_id",
+        "modmail_guild_id",
+    }
+
+    serialize = {
+        "oauth_whitelist",
+        "blocked",
+        "blocked_whitelist",
+        "command_permissions",
+        "level_permissions",
+        "override_command_level",
+        "snippets",
+        "notification_squad",
+        "subscriptions",
+        "closures",
+        "plugins",
+        "aliases",
     }
 
     special_types = {"status", "activity_type"}
@@ -144,6 +170,7 @@ class ConfigManager:
     def __init__(self, bot):
         self.bot = bot
         self._cache = {}
+        self._old_cache = {}
         self.ready_event = asyncio.Event()
         self.config_help = {}
 
@@ -184,13 +211,22 @@ class ConfigManager:
 
     async def update(self):
         """Updates the config with data from the cache"""
-        await self.bot.api.update_config(self.filter_default(self._cache))
+        filtered = self.filter_default(self._cache)
+        if not filtered:
+            return
+        for k in self.serialize:
+            if k in filtered and filtered[k] is not None:
+                filtered[k] = ujson.dumps(filtered[k])
+
+        await self.bot.api.update_config(filtered)
 
     async def refresh(self) -> dict:
         """Refreshes internal cache with data from database"""
         for k, v in (await self.bot.api.get_config()).items():
             k = k.lower()
-            if k in self.all_keys:
+            if k in self.all_keys and v is not None:
+                if k in self.serialize:
+                    v = ujson.loads(v)
                 self._cache[k] = v
         if not self.ready_event.is_set():
             self.ready_event.set()
@@ -203,6 +239,10 @@ class ConfigManager:
     def __setitem__(self, key: str, item: typing.Any) -> None:
         key = key.lower()
         logger.info("Setting %s.", key)
+
+        if key in self.ids and item is not None:
+            item = str(item)
+
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         self._cache[key] = item
@@ -213,7 +253,12 @@ class ConfigManager:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
         if key not in self._cache:
             self._cache[key] = deepcopy(self.defaults[key])
-        return self._cache[key]
+
+        item = self._cache[key]
+        if key in self.ids and item is not None:
+            item = int(item)
+
+        return item
 
     def __delitem__(self, key: str) -> None:
         return self.remove(key)
@@ -325,9 +370,6 @@ class ConfigManager:
                 return self.__setitem__(key, strtobool(item))
             except ValueError:
                 raise InvalidConfigError("Must be a yes/no value.")
-
-        # elif key in self.special_types:
-        #     if key == "status":
 
         return self.__setitem__(key, item)
 

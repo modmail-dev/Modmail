@@ -1,4 +1,4 @@
-__version__ = "3.5.0"
+__version__ = "3.5.1-dev0"
 
 
 import asyncio
@@ -8,18 +8,17 @@ import re
 import sys
 import typing
 from datetime import datetime
+from pkg_resources import parse_version
 from types import SimpleNamespace
+
+import isodate
+from aiohttp import ClientSession
+from emoji import UNICODE_EMOJI
 
 import discord
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
 
-import isodate
-
-from aiohttp import ClientSession
-from emoji import UNICODE_EMOJI
-
-from pkg_resources import parse_version
 
 try:
     # noinspection PyUnresolvedReferences
@@ -30,7 +29,7 @@ except ImportError:
     pass
 
 from core import checks
-from core.clients import ApiClient, PluginDatabaseClient, MongoDBClient
+from core.clients import ApiClient, SQLClient, MongoDBClient
 from core.config import ConfigManager
 from core.utils import human_join, normalize_alias
 from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
@@ -70,7 +69,6 @@ class ModmailBot(commands.Bot):
         self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
         self._configure_logging()
 
-        self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
     @property
@@ -141,8 +139,11 @@ class ModmailBot(commands.Bot):
     @property
     def api(self) -> ApiClient:
         if self._api is None:
-            if self.config["database_type"].lower() == "mongodb":
+            database_type = self.config["database_type"].lower()
+            if database_type == "mongodb":
                 self._api = MongoDBClient(self)
+            elif database_type in {'sqlite', 'postgres', 'postgresql', 'mysql', 'sql'}:
+                self._api = SQLClient(self)
             else:
                 logger.critical("Invalid database type.")
                 raise RuntimeError
@@ -167,6 +168,10 @@ class ModmailBot(commands.Bot):
             logger.critical("Fatal exception", exc_info=True)
         finally:
             self.loop.run_until_complete(self.logout())
+            try:
+                self.loop.run_until_complete(self.api.disconnect())
+            except Exception:
+                logger.error("Failed to disconnect from database", exc_info=True)
             for task in asyncio.all_tasks(self.loop):
                 task.cancel()
             try:
@@ -368,14 +373,14 @@ class ModmailBot(commands.Bot):
 
     async def on_connect(self):
         try:
-            await self.api.validate_database_connection()
+            await self.api.connect()
         except Exception:
-            logger.debug("Logging out due to failed database connection.")
+            logger.debug("Logging out due to failed database connection.", exc_info=True)
             return await self.logout()
 
-        logger.debug("Connected to gateway.")
         await self.config.refresh()
-        await self.api.setup_indexes()
+        logger.debug("Setup database.")
+        logger.debug("Connected to gateway.")
         self._connected.set()
 
     async def on_ready(self):
@@ -442,21 +447,10 @@ class ModmailBot(commands.Bot):
         for log in await self.api.get_open_logs():
             if self.get_channel(int(log["channel_id"])) is None:
                 logger.debug("Unable to resolve thread with channel %s.", log["channel_id"])
-                log_data = await self.api.post_log(
-                    log["channel_id"],
-                    {
-                        "open": False,
-                        "closed_at": str(datetime.utcnow()),
-                        "close_message": "Channel has been deleted, no closer found.",
-                        "closer": {
-                            "id": str(self.user.id),
-                            "name": self.user.name,
-                            "discriminator": self.user.discriminator,
-                            "avatar_url": str(self.user.avatar_url),
-                            "mod": True,
-                        },
-                    },
+                log_data = await self.api.close_log(
+                    log["channel_id"], "Channel has been deleted, no closer found.", self.user
                 )
+
                 if log_data:
                     logger.debug("Successfully closed thread with channel %s.", log["channel_id"])
                 else:
@@ -481,11 +475,12 @@ class ModmailBot(commands.Bot):
         ]
         if any(other_guilds):
             logger.warning(
-                "The bot is in more servers other than the main and staff server."
-                "This may cause data compromise (%s).",
-                ", ".join(guild.name for guild in other_guilds),
+                "The bot is in more servers other than the main and staff server. "
+                "This may cause data compromise."
             )
             logger.warning("If the external servers are valid, you may ignore this message.")
+            for g in other_guilds:
+                logger.warning("%d: %s", g.id, g.name)
 
     async def convert_emoji(self, name: str) -> str:
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
@@ -658,7 +653,7 @@ class ModmailBot(commands.Bot):
         if thread_cooldown == isodate.Duration():
             return
 
-        last_log = await self.api.get_latest_user_logs(author.id)
+        last_log = await self.api.get_latest_user_log(author.id)
 
         if last_log is None:
             logger.debug("Last thread wasn't found, %s.", author.name)
@@ -671,12 +666,10 @@ class ModmailBot(commands.Bot):
             return
 
         try:
-            cooldown = datetime.fromisoformat(last_log_closed_at) + thread_cooldown
+            cooldown = last_log_closed_at + thread_cooldown
         except ValueError:
             logger.warning("Error with 'thread_cooldown'.", exc_info=True)
-            cooldown = datetime.fromisoformat(last_log_closed_at) + self.config.remove(
-                "thread_cooldown"
-            )
+            cooldown = last_log_closed_at + self.config.remove("thread_cooldown")
 
         if cooldown > now:
             # User messaged before thread cooldown ended
@@ -1068,6 +1061,7 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
+                asyncio.create_task(self.api.delete_message(message.id))
                 message = await thread.find_linked_message_from_dm(message)
             except ValueError as e:
                 if str(e) != "Thread channel message not found.":

@@ -10,18 +10,21 @@ bandit = "==1.6.2"
 
 [packages]
 colorama = ">=0.4.0"
-python-dateutil = ">=2.7.0"
-emoji = ">=0.2"
+python-dateutil = ">=2.7.0,<=2.8.1"
+emoji = "~=0.6.0"
 uvloop = {version=">=0.12.0", sys_platform = "!= 'win32'"}
-motor = ">=2.0.0"
 natural = "==0.2.0"
-isodate = ">=0.6.0"
+isodate = "==0.6.0"
 dnspython = "~=1.16.0"
 parsedatetime = "==2.6"
 aiohttp = ">=3.6.0,<3.7.0"
 python-dotenv = ">=0.10.3"
 pipenv = "*"
 "discord.py" = "==1.3.4"
+ujson = "~=3.0"
+umongo = {extras = ["motor"], version = "==2.2.0"}
+databases = {extras = ["mysql", "postgresql", "sqlite"], version = "==0.3.2"}
+alembic = "~=1.4.2"
 
 [requires]
 python_version = "3.7"
