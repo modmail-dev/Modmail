@@ -108,7 +108,6 @@ class ConfigManager:
         "log_url": "https://example.com/",
         "log_url_prefix": "/logs",
         "mongo_uri": None,
-        "database_type": "mongodb",
         "connection_uri": None,  # replace mongo uri in the future
         "owners": None,
         # bot

@@ -32,8 +32,8 @@ from sqlalchemy import create_engine
 
 load_dotenv()
 url = DatabaseURL(next(v for k, v in os.environ.items() if k.lower() == "connection_uri"))
-if next(v for k, v in os.environ.items() if k.lower() == "database_type") == "mysql":
-    url = url.replace(dialect="mysql+pymysql")
+if url.dialect == "mysql":
+    url = url.replace(driver="pymysql")
 
 config.set_main_option("sqlalchemy.url", str(url))
 

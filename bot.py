@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 import isodate
 from aiohttp import ClientSession
+from databases import DatabaseURL
 from emoji import UNICODE_EMOJI
 
 import discord
@@ -139,13 +140,25 @@ class ModmailBot(commands.Bot):
     @property
     def api(self) -> ApiClient:
         if self._api is None:
-            database_type = self.config["database_type"].lower()
-            if database_type == "mongodb":
-                self._api = MongoDBClient(self)
-            elif database_type in {"sqlite", "postgres", "postgresql", "mysql", "sql"}:
-                self._api = SQLClient(self)
+            raw_uri = self.config["connection_uri"]
+            if raw_uri is None:
+                raw_uri = self.config["mongo_uri"]
+                if raw_uri is not None:
+                    logger.warning(
+                        "You're using the old config MONGO_URI, "
+                        "consider renaming to the new CONNECTION_URI config."
+                    )
+                else:
+                    logger.critical("A Mongo URI is necessary for the bot to function.")
+                    raise RuntimeError
+
+            connection_uri = DatabaseURL(raw_uri)
+            if connection_uri.dialect == "mongodb":
+                self._api = MongoDBClient(self, connection_uri)
+            elif connection_uri.dialect in {"sqlite", "postgres", "postgresql", "mysql"}:
+                self._api = SQLClient(self, connection_uri)
             else:
-                logger.critical("Invalid database type.")
+                logger.critical("Unsupported database URI.")
                 raise RuntimeError
         return self._api
 

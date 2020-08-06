@@ -38,12 +38,13 @@ class ApiClient(ABC):
     ----------
     bot : Bot
         The Modmail bot.
-    session : ClientSession
-        The bot's current running `ClientSession`.
+    connection_uri : Union[DatabaseURL, str]
+        The database connection URI.
     """
 
-    def __init__(self, bot, db):
+    def __init__(self, bot, connection_uri, db=None):
         self.bot = bot
+        self.uri = connection_uri
         self.db = db
         self.session = bot.session
 
@@ -191,12 +192,11 @@ class PluginClient(ABC):
 
 
 class SQLClient(ApiClient):
-    def __init__(self, bot):
-        connection_uri = DatabaseURL(bot.config["connection_uri"])
+    def __init__(self, bot, connection_uri: DatabaseURL):
         try:
             db = Database(connection_uri)
             if connection_uri.dialect == "mysql":
-                connection_uri = connection_uri.replace(dialect="mysql+pymysql")
+                connection_uri = connection_uri.replace(driver="pymysql")
             self.engine = create_engine(str(connection_uri))
         except Exception as e:
             logger.critical("Invalid connection URI:")
@@ -207,7 +207,7 @@ class SQLClient(ApiClient):
         self.Attachment = models.AttachmentSQLModel
         self.Config = models.ConfigSQLModel
         self.Message = models.MessageSQLModel
-        super().__init__(bot, db)
+        super().__init__(bot, connection_uri, db)
 
     async def connect(self) -> None:
         ini_file = path.join(path.dirname(path.dirname(path.abspath(__file__))), "alembic.ini")
@@ -626,7 +626,7 @@ class SQLClient(ApiClient):
 
     async def delete_plugin_client(self, cog):
         plugin_name = f"plugin_{cog.__class__.__name__}"
-        await self.engine.execute(f"DROP TABLE IF EXISTS {plugin_name}", checkfirst=True)
+        self.engine.execute(f"DROP TABLE {plugin_name}", checkfirst=True)
 
 
 class SQLPluginClient(PluginClient):
@@ -656,19 +656,8 @@ class SQLPluginClient(PluginClient):
 
 
 class MongoDBClient(ApiClient):
-    def __init__(self, bot):
-        mongo_uri = bot.config["connection_uri"]
-        if mongo_uri is None:
-            mongo_uri = bot.config["mongo_uri"]
-            if mongo_uri is not None:
-                logger.warning(
-                    "You're using the old config MONGO_URI, "
-                    "consider switching to the new CONNECTION_URI config."
-                )
-            else:
-                logger.critical("A Mongo URI is necessary for the bot to function.")
-                raise RuntimeError
-
+    def __init__(self, bot, connection_uri):
+        mongo_uri = str(connection_uri)
         try:
             db = AsyncIOMotorClient(mongo_uri).modmail_bot  # TODO: OWO
         except ConfigurationError as e:
@@ -692,7 +681,7 @@ class MongoDBClient(ApiClient):
         self.Attachment = self.instance.register(models.AttachmentMongoModel)
         self.Config = self.instance.register(models.ConfigMongoModel)
         self.bot_ref = None
-        super().__init__(bot, db)
+        super().__init__(bot, mongo_uri, db)
 
     async def connect(self) -> None:
         try:

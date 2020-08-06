@@ -30,7 +30,7 @@ IRREVERSIBLE DATABASE CHANGES.
 - Lots of changes in api methods.
 - User models in database are updated.
   - Whenever their name/discriminator/avatar_url is changed, all the user references are updated as well.
-
+- Removed `DATABASE_TYPE` config from previous update, the database type is inferred from the `CONNECTION_URI` now.
 
 # v3.5.0
 
