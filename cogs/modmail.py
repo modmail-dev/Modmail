@@ -1355,7 +1355,7 @@ class Modmail(commands.Cog):
         else:
             embed = discord.Embed(
                 title="Enabled",
-                description="Modmail is accepting all DM messages.",
+                description="Modmail now is accepting all DM messages.",
                 color=self.bot.main_color,
             )
 
