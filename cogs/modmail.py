@@ -540,7 +540,7 @@ class Modmail(commands.Cog):
         if mention not in mentions:
             embed = discord.Embed(
                 color=self.bot.error_color,
-                description=f"{mention} is not already subscribed to this thread.",
+                description=f"{mention} is not subscribed to this thread.",
             )
         else:
             mentions.remove(mention)
