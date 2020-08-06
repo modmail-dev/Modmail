@@ -183,8 +183,9 @@ class ModmailBot(commands.Bot):
             self.loop.run_until_complete(self.logout())
             try:
                 self.loop.run_until_complete(self.api.disconnect())
-            except Exception:
-                logger.error("Failed to disconnect from database", exc_info=True)
+            except Exception as e:
+                if not isinstance(e, AssertionError):  # Ignores Already disconnected.
+                    logger.error("Failed to disconnect from database", exc_info=True)
             for task in asyncio.all_tasks(self.loop):
                 task.cancel()
             try:

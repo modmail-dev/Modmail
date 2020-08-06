@@ -418,7 +418,7 @@ class SQLClient(ApiClient):
                 self.Log.c.bot_id == str(self.bot.user.id),
             )
         )
-        key = (await self.db.fetch_one(query)).key
+        key = (await self.db.fetch_one(query))['key']
         prefix = self.bot.config["log_url_prefix"].strip("/")
         if prefix == "NONE":
             prefix = ""
@@ -510,7 +510,7 @@ class SQLClient(ApiClient):
             logger.warning("Thread cannot be found in database, recreating.")
             await self.create_log_entry(message.author, channel_id, message.author)
             log = await self.db.fetch_one(query)
-        key = log.key
+        key = log["key"]
         author_user = await self.get_or_create_user_model(message.author)
 
         query = self.Message.insert().values(
@@ -562,7 +562,7 @@ class SQLClient(ApiClient):
                 closer_id=closer_user["id"],
                 close_message=close_message,
             )
-            .where(and_(self.Log.c.key == rtn.key, self.Log.c.bot_id == str(self.bot.user.id)))
+            .where(and_(self.Log.c.key == rtn["key"], self.Log.c.bot_id == str(self.bot.user.id)))
         )
         await self.db.execute(query)
         return dict(rtn.items())
@@ -639,7 +639,7 @@ class SQLPluginClient(PluginClient):
         val = await self.db.fetch_one(query)
         if val is None:
             return default
-        return ujson.loads(val.value)
+        return ujson.loads(val['value'])
 
     async def set(self, key: str, value):
         query = select([self.Plugin]).where(self.Plugin.c.key == key)

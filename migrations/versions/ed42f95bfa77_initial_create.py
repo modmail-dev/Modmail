@@ -179,8 +179,8 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table("logs_user")
     op.drop_table("logs_attachment")
     op.drop_table("logs_message")
     op.drop_table("logs")
+    op.drop_table("logs_user")
     op.drop_table("config")
