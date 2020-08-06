@@ -1057,13 +1057,13 @@ class MongoDBClient(ApiClient):
                 if await self.db.config_migrate.find_one({}):
                     await self.db.config.drop()
                     await self.db.config_migrate.rename("config")
-            except:
+            except Exception:
                 pass
             try:
                 if await self.db.logs_migrate.find_one({}):
                     await self.db.logs.drop()
                     await self.db.logs_migrate.rename("logs")
-            except:
+            except Exception:
                 pass
         else:
             return True
