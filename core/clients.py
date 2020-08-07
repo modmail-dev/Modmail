@@ -659,7 +659,15 @@ class MongoDBClient(ApiClient):
     def __init__(self, bot, connection_uri):
         mongo_uri = str(connection_uri)
         try:
-            db = AsyncIOMotorClient(mongo_uri).modmail_bot  # TODO: OWO
+            db = AsyncIOMotorClient(mongo_uri).get_default_database("modmail_bot")
+            if db.name != "modmail_bot":
+                logger.warning(
+                    "A default database name has been provided. "
+                    "If you been using this bot for a while and noticed your "
+                    "data missing, change your connection_uri/mongo_uri to "
+                    '"mongodb+srv://[...].mongodb.net/modmail_bot" to use '
+                    "the former preset modmail_bot database."
+                )
         except ConfigurationError as e:
             if "The DNS operation timed out" in str(e):
                 logger.critical(
