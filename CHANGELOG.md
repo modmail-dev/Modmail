@@ -21,6 +21,7 @@ IRREVERSIBLE DATABASE CHANGES FOR MONGODB.
   - To obtain a `PluginClient`, use `await bot.api.get_plugin_client(cog)`
 - Fixed thread channels not creating when username is not allowed for server discovery.
   - Channel name would be replaced by `#user_<userid>`.
+- Bot ID is stored in channel topic as well, to allow multiple modmail bots in one server without conflict.
 
 ### Changed
 

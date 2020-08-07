@@ -433,7 +433,15 @@ class SQLClient(ApiClient):
         else:
             creator_user = recipient_user
 
-        channel_id = channel if isinstance(channel, (int, str)) else channel.id
+        if isinstance(channel, (int, str)):
+            channel_id = channel
+            guild_id = self.bot.guild_id or -1
+        else:
+            channel_id = channel.id
+            try:
+                guild_id = channel.guild.id
+            except AttributeError:
+                guild_id = -1
 
         key = self.get_key()
         data = dict(
@@ -441,7 +449,7 @@ class SQLClient(ApiClient):
             bot_id=str(self.bot.user.id),
             created_at=datetime.utcnow(),
             channel_id=str(channel_id),
-            guild_id=str(self.bot.guild_id),
+            guild_id=str(guild_id),
             recipient_id=recipient_user["id"],
             creator_id=creator_user["id"],
             creator_mod=isinstance(creator, Member),
@@ -1218,7 +1226,15 @@ class MongoDBClient(ApiClient):
         else:
             creator_user = recipient_user
 
-        channel_id = channel if isinstance(channel, (int, str)) else channel.id
+        if isinstance(channel, (int, str)):
+            channel_id = channel
+            guild_id = self.bot.guild_id or -1
+        else:
+            channel_id = channel.id
+            try:
+                guild_id = channel.guild.id
+            except AttributeError:
+                guild_id = -1
 
         for _ in range(3):
             key = self.get_key()
@@ -1227,7 +1243,7 @@ class MongoDBClient(ApiClient):
                 bot=self.bot_ref,
                 created_at=datetime.utcnow(),
                 channel_id=str(channel_id),
-                guild_id=str(self.bot.guild_id),
+                guild_id=str(guild_id),
                 recipient=recipient_user,
                 creator=creator_user,
                 creator_mod=isinstance(creator, Member),

@@ -175,24 +175,28 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
-TOPIC_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
-
-
-def match_user_id(text: str) -> int:
+def match_user_id(bot, text: str, match_bot_id: bool = True) -> int:
     """
     Matches a user ID in the format of "User ID: 12345".
 
     Parameters
     ----------
+    bot : commands.Bot
+        The current Discord Bot instance
     text : str
         The text of the user ID.
-
+    match_bot_id : Bool
+        Whether to match bot ID too.
+        Defaults True.
     Returns
     -------
     int
         The user ID if found. Otherwise, -1.
     """
-    match = TOPIC_REGEX.search(text)
+    if match_bot_id:
+        match = re.search(r"\bUser ID:\s*(\d{17,21})\s+Bot ID: " + str(bot.user.id) + r'\b', text, flags=re.IGNORECASE)
+    else:
+        match = re.search(r"\bUser ID:\s*(\d{17,21})\b", text, flags=re.IGNORECASE)
     if match is not None:
         return int(match.group(1))
     return -1

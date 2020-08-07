@@ -132,7 +132,7 @@ class Thread:
             log_url = log_count = None
             # ensure core functionality still works
 
-        await channel.edit(topic=f"User ID: {recipient.id}")
+        await channel.edit(topic=f"User ID: {recipient.id}\nBot ID: {self.bot.user.id}")
         self.ready = True
 
         if creator:
@@ -901,7 +901,7 @@ class ThreadManager:
                 )
                 if thread is not None:
                     logger.debug("Found thread with tempered ID.")
-                    await channel.edit(topic=f"User ID: {user_id}")
+                    await channel.edit(topic=f"User ID: {user_id}\nBot ID: {self.bot.user.id}")
             return thread
 
         if recipient:
@@ -920,7 +920,7 @@ class ThreadManager:
                 thread = None
         else:
             channel = discord.utils.get(
-                self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"
+                self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}\nBot ID: {self.bot.user.id}"
             )
             if channel:
                 thread = Thread(self, recipient or recipient_id, channel)
@@ -938,7 +938,7 @@ class ThreadManager:
         user_id = -1
 
         if channel.topic:
-            user_id = match_user_id(channel.topic)
+            user_id = match_user_id(self.bot, channel.topic)
 
         if user_id == -1:
             return None

@@ -1169,10 +1169,10 @@ class Modmail(commands.Cog):
         sent_emoji, blocked_emoji = await self.bot.retrieve_emoji()
 
         if ctx.thread:
-            user_id = match_user_id(ctx.channel.topic)
+            user_id = match_user_id(self.bot, ctx.channel.topic)
             if user_id == -1:
                 logger.info("Setting current channel's topic to User ID.")
-                await ctx.channel.edit(topic=f"User ID: {ctx.thread.id}")
+                await ctx.channel.edit(topic=f"User ID: {ctx.thread.id}\nBot ID: {self.bot.user.id}")
             return await self.bot.add_reaction(ctx.message, sent_emoji)
 
         logger.info("Attempting to fix a broken thread %s.", ctx.channel.name)
@@ -1184,7 +1184,7 @@ class Modmail(commands.Cog):
         )
         if thread is not None:
             logger.debug("Found thread with tempered ID.")
-            await ctx.channel.edit(reason="Fix broken Modmail thread", topic=f"User ID: {user_id}")
+            await ctx.channel.edit(reason="Fix broken Modmail thread", topic=f"User ID: {user_id}\nBot ID: {self.bot.user.id}")
             return await self.bot.add_reaction(ctx.message, sent_emoji)
 
         # find genesis message to retrieve User ID
@@ -1196,7 +1196,7 @@ class Modmail(commands.Cog):
                 and message.embeds[0].color.value == self.bot.main_color
                 and message.embeds[0].footer.text
             ):
-                user_id = match_user_id(message.embeds[0].footer.text)
+                user_id = match_user_id(self.bot, message.embeds[0].footer.text, match_bot_id=False)
                 if user_id != -1:
                     recipient = self.bot.get_user(user_id)
                     if recipient is None:
@@ -1212,7 +1212,7 @@ class Modmail(commands.Cog):
                         "Setting current channel's topic to User ID and created new thread."
                     )
                     await ctx.channel.edit(
-                        reason="Fix broken Modmail thread", topic=f"User ID: {user_id}"
+                        reason="Fix broken Modmail thread", topic=f"User ID: {user_id}\nBot ID: {self.bot.user.id}"
                     )
                     return await self.bot.add_reaction(ctx.message, sent_emoji)
 
@@ -1263,7 +1263,7 @@ class Modmail(commands.Cog):
                 thread.ready = True
                 logger.info("Setting current channel's topic to User ID and created new thread.")
                 await ctx.channel.edit(
-                    reason="Fix broken Modmail thread", name=name, topic=f"User ID: {user.id}"
+                    reason="Fix broken Modmail thread", name=name, topic=f"User ID: {user.id}\nBot ID: {self.bot.user.id}"
                 )
                 return await self.bot.add_reaction(ctx.message, sent_emoji)
 
