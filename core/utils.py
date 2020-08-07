@@ -194,7 +194,11 @@ def match_user_id(bot, text: str, match_bot_id: bool = True) -> int:
         The user ID if found. Otherwise, -1.
     """
     if match_bot_id:
-        match = re.search(r"\bUser ID:\s*(\d{17,21})\s+Bot ID: " + str(bot.user.id) + r'\b', text, flags=re.IGNORECASE)
+        match = re.search(
+            r"\bUser ID:\s*(\d{17,21})\s+Bot ID: " + str(bot.user.id) + r"\b",
+            text,
+            flags=re.IGNORECASE,
+        )
     else:
         match = re.search(r"\bUser ID:\s*(\d{17,21})\b", text, flags=re.IGNORECASE)
     if match is not None:

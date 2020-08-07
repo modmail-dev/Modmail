@@ -920,7 +920,8 @@ class ThreadManager:
                 thread = None
         else:
             channel = discord.utils.get(
-                self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}\nBot ID: {self.bot.user.id}"
+                self.bot.modmail_guild.text_channels,
+                topic=f"User ID: {recipient_id}\nBot ID: {self.bot.user.id}",
             )
             if channel:
                 thread = Thread(self, recipient or recipient_id, channel)
