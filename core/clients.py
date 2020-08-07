@@ -752,6 +752,13 @@ class MongoDBClient(ApiClient):
             "plugins",
             "aliases",
         }
+        ids = {
+            "main_category_id",
+            "log_channel_id",
+            "fallback_category_id",
+            "guild_id",
+            "modmail_guild_id",
+        }
 
         this_bot = None
         bots = {}
@@ -762,6 +769,10 @@ class MongoDBClient(ApiClient):
                 for x in serialize:
                     if x in conf:
                         conf[x] = ujson.dumps(conf[x])
+                for x in ids:
+                    if isinstance(conf.get(x), int):
+                        conf[x] = str(conf[x])
+
                 conf["id"] = str(conf["bot_id"])
                 conf.pop("bot_id", None)
                 conf.pop("_id", None)
