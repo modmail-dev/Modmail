@@ -539,7 +539,7 @@ class Modmail(commands.Cog):
         if mention not in mentions:
             embed = discord.Embed(
                 color=self.bot.error_color,
-                description=f"{mention} is not already subscribed to this thread.",
+                description=f"{mention} is not subscribed to this thread.",
             )
         else:
             mentions.remove(mention)
@@ -1364,7 +1364,7 @@ class Modmail(commands.Cog):
         else:
             embed = discord.Embed(
                 title="Enabled",
-                description="Modmail is accepting all DM messages.",
+                description="Modmail now is accepting all DM messages.",
                 color=self.bot.main_color,
             )
 
