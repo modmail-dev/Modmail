@@ -102,6 +102,7 @@ class Thread:
                     overwrites=overwrites,
                     reason="Creating a thread channel.",
                 )
+                break
             except discord.HTTPException as e:  # Failed to create due to missing perms.
                 logger.critical("An error occurred while creating a thread.", exc_info=True)
                 if "Contains words not allowed" in str(e):
