@@ -1,4 +1,4 @@
-<div align="center">
+[![Run on Repl.it](https://repl.it/badge/github/kyb3r/modmail)](https://repl.it/github/kyb3r/modmail)<div align="center">
   <img src="https://i.imgur.com/o558Qnq.png" align="center">
   <br>
   <strong><i>A feature-rich Modmail bot for Discord.</i></strong>
