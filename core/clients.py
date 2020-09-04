@@ -721,8 +721,8 @@ class MongoDBClient(ApiClient):
                     )
             if "OperationFailure" in message:
                 logger.critical(
-                    "This is due to having invalid credentials in your MONGO_URI. "
-                    "Remember you need to substitute `<password>` with your actual password."
+                    "This is due to having invalid credentials in your CONNECTION_URI. "
+                    "Remember you need to replace `<password>` with your actual database-user password."
                 )
                 logger.critical(
                     "Be sure to URL encode your username and password (not the entire URL!!), "
