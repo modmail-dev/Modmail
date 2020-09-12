@@ -21,7 +21,7 @@ exclude = '''
 
 [tool.poetry]
 name = 'Modmail'
-version = '3.4.1'
+version = '3.5.0'
 description = "Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way."
 license = 'AGPL-3.0-only'
 authors = [
@@ -36,10 +36,10 @@ keywords = ['discord', 'modmail']
 
 [tool.poetry.dependencies]
 python = "^3.7"
-"discord.py" = "=1.2.5"
-uvloop = "^0.14.0"
-python-dotenv = "^0.10.3"
-parsedatetime = "^2.5"
+"discord.py" = "=1.3.4"
+uvloop = {version = ">=0.12.0", sys_platform = "!= 'win32'"}
+python-dotenv = ">=0.10.3"
+parsedatetime = "^2.6"
 dnspython = "^1.16"
 isodate = "^0.6.0"
 natural = "^0.2.0"
@@ -47,10 +47,10 @@ motor = {version = "^2.1", optional = true}
 emoji = "^0.5.4"
 python-dateutil = "^2.8"
 colorama = "^0.4.3"
-aiohttp = "<3.6.0,>=3.3.0"
+aiohttp = ">=3.6.0,<3.7.0"
 
 [tool.poetry.dev-dependencies]
-black = {version = "=19.3b0", allows-prereleases = true}
+black = {version = "=19.10b0", allows-prereleases = true}
 pylint = "^2.4"
 bandit = "^1.6"
 

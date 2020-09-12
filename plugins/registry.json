@@ -7,8 +7,17 @@
         "title": "Profanity Filter Plugin",
         "icon_url": "https://i.imgur.com/951szZ3.jpg",
         "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
-    },
-    "dragory-migrate": {
+    },    
+       "music": {
+        "repository": "lorenzo132/modmail-plugins",
+        "branch": "master",
+        "description": "Play your favourite music on your bot! Note: Only works on VPS follow this guide: https://gist.github.com/lorenzo132/5ef328e5dfcfaec19cb81dc7a63eaffa",
+        "bot_version": "2.20.1",
+        "title": "Music",
+        "icon_url": "https://i.imgur.com/R2olclk.png",
+        "thumbnail_url": "https://i.imgur.com/xuoQjPu.gif"
+    },    
+       "dragory-migrate": {
         "repository": "kyb3r/modmail-plugins",
         "branch": "master",
         "description": "Migrate your logs from Dragory's modmail bot to this one with a simple command. Added at the request of users.",
@@ -222,5 +231,14 @@
         "title": "Slow Mode",
         "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
+    },
+       "publish": {
+        "repository": "codeinteger6/modmail-plugins",
+        "branch": "master",
+        "description": "Publish messages sent in announcement channels.",
+        "bot_version": "3.5.0",
+        "title": "Publish",
+        "icon_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png",
+        "thumbnail_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png"
     }
 }

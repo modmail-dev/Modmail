@@ -7,6 +7,34 @@ This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
 
+# v3.5.0
+
+Fixed discord.py issue.
+
+### Added
+
+- A confirmation when you manually delete a thread message embed.
+- Config var `enable_eval` defaults true, set `enable_eval=no` to disable the eval command. (GH #2803)
+- Added `?plugins reset` command to completely reset everything related to plugins. This will fix some problems caused by broken plugins in the file system.
+- Support private GitHub repos for plugins (thanks to @officialpiyush pr#2767)
+
+### Changed
+
+- Bump discord.py version to v1.3.3.
+- Renamed `bot.owner_ids` to `bot.bot_owner_ids` as the attribute is now defined internally for team support.
+- Deleting channel manually will now close the thread.
+- Deleting messages will no longer cause the bot to produce warnings.
+- Plugins will automatically be removed when it fails to load.
+- Moved all database-related activities to clients.py under MongoDBClient, with possible future hook for additional database support. 
+- `bot.db` is deprecated in favour of `bot.api.db` and will be removed in the future.
+- Deprecated `bot.plugin_db.get_partition` in favour of `bot.api.get_plugin_partition` (not final).
+- Deprecated `MONGO_URI` config var (but will keep support in the future) in favour of `CONNECTION_URI` and `DATABASE_TYPE`. Right now there is one supported database - "mongodb", which is the default.
+
+### Fixed
+
+- Plugins not loading in Windows OS. Now uses proactor event loop for asyncio which should fix this.
+
+
 # v3.4.1
 
 ### Fixed
