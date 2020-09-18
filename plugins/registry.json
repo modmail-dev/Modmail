@@ -240,5 +240,14 @@
         "title": "Publish",
         "icon_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png",
         "thumbnail_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png"
+    },
+    "autopublish": {
+        "repository": "officialakhil/modmail-plugins",
+        "branch": "master",
+        "description": "Auto Publish messages sent in announcement channels.",
+        "bot_version": "3.5.0",
+        "title": "AutoPublish",
+        "icon_url": "https://media.discordapp.net/attachments/511385199612002304/756412300512067664/AKHIL.png?width=431&height=431",
+        "thumbnail_url": "https://media.discordapp.net/attachments/511385199612002304/756412300512067664/AKHIL.png?width=431&height=431"
     }
 }
