@@ -50,7 +50,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             format_ += (
                 f"- {cmd.short_doc}\n"
                 if not cmd.short_doc == ""
-                else "- No description."
+                else "- No description.\n"
             )
             if not format_.strip():
                 continue
