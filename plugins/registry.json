@@ -240,5 +240,14 @@
         "title": "Publish",
         "icon_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png",
         "thumbnail_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png"
+    },
+       "action": {
+        "repository": "6days9weeks/modmail-plugins",
+        "branch": "master",
+        "description": "Various action commands.",
+        "bot_version": "3.5.0",
+        "title": "Action",
+        "icon_url": "https://cdn.discordapp.com/attachments/720733784970100776/762235466665558036/34457007.png",
+        "thumbnail_url": "https://cdn.nekos.life/kiss/kiss_081.gif"
     }
 }
