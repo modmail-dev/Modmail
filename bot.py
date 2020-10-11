@@ -1214,7 +1214,7 @@ class ModmailBot(commands.Bot):
         else:
             data.update({"owner_name": info.owner.name, "owner_id": info.owner.id, "team": False})
 
-        async with self.session.post("https://api.logviewer.tech/metadata", json=data):
+        async with self.session.post("https://api.modmail.dev/metadata", json=data):
             logger.debug("Uploading metadata to Modmail server.")
 
     async def before_post_metadata(self):
