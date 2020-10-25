@@ -25,6 +25,15 @@
         "title": "Dragory Logs Migration",
         "icon_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png",
         "thumbnail_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png"
+    },    
+       "media-only": {
+        "repository": "lorenzo132/modmail-plugins",
+        "branch": "master",
+        "description": "Make a channel mediaonly, only the following mediatypes will be accepted `.png` / `.gif` / `.jpg` / `.mp4`",
+        "bot_version": "2.20.1",
+        "title": "Media-only",
+        "icon_url": "https://i.imgur.com/ussAoIi.png",
+        "thumbnail_url": "https://i.imgur.com/ussAoIi.png"
     },
     "anti-steal-close": {
       "repository": "officialpiyush/modmail-plugins",
