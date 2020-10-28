@@ -361,7 +361,7 @@ class Thread:
 
         event = "Thread Closed as Scheduled" if scheduled else "Thread Closed"
         # embed.set_author(name=f"Event: {event}", url=log_url)
-        embed.set_footer(text=f"{event} by {_closer}")
+        embed.set_footer(text=f"{event} by {_closer}", icon_url=closer.avatar_url)
         embed.timestamp = datetime.utcnow()
 
         tasks = [self.bot.config.update()]
