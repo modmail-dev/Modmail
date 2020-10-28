@@ -36,7 +36,7 @@ keywords = ['discord', 'modmail']
 
 [tool.poetry.dependencies]
 python = "^3.7"
-"discord.py" = "=1.3.4"
+"discord.py" = "=1.5.1"
 uvloop = {version = ">=0.12.0", sys_platform = "!= 'win32'"}
 python-dotenv = ">=0.10.3"
 parsedatetime = "^2.6"

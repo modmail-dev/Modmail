@@ -1,4 +1,4 @@
-__version__ = "3.5.0"
+__version__ = "3.6.0"
 
 
 import asyncio
@@ -53,7 +53,8 @@ if sys.platform == "win32":
 
 class ModmailBot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=None)  # implemented in `get_prefix`
+        intents = discord.Intents.all()
+        super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
         self._session = None
         self._api = None
         self.metadata_loop = None
@@ -89,7 +90,7 @@ class ModmailBot(commands.Bot):
 
     def startup(self):
         logger.line()
-        if os.name != 'nt':
+        if os.name != "nt":
             logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
             logger.info("││││ │ │││││├─┤││")
             logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
