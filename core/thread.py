@@ -341,9 +341,9 @@ class Thread:
                 sneak_peak = "No content"
             
             if self.channel.nsfw:
-                _nsfw = 'NSFW-'
+                _nsfw = "NSFW-"
             else:
-                _nsfw = ''
+                _nsfw = ""
 
             desc = f"[`{_nsfw}{log_data['key']}`]({log_url}): "
             desc += truncate(sneak_peak, max=75 - 13)

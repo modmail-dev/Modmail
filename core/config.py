@@ -57,6 +57,7 @@ class ConfigManager:
         "thread_close_title": "Thread Closed",
         "thread_close_response": "{closer.mention} has closed this Modmail thread.",
         "thread_self_close_response": "You have closed this Modmail thread.",
+        "thread_move_title": "Thread Moved",
         "thread_move_notify": False,
         "thread_move_response": "This thread has been moved.",
         "disabled_new_thread_title": "Not Delivered",
