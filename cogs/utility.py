@@ -47,7 +47,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             else:
                 format_ = f"`[{perm_level}] {prefix + cmd.qualified_name}` "
 
-            format_ += f"- {cmd.short_doc}\n"
+            format_ += f"- {cmd.short_doc}\n" if cmd.short_doc else "- *No description.*\n"
             if not format_.strip():
                 continue
             if len(format_) + len(formats[-1]) >= 1024:
@@ -638,7 +638,7 @@ class Utility(commands.Cog):
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def mention(self, ctx, *, mention: str = None):
+    async def mention(self, ctx, *mention: Union[discord.Role, discord.Member]):
         """
         Change what the bot mentions at the start of each thread.
 
@@ -647,11 +647,12 @@ class Utility(commands.Cog):
         # TODO: ability to disable mention.
         current = self.bot.config["mention"]
 
-        if mention is None:
+        if not mention:
             embed = discord.Embed(
                 title="Current mention:", color=self.bot.main_color, description=str(current)
             )
         else:
+            mention = " ".join(i.mention for i in mention)
             embed = discord.Embed(
                 title="Changed mention!",
                 description=f'On thread creation the bot now says "{mention}".',

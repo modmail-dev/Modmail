@@ -8,6 +8,15 @@
         "icon_url": "https://i.imgur.com/951szZ3.jpg",
         "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
     },
+    "music": {
+        "repository": "lorenzo132/modmail-plugins",
+        "branch": "master",
+        "description": "Play your favourite music on your bot! Note: Only works on VPS follow this guide: https://gist.github.com/lorenzo132/5ef328e5dfcfaec19cb81dc7a63eaffa",
+        "bot_version": "2.20.1",
+        "title": "Music",
+        "icon_url": "https://i.imgur.com/R2olclk.png",
+        "thumbnail_url": "https://i.imgur.com/xuoQjPu.gif"
+    },
     "dragory-migrate": {
         "repository": "kyb3r/modmail-plugins",
         "branch": "master",
@@ -17,58 +26,22 @@
         "icon_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png",
         "thumbnail_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png"
     },
-    "autorole": {
-        "repository": "papiersnipper/modmail-plugins",
+    "media-only": {
+        "repository": "lorenzo132/modmail-plugins",
         "branch": "master",
-        "description": "Easily auto-assign a role to a user when they join your server.",
+        "description": "Make a channel mediaonly, only the following mediatypes will be accepted `.png` / `.gif` / `.jpg` / `.mp4`/ `.jpeg`",
         "bot_version": "2.20.1",
-        "title": "Autorole Plugin",
-        "icon_url": "https://i.imgur.com/67bEi82.png",
-        "thumbnail_url": "https://i.imgur.com/67bEi82.png"
+        "title": "Media-only",
+        "icon_url": "https://i.imgur.com/ussAoIi.png",
+        "thumbnail_url": "https://i.imgur.com/ussAoIi.png"
     },
     "anti-steal-close": {
-      "repository": "officialpiyush/modmail-plugins",
-      "branch": "master",
-      "description": "Don't let anyone steal ya close.",
-      "title": "Anti Steal Close",
-      "icon_url": "https://i.imgur.com/LovxyV3.png",
-      "thumbnail_url": "https://i.imgur.com/LovxyV3.png"
-    },
-    "embedder": {
-        "repository": "papiersnipper/modmail-plugins",
+        "repository": "officialpiyush/modmail-plugins",
         "branch": "master",
-        "description": "Easily make embeds for a nicer presence.",
-        "bot_version": "2.20.1",
-        "title": "Embedder Plugin",
-        "icon_url": "https://i.imgur.com/l3uzJwD.png",
-        "thumbnail_url": "https://i.imgur.com/l3uzJwD.png"
-    },
-    "leveling": {
-        "repository": "papiersnipper/modmail-plugins",
-        "branch": "master",
-        "description": "A leveling system for your server: see who's active and who's not.",
-        "bot_version": "2.20.1",
-        "title": "Leveling Plugin",
-        "icon_url": "https://i.imgur.com/VuZ60QX.png",
-        "thumbnail_url": "https://i.imgur.com/VuZ60QX.png"
-    },
-    "purger": {
-        "repository": "papiersnipper/modmail-plugins",
-        "branch": "master",
-        "description": "Delete multiple messages at a time.",
-        "bot_version": "2.20.1",
-        "title": "Purger Plugin",
-        "icon_url": "https://i.imgur.com/HnC42jM.png",
-        "thumbnail_url": "https://i.imgur.com/HnC42jM.png"
-    },
-    "supporters": {
-        "repository": "papiersnipper/modmail-plugins",
-        "branch": "master",
-        "description": "Let your users know who is part of the support team.",
-        "bot_version": "2.20.1",
-        "title": "Supporters Plugin",
-        "icon_url": "https://i.imgur.com/1QXRutA.png",
-        "thumbnail_url": "https://i.imgur.com/1QXRutA.png"
+        "description": "Don't let anyone steal ya close.",
+        "title": "Anti Steal Close",
+        "icon_url": "https://i.imgur.com/LovxyV3.png",
+        "thumbnail_url": "https://i.imgur.com/LovxyV3.png"
     },
     "announcement": {
         "repository": "officialpiyush/modmail-plugins",
@@ -115,15 +88,6 @@
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
-    "translator": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "You can auto translate thread msgs using this plugin or translate text fromm any language to English!",
-        "bot_version": "2.20.1",
-        "title": "Translator Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
     "welcomer": {
         "repository": "fourjr/modmail-plugins",
         "branch": "master",
@@ -150,7 +114,7 @@
         "title": "Backup Database (backupdb)",
         "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
         "thumbnail_url": "https://images.ionadev.ml/b/nKAlOC4.jpg"
-   },
+    },
     "colors": {
         "repository": "Taaku18/modmail-plugins",
         "branch": "master",
@@ -160,7 +124,7 @@
         "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
         "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
     },
-     "fun": {
+    "fun": {
         "repository": "TheKinG2149/modmail-plugins",
         "branch": "master",
         "description": "Some fun commands like 8ball, dadjokes",
@@ -168,7 +132,7 @@
         "title": "Fun",
         "icon_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png"
-   },
+    },
     "stats": {
         "repository": "KarateWumpus/modmail-plugins",
         "branch": "master",
@@ -214,7 +178,7 @@
         "icon_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg",
         "thumbnail_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg"
     },
-        "slowmode": {
+    "slowmode": {
         "repository": "teen1/modmail-plugins",
         "branch": "master",
         "description": "Configure slow mode for your channels with Modmail!",
@@ -222,5 +186,23 @@
         "title": "Slow Mode",
         "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
+    },
+    "publish": {
+        "repository": "codeinteger6/modmail-plugins",
+        "branch": "master",
+        "description": "Publish messages sent in announcement channels.",
+        "bot_version": "3.5.0",
+        "title": "Publish",
+        "icon_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png",
+        "thumbnail_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png"
+    },
+    "translate": {
+        "repository": "WebKide/modmail-plugins",
+        "branch": "master",
+        "description": "(∩｀-´)⊃━☆ﾟ.*･｡ﾟ translate text from one language to another (defaults to English)\n\nGet full list of available languages at: https://github.com/WebKide/modmail-plugins/blob/master/translate/langs.json\n\nThis command conflicts with Translator-plugin",
+        "bot_version": "3.5.0",
+        "title": "Translate",
+        "icon_url": "https://i.imgur.com/yeHFKgl.png",
+        "thumbnail_url": "https://i.imgur.com/yeHFKgl.png"
     }
 }

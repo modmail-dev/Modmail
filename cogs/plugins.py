@@ -199,7 +199,7 @@ class Plugins(commands.Cog):
             venv = hasattr(sys, "real_prefix") or hasattr(sys, "base_prefix")  # in a virtual env
             user_install = " --user" if not venv else ""
             proc = await asyncio.create_subprocess_shell(
-                f"{sys.executable} -m pip install --upgrade{user_install} -r {req_txt} -q -q",
+                f'"{sys.executable}" -m pip install --upgrade{user_install} -r {req_txt} -q -q',
                 stderr=PIPE,
                 stdout=PIPE,
             )
@@ -497,7 +497,7 @@ class Plugins(commands.Cog):
                 logger.warning("Removing %s.", entry.name)
 
         embed = discord.Embed(
-            description=f"Successfully purged all plugins from the bot.", color=self.bot.main_color
+            description="Successfully purged all plugins from the bot.", color=self.bot.main_color
         )
         return await ctx.send(embed=embed)
 
