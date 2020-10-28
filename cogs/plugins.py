@@ -199,7 +199,7 @@ class Plugins(commands.Cog):
             venv = hasattr(sys, "real_prefix") or hasattr(sys, "base_prefix")  # in a virtual env
             user_install = " --user" if not venv else ""
             proc = await asyncio.create_subprocess_shell(
-                f"\"{sys.executable}\" -m pip install --upgrade{user_install} -r {req_txt} -q -q --user",
+                f'"{sys.executable}" -m pip install --upgrade{user_install} -r {req_txt} -q -q --user',
                 stderr=PIPE,
                 stdout=PIPE,
             )

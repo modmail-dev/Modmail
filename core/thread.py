@@ -339,7 +339,7 @@ class Thread:
                 sneak_peak = content.replace("\n", "")
             else:
                 sneak_peak = "No content"
-            
+
             if self.channel.nsfw:
                 _nsfw = "NSFW-"
             else:
