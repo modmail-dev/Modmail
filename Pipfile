@@ -23,8 +23,6 @@ aiohttp = ">=3.6.0,<3.7.0"
 python-dotenv = ">=0.10.3"
 pipenv = "*"
 "discord.py" = "==1.5.1"
-pynacl = "*"
-cffi = "*"
 
 [scripts]
 bot = "python bot.py"

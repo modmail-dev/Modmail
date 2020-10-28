@@ -1,4 +1,4 @@
-__version__ = "3.6.0"
+__version__ = "3.6.2"
 
 
 import asyncio
@@ -168,7 +168,9 @@ class ModmailBot(commands.Bot):
         except discord.LoginFailure:
             logger.critical("Invalid token")
         except discord.PrivilegedIntentsRequired:
-            logger.critical('Privileged intents are not explicitly granted in the discord developers dashboard.')
+            logger.critical(
+                "Privileged intents are not explicitly granted in the discord developers dashboard."
+            )
         except Exception:
             logger.critical("Fatal exception", exc_info=True)
         finally:
