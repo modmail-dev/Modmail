@@ -186,5 +186,14 @@
         "title": "Publish",
         "icon_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png",
         "thumbnail_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png"
+    },
+        "translate": {
+        "repository": "WebKide/modmail-plugins",
+        "branch": "master",
+        "description": "(∩｀-´)⊃━☆ﾟ.*･｡ﾟ translate text from one language to another (defaults to English)\n\nGet full list of available languages at: https://github.com/WebKide/modmail-plugins/blob/master/translate/langs.json\n\nThis command conflicts with Translator-plugin",
+        "bot_version": "3.5.0",
+        "title": "Translate",
+        "icon_url": "https://i.imgur.com/yeHFKgl.png",
+        "thumbnail_url": "https://i.imgur.com/yeHFKgl.png"
     }
 }
