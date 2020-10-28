@@ -47,7 +47,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             else:
                 format_ = f"`[{perm_level}] {prefix + cmd.qualified_name}` "
 
-            format_ += f"- {cmd.short_doc}\n"
+            format_ += f"- {cmd.short_doc}\n" if not cmd.short_doc == "" else "- No description.\n"
             if not format_.strip():
                 continue
             if len(format_) + len(formats[-1]) >= 1024:
