@@ -96,7 +96,6 @@ class ModmailBot(commands.Bot):
             logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
         else:
             logger.info("MODMAIL")
-        logger.info("MODMAIL")
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
