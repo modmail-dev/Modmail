@@ -89,9 +89,13 @@ class ModmailBot(commands.Bot):
 
     def startup(self):
         logger.line()
-        logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
-        logger.info("││││ │ │││││├─┤││")
-        logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
+        if os.name != 'nt':
+            logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
+            logger.info("││││ │ │││││├─┤││")
+            logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
+        else:
+            logger.info("MODMAIL")
+        logger.info("MODMAIL")
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
