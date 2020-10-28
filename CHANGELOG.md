@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
+# v3.6.1
+
+### Added
+
+- Proper error message if privileged intents not explicitly granted to bot.
+
+
 # v3.6.0
 
 ### Added
@@ -28,6 +35,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Bump discord.py version to 1.5.1
 - Explicitly state intents used for connection
 - Use `--diff` for black CI instead of `--check` ([GH#2816](https://github.com/kyb3r/modmail/issues/2816))
+
 
 # v3.5.0
 

@@ -167,6 +167,8 @@ class ModmailBot(commands.Bot):
             pass
         except discord.LoginFailure:
             logger.critical("Invalid token")
+        except discord.PrivilegedIntentsRequired:
+            logger.critical('Privileged intents are not explicitly granted in the discord developers dashboard.')
         except Exception:
             logger.critical("Fatal exception", exc_info=True)
         finally:
