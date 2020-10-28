@@ -79,15 +79,6 @@
         "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
         "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
     },
-    "translator": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "You can auto translate thread msgs using this plugin or translate text fromm any language to English!",
-        "bot_version": "2.20.1",
-        "title": "Translator Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
     "welcomer": {
         "repository": "fourjr/modmail-plugins",
         "branch": "master",
