@@ -305,7 +305,7 @@ class Modmail(commands.Cog):
 
         if self.bot.config["thread_move_notify"] and not silent:
             embed = discord.Embed(
-                title="Thread Moved",
+                title=self.bot.config["thread_move_title"],
                 description=self.bot.config["thread_move_response"],
                 color=self.bot.main_color,
             )
