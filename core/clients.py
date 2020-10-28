@@ -164,7 +164,7 @@ class MongoDBClient(ApiClient):
             db = AsyncIOMotorClient(mongo_uri).modmail_bot
         except ConfigurationError as e:
             logger.critical(
-                "Your MONGO_URI might be copied wrong, try re-copying from the source again. "
+                "Your MongoDB CONNECTION_URI might be copied wrong, try re-copying from the source again. "
                 "Otherwise noted in the following message:"
             )
             logger.critical(e)
@@ -210,7 +210,7 @@ class MongoDBClient(ApiClient):
 
             if "OperationFailure" in message:
                 logger.critical(
-                    "This is due to having invalid credentials in your MONGO_URI. "
+                    "This is due to having invalid credentials in your MongoDB CONNECTION_URI. "
                     "Remember you need to substitute `<password>` with your actual password."
                 )
                 logger.critical(
