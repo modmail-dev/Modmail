@@ -13,11 +13,12 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added `thread_move_title` to specify title of thread moved embed.
 - Mark NSFW logs in log message. ([GH #2792](https://github.com/kyb3r/modmail/issues/2792))
 - Icon for moderator that closed the thread in log message. ([GH #2828](https://github.com/kyb3r/modmail/issues/2828))
-- Ability to set mentions via user/role ID ([GH #2796](https://github.com/kyb3r/modmail/issues/2796))
+- Ability to set mentions via user/role ID. ([GH #2796](https://github.com/kyb3r/modmail/issues/2796))
 
 ### Changed
 
 - `?move` now consumes rest in category name, which means `?move Long Category Name` works without quotes!
+- `?help` shows "No command description" if no description provided. ([PR #2845](https://github.com/kyb3r/modmail/pull/2845))
 
 ### Internal
 
