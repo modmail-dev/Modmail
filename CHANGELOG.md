@@ -8,9 +8,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # v3.6.2
 
-### Added
+### Fixed
 
-- Proper error message if privileged intents not explicitly granted to bot.
+- Plugins downloading requirements in virtual environments
 
 
 # v3.6.1
