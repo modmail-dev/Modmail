@@ -316,6 +316,7 @@ class Thread:
             {
                 "open": False,
                 "closed_at": str(datetime.utcnow()),
+                "nsfw": self.channel.nsfw,
                 "close_message": message if not silent else None,
                 "closer": {
                     "id": str(closer.id),
@@ -338,8 +339,13 @@ class Thread:
                 sneak_peak = content.replace("\n", "")
             else:
                 sneak_peak = "No content"
+            
+            if self.channel.nsfw:
+                _nsfw = 'NSFW-'
+            else:
+                _nsfw = ''
 
-            desc = f"[`{log_data['key']}`]({log_url}): "
+            desc = f"[`{_nsfw}{log_data['key']}`]({log_url}): "
             desc += truncate(sneak_peak, max=75 - 13)
         else:
             desc = "Could not resolve log url."
