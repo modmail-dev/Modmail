@@ -20,6 +20,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `?move` now consumes rest in category name, which means `?move Long Category Name` works without quotes!
 - `?help` shows "No command description" if no description provided. ([PR #2845](https://github.com/kyb3r/modmail/pull/2845))
 
+### Fixed
+- Unicode errors raised during windows selfhosting
+
 ### Internal
 
 - Bump discord.py version to 1.5.1
