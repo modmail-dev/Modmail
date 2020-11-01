@@ -176,7 +176,7 @@ class PaginatorSession:
         """
         self.running = False
 
-        sent_emoji, x = await self.ctx.bot.retrieve_emoji()
+        sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
         await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
 
         if delete:
