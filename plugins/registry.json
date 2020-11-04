@@ -144,7 +144,7 @@
     },
     "moderation": {
         "repository": "Vincysuper07/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Moderate your server with Modmail, bring the Mod to Modmail!",
         "bot_version": "3.0.3",
         "title": "Moderate your server",
