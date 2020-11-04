@@ -350,6 +350,16 @@
       "See also: `thread_close_title`, `thread_close_footer`, `thread_close_response`."
     ]
   },
+  "thread_move_title": {
+    "default": "Thread Moved",
+    "description": "The title of the message embed when a thread is moved.",
+    "examples": [
+      "`{prefix}config set thread_move_title Thread transferred to another channel!"
+    ],
+    "notes": [
+      "See also: `thread_move_notify`, `thread_move_response`."
+    ]
+  },
   "thread_move_notify": {
     "default": "No",
     "description": "Notify the recipient if the thread was moved.",
@@ -358,7 +368,7 @@
       "`{prefix}config set thread_move_notify no`"
     ],
     "notes": [
-      "See also: `thread_move_response`."
+      "See also: `thread_move_title`, `thread_move_response`."
     ]
   },
   "thread_move_response": {
@@ -369,7 +379,7 @@
     ],
     "notes": [
       "Only has an effect when `thread_move_notify` is on.",
-      "See also: `thread_move_notify`."
+      "See also: `thread_move_title`, `thread_move_notify`."
     ]
   },
   "disabled_new_thread_title": {

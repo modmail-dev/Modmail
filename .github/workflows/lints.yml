@@ -31,4 +31,4 @@ jobs:
       continue-on-error: true
     - name: Black and flake8
       run: |
-        black . --check
+        black . --diff

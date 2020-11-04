@@ -316,6 +316,7 @@ class Thread:
             {
                 "open": False,
                 "closed_at": str(datetime.utcnow()),
+                "nsfw": self.channel.nsfw,
                 "close_message": message if not silent else None,
                 "closer": {
                     "id": str(closer.id),
@@ -339,7 +340,12 @@ class Thread:
             else:
                 sneak_peak = "No content"
 
-            desc = f"[`{log_data['key']}`]({log_url}): "
+            if self.channel.nsfw:
+                _nsfw = "NSFW-"
+            else:
+                _nsfw = ""
+
+            desc = f"[`{_nsfw}{log_data['key']}`]({log_url}): "
             desc += truncate(sneak_peak, max=75 - 13)
         else:
             desc = "Could not resolve log url."
@@ -361,7 +367,7 @@ class Thread:
 
         event = "Thread Closed as Scheduled" if scheduled else "Thread Closed"
         # embed.set_author(name=f"Event: {event}", url=log_url)
-        embed.set_footer(text=f"{event} by {_closer}")
+        embed.set_footer(text=f"{event} by {_closer}", icon_url=closer.avatar_url)
         embed.timestamp = datetime.utcnow()
 
         tasks = [self.bot.config.update()]

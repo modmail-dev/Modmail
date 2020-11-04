@@ -1,4 +1,4 @@
-__version__ = "3.5.0"
+__version__ = "3.6.2"
 
 
 import asyncio
@@ -53,7 +53,8 @@ if sys.platform == "win32":
 
 class ModmailBot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=None)  # implemented in `get_prefix`
+        intents = discord.Intents.all()
+        super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
         self._session = None
         self._api = None
         self.metadata_loop = None
@@ -89,9 +90,12 @@ class ModmailBot(commands.Bot):
 
     def startup(self):
         logger.line()
-        logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
-        logger.info("││││ │ │││││├─┤││")
-        logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
+        if os.name != "nt":
+            logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
+            logger.info("││││ │ │││││├─┤││")
+            logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
+        else:
+            logger.info("MODMAIL")
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
@@ -163,6 +167,10 @@ class ModmailBot(commands.Bot):
             pass
         except discord.LoginFailure:
             logger.critical("Invalid token")
+        except discord.PrivilegedIntentsRequired:
+            logger.critical(
+                "Privileged intents are not explicitly granted in the discord developers dashboard."
+            )
         except Exception:
             logger.critical("Fatal exception", exc_info=True)
         finally:

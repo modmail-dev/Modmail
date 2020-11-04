@@ -284,28 +284,49 @@ class Modmail(commands.Cog):
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(usage="<category> [options]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @checks.thread_only()
-    async def move(self, ctx, category: discord.CategoryChannel, *, specifics: str = None):
+    async def move(self, ctx, *, arguments):
         """
         Move a thread to another category.
 
         `category` may be a category ID, mention, or name.
-        `specifics` is a string which takes in arguments on how to perform the move. Ex: "silently"
+        `options` is a string which takes in arguments on how to perform the move. Ex: "silently"
         """
+        split_args = arguments.strip('"').split(" ")
+
+        # manually parse arguments, consumes as much of args as possible for category
+        for i in range(len(split_args)):
+            try:
+                if i == 0:
+                    fmt = arguments
+                else:
+                    fmt = " ".join(split_args[:-i])
+
+                category = await commands.CategoryChannelConverter().convert(ctx, fmt)
+            except commands.BadArgument:
+                if i == len(split_args) - 1:
+                    # last one
+                    raise
+                pass
+            else:
+                break
+
+        options = " ".join(arguments.split(" ")[-i:])
+
         thread = ctx.thread
         silent = False
 
-        if specifics:
+        if options:
             silent_words = ["silent", "silently"]
-            silent = any(word in silent_words for word in specifics.split())
+            silent = any(word in silent_words for word in options.split())
 
         await thread.channel.edit(category=category, sync_permissions=True)
 
         if self.bot.config["thread_move_notify"] and not silent:
             embed = discord.Embed(
-                title="Thread Moved",
+                title=self.bot.config["thread_move_title"],
                 description=self.bot.config["thread_move_response"],
                 color=self.bot.main_color,
             )

@@ -6,6 +6,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
+# v3.6.2
+
+### Fixed
+
+- Plugins downloading requirements in virtual environments
+
+
+# v3.6.1
+
+### Added
+
+- Proper error message if privileged intents not explicitly granted to bot.
+
+
+# v3.6.0
+
+### Added
+
+- Added `thread_move_title` to specify title of thread moved embed.
+- Mark NSFW logs in log message. ([GH #2792](https://github.com/kyb3r/modmail/issues/2792))
+- Icon for moderator that closed the thread in log message. ([GH #2828](https://github.com/kyb3r/modmail/issues/2828))
+- Ability to set mentions via user/role ID. ([GH #2796](https://github.com/kyb3r/modmail/issues/2796))
+
+### Changed
+
+- `?move` now consumes rest in category name, which means `?move Long Category Name` works without quotes!
+- `?help` shows "No command description" if no description provided. ([PR #2845](https://github.com/kyb3r/modmail/pull/2845))
+
+### Fixed
+- Unicode errors raised during windows selfhosting
+
+### Internal
+
+- Bump discord.py version to 1.5.1
+- Explicitly state intents used for connection
+- Use `--diff` for black CI instead of `--check` ([GH#2816](https://github.com/kyb3r/modmail/issues/2816))
+
 
 # v3.5.0
 
@@ -14,7 +51,7 @@ Fixed discord.py issue.
 ### Added
 
 - A confirmation when you manually delete a thread message embed.
-- Config var `enable_eval` defaults true, set `enable_eval=no` to disable the eval command. (GH #2803)
+- Config var `enable_eval` defaults true, set `enable_eval=no` to disable the eval command. ([GH #2803](https://github.com/kyb3r/modmail/issues/2803))
 - Added `?plugins reset` command to completely reset everything related to plugins. This will fix some problems caused by broken plugins in the file system.
 - Support private GitHub repos for plugins (thanks to @officialpiyush pr#2767)
 
