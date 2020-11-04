@@ -10,9 +10,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Added
 
-- Plain replies: added commands `preply`, `pareply`, added config `plain_reply_without_command`. Only works from mod to users. ([GH#2872](https://github.com/kyb3r/modmail/issues/2872))
+- Plain replies: added commands `preply`, `pareply`, added config `plain_reply_without_command`. Only works from mod to users. ([GH #2872](https://github.com/kyb3r/modmail/issues/2872))
 - React to start a thread, added configs `react_to_contact_message`, `react_to_contact_emoji`.
-- Mention mods after move: added config `thread_move_notify_mods` ([GH#215](https://github.com/kyb3r/modmail/issues/215))
+- Mention mods after move: added config `thread_move_notify_mods` ([GH #215](https://github.com/kyb3r/modmail/issues/215))
+- Added `transfer_reactions` config var ([GH #2763](https://github.com/kyb3r/modmail/issues/2763))
 
 ### Fixed
 

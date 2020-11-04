@@ -1009,10 +1009,12 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to remove reaction: %s", e)
 
     async def on_raw_reaction_add(self, payload):
-        await self.handle_reaction_events(payload)
+        if self.config["transfer_reactions"]:
+            await self.handle_reaction_events(payload)
 
     async def on_raw_reaction_remove(self, payload):
-        await self.handle_reaction_events(payload)
+        if self.config["transfer_reactions"]:
+            await self.handle_reaction_events(payload)
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:

@@ -68,6 +68,7 @@ class ConfigManager:
         "disabled_current_thread_title": "Not Delivered",
         "disabled_current_thread_response": "We are not accepting any messages.",
         "disabled_current_thread_footer": "Please try again later...",
+        "transfer_reactions": True,
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -140,6 +141,7 @@ class ConfigManager:
         "thread_auto_close_silently",
         "thread_move_notify",
         "thread_move_notify_mods",
+        "transfer_reactions",
         "enable_plugins",
         "enable_eval",
     }

@@ -558,11 +558,19 @@
     "default": "\u2705",
     "description": "An emoji which is tracked in `react_to_contact_message`",
     "examples": [
-      "`{prefix}config set react_to_contact_emoji 773575608814534717`"
+      "`{prefix}config set react_to_contact_emoji \u2705`"
     ],
     "notes": [
       "See also: `react_to_contact_message \u2705`"
     ]
+  },
+  "transfer_reactions": {
+    "default": "Yes",
+    "description": "Transfer users reactions to mods and vice versa",
+    "examples":[
+      "`{prefix}config set transfer_reactions no"
+    ],
+    "notes": []
   },
   "modmail_guild_id": {
     "default": "Fallback on `GUILD_ID`",
