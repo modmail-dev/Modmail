@@ -332,6 +332,11 @@ class Modmail(commands.Cog):
             )
             await thread.recipient.send(embed=embed)
 
+        if self.bot.config["thread_move_notify_mods"]:
+            mention = self.bot.config["mention"]
+            await thread.channel.send(f'{mention}, thread has been moved.')
+
+
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 

@@ -368,7 +368,7 @@
       "`{prefix}config set thread_move_title Thread transferred to another channel!"
     ],
     "notes": [
-      "See also: `thread_move_notify`, `thread_move_response`."
+      "See also: `thread_move_notify`, `thread_move_notify_mods`, `thread_move_response`."
     ]
   },
   "thread_move_notify": {
@@ -379,7 +379,18 @@
       "`{prefix}config set thread_move_notify no`"
     ],
     "notes": [
-      "See also: `thread_move_title`, `thread_move_response`."
+      "See also: `thread_move_title`, `thread_move_response`, `thread_move_notify_mods`."
+    ]
+  },
+  "thread_move_notify_mods": {
+    "default": "No",
+    "description": "Notify mods again after the thread is moved",
+    "examples": [
+      "`{prefix}config set thread_move_notify_mods yes`",
+      "`{prefix}config set thread_move_notify_mods no`"
+    ],
+    "notes": [
+      "See also: `thread_move_title`, `thread_move_response`, `thread_move_notify`."
     ]
   },
   "thread_move_response": {

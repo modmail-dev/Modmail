@@ -60,6 +60,7 @@ class ConfigManager:
         "thread_self_close_response": "You have closed this Modmail thread.",
         "thread_move_title": "Thread Moved",
         "thread_move_notify": False,
+        "thread_move_notify_mods": False,
         "thread_move_response": "This thread has been moved.",
         "disabled_new_thread_title": "Not Delivered",
         "disabled_new_thread_response": "We are not accepting new threads.",
@@ -138,6 +139,7 @@ class ConfigManager:
         "recipient_thread_close",
         "thread_auto_close_silently",
         "thread_move_notify",
+        "thread_move_notify_mods",
         "enable_plugins",
         "enable_eval",
     }
