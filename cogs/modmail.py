@@ -334,8 +334,7 @@ class Modmail(commands.Cog):
 
         if self.bot.config["thread_move_notify_mods"]:
             mention = self.bot.config["mention"]
-            await thread.channel.send(f'{mention}, thread has been moved.')
-
+            await thread.channel.send(f"{mention}, thread has been moved.")
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -914,7 +913,7 @@ class Modmail(commands.Cog):
         user: Union[discord.Member, discord.User],
         *,
         category: discord.CategoryChannel = None,
-        manual_trigger = True
+        manual_trigger=True,
     ):
         """
         Create a thread with a specified member.
@@ -950,7 +949,12 @@ class Modmail(commands.Cog):
                 description = "You have opened a Modmail thread."
             else:
                 description = f"{ctx.author.name} has opened a Modmail thread."
-            em = discord.Embed(title="New Thread", description=description, color=self.bot.main_color, timestamp=datetime.utcnow())
+            em = discord.Embed(
+                title="New Thread",
+                description=description,
+                color=self.bot.main_color,
+                timestamp=datetime.utcnow(),
+            )
             em.set_footer(icon_url=ctx.author.avatar_url)
             await user.send(embed=em)
 
@@ -977,7 +981,7 @@ class Modmail(commands.Cog):
                 if payload.emoji.is_unicode_emoji():
                     emoji_fmt = payload.emoji.name
                 else:
-                    emoji_fmt = f'<:{payload.emoji.name}:{payload.emoji.id}>'
+                    emoji_fmt = f"<:{payload.emoji.name}:{payload.emoji.id}>"
 
                 if emoji_fmt == react_message_emoji:
                     channel = self.bot.get_channel(payload.channel_id)
@@ -988,7 +992,6 @@ class Modmail(commands.Cog):
                     ctx = await self.bot.get_context(message)
                     ctx.author = member
                     await ctx.invoke(self.contact, user=member, manual_trigger=False)
-
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)

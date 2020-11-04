@@ -1060,7 +1060,11 @@ class ModmailBot(commands.Bot):
         thread = await self.threads.find(recipient=member)
         if thread:
             if self.config["close_on_leave"]:
-                await thread.close(closer=member.guild.me, message="The recipient has left the server.", silent=True)
+                await thread.close(
+                    closer=member.guild.me,
+                    message="The recipient has left the server.",
+                    silent=True,
+                )
             else:
                 embed = discord.Embed(
                     description="The recipient has left the server.", color=self.error_color

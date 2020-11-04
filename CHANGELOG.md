@@ -10,14 +10,15 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Added
 
-- Plain replies: added commands `preply`, `pareply`, added config `plain_reply_without_command`. Only works from mod to users. ([GH #2872](https://github.com/kyb3r/modmail/issues/2872))
-- React to start a thread, added configs `react_to_contact_message`, `react_to_contact_emoji`.
-- Mention mods after move: added config `thread_move_notify_mods` ([GH #215](https://github.com/kyb3r/modmail/issues/215))
-- Added `transfer_reactions` config var ([GH #2763](https://github.com/kyb3r/modmail/issues/2763))
+- Plain replies functionality. Added commands `preply`, `pareply` and config `plain_reply_without_command`. ([GH #2872](https://github.com/kyb3r/modmail/issues/2872))
+- Added `react_to_contact_message`, `react_to_contact_emoji` to allow users to create threads by reacting to a message.
+- Added `thread_move_notify_mods` to mention all mods again after moving thread. ([GH #215](https://github.com/kyb3r/modmail/issues/215))
+- Added `transfer_reactions` to link reactions between mods and users. ([GH #2763](https://github.com/kyb3r/modmail/issues/2763))
+- Added `close_on_leave` to automatically close threads upon recipient leaving the server. ([GH #2757](https://github.com/kyb3r/modmail/issues/2757))
 
 ### Fixed
 
-- `?contact` now sends members a DM 
+- `?contact` now sends members a DM.
 
 ### Improved
 
@@ -27,7 +28,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Fixed
 
-- Plugins downloading requirements in virtual environments
+- Plugins downloading requirements in virtual environments.
 
 
 # v3.6.1
