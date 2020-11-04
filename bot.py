@@ -1059,10 +1059,13 @@ class ModmailBot(commands.Bot):
             return
         thread = await self.threads.find(recipient=member)
         if thread:
-            embed = discord.Embed(
-                description="The recipient has left the server.", color=self.error_color
-            )
-            await thread.channel.send(embed=embed)
+            if self.config["close_on_leave"]:
+                await thread.close(closer=member.guild.me, message="The recipient has left the server.", silent=True)
+            else:
+                embed = discord.Embed(
+                    description="The recipient has left the server.", color=self.error_color
+                )
+                await thread.channel.send(embed=embed)
 
     async def on_member_join(self, member):
         if member.guild != self.guild:
