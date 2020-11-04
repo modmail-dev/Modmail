@@ -75,6 +75,9 @@ class ConfigManager:
         "anon_username": None,
         "anon_avatar_url": None,
         "anon_tag": "Response",
+        # react to contact
+        "react_to_contact_message": None,
+        "react_to_contact_emoji": "\u2705",
     }
 
     private_keys = {

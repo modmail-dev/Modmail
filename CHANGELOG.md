@@ -9,7 +9,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 # v3.6.3-dev1
 
 ### Added
-- Plain replies: added commands `preply`, `pareply`, added config `plain_reply_without_command`. Only works from mod to users.
+
+- Plain replies: added commands `preply`, `pareply`, added config `plain_reply_without_command`. Only works from mod to users. ([#2872](https://github.com/kyb3r/modmail/issues/2872))
+- React to start a thread, added configs `react_to_contact_message`, `react_to_contact_emoji`.
+
+### Fixed
+
+- `?contact` now sends members a DM 
 
 ### Improved
 

@@ -909,6 +909,7 @@ class Modmail(commands.Cog):
         user: Union[discord.Member, discord.User],
         *,
         category: discord.CategoryChannel = None,
+        manual_trigger = True
     ):
         """
         Create a thread with a specified member.
@@ -924,7 +925,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 color=self.bot.error_color, description="Cannot start a thread with a bot."
             )
-            return await ctx.send(embed=embed)
+            return await ctx.send(embed=embed, delete_afer=3)
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
@@ -933,12 +934,20 @@ class Modmail(commands.Cog):
                 description="A thread for this user already "
                 f"exists in {exists.channel.mention}.",
             )
-            await ctx.channel.send(embed=embed)
+            await ctx.channel.send(embed=embed, delete_after=3)
 
         else:
             thread = await self.bot.threads.create(user, creator=ctx.author, category=category)
             if self.bot.config["dm_disabled"] >= 1:
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
+
+            if ctx.author.id == user.id:
+                description = "You have opened a Modmail thread."
+            else:
+                description = f"{ctx.author.name} has opened a Modmail thread."
+            em = discord.Embed(title="New Thread", description=description, color=self.bot.main_color, timestamp=datetime.utcnow())
+            em.set_footer(icon_url=ctx.author.avatar_url)
+            await user.send(embed=em)
 
             embed = discord.Embed(
                 title="Created Thread",
@@ -947,10 +956,34 @@ class Modmail(commands.Cog):
             )
             await thread.wait_until_ready()
             await thread.channel.send(embed=embed)
-            sent_emoji, _ = await self.bot.retrieve_emoji()
-            await self.bot.add_reaction(ctx.message, sent_emoji)
-            await asyncio.sleep(3)
-            await ctx.message.delete()
+
+            if manual_trigger:
+                sent_emoji, _ = await self.bot.retrieve_emoji()
+                await self.bot.add_reaction(ctx.message, sent_emoji)
+                await asyncio.sleep(5)
+                await ctx.message.delete()
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        react_message_id = int(self.bot.config.get("react_to_contact_message"))
+        react_message_emoji = self.bot.config.get("react_to_contact_emoji")
+        if all((react_message_id, react_message_emoji)):
+            if payload.message_id == react_message_id:
+                if payload.emoji.is_unicode_emoji():
+                    emoji_fmt = payload.emoji.name
+                else:
+                    emoji_fmt = f'<:{payload.emoji.name}:{payload.emoji.id}>'
+
+                if emoji_fmt == react_message_emoji:
+                    channel = self.bot.get_channel(payload.channel_id)
+                    member = channel.guild.get_member(payload.user_id)
+                    message = await channel.fetch_message(payload.message_id)
+                    await message.remove_reaction(payload.emoji, member)
+
+                    ctx = await self.bot.get_context(message)
+                    ctx.author = member
+                    await ctx.invoke(self.contact, user=member, manual_trigger=False)
+
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
