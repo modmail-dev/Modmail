@@ -831,6 +831,34 @@ class Modmail(commands.Cog):
         async with ctx.typing():
             await ctx.thread.reply(ctx.message, anonymous=True)
 
+    @commands.command(aliases=["plainreply"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def preply(self, ctx, *, msg: str = ""):
+        """
+        Reply to a Modmail thread with a plain message.
+
+        Supports attachments and images as well as
+        automatically embedding image URLs.
+        """
+        ctx.message.content = msg
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message, plain=True)
+
+    @commands.command(aliases=["plainanonreply", "plainanonymousreply"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def pareply(self, ctx, *, msg: str = ""):
+        """
+        Reply to a Modmail thread with a plain message and anonmymously.
+
+        Supports attachments and images as well as
+        automatically embedding image URLs.
+        """
+        ctx.message.content = msg
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message, anonymous=True, plain=True)
+
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()

@@ -39,6 +39,7 @@ class ConfigManager:
         "thread_cooldown": isodate.Duration(),
         "reply_without_command": False,
         "anon_reply_without_command": False,
+        "plain_reply_without_command": False,
         # logging
         "log_channel_id": None,
         # threads
@@ -130,6 +131,7 @@ class ConfigManager:
         "mod_typing",
         "reply_without_command",
         "anon_reply_without_command",
+        "plain_reply_without_command",
         "recipient_thread_close",
         "thread_auto_close_silently",
         "thread_move_notify",

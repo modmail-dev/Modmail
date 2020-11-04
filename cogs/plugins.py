@@ -172,10 +172,10 @@ class Plugins(commands.Cog):
                 except UnicodeDecodeError:
                     pass
                 else:
-                    if raw == 'Not Found':
-                        raise InvalidPluginError('Plugin not found')
+                    if raw == "Not Found":
+                        raise InvalidPluginError("Plugin not found")
                     else:
-                        raise InvalidPluginError('Invalid download recieved, non-bytes object')
+                        raise InvalidPluginError("Invalid download recieved, non-bytes object")
 
                 plugin_io = io.BytesIO(raw)
                 if not plugin.cache_path.parent.exists():

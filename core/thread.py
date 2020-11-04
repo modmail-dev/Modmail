@@ -1,4 +1,5 @@
 import asyncio
+import io
 import re
 import typing
 from datetime import datetime, timedelta
@@ -619,7 +620,9 @@ class Thread:
 
         return msg
 
-    async def reply(self, message: discord.Message, anonymous: bool = False) -> None:
+    async def reply(
+        self, message: discord.Message, anonymous: bool = False, plain: bool = False
+    ) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
         if not any(g.get_member(self.id) for g in self.bot.guilds):
@@ -635,7 +638,11 @@ class Thread:
 
         try:
             await self.send(
-                message, destination=self.recipient, from_mod=True, anonymous=anonymous
+                message,
+                destination=self.recipient,
+                from_mod=True,
+                anonymous=anonymous,
+                plain=plain,
             )
         except Exception:
             logger.error("Message delivery failed:", exc_info=True)
@@ -653,7 +660,7 @@ class Thread:
         else:
             # Send the same thing in the thread channel.
             msg = await self.send(
-                message, destination=self.channel, from_mod=True, anonymous=anonymous
+                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain
             )
 
             tasks.append(
@@ -688,6 +695,7 @@ class Thread:
         from_mod: bool = False,
         note: bool = False,
         anonymous: bool = False,
+        plain: bool = False,
     ) -> None:
 
         self.bot.loop.create_task(
@@ -851,7 +859,31 @@ class Thread:
         else:
             mentions = None
 
-        msg = await destination.send(mentions, embed=embed)
+        if plain:
+            if from_mod and not isinstance(destination, discord.TextChannel):
+                # Plain to user
+                if embed.footer.text:
+                    plain_message = f"**({embed.footer.text}) "
+                else:
+                    plain_message = "**"
+                plain_message += f"{embed.author.name}:** {embed.description}"
+                files = []
+                for i in embed.fields:
+                    if "Image" in i.name:
+                        async with self.bot.session.get(
+                            i.field[i.field.find("http") : -1]
+                        ) as resp:
+                            stream = io.BytesIO(await resp.read())
+                            files.append(discord.File(stream))
+
+                msg = await destination.send(plain_message, files=files)
+            else:
+                # Plain to mods
+                embed.set_footer(text="[PLAIN] " + embed.footer.text)
+                msg = await destination.send(mentions, embed=embed)
+
+        else:
+            msg = await destination.send(mentions, embed=embed)
 
         if additional_images:
             self.ready = False

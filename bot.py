@@ -1,4 +1,4 @@
-__version__ = "3.6.3-dev0"
+__version__ = "3.6.3-dev1"
 
 
 import asyncio
@@ -896,10 +896,19 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.find(channel=ctx.channel)
             if thread is not None:
+                anonymous = False
+                plain = False
                 if self.config.get("anon_reply_without_command"):
-                    await thread.reply(message, anonymous=True)
-                elif self.config.get("reply_without_command"):
-                    await thread.reply(message)
+                    anonymous = True
+                if self.config.get("plain_reply_without_command"):
+                    plain = True
+
+                if (
+                    self.config.get("reply_without_command")
+                    or self.config.get("anon_reply_without_command")
+                    or self.config.get("plain_reply_without_command")
+                ):
+                    await thread.reply(message, anonymous=anonymous, plain=plain)
                 else:
                     await self.api.append_log(message, type_="internal")
             elif ctx.invoked_with:

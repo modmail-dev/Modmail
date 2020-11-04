@@ -139,7 +139,7 @@
       "`{prefix}config set reply_without_command no`"
     ],
     "notes": [
-      "See also: `anon_reply_without_command`."
+      "See also: `anon_reply_without_command`, `plain_reply_without_command`."
     ]
   },
   "anon_reply_without_command": {
@@ -150,7 +150,18 @@
       "`{prefix}config set anon_reply_without_command no`"
     ],
     "notes": [
-      "See also: `reply_without_command`."
+      "See also: `reply_without_command`, `plain_reply_without_command`."
+    ]
+  },
+  "plain_reply_without_command": {
+    "default": "Disabled",
+    "description": "Setting this configuration will make all non-command messages sent in the thread channel to be forwarded to the recipient in a plain form without the need of `{prefix}reply`.",
+    "examples": [
+      "`{prefix}config set plain_reply_without_command yes`",
+      "`{prefix}config set plain_reply_without_command no`"
+    ],
+    "notes": [
+      "See also: `reply_without_command`, `anon_reply_without_command`."
     ]
   },
   "log_channel_id": {

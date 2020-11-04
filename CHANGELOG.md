@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
-# v3.6.3-dev0
+# v3.6.3-dev1
+
+### Added
+- Plain replies: added commands `preply`, `pareply`, added config `plain_reply_without_command`. Only works from mod to users.
 
 ### Improved
 
