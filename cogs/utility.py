@@ -38,8 +38,8 @@ class ModmailHelpCommand(commands.HelpCommand):
             self.verify_checks = True
         else:
             self.verify_checks = False
-        
-        if command == 'all':
+
+        if command == "all":
             command = None
 
         return await super().command_callback(ctx, command=command)

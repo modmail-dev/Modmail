@@ -325,6 +325,10 @@ class ModmailBot(commands.Bot):
         return self.config["blocked"]
 
     @property
+    def blocked_roles(self) -> typing.Dict[str, str]:
+        return self.config["blocked_roles"]
+
+    @property
     def blocked_whitelisted_users(self) -> typing.List[str]:
         return self.config["blocked_whitelist"]
 
@@ -578,6 +582,36 @@ class ModmailBot(commands.Bot):
             return False
         return True
 
+    def check_manual_blocked_roles(self, author: discord.Member) -> bool:
+        for r in author.roles:
+            if str(r.id) in self.blocked_roles:
+
+                blocked_reason = self.blocked_roles.get(str(r.id)) or ""
+                now = datetime.utcnow()
+
+                # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
+                end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
+                if end_time is None:
+                    # backwards compat
+                    end_time = re.search(r"%([^%]+?)%", blocked_reason)
+                    if end_time is not None:
+                        logger.warning(
+                            r"Deprecated time message for user %s, block and unblock again to update.",
+                            author.name,
+                        )
+
+                if end_time is not None:
+                    after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
+                    if after <= 0:
+                        # No longer blocked
+                        self.blocked_users.pop(str(author.id))
+                        logger.debug("No longer blocked, user %s.", author.name)
+                        return True
+                logger.debug("User blocked, user %s.", author.name)
+                return False
+
+        return True
+
     def check_manual_blocked(self, author: discord.Member) -> bool:
         if str(author.id) not in self.blocked_users:
             return True
@@ -654,6 +688,9 @@ class ModmailBot(commands.Bot):
             return True
 
         if not self.check_manual_blocked(author):
+            return True
+
+        if not self.check_manual_blocked_roles(author):
             return True
 
         await self.config.update()

@@ -20,6 +20,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Support Gyazo image links in message embeds. ([GH #282](https://github.com/kyb3r/modmail/issues/282))
 - Added `silent` argument to `?contact` to restore old behaviour.
 - If `?help` is sent, bot does checks on every command, `?help all` restores old behaviour. ([GH #2847](https://github.com/kyb3r/modmail/issues/2847))
+- Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
 
 ### Fixed
 

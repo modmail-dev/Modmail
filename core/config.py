@@ -101,6 +101,7 @@ class ConfigManager:
         "oauth_whitelist": [],
         # moderation
         "blocked": {},
+        "blocked_roles": {},
         "blocked_whitelist": [],
         "command_permissions": {},
         "level_permissions": {},
