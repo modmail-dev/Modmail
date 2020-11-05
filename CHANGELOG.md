@@ -22,6 +22,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - If `?help` is sent, bot does checks on every command, `?help all` restores old behaviour. ([GH #2847](https://github.com/kyb3r/modmail/issues/2847))
 - Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
 - Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/kyb3r/modmail/issues/2865))
+- Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/kyb3r/modmail/issues/2762))
 
 ### Fixed
 

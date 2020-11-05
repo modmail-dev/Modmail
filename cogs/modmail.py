@@ -906,6 +906,11 @@ class Modmail(commands.Cog):
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.REGULAR)
+    async def selfcontact(self, ctx):
+        await ctx.invoke(self.contact, user=ctx.author)
+
     @commands.command(usage="<user> [category] [options]")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def contact(
