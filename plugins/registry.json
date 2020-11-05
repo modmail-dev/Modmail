@@ -204,5 +204,14 @@
         "title": "Translate",
         "icon_url": "https://i.imgur.com/yeHFKgl.png",
         "thumbnail_url": "https://i.imgur.com/yeHFKgl.png"
+    },
+    "countdowns": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "master",
+        "description": "Setup a countdown voice channel in your server!",
+        "bot_version": "3.6.2",
+        "title": "Countdowns",
+        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
+        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
     }
 }
