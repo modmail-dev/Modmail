@@ -988,7 +988,7 @@ class Modmail(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        react_message_id = int(self.bot.config.get("react_to_contact_message"))
+        react_message_id = tryint(self.bot.config.get("react_to_contact_message"))
         react_message_emoji = self.bot.config.get("react_to_contact_emoji")
         if all((react_message_id, react_message_emoji)):
             if payload.message_id == react_message_id:

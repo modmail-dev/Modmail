@@ -863,7 +863,7 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         def fmt(val):
-            return val.format(prefix=self.bot.prefix, bot=self.bot)
+            return val.format(prefix=self.bot.prefix, bot=self.bot, delta='{delta}')
 
         index = 0
         embeds = []

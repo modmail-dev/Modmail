@@ -29,6 +29,7 @@ __all__ = [
     "trigger_typing",
     "escape_code_block",
     "format_channel_name",
+    "tryint",
 ]
 
 
@@ -117,7 +118,7 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
     return out or "No Messages"
 
 
-def is_image_url(url: str, **kwargs) -> bool:
+def is_image_url(url: str, **kwargs) -> str:
     """
     Check if the URL is pointing to an image.
 
@@ -327,3 +328,10 @@ def format_channel_name(author, guild, exclude_channel=None):
         counter += 1
 
     return new_name
+
+
+def tryint(x):
+    try:
+        return int(x)
+    except ValueError:
+        return x

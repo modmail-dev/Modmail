@@ -419,7 +419,7 @@
     "default": "You must wait for {delta} before you can contact me again.",
     "description": "The description of the message embed when the user has a cooldown before creating a new thread.",
     "examples": [
-      "`{prefix}config set cooldown_thread_response Be patient! You are on cooldown, wait {delta} more."
+      "`{prefix}config set cooldown_thread_response Be patient! You are on cooldown, wait {delta} more.`"
     ],
     "notes": [
       "Only has an effect when `thread_cooldown` is set",
@@ -591,7 +591,7 @@
     "default": "Yes",
     "description": "Transfer users reactions to mods and vice versa",
     "examples":[
-      "`{prefix}config set transfer_reactions no"
+      "`{prefix}config set transfer_reactions no`"
     ],
     "notes": []
   },
@@ -599,7 +599,7 @@
     "default": "No",
     "description": "Closes a modmail thread upon user leave automatically",
     "examples":[
-      "`{prefix}config set close_on_leave yes"
+      "`{prefix}config set close_on_leave yes`"
     ],
     "notes": []
   },
@@ -607,7 +607,7 @@
     "default": "No",
     "description": "Mentions all mods (mention) in logs channel when bot is mentioned",
     "examples":[
-      "`{prefix}config set alert_on_mention yes"
+      "`{prefix}config set alert_on_mention yes`"
     ],
     "notes": [
       "See also: `mention`"
@@ -617,7 +617,7 @@
     "default": "No",
     "description": "Ensure users confirm that they want to create a new thread",
     "examples":[
-      "`{prefix}config set confirm_thread_creation yes"
+      "`{prefix}config set confirm_thread_creation yes`"
     ],
     "notes": [
       "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
@@ -627,7 +627,7 @@
     "default": "Confirm thread creation",
     "description": "Title for the embed message sent to users to confirm a thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_creation_title Are you sure you want to create a new thread?"
+      "`{prefix}config set confirm_thread_creation_title Are you sure you want to create a new thread?`"
     ],
     "notes": [
       "See also: `confirm_thread_creation`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
@@ -637,7 +637,7 @@
     "default": "React to confirm thread creation which will directly contact the moderators",
     "description": "Description for the embed message sent to users to confirm a thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_response React to confirm"
+      "`{prefix}config set confirm_thread_response React to confirm`"
     ],
     "notes": [
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
@@ -647,19 +647,21 @@
     "default": "\u2705",
     "description": "Emoji to accept a thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_creation_accept \u2611"
+      "`{prefix}config set confirm_thread_creation_accept \u2611`"
     ],
     "notes": [
+      "Has no effect unless `confirm_thread_creation` is set",
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_creation_deny": {
-    "default": "\u2705",
+    "default": "\uD83D\uDEAB",
     "description": "Emoji to accept deny thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_creation_deny \u26D4"
+      "`{prefix}config set confirm_thread_creation_deny \u26D4`"
     ],
     "notes": [
+      "Has no effect unless `confirm_thread_creation` is set",
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_accept`"
     ]
   },

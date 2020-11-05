@@ -50,7 +50,7 @@ class Thread:
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
         # timeout after 30 seconds
-        task = asyncio.create_task(asyncio.wait_for(self._ready_event.wait(), timeout=20))
+        task = asyncio.create_task(asyncio.wait_for(self._ready_event.wait(), timeout=25))
         self.wait_tasks.append(task)
         try:
             await task
@@ -346,8 +346,6 @@ class Thread:
                     },
                 },
             )
-        else:
-            log_data = None
 
         if isinstance(log_data, dict):
             prefix = self.bot.config["log_url_prefix"].strip("/")
@@ -393,7 +391,7 @@ class Thread:
 
         tasks = [self.bot.config.update()]
 
-        if self.bot.log_channel is not None:
+        if self.bot.log_channel is not None and self.channel is not None:
             tasks.append(self.bot.log_channel.send(embed=embed))
 
         # Thread closed message
