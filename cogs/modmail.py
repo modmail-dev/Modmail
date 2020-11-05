@@ -1158,14 +1158,16 @@ class Modmail(commands.Cog):
 
         mention = getattr(user_or_role, "mention", f"`{user_or_role.id}`")
 
-        if not isinstance(user_or_role, discord.Role):
-            if str(user_or_role.id) in self.bot.blocked_whitelisted_users:
-                embed = discord.Embed(
-                    title="Error",
-                    description=f"Cannot block {mention}, user is whitelisted.",
-                    color=self.bot.error_color,
-                )
-                return await ctx.send(embed=embed)
+        if (
+            not isinstance(user_or_role, discord.Role)
+            and str(user_or_role.id) in self.bot.blocked_whitelisted_users
+        ):
+            embed = discord.Embed(
+                title="Error",
+                description=f"Cannot block {mention}, user is whitelisted.",
+                color=self.bot.error_color,
+            )
+            return await ctx.send(embed=embed)
 
         reason = f"by {escape_markdown(ctx.author.name)}#{ctx.author.discriminator}"
 
@@ -1213,7 +1215,7 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
-    async def unblock(self, ctx, *, user: User = None):
+    async def unblock(self, ctx, *, user_or_role: Union[User, Role] = None):
         """
         Unblock a user from using Modmail.
 
@@ -1222,18 +1224,21 @@ class Modmail(commands.Cog):
         `user` may be a user ID, mention, or name.
         """
 
-        if user is None:
+        if user_or_role is None:
             thread = ctx.thread
             if thread:
-                user = thread.recipient
+                user_or_role = thread.recipient
             else:
                 raise commands.MissingRequiredArgument(SimpleNamespace(name="user"))
 
-        mention = getattr(user, "mention", f"`{user.id}`")
-        name = getattr(user, "name", f"`{user.id}`")
+        mention = getattr(user_or_role, "mention", f"`{user_or_role.id}`")
+        name = getattr(user_or_role, "name", f"`{user_or_role.id}`")
 
-        if str(user.id) in self.bot.blocked_users:
-            msg = self.bot.blocked_users.pop(str(user.id)) or ""
+        if (
+            not isinstance(user_or_role, discord.Role)
+            and str(user_or_role.id) in self.bot.blocked_users
+        ):
+            msg = self.bot.blocked_users.pop(str(user_or_role.id)) or ""
             await self.bot.config.update()
 
             if msg.startswith("System Message: "):
@@ -1249,7 +1254,7 @@ class Modmail(commands.Cog):
                 embed.set_footer(
                     text="However, if the original system block reason still applies, "
                     f"{name} will be automatically blocked again. "
-                    f'Use "{self.bot.prefix}blocked whitelist {user.id}" to whitelist the user.'
+                    f'Use "{self.bot.prefix}blocked whitelist {user_or_role.id}" to whitelist the user.'
                 )
             else:
                 embed = discord.Embed(
@@ -1257,6 +1262,18 @@ class Modmail(commands.Cog):
                     color=self.bot.main_color,
                     description=f"{mention} is no longer blocked.",
                 )
+        elif (
+            isinstance(user_or_role, discord.Role)
+            and str(user_or_role.id) in self.bot.blocked_roles
+        ):
+            msg = self.bot.blocked_roles.pop(str(user_or_role.id)) or ""
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"{mention} is no longer blocked.",
+            )
         else:
             embed = discord.Embed(
                 title="Error", description=f"{mention} is not blocked.", color=self.bot.error_color
