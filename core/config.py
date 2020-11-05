@@ -82,6 +82,12 @@ class ConfigManager:
         # react to contact
         "react_to_contact_message": None,
         "react_to_contact_emoji": "\u2705",
+        # confirm thread creation
+        "confirm_thread_creation": False,
+        "confirm_thread_creation_title": "Confirm thread creation",
+        "confirm_thread_creation_description": "React to confirm thread creation which will directly contact the moderators",
+        "confirm_thread_creation_accept": "\u2705",
+        "confirm_thread_creation_deny": "\U0001F6AB",
     }
 
     private_keys = {
@@ -146,6 +152,7 @@ class ConfigManager:
         "transfer_reactions",
         "close_on_leave",
         "alert_on_mention",
+        "confirm_thread_creation",
         "enable_plugins",
         "enable_eval",
     }

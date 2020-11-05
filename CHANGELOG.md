@@ -16,6 +16,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added `transfer_reactions` to link reactions between mods and users. ([GH #2763](https://github.com/kyb3r/modmail/issues/2763))
 - Added `close_on_leave` to automatically close threads upon recipient leaving the server. ([GH #2757](https://github.com/kyb3r/modmail/issues/2757))
 - Added `alert_on_mention` to mention mods upon a bot mention. ([GH #2833](https://github.com/kyb3r/modmail/issues/2833))
+- Added `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_description`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny` to allow users to confirm that they indeed want to create a new thread. ([GH #2773](https://github.com/kyb3r/modmail/issues/2773))
 
 ### Fixed
 

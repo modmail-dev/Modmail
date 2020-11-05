@@ -590,6 +590,56 @@
       "See also: `mention`"
     ]
   },
+  "confirm_thread_creation": {
+    "default": "No",
+    "description": "Ensure users confirm that they want to create a new thread",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation yes"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation_title`, `confirm_thread_creation_description`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_creation_title": {
+    "default": "Confirm thread creation",
+    "description": "Title for the embed message sent to users to confirm a thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation_title Are you sure you want to create a new thread?"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_description`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_creation_description": {
+    "default": "React to confirm thread creation which will directly contact the moderators",
+    "description": "Description for the embed message sent to users to confirm a thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation_description React to confirm"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_creation_accept": {
+    "default": "\u2705",
+    "description": "Emoji to accept a thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation_accept \u2611"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_description`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_creation_deny": {
+    "default": "\u2705",
+    "description": "Emoji to accept deny thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation_deny \u26D4"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_description`, confirm_thread_creation_accept`"
+    ]
+  },
   "modmail_guild_id": {
     "default": "Fallback on `GUILD_ID`",
     "description": "The ID of the discord server where the threads channels should be created (receiving server).",

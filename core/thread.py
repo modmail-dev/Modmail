@@ -39,19 +39,25 @@ class Thread:
         self._channel = channel
         self.genesis_message = None
         self._ready_event = asyncio.Event()
+        self.wait_tasks = []
         self.close_task = None
         self.auto_close_task = None
+        self._cancelled = False
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id})'
 
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
-        # timeout after 3 seconds
+        # timeout after 30 seconds
+        task = asyncio.create_task(asyncio.wait_for(self._ready_event.wait(), timeout=20))
+        self.wait_tasks.append(task)
         try:
-            await asyncio.wait_for(self._ready_event.wait(), timeout=3)
+            await task
         except asyncio.TimeoutError:
-            return
+            pass
+            
+        self.wait_tasks.remove(task)
 
     @property
     def id(self) -> int:
@@ -76,6 +82,17 @@ class Thread:
             self.bot.dispatch("thread_create", self)
         else:
             self._ready_event.clear()
+
+    @property
+    def cancelled(self) -> bool:
+        return self._cancelled
+    
+    @cancelled.setter
+    def cancelled(self, flag: bool):
+        self._cancelled = flag
+        if flag:
+            for i in self.wait_tasks:
+                i.cancel()
 
     async def setup(self, *, creator=None, category=None):
         """Create the thread channel and other io related initialisation tasks"""
@@ -312,22 +329,25 @@ class Thread:
         self.bot.config["notification_squad"].pop(str(self.id), None)
 
         # Logging
-        log_data = await self.bot.api.post_log(
-            self.channel.id,
-            {
-                "open": False,
-                "closed_at": str(datetime.utcnow()),
-                "nsfw": self.channel.nsfw,
-                "close_message": message if not silent else None,
-                "closer": {
-                    "id": str(closer.id),
-                    "name": closer.name,
-                    "discriminator": closer.discriminator,
-                    "avatar_url": str(closer.avatar_url),
-                    "mod": True,
+        if self.channel:
+            log_data = await self.bot.api.post_log(
+                self.channel.id,
+                {
+                    "open": False,
+                    "closed_at": str(datetime.utcnow()),
+                    "nsfw": self.channel.nsfw,
+                    "close_message": message if not silent else None,
+                    "closer": {
+                        "id": str(closer.id),
+                        "name": closer.name,
+                        "discriminator": closer.discriminator,
+                        "avatar_url": str(closer.avatar_url),
+                        "mod": True,
+                    },
                 },
-            },
-        )
+            )
+        else:
+            log_data = None
 
         if isinstance(log_data, dict):
             prefix = self.bot.config["log_url_prefix"].strip("/")
@@ -950,15 +970,20 @@ class ThreadManager:
 
         thread = self.cache.get(recipient_id)
         if thread is not None:
-            await thread.wait_until_ready()
-            if not thread.channel or not self.bot.get_channel(thread.channel.id):
-                logger.warning(
-                    "Found existing thread for %s but the channel is invalid.", recipient_id
-                )
-                self.bot.loop.create_task(
-                    thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-                )
-                thread = None
+            try:
+                await thread.wait_until_ready()
+            except asyncio.CancelledError:
+                logger.warning("Thread for %s cancelled, abort creating", recipient)
+                return thread
+            else:
+                if not thread.channel or not self.bot.get_channel(thread.channel.id):
+                    logger.warning(
+                        "Found existing thread for %s but the channel is invalid.", recipient_id
+                    )
+                    self.bot.loop.create_task(
+                        thread.close(closer=self.bot.user, silent=True, delete_channel=False)
+                    )
+                    thread = None
         else:
             channel = discord.utils.get(
                 self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"
@@ -1000,6 +1025,7 @@ class ThreadManager:
         self,
         recipient: typing.Union[discord.Member, discord.User],
         *,
+        message: discord.Message = None,
         creator: typing.Union[discord.Member, discord.User] = None,
         category: discord.CategoryChannel = None,
     ) -> Thread:
@@ -1008,14 +1034,19 @@ class ThreadManager:
         # checks for existing thread in cache
         thread = self.cache.get(recipient.id)
         if thread:
-            await thread.wait_until_ready()
-            if thread.channel and self.bot.get_channel(thread.channel.id):
-                logger.warning("Found an existing thread for %s, abort creating.", recipient)
+            try:
+                await thread.wait_until_ready()
+            except asyncio.CancelledError:
+                logger.warning("Thread for %s cancelled, abort creating", recipient)
                 return thread
-            logger.warning("Found an existing thread for %s, closing previous thread.", recipient)
-            self.bot.loop.create_task(
-                thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-            )
+            else:
+                if thread.channel and self.bot.get_channel(thread.channel.id):
+                    logger.warning("Found an existing thread for %s, abort creating.", recipient)
+                    return thread
+                logger.warning("Found an existing thread for %s, closing previous thread.", recipient)
+                self.bot.loop.create_task(
+                    thread.close(closer=self.bot.user, silent=True, delete_channel=False)
+                )
 
         thread = Thread(self, recipient)
 
@@ -1034,6 +1065,57 @@ class ThreadManager:
                 category = await cat.clone(name="Fallback Modmail")
                 self.bot.config.set("fallback_category_id", category.id)
                 await self.bot.config.update()
+
+        if message and self.bot.config["confirm_thread_creation"]:
+            confirm = await message.channel.send(
+                embed=discord.Embed(
+                    title=self.bot.config["confirm_thread_creation_title"],
+                    description=self.bot.config["confirm_thread_creation_description"],
+                    color=self.bot.main_color,
+                )
+            )
+            accept_emoji = self.bot.config["confirm_thread_creation_accept"]
+            deny_emoji = self.bot.config["confirm_thread_creation_deny"]
+            await confirm.add_reaction(accept_emoji)
+            await asyncio.sleep(0.2)
+            await confirm.add_reaction(deny_emoji)
+            try:
+                r, _ = await self.bot.wait_for(
+                    "reaction_add",
+                    check=lambda r, u: u.id == message.author.id
+                    and r.message.id == confirm.id
+                    and r.message.channel.id == confirm.channel.id
+                    and r.emoji in (accept_emoji, deny_emoji),
+                    timeout=20,
+                )
+            except asyncio.TimeoutError:
+                thread.cancelled = True
+
+                await confirm.remove_reaction(accept_emoji, self.bot.user)
+                await asyncio.sleep(0.2)
+                await confirm.remove_reaction(deny_emoji, self.bot.user)
+                await message.channel.send(
+                    embed=discord.Embed(
+                        title="Cancelled", description="Timed out", color=self.bot.error_color
+                    )
+                )
+                del self.cache[recipient.id]
+                return thread
+            else:
+                if r.emoji == deny_emoji:
+                    thread.cancelled = True
+
+                    await confirm.remove_reaction(accept_emoji, self.bot.user)
+                    await asyncio.sleep(0.2)
+                    await confirm.remove_reaction(deny_emoji, self.bot.user)
+                    await message.channel.send(
+                        embed=discord.Embed(
+                            title="Cancelled", color=self.bot.error_color
+                        )
+                    )
+                    del self.cache[recipient.id]
+                    return thread
+
 
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread
