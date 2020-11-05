@@ -404,6 +404,29 @@
       "See also: `thread_move_title`, `thread_move_notify`."
     ]
   },
+  "cooldown_thread_title": {
+    "default": "Message not sent!",
+    "description": "The title of the message embed when the user has a cooldown before creating a new thread.",
+    "examples": [
+      "`{prefix}config set cooldown_thread_title Error`"
+    ],
+    "notes": [
+      "Only has an effect when `thread_cooldown` is set",
+      "See also: `cooldown_thread_response`."
+    ]
+  },
+  "cooldown_thread_response": {
+    "default": "You must wait for {delta} before you can contact me again.",
+    "description": "The description of the message embed when the user has a cooldown before creating a new thread.",
+    "examples": [
+      "`{prefix}config set cooldown_thread_response Be patient! You are on cooldown, wait {delta} more."
+    ],
+    "notes": [
+      "Only has an effect when `thread_cooldown` is set",
+      "Must have a {delta} included which will be replaced with the duration of time.",
+      "See also: `cooldown_thread_title`."
+    ]
+  },
   "disabled_new_thread_title": {
     "default": "Not Delivered.",
     "description": "The title of the message embed when Modmail new thread creation is disabled and user tries to create a new thread.",
@@ -597,7 +620,7 @@
       "`{prefix}config set confirm_thread_creation yes"
     ],
     "notes": [
-      "See also: `confirm_thread_creation_title`, `confirm_thread_creation_description`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_creation_title": {
@@ -607,14 +630,14 @@
       "`{prefix}config set confirm_thread_creation_title Are you sure you want to create a new thread?"
     ],
     "notes": [
-      "See also: `confirm_thread_creation`, `confirm_thread_creation_description`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+      "See also: `confirm_thread_creation`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
     ]
   },
-  "confirm_thread_creation_description": {
+  "confirm_thread_response": {
     "default": "React to confirm thread creation which will directly contact the moderators",
     "description": "Description for the embed message sent to users to confirm a thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_creation_description React to confirm"
+      "`{prefix}config set confirm_thread_response React to confirm"
     ],
     "notes": [
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
@@ -627,7 +650,7 @@
       "`{prefix}config set confirm_thread_creation_accept \u2611"
     ],
     "notes": [
-      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_description`, confirm_thread_creation_deny`"
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_creation_deny": {
@@ -637,7 +660,7 @@
       "`{prefix}config set confirm_thread_creation_deny \u26D4"
     ],
     "notes": [
-      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_description`, confirm_thread_creation_accept`"
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_accept`"
     ]
   },
   "modmail_guild_id": {

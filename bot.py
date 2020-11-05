@@ -1,4 +1,4 @@
-__version__ = "3.6.3-dev2"
+__version__ = "3.7.0-dev3"
 
 
 import asyncio
@@ -753,8 +753,8 @@ class ModmailBot(commands.Bot):
             if delta:
                 await message.channel.send(
                     embed=discord.Embed(
-                        title="Message not sent!",
-                        description=f"You must wait for {delta} before you can contact me again.",
+                        title=self.config["cooldown_thread_title"],
+                        description=self.config["cooldown_thread_response"].format(delta=delta),
                         color=self.error_color,
                     )
                 )

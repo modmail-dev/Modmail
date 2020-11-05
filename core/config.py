@@ -62,6 +62,8 @@ class ConfigManager:
         "thread_move_notify": False,
         "thread_move_notify_mods": False,
         "thread_move_response": "This thread has been moved.",
+        "cooldown_thread_title": "Message not sent!",
+        "cooldown_thread_response": "You must wait for {delta} before you can contact me again.",
         "disabled_new_thread_title": "Not Delivered",
         "disabled_new_thread_response": "We are not accepting new threads.",
         "disabled_new_thread_footer": "Please try again later...",
@@ -85,7 +87,7 @@ class ConfigManager:
         # confirm thread creation
         "confirm_thread_creation": False,
         "confirm_thread_creation_title": "Confirm thread creation",
-        "confirm_thread_creation_description": "React to confirm thread creation which will directly contact the moderators",
+        "confirm_thread_response": "React to confirm thread creation which will directly contact the moderators",
         "confirm_thread_creation_accept": "\u2705",
         "confirm_thread_creation_deny": "\U0001F6AB",
     }

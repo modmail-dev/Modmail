@@ -1076,7 +1076,7 @@ class ThreadManager:
             confirm = await message.channel.send(
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],
-                    description=self.bot.config["confirm_thread_creation_description"],
+                    description=self.bot.config["confirm_thread_response"],
                     color=self.bot.main_color,
                 )
             )
