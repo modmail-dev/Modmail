@@ -580,6 +580,16 @@
     ],
     "notes": []
   },
+  "alert_on_mention": {
+    "default": "No",
+    "description": "Mentions all mods (mention) in logs channel when bot is mentioned",
+    "examples":[
+      "`{prefix}config set alert_on_mention yes"
+    ],
+    "notes": [
+      "See also: `mention`"
+    ]
+  },
   "modmail_guild_id": {
     "default": "Fallback on `GUILD_ID`",
     "description": "The ID of the discord server where the threads channels should be created (receiving server).",

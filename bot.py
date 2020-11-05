@@ -862,6 +862,24 @@ class ModmailBot(commands.Bot):
         await self.wait_for_connected()
         if message.type == discord.MessageType.pins_add and message.author == self.user:
             await message.delete()
+
+        if (
+            (f"<@{self.user.id}" in message.content or f"<@!{self.user.id}" in message.content)
+            and self.config["alert_on_mention"]
+            and not message.author.bot
+        ):
+            if len(message.content) > 50:
+                extra = "..."
+            else:
+                extra = ""
+            em = discord.Embed(
+                title="Bot mention",
+                description=f"[Jump URL]({message.jump_url})\n{message.content[:50]}{extra}",
+                color=self.main_color,
+                timestamp=datetime.utcnow(),
+            )
+            await self.log_channel.send(content=self.config["mention"], embed=em)
+
         await self.process_commands(message)
 
     async def process_commands(self, message):
