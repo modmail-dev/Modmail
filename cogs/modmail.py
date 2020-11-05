@@ -905,14 +905,14 @@ class Modmail(commands.Cog):
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
-    @commands.command()
+    @commands.command(usage="<user> [category] [options]")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def contact(
         self,
         ctx,
         user: Union[discord.Member, discord.User],
         *,
-        category: discord.CategoryChannel = None,
+        category: Union[discord.CategoryChannel, str] = None,
         manual_trigger=True,
     ):
         """
@@ -923,7 +923,13 @@ class Modmail(commands.Cog):
 
         `category`, if specified, may be a category ID, mention, or name.
         `user` may be a user ID, mention, or name.
+        `options` can be `silent`
         """
+        silent = False
+        if isinstance(category, str):
+            if "silent" in category or "silently" in category:
+                silent = True
+            category = None
 
         if user.bot:
             embed = discord.Embed(
@@ -945,18 +951,20 @@ class Modmail(commands.Cog):
             if self.bot.config["dm_disabled"] >= 1:
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
 
-            if ctx.author.id == user.id:
-                description = "You have opened a Modmail thread."
-            else:
-                description = f"{ctx.author.name} has opened a Modmail thread."
-            em = discord.Embed(
-                title="New Thread",
-                description=description,
-                color=self.bot.main_color,
-                timestamp=datetime.utcnow(),
-            )
-            em.set_footer(icon_url=ctx.author.avatar_url)
-            await user.send(embed=em)
+            if not silent:
+                if ctx.author.id == user.id:
+                    description = "You have opened a Modmail thread."
+                else:
+                    description = f"{ctx.author.name} has opened a Modmail thread."
+
+                em = discord.Embed(
+                    title="New Thread",
+                    description=description,
+                    color=self.bot.main_color,
+                    timestamp=datetime.utcnow(),
+                )
+                em.set_footer(icon_url=ctx.author.avatar_url)
+                await user.send(embed=em)
 
             embed = discord.Embed(
                 title="Created Thread",
