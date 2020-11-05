@@ -1,31 +1,30 @@
 import asyncio
 import inspect
 import os
-import traceback
 import random
+import traceback
 from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
-from io import StringIO, BytesIO
-from itertools import zip_longest, takewhile
+from io import BytesIO, StringIO
+from itertools import takewhile, zip_longest
 from json import JSONDecodeError, loads
 from textwrap import indent
 from types import SimpleNamespace
 from typing import Union
 
 import discord
+from aiohttp import ClientResponseError
 from discord.enums import ActivityType, Status
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
-
-from aiohttp import ClientResponseError
 from pkg_resources import parse_version
 
-from core import checks
+from core import checks, utils
 from core.changelog import Changelog
-from core.models import InvalidConfigError, PermissionLevel, getLogger
+from core.models import InvalidConfigError, PermissionLevel, UnseenFormatter, getLogger
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
-from core import utils
+
 
 logger = getLogger(__name__)
 
@@ -863,7 +862,7 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         def fmt(val):
-            return val.format(prefix=self.bot.prefix, bot=self.bot, delta='{delta}')
+            return UnseenFormatter().format(val, prefix=self.bot.prefix, bot=self.bot)
 
         index = 0
         embeds = []
