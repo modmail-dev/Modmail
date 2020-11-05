@@ -31,6 +31,19 @@ logger = getLogger(__name__)
 
 
 class ModmailHelpCommand(commands.HelpCommand):
+    async def command_callback(self, ctx, *, command=None):
+        """Ovrwrites original command_callback to ensure `help` without any arguments
+        returns with checks, `help all` returns without checks"""
+        if command is None:
+            self.verify_checks = True
+        else:
+            self.verify_checks = False
+        
+        if command == 'all':
+            command = None
+
+        return await super().command_callback(ctx, command=command)
+
     async def format_cog_help(self, cog, *, no_cog=False):
         bot = self.context.bot
         prefix = self.clean_prefix
@@ -63,6 +76,9 @@ class ModmailHelpCommand(commands.HelpCommand):
                 else "Miscellaneous commands without a category."
             )
             embed = discord.Embed(description=f"*{description}*", color=bot.main_color)
+
+            if not format_:
+                continue
 
             embed.add_field(name="Commands", value=format_ or "No commands.")
 
@@ -231,7 +247,6 @@ class Utility(commands.Cog):
         self.bot = bot
         self._original_help_command = bot.help_command
         self.bot.help_command = ModmailHelpCommand(
-            verify_checks=False,
             command_attrs={
                 "help": "Shows this help message.",
                 "checks": [checks.has_permissions_predicate(PermissionLevel.REGULAR)],
