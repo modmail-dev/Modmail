@@ -333,5 +333,5 @@ def format_channel_name(author, guild, exclude_channel=None):
 def tryint(x):
     try:
         return int(x)
-    except ValueError:
+    except (ValueError, TypeError):
         return x
