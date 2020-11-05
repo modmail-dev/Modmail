@@ -56,7 +56,7 @@ class Thread:
             await task
         except asyncio.TimeoutError:
             pass
-            
+
         self.wait_tasks.remove(task)
 
     @property
@@ -86,7 +86,7 @@ class Thread:
     @property
     def cancelled(self) -> bool:
         return self._cancelled
-    
+
     @cancelled.setter
     def cancelled(self, flag: bool):
         self._cancelled = flag
@@ -793,11 +793,15 @@ class Thread:
                 attachments.append(attachment)
 
         image_urls = re.findall(
-            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            r"http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
             message.content,
         )
 
-        image_urls = [(url, None) for url in image_urls if is_image_url(url)]
+        image_urls = [
+            (is_image_url(url, convert_size=False), None)
+            for url in image_urls
+            if is_image_url(url, convert_size=False)
+        ]
         images.extend(image_urls)
 
         embedded_image = False
@@ -1043,7 +1047,9 @@ class ThreadManager:
                 if thread.channel and self.bot.get_channel(thread.channel.id):
                     logger.warning("Found an existing thread for %s, abort creating.", recipient)
                     return thread
-                logger.warning("Found an existing thread for %s, closing previous thread.", recipient)
+                logger.warning(
+                    "Found an existing thread for %s, closing previous thread.", recipient
+                )
                 self.bot.loop.create_task(
                     thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                 )
@@ -1109,13 +1115,10 @@ class ThreadManager:
                     await asyncio.sleep(0.2)
                     await confirm.remove_reaction(deny_emoji, self.bot.user)
                     await message.channel.send(
-                        embed=discord.Embed(
-                            title="Cancelled", color=self.bot.error_color
-                        )
+                        embed=discord.Embed(title="Cancelled", color=self.bot.error_color)
                     )
                     del self.cache[recipient.id]
                     return thread
-
 
         self.bot.loop.create_task(thread.setup(creator=creator, category=category))
         return thread

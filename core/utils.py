@@ -117,7 +117,7 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
     return out or "No Messages"
 
 
-def is_image_url(url: str) -> bool:
+def is_image_url(url: str, **kwargs) -> bool:
     """
     Check if the URL is pointing to an image.
 
@@ -131,10 +131,18 @@ def is_image_url(url: str) -> bool:
     bool
         Whether the URL is a valid image URL.
     """
-    return bool(parse_image_url(url))
+    if url.startswith("https://gyazo.com") or url.startswith("http://gyazo.com"):
+        # gyazo support
+        url = re.sub(
+            r"(http[s]?:\/\/)((?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+            r"\1i.\2.png",
+            url,
+        )
+
+    return parse_image_url(url, **kwargs)
 
 
-def parse_image_url(url: str) -> str:
+def parse_image_url(url: str, *, convert_size=True) -> str:
     """
     Convert the image URL into a sized Discord avatar.
 
@@ -152,7 +160,10 @@ def parse_image_url(url: str) -> str:
     url = parse.urlsplit(url)
 
     if any(url.path.lower().endswith(i) for i in types):
-        return parse.urlunsplit((*url[:3], "size=128", url[-1]))
+        if convert_size:
+            return parse.urlunsplit((*url[:3], "size=128", url[-1]))
+        else:
+            return parse.urlunsplit(url)
     return ""
 
 
