@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
-# v3.7.0-dev6
+# v3.7.0-dev7
 
 ### Added
 
@@ -23,6 +23,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
 - Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/kyb3r/modmail/issues/2865))
 - Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/kyb3r/modmail/issues/2762))
+- Support stickers and reject non-messages (i.e. pin_add)
 
 ### Fixed
 
