@@ -898,7 +898,7 @@ class Modmail(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
-                    description="Cannot find a message to edit.",
+                    description="Cannot find a message to edit. Plain messages are not supported.",
                     color=self.bot.error_color,
                 )
             )
@@ -1307,7 +1307,7 @@ class Modmail(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
-                    description="Cannot find a message to delete.",
+                    description="Cannot find a message to delete. Plain messages are not supported.",
                     color=self.bot.error_color,
                 )
             )

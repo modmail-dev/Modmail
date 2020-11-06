@@ -553,7 +553,7 @@ class Thread:
                     return message1, msg
             except ValueError:
                 continue
-        raise ValueError("DM message not found.")
+        raise ValueError("DM message not found. Plain messages are not supported.")
 
     async def edit_message(self, message_id: typing.Optional[int], message: str) -> None:
         try:
