@@ -72,6 +72,7 @@ class ConfigManager:
         "disabled_current_thread_footer": "Please try again later...",
         "transfer_reactions": True,
         "close_on_leave": False,
+        "close_on_leave_reason": "The recipient has left the server.",
         "alert_on_mention": False,
         # moderation
         "recipient_color": str(discord.Color.gold()),

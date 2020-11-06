@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev5"
+__version__ = "3.7.0-dev6"
 
 
 import asyncio
@@ -1118,12 +1118,12 @@ class ModmailBot(commands.Bot):
             if self.config["close_on_leave"]:
                 await thread.close(
                     closer=member.guild.me,
-                    message="The recipient has left the server.",
+                    message=self.config["close_on_leave_reason"],
                     silent=True,
                 )
             else:
                 embed = discord.Embed(
-                    description="The recipient has left the server.", color=self.error_color
+                    description=self.config["close_on_leave_reason"], color=self.error_color
                 )
                 await thread.channel.send(embed=embed)
 

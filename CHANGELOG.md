@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
-# v3.7.0-dev5
+# v3.7.0-dev6
 
 ### Added
 
@@ -14,7 +14,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added `react_to_contact_message`, `react_to_contact_emoji` to allow users to create threads by reacting to a message.
 - Added `thread_move_notify_mods` to mention all mods again after moving thread. ([GH #215](https://github.com/kyb3r/modmail/issues/215))
 - Added `transfer_reactions` to link reactions between mods and users. ([GH #2763](https://github.com/kyb3r/modmail/issues/2763))
-- Added `close_on_leave` to automatically close threads upon recipient leaving the server. ([GH #2757](https://github.com/kyb3r/modmail/issues/2757))
+- Added `close_on_leave`, `close_on_leave_reason` to automatically close threads upon recipient leaving the server. ([GH #2757](https://github.com/kyb3r/modmail/issues/2757))
 - Added `alert_on_mention` to mention mods upon a bot mention. ([GH #2833](https://github.com/kyb3r/modmail/issues/2833))
 - Added `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny` to allow users to confirm that they indeed want to create a new thread. ([GH #2773](https://github.com/kyb3r/modmail/issues/2773))
 - Support Gyazo image links in message embeds. ([GH #282](https://github.com/kyb3r/modmail/issues/282))

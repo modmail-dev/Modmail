@@ -601,7 +601,20 @@
     "examples":[
       "`{prefix}config set close_on_leave yes`"
     ],
-    "notes": []
+    "notes": [
+      "See also: `close_on_leave_reason`."
+    ]
+  },
+  "close_on_leave_reason": {
+    "default": "The recipient has left the server.",
+    "description": "Reason for closing the thread once member leaves",
+    "examples":[
+      "`{prefix}config set close_on_leave_reason Member left`"
+    ],
+    "notes": [
+      "This has no effect unless `close_on_leave` is set.",
+      "See also: `close_on_leave`."
+    ]
   },
   "alert_on_mention": {
     "default": "No",
@@ -650,7 +663,7 @@
       "`{prefix}config set confirm_thread_creation_accept \u2611`"
     ],
     "notes": [
-      "Has no effect unless `confirm_thread_creation` is set",
+      "This has no effect unless `confirm_thread_creation` is set",
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_deny`"
     ]
   },
@@ -661,7 +674,7 @@
       "`{prefix}config set confirm_thread_creation_deny \u26D4`"
     ],
     "notes": [
-      "Has no effect unless `confirm_thread_creation` is set",
+      "This has no effect unless `confirm_thread_creation` is set",
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_accept`"
     ]
   },
