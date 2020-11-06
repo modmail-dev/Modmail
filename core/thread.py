@@ -780,7 +780,7 @@ class Thread:
                 url=f"https://discordapp.com/users/{author.id}#{message.id}",
             )
 
-        ext = [(a.url, a.filename) for a in message.attachments]
+        ext = [(a.url, a.filename, False) for a in message.attachments]
 
         images = []
         attachments = []
@@ -796,11 +796,12 @@ class Thread:
         )
 
         image_urls = [
-            (is_image_url(url, convert_size=False), None)
+            (is_image_url(url, convert_size=False), None, False)
             for url in image_urls
             if is_image_url(url, convert_size=False)
         ]
         images.extend(image_urls)
+        images.extend((str(i.image_url), f'{i.name} Sticker', True) for i in message.stickers)
 
         embedded_image = False
 
@@ -809,11 +810,14 @@ class Thread:
         additional_images = []
         additional_count = 1
 
-        for url, filename in images:
+        for url, filename, is_sticker in images:
             if not prioritize_uploads or (is_image_url(url) and not embedded_image and filename):
                 embed.set_image(url=url)
                 if filename:
-                    embed.add_field(name="Image", value=f"[{filename}]({url})")
+                    if is_sticker:
+                        embed.add_field(name=filename, value=f"\u200b")
+                    else:
+                        embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
             elif filename is not None:
                 if note:
