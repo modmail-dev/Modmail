@@ -855,7 +855,7 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def pareply(self, ctx, *, msg: str = ""):
         """
-        Reply to a Modmail thread with a plain message and anonmymously.
+        Reply to a Modmail thread with a plain message and anonymously.
 
         Supports attachments and images as well as
         automatically embedding image URLs.
