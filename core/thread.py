@@ -12,7 +12,7 @@ from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.models import getLogger
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_user_id, truncate, format_channel_name
+from core.utils import is_image_url, days, match_title, match_user_id, truncate, format_channel_name
 
 logger = getLogger(__name__)
 
@@ -334,6 +334,7 @@ class Thread:
                 self.channel.id,
                 {
                     "open": False,
+                    "title": match_title(self.channel.topic),
                     "closed_at": str(datetime.utcnow()),
                     "nsfw": self.channel.nsfw,
                     "close_message": message if not silent else None,
@@ -346,6 +347,8 @@ class Thread:
                     },
                 },
             )
+        else:
+            log_data = None
 
         if isinstance(log_data, dict):
             prefix = self.bot.config["log_url_prefix"].strip("/")
@@ -353,7 +356,9 @@ class Thread:
                 prefix = ""
             log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
 
-            if log_data["messages"]:
+            if log_data["title"]:
+                sneak_peak = log_data["title"]
+            elif log_data["messages"]:
                 content = str(log_data["messages"][0]["content"])
                 sneak_peak = content.replace("\n", "")
             else:
@@ -931,6 +936,9 @@ class Thread:
 
         return " ".join(mentions)
 
+    async def set_title(self, title) -> None:
+        user_id = match_user_id(self.channel.topic)
+        await self.channel.edit(topic=f'Title: {title}\nUser ID: {user_id}')
 
 class ThreadManager:
     """Class that handles storing, finding and creating Modmail threads."""

@@ -216,8 +216,27 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
-TOPIC_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
+TOPIC_TITLE_REGEX = re.compile(r"\bTitle: (.*)\n(?:User ID: )\b", flags=re.IGNORECASE | re.DOTALL)
+TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
 
+
+def match_title(text: str) -> int:
+    """
+    Matches a title in the foramt of "Title: XXXX"
+
+    Parameters
+    ----------
+    text : str
+        The text of the user ID.
+
+    Returns
+    -------
+    Optional[str]
+        The title if found
+    """
+    match = TOPIC_TITLE_REGEX.search(text)
+    if match is not None:
+        return match.group(1)
 
 def match_user_id(text: str) -> int:
     """
@@ -233,7 +252,7 @@ def match_user_id(text: str) -> int:
     int
         The user ID if found. Otherwise, -1.
     """
-    match = TOPIC_REGEX.search(text)
+    match = TOPIC_UID_REGEX.search(text)
     if match is not None:
         return int(match.group(1))
     return -1

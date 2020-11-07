@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev7"
+__version__ = "3.7.0-dev8"
 
 
 import asyncio
@@ -32,7 +32,7 @@ except ImportError:
 from core import checks
 from core.clients import ApiClient, PluginDatabaseClient, MongoDBClient
 from core.config import ConfigManager
-from core.utils import human_join, normalize_alias
+from core.utils import human_join, match_title, normalize_alias
 from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
 from core.thread import ThreadManager
 from core.time import human_timedelta
@@ -458,6 +458,7 @@ class ModmailBot(commands.Bot):
                     log["channel_id"],
                     {
                         "open": False,
+                        "title": match_title(thread.channel.topic),
                         "closed_at": str(datetime.utcnow()),
                         "close_message": "Channel has been deleted, no closer found.",
                         "closer": {

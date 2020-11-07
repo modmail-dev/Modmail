@@ -646,6 +646,15 @@ class Modmail(commands.Cog):
             embeds.append(embed)
         return embeds
 
+
+    @commands.command()
+    @checks.thread_only()
+    async def title(self, ctx, *, name: str):
+        await ctx.thread.set_title(name)
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        await self.bot.add_reaction(ctx.message, sent_emoji)
+
+
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def logs(self, ctx, *, user: User = None):
