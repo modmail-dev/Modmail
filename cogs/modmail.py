@@ -873,7 +873,7 @@ class Modmail(commands.Cog):
         async with ctx.typing():
             await ctx.thread.reply(ctx.message, anonymous=True, plain=True)
 
-    @commands.command()
+    @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def note(self, ctx, *, msg: str = ""):
@@ -886,6 +886,19 @@ class Modmail(commands.Cog):
         async with ctx.typing():
             msg = await ctx.thread.note(ctx.message)
             await msg.pin()
+
+    @note.command(name="persistent", aliases=["persist"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def note_persistent(self, ctx, *, msg: str = ""):
+        """
+        Take a persistent note about the current user.
+        """
+        ctx.message.content = msg
+        async with ctx.typing():
+            msg = await ctx.thread.note(ctx.message, persistent=True)
+            await msg.pin()
+        await self.bot.api.create_note(recipient=ctx.thread.recipient, message=ctx.message)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)

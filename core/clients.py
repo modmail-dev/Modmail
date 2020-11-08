@@ -401,6 +401,25 @@ class MongoDBClient(ApiClient):
             {"messages": {"$slice": 5}},
         ).to_list(limit)
 
+    async def create_note(self, recipient: Member, message: Message):
+        await self.db.notes.insert_one(
+            {
+                "recipient": str(recipient.id),
+                "author": {
+                    "id": str(message.author.id),
+                    "name": message.author.name,
+                    "discriminator": message.author.discriminator,
+                    "avatar_url": str(message.author.avatar_url),
+                },
+            }
+        )
+
+    async def delete_note(self):
+        pass
+
+    async def find_notes(self, recipient: Member):
+        return await self.db.notes.find({"recipient": str(recipient.id)}).to_list(None)
+
     def get_plugin_partition(self, cog):
         cls_name = cog.__class__.__name__
         return self.db.plugins[cls_name]

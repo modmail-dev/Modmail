@@ -190,6 +190,13 @@ class Thread:
                     close_emoji = await self.bot.convert_emoji(close_emoji)
                     await self.bot.add_reaction(msg, close_emoji)
 
+        async def send_persistent_notes():
+            notes = await self.bot.api.find_notes()
+            for note in notes:
+                message = discord.Message()
+                await self.note(note.message)
+                pass
+
         await asyncio.gather(send_genesis_message(), send_recipient_genesis_message())
         self.bot.dispatch("thread_ready", self)
 
@@ -629,11 +636,11 @@ class Thread:
             self.bot.api.edit_message(message.id, content), linked_message.edit(embed=embed)
         )
 
-    async def note(self, message: discord.Message) -> None:
+    async def note(self, message: discord.Message, persistent=False) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
-        msg = await self.send(message, self.channel, note=True)
+        msg = await self.send(message, self.channel, note=True, persistent_note=persistent)
 
         self.bot.loop.create_task(
             self.bot.api.append_log(
@@ -719,6 +726,7 @@ class Thread:
         note: bool = False,
         anonymous: bool = False,
         plain: bool = False,
+        persistent_note: bool = False,
     ) -> None:
 
         self.bot.loop.create_task(
@@ -780,7 +788,7 @@ class Thread:
         else:
             # Special note messages
             embed.set_author(
-                name=f"Note ({author.name})",
+                name=f"{'Persistent' if persistent_note else ''} Note ({author.name})",
                 icon_url=system_avatar_url,
                 url=f"https://discordapp.com/users/{author.id}#{message.id}",
             )
