@@ -184,3 +184,9 @@ Plugins requests and support is available in our [Modmail Plugins Server](https:
 Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our [contributing guidelines](https://github.com/kyb3r/modmail/blob/master/CONTRIBUTING.md) before you get started.
 
 If you like this project and would like to show your appreciation, support us on **[Patreon](https://www.patreon.com/kyber)**!
+
+## Beta Testing
+
+Our [development](https://github.com/kyb3r/modmail/tree/development) branch is where most of our features are tested before public release. Be warned that there could be bugs in various commands so keep it away from any large servers you manage.
+
+If you wish to test the new features and play around with them, feel free to join our [Public Test Server](https://discord.gg/v5hTjKC). Bugs can be raised within that server or in our Github issues (state that you are using the development branch though).

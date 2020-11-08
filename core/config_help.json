@@ -758,5 +758,14 @@
     "notes": [
       "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
+  },
+  "data_collection": {
+    "default": "Yes",
+    "description": "Controls if bot metadata should be sent to the development team.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
   }
 }
