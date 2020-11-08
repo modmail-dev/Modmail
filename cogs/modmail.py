@@ -648,6 +648,7 @@ class Modmail(commands.Cog):
 
 
     @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def title(self, ctx, *, name: str):
         await ctx.thread.set_title(name)
