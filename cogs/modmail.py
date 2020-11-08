@@ -653,6 +653,7 @@ class Modmail(commands.Cog):
     async def title(self, ctx, *, name: str):
         await ctx.thread.set_title(name)
         sent_emoji, _ = await self.bot.retrieve_emoji()
+        await ctx.message.pin()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
 
