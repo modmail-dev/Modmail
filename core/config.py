@@ -117,6 +117,7 @@ class ConfigManager:
         # misc
         "plugins": [],
         "aliases": {},
+        "auto_triggers": {},
     }
 
     protected_keys = {

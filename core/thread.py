@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import io
 import re
 import typing
@@ -10,7 +11,8 @@ import isodate
 import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
-from core.models import getLogger
+from core import checks
+from core.models import PermissionLevel, getLogger
 from core.time import human_timedelta
 from core.utils import (
     is_image_url,
@@ -101,7 +103,7 @@ class Thread:
             for i in self.wait_tasks:
                 i.cancel()
 
-    async def setup(self, *, creator=None, category=None):
+    async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
         self.bot.dispatch("thread_initiate", self)
         recipient = self.recipient
@@ -197,7 +199,19 @@ class Thread:
                     close_emoji = await self.bot.convert_emoji(close_emoji)
                     await self.bot.add_reaction(msg, close_emoji)
 
-        await asyncio.gather(send_genesis_message(), send_recipient_genesis_message())
+        async def activate_auto_triggers():
+            message = copy.copy(initial_message)
+            if message:
+                for keyword in list(self.bot.auto_triggers):
+                    if keyword in message.content:
+                        try:
+                            return await self.bot.trigger_auto_triggers(message, channel)
+                        except StopIteration:
+                            pass
+
+        await asyncio.gather(
+            send_genesis_message(), send_recipient_genesis_message(), activate_auto_triggers(),
+        )
         self.bot.dispatch("thread_ready", self)
 
     def _format_info_embed(self, user, log_url, log_count, color):
@@ -880,6 +894,8 @@ class Thread:
             if delete_message and destination == self.channel:
                 try:
                     await message.delete()
+                except discord.NotFound:
+                    pass
                 except Exception as e:
                     logger.warning("Cannot delete message: %s.", e)
 
@@ -1138,7 +1154,9 @@ class ThreadManager:
                     del self.cache[recipient.id]
                     return thread
 
-        self.bot.loop.create_task(thread.setup(creator=creator, category=category))
+        self.bot.loop.create_task(
+            thread.setup(creator=creator, category=category, initial_message=message)
+        )
         return thread
 
     async def find_or_create(self, recipient) -> Thread:

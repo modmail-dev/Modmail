@@ -338,7 +338,10 @@ class Modmail(commands.Cog):
             await thread.channel.send(f"{mention}, thread has been moved.")
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
-        await self.bot.add_reaction(ctx.message, sent_emoji)
+        try:
+            await self.bot.add_reaction(ctx.message, sent_emoji)
+        except discord.NotFound:
+            pass
 
     async def send_scheduled_close_message(self, ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)

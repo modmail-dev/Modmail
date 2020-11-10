@@ -23,9 +23,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
 - Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/kyb3r/modmail/issues/2865))
 - Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/kyb3r/modmail/issues/2762))
-- Support stickers and reject non-messages (i.e. pin_add)
-- Added support for thread titles, `?title` ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
-- Added `data_collection` to specify if bot metadata should be collected by Modmail developers
+- Support stickers and reject non-messages. (i.e. pin_add)
+- Added support for thread titles, `?title`. ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
+- Added `data_collection` to specify if bot metadata should be collected by Modmail developers.
+- Added `?autotrigger` to specify keywords to trigger commands. ([GH #130](https://github.com/kyb3r/modmail/issues/130), [GH #649](https://github.com/kyb3r/modmail/issues/649))
 
 ### Fixed
 

@@ -196,8 +196,11 @@ class SimilarCategoryConverter(commands.CategoryChannelConverter):
         try:
             return await super().convert(ctx, argument)
         except commands.ChannelNotFound:
+
             def check(c):
-                return isinstance(c, discord.CategoryChannel) and c.name.lower().startswith(argument.lower())
+                return isinstance(c, discord.CategoryChannel) and c.name.lower().startswith(
+                    argument.lower()
+                )
 
             if guild:
                 result = discord.utils.find(check, guild.categories)

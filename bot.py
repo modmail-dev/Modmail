@@ -2,6 +2,7 @@ __version__ = "3.7.0-dev10"
 
 
 import asyncio
+import copy
 import logging
 import os
 import re
@@ -243,6 +244,10 @@ class ModmailBot(commands.Bot):
     @property
     def aliases(self) -> typing.Dict[str, str]:
         return self.config["aliases"]
+
+    @property
+    def auto_triggers(self) -> typing.Dict[str, str]:
+        return self.config["auto_triggers"]
 
     @property
     def token(self) -> str:
@@ -851,6 +856,51 @@ class ModmailBot(commands.Bot):
         ctx.invoked_with = invoker
         ctx.command = self.all_commands.get(invoker)
         return [ctx]
+
+    async def trigger_auto_triggers(self, message, channel, *, cls=commands.Context):
+        message.author = self.modmail_guild.me
+        message.channel = channel
+
+        view = StringView(message.content)
+        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        thread = await self.threads.find(channel=ctx.channel)
+
+        invoked_prefix = self.prefix
+        invoker = view.get_word().lower()
+
+        # Check if there is any aliases being called.
+        alias = self.auto_triggers[
+            next(filter(lambda x: x in message.content, self.auto_triggers.keys()))
+        ]
+        if alias is None:
+            ctx.thread = thread
+            ctx.invoked_with = invoker
+            ctx.command = self.all_commands.get(invoker)
+            ctxs = [ctx]
+        else:
+            ctxs = []
+            aliases = normalize_alias(alias, message.content[len(f"{invoked_prefix}{invoker}") :])
+            if not aliases:
+                logger.warning("Alias %s is invalid as called in automove.", invoker)
+
+            for alias in aliases:
+                view = StringView(invoked_prefix + alias)
+                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                ctx_.thread = thread
+                discord.utils.find(view.skip_string, await self.get_prefix())
+                ctx_.invoked_with = view.get_word().lower()
+                ctx_.command = self.all_commands.get(ctx_.invoked_with)
+                ctxs += [ctx_]
+
+        for ctx in ctxs:
+            if ctx.command:
+                old_checks = copy.copy(ctx.command.checks)
+                ctx.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+
+                await self.invoke(ctx)
+
+                ctx.command.checks = old_checks
+                continue
 
     async def get_context(self, message, *, cls=commands.Context):
         """
