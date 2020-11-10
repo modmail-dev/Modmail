@@ -12,7 +12,14 @@ from discord.ext.commands import MissingRequiredArgument, CommandError
 
 from core.models import getLogger
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_title, match_user_id, truncate, format_channel_name
+from core.utils import (
+    is_image_url,
+    days,
+    match_title,
+    match_user_id,
+    truncate,
+    format_channel_name,
+)
 
 logger = getLogger(__name__)
 
@@ -806,7 +813,7 @@ class Thread:
             if is_image_url(url, convert_size=False)
         ]
         images.extend(image_urls)
-        images.extend((str(i.image_url), f'{i.name} Sticker', True) for i in message.stickers)
+        images.extend((str(i.image_url), f"{i.name} Sticker", True) for i in message.stickers)
 
         embedded_image = False
 
@@ -938,7 +945,8 @@ class Thread:
 
     async def set_title(self, title) -> None:
         user_id = match_user_id(self.channel.topic)
-        await self.channel.edit(topic=f'Title: {title}\nUser ID: {user_id}')
+        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}")
+
 
 class ThreadManager:
     """Class that handles storing, finding and creating Modmail threads."""

@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev9"
+__version__ = "3.7.0-dev10"
 
 
 import asyncio
@@ -748,7 +748,7 @@ class ModmailBot(commands.Bot):
         if blocked:
             return
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
-    
+
         if message.type != discord.MessageType.default:
             return
 

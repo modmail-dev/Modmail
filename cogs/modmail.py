@@ -14,7 +14,7 @@ from dateutil import parser
 from natural.date import duration
 
 from core import checks
-from core.models import PermissionLevel, getLogger
+from core.models import PermissionLevel, SimilarCategoryConverter, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.thread import Thread
 from core.time import UserFriendlyTime, human_timedelta
@@ -305,7 +305,7 @@ class Modmail(commands.Cog):
                 else:
                     fmt = " ".join(split_args[:-i])
 
-                category = await commands.CategoryChannelConverter().convert(ctx, fmt)
+                category = await SimilarCategoryConverter().convert(ctx, fmt)
             except commands.BadArgument:
                 if i == len(split_args) - 1:
                     # last one
@@ -646,7 +646,6 @@ class Modmail(commands.Cog):
             embeds.append(embed)
         return embeds
 
-
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
@@ -656,7 +655,6 @@ class Modmail(commands.Cog):
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await ctx.message.pin()
         await self.bot.add_reaction(ctx.message, sent_emoji)
-
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -930,7 +928,7 @@ class Modmail(commands.Cog):
         ctx,
         user: Union[discord.Member, discord.User],
         *,
-        category: Union[discord.CategoryChannel, str] = None,
+        category: Union[SimilarCategoryConverter, str] = None,
         manual_trigger=True,
     ):
         """

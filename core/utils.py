@@ -238,6 +238,7 @@ def match_title(text: str) -> int:
     if match is not None:
         return match.group(1)
 
+
 def match_user_id(text: str) -> int:
     """
     Matches a user ID in the format of "User ID: 12345".

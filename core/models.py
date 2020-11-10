@@ -185,3 +185,26 @@ class UnseenFormatter(Formatter):
                 return "{" + key + "}"
         else:
             return Formatter.get_value(key, args, kwds)
+
+
+class SimilarCategoryConverter(commands.CategoryChannelConverter):
+    async def convert(self, ctx, argument):
+        bot = ctx.bot
+        guild = ctx.guild
+        result = None
+
+        try:
+            return await super().convert(ctx, argument)
+        except commands.ChannelNotFound:
+            def check(c):
+                return isinstance(c, discord.CategoryChannel) and c.name.lower().startswith(argument.lower())
+
+            if guild:
+                result = discord.utils.find(check, guild.categories)
+            else:
+                result = discord.utils.find(check, bot.get_all_channels())
+
+            if not isinstance(result, discord.CategoryChannel):
+                raise commands.ChannelNotFound(argument)
+
+        return result
