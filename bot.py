@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev8"
+__version__ = "3.7.0-dev9"
 
 
 import asyncio
@@ -477,17 +477,18 @@ class ModmailBot(commands.Bot):
                         "Failed to close thread with channel %s, skipping.", log["channel_id"]
                     )
 
-        self.metadata_loop = tasks.Loop(
-            self.post_metadata,
-            seconds=0,
-            minutes=0,
-            hours=1,
-            count=None,
-            reconnect=True,
-            loop=None,
-        )
-        self.metadata_loop.before_loop(self.before_post_metadata)
-        self.metadata_loop.start()
+        if self.config["data_collection"]:
+            self.metadata_loop = tasks.Loop(
+                self.post_metadata,
+                seconds=0,
+                minutes=0,
+                hours=1,
+                count=None,
+                reconnect=True,
+                loop=None,
+            )
+            self.metadata_loop.before_loop(self.before_post_metadata)
+            self.metadata_loop.start()
 
         other_guilds = [
             guild for guild in self.guilds if guild not in {self.guild, self.modmail_guild}

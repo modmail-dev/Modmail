@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
 
-# v3.7.0-dev8
+# v3.7.0-dev9
 
 ### Added
 
@@ -19,12 +19,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny` to allow users to confirm that they indeed want to create a new thread. ([GH #2773](https://github.com/kyb3r/modmail/issues/2773))
 - Support Gyazo image links in message embeds. ([GH #282](https://github.com/kyb3r/modmail/issues/282))
 - Added `silent` argument to `?contact` to restore old behaviour.
-- If `?help` is sent, bot does checks on every command, `?help all` restores old behaviour. ([GH #2847](https://github.com/kyb3r/modmail/issues/2847))
+- Added new functionality: If `?help` is sent, bot does checks on every command, `?help all` restores old behaviour. ([GH #2847](https://github.com/kyb3r/modmail/issues/2847))
 - Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
 - Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/kyb3r/modmail/issues/2865))
 - Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/kyb3r/modmail/issues/2762))
 - Support stickers and reject non-messages (i.e. pin_add)
-- Add support for thread titles, `?title` ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
+- Added support for thread titles, `?title` ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
+- Added `data_collection` to specify if bot metadata should be collected by Modmail developers
 
 ### Fixed
 

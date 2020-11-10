@@ -137,6 +137,8 @@ class ConfigManager:
         "github_token": None,
         # Logging
         "log_level": "INFO",
+        # data collection
+        "data_collection": True,
     }
 
     colors = {"mod_color", "recipient_color", "main_color", "error_color"}
@@ -158,6 +160,7 @@ class ConfigManager:
         "alert_on_mention",
         "confirm_thread_creation",
         "enable_plugins",
+        "data_collection",
         "enable_eval",
     }
 
