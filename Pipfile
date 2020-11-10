@@ -27,7 +27,7 @@ parsedatetime = "==2.6"
 aiohttp = ">=3.6.0,<3.7.0"
 python-dotenv = ">=0.10.3"
 pipenv = "*"
-"discord.py" = {file = "https://raw.githubusercontent.com/kyb3r/modmail/development/discord.py-1.5.1.tar.gz"}
+"discord.py" = {file = "./discord.py-1.5.1.tar.gz"}
 
 [scripts]
 bot = "python bot.py"
