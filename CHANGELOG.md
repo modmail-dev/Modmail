@@ -30,6 +30,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Fixed
 
 - `?contact` now sends members a DM.
+- Fixed issue where `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/kyb3r/modmail/issues/2856))
 
 ### Improved
 

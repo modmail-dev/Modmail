@@ -882,7 +882,7 @@ class ModmailBot(commands.Bot):
     async def update_perms(
         self, name: typing.Union[PermissionLevel, str], value: int, add: bool = True
     ) -> None:
-        value = int(value)
+        value = str(value)
         if isinstance(name, PermissionLevel):
             permissions = self.config["level_permissions"]
             name = name.name
