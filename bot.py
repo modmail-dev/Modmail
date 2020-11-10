@@ -870,9 +870,15 @@ class ModmailBot(commands.Bot):
         invoker = view.get_word().lower()
 
         # Check if there is any aliases being called.
-        alias = self.auto_triggers[
-            next(filter(lambda x: x in message.content, self.auto_triggers.keys()))
-        ]
+        if self.config.get("use_regex_autotrigger"):
+            alias = self.auto_triggers[
+                next(filter(lambda x: re.match(x, message.content), self.auto_triggers.keys()))
+            ]
+        else:
+            alias = self.auto_triggers[
+                next(filter(lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys()))
+            ]
+
         if alias is None:
             ctx.thread = thread
             ctx.invoked_with = invoker

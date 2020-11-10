@@ -678,6 +678,18 @@
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_accept`"
     ]
   },
+  "use_regex_autotrigger": {
+    "default": "No",
+    "description": "Whether to use regex to compare in autotriggers.",
+    "examples":[
+      "`{prefix}config set use_regex_autotrigger yes`"
+    ],
+    "notes": [
+      "This is meant for advanced user that understand regular expressions.",
+      "You can test it out with https://regexr.com on `PCRE (Server)` mode",
+      "See command: `autotrigger`"
+    ]
+  },
   "modmail_guild_id": {
     "default": "Fallback on `GUILD_ID`",
     "description": "The ID of the discord server where the threads channels should be created (receiving server).",
