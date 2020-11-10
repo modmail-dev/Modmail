@@ -14,7 +14,7 @@ from dateutil import parser
 from natural.date import duration
 
 from core import checks
-from core.models import PermissionLevel, getLogger
+from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.thread import Thread
 from core.time import UserFriendlyTime, human_timedelta
@@ -305,7 +305,7 @@ class Modmail(commands.Cog):
                 else:
                     fmt = " ".join(split_args[:-i])
 
-                category = await commands.CategoryChannelConverter().convert(ctx, fmt)
+                category = await SimilarCategoryConverter().convert(ctx, fmt)
             except commands.BadArgument:
                 if i == len(split_args) - 1:
                     # last one
@@ -646,7 +646,6 @@ class Modmail(commands.Cog):
             embeds.append(embed)
         return embeds
 
-
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
@@ -656,7 +655,6 @@ class Modmail(commands.Cog):
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await ctx.message.pin()
         await self.bot.add_reaction(ctx.message, sent_emoji)
-
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -943,7 +941,7 @@ class Modmail(commands.Cog):
         ctx,
         user: Union[discord.Member, discord.User],
         *,
-        category: Union[discord.CategoryChannel, str] = None,
+        category: Union[SimilarCategoryConverter, str] = None,
         manual_trigger=True,
     ):
         """
@@ -979,7 +977,7 @@ class Modmail(commands.Cog):
 
         else:
             thread = await self.bot.threads.create(user, creator=ctx.author, category=category)
-            if self.bot.config["dm_disabled"] >= 1:
+            if self.bot.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
 
             if not silent:
@@ -1465,8 +1463,8 @@ class Modmail(commands.Cog):
             color=self.bot.main_color,
         )
 
-        if self.bot.config["dm_disabled"] != 0:
-            self.bot.config["dm_disabled"] = 0
+        if self.bot.config["dm_disabled"] != DMDisabled.NONE:
+            self.bot.config["dm_disabled"] = DMDisabled.NONE
             await self.bot.config.update()
 
         return await ctx.send(embed=embed)
@@ -1496,8 +1494,8 @@ class Modmail(commands.Cog):
             description="Modmail will not create any new threads.",
             color=self.bot.main_color,
         )
-        if self.bot.config["dm_disabled"] < 1:
-            self.bot.config["dm_disabled"] = 1
+        if self.bot.config["dm_disabled"] < DMDisabled.NEW_THREADS:
+            self.bot.config["dm_disabled"] = DMDisabled.NEW_THREADS
             await self.bot.config.update()
 
         return await ctx.send(embed=embed)
@@ -1516,8 +1514,8 @@ class Modmail(commands.Cog):
             color=self.bot.main_color,
         )
 
-        if self.bot.config["dm_disabled"] != 2:
-            self.bot.config["dm_disabled"] = 2
+        if self.bot.config["dm_disabled"] != DMDisabled.ALL_THREADS:
+            self.bot.config["dm_disabled"] = DMDisabled.ALL_THREADS
             await self.bot.config.update()
 
         return await ctx.send(embed=embed)
@@ -1529,13 +1527,13 @@ class Modmail(commands.Cog):
         Check if the DM functionalities of Modmail is enabled.
         """
 
-        if self.bot.config["dm_disabled"] == 1:
+        if self.bot.config["dm_disabled"] == DMDisabled.NEW_THREADS:
             embed = discord.Embed(
                 title="New Threads Disabled",
                 description="Modmail is not creating new threads.",
                 color=self.bot.error_color,
             )
-        elif self.bot.config["dm_disabled"] == 2:
+        elif self.bot.config["dm_disabled"] == DMDisabled.ALL_THREADS:
             embed = discord.Embed(
                 title="All DM Disabled",
                 description="Modmail is not accepting any DM messages for new and existing threads.",

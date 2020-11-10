@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import io
 import re
 import typing
@@ -11,9 +12,16 @@ import isodate
 import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
-from core.models import getLogger
+from core.models import DMDisabled, DummyMessage, getLogger
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_title, match_user_id, truncate, format_channel_name
+from core.utils import (
+    is_image_url,
+    days,
+    match_title,
+    match_user_id,
+    truncate,
+    format_channel_name,
+)
 
 logger = getLogger(__name__)
 
@@ -95,7 +103,7 @@ class Thread:
             for i in self.wait_tasks:
                 i.cancel()
 
-    async def setup(self, *, creator=None, category=None):
+    async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
         self.bot.dispatch("thread_initiate", self)
         recipient = self.recipient
@@ -225,8 +233,16 @@ class Thread:
 
             await self.bot.api.update_note_ids(ids)
 
+        async def activate_auto_triggers():
+            message = DummyMessage(copy.copy(initial_message))
+            if message:
+                try:
+                    return await self.bot.trigger_auto_triggers(message, channel)
+                except RuntimeError:
+                    pass
+
         await asyncio.gather(
-            send_genesis_message(), send_recipient_genesis_message(), send_persistent_notes()
+            send_genesis_message(), send_recipient_genesis_message(), activate_auto_triggers(), send_persistent_notes(),
         )
         self.bot.dispatch("thread_ready", self)
 
@@ -848,7 +864,7 @@ class Thread:
             if is_image_url(url, convert_size=False)
         ]
         images.extend(image_urls)
-        images.extend((str(i.image_url), f'{i.name} Sticker', True) for i in message.stickers)
+        images.extend((str(i.image_url), f"{i.name} Sticker", True) for i in message.stickers)
 
         embedded_image = False
 
@@ -918,7 +934,11 @@ class Thread:
                 except Exception as e:
                     logger.warning("Cannot delete message: %s.", e)
 
-        if from_mod and self.bot.config["dm_disabled"] == 2 and destination != self.channel:
+        if (
+            from_mod
+            and self.bot.config["dm_disabled"] == DMDisabled.ALL_THREADS
+            and destination != self.channel
+        ):
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
         try:
@@ -980,7 +1000,8 @@ class Thread:
 
     async def set_title(self, title) -> None:
         user_id = match_user_id(self.channel.topic)
-        await self.channel.edit(topic=f'Title: {title}\nUser ID: {user_id}')
+        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}")
+
 
 class ThreadManager:
     """Class that handles storing, finding and creating Modmail threads."""
@@ -1172,7 +1193,9 @@ class ThreadManager:
                     del self.cache[recipient.id]
                     return thread
 
-        self.bot.loop.create_task(thread.setup(creator=creator, category=category))
+        self.bot.loop.create_task(
+            thread.setup(creator=creator, category=category, initial_message=message)
+        )
         return thread
 
     async def find_or_create(self, recipient) -> Thread:

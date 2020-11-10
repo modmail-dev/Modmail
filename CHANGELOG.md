@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
-however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
+however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# v3.7.0-dev9
+# v3.7.0-dev12
 
 ### Added
 
@@ -23,17 +23,24 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
 - Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/kyb3r/modmail/issues/2865))
 - Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/kyb3r/modmail/issues/2762))
-- Support stickers and reject non-messages (i.e. pin_add)
-- Added support for thread titles, `?title` ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
-- Added `data_collection` to specify if bot metadata should be collected by Modmail developers
+- Support stickers and reject non-messages. (i.e. pin_add)
+- Added support for thread titles, `?title`. ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
+- Added `data_collection` to specify if bot metadata should be collected by Modmail developers.
+- Added `?autotrigger`, `use_regex_autotrigger` config to specify keywords to trigger commands. ([GH #130](https://github.com/kyb3r/modmail/issues/130), [GH #649](https://github.com/kyb3r/modmail/issues/649))
 
 ### Fixed
 
 - `?contact` now sends members a DM.
+- `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/kyb3r/modmail/issues/2856))
+- Command truncated after && in alias. ([GH #2870](https://github.com/kyb3r/modmail/issues/2870))
 
 ### Improved
 
-- Plugins installations have clearer error messages
+- Plugins installations have clearer error messages.
+- `?move` now does not require exact category names, accepts case-insensitive and startswith names.
+
+### Internal
+- Use enums in config. ([GH #2821](https://github.com/kyb3r/modmail/issues/2821))
 
 # v3.6.2
 

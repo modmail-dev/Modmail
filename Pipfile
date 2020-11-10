@@ -3,6 +3,11 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
 [dev-packages]
 black = "==19.10b0"
 pylint = "*"
@@ -10,26 +15,19 @@ bandit = "==1.6.2"
 flake8 = "*"
 
 [packages]
-aiohttp = "==3.6.2"
-async-timeout = "==3.0.1"
-attrs = "==19.3.0"
-chardet = "==3.0.4"
-"discord.py" = {path = "discord.py-1.5.2.tar.gz"}
-dnspython = "==1.16.0"
-emoji = "==0.5.4"
-future = "==0.18.2"
-idna = "==2.9"
-isodate = "==0.6.0"
-motor = "==2.1.0"
-multidict = "==4.7.6"
+colorama = ">=0.4.0"
+python-dateutil = ">=2.7.0"
+emoji = ">=0.2"
+uvloop = {version = ">=0.12.0",sys_platform = "!= 'win32'"}
+motor = ">=2.0.0"
 natural = "==0.2.0"
+isodate = ">=0.6.0"
+dnspython = "~=1.16.0"
 parsedatetime = "==2.6"
-pymongo = "==3.10.1"
-python-dateutil = "==2.8.1"
-python-dotenv = "==0.14.0"
-six = "==1.15.0"
-websockets = "==8.1"
-yarl = "==1.4.2"
+aiohttp = ">=3.6.0,<3.7.0"
+python-dotenv = ">=0.10.3"
+pipenv = "*"
+"discord.py" = {file = "./discord.py-1.5.2.tar.gz"}
 
 [scripts]
 bot = "python bot.py"

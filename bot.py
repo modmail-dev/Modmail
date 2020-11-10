@@ -1,7 +1,8 @@
-__version__ = "3.7.0-dev9"
+__version__ = "3.7.0-dev12"
 
 
 import asyncio
+import copy
 import logging
 import os
 import re
@@ -33,7 +34,7 @@ from core import checks
 from core.clients import ApiClient, PluginDatabaseClient, MongoDBClient
 from core.config import ConfigManager
 from core.utils import human_join, match_title, normalize_alias
-from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
+from core.models import DMDisabled, PermissionLevel, SafeFormatter, getLogger, configure_logging
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
@@ -243,6 +244,10 @@ class ModmailBot(commands.Bot):
     @property
     def aliases(self) -> typing.Dict[str, str]:
         return self.config["aliases"]
+
+    @property
+    def auto_triggers(self) -> typing.Dict[str, str]:
+        return self.config["auto_triggers"]
 
     @property
     def token(self) -> str:
@@ -477,7 +482,7 @@ class ModmailBot(commands.Bot):
                         "Failed to close thread with channel %s, skipping.", log["channel_id"]
                     )
 
-        if self.config["data_collection"]:
+        if self.config.get("data_collection"):
             self.metadata_loop = tasks.Loop(
                 self.post_metadata,
                 seconds=0,
@@ -748,7 +753,7 @@ class ModmailBot(commands.Bot):
         if blocked:
             return
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
-    
+
         if message.type != discord.MessageType.default:
             return
 
@@ -765,7 +770,7 @@ class ModmailBot(commands.Bot):
                 )
                 return
 
-            if self.config["dm_disabled"] >= 1:
+            if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                 embed = discord.Embed(
                     title=self.config["disabled_new_thread_title"],
                     color=self.error_color,
@@ -782,7 +787,7 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.create(message.author, message=message)
         else:
-            if self.config["dm_disabled"] == 2:
+            if self.config["dm_disabled"] == DMDisabled.ALL_THREADS:
                 embed = discord.Embed(
                     title=self.config["disabled_current_thread_title"],
                     color=self.error_color,
@@ -844,6 +849,7 @@ class ModmailBot(commands.Bot):
                 discord.utils.find(view.skip_string, prefixes)
                 ctx_.invoked_with = view.get_word().lower()
                 ctx_.command = self.all_commands.get(ctx_.invoked_with)
+                print(ctx_.invoked_with, ctx_.args, ctx_.kwargs)
                 ctxs += [ctx_]
             return ctxs
 
@@ -851,6 +857,61 @@ class ModmailBot(commands.Bot):
         ctx.invoked_with = invoker
         ctx.command = self.all_commands.get(invoker)
         return [ctx]
+
+    async def trigger_auto_triggers(self, message, channel, *, cls=commands.Context):
+        message.author = self.modmail_guild.me
+        message.channel = channel
+
+        view = StringView(message.content)
+        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        thread = await self.threads.find(channel=ctx.channel)
+
+        invoked_prefix = self.prefix
+        invoker = view.get_word().lower()
+
+        # Check if there is any aliases being called.
+        if self.config.get("use_regex_autotrigger"):
+            alias = self.auto_triggers[
+                next(filter(lambda x: re.match(x, message.content), self.auto_triggers.keys()))
+            ]
+        else:
+            alias = self.auto_triggers[
+                next(
+                    filter(
+                        lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys()
+                    )
+                )
+            ]
+
+        if alias is None:
+            ctx.thread = thread
+            ctx.invoked_with = invoker
+            ctx.command = self.all_commands.get(invoker)
+            ctxs = [ctx]
+        else:
+            ctxs = []
+            aliases = normalize_alias(alias, message.content[len(f"{invoked_prefix}{invoker}") :])
+            if not aliases:
+                logger.warning("Alias %s is invalid as called in automove.", invoker)
+
+            for alias in aliases:
+                view = StringView(invoked_prefix + alias)
+                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                ctx_.thread = thread
+                discord.utils.find(view.skip_string, await self.get_prefix())
+                ctx_.invoked_with = view.get_word().lower()
+                ctx_.command = self.all_commands.get(ctx_.invoked_with)
+                ctxs += [ctx_]
+
+        for ctx in ctxs:
+            if ctx.command:
+                old_checks = copy.copy(ctx.command.checks)
+                ctx.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+
+                await self.invoke(ctx)
+
+                ctx.command.checks = old_checks
+                continue
 
     async def get_context(self, message, *, cls=commands.Context):
         """
@@ -882,7 +943,7 @@ class ModmailBot(commands.Bot):
     async def update_perms(
         self, name: typing.Union[PermissionLevel, str], value: int, add: bool = True
     ) -> None:
-        value = int(value)
+        value = str(value)
         if isinstance(name, PermissionLevel):
             permissions = self.config["level_permissions"]
             name = name.name

@@ -12,7 +12,7 @@ import discord
 from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
-from core.models import InvalidConfigError, Default, getLogger
+from core.models import DMDisabled, InvalidConfigError, Default, getLogger
 from core.time import UserFriendlyTimeSync
 from core.utils import strtobool
 
@@ -91,6 +91,8 @@ class ConfigManager:
         "confirm_thread_response": "React to confirm thread creation which will directly contact the moderators",
         "confirm_thread_creation_accept": "\u2705",
         "confirm_thread_creation_deny": "\U0001F6AB",
+        # regex
+        "use_regex_autotrigger": False,
     }
 
     private_keys = {
@@ -98,9 +100,7 @@ class ConfigManager:
         "activity_message": "",
         "activity_type": None,
         "status": None,
-        # dm_disabled 0 = none, 1 = new threads, 2 = all threads
-        # TODO: use enum
-        "dm_disabled": 0,
+        "dm_disabled": DMDisabled.NONE,
         "oauth_whitelist": [],
         # moderation
         "blocked": {},
@@ -117,6 +117,7 @@ class ConfigManager:
         # misc
         "plugins": [],
         "aliases": {},
+        "auto_triggers": {},
     }
 
     protected_keys = {
@@ -159,12 +160,16 @@ class ConfigManager:
         "close_on_leave",
         "alert_on_mention",
         "confirm_thread_creation",
-        "enable_plugins",
+        "use_regex_autotrigger" "enable_plugins",
         "data_collection",
         "enable_eval",
     }
 
-    special_types = {"status", "activity_type"}
+    enums = {
+        "dm_disabled": DMDisabled,
+        "status": discord.Status,
+        "activity_type": discord.ActivityType,
+    }
 
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
@@ -277,25 +282,14 @@ class ConfigManager:
             except ValueError:
                 value = self.remove(key)
 
-        elif key in self.special_types:
+        elif key in self.enums:
             if value is None:
                 return None
-
-            if key == "status":
-                try:
-                    # noinspection PyArgumentList
-                    value = discord.Status(value)
-                except ValueError:
-                    logger.warning("Invalid status %s.", value)
-                    value = self.remove(key)
-
-            elif key == "activity_type":
-                try:
-                    # noinspection PyArgumentList
-                    value = discord.ActivityType(value)
-                except ValueError:
-                    logger.warning("Invalid activity %s.", value)
-                    value = self.remove(key)
+            try:
+                value = self.enums[key](value)
+            except ValueError:
+                logger.warning("Invalid %s %s.", key, value)
+                value = self.remove(key)
 
         return value
 
@@ -354,8 +348,10 @@ class ConfigManager:
             except ValueError:
                 raise InvalidConfigError("Must be a yes/no value.")
 
-        # elif key in self.special_types:
-        #     if key == "status":
+        elif key in self.enums:
+            if isinstance(item, self.enums[key]):
+                # value is an enum type
+                item = item.value
 
         return self.__setitem__(key, item)
 

@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import os
 import random
+import re
 import traceback
 from contextlib import redirect_stdout
 from datetime import datetime
@@ -22,7 +23,13 @@ from pkg_resources import parse_version
 
 from core import checks, utils
 from core.changelog import Changelog
-from core.models import InvalidConfigError, PermissionLevel, UnseenFormatter, getLogger
+from core.models import (
+    InvalidConfigError,
+    PermissionLevel,
+    SimilarCategoryConverter,
+    UnseenFormatter,
+    getLogger,
+)
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 
 
@@ -1697,6 +1704,124 @@ class Utility(commands.Cog):
         embed.add_field(name="Roles", value=" ".join(r.mention for r in roles) or "None")
 
         await ctx.send(embed=embed)
+
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger(self, ctx):
+        """Automatically trigger alias-like commands based on a certain keyword in the user's inital message"""
+        await ctx.send_help(ctx.command)
+
+    @autotrigger.command(name="add")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_add(self, ctx, keyword, *, command):
+        """Adds a trigger to automatically trigger an alias-like command"""
+        if keyword in self.bot.auto_triggers:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Another autotrigger with the same name already exists: `{keyword}`.",
+            )
+        else:
+            self.bot.auto_triggers[keyword] = command
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"Keyword `{keyword}` has been linked to `{command}`.",
+            )
+
+        await ctx.send(embed=embed)
+
+    @autotrigger.command(name="edit")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_edit(self, ctx, keyword, *, command):
+        """Edits a pre-existing trigger to automatically trigger an alias-like command"""
+        if keyword not in self.bot.auto_triggers:
+            embed = utils.create_not_found_embed(
+                keyword, self.bot.auto_triggers.keys(), "Autotrigger"
+            )
+        else:
+            self.bot.auto_triggers[keyword] = command
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"Keyword `{keyword}` has been linked to `{command}`.",
+            )
+
+        await ctx.send(embed=embed)
+
+    @autotrigger.command(name="remove")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_remove(self, ctx, keyword):
+        """Removes a trigger to automatically trigger an alias-like command"""
+        try:
+            del self.bot.auto_triggers[keyword]
+        except KeyError:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Keyword `{keyword}` could not be found.",
+            )
+            await ctx.send(embed=embed)
+        else:
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"Keyword `{keyword}` has been removed.",
+            )
+            await ctx.send(embed=embed)
+
+    @autotrigger.command(name="test")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_test(self, ctx, *, text):
+        """Tests a string against the current autotrigger setup"""
+        for keyword in list(self.bot.auto_triggers):
+            if self.bot.config.get("use_regex_autotrigger"):
+                check = re.match(keyword, text)
+            else:
+                check = keyword in text
+
+            if check:
+                alias = self.bot.auto_triggers[keyword]
+                embed = discord.Embed(
+                    title="Keyword Found",
+                    color=self.bot.main_color,
+                    description=f"autotrigger keyword `{keyword}` found. Command executed: `{alias}`",
+                )
+                return await ctx.send(embed=embed)
+
+        embed = discord.Embed(
+            title="Keyword Not Found",
+            color=self.bot.error_color,
+            description=f"No autotrigger keyword found. Thread will stay in {self.bot.main_category}.",
+        )
+        return await ctx.send(embed=embed)
+
+    @autotrigger.command(name="list")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_list(self, ctx):
+        """Lists all autotriggers set up"""
+        embeds = []
+        for keyword in list(self.bot.auto_triggers):
+            command = self.bot.auto_triggers[keyword]
+            embed = discord.Embed(title=keyword, color=self.bot.main_color, description=command,)
+            embeds.append(embed)
+
+        if not embeds:
+            embeds.append(
+                discord.Embed(
+                    title="No autotrigger set",
+                    color=self.bot.error_color,
+                    description=f"Use `{self.bot.prefix}autotrigger add` to add new autotriggers.",
+                )
+            )
+
+        await EmbedPaginatorSession(ctx, *embeds).run()
 
     @commands.command(hidden=True, name="eval")
     @checks.has_permissions(PermissionLevel.OWNER)
