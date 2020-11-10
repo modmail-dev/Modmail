@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "878a40a1f33596a78d6ddccfec3c116687a6dd2a98ba77d7f63d2a86d07d2718"
+            "sha256": "1f660c7237deeaa50a7098002c0f3c05cce254d6c0ba8bc02993c5400e335a59"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -82,7 +82,7 @@
             "version": "==0.4.4"
         },
         "discord.py": {
-            "file": "./discord.py-1.5.1.tar.gz"
+            "file": "./discord.py-1.5.2.tar.gz"
         },
         "distlib": {
             "hashes": [
