@@ -901,7 +901,7 @@ class Modmail(commands.Cog):
         async with ctx.typing():
             msg = await ctx.thread.note(ctx.message, persistent=True)
             await msg.pin()
-        await self.bot.api.create_note(recipient=ctx.thread.recipient, message=ctx.message)
+        await self.bot.api.create_note(recipient=ctx.thread.recipient, message=ctx.message, message_id=msg.id)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)

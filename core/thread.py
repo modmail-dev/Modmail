@@ -3,6 +3,7 @@ import io
 import re
 import typing
 from datetime import datetime, timedelta
+import time
 from types import SimpleNamespace
 
 import isodate
@@ -191,13 +192,42 @@ class Thread:
                     await self.bot.add_reaction(msg, close_emoji)
 
         async def send_persistent_notes():
-            notes = await self.bot.api.find_notes()
-            for note in notes:
-                message = discord.Message()
-                await self.note(note.message)
-                pass
+            notes = await self.bot.api.find_notes(self.recipient)
+            ids = {}
 
-        await asyncio.gather(send_genesis_message(), send_recipient_genesis_message())
+            class State:
+                def store_user(self, user):
+                    return user
+
+            for note in notes:
+                author = note["author"]
+
+                class Author:
+                    name = author["name"]
+                    id = author["id"]
+                    discriminator = author["discriminator"]
+                    avatar_url = author["avatar_url"]
+
+                data = {
+                    "id": round(time.time() * 1000 - discord.utils.DISCORD_EPOCH) << 22,
+                    "attachments": {},
+                    "embeds": {},
+                    "edited_timestamp": None,
+                    "type": None,
+                    "pinned": None,
+                    "mention_everyone": None,
+                    "tts": None,
+                    "content": note["message"],
+                    "author": Author(),
+                }
+                message = discord.Message(state=State(), channel=None, data=data)
+                ids[note["_id"]] = str((await self.note(message, persistent=True, thread_creation=True)).id)
+
+            await self.bot.api.update_note_ids(ids)
+
+        await asyncio.gather(
+            send_genesis_message(), send_recipient_genesis_message(), send_persistent_notes()
+        )
         self.bot.dispatch("thread_ready", self)
 
     def _format_info_embed(self, user, log_url, log_count, color):
@@ -517,11 +547,14 @@ class Thread:
             ):
                 raise ValueError("Thread message not found.")
 
-            if message1.embeds[0].color.value == self.bot.main_color and message1.embeds[
-                0
-            ].author.name.startswith("Note"):
+            if message1.embeds[0].color.value == self.bot.main_color and (
+                message1.embeds[0].author.name.startswith("Note")
+                or message1.embeds[0].author.name.startswith("Persistent Note")
+            ):
                 if not note:
                     raise ValueError("Thread message not found.")
+                elif message1.embeds[0].author.name.startswith("Persistent Note"):
+                    await self.bot.api.delete_note(message_id)
                 return message1, None
 
             if message1.embeds[0].color.value != self.bot.mod_color and not (
@@ -636,11 +669,11 @@ class Thread:
             self.bot.api.edit_message(message.id, content), linked_message.edit(embed=embed)
         )
 
-    async def note(self, message: discord.Message, persistent=False) -> None:
+    async def note(self, message: discord.Message, persistent=False, thread_creation=False) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
-        msg = await self.send(message, self.channel, note=True, persistent_note=persistent)
+        msg = await self.send(message, self.channel, note=True, persistent_note=persistent, thread_creation=thread_creation)
 
         self.bot.loop.create_task(
             self.bot.api.append_log(
@@ -727,6 +760,7 @@ class Thread:
         anonymous: bool = False,
         plain: bool = False,
         persistent_note: bool = False,
+        thread_creation: bool = False,
     ) -> None:
 
         self.bot.loop.create_task(
@@ -876,7 +910,7 @@ class Thread:
             embed.set_footer(text=f"Message ID: {message.id}")
             embed.colour = self.bot.recipient_color
 
-        if from_mod or note:
+        if (from_mod or note) and not thread_creation:
             delete_message = not bool(message.attachments)
             if delete_message and destination == self.channel:
                 try:

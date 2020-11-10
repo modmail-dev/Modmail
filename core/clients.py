@@ -142,6 +142,21 @@ class ApiClient:
     async def search_by_text(self, text: str, limit: Optional[int]):
         return NotImplemented
 
+    async def create_note(self, recipient: Member, message: Message, message_id: Union[int, str]):
+        return NotImplemented
+
+    async def find_notes(self, recipient: Member):
+        return NotImplemented
+
+    async def update_note_ids(self, ids: dict):
+        return NotImplemented
+
+    async def delete_note(self, message_id: Union[int, str]):
+        return NotImplemented
+
+    async def edit_note(self, message_id: Union[int, str]):
+        return NotImplemented
+
     def get_plugin_partition(self, cog):
         return NotImplemented
 
@@ -401,7 +416,7 @@ class MongoDBClient(ApiClient):
             {"messages": {"$slice": 5}},
         ).to_list(limit)
 
-    async def create_note(self, recipient: Member, message: Message):
+    async def create_note(self, recipient: Member, message: Message, message_id: Union[int, str]):
         await self.db.notes.insert_one(
             {
                 "recipient": str(recipient.id),
@@ -409,16 +424,25 @@ class MongoDBClient(ApiClient):
                     "id": str(message.author.id),
                     "name": message.author.name,
                     "discriminator": message.author.discriminator,
-                    "avatar_url": str(message.author.avatar_url),
+                    "avatar_url": str(message.author.avatar_url)
                 },
+                "message": message.content,
+                "message_id": str(message_id),
             }
         )
 
-    async def delete_note(self):
-        pass
-
     async def find_notes(self, recipient: Member):
         return await self.db.notes.find({"recipient": str(recipient.id)}).to_list(None)
+
+    async def update_note_ids(self, ids: dict):
+        for object_id, message_id in ids.items():
+            await self.db.notes.update_one({"_id": object_id}, {"$set": {"message_id": message_id}})
+
+    async def delete_note(self, message_id: Union[int, str]):
+        await self.db.notes.delete_one({"message_id": str(message_id)})
+
+    async def edit_note(self, message_id: Union[int, str]):
+        return NotImplemented
 
     def get_plugin_partition(self, cog):
         cls_name = cog.__class__.__name__
