@@ -14,7 +14,6 @@ aiohttp = "==3.6.2"
 async-timeout = "==3.0.1"
 attrs = "==19.3.0"
 chardet = "==3.0.4"
-"discord.py" = {path = "discord.py-1.5.1.tar.gz"}
 dnspython = "==1.16.0"
 emoji = "==0.5.4"
 future = "==0.18.2"
@@ -30,6 +29,8 @@ python-dotenv = "==0.14.0"
 six = "==1.15.0"
 websockets = "==8.1"
 yarl = "==1.4.2"
+uvloop = {version = ">=0.12.0",sys_platform = "!= 'win32'"}
+"discord.py" = {file = "https://github.com/kyb3r/modmail/raw/development/discord.py-1.5.1.tar.gz"}
 
 [scripts]
 bot = "python bot.py"

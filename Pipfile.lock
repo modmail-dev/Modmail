@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "085d6c018d43b9b4c4b5bc5e1ff99543b00c735dfe744abbc5a813048b2e1734"
+            "sha256": "c910ca82e90b6af36846c730e166d2d7a4b82ca96271a6863c482ac6053c32cc"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -57,14 +57,14 @@
             "version": "==3.0.4"
         },
         "discord-py": {
+            "file": "https://github.com/kyb3r/modmail/raw/development/discord.py-1.5.1.tar.gz",
             "hashes": [
                 "sha256:f52ab61650d5fe2726fb645e4f23eecdfcf3ded74645f3978a010259e1bc28ca"
             ],
-            "path": "./discord.py-1.5.1.tar.gz",
             "version": "==1.5.1"
         },
         "discord.py": {
-            "path": "discord.py-1.5.1.tar.gz"
+            "file": "https://github.com/kyb3r/modmail/raw/development/discord.py-1.5.1.tar.gz"
         },
         "dnspython": {
             "hashes": [
@@ -236,6 +236,21 @@
             ],
             "index": "pypi",
             "version": "==1.15.0"
+        },
+        "uvloop": {
+            "hashes": [
+                "sha256:08b109f0213af392150e2fe6f81d33261bb5ce968a288eb698aad4f46eb711bd",
+                "sha256:123ac9c0c7dd71464f58f1b4ee0bbd81285d96cdda8bc3519281b8973e3a461e",
+                "sha256:4315d2ec3ca393dd5bc0b0089d23101276778c304d42faff5dc4579cb6caef09",
+                "sha256:4544dcf77d74f3a84f03dd6278174575c44c67d7165d4c42c71db3fdc3860726",
+                "sha256:afd5513c0ae414ec71d24f6f123614a80f3d27ca655a4fcf6cabe50994cc1891",
+                "sha256:b4f591aa4b3fa7f32fb51e2ee9fea1b495eb75b0b3c8d0ca52514ad675ae63f7",
+                "sha256:bcac356d62edd330080aed082e78d4b580ff260a677508718f88016333e2c9c5",
+                "sha256:e7514d7a48c063226b7d06617cbb12a14278d4323a065a8d46a7962686ce2e95",
+                "sha256:f07909cd9fc08c52d294b1570bba92186181ca01fe3dc9ffba68955273dd7362"
+            ],
+            "markers": "sys_platform != 'win32'",
+            "version": "==0.14.0"
         },
         "websockets": {
             "hashes": [
