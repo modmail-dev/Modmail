@@ -11,7 +11,7 @@ import isodate
 import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
-from core.models import DummyMessage, getLogger
+from core.models import DMDisabled, DummyMessage, getLogger
 from core.time import human_timedelta
 from core.utils import (
     is_image_url,
@@ -201,12 +201,10 @@ class Thread:
         async def activate_auto_triggers():
             message = DummyMessage(copy.copy(initial_message))
             if message:
-                for keyword in list(self.bot.auto_triggers):
-                    if keyword in message.content:
-                        try:
-                            return await self.bot.trigger_auto_triggers(message, channel)
-                        except StopIteration:
-                            pass
+                try:
+                    return await self.bot.trigger_auto_triggers(message, channel)
+                except RuntimeError:
+                    pass
 
         await asyncio.gather(
             send_genesis_message(), send_recipient_genesis_message(), activate_auto_triggers(),
@@ -896,7 +894,11 @@ class Thread:
                 except Exception as e:
                     logger.warning("Cannot delete message: %s.", e)
 
-        if from_mod and self.bot.config["dm_disabled"] == DMDisabled.ALL_THREADS and destination != self.channel:
+        if (
+            from_mod
+            and self.bot.config["dm_disabled"] == DMDisabled.ALL_THREADS
+            and destination != self.channel
+        ):
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
         try:

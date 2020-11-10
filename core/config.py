@@ -92,7 +92,7 @@ class ConfigManager:
         "confirm_thread_creation_accept": "\u2705",
         "confirm_thread_creation_deny": "\U0001F6AB",
         # regex
-        "use_regex_autotrigger": False
+        "use_regex_autotrigger": False,
     }
 
     private_keys = {
@@ -160,8 +160,7 @@ class ConfigManager:
         "close_on_leave",
         "alert_on_mention",
         "confirm_thread_creation",
-        "use_regex_autotrigger"
-        "enable_plugins",
+        "use_regex_autotrigger" "enable_plugins",
         "data_collection",
         "enable_eval",
     }
@@ -169,7 +168,7 @@ class ConfigManager:
     enums = {
         "dm_disabled": DMDisabled,
         "status": discord.Status,
-        "activity_type": discord.ActivityType
+        "activity_type": discord.ActivityType,
     }
 
     defaults = {**public_keys, **private_keys, **protected_keys}
@@ -282,7 +281,7 @@ class ConfigManager:
                 value = strtobool(value)
             except ValueError:
                 value = self.remove(key)
-        
+
         elif key in self.enums:
             if value is None:
                 return None

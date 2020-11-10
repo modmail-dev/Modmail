@@ -219,6 +219,7 @@ class DummyMessage:
     where all functions that require an actual message to exist
     is replaced with a dummy function
     """
+
     def __init__(self, message):
         self._message = message
 

@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import os
 import random
+import re
 import traceback
 from contextlib import redirect_stdout
 from datetime import datetime
@@ -1718,7 +1719,7 @@ class Utility(commands.Cog):
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
-                description=f"Another autotrigger with the same name already exists: `{name}`.",
+                description=f"Another autotrigger with the same name already exists: `{keyword}`.",
             )
         else:
             self.bot.auto_triggers[keyword] = command
@@ -1780,7 +1781,12 @@ class Utility(commands.Cog):
     async def autotrigger_test(self, ctx, *, text):
         """Tests a string against the current autotrigger setup"""
         for keyword in list(self.bot.auto_triggers):
-            if keyword in text:
+            if self.bot.config.get("use_regex_autotrigger"):
+                check = re.match(keyword, text)
+            else:
+                check = keyword in text
+
+            if check:
                 alias = self.bot.auto_triggers[keyword]
                 embed = discord.Embed(
                     title="Keyword Found",

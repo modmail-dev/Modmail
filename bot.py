@@ -876,7 +876,11 @@ class ModmailBot(commands.Bot):
             ]
         else:
             alias = self.auto_triggers[
-                next(filter(lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys()))
+                next(
+                    filter(
+                        lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys()
+                    )
+                )
             ]
 
         if alias is None:
