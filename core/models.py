@@ -257,3 +257,9 @@ class DummyMessage:
 
     async def ack(self):
         return
+
+
+class DMDisabled(IntEnum):
+    NONE = 0
+    NEW_THREADS = 1
+    ALL_THREADS = 2

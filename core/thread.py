@@ -896,7 +896,7 @@ class Thread:
                 except Exception as e:
                     logger.warning("Cannot delete message: %s.", e)
 
-        if from_mod and self.bot.config["dm_disabled"] == 2 and destination != self.channel:
+        if from_mod and self.bot.config["dm_disabled"] == DMDisabled.ALL_THREADS and destination != self.channel:
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
         try:

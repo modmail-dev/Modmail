@@ -34,7 +34,7 @@ from core import checks
 from core.clients import ApiClient, PluginDatabaseClient, MongoDBClient
 from core.config import ConfigManager
 from core.utils import human_join, match_title, normalize_alias
-from core.models import PermissionLevel, SafeFormatter, getLogger, configure_logging
+from core.models import DMDisabled, PermissionLevel, SafeFormatter, getLogger, configure_logging
 from core.thread import ThreadManager
 from core.time import human_timedelta
 
@@ -770,7 +770,7 @@ class ModmailBot(commands.Bot):
                 )
                 return
 
-            if self.config["dm_disabled"] >= 1:
+            if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                 embed = discord.Embed(
                     title=self.config["disabled_new_thread_title"],
                     color=self.error_color,
@@ -787,7 +787,7 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.create(message.author, message=message)
         else:
-            if self.config["dm_disabled"] == 2:
+            if self.config["dm_disabled"] == DMDisabled.ALL_THREADS:
                 embed = discord.Embed(
                     title=self.config["disabled_current_thread_title"],
                     color=self.error_color,
