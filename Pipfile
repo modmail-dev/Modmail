@@ -7,14 +7,14 @@ verify_ssl = true
 black = "==19.10b0"
 pylint = "==2.6.0"
 bandit = "==1.6.2"
-flake8 = "==3.8.5"
+flake8 = "==3.8.4"
 
 [packages]
 aiohttp = "==3.6.2"
 async-timeout = "==3.0.1"
 attrs = "==19.3.0"
 chardet = "==3.0.4"
-"discord.py" = {path = "discord.py-1.5.2.tar.gz"}
+"discord.py" = {path = "discord.py-1.5.1.tar.gz"}
 dnspython = "==1.16.0"
 emoji = "==0.5.4"
 future = "==0.18.2"
