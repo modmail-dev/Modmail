@@ -482,7 +482,7 @@ class ModmailBot(commands.Bot):
                         "Failed to close thread with channel %s, skipping.", log["channel_id"]
                     )
 
-        if self.config["data_collection"]:
+        if self.config.get("data_collection"):
             self.metadata_loop = tasks.Loop(
                 self.post_metadata,
                 seconds=0,
