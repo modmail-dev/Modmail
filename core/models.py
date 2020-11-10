@@ -225,6 +225,9 @@ class DummyMessage:
     def __getattr__(self, name: str):
         return getattr(self._message, name)
 
+    def __bool__(self):
+        return bool(self._message)
+
     async def delete(self, *, delay=None):
         return
 

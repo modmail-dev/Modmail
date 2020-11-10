@@ -849,6 +849,7 @@ class ModmailBot(commands.Bot):
                 discord.utils.find(view.skip_string, prefixes)
                 ctx_.invoked_with = view.get_word().lower()
                 ctx_.command = self.all_commands.get(ctx_.invoked_with)
+                print(ctx_.invoked_with, ctx_.args, ctx_.kwargs)
                 ctxs += [ctx_]
             return ctxs
 

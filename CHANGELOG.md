@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
-however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
+however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# v3.7.0-dev11
+# v3.7.0-dev12
 
 ### Added
 
@@ -31,7 +31,8 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Fixed
 
 - `?contact` now sends members a DM.
-- Fixed issue where `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/kyb3r/modmail/issues/2856))
+- `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/kyb3r/modmail/issues/2856))
+- Command truncated after && in alias ([GH #2870](https://github.com/kyb3r/modmail/issues/2870))
 
 ### Improved
 

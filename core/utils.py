@@ -270,7 +270,7 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
     return embed
 
 
-def parse_alias(alias):
+def parse_alias(alias, *, split=True):
     def encode_alias(m):
         return "\x1AU" + base64.b64encode(m.group(1).encode()).decode() + "\x1AU"
 
@@ -288,7 +288,12 @@ def parse_alias(alias):
     if not alias:
         return aliases
 
-    for a in re.split(r"\s*&&\s*", alias):
+    if split:
+        iterate = re.split(r"\s*&&\s*", alias)
+    else:
+        iterate = [alias]
+
+    for a in iterate:
         a = re.sub("\x1AU(.+?)\x1AU", decode_alias, a)
         if a[0] == a[-1] == '"':
             a = a[1:-1]
@@ -299,7 +304,7 @@ def parse_alias(alias):
 
 def normalize_alias(alias, message):
     aliases = parse_alias(alias)
-    contents = parse_alias(message)
+    contents = parse_alias(message, split=False)
 
     final_aliases = []
     for a, content in zip_longest(aliases, contents):
