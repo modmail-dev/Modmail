@@ -1707,7 +1707,7 @@ class Utility(commands.Cog):
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def autotrigger(self, ctx):
-        """Automatically trigger alias-like commands based on a certain keyword"""
+        """Automatically trigger alias-like commands based on a certain keyword in the user's inital message"""
         await ctx.send_help(ctx.command)
 
     @autotrigger.command(name="add")

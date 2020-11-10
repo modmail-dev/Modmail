@@ -211,3 +211,46 @@ class SimilarCategoryConverter(commands.CategoryChannelConverter):
                 raise commands.ChannelNotFound(argument)
 
         return result
+
+
+class DummyMessage:
+    """
+    A class mimicking the original :class:discord.Message
+    where all functions that require an actual message to exist
+    is replaced with a dummy function
+    """
+    def __init__(self, message):
+        self._message = message
+
+    def __getattr__(self, name: str):
+        return getattr(self._message, name)
+
+    async def delete(self, *, delay=None):
+        return
+
+    async def edit(self, **fields):
+        return
+
+    async def add_reaction(self, emoji):
+        return
+
+    async def remove_reaction(self, emoji):
+        return
+
+    async def clear_reaction(self, emoji):
+        return
+
+    async def clear_reactions(self):
+        return
+
+    async def pin(self, *, reason=None):
+        return
+
+    async def unpin(self, *, reason=None):
+        return
+
+    async def publish(self):
+        return
+
+    async def ack(self):
+        return

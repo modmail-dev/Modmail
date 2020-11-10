@@ -11,8 +11,7 @@ import isodate
 import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
-from core import checks
-from core.models import PermissionLevel, getLogger
+from core.models import DummyMessage, getLogger
 from core.time import human_timedelta
 from core.utils import (
     is_image_url,
@@ -200,7 +199,7 @@ class Thread:
                     await self.bot.add_reaction(msg, close_emoji)
 
         async def activate_auto_triggers():
-            message = copy.copy(initial_message)
+            message = DummyMessage(copy.copy(initial_message))
             if message:
                 for keyword in list(self.bot.auto_triggers):
                     if keyword in message.content:
@@ -894,8 +893,6 @@ class Thread:
             if delete_message and destination == self.channel:
                 try:
                     await message.delete()
-                except discord.NotFound:
-                    pass
                 except Exception as e:
                     logger.warning("Cannot delete message: %s.", e)
 
