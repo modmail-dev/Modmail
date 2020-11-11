@@ -29,6 +29,6 @@ jobs:
     - name: Pylint
       run: pylint ./bot.py cogs/*.py core/*.py --disable=import-error  --exit-zero -r y
       continue-on-error: true
-    - name: Black and flake8
+    - name: Black
       run: |
         black . --diff --check

@@ -33,8 +33,7 @@ except ImportError:
 from core import checks
 from core.clients import ApiClient, MongoDBClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.models import (DMDisabled, PermissionLevel, SafeFormatter,
-                         configure_logging, getLogger)
+from core.models import DMDisabled, PermissionLevel, SafeFormatter, configure_logging, getLogger
 from core.thread import ThreadManager
 from core.time import human_timedelta
 from core.utils import human_join, match_title, normalize_alias
