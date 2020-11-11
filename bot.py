@@ -849,7 +849,6 @@ class ModmailBot(commands.Bot):
                 discord.utils.find(view.skip_string, prefixes)
                 ctx_.invoked_with = view.get_word().lower()
                 ctx_.command = self.all_commands.get(ctx_.invoked_with)
-                print(ctx_.invoked_with, ctx_.args, ctx_.kwargs)
                 ctxs += [ctx_]
             return ctxs
 
@@ -867,30 +866,28 @@ class ModmailBot(commands.Bot):
         thread = await self.threads.find(channel=ctx.channel)
 
         invoked_prefix = self.prefix
-        invoker = view.get_word().lower()
+        invoker = None
 
         # Check if there is any aliases being called.
         if self.config.get("use_regex_autotrigger"):
-            alias = self.auto_triggers[
-                next(filter(lambda x: re.match(x, message.content), self.auto_triggers.keys()))
-            ]
+            trigger = next(
+                filter(lambda x: re.match(x, message.content), self.auto_triggers.keys())
+            )
+            if trigger:
+                invoker = re.match(trigger, message.content).group(0)
         else:
-            alias = self.auto_triggers[
-                next(
-                    filter(
-                        lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys()
-                    )
-                )
-            ]
+            trigger = next(
+                filter(lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys())
+            )
+            if trigger:
+                invoker = trigger.lower()
 
-        if alias is None:
-            ctx.thread = thread
-            ctx.invoked_with = invoker
-            ctx.command = self.all_commands.get(invoker)
-            ctxs = [ctx]
-        else:
+        alias = self.auto_triggers[trigger]
+
+        ctxs = []
+        if alias is not None:
             ctxs = []
-            aliases = normalize_alias(alias, message.content[len(f"{invoked_prefix}{invoker}") :])
+            aliases = normalize_alias(alias)
             if not aliases:
                 logger.warning("Alias %s is invalid as called in automove.", invoker)
 

@@ -1780,16 +1780,18 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def autotrigger_test(self, ctx, *, text):
         """Tests a string against the current autotrigger setup"""
-        for keyword in list(self.bot.auto_triggers):
+        for keyword in self.bot.auto_triggers:
             if self.bot.config.get("use_regex_autotrigger"):
                 check = re.match(keyword, text)
+                regex = True
             else:
-                check = keyword in text
+                check = keyword.lower() in text.lower()
+                regex = False
 
             if check:
                 alias = self.bot.auto_triggers[keyword]
                 embed = discord.Embed(
-                    title="Keyword Found",
+                    title=f"{'Regex ' if regex else ''}Keyword Found",
                     color=self.bot.main_color,
                     description=f"autotrigger keyword `{keyword}` found. Command executed: `{alias}`",
                 )
@@ -1798,7 +1800,7 @@ class Utility(commands.Cog):
         embed = discord.Embed(
             title="Keyword Not Found",
             color=self.bot.error_color,
-            description=f"No autotrigger keyword found. Thread will stay in {self.bot.main_category}.",
+            description=f"No autotrigger keyword found.",
         )
         return await ctx.send(embed=embed)
 
@@ -1807,7 +1809,7 @@ class Utility(commands.Cog):
     async def autotrigger_list(self, ctx):
         """Lists all autotriggers set up"""
         embeds = []
-        for keyword in list(self.bot.auto_triggers):
+        for keyword in self.bot.auto_triggers:
             command = self.bot.auto_triggers[keyword]
             embed = discord.Embed(title=keyword, color=self.bot.main_color, description=command,)
             embeds.append(embed)

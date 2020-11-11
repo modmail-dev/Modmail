@@ -160,7 +160,8 @@ class ConfigManager:
         "close_on_leave",
         "alert_on_mention",
         "confirm_thread_creation",
-        "use_regex_autotrigger" "enable_plugins",
+        "use_regex_autotrigger",
+        "enable_plugins",
         "data_collection",
         "enable_eval",
     }

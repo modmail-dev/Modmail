@@ -302,7 +302,7 @@ def parse_alias(alias, *, split=True):
     return aliases
 
 
-def normalize_alias(alias, message):
+def normalize_alias(alias, message=""):
     aliases = parse_alias(alias)
     contents = parse_alias(message, split=False)
 
