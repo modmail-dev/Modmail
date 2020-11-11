@@ -1811,7 +1811,11 @@ class Utility(commands.Cog):
         embeds = []
         for keyword in self.bot.auto_triggers:
             command = self.bot.auto_triggers[keyword]
-            embed = discord.Embed(title=keyword, color=self.bot.main_color, description=command,)
+            embed = discord.Embed(
+                title=keyword,
+                color=self.bot.main_color,
+                description=command,
+            )
             embeds.append(embed)
 
         if not embeds:
