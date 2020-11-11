@@ -810,7 +810,7 @@ class ModmailBot(commands.Bot):
                 await self.add_reaction(message, blocked_emoji)
             else:
                 await self.add_reaction(message, sent_emoji)
-                self.bot.dispatch("thread_reply", thread, False, message, False, False)
+                self.dispatch("thread_reply", thread, False, message, False, False)
 
     async def get_contexts(self, message, *, cls=commands.Context):
         """
@@ -1131,8 +1131,8 @@ class ModmailBot(commands.Bot):
         if self.config["transfer_reactions"]:
             await self.handle_reaction_events(payload)
 
-        react_message_id = tryint(self.bot.config.get("react_to_contact_message"))
-        react_message_emoji = self.bot.config.get("react_to_contact_emoji")
+        react_message_id = tryint(self.config.get("react_to_contact_message"))
+        react_message_emoji = self.config.get("react_to_contact_emoji")
         if all((react_message_id, react_message_emoji)):
             if payload.message_id == react_message_id:
                 if payload.emoji.is_unicode_emoji():
@@ -1141,12 +1141,12 @@ class ModmailBot(commands.Bot):
                     emoji_fmt = f"<:{payload.emoji.name}:{payload.emoji.id}>"
 
                 if emoji_fmt == react_message_emoji:
-                    channel = self.bot.get_channel(payload.channel_id)
+                    channel = self.get_channel(payload.channel_id)
                     member = channel.guild.get_member(payload.user_id)
                     message = await channel.fetch_message(payload.message_id)
                     await message.remove_reaction(payload.emoji, member)
 
-                    ctx = await self.bot.get_context(message)
+                    ctx = await self.get_context(message)
                     ctx.author = member
                     await ctx.invoke(self.contact, user=member, manual_trigger=False)
 
