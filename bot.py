@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev14"
+__version__ = "3.7.0-dev15"
 
 
 import asyncio
@@ -12,15 +12,15 @@ from datetime import datetime
 from types import SimpleNamespace
 
 import discord
+import isodate
+from aiohttp import ClientSession
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
-
-import isodate
-
-from aiohttp import ClientSession
 from emoji import UNICODE_EMOJI
-
 from pkg_resources import parse_version
+
+from core.utils import tryint
+
 
 try:
     # noinspection PyUnresolvedReferences
@@ -31,13 +31,13 @@ except ImportError:
     pass
 
 from core import checks
-from core.clients import ApiClient, PluginDatabaseClient, MongoDBClient
+from core.clients import ApiClient, MongoDBClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.utils import human_join, match_title, normalize_alias
-from core.models import DMDisabled, PermissionLevel, SafeFormatter, getLogger, configure_logging
+from core.models import (DMDisabled, PermissionLevel, SafeFormatter,
+                         configure_logging, getLogger)
 from core.thread import ThreadManager
 from core.time import human_timedelta
-
+from core.utils import human_join, match_title, normalize_alias
 
 logger = getLogger(__name__)
 
