@@ -569,8 +569,6 @@ class Thread:
             ):
                 if not note:
                     raise ValueError("Thread message not found.")
-                elif message1.embeds[0].author.name.startswith("Persistent Note"):
-                    await self.bot.api.delete_note(message_id)
                 return message1, None
 
             if message1.embeds[0].color.value != self.bot.mod_color and not (
@@ -646,6 +644,8 @@ class Thread:
             tasks += [message1.delete()]
         if message2 is not None:
             tasks += [message2.delete()]
+        elif message1.embeds[0].author.name.startswith("Persistent Note"):
+            await self.bot.api.delete_note(message1.id)
         if tasks:
             await asyncio.gather(*tasks)
 
