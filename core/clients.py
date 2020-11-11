@@ -154,7 +154,7 @@ class ApiClient:
     async def delete_note(self, message_id: Union[int, str]):
         return NotImplemented
 
-    async def edit_note(self, message_id: Union[int, str]):
+    async def edit_note(self, message_id: Union[int, str], message: str):
         return NotImplemented
 
     def get_plugin_partition(self, cog):
@@ -441,8 +441,8 @@ class MongoDBClient(ApiClient):
     async def delete_note(self, message_id: Union[int, str]):
         await self.db.notes.delete_one({"message_id": str(message_id)})
 
-    async def edit_note(self, message_id: Union[int, str]):
-        return NotImplemented
+    async def edit_note(self, message_id: Union[int, str], message: str):
+        await self.db.notes.update_one({"message_id": str(message_id)}, {"$set": {"message": message}})
 
     def get_plugin_partition(self, cog):
         cls_name = cog.__class__.__name__

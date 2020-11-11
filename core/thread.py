@@ -629,6 +629,8 @@ class Thread:
             embed2 = message2.embeds[0]
             embed2.description = message
             tasks += [message2.edit(embed=embed2)]
+        elif message1.embeds[0].author.name.startswith("Persistent Note"):
+            tasks += [self.bot.api.edit_note(message1.id, message)]
 
         await asyncio.gather(*tasks)
 
