@@ -645,7 +645,7 @@ class Thread:
         if message2 is not None:
             tasks += [message2.delete()]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
-            await self.bot.api.delete_note(message1.id)
+            tasks += [self.bot.api.delete_note(message1.id)]
         if tasks:
             await asyncio.gather(*tasks)
 
