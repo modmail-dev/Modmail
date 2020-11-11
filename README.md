@@ -16,7 +16,7 @@
   </a>
 
   <a href="https://github.com/kyb3r/modmail/">
-    <img src="https://api.logviewer.tech/badges/instances.svg" alt="Bot instances">
+    <img src="https://api.modmail.dev/badges/instances.svg" alt="Bot instances">
   </a>
 
   <a href="https://discord.gg/j5e9p8w">
@@ -54,7 +54,7 @@ This bot is free for everyone and always will be. If you like this project and w
 
 When a member sends a direct message to the bot, Modmail will create a channel or "thread" into a designated category. All further DM messages will automatically relay to that channel; any available staff can respond within the channel.
 
-Our Logviewer will save the threads so you can view previous threads through their corresponding log link. Here is an [**example**](https://logs.logviewer.tech/example).
+Our Logviewer will save the threads so you can view previous threads through their corresponding log link. Here is an [**example**](https://logs.modmail.dev/example).
 
 ## Features
 
@@ -67,7 +67,7 @@ Our Logviewer will save the threads so you can view previous threads through the
   * Minimum length for members to be in the guild before allowed to contact Modmail (`guild_age`). 
 
 * **Advanced Logging Functionality:**
-  * When you close a thread, Modmail will generate a [log link](https://logs.logviewer.tech/example) and post it to your log channel.
+  * When you close a thread, Modmail will generate a [log link](https://logs.modmail.dev/example) and post it to your log channel.
   * Native Discord dark-mode feel.
   * Markdown/formatting support.
   * Login via Discord to protect your logs ([premium Patreon feature](https://patreon.com/kyber)).
