@@ -229,7 +229,9 @@ class Thread:
                     "author": Author(),
                 }
                 message = discord.Message(state=State(), channel=None, data=data)
-                ids[note["_id"]] = str((await self.note(message, persistent=True, thread_creation=True)).id)
+                ids[note["_id"]] = str(
+                    (await self.note(message, persistent=True, thread_creation=True)).id
+                )
 
             await self.bot.api.update_note_ids(ids)
 
@@ -242,7 +244,10 @@ class Thread:
                     pass
 
         await asyncio.gather(
-            send_genesis_message(), send_recipient_genesis_message(), activate_auto_triggers(), send_persistent_notes(),
+            send_genesis_message(),
+            send_recipient_genesis_message(),
+            activate_auto_triggers(),
+            send_persistent_notes(),
         )
         self.bot.dispatch("thread_ready", self)
 
@@ -687,11 +692,19 @@ class Thread:
             self.bot.api.edit_message(message.id, content), linked_message.edit(embed=embed)
         )
 
-    async def note(self, message: discord.Message, persistent=False, thread_creation=False) -> None:
+    async def note(
+        self, message: discord.Message, persistent=False, thread_creation=False
+    ) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
-        msg = await self.send(message, self.channel, note=True, persistent_note=persistent, thread_creation=thread_creation)
+        msg = await self.send(
+            message,
+            self.channel,
+            note=True,
+            persistent_note=persistent,
+            thread_creation=thread_creation,
+        )
 
         self.bot.loop.create_task(
             self.bot.api.append_log(

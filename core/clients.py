@@ -424,7 +424,7 @@ class MongoDBClient(ApiClient):
                     "id": str(message.author.id),
                     "name": message.author.name,
                     "discriminator": message.author.discriminator,
-                    "avatar_url": str(message.author.avatar_url)
+                    "avatar_url": str(message.author.avatar_url),
                 },
                 "message": message.content,
                 "message_id": str(message_id),
@@ -436,13 +436,17 @@ class MongoDBClient(ApiClient):
 
     async def update_note_ids(self, ids: dict):
         for object_id, message_id in ids.items():
-            await self.db.notes.update_one({"_id": object_id}, {"$set": {"message_id": message_id}})
+            await self.db.notes.update_one(
+                {"_id": object_id}, {"$set": {"message_id": message_id}}
+            )
 
     async def delete_note(self, message_id: Union[int, str]):
         await self.db.notes.delete_one({"message_id": str(message_id)})
 
     async def edit_note(self, message_id: Union[int, str], message: str):
-        await self.db.notes.update_one({"message_id": str(message_id)}, {"$set": {"message": message}})
+        await self.db.notes.update_one(
+            {"message_id": str(message_id)}, {"$set": {"message": message}}
+        )
 
     def get_plugin_partition(self, cog):
         cls_name = cog.__class__.__name__
