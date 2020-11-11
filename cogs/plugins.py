@@ -147,7 +147,7 @@ class Plugins(commands.Cog):
 
         logger.debug("Finished loading all plugins.")
 
-        self.bot.dispatch('plugins_ready')
+        self.bot.dispatch("plugins_ready")
 
         self._ready_event.set()
         await self.bot.config.update()

@@ -813,7 +813,6 @@ class ModmailBot(commands.Bot):
                 await self.add_reaction(message, sent_emoji)
                 self.bot.dispatch("thread_reply", thread, False, message, False, False)
 
-
     async def get_contexts(self, message, *, cls=commands.Context):
         """
         Returns all invocation contexts from the message.

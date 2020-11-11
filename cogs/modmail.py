@@ -1011,10 +1011,6 @@ class Modmail(commands.Cog):
                 await asyncio.sleep(5)
                 await ctx.message.delete()
 
-    @commands.Cog.listener()
-    async def on_plugin_ready(self):
-        print('hi')
-
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @trigger_typing
