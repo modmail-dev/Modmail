@@ -486,6 +486,8 @@ class Thread:
             tasks.append(self.channel.delete())
 
         await asyncio.gather(*tasks)
+        self.bot.dispatch("thread_close", self, closer, silent, delete_channel, message, scheduled)
+
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
         if self.close_task is not None and (not auto_close or all):
@@ -779,6 +781,7 @@ class Thread:
                 )
 
         await asyncio.gather(*tasks)
+        self.bot.dispatch("thread_reply", self, True, message, anonymous, plain)
 
     async def send(
         self,

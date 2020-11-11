@@ -34,6 +34,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `?contact` now sends members a DM.
 - `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/kyb3r/modmail/issues/2856))
 - Command truncated after && in alias. ([GH #2870](https://github.com/kyb3r/modmail/issues/2870))
+- `on_plugins_ready` event for plugins works now.
 
 ### Improved
 
@@ -42,6 +43,8 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Internal
 - Use enums in config. ([GH #2821](https://github.com/kyb3r/modmail/issues/2821))
+- `on_thread_close` event for plugins.
+- `on_thread_reply` event for plugins.
 
 # v3.6.2
 

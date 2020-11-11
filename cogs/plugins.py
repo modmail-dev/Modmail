@@ -15,6 +15,7 @@ from subprocess import PIPE
 
 import discord
 from discord.ext import commands
+from discord.utils import async_all
 
 from pkg_resources import parse_version
 
@@ -145,6 +146,9 @@ class Plugins(commands.Cog):
                 continue
 
         logger.debug("Finished loading all plugins.")
+
+        self.bot.dispatch('plugins_ready')
+
         self._ready_event.set()
         await self.bot.config.update()
 
