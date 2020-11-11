@@ -27,7 +27,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Added support for thread titles, `?title`. ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
 - Added `data_collection` to specify if bot metadata should be collected by Modmail developers.
 - Added `?autotrigger`, `use_regex_autotrigger` config to specify keywords to trigger commands. ([GH #130](https://github.com/kyb3r/modmail/issues/130), [GH #649](https://github.com/kyb3r/modmail/issues/649))
-- Added `?note persistent` that creates notes that are persistent for a user.
+- Added `?note persistent` that creates notes that are persistent for a user. ([GH #2842](https://github.com/kyb3r/modmail/issues/2842), [PR #2878](https://github.com/kyb3r/modmail/pull/2878))
 
 ### Fixed
 
