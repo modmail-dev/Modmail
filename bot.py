@@ -6,10 +6,10 @@ import copy
 import logging
 import os
 import re
-import subprocess
 import sys
 import typing
 from datetime import datetime
+from subprocess import PIPE
 from types import SimpleNamespace
 
 import discord
@@ -1466,15 +1466,9 @@ class ModmailBot(commands.Bot):
                     await channel.send(embed=embed)
             else:
                 command = "git pull"
-
-                cmd = subprocess.run(
-                    command,
-                    cwd=os.getcwd(),
-                    stderr=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    shell=True,
-                )
-                res = cmd.stdout.decode("utf-8").strip()
+                proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
+                res = await proc.stdout.read()
+                res = res.decode("utf-8").rstrip()
 
                 if res != "Already up to date.":
                     logger.info("Bot has been updated.")
@@ -1499,7 +1493,7 @@ class ModmailBot(commands.Bot):
             logger.warning("Autoupdates disabled.")
             self.autoupdate_loop.cancel()
 
-        if not self.config.get("github_token"):
+        if not self.config.get("github_token") and self.hosting_method == HostingMethod.HEROKU:
             logger.warning("GitHub access token not found.")
             logger.warning("Autoupdates disabled.")
             self.autoupdate_loop.cancel()

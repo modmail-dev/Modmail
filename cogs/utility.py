@@ -10,7 +10,7 @@ from difflib import get_close_matches
 from io import BytesIO, StringIO
 from itertools import takewhile, zip_longest
 from json import JSONDecodeError, loads
-import subprocess
+from subprocess import PIPE
 from textwrap import indent
 from types import SimpleNamespace
 from typing import Union
@@ -1844,9 +1844,9 @@ class Utility(commands.Cog):
             embed.set_thumbnail(url=user["avatar_url"])
             await ctx.send(embed=embed)
         else:
-            await ctx.send(embed=discord.Embed(
-                title="Invalid Github Token", color=self.bot.error_color
-            ))
+            await ctx.send(
+                embed=discord.Embed(title="Invalid Github Token", color=self.bot.error_color)
+            )
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -1920,14 +1920,9 @@ class Utility(commands.Cog):
             else:
                 command = "git pull"
 
-                cmd = subprocess.run(
-                    command,
-                    cwd=os.getcwd(),
-                    stderr=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    shell=True,
-                )
-                res = cmd.stdout.decode("utf-8").strip()
+                proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
+                res = await proc.stdout.read()
+                res = res.decode("utf-8").rstrip()
 
                 if res != "Already up to date.":
                     logger.info("Bot has been updated.")

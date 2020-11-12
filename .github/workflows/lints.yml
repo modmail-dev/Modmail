@@ -25,7 +25,7 @@ jobs:
         python -m pip install bandit==1.6.2 pylint black==19.10b0
       continue-on-error: true
     - name: Bandit syntax check
-      run: bandit ./bot.py cogs/*.py core/*.py -b .bandit_baseline.json
+      run: bandit -r . -b .bandit_baseline.json
     - name: Pylint
       run: pylint ./bot.py cogs/*.py core/*.py --disable=import-error  --exit-zero -r y
       continue-on-error: true

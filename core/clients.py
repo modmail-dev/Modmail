@@ -211,7 +211,6 @@ class GitHub:
             raise InvalidConfigError("Invalid github token")
 
 
-
 class ApiClient:
     """
     This class represents the general request class for all type of clients.
@@ -664,7 +663,11 @@ class MongoDBClient(ApiClient):
             return None
         else:
             return {
-                "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,}
+                "user": {
+                    "username": user.username,
+                    "avatar_url": user.avatar_url,
+                    "url": user.url,
+                }
             }
 
 
