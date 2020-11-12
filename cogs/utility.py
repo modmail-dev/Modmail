@@ -1835,13 +1835,18 @@ class Utility(commands.Cog):
         """Shows the GitHub user your Github_Token is linked to."""
         data = await self.bot.api.get_user_info()
 
-        embed = discord.Embed(
-            title="GitHub", description="Current User", color=self.bot.main_color
-        )
-        user = data["user"]
-        embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
-        embed.set_thumbnail(url=user["avatar_url"])
-        await ctx.send(embed=embed)
+        if data:
+            embed = discord.Embed(
+                title="GitHub", description="Current User", color=self.bot.main_color
+            )
+            user = data["user"]
+            embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
+            embed.set_thumbnail(url=user["avatar_url"])
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(embed=discord.Embed(
+                title="Invalid Github Token", color=self.bot.error_color
+            ))
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -1869,7 +1874,7 @@ class Utility(commands.Cog):
             )
 
             data = await self.bot.api.get_user_info()
-            if not data.get("error"):
+            if data:
                 user = data["user"]
                 embed.set_author(
                     name=user["username"], icon_url=user["avatar_url"], url=user["url"]

@@ -11,7 +11,7 @@ from aiohttp import ClientResponseError, ClientResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConfigurationError
 
-from core.models import getLogger
+from core.models import InvalidConfigError, getLogger
 
 logger = getLogger(__name__)
 
@@ -201,11 +201,15 @@ class GitHub:
         """
         self = cls(bot, bot.config.get("github_token"))
         resp: dict = await self.request("https://api.github.com/user")
-        self.username = resp["login"]
-        self.avatar_url = resp["avatar_url"]
-        self.url = resp["html_url"]
-        logger.info(f"GitHub logged in to: {self.username}")
-        return self
+        if resp.get("login"):
+            self.username = resp["login"]
+            self.avatar_url = resp["avatar_url"]
+            self.url = resp["html_url"]
+            logger.info(f"GitHub logged in to: {self.username}")
+            return self
+        else:
+            raise InvalidConfigError("Invalid github token")
+
 
 
 class ApiClient:
@@ -654,10 +658,14 @@ class MongoDBClient(ApiClient):
         }
 
     async def get_user_info(self) -> dict:
-        user = await GitHub.login(self.bot)
-        return {
-            "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,}
-        }
+        try:
+            user = await GitHub.login(self.bot)
+        except InvalidConfigError:
+            return None
+        else:
+            return {
+                "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,}
+            }
 
 
 class PluginDatabaseClient:
