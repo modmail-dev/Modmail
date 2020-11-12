@@ -1928,17 +1928,19 @@ class Utility(commands.Cog):
                     logger.info("Bot has been updated.")
                     if self.bot.hosting_method == HostingMethod.PM2:
                         embed = discord.Embed(
-                            title="Bot has been updated", color=self.bot.main_color
+                            title="Bot has been updated",
+                            description=f"Version: {latest.version}",
+                            color=self.bot.main_color,
                         )
                         await ctx.send(embed=embed)
                     else:
                         embed = discord.Embed(
                             title="Bot has been updated and is logging out.",
-                            description="If you do not have an auto-restart setup, please manually start the bot.",
+                            description=f"Version: {latest.version}\nIf you do not have an auto-restart setup, please manually start the bot.",
                             color=self.bot.main_color,
                         )
                         await ctx.send(embed=embed)
-                        await self.bot.logout()
+                    await self.bot.logout()
                 else:
                     embed = discord.Embed(title="Already up to date.", color=self.bot.main_color,)
                     await ctx.send(embed=embed)

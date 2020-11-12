@@ -2,7 +2,7 @@
   "errors": [],
   "generated_at": "2020-11-12T15:17:38Z",
   "metrics": {
-    ".\\bot.py": {
+    "./bot.py": {
       "CONFIDENCE.HIGH": 1.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -14,7 +14,7 @@
       "loc": 1264,
       "nosec": 0
     },
-    ".\\cogs\\modmail.py": {
+    "./cogs/modmail.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -26,7 +26,7 @@
       "loc": 1280,
       "nosec": 0
     },
-    ".\\cogs\\plugins.py": {
+    "./cogs/plugins.py": {
       "CONFIDENCE.HIGH": 1.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -38,7 +38,7 @@
       "loc": 572,
       "nosec": 0
     },
-    ".\\cogs\\utility.py": {
+    "./cogs/utility.py": {
       "CONFIDENCE.HIGH": 2.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -50,7 +50,7 @@
       "loc": 1710,
       "nosec": 0
     },
-    ".\\core\\_color_data.py": {
+    "./core/_color_data.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -62,7 +62,7 @@
       "loc": 1166,
       "nosec": 0
     },
-    ".\\core\\changelog.py": {
+    "./core/changelog.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -74,7 +74,7 @@
       "loc": 145,
       "nosec": 0
     },
-    ".\\core\\checks.py": {
+    "./core/checks.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -86,7 +86,7 @@
       "loc": 89,
       "nosec": 0
     },
-    ".\\core\\clients.py": {
+    "./core/clients.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 1.0,
@@ -98,7 +98,7 @@
       "loc": 585,
       "nosec": 0
     },
-    ".\\core\\config.py": {
+    "./core/config.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -110,7 +110,7 @@
       "loc": 327,
       "nosec": 0
     },
-    ".\\core\\decorators.py": {
+    "./core/decorators.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -122,7 +122,7 @@
       "loc": 9,
       "nosec": 0
     },
-    ".\\core\\models.py": {
+    "./core/models.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -134,7 +134,7 @@
       "loc": 199,
       "nosec": 0
     },
-    ".\\core\\paginator.py": {
+    "./core/paginator.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -146,7 +146,7 @@
       "loc": 209,
       "nosec": 0
     },
-    ".\\core\\thread.py": {
+    "./core/thread.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -158,7 +158,7 @@
       "loc": 993,
       "nosec": 0
     },
-    ".\\core\\time.py": {
+    "./core/time.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -170,7 +170,7 @@
       "loc": 158,
       "nosec": 0
     },
-    ".\\core\\utils.py": {
+    "./core/utils.py": {
       "CONFIDENCE.HIGH": 0.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
@@ -198,7 +198,7 @@
   "results": [
     {
       "code": "11 from datetime import datetime\n12 from subprocess import PIPE\n13 from types import SimpleNamespace\n",
-      "filename": ".\\bot.py",
+      "filename": "./bot.py",
       "issue_confidence": "HIGH",
       "issue_severity": "LOW",
       "issue_text": "Consider possible security implications associated with PIPE module.",
@@ -212,7 +212,7 @@
     },
     {
       "code": "13 from site import USER_SITE\n14 from subprocess import PIPE\n15 \n16 import discord\n",
-      "filename": ".\\cogs\\plugins.py",
+      "filename": "./cogs/plugins.py",
       "issue_confidence": "HIGH",
       "issue_severity": "LOW",
       "issue_text": "Consider possible security implications associated with PIPE module.",
@@ -227,7 +227,7 @@
     },
     {
       "code": "12 from json import JSONDecodeError, loads\n13 from subprocess import PIPE\n14 from textwrap import indent\n",
-      "filename": ".\\cogs\\utility.py",
+      "filename": "./cogs/utility.py",
       "issue_confidence": "HIGH",
       "issue_severity": "LOW",
       "issue_text": "Consider possible security implications associated with PIPE module.",
@@ -241,7 +241,7 @@
     },
     {
       "code": "1985         try:\n1986             exec(to_compile, env)  # pylint: disable=exec-used\n1987         except Exception as exc:\n",
-      "filename": ".\\cogs\\utility.py",
+      "filename": "./cogs/utility.py",
       "issue_confidence": "HIGH",
       "issue_severity": "MEDIUM",
       "issue_text": "Use of exec detected.",
@@ -255,7 +255,7 @@
     },
     {
       "code": "68 \n69     def __init__(self, bot, access_token: str = \"\", username: str = \"\", **kwargs):\n70         self.bot = bot\n71         self.session = bot.session\n72         self.headers: dict = None\n73         self.access_token = access_token\n74         self.username = username\n75         self.avatar_url: str = kwargs.pop(\"avatar_url\", \"\")\n76         self.url: str = kwargs.pop(\"url\", \"\")\n77         if self.access_token:\n78             self.headers = {\"Authorization\": \"token \" + str(access_token)}\n79 \n80     async def request(\n",
-      "filename": ".\\core\\clients.py",
+      "filename": "./core/clients.py",
       "issue_confidence": "MEDIUM",
       "issue_severity": "LOW",
       "issue_text": "Possible hardcoded password: ''",
