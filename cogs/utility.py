@@ -1929,20 +1929,25 @@ class Utility(commands.Cog):
                     if self.bot.hosting_method == HostingMethod.PM2:
                         embed = discord.Embed(
                             title="Bot has been updated",
-                            description=f"Version: {latest.version}",
                             color=self.bot.main_color,
+                        )
+                        embed.set_footer(
+                            text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
                         )
                         await ctx.send(embed=embed)
                     else:
                         embed = discord.Embed(
                             title="Bot has been updated and is logging out.",
-                            description=f"Version: {latest.version}\nIf you do not have an auto-restart setup, please manually start the bot.",
+                            description="If you do not have an auto-restart setup, please manually start the bot.",
                             color=self.bot.main_color,
+                        )
+                        embed.set_footer(
+                            text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
                         )
                         await ctx.send(embed=embed)
                     await self.bot.logout()
                 else:
-                    embed = discord.Embed(title="Already up to date.", color=self.bot.main_color,)
+                    embed = discord.Embed(title="Already up to date", description=desc, color=self.bot.main_color,)
                     await ctx.send(embed=embed)
 
     @commands.command(hidden=True, name="eval")
@@ -2022,6 +2027,8 @@ class Utility(commands.Cog):
                             await ctx.send(f"```py\n{page}\n```")
                             break
                         await ctx.send(f"```py\n{page}\n```")
+
+        await self.bot.add_reaction(ctx.message, "\u2705")
 
 
 def setup(bot):

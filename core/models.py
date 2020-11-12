@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+import os
 from enum import IntEnum
 from logging.handlers import RotatingFileHandler
 from string import Formatter
@@ -13,6 +14,11 @@ import _string
 try:
     from colorama import Fore, Style
 except ImportError:
+    Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
+
+
+if ".heroku" in os.environ.get("PYTHONHOME", ""):
+    # heroku
     Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
 
 

@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev20"
+__version__ = "3.7.0-dev21"
 
 
 import asyncio
@@ -108,10 +108,6 @@ class ModmailBot(commands.Bot):
             return HostingMethod.PM2
 
         return HostingMethod.OTHER
-
-    @property
-    def is_pm2(self) -> bool:
-        return ".heroku" in os.environ.get("PYTHONHOME", "")
 
     def startup(self):
         logger.line()
