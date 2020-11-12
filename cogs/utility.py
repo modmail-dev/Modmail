@@ -1889,7 +1889,7 @@ class Utility(commands.Cog):
 
                 user = data["user"]
 
-                if not commit_data or not commit_data.get("html_url"):
+                if commit_data and commit_data.get("html_url"):
                     embed = discord.Embed(color=self.bot.main_color)
 
                     embed.set_footer(
@@ -1914,7 +1914,7 @@ class Utility(commands.Cog):
                     embed.add_field(name="Merge Commit", value=f"[`{short_sha}`]({html_url})")
                 else:
                     embed = discord.Embed(
-                        title="Already up to date with master repository.",
+                        title="Already up to date",
                         description="No further updates required",
                         color=self.bot.main_color,
                     )
