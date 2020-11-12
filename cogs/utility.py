@@ -1885,7 +1885,6 @@ class Utility(commands.Cog):
                 data = await self.bot.api.update_repository()
 
                 commit_data = data["data"]
-                print(commit_data)
                 user = data["user"]
 
                 if commit_data and commit_data.get("html_url"):

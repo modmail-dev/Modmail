@@ -159,7 +159,6 @@ class GitHub:
 
         payload = {"base": self.BRANCH, "head": sha, "commit_message": "Updating bot"}
 
-        print(payload)
 
         merge_url = self.MERGE_URL.format(username=self.username)
 
