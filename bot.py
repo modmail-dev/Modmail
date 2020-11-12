@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev15"
+__version__ = "3.7.0-dev16"
 
 
 import asyncio
@@ -462,7 +462,7 @@ class ModmailBot(commands.Bot):
                     log["channel_id"],
                     {
                         "open": False,
-                        "title": match_title(thread.channel.topic),
+                        "title": None,
                         "closed_at": str(datetime.utcnow()),
                         "close_message": "Channel has been deleted, no closer found.",
                         "closer": {
@@ -1323,6 +1323,14 @@ class ModmailBot(commands.Bot):
             logger.warning("CommandNotFound: %s", exception)
         elif isinstance(exception, commands.MissingRequiredArgument):
             await context.send_help(context.command)
+        elif isinstance(exception, commands.CommandOnCooldown):
+            await context.send(
+                embed=discord.Embed(
+                    title="Command on cooldown",
+                    description=f"Try again in {exception.retry_after:.2f} seconds",
+                    color=self.error_color,
+                )
+            )
         elif isinstance(exception, commands.CheckFailure):
             for check in context.command.checks:
                 if not await check(context):

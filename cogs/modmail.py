@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import discord
 from discord.ext import commands
+from discord.ext.commands.cooldowns import BucketType
 from discord.role import Role
 from discord.utils import escape_markdown
 
@@ -296,6 +297,7 @@ class Modmail(commands.Cog):
         `options` is a string which takes in arguments on how to perform the move. Ex: "silently"
         """
         split_args = arguments.strip('"').split(" ")
+        category = None
 
         # manually parse arguments, consumes as much of args as possible for category
         for i in range(len(split_args)):
@@ -313,6 +315,9 @@ class Modmail(commands.Cog):
                 pass
             else:
                 break
+
+        if not category:
+            raise commands.ChannelNotFound(arguments)
 
         options = " ".join(arguments.split(" ")[-i:])
 
@@ -646,9 +651,10 @@ class Modmail(commands.Cog):
             embeds.append(embed)
         return embeds
 
-    @commands.command()
+    @commands.command(cooldown_after_parsing=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
+    @commands.cooldown(1, 600, BucketType.channel)
     async def title(self, ctx, *, name: str):
         """Sets title for a thread"""
         await ctx.thread.set_title(name)
