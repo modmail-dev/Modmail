@@ -1902,8 +1902,10 @@ class Utility(commands.Cog):
 
                     embed.description = latest.description
                     for name, value in latest.fields.items():
+                        if value > 200:
+                            value = value[:200] + "..."
+
                         embed.add_field(name=name, value=value)
-                    # message = commit_data['commit']['message']
                     html_url = commit_data["html_url"]
                     short_sha = commit_data["sha"][:6]
                     embed.add_field(name="Merge Commit", value=f"[`{short_sha}`]({html_url})")
@@ -1926,28 +1928,29 @@ class Utility(commands.Cog):
 
                 if res != "Already up to date.":
                     logger.info("Bot has been updated.")
-                    if self.bot.hosting_method == HostingMethod.PM2:
-                        embed = discord.Embed(
-                            title="Bot has been updated",
-                            color=self.bot.main_color,
+
+                    embed = discord.Embed(title="Bot has been updated", color=self.bot.main_color,)
+                    embed.set_footer(
+                        text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
+                    )
+                    embed.description = latest.description
+                    for name, value in latest.fields.items():
+                        if value > 200:
+                            value = value[:200] + "..."
+
+                        embed.add_field(name=name, value=value)
+
+                    if self.bot.hosting_method == HostingMethod.OTHER:
+                        embed.description = (
+                            "If you do not have an auto-restart setup, please manually start the bot.",
                         )
-                        embed.set_footer(
-                            text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
-                        )
-                        await ctx.send(embed=embed)
-                    else:
-                        embed = discord.Embed(
-                            title="Bot has been updated and is logging out.",
-                            description="If you do not have an auto-restart setup, please manually start the bot.",
-                            color=self.bot.main_color,
-                        )
-                        embed.set_footer(
-                            text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
-                        )
-                        await ctx.send(embed=embed)
+
+                    await ctx.send(embed=embed)
                     await self.bot.logout()
                 else:
-                    embed = discord.Embed(title="Already up to date", description=desc, color=self.bot.main_color,)
+                    embed = discord.Embed(
+                        title="Already up to date", description=desc, color=self.bot.main_color,
+                    )
                     await ctx.send(embed=embed)
 
     @commands.command(hidden=True, name="eval")
