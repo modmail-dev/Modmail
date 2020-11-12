@@ -1148,7 +1148,9 @@ class ModmailBot(commands.Bot):
 
                     ctx = await self.get_context(message)
                     ctx.author = member
-                    await ctx.invoke(self.get_command("contact"), user=member, manual_trigger=False)
+                    await ctx.invoke(
+                        self.get_command("contact"), user=member, manual_trigger=False
+                    )
 
     async def on_raw_reaction_remove(self, payload):
         if self.config["transfer_reactions"]:
