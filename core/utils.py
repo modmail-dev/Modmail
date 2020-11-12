@@ -1,4 +1,5 @@
 import base64
+from core.models import HostingMethod
 import functools
 import re
 import string

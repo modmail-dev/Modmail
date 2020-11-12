@@ -5,6 +5,7 @@ from json import JSONDecodeError
 from typing import Union, Optional
 
 from discord import Member, DMChannel, TextChannel, Message
+from discord.ext import commands
 
 from aiohttp import ClientResponseError, ClientResponse
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -13,6 +14,198 @@ from pymongo.errors import ConfigurationError
 from core.models import getLogger
 
 logger = getLogger(__name__)
+
+
+class GitHub:
+    """
+    The client for interacting with GitHub API.
+    Parameters
+    ----------
+    bot : Bot
+        The Modmail bot.
+    access_token : str, optional
+        GitHub's access token.
+    username : str, optional
+        GitHub username.
+    avatar_url : str, optional
+        URL to the avatar in GitHub.
+    url : str, optional
+        URL to the GitHub profile.
+    Attributes
+    ----------
+    bot : Bot
+        The Modmail bot.
+    access_token : str
+        GitHub's access token.
+    username : str
+        GitHub username.
+    avatar_url : str
+        URL to the avatar in GitHub.
+    url : str
+        URL to the GitHub profile.
+    Class Attributes
+    ----------------
+    BASE : str
+        GitHub API base URL.
+    REPO : str
+        Modmail repo URL for GitHub API.
+    HEAD : str
+        Modmail HEAD URL for GitHub API.
+    MERGE_URL : str
+        URL for merging upstream to master.
+    FORK_URL : str
+        URL to fork Modmail.
+    STAR_URL : str
+        URL to star Modmail.
+    """
+
+    BASE = "https://api.github.com"
+    REPO = BASE + "/repos/kyb3r/modmail"
+    HEAD = REPO + "/git/refs/heads/master"
+    MERGE_URL = BASE + "/repos/{username}/modmail/merges"
+    FORK_URL = REPO + "/forks"
+    STAR_URL = BASE + "/user/starred/kyb3r/modmail"
+
+    def __init__(self, bot, access_token: str = "", username: str = "", **kwargs):
+        self.bot = bot
+        self.session = bot.session
+        self.headers: dict = None
+        self.access_token = access_token
+        self.username = username
+        self.avatar_url: str = kwargs.pop("avatar_url", "")
+        self.url: str = kwargs.pop("url", "")
+        if self.access_token:
+            self.headers = {"Authorization": "token " + str(access_token)}
+
+    async def request(
+        self,
+        url: str,
+        method: str = "GET",
+        payload: dict = None,
+        return_response: bool = False,
+        headers: dict = None,
+    ) -> Union[ClientResponse, dict, str]:
+        """
+        Makes a HTTP request.
+        Parameters
+        ----------
+        url : str
+            The destination URL of the request.
+        method : str
+            The HTTP method (POST, GET, PUT, DELETE, FETCH, etc.).
+        payload : Dict[str, Any]
+            The json payload to be sent along the request.
+        return_response : bool
+            Whether the `ClientResponse` object should be returned.
+        headers : Dict[str, str]
+            Additional headers to `headers`.
+        Returns
+        -------
+        ClientResponse or Dict[str, Any] or List[Any] or str
+            `ClientResponse` if `return_response` is `True`.
+            `dict` if the returned data is a json object.
+            `list` if the returned data is a json list.
+            `str` if the returned data is not a valid json data,
+            the raw response.
+        """
+        if headers is not None:
+            headers.update(self.headers)
+        else:
+            headers = self.headers
+        async with self.session.request(method, url, headers=headers, json=payload) as resp:
+            if return_response:
+                return resp
+            try:
+                return await resp.json()
+            except (JSONDecodeError, ClientResponseError):
+                return await resp.text()
+
+    def filter_valid(self, data):
+        """
+        Filters configuration keys that are accepted.
+        Parameters
+        ----------
+        data : Dict[str, Any]
+            The data that needs to be cleaned.
+        Returns
+        -------
+        Dict[str, Any]
+            Filtered `data` to keep only the accepted pairs.
+        """
+        valid_keys = self.bot.config.valid_keys.difference(self.bot.config.protected_keys)
+        return {k: v for k, v in data.items() if k in valid_keys}
+
+    async def update_repository(self, sha: str = None) -> Optional[dict]:
+        """
+        Update the repository from Modmail main repo.
+        Parameters
+        ----------
+        sha : Optional[str], optional
+            The commit SHA to update the repository.
+        Returns
+        -------
+        Optional[dict]
+            If the response is a dict.
+        """
+        if not self.username:
+            raise commands.CommandInvokeError("Username not found.")
+
+        if sha is None:
+            resp: dict = await self.request(self.HEAD)
+            sha = resp["object"]["sha"]
+
+        payload = {"base": "master", "head": sha, "commit_message": "Updating bot"}
+
+        merge_url = self.MERGE_URL.format(username=self.username)
+
+        resp = await self.request(merge_url, method="POST", payload=payload)
+        if isinstance(resp, dict):
+            return resp
+
+    async def fork_repository(self) -> None:
+        """
+        Forks Modmail's repository.
+        """
+        await self.request(self.FORK_URL, method="POST")
+
+    async def has_starred(self) -> bool:
+        """
+        Checks if shared Modmail.
+        Returns
+        -------
+        bool
+            `True`, if Modmail was starred.
+            Otherwise `False`.
+        """
+        resp = await self.request(self.STAR_URL, return_response=True)
+        return resp.status == 204
+
+    async def star_repository(self) -> None:
+        """
+        Stars Modmail's repository.
+        """
+        await self.request(self.STAR_URL, method="PUT", headers={"Content-Length": "0"})
+
+    @classmethod
+    async def login(cls, bot) -> "GitHub":
+        """
+        Logs in to GitHub with configuration variable information.
+        Parameters
+        ----------
+        bot : Bot
+            The Modmail bot.
+        Returns
+        -------
+        GitHub
+            The newly created `GitHub` object.
+        """
+        self = cls(bot, bot.config.get("github_token"))
+        resp: dict = await self.request("https://api.github.com/user")
+        self.username = resp["login"]
+        self.avatar_url = resp["avatar_url"]
+        self.url = resp["html_url"]
+        logger.info(f"GitHub logged in to: {self.username}")
+        return self
 
 
 class ApiClient:
@@ -451,6 +644,20 @@ class MongoDBClient(ApiClient):
     def get_plugin_partition(self, cog):
         cls_name = cog.__class__.__name__
         return self.db.plugins[cls_name]
+
+    async def update_repository(self) -> dict:
+        user = await GitHub.login(self.bot)
+        data = await user.update_repository()
+        return {
+            "data": data,
+            "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,},
+        }
+
+    async def get_user_info(self) -> dict:
+        user = await GitHub.login(self.bot)
+        return {
+            "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,}
+        }
 
 
 class PluginDatabaseClient:

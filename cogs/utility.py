@@ -10,6 +10,7 @@ from difflib import get_close_matches
 from io import BytesIO, StringIO
 from itertools import takewhile, zip_longest
 from json import JSONDecodeError, loads
+import subprocess
 from textwrap import indent
 from types import SimpleNamespace
 from typing import Union
@@ -24,12 +25,13 @@ from pkg_resources import parse_version
 from core import checks, utils
 from core.changelog import Changelog
 from core.models import (
+    HostingMethod,
     InvalidConfigError,
     PermissionLevel,
-    SimilarCategoryConverter,
     UnseenFormatter,
     getLogger,
 )
+from core.utils import trigger_typing
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 
 
@@ -1824,6 +1826,122 @@ class Utility(commands.Cog):
             )
 
         await EmbedPaginatorSession(ctx, *embeds).run()
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
+    @checks.github_token_required()
+    @trigger_typing
+    async def github(self, ctx):
+        """Shows the GitHub user your Github_Token is linked to."""
+        data = await self.bot.api.get_user_info()
+
+        embed = discord.Embed(
+            title="GitHub", description="Current User", color=self.bot.main_color
+        )
+        user = data["user"]
+        embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
+        embed.set_thumbnail(url=user["avatar_url"])
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
+    @checks.github_token_required(ignore_if_not_heroku=True)
+    @trigger_typing
+    async def update(self, ctx, *, flag: str = ""):
+        """
+        Update Modmail.
+        This only works for PM2 or Heroku users who have configured their bot for updates.
+        To stay up-to-date with the latest commit
+        from GitHub, specify "force" as the flag.
+        """
+
+        changelog = await Changelog.from_url(self.bot)
+        latest = changelog.latest_version
+
+        desc = (
+            f"The latest version is [`{self.bot.version}`]"
+            "(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)"
+        )
+
+        if self.bot.version >= parse_version(latest.version) and flag.lower() != "force":
+            embed = discord.Embed(
+                title="Already up to date", description=desc, color=self.bot.main_color
+            )
+
+            data = await self.bot.api.get_user_info()
+            if not data.get("error"):
+                user = data["user"]
+                embed.set_author(
+                    name=user["username"], icon_url=user["avatar_url"], url=user["url"]
+                )
+            await ctx.send(embed=embed)
+        else:
+            if self.bot.hosting_method == HostingMethod.HEROKU:
+                data = await self.bot.api.update_repository()
+
+                commit_data = data["data"]
+                user = data["user"]
+
+                if commit_data:
+                    embed = discord.Embed(color=self.bot.main_color)
+
+                    embed.set_footer(
+                        text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
+                    )
+
+                    embed.set_author(
+                        name=user["username"] + " - Updating bot",
+                        icon_url=user["avatar_url"],
+                        url=user["url"],
+                    )
+
+                    embed.description = latest.description
+                    for name, value in latest.fields.items():
+                        embed.add_field(name=name, value=value)
+                    # message = commit_data['commit']['message']
+                    html_url = commit_data["html_url"]
+                    short_sha = commit_data["sha"][:6]
+                    embed.add_field(name="Merge Commit", value=f"[`{short_sha}`]({html_url})")
+                else:
+                    embed = discord.Embed(
+                        title="Already up to date with master repository.",
+                        description="No further updates required",
+                        color=self.bot.main_color,
+                    )
+                    embed.set_author(
+                        name=user["username"], icon_url=user["avatar_url"], url=user["url"]
+                    )
+                await ctx.send(embed=embed)
+            else:
+                command = "git pull"
+
+                cmd = subprocess.run(
+                    command,
+                    cwd=os.getcwd(),
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    shell=True,
+                )
+                res = cmd.stdout.decode("utf-8").strip()
+
+                if res != "Already up to date.":
+                    logger.info("Bot has been updated.")
+                    if self.bot.hosting_method == HostingMethod.PM2:
+                        embed = discord.Embed(
+                            title="Bot has been updated", color=self.bot.main_color
+                        )
+                        await ctx.send(embed=embed)
+                    else:
+                        embed = discord.Embed(
+                            title="Bot has been updated and is logging out.",
+                            description="If you do not have an auto-restart setup, please manually start the bot.",
+                            color=self.bot.main_color,
+                        )
+                        await ctx.send(embed=embed)
+                        await self.bot.logout()
+                else:
+                    embed = discord.Embed(title="Already up to date.", color=self.bot.main_color,)
+                    await ctx.send(embed=embed)
 
     @commands.command(hidden=True, name="eval")
     @checks.has_permissions(PermissionLevel.OWNER)

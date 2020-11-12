@@ -1535,6 +1535,15 @@ class Modmail(commands.Cog):
 
         return await ctx.send(embed=embed)
 
+    @commands.command(usage="[after] [close message]")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def adduser(self, ctx, *, member: discord.Member = None):
+        await ctx.thread.add_user(member)
+
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        await self.bot.add_reaction(ctx.message, sent_emoji)
+
 
 def setup(bot):
     bot.add_cog(Modmail(bot))

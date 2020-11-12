@@ -136,6 +136,7 @@ class ConfigManager:
         "enable_eval": True,
         # github access token for private repositories
         "github_token": None,
+        "disable_autoupdates": False,
         # Logging
         "log_level": "INFO",
         # data collection
@@ -164,6 +165,7 @@ class ConfigManager:
         "enable_plugins",
         "data_collection",
         "enable_eval",
+        "disable_autoupdates",
     }
 
     enums = {

@@ -1,4 +1,4 @@
-__version__ = "3.7.0-dev16"
+__version__ = "3.7.0-dev17"
 
 
 import asyncio
@@ -6,6 +6,7 @@ import copy
 import logging
 import os
 import re
+import subprocess
 import sys
 import typing
 from datetime import datetime
@@ -31,9 +32,17 @@ except ImportError:
     pass
 
 from core import checks
+from core.changelog import Changelog
 from core.clients import ApiClient, MongoDBClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.models import DMDisabled, PermissionLevel, SafeFormatter, configure_logging, getLogger
+from core.models import (
+    DMDisabled,
+    HostingMethod,
+    PermissionLevel,
+    SafeFormatter,
+    configure_logging,
+    getLogger,
+)
 from core.thread import ThreadManager
 from core.time import human_timedelta
 from core.utils import human_join, match_title, normalize_alias
@@ -58,6 +67,7 @@ class ModmailBot(commands.Bot):
         self._session = None
         self._api = None
         self.metadata_loop = None
+        self.autoupdate_loop = None
         self.formatter = SafeFormatter()
         self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
         self._connected = asyncio.Event()
@@ -87,6 +97,21 @@ class ModmailBot(commands.Bot):
             fmt = "{d}d " + fmt
 
         return self.formatter.format(fmt, d=days, h=hours, m=minutes, s=seconds)
+
+    @property
+    def hosting_method(self) -> HostingMethod:
+        # use enums
+        if ".heroku" in os.environ.get("PYTHONHOME", ""):
+            return HostingMethod.HEROKU
+
+        if os.environ.get("pm_id"):
+            return HostingMethod.PM2
+
+        return HostingMethod.OTHER
+
+    @property
+    def is_pm2(self) -> bool:
+        return ".heroku" in os.environ.get("PYTHONHOME", "")
 
     def startup(self):
         logger.line()
@@ -493,6 +518,12 @@ class ModmailBot(commands.Bot):
             )
             self.metadata_loop.before_loop(self.before_post_metadata)
             self.metadata_loop.start()
+
+        self.autoupdate_loop = tasks.Loop(
+            self.autoupdate, seconds=0, minutes=0, hours=1, count=None, reconnect=True, loop=None
+        )
+        self.autoupdate_loop.before_loop(self.before_autoupdate)
+        self.autoupdate_loop.start()
 
         other_guilds = [
             guild for guild in self.guilds if guild not in {self.guild, self.modmail_guild}
@@ -1397,6 +1428,81 @@ class ModmailBot(commands.Bot):
         logger.line("debug")
         if not self.guild:
             self.metadata_loop.cancel()
+
+    async def autoupdate(self):
+        changelog = await Changelog.from_url(self)
+        latest = changelog.latest_version
+
+        if self.version < parse_version(latest.version):
+            if self.hosting_method == HostingMethod.HEROKU:
+                data = await self.api.update_repository()
+
+                embed = discord.Embed(color=self.main_color)
+
+                commit_data = data["data"]
+                user = data["user"]
+                embed.set_author(
+                    name=user["username"] + " - Updating Bot",
+                    icon_url=user["avatar_url"],
+                    url=user["url"],
+                )
+
+                embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version}")
+
+                embed.description = latest.description
+                for name, value in latest.fields.items():
+                    embed.add_field(name=name, value=value)
+
+                if commit_data:
+                    message = commit_data["commit"]["message"]
+                    html_url = commit_data["html_url"]
+                    short_sha = commit_data["sha"][:6]
+                    embed.add_field(
+                        name="Merge Commit",
+                        value=f"[`{short_sha}`]({html_url}) " f"{message} - {user['username']}",
+                    )
+                    logger.info("Bot has been updated.")
+                    channel = self.log_channel
+                    await channel.send(embed=embed)
+            else:
+                command = "git pull"
+
+                cmd = subprocess.run(
+                    command,
+                    cwd=os.getcwd(),
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    shell=True,
+                )
+                res = cmd.stdout.decode("utf-8").strip()
+
+                if res != "Already up to date.":
+                    logger.info("Bot has been updated.")
+                    channel = self.log_channel
+                    if self.hosting_method == HostingMethod.PM2:
+                        embed = discord.Embed(title="Bot has been updated", color=self.main_color)
+                        await channel.send(embed=embed)
+                    else:
+                        embed = discord.Embed(
+                            title="Bot has been updated and is logging out.",
+                            description="If you do not have an auto-restart setup, please manually start the bot.",
+                            color=self.main_color,
+                        )
+                        await channel.send(embed=embed)
+                        await self.logout()
+
+    async def before_autoupdate(self):
+        await self.wait_for_connected()
+        logger.debug("Starting autoupdate loop")
+
+        if self.config.get("disable_autoupdates"):
+            logger.warning("Autoupdates disabled.")
+            self.autoupdate_loop.cancel()
+
+        if not self.config.get("github_token"):
+            logger.warning("GitHub access token not found.")
+            logger.warning("Autoupdates disabled.")
+            self.autoupdate_loop.cancel()
 
 
 def main():

@@ -779,5 +779,23 @@
     "notes": [
       "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
+  },
+  "github_token": {
+    "default": "None, required for update functionality",
+    "description": "A github personal access token with the repo scope: https://github.com/settings/tokens.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "disable_autoupdates": {
+    "default": "No",
+    "description": "Controls if autoupdates should be disabled or not.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
   }
 }

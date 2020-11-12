@@ -264,3 +264,9 @@ class DMDisabled(IntEnum):
     NONE = 0
     NEW_THREADS = 1
     ALL_THREADS = 2
+
+
+class HostingMethod(IntEnum):
+    HEROKU = 0
+    PM2 = 1
+    OTHER = 2
