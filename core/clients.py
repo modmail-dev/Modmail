@@ -61,7 +61,6 @@ class GitHub:
 
     BASE = "https://api.github.com"
     REPO = BASE + "/repos/kyb3r/modmail"
-    HEAD = REPO + "/git/refs/heads/master"
     MERGE_URL = BASE + "/repos/{username}/modmail/merges"
     FORK_URL = REPO + "/forks"
     STAR_URL = BASE + "/user/starred/kyb3r/modmail"
@@ -76,6 +75,10 @@ class GitHub:
         self.url: str = kwargs.pop("url", "")
         if self.access_token:
             self.headers = {"Authorization": "token " + str(access_token)}
+
+    @property
+    def BRANCH(self):
+        return "master" if not self.bot.version.is_prerelease else "development"
 
     async def request(
         self,
@@ -151,10 +154,10 @@ class GitHub:
             raise commands.CommandInvokeError("Username not found.")
 
         if sha is None:
-            resp: dict = await self.request(self.HEAD)
+            resp: dict = await self.request(self.REPO + "/git/refs/heads/" + self.BRANCH)
             sha = resp["object"]["sha"]
 
-        payload = {"base": "master", "head": sha, "commit_message": "Updating bot"}
+        payload = {"base": self.BRANCH, "head": sha, "commit_message": "Updating bot"}
 
         merge_url = self.MERGE_URL.format(username=self.username)
 
