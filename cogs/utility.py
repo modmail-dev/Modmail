@@ -1889,7 +1889,7 @@ class Utility(commands.Cog):
 
                 user = data["user"]
 
-                if commit_data:
+                if not commit_data or not commit_data.get("html_url"):
                     embed = discord.Embed(color=self.bot.main_color)
 
                     embed.set_footer(
@@ -1904,7 +1904,7 @@ class Utility(commands.Cog):
 
                     embed.description = latest.description
                     for name, value in latest.fields.items():
-                        if value > 200:
+                        if len(value) > 200:
                             value = value[:200] + "..."
 
                         embed.add_field(name=name, value=value)
