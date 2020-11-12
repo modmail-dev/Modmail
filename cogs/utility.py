@@ -1885,6 +1885,7 @@ class Utility(commands.Cog):
                 data = await self.bot.api.update_repository()
 
                 commit_data = data["data"]
+                print(commit_data)
                 user = data["user"]
 
                 if commit_data:
@@ -1906,6 +1907,7 @@ class Utility(commands.Cog):
                             value = value[:200] + "..."
 
                         embed.add_field(name=name, value=value)
+
                     html_url = commit_data["html_url"]
                     short_sha = commit_data["sha"][:6]
                     embed.add_field(name="Merge Commit", value=f"[`{short_sha}`]({html_url})")
