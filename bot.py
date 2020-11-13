@@ -120,6 +120,8 @@ class ModmailBot(commands.Bot):
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
+        logger.info("discord.py: v%s", discord.__version__)
+        logger.line()
 
         for cog in self.loaded_cogs:
             logger.debug("Loading %s.", cog)
