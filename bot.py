@@ -1,4 +1,4 @@
-__version__ = "3.7.3"
+__version__ = "3.7.4"
 
 
 import asyncio
@@ -1157,19 +1157,19 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if payload.event_type == "REACTION_ADD":
-            if await self.add_reaction(linked_message, reaction):
-                await self.add_reaction(message, reaction)
-        else:
-            try:
-                await linked_message.remove_reaction(reaction, self.user)
-                await message.remove_reaction(reaction, self.user)
-            except (discord.HTTPException, discord.InvalidArgument) as e:
-                logger.warning("Failed to remove reaction: %s", e)
+        if self.config["transfer_reactions"]:
+            if payload.event_type == "REACTION_ADD":
+                if await self.add_reaction(linked_message, reaction):
+                    await self.add_reaction(message, reaction)
+            else:
+                try:
+                    await linked_message.remove_reaction(reaction, self.user)
+                    await message.remove_reaction(reaction, self.user)
+                except (discord.HTTPException, discord.InvalidArgument) as e:
+                    logger.warning("Failed to remove reaction: %s", e)
 
     async def on_raw_reaction_add(self, payload):
-        if self.config["transfer_reactions"]:
-            await self.handle_reaction_events(payload)
+        await self.handle_reaction_events(payload)
 
         react_message_id = tryint(self.config.get("react_to_contact_message"))
         react_message_emoji = self.config.get("react_to_contact_emoji")
