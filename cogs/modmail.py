@@ -940,6 +940,7 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.REGULAR)
     async def selfcontact(self, ctx):
+        """Creates a thread with yourself"""
         await ctx.invoke(self.contact, user=ctx.author)
 
     @commands.command(usage="<user> [category] [options]")

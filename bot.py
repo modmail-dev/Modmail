@@ -1,4 +1,4 @@
-__version__ = "3.7.0"
+__version__ = "3.7.1"
 
 
 import asyncio
@@ -1166,14 +1166,17 @@ class ModmailBot(commands.Bot):
                 if emoji_fmt == react_message_emoji:
                     channel = self.get_channel(payload.channel_id)
                     member = channel.guild.get_member(payload.user_id)
-                    message = await channel.fetch_message(payload.message_id)
-                    await message.remove_reaction(payload.emoji, member)
+                    if not member.bot:
+                        message = await channel.fetch_message(payload.message_id)
+                        await message.remove_reaction(payload.emoji, member)
 
-                    ctx = await self.get_context(message)
-                    ctx.author = member
-                    await ctx.invoke(
-                        self.get_command("contact"), user=member, manual_trigger=False
-                    )
+                        ctx = await self.get_context(message)
+                        ctx.author = member
+                        await ctx.invoke(
+                            self.get_command("contact"), user=member, manual_trigger=False
+                        )
+
+                        await message.add_reaction(emoji_fmt)  # bot adds as well
 
     async def on_raw_reaction_remove(self, payload):
         if self.config["transfer_reactions"]:
