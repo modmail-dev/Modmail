@@ -9,7 +9,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 # 3.7.2
 
 ### Added
+
 - Added `mention_channel_id` to specify which channel `alert_on_mention` was being sent to ([GH #2880](https://github.com/kyb3r/modmail/issues/2880))
+
+### Fixed
+
+- `?config set` would not respond if an invalid key was provided.
+
 
 # v3.7.1
 
