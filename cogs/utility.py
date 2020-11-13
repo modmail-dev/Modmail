@@ -1855,9 +1855,7 @@ class Utility(commands.Cog):
     async def update(self, ctx, *, flag: str = ""):
         """
         Update Modmail.
-        This only works for PM2 or Heroku users who have configured their bot for updates.
-        To stay up-to-date with the latest commit
-        from GitHub, specify "force" as the flag.
+        To stay up-to-date with the latest commit rom GitHub, specify "force" as the flag.
         """
 
         changelog = await Changelog.from_url(self.bot)
