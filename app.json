@@ -30,6 +30,10 @@
         "LOG_URL": {
             "description": "The url of the log viewer app for viewing self-hosted logs.",
             "required": true
+        },
+        "GITHUB_TOKEN": {
+            "description": "A github personal access token with the repo scope.",
+            "required": true
         }
     }
 }
