@@ -6,11 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# 3.7.2
+# v3.7.3
+
+### Fixed
+
+- React to contact threads were treated like normal contact threads. ([GH #2881](https://github.com/kyb3r/modmail/issues/2881))
+
+# v3.7.2
 
 ### Added
 
-- Added `mention_channel_id` to specify which channel `alert_on_mention` was being sent to ([GH #2880](https://github.com/kyb3r/modmail/issues/2880))
+- Added `mention_channel_id` to specify which channel `alert_on_mention` was being sent to. ([GH #2880](https://github.com/kyb3r/modmail/issues/2880))
 
 ### Fixed
 

@@ -155,7 +155,7 @@ class Thread:
         await channel.edit(topic=f"User ID: {recipient.id}")
         self.ready = True
 
-        if creator:
+        if creator != recipient:
             mention = None
         else:
             mention = self.bot.config["mention"]
@@ -191,7 +191,7 @@ class Thread:
             embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
             embed.title = self.bot.config["thread_creation_title"]
 
-            if creator is None:
+            if creator != recipient:
                 msg = await recipient.send(embed=embed)
 
                 if recipient_thread_close:
