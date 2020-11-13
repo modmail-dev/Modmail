@@ -45,7 +45,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import human_join, match_title, normalize_alias
+from core.utils import human_join, normalize_alias, truncate
 
 logger = getLogger(__name__)
 
@@ -996,13 +996,9 @@ class ModmailBot(commands.Bot):
             and self.config["alert_on_mention"]
             and not message.author.bot
         ):
-            if len(message.content) > 50:
-                extra = "..."
-            else:
-                extra = ""
             em = discord.Embed(
                 title="Bot mention",
-                description=f"[Jump URL]({message.jump_url})\n{message.content[:50]}{extra}",
+                description=f"[Jump URL]({message.jump_url})\n{truncate(message.content, 50)}",
                 color=self.main_color,
                 timestamp=datetime.utcnow(),
             )

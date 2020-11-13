@@ -31,7 +31,7 @@ from core.models import (
     UnseenFormatter,
     getLogger,
 )
-from core.utils import trigger_typing
+from core.utils import trigger_typing, truncate
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 
 
@@ -1902,10 +1902,7 @@ class Utility(commands.Cog):
 
                     embed.description = latest.description
                     for name, value in latest.fields.items():
-                        if len(value) > 200:
-                            value = value[:200] + "..."
-
-                        embed.add_field(name=name, value=value)
+                        embed.add_field(name=name, value=truncate(value, 200))
 
                     html_url = commit_data["html_url"]
                     short_sha = commit_data["sha"][:6]
@@ -1936,10 +1933,7 @@ class Utility(commands.Cog):
                     )
                     embed.description = latest.description
                     for name, value in latest.fields.items():
-                        if len(value) > 200:
-                            value = value[:200] + "..."
-
-                        embed.add_field(name=name, value=value)
+                        embed.add_field(name=name, value=truncate(value, 200))
 
                     if self.bot.hosting_method == HostingMethod.OTHER:
                         embed.description = (

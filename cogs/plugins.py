@@ -15,7 +15,6 @@ from subprocess import PIPE
 
 import discord
 from discord.ext import commands
-from discord.utils import async_all
 
 from pkg_resources import parse_version
 
