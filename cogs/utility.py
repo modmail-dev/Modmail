@@ -1936,7 +1936,7 @@ class Utility(commands.Cog):
                     )
                     embed.description = latest.description
                     for name, value in latest.fields.items():
-                        if value > 200:
+                        if len(value) > 200:
                             value = value[:200] + "..."
 
                         embed.add_field(name=name, value=value)
