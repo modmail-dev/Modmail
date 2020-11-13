@@ -1,7 +1,10 @@
 import asyncio
+import copy
+import io
 import re
 import typing
 from datetime import datetime, timedelta
+import time
 from types import SimpleNamespace
 
 import isodate
@@ -9,9 +12,16 @@ import isodate
 import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
 
-from core.models import getLogger
+from core.models import DMDisabled, DummyMessage, getLogger
 from core.time import human_timedelta
-from core.utils import is_image_url, days, match_user_id, truncate, format_channel_name
+from core.utils import (
+    is_image_url,
+    days,
+    match_title,
+    match_user_id,
+    truncate,
+    format_channel_name,
+)
 
 logger = getLogger(__name__)
 
@@ -38,19 +48,25 @@ class Thread:
         self._channel = channel
         self.genesis_message = None
         self._ready_event = asyncio.Event()
+        self.wait_tasks = []
         self.close_task = None
         self.auto_close_task = None
+        self._cancelled = False
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id})'
 
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
-        # timeout after 3 seconds
+        # timeout after 30 seconds
+        task = asyncio.create_task(asyncio.wait_for(self._ready_event.wait(), timeout=25))
+        self.wait_tasks.append(task)
         try:
-            await asyncio.wait_for(self._ready_event.wait(), timeout=3)
+            await task
         except asyncio.TimeoutError:
-            return
+            pass
+
+        self.wait_tasks.remove(task)
 
     @property
     def id(self) -> int:
@@ -76,7 +92,18 @@ class Thread:
         else:
             self._ready_event.clear()
 
-    async def setup(self, *, creator=None, category=None):
+    @property
+    def cancelled(self) -> bool:
+        return self._cancelled
+
+    @cancelled.setter
+    def cancelled(self, flag: bool):
+        self._cancelled = flag
+        if flag:
+            for i in self.wait_tasks:
+                i.cancel()
+
+    async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
         self.bot.dispatch("thread_initiate", self)
         recipient = self.recipient
@@ -172,7 +199,56 @@ class Thread:
                     close_emoji = await self.bot.convert_emoji(close_emoji)
                     await self.bot.add_reaction(msg, close_emoji)
 
-        await asyncio.gather(send_genesis_message(), send_recipient_genesis_message())
+        async def send_persistent_notes():
+            notes = await self.bot.api.find_notes(self.recipient)
+            ids = {}
+
+            class State:
+                def store_user(self, user):
+                    return user
+
+            for note in notes:
+                author = note["author"]
+
+                class Author:
+                    name = author["name"]
+                    id = author["id"]
+                    discriminator = author["discriminator"]
+                    avatar_url = author["avatar_url"]
+
+                data = {
+                    "id": round(time.time() * 1000 - discord.utils.DISCORD_EPOCH) << 22,
+                    "attachments": {},
+                    "embeds": {},
+                    "edited_timestamp": None,
+                    "type": None,
+                    "pinned": None,
+                    "mention_everyone": None,
+                    "tts": None,
+                    "content": note["message"],
+                    "author": Author(),
+                }
+                message = discord.Message(state=State(), channel=None, data=data)
+                ids[note["_id"]] = str(
+                    (await self.note(message, persistent=True, thread_creation=True)).id
+                )
+
+            await self.bot.api.update_note_ids(ids)
+
+        async def activate_auto_triggers():
+            message = DummyMessage(copy.copy(initial_message))
+            if message:
+                try:
+                    return await self.bot.trigger_auto_triggers(message, channel)
+                except RuntimeError:
+                    pass
+
+        await asyncio.gather(
+            send_genesis_message(),
+            send_recipient_genesis_message(),
+            activate_auto_triggers(),
+            send_persistent_notes(),
+        )
         self.bot.dispatch("thread_ready", self)
 
     def _format_info_embed(self, user, log_url, log_count, color):
@@ -311,22 +387,26 @@ class Thread:
         self.bot.config["notification_squad"].pop(str(self.id), None)
 
         # Logging
-        log_data = await self.bot.api.post_log(
-            self.channel.id,
-            {
-                "open": False,
-                "closed_at": str(datetime.utcnow()),
-                "nsfw": self.channel.nsfw,
-                "close_message": message if not silent else None,
-                "closer": {
-                    "id": str(closer.id),
-                    "name": closer.name,
-                    "discriminator": closer.discriminator,
-                    "avatar_url": str(closer.avatar_url),
-                    "mod": True,
+        if self.channel:
+            log_data = await self.bot.api.post_log(
+                self.channel.id,
+                {
+                    "open": False,
+                    "title": match_title(self.channel.topic),
+                    "closed_at": str(datetime.utcnow()),
+                    "nsfw": self.channel.nsfw,
+                    "close_message": message if not silent else None,
+                    "closer": {
+                        "id": str(closer.id),
+                        "name": closer.name,
+                        "discriminator": closer.discriminator,
+                        "avatar_url": str(closer.avatar_url),
+                        "mod": True,
+                    },
                 },
-            },
-        )
+            )
+        else:
+            log_data = None
 
         if isinstance(log_data, dict):
             prefix = self.bot.config["log_url_prefix"].strip("/")
@@ -334,7 +414,9 @@ class Thread:
                 prefix = ""
             log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
 
-            if log_data["messages"]:
+            if log_data["title"]:
+                sneak_peak = log_data["title"]
+            elif log_data["messages"]:
                 content = str(log_data["messages"][0]["content"])
                 sneak_peak = content.replace("\n", "")
             else:
@@ -372,7 +454,7 @@ class Thread:
 
         tasks = [self.bot.config.update()]
 
-        if self.bot.log_channel is not None:
+        if self.bot.log_channel is not None and self.channel is not None:
             tasks.append(self.bot.log_channel.send(embed=embed))
 
         # Thread closed message
@@ -404,6 +486,7 @@ class Thread:
             tasks.append(self.channel.delete())
 
         await asyncio.gather(*tasks)
+        self.bot.dispatch("thread_close", self, closer, silent, delete_channel, message, scheduled)
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
         if self.close_task is not None and (not auto_close or all):
@@ -486,9 +569,10 @@ class Thread:
             ):
                 raise ValueError("Thread message not found.")
 
-            if message1.embeds[0].color.value == self.bot.main_color and message1.embeds[
-                0
-            ].author.name.startswith("Note"):
+            if message1.embeds[0].color.value == self.bot.main_color and (
+                message1.embeds[0].author.name.startswith("Note")
+                or message1.embeds[0].author.name.startswith("Persistent Note")
+            ):
                 if not note:
                     raise ValueError("Thread message not found.")
                 return message1, None
@@ -534,7 +618,7 @@ class Thread:
                     return message1, msg
             except ValueError:
                 continue
-        raise ValueError("DM message not found.")
+        raise ValueError("DM message not found. Plain messages are not supported.")
 
     async def edit_message(self, message_id: typing.Optional[int], message: str) -> None:
         try:
@@ -551,6 +635,8 @@ class Thread:
             embed2 = message2.embeds[0]
             embed2.description = message
             tasks += [message2.edit(embed=embed2)]
+        elif message1.embeds[0].author.name.startswith("Persistent Note"):
+            tasks += [self.bot.api.edit_note(message1.id, message)]
 
         await asyncio.gather(*tasks)
 
@@ -566,6 +652,8 @@ class Thread:
             tasks += [message1.delete()]
         if message2 is not None:
             tasks += [message2.delete()]
+        elif message1.embeds[0].author.name.startswith("Persistent Note"):
+            tasks += [self.bot.api.delete_note(message1.id)]
         if tasks:
             await asyncio.gather(*tasks)
 
@@ -605,11 +693,19 @@ class Thread:
             self.bot.api.edit_message(message.id, content), linked_message.edit(embed=embed)
         )
 
-    async def note(self, message: discord.Message) -> None:
+    async def note(
+        self, message: discord.Message, persistent=False, thread_creation=False
+    ) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
-        msg = await self.send(message, self.channel, note=True)
+        msg = await self.send(
+            message,
+            self.channel,
+            note=True,
+            persistent_note=persistent,
+            thread_creation=thread_creation,
+        )
 
         self.bot.loop.create_task(
             self.bot.api.append_log(
@@ -619,7 +715,9 @@ class Thread:
 
         return msg
 
-    async def reply(self, message: discord.Message, anonymous: bool = False) -> None:
+    async def reply(
+        self, message: discord.Message, anonymous: bool = False, plain: bool = False
+    ) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
         if not any(g.get_member(self.id) for g in self.bot.guilds):
@@ -635,7 +733,11 @@ class Thread:
 
         try:
             await self.send(
-                message, destination=self.recipient, from_mod=True, anonymous=anonymous
+                message,
+                destination=self.recipient,
+                from_mod=True,
+                anonymous=anonymous,
+                plain=plain,
             )
         except Exception:
             logger.error("Message delivery failed:", exc_info=True)
@@ -653,7 +755,7 @@ class Thread:
         else:
             # Send the same thing in the thread channel.
             msg = await self.send(
-                message, destination=self.channel, from_mod=True, anonymous=anonymous
+                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain
             )
 
             tasks.append(
@@ -678,6 +780,7 @@ class Thread:
                 )
 
         await asyncio.gather(*tasks)
+        self.bot.dispatch("thread_reply", self, True, message, anonymous, plain)
 
     async def send(
         self,
@@ -688,6 +791,9 @@ class Thread:
         from_mod: bool = False,
         note: bool = False,
         anonymous: bool = False,
+        plain: bool = False,
+        persistent_note: bool = False,
+        thread_creation: bool = False,
     ) -> None:
 
         self.bot.loop.create_task(
@@ -749,12 +855,12 @@ class Thread:
         else:
             # Special note messages
             embed.set_author(
-                name=f"Note ({author.name})",
+                name=f"{'Persistent' if persistent_note else ''} Note ({author.name})",
                 icon_url=system_avatar_url,
                 url=f"https://discordapp.com/users/{author.id}#{message.id}",
             )
 
-        ext = [(a.url, a.filename) for a in message.attachments]
+        ext = [(a.url, a.filename, False) for a in message.attachments]
 
         images = []
         attachments = []
@@ -765,12 +871,17 @@ class Thread:
                 attachments.append(attachment)
 
         image_urls = re.findall(
-            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            r"http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
             message.content,
         )
 
-        image_urls = [(url, None) for url in image_urls if is_image_url(url)]
+        image_urls = [
+            (is_image_url(url, convert_size=False), None, False)
+            for url in image_urls
+            if is_image_url(url, convert_size=False)
+        ]
         images.extend(image_urls)
+        images.extend((str(i.image_url), f"{i.name} Sticker", True) for i in message.stickers)
 
         embedded_image = False
 
@@ -779,11 +890,14 @@ class Thread:
         additional_images = []
         additional_count = 1
 
-        for url, filename in images:
+        for url, filename, is_sticker in images:
             if not prioritize_uploads or (is_image_url(url) and not embedded_image and filename):
                 embed.set_image(url=url)
                 if filename:
-                    embed.add_field(name="Image", value=f"[{filename}]({url})")
+                    if is_sticker:
+                        embed.add_field(name=filename, value=f"\u200b")
+                    else:
+                        embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
             elif filename is not None:
                 if note:
@@ -829,7 +943,7 @@ class Thread:
             embed.set_footer(text=f"Message ID: {message.id}")
             embed.colour = self.bot.recipient_color
 
-        if from_mod or note:
+        if (from_mod or note) and not thread_creation:
             delete_message = not bool(message.attachments)
             if delete_message and destination == self.channel:
                 try:
@@ -837,7 +951,11 @@ class Thread:
                 except Exception as e:
                     logger.warning("Cannot delete message: %s.", e)
 
-        if from_mod and self.bot.config["dm_disabled"] == 2 and destination != self.channel:
+        if (
+            from_mod
+            and self.bot.config["dm_disabled"] == DMDisabled.ALL_THREADS
+            and destination != self.channel
+        ):
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
         try:
@@ -851,7 +969,31 @@ class Thread:
         else:
             mentions = None
 
-        msg = await destination.send(mentions, embed=embed)
+        if plain:
+            if from_mod and not isinstance(destination, discord.TextChannel):
+                # Plain to user
+                if embed.footer.text:
+                    plain_message = f"**({embed.footer.text}) "
+                else:
+                    plain_message = "**"
+                plain_message += f"{embed.author.name}:** {embed.description}"
+                files = []
+                for i in embed.fields:
+                    if "Image" in i.name:
+                        async with self.bot.session.get(
+                            i.field[i.field.find("http") : -1]
+                        ) as resp:
+                            stream = io.BytesIO(await resp.read())
+                            files.append(discord.File(stream))
+
+                msg = await destination.send(plain_message, files=files)
+            else:
+                # Plain to mods
+                embed.set_footer(text="[PLAIN] " + embed.footer.text)
+                msg = await destination.send(mentions, embed=embed)
+
+        else:
+            msg = await destination.send(mentions, embed=embed)
 
         if additional_images:
             self.ready = False
@@ -872,6 +1014,10 @@ class Thread:
             self.bot.loop.create_task(self.bot.config.update())
 
         return " ".join(mentions)
+
+    async def set_title(self, title) -> None:
+        user_id = match_user_id(self.channel.topic)
+        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}")
 
 
 class ThreadManager:
@@ -918,15 +1064,20 @@ class ThreadManager:
 
         thread = self.cache.get(recipient_id)
         if thread is not None:
-            await thread.wait_until_ready()
-            if not thread.channel or not self.bot.get_channel(thread.channel.id):
-                logger.warning(
-                    "Found existing thread for %s but the channel is invalid.", recipient_id
-                )
-                self.bot.loop.create_task(
-                    thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-                )
-                thread = None
+            try:
+                await thread.wait_until_ready()
+            except asyncio.CancelledError:
+                logger.warning("Thread for %s cancelled, abort creating", recipient)
+                return thread
+            else:
+                if not thread.channel or not self.bot.get_channel(thread.channel.id):
+                    logger.warning(
+                        "Found existing thread for %s but the channel is invalid.", recipient_id
+                    )
+                    self.bot.loop.create_task(
+                        thread.close(closer=self.bot.user, silent=True, delete_channel=False)
+                    )
+                    thread = None
         else:
             channel = discord.utils.get(
                 self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"
@@ -968,6 +1119,7 @@ class ThreadManager:
         self,
         recipient: typing.Union[discord.Member, discord.User],
         *,
+        message: discord.Message = None,
         creator: typing.Union[discord.Member, discord.User] = None,
         category: discord.CategoryChannel = None,
     ) -> Thread:
@@ -976,14 +1128,21 @@ class ThreadManager:
         # checks for existing thread in cache
         thread = self.cache.get(recipient.id)
         if thread:
-            await thread.wait_until_ready()
-            if thread.channel and self.bot.get_channel(thread.channel.id):
-                logger.warning("Found an existing thread for %s, abort creating.", recipient)
+            try:
+                await thread.wait_until_ready()
+            except asyncio.CancelledError:
+                logger.warning("Thread for %s cancelled, abort creating", recipient)
                 return thread
-            logger.warning("Found an existing thread for %s, closing previous thread.", recipient)
-            self.bot.loop.create_task(
-                thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-            )
+            else:
+                if thread.channel and self.bot.get_channel(thread.channel.id):
+                    logger.warning("Found an existing thread for %s, abort creating.", recipient)
+                    return thread
+                logger.warning(
+                    "Found an existing thread for %s, closing previous thread.", recipient
+                )
+                self.bot.loop.create_task(
+                    thread.close(closer=self.bot.user, silent=True, delete_channel=False)
+                )
 
         thread = Thread(self, recipient)
 
@@ -1003,7 +1162,57 @@ class ThreadManager:
                 self.bot.config.set("fallback_category_id", category.id)
                 await self.bot.config.update()
 
-        self.bot.loop.create_task(thread.setup(creator=creator, category=category))
+        if message and self.bot.config["confirm_thread_creation"]:
+            confirm = await message.channel.send(
+                embed=discord.Embed(
+                    title=self.bot.config["confirm_thread_creation_title"],
+                    description=self.bot.config["confirm_thread_response"],
+                    color=self.bot.main_color,
+                )
+            )
+            accept_emoji = self.bot.config["confirm_thread_creation_accept"]
+            deny_emoji = self.bot.config["confirm_thread_creation_deny"]
+            await confirm.add_reaction(accept_emoji)
+            await asyncio.sleep(0.2)
+            await confirm.add_reaction(deny_emoji)
+            try:
+                r, _ = await self.bot.wait_for(
+                    "reaction_add",
+                    check=lambda r, u: u.id == message.author.id
+                    and r.message.id == confirm.id
+                    and r.message.channel.id == confirm.channel.id
+                    and r.emoji in (accept_emoji, deny_emoji),
+                    timeout=20,
+                )
+            except asyncio.TimeoutError:
+                thread.cancelled = True
+
+                await confirm.remove_reaction(accept_emoji, self.bot.user)
+                await asyncio.sleep(0.2)
+                await confirm.remove_reaction(deny_emoji, self.bot.user)
+                await message.channel.send(
+                    embed=discord.Embed(
+                        title="Cancelled", description="Timed out", color=self.bot.error_color
+                    )
+                )
+                del self.cache[recipient.id]
+                return thread
+            else:
+                if r.emoji == deny_emoji:
+                    thread.cancelled = True
+
+                    await confirm.remove_reaction(accept_emoji, self.bot.user)
+                    await asyncio.sleep(0.2)
+                    await confirm.remove_reaction(deny_emoji, self.bot.user)
+                    await message.channel.send(
+                        embed=discord.Embed(title="Cancelled", color=self.bot.error_color)
+                    )
+                    del self.cache[recipient.id]
+                    return thread
+
+        self.bot.loop.create_task(
+            thread.setup(creator=creator, category=category, initial_message=message)
+        )
         return thread
 
     async def find_or_create(self, recipient) -> Thread:

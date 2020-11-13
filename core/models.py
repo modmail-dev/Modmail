@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+import os
 from enum import IntEnum
 from logging.handlers import RotatingFileHandler
 from string import Formatter
@@ -13,6 +14,11 @@ import _string
 try:
     from colorama import Fore, Style
 except ImportError:
+    Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
+
+
+if ".heroku" in os.environ.get("PYTHONHOME", ""):
+    # heroku
     Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
 
 
@@ -174,3 +180,99 @@ class SafeFormatter(Formatter):
         except (IndexError, KeyError):
             pass
         return "<Invalid>", first
+
+
+class UnseenFormatter(Formatter):
+    def get_value(self, key, args, kwds):
+        if isinstance(key, str):
+            try:
+                return kwds[key]
+            except KeyError:
+                return "{" + key + "}"
+        else:
+            return Formatter.get_value(key, args, kwds)
+
+
+class SimilarCategoryConverter(commands.CategoryChannelConverter):
+    async def convert(self, ctx, argument):
+        bot = ctx.bot
+        guild = ctx.guild
+        result = None
+
+        try:
+            return await super().convert(ctx, argument)
+        except commands.ChannelNotFound:
+
+            def check(c):
+                return isinstance(c, discord.CategoryChannel) and c.name.lower().startswith(
+                    argument.lower()
+                )
+
+            if guild:
+                result = discord.utils.find(check, guild.categories)
+            else:
+                result = discord.utils.find(check, bot.get_all_channels())
+
+            if not isinstance(result, discord.CategoryChannel):
+                raise commands.ChannelNotFound(argument)
+
+        return result
+
+
+class DummyMessage:
+    """
+    A class mimicking the original :class:discord.Message
+    where all functions that require an actual message to exist
+    is replaced with a dummy function
+    """
+
+    def __init__(self, message):
+        self._message = message
+
+    def __getattr__(self, name: str):
+        return getattr(self._message, name)
+
+    def __bool__(self):
+        return bool(self._message)
+
+    async def delete(self, *, delay=None):
+        return
+
+    async def edit(self, **fields):
+        return
+
+    async def add_reaction(self, emoji):
+        return
+
+    async def remove_reaction(self, emoji):
+        return
+
+    async def clear_reaction(self, emoji):
+        return
+
+    async def clear_reactions(self):
+        return
+
+    async def pin(self, *, reason=None):
+        return
+
+    async def unpin(self, *, reason=None):
+        return
+
+    async def publish(self):
+        return
+
+    async def ack(self):
+        return
+
+
+class DMDisabled(IntEnum):
+    NONE = 0
+    NEW_THREADS = 1
+    ALL_THREADS = 2
+
+
+class HostingMethod(IntEnum):
+    HEROKU = 0
+    PM2 = 1
+    OTHER = 2

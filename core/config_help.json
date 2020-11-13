@@ -139,7 +139,7 @@
       "`{prefix}config set reply_without_command no`"
     ],
     "notes": [
-      "See also: `anon_reply_without_command`."
+      "See also: `anon_reply_without_command`, `plain_reply_without_command`."
     ]
   },
   "anon_reply_without_command": {
@@ -150,7 +150,18 @@
       "`{prefix}config set anon_reply_without_command no`"
     ],
     "notes": [
-      "See also: `reply_without_command`."
+      "See also: `reply_without_command`, `plain_reply_without_command`."
+    ]
+  },
+  "plain_reply_without_command": {
+    "default": "Disabled",
+    "description": "Setting this configuration will make all non-command messages sent in the thread channel to be forwarded to the recipient in a plain form without the need of `{prefix}reply`.",
+    "examples": [
+      "`{prefix}config set plain_reply_without_command yes`",
+      "`{prefix}config set plain_reply_without_command no`"
+    ],
+    "notes": [
+      "See also: `reply_without_command`, `anon_reply_without_command`."
     ]
   },
   "log_channel_id": {
@@ -357,7 +368,7 @@
       "`{prefix}config set thread_move_title Thread transferred to another channel!"
     ],
     "notes": [
-      "See also: `thread_move_notify`, `thread_move_response`."
+      "See also: `thread_move_notify`, `thread_move_notify_mods`, `thread_move_response`."
     ]
   },
   "thread_move_notify": {
@@ -368,7 +379,18 @@
       "`{prefix}config set thread_move_notify no`"
     ],
     "notes": [
-      "See also: `thread_move_title`, `thread_move_response`."
+      "See also: `thread_move_title`, `thread_move_response`, `thread_move_notify_mods`."
+    ]
+  },
+  "thread_move_notify_mods": {
+    "default": "No",
+    "description": "Notify mods again after the thread is moved",
+    "examples": [
+      "`{prefix}config set thread_move_notify_mods yes`",
+      "`{prefix}config set thread_move_notify_mods no`"
+    ],
+    "notes": [
+      "See also: `thread_move_title`, `thread_move_response`, `thread_move_notify`."
     ]
   },
   "thread_move_response": {
@@ -380,6 +402,29 @@
     "notes": [
       "Only has an effect when `thread_move_notify` is on.",
       "See also: `thread_move_title`, `thread_move_notify`."
+    ]
+  },
+  "cooldown_thread_title": {
+    "default": "Message not sent!",
+    "description": "The title of the message embed when the user has a cooldown before creating a new thread.",
+    "examples": [
+      "`{prefix}config set cooldown_thread_title Error`"
+    ],
+    "notes": [
+      "Only has an effect when `thread_cooldown` is set",
+      "See also: `cooldown_thread_response`."
+    ]
+  },
+  "cooldown_thread_response": {
+    "default": "You must wait for {delta} before you can contact me again.",
+    "description": "The description of the message embed when the user has a cooldown before creating a new thread.",
+    "examples": [
+      "`{prefix}config set cooldown_thread_response Be patient! You are on cooldown, wait {delta} more.`"
+    ],
+    "notes": [
+      "Only has an effect when `thread_cooldown` is set",
+      "Must have a {delta} included which will be replaced with the duration of time.",
+      "See also: `cooldown_thread_title`."
     ]
   },
   "disabled_new_thread_title": {
@@ -522,6 +567,129 @@
     ],
     "image": "https://i.imgur.com/SKOC42Z.png"
   },
+  "react_to_contact_message": {
+    "default": "None",
+    "description": "A message ID where reactions are tracked. If the `react_to_contact_emoji` is added, the bot opens a thread with them.",
+    "examples": [
+      "`{prefix}config set react_to_contact_message 773575608814534717`"
+    ],
+    "notes": [
+      "See also: `react_to_contact_emoji`"
+    ]
+  },
+  "react_to_contact_emoji": {
+    "default": "\u2705",
+    "description": "An emoji which is tracked in `react_to_contact_message`",
+    "examples": [
+      "`{prefix}config set react_to_contact_emoji \u2705`"
+    ],
+    "notes": [
+      "See also: `react_to_contact_message \u2705`"
+    ]
+  },
+  "transfer_reactions": {
+    "default": "Yes",
+    "description": "Transfer users reactions to mods and vice versa",
+    "examples":[
+      "`{prefix}config set transfer_reactions no`"
+    ],
+    "notes": []
+  },
+  "close_on_leave": {
+    "default": "No",
+    "description": "Closes a modmail thread upon user leave automatically",
+    "examples":[
+      "`{prefix}config set close_on_leave yes`"
+    ],
+    "notes": [
+      "See also: `close_on_leave_reason`."
+    ]
+  },
+  "close_on_leave_reason": {
+    "default": "The recipient has left the server.",
+    "description": "Reason for closing the thread once member leaves",
+    "examples":[
+      "`{prefix}config set close_on_leave_reason Member left`"
+    ],
+    "notes": [
+      "This has no effect unless `close_on_leave` is set.",
+      "See also: `close_on_leave`."
+    ]
+  },
+  "alert_on_mention": {
+    "default": "No",
+    "description": "Mentions all mods (mention) in logs channel when bot is mentioned",
+    "examples":[
+      "`{prefix}config set alert_on_mention yes`"
+    ],
+    "notes": [
+      "See also: `mention`"
+    ]
+  },
+  "confirm_thread_creation": {
+    "default": "No",
+    "description": "Ensure users confirm that they want to create a new thread",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation yes`"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_creation_title": {
+    "default": "Confirm thread creation",
+    "description": "Title for the embed message sent to users to confirm a thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation_title Are you sure you want to create a new thread?`"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_response": {
+    "default": "React to confirm thread creation which will directly contact the moderators",
+    "description": "Description for the embed message sent to users to confirm a thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_response React to confirm`"
+    ],
+    "notes": [
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_creation_accept": {
+    "default": "\u2705",
+    "description": "Emoji to accept a thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation_accept \u2611`"
+    ],
+    "notes": [
+      "This has no effect unless `confirm_thread_creation` is set",
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_deny`"
+    ]
+  },
+  "confirm_thread_creation_deny": {
+    "default": "\uD83D\uDEAB",
+    "description": "Emoji to accept deny thread creation",
+    "examples":[
+      "`{prefix}config set confirm_thread_creation_deny \u26D4`"
+    ],
+    "notes": [
+      "This has no effect unless `confirm_thread_creation` is set",
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_accept`"
+    ]
+  },
+  "use_regex_autotrigger": {
+    "default": "No",
+    "description": "Whether to use regex to compare in autotriggers.",
+    "examples":[
+      "`{prefix}config set use_regex_autotrigger yes`"
+    ],
+    "notes": [
+      "This is meant for advanced user that understand regular expressions.",
+      "You can test it out with https://regexr.com on `PCRE (Server)` mode",
+      "See command: `autotrigger`"
+    ]
+  },
   "modmail_guild_id": {
     "default": "Fallback on `GUILD_ID`",
     "description": "The ID of the discord server where the threads channels should be created (receiving server).",
@@ -597,6 +765,33 @@
   "enable_plugins": {
     "default": "Yes",
     "description": "Whether plugins should be enabled and loaded into Modmail.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "data_collection": {
+    "default": "Yes",
+    "description": "Controls if bot metadata should be sent to the development team.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "github_token": {
+    "default": "None, required for update functionality",
+    "description": "A github personal access token with the repo scope: https://github.com/settings/tokens.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "disable_autoupdates": {
+    "default": "No",
+    "description": "Controls if autoupdates should be disabled or not.",
     "examples": [
     ],
     "notes": [

@@ -1,36 +1,57 @@
 import asyncio
 import inspect
 import os
-import traceback
 import random
+import re
+import traceback
 from contextlib import redirect_stdout
 from datetime import datetime
 from difflib import get_close_matches
-from io import StringIO, BytesIO
-from itertools import zip_longest, takewhile
+from io import BytesIO, StringIO
+from itertools import takewhile, zip_longest
 from json import JSONDecodeError, loads
+from subprocess import PIPE
 from textwrap import indent
 from types import SimpleNamespace
 from typing import Union
 
 import discord
+from aiohttp import ClientResponseError
 from discord.enums import ActivityType, Status
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
-
-from aiohttp import ClientResponseError
 from pkg_resources import parse_version
 
-from core import checks
+from core import checks, utils
 from core.changelog import Changelog
-from core.models import InvalidConfigError, PermissionLevel, getLogger
+from core.models import (
+    HostingMethod,
+    InvalidConfigError,
+    PermissionLevel,
+    UnseenFormatter,
+    getLogger,
+)
+from core.utils import trigger_typing, truncate
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
-from core import utils
+
 
 logger = getLogger(__name__)
 
 
 class ModmailHelpCommand(commands.HelpCommand):
+    async def command_callback(self, ctx, *, command=None):
+        """Ovrwrites original command_callback to ensure `help` without any arguments
+        returns with checks, `help all` returns without checks"""
+        if command is None:
+            self.verify_checks = True
+        else:
+            self.verify_checks = False
+
+        if command == "all":
+            command = None
+
+        return await super().command_callback(ctx, command=command)
+
     async def format_cog_help(self, cog, *, no_cog=False):
         bot = self.context.bot
         prefix = self.clean_prefix
@@ -63,6 +84,9 @@ class ModmailHelpCommand(commands.HelpCommand):
                 else "Miscellaneous commands without a category."
             )
             embed = discord.Embed(description=f"*{description}*", color=bot.main_color)
+
+            if not format_:
+                continue
 
             embed.add_field(name="Commands", value=format_ or "No commands.")
 
@@ -231,7 +255,6 @@ class Utility(commands.Cog):
         self.bot = bot
         self._original_help_command = bot.help_command
         self.bot.help_command = ModmailHelpCommand(
-            verify_checks=False,
             command_attrs={
                 "help": "Shows this help message.",
                 "checks": [checks.has_permissions_predicate(PermissionLevel.REGULAR)],
@@ -848,7 +871,7 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         def fmt(val):
-            return val.format(prefix=self.bot.prefix, bot=self.bot)
+            return UnseenFormatter().format(val, prefix=self.bot.prefix, bot=self.bot)
 
         index = 0
         embeds = []
@@ -1684,6 +1707,247 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger(self, ctx):
+        """Automatically trigger alias-like commands based on a certain keyword in the user's inital message"""
+        await ctx.send_help(ctx.command)
+
+    @autotrigger.command(name="add")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_add(self, ctx, keyword, *, command):
+        """Adds a trigger to automatically trigger an alias-like command"""
+        if keyword in self.bot.auto_triggers:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Another autotrigger with the same name already exists: `{keyword}`.",
+            )
+        else:
+            self.bot.auto_triggers[keyword] = command
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"Keyword `{keyword}` has been linked to `{command}`.",
+            )
+
+        await ctx.send(embed=embed)
+
+    @autotrigger.command(name="edit")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_edit(self, ctx, keyword, *, command):
+        """Edits a pre-existing trigger to automatically trigger an alias-like command"""
+        if keyword not in self.bot.auto_triggers:
+            embed = utils.create_not_found_embed(
+                keyword, self.bot.auto_triggers.keys(), "Autotrigger"
+            )
+        else:
+            self.bot.auto_triggers[keyword] = command
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"Keyword `{keyword}` has been linked to `{command}`.",
+            )
+
+        await ctx.send(embed=embed)
+
+    @autotrigger.command(name="remove")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_remove(self, ctx, keyword):
+        """Removes a trigger to automatically trigger an alias-like command"""
+        try:
+            del self.bot.auto_triggers[keyword]
+        except KeyError:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Keyword `{keyword}` could not be found.",
+            )
+            await ctx.send(embed=embed)
+        else:
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Success",
+                color=self.bot.main_color,
+                description=f"Keyword `{keyword}` has been removed.",
+            )
+            await ctx.send(embed=embed)
+
+    @autotrigger.command(name="test")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_test(self, ctx, *, text):
+        """Tests a string against the current autotrigger setup"""
+        for keyword in self.bot.auto_triggers:
+            if self.bot.config.get("use_regex_autotrigger"):
+                check = re.match(keyword, text)
+                regex = True
+            else:
+                check = keyword.lower() in text.lower()
+                regex = False
+
+            if check:
+                alias = self.bot.auto_triggers[keyword]
+                embed = discord.Embed(
+                    title=f"{'Regex ' if regex else ''}Keyword Found",
+                    color=self.bot.main_color,
+                    description=f"autotrigger keyword `{keyword}` found. Command executed: `{alias}`",
+                )
+                return await ctx.send(embed=embed)
+
+        embed = discord.Embed(
+            title="Keyword Not Found",
+            color=self.bot.error_color,
+            description=f"No autotrigger keyword found.",
+        )
+        return await ctx.send(embed=embed)
+
+    @autotrigger.command(name="list")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def autotrigger_list(self, ctx):
+        """Lists all autotriggers set up"""
+        embeds = []
+        for keyword in self.bot.auto_triggers:
+            command = self.bot.auto_triggers[keyword]
+            embed = discord.Embed(title=keyword, color=self.bot.main_color, description=command,)
+            embeds.append(embed)
+
+        if not embeds:
+            embeds.append(
+                discord.Embed(
+                    title="No autotrigger set",
+                    color=self.bot.error_color,
+                    description=f"Use `{self.bot.prefix}autotrigger add` to add new autotriggers.",
+                )
+            )
+
+        await EmbedPaginatorSession(ctx, *embeds).run()
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
+    @checks.github_token_required()
+    @trigger_typing
+    async def github(self, ctx):
+        """Shows the GitHub user your Github_Token is linked to."""
+        data = await self.bot.api.get_user_info()
+
+        if data:
+            embed = discord.Embed(
+                title="GitHub", description="Current User", color=self.bot.main_color
+            )
+            user = data["user"]
+            embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
+            embed.set_thumbnail(url=user["avatar_url"])
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(
+                embed=discord.Embed(title="Invalid Github Token", color=self.bot.error_color)
+            )
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
+    @checks.github_token_required(ignore_if_not_heroku=True)
+    @trigger_typing
+    async def update(self, ctx, *, flag: str = ""):
+        """
+        Update Modmail.
+        This only works for PM2 or Heroku users who have configured their bot for updates.
+        To stay up-to-date with the latest commit
+        from GitHub, specify "force" as the flag.
+        """
+
+        changelog = await Changelog.from_url(self.bot)
+        latest = changelog.latest_version
+
+        desc = (
+            f"The latest version is [`{self.bot.version}`]"
+            "(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)"
+        )
+
+        if self.bot.version >= parse_version(latest.version) and flag.lower() != "force":
+            embed = discord.Embed(
+                title="Already up to date", description=desc, color=self.bot.main_color
+            )
+
+            data = await self.bot.api.get_user_info()
+            if data:
+                user = data["user"]
+                embed.set_author(
+                    name=user["username"], icon_url=user["avatar_url"], url=user["url"]
+                )
+            await ctx.send(embed=embed)
+        else:
+            if self.bot.hosting_method == HostingMethod.HEROKU:
+                data = await self.bot.api.update_repository()
+
+                commit_data = data["data"]
+                user = data["user"]
+
+                if commit_data and commit_data.get("html_url"):
+                    embed = discord.Embed(color=self.bot.main_color)
+
+                    embed.set_footer(
+                        text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
+                    )
+
+                    embed.set_author(
+                        name=user["username"] + " - Updating bot",
+                        icon_url=user["avatar_url"],
+                        url=user["url"],
+                    )
+
+                    embed.description = latest.description
+                    for name, value in latest.fields.items():
+                        embed.add_field(name=name, value=truncate(value, 200))
+
+                    html_url = commit_data["html_url"]
+                    short_sha = commit_data["sha"][:6]
+                    embed.add_field(name="Merge Commit", value=f"[`{short_sha}`]({html_url})")
+                else:
+                    embed = discord.Embed(
+                        title="Already up to date",
+                        description="No further updates required",
+                        color=self.bot.main_color,
+                    )
+                    embed.set_author(
+                        name=user["username"], icon_url=user["avatar_url"], url=user["url"]
+                    )
+                await ctx.send(embed=embed)
+            else:
+                command = "git pull"
+
+                proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
+                res = await proc.stdout.read()
+                res = res.decode("utf-8").rstrip()
+
+                if res != "Already up to date.":
+                    logger.info("Bot has been updated.")
+
+                    embed = discord.Embed(title="Bot has been updated", color=self.bot.main_color,)
+                    embed.set_footer(
+                        text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}"
+                    )
+                    embed.description = latest.description
+                    for name, value in latest.fields.items():
+                        embed.add_field(name=name, value=truncate(value, 200))
+
+                    if self.bot.hosting_method == HostingMethod.OTHER:
+                        embed.description = (
+                            "If you do not have an auto-restart setup, please manually start the bot.",
+                        )
+
+                    await ctx.send(embed=embed)
+                    await self.bot.logout()
+                else:
+                    embed = discord.Embed(
+                        title="Already up to date", description=desc, color=self.bot.main_color,
+                    )
+                    await ctx.send(embed=embed)
+
     @commands.command(hidden=True, name="eval")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def eval_(self, ctx, *, body: str):
@@ -1761,6 +2025,8 @@ class Utility(commands.Cog):
                             await ctx.send(f"```py\n{page}\n```")
                             break
                         await ctx.send(f"```py\n{page}\n```")
+
+        await self.bot.add_reaction(ctx.message, "\u2705")
 
 
 def setup(bot):

@@ -4,13 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
-however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugins developer, note the "BREAKING" section.
+however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
+
+# v3.7.0-dev22
+
+### Added
+
+- Plain replies functionality. Added commands `preply`, `pareply` and config `plain_reply_without_command`. ([GH #2872](https://github.com/kyb3r/modmail/issues/2872))
+- Added `react_to_contact_message`, `react_to_contact_emoji` to allow users to create threads by reacting to a message.
+- Added `thread_move_notify_mods` to mention all mods again after moving thread. ([GH #215](https://github.com/kyb3r/modmail/issues/215))
+- Added `transfer_reactions` to link reactions between mods and users. ([GH #2763](https://github.com/kyb3r/modmail/issues/2763))
+- Added `close_on_leave`, `close_on_leave_reason` to automatically close threads upon recipient leaving the server. ([GH #2757](https://github.com/kyb3r/modmail/issues/2757))
+- Added `alert_on_mention` to mention mods upon a bot mention. ([GH #2833](https://github.com/kyb3r/modmail/issues/2833))
+- Added `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny` to allow users to confirm that they indeed want to create a new thread. ([GH #2773](https://github.com/kyb3r/modmail/issues/2773))
+- Support Gyazo image links in message embeds. ([GH #282](https://github.com/kyb3r/modmail/issues/282))
+- Added `silent` argument to `?contact` to restore old behaviour.
+- Added new functionality: If `?help` is sent, bot does checks on every command, `?help all` restores old behaviour. ([GH #2847](https://github.com/kyb3r/modmail/issues/2847))
+- Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
+- Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/kyb3r/modmail/issues/2865))
+- Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/kyb3r/modmail/issues/2762))
+- Support stickers and reject non-messages. (i.e. pin_add)
+- Added support for thread titles, `?title`. ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
+- Added `data_collection` to specify if bot metadata should be collected by Modmail developers.
+- Added `?autotrigger`, `use_regex_autotrigger` config to specify keywords to trigger commands. ([GH #130](https://github.com/kyb3r/modmail/issues/130), [GH #649](https://github.com/kyb3r/modmail/issues/649))
+- Added `?note persistent` that creates notes that are persistent for a user. ([GH #2842](https://github.com/kyb3r/modmail/issues/2842), [PR #2878](https://github.com/kyb3r/modmail/pull/2878))
+- Autoupdates and `?update` which was removed in v3.0.0
+
+### Fixed
+
+- `?contact` now sends members a DM.
+- `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/kyb3r/modmail/issues/2856))
+- Command truncated after && in alias. ([GH #2870](https://github.com/kyb3r/modmail/issues/2870))
+- `on_plugins_ready` event for plugins works now.
+
+### Improved
+
+- Plugins installations have clearer error messages.
+- `?move` now does not require exact category names, accepts case-insensitive and startswith names.
+
+### Internal
+- Use enums in config. ([GH #2821](https://github.com/kyb3r/modmail/issues/2821))
+- `on_thread_close` event for plugins.
+- `on_thread_reply` event for plugins.
 
 # v3.6.2
 
 ### Fixed
 
-- Plugins downloading requirements in virtual environments
+- Plugins downloading requirements in virtual environments.
 
 
 # v3.6.1
@@ -41,7 +82,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - Bump discord.py version to 1.5.1
 - Explicitly state intents used for connection
-- Use `--diff` for black CI instead of `--check` ([GH#2816](https://github.com/kyb3r/modmail/issues/2816))
+- Use `--diff` for black CI instead of `--check` ([GH #2816](https://github.com/kyb3r/modmail/issues/2816))
 
 
 # v3.5.0

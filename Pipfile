@@ -3,6 +3,11 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
 [dev-packages]
 black = "==19.10b0"
 pylint = "*"
@@ -22,7 +27,7 @@ parsedatetime = "==2.6"
 aiohttp = ">=3.6.0,<3.7.0"
 python-dotenv = ">=0.10.3"
 pipenv = "*"
-"discord.py" = "==1.5.1"
+"discord.py" = {file = "./discord.py-1.5.2.tar.gz"}
 
 [scripts]
 bot = "python bot.py"

@@ -29,6 +29,7 @@ __all__ = [
     "trigger_typing",
     "escape_code_block",
     "format_channel_name",
+    "tryint",
 ]
 
 
@@ -117,7 +118,7 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
     return out or "No Messages"
 
 
-def is_image_url(url: str) -> bool:
+def is_image_url(url: str, **kwargs) -> str:
     """
     Check if the URL is pointing to an image.
 
@@ -131,10 +132,18 @@ def is_image_url(url: str) -> bool:
     bool
         Whether the URL is a valid image URL.
     """
-    return bool(parse_image_url(url))
+    if url.startswith("https://gyazo.com") or url.startswith("http://gyazo.com"):
+        # gyazo support
+        url = re.sub(
+            r"(http[s]?:\/\/)((?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+            r"\1i.\2.png",
+            url,
+        )
+
+    return parse_image_url(url, **kwargs)
 
 
-def parse_image_url(url: str) -> str:
+def parse_image_url(url: str, *, convert_size=True) -> str:
     """
     Convert the image URL into a sized Discord avatar.
 
@@ -152,7 +161,10 @@ def parse_image_url(url: str) -> str:
     url = parse.urlsplit(url)
 
     if any(url.path.lower().endswith(i) for i in types):
-        return parse.urlunsplit((*url[:3], "size=128", url[-1]))
+        if convert_size:
+            return parse.urlunsplit((*url[:3], "size=128", url[-1]))
+        else:
+            return parse.urlunsplit(url)
     return ""
 
 
@@ -204,7 +216,27 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
-TOPIC_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
+TOPIC_TITLE_REGEX = re.compile(r"\bTitle: (.*)\n(?:User ID: )\b", flags=re.IGNORECASE | re.DOTALL)
+TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
+
+
+def match_title(text: str) -> int:
+    """
+    Matches a title in the foramt of "Title: XXXX"
+
+    Parameters
+    ----------
+    text : str
+        The text of the user ID.
+
+    Returns
+    -------
+    Optional[str]
+        The title if found
+    """
+    match = TOPIC_TITLE_REGEX.search(text)
+    if match is not None:
+        return match.group(1)
 
 
 def match_user_id(text: str) -> int:
@@ -221,7 +253,7 @@ def match_user_id(text: str) -> int:
     int
         The user ID if found. Otherwise, -1.
     """
-    match = TOPIC_REGEX.search(text)
+    match = TOPIC_UID_REGEX.search(text)
     if match is not None:
         return int(match.group(1))
     return -1
@@ -238,7 +270,7 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
     return embed
 
 
-def parse_alias(alias):
+def parse_alias(alias, *, split=True):
     def encode_alias(m):
         return "\x1AU" + base64.b64encode(m.group(1).encode()).decode() + "\x1AU"
 
@@ -256,7 +288,12 @@ def parse_alias(alias):
     if not alias:
         return aliases
 
-    for a in re.split(r"\s*&&\s*", alias):
+    if split:
+        iterate = re.split(r"\s*&&\s*", alias)
+    else:
+        iterate = [alias]
+
+    for a in iterate:
         a = re.sub("\x1AU(.+?)\x1AU", decode_alias, a)
         if a[0] == a[-1] == '"':
             a = a[1:-1]
@@ -265,9 +302,9 @@ def parse_alias(alias):
     return aliases
 
 
-def normalize_alias(alias, message):
+def normalize_alias(alias, message=""):
     aliases = parse_alias(alias)
-    contents = parse_alias(message)
+    contents = parse_alias(message, split=False)
 
     final_aliases = []
     for a, content in zip_longest(aliases, contents):
@@ -316,3 +353,10 @@ def format_channel_name(author, guild, exclude_channel=None):
         counter += 1
 
     return new_name
+
+
+def tryint(x):
+    try:
+        return int(x)
+    except (ValueError, TypeError):
+        return x
