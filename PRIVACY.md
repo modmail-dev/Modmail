@@ -32,7 +32,7 @@ The Modmail Team collect some metadata to keep us updated on the number of insta
 - Bot uptime
 - Bot latency
 - Bot version
-- Whether the bot is seflhosted
+- Whether the bot is selfhosted
 
 No tokens/passwords/private data is ever being collected or sent to our servers.
 
