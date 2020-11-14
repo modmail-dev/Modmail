@@ -1,4 +1,4 @@
-__version__ = "3.7.5"
+__version__ = "3.7.6"
 
 
 import asyncio
@@ -1479,10 +1479,17 @@ class ModmailBot(commands.Bot):
             else:
                 command = "git pull"
                 proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
+                err = await proc.stderr.read()
+                err = err.decode("utf-8").rstrip()
                 res = await proc.stdout.read()
                 res = res.decode("utf-8").rstrip()
 
-                if res != "Already up to date.":
+                if err and not res:
+                    logger.warning(f"Autoupdate failed: {err}")
+                    self.autoupdate_loop.cancel()
+                    return
+
+                elif res != "Already up to date.":
                     logger.info("Bot has been updated.")
                     channel = self.log_channel
                     if self.hosting_method == HostingMethod.PM2:

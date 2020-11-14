@@ -3,6 +3,7 @@ import inspect
 import os
 import random
 import re
+from sys import stdout
 import traceback
 from contextlib import redirect_stdout
 from datetime import datetime
@@ -1920,10 +1921,18 @@ class Utility(commands.Cog):
                 command = "git pull"
 
                 proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
+                err = await proc.stderr.read()
+                err = err.decode("utf-8").rstrip()
                 res = await proc.stdout.read()
                 res = res.decode("utf-8").rstrip()
 
-                if res != "Already up to date.":
+                if err and not res:
+                    embed = discord.Embed(
+                        title="Update failed", description=err, color=self.bot.error_color
+                    )
+                    await ctx.send(embed=embed)
+
+                elif res != "Already up to date.":
                     logger.info("Bot has been updated.")
 
                     embed = discord.Embed(title="Bot has been updated", color=self.bot.main_color,)

@@ -10,6 +10,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Fixed
 
+- Autoupdate persists despite errors
+- Mention when normal thread created was not working.
+
+# v3.7.5
+
+### Fixed
+
 - Close on emoji was not working.
 
 # v3.7.3
