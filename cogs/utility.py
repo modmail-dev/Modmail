@@ -1926,7 +1926,7 @@ class Utility(commands.Cog):
                 res = await proc.stdout.read()
                 res = res.decode("utf-8").rstrip()
 
-                if err:
+                if err and not res:
                     embed = discord.Embed(
                         title="Update failed", description=err, color=self.bot.error_color
                     )

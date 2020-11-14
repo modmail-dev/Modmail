@@ -1484,7 +1484,7 @@ class ModmailBot(commands.Bot):
                 res = await proc.stdout.read()
                 res = res.decode("utf-8").rstrip()
 
-                if err:
+                if err and not res:
                     logger.warning(f"Autoupdate failed: {err}")
                     self.autoupdate_loop.cancel()
                     return
