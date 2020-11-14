@@ -1913,11 +1913,18 @@ class Utility(commands.Cog):
                         description="No further updates required",
                         color=self.bot.main_color,
                     )
+                    embed.set_footer(text="Force update")
                     embed.set_author(
                         name=user["username"], icon_url=user["avatar_url"], url=user["url"]
                     )
                 await ctx.send(embed=embed)
             else:
+                # update fork if gh_token exists
+                try:
+                    await self.bot.api.update_repository()
+                except InvalidConfigError:
+                    pass
+
                 command = "git pull"
 
                 proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
@@ -1954,6 +1961,7 @@ class Utility(commands.Cog):
                     embed = discord.Embed(
                         title="Already up to date", description=desc, color=self.bot.main_color,
                     )
+                    embed.set_footer(text="Force update")
                     await ctx.send(embed=embed)
 
     @commands.command(hidden=True, name="eval")

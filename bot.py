@@ -1,4 +1,4 @@
-__version__ = "3.7.6"
+__version__ = "3.7.7"
 
 
 import asyncio
@@ -38,6 +38,7 @@ from core.config import ConfigManager
 from core.models import (
     DMDisabled,
     HostingMethod,
+    InvalidConfigError,
     PermissionLevel,
     SafeFormatter,
     configure_logging,
@@ -633,32 +634,33 @@ class ModmailBot(commands.Bot):
         return True
 
     def check_manual_blocked_roles(self, author: discord.Member) -> bool:
-        for r in author.roles:
-            if str(r.id) in self.blocked_roles:
+        if isinstance(author, discord.Member):
+            for r in author.roles:
+                if str(r.id) in self.blocked_roles:
 
-                blocked_reason = self.blocked_roles.get(str(r.id)) or ""
-                now = datetime.utcnow()
+                    blocked_reason = self.blocked_roles.get(str(r.id)) or ""
+                    now = datetime.utcnow()
 
-                # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
-                end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
-                if end_time is None:
-                    # backwards compat
-                    end_time = re.search(r"%([^%]+?)%", blocked_reason)
+                    # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
+                    end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
+                    if end_time is None:
+                        # backwards compat
+                        end_time = re.search(r"%([^%]+?)%", blocked_reason)
+                        if end_time is not None:
+                            logger.warning(
+                                r"Deprecated time message for user %s, block and unblock again to update.",
+                                author.name,
+                            )
+
                     if end_time is not None:
-                        logger.warning(
-                            r"Deprecated time message for user %s, block and unblock again to update.",
-                            author.name,
-                        )
-
-                if end_time is not None:
-                    after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
-                    if after <= 0:
-                        # No longer blocked
-                        self.blocked_users.pop(str(author.id))
-                        logger.debug("No longer blocked, user %s.", author.name)
-                        return True
-                logger.debug("User blocked, user %s.", author.name)
-                return False
+                        after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
+                        if after <= 0:
+                            # No longer blocked
+                            self.blocked_users.pop(str(author.id))
+                            logger.debug("No longer blocked, user %s.", author.name)
+                            return True
+                    logger.debug("User blocked, user %s.", author.name)
+                    return False
 
         return True
 
@@ -1477,6 +1479,12 @@ class ModmailBot(commands.Bot):
                     channel = self.log_channel
                     await channel.send(embed=embed)
             else:
+                try:
+                    # update fork if gh_token exists
+                    await self.api.update_repository()
+                except InvalidConfigError:
+                    pass
+
                 command = "git pull"
                 proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
                 err = await proc.stderr.read()
