@@ -6,7 +6,7 @@ aiohttp==3.6.2
 async-timeout==3.0.1
 attrs==19.3.0
 chardet==3.0.4
-./discord.py-1.5.1.tar.gz
+./discord.py-1.5.2.tar.gz
 dnspython==1.16.0
 emoji==0.5.4
 future==0.18.2
