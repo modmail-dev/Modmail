@@ -155,7 +155,7 @@ class Thread:
         await channel.edit(topic=f"User ID: {recipient.id}")
         self.ready = True
 
-        if creator != recipient:
+        if creator is not None and creator != recipient:
             mention = None
         else:
             mention = self.bot.config["mention"]
