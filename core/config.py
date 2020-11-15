@@ -49,6 +49,7 @@ class ConfigManager:
         "close_emoji": "🔒",
         "recipient_thread_close": False,
         "thread_auto_close_silently": False,
+        "thread_auto_open_silently": False,
         "thread_auto_close": isodate.Duration(),
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
         "thread_creation_response": "The staff team will get back to you as soon as possible.",
