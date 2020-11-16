@@ -10,7 +10,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Added
 
-- Added `thread_auto_open_silently` to allow opening threads silently by default
+- Added `thread_creation_silent` to allow opening threads silently by default
 
 # v3.7.7
 
