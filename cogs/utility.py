@@ -1507,9 +1507,7 @@ class Utility(commands.Cog):
             for command in self.bot.walk_commands():
                 if command not in done:
                     done.add(command)
-                    permissions = command_permissions.get(
-                        command.qualified_name, []
-                    )
+                    permissions = command_permissions.get(command.qualified_name, [])
                     if value in permissions:
                         cmds.append(command.qualified_name)
 

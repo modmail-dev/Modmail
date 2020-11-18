@@ -1002,7 +1002,7 @@ class ModmailBot(commands.Bot):
             else:
                 if value in permissions[name]:
                     permissions[name].remove(value)
-        
+
         if isinstance(name, PermissionLevel):
             self.config["level_permissions"] = permissions
         else:

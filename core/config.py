@@ -175,11 +175,8 @@ class ConfigManager:
         "activity_type": discord.ActivityType,
     }
 
-    force_str = {
-        "command_permissions",
-        "level_permissions"
-    }
-    
+    force_str = {"command_permissions", "level_permissions"}
+
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
 
@@ -311,7 +308,7 @@ class ConfigManager:
                 if isinstance(v, list):
                     new_v = []
                     for n in v:
-                        print('x', n, v)
+                        print("x", n, v)
                         if n != -1 and not isinstance(n, str):
                             changed = True
                             n = str(n)
