@@ -14,7 +14,7 @@ from discord.ext.commands import BadArgument
 from core._color_data import ALL_COLORS
 from core.models import DMDisabled, InvalidConfigError, Default, getLogger
 from core.time import UserFriendlyTimeSync
-from core.utils import strtobool
+from core.utils import strtobool, tryint
 
 logger = getLogger(__name__)
 load_dotenv()
@@ -175,6 +175,11 @@ class ConfigManager:
         "activity_type": discord.ActivityType,
     }
 
+    force_str = {
+        "command_permissions",
+        "level_permissions"
+    }
+    
     defaults = {**public_keys, **private_keys, **protected_keys}
     all_keys = set(defaults.keys())
 
@@ -245,18 +250,19 @@ class ConfigManager:
         self._cache[key] = item
 
     def __getitem__(self, key: str) -> typing.Any:
-        key = key.lower()
-        if key not in self.all_keys:
-            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
-        if key not in self._cache:
-            self._cache[key] = deepcopy(self.defaults[key])
-        return self._cache[key]
+        # make use of the custom methods in func:get:
+        return self.get(key)
 
     def __delitem__(self, key: str) -> None:
         return self.remove(key)
 
     def get(self, key: str, convert=True) -> typing.Any:
-        value = self.__getitem__(key)
+        key = key.lower()
+        if key not in self.all_keys:
+            raise InvalidConfigError(f'Configuration "{key}" is invalid.')
+        if key not in self._cache:
+            self._cache[key] = deepcopy(self.defaults[key])
+        value = self._cache[key]
 
         if not convert:
             return value
@@ -294,6 +300,29 @@ class ConfigManager:
             except ValueError:
                 logger.warning("Invalid %s %s.", key, value)
                 value = self.remove(key)
+
+        elif key in self.force_str:
+            # Temporary: as we saved in int previously, leading to int32 overflow,
+            #            this is transitioning IDs to strings
+            new_value = {}
+            changed = False
+            for k, v in value.items():
+                new_v = v
+                if isinstance(v, list):
+                    new_v = []
+                    for n in v:
+                        print('x', n, v)
+                        if n != -1 and not isinstance(n, str):
+                            changed = True
+                            n = str(n)
+                        new_v.append(n)
+                new_value[k] = new_v
+
+            if changed:
+                # transition the database as well
+                self.set(key, new_value)
+
+            value = new_value
 
         return value
 
