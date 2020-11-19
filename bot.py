@@ -988,9 +988,11 @@ class ModmailBot(commands.Bot):
     ) -> None:
         value = str(value)
         if isinstance(name, PermissionLevel):
+            level = True
             permissions = self.config["level_permissions"]
             name = name.name
         else:
+            level = False
             permissions = self.config["command_permissions"]
         if name not in permissions:
             if add:
@@ -1003,7 +1005,7 @@ class ModmailBot(commands.Bot):
                 if value in permissions[name]:
                     permissions[name].remove(value)
 
-        if isinstance(name, PermissionLevel):
+        if level:
             self.config["level_permissions"] = permissions
         else:
             self.config["command_permissions"] = permissions
