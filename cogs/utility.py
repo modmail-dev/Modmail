@@ -345,7 +345,7 @@ class Utility(commands.Cog):
         embed.add_field(
             name="Want Modmail in Your Server?",
             value="Follow the installation guide on [GitHub](https://github.com/kyb3r/modmail/) "
-            "and join our [Discord server](https://discord.gg/F34cRU8/)!",
+            "and join our [Discord server](https://discord.gg/F34cRU8)!",
             inline=False,
         )
 
@@ -1496,23 +1496,23 @@ class Utility(commands.Cog):
         """
 
         if name is None and user_or_role not in {"command", "level", "override"}:
-            value = self._verify_user_or_role(user_or_role)
+            value = str(self._verify_user_or_role(user_or_role))
 
             cmds = []
             levels = []
 
             done = set()
+            command_permissions = self.bot.config["command_permissions"]
+            level_permissions = self.bot.config["level_permissions"]
             for command in self.bot.walk_commands():
                 if command not in done:
                     done.add(command)
-                    permissions = self.bot.config["command_permissions"].get(
-                        command.qualified_name, []
-                    )
+                    permissions = command_permissions.get(command.qualified_name, [])
                     if value in permissions:
                         cmds.append(command.qualified_name)
 
             for level in PermissionLevel:
-                permissions = self.bot.config["level_permissions"].get(level.name, [])
+                permissions = level_permissions.get(level.name, [])
                 if value in permissions:
                     levels.append(level.name)
 

@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.7.8
+
+### Added
+
+- Added `thread_contact_silently` to allow opening threads silently by default. ([PR #2887](https://github.com/kyb3r/modmail/pull/2887))
+
+### Fixed
+- Permission levels were not respected.
+- `perms remove` was not working.
+- `logs` and `block` would not recognise users in a seperate server setup.
+- Custom emojis were not working with `confirm_thread_creation`.
+
+### Internal
+- Optimised `perms get`, bot should respond faster now.
+
 # v3.7.7
 
 ### Added
@@ -14,14 +29,14 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Fixed
 
-- Skip blocked roles check if user is not in main guild
+- Skip blocked roles check if user is not in main guild.
 
 # v3.7.6
 
 ### Fixed
 
-- Autoupdate persists despite errors
-- Mention when normal thread created was not working.
+- Autoupdate persists despite errors.
+- Mention when normal thread created was not working. ([GH #2883](https://github.com/kyb3r/modmail/issues/2883))
 
 # v3.7.5
 
@@ -44,7 +59,6 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Fixed
 
 - `?config set` would not respond if an invalid key was provided.
-
 
 # v3.7.1
 

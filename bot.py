@@ -1,4 +1,4 @@
-__version__ = "3.7.7"
+__version__ = "3.7.8"
 
 
 import asyncio
@@ -1002,6 +1002,11 @@ class ModmailBot(commands.Bot):
             else:
                 if value in permissions[name]:
                     permissions[name].remove(value)
+
+        if isinstance(name, PermissionLevel):
+            self.config["level_permissions"] = permissions
+        else:
+            self.config["command_permissions"] = permissions
         logger.info("Updating permissions for %s, %s (add=%s).", name, value, add)
         await self.config.update()
 
@@ -1159,7 +1164,7 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if self.config["transfer_reactions"]:
+        if self.config["transfer_reactions"] and linked_message is not None:
             if payload.event_type == "REACTION_ADD":
                 if await self.add_reaction(linked_message, reaction):
                     await self.add_reaction(message, reaction)
@@ -1355,6 +1360,7 @@ class ModmailBot(commands.Bot):
 
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.BadUnionArgument):
+            logger.error("Expected exception:", exc_info=exception)
             msg = "Could not find the specified " + human_join(
                 [c.__name__ for c in exception.converters]
             )

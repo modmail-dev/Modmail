@@ -989,7 +989,7 @@ class Modmail(commands.Cog):
             if self.bot.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
 
-            if not silent:
+            if not silent and not self.bot.config.get("thread_contact_silently"):
                 if ctx.author.id == user.id:
                     description = "You have opened a Modmail thread."
                 else:
