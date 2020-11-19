@@ -1182,7 +1182,7 @@ class ThreadManager:
                     check=lambda r, u: u.id == message.author.id
                     and r.message.id == confirm.id
                     and r.message.channel.id == confirm.channel.id
-                    and r.emoji in (accept_emoji, deny_emoji),
+                    and str(r.emoji) in (accept_emoji, deny_emoji),
                     timeout=20,
                 )
             except asyncio.TimeoutError:

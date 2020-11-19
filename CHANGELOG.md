@@ -16,6 +16,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Permission levels were not respected
 - `perms remove` was not working
 - `logs` and `block` would not recognise users in a seperate server setup.
+- Custom emojis were not working with `confirm_thread_creation`
 
 ### Internal
 - Optimised `perms get`, bot should respond faster now
