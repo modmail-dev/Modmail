@@ -303,6 +303,17 @@
       "See also: `thread_creation_title`, `thread_creation_response`, `thread_self_closable_creation_footer`, `thread_close_footer`."
     ]
   },
+  "thread_contact_silently": {
+    "default": "No",
+    "description": "Setting this configuration will always open a new thread silently in contact.",
+    "examples": [
+      "`{prefix}config set thread_contact_silently yes`",
+      "`{prefix}config set thread_contact_silently no`"
+    ],
+    "notes": [
+      "Works like `{prefix}contact <user> silent` for every new thread."
+    ]
+  },
   "thread_self_closable_creation_footer": {
     "default": "\"Click the lock to close the thread\"",
     "description": "This is the message embed footer sent to the recipient upon the creation of a new thread.",
@@ -644,7 +655,7 @@
       "`{prefix}config set confirm_thread_creation yes`"
     ],
     "notes": [
-      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny``"
     ]
   },
   "confirm_thread_creation_title": {
@@ -654,7 +665,7 @@
       "`{prefix}config set confirm_thread_creation_title Are you sure you want to create a new thread?`"
     ],
     "notes": [
-      "See also: `confirm_thread_creation`, `confirm_thread_response`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+      "See also: `confirm_thread_creation`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_response": {
@@ -664,7 +675,7 @@
       "`{prefix}config set confirm_thread_response React to confirm`"
     ],
     "notes": [
-      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, confirm_thread_creation_deny`"
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_creation_accept": {
@@ -675,7 +686,7 @@
     ],
     "notes": [
       "This has no effect unless `confirm_thread_creation` is set",
-      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_deny`"
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_creation_deny": {
@@ -686,7 +697,7 @@
     ],
     "notes": [
       "This has no effect unless `confirm_thread_creation` is set",
-      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, confirm_thread_creation_accept`"
+      "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`"
     ]
   },
   "use_regex_autotrigger": {

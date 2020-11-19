@@ -56,11 +56,11 @@ class User(commands.IDConverter):
     # noinspection PyCallByClass,PyTypeChecker
     async def convert(self, ctx, argument):
         try:
-            return await commands.MemberConverter.convert(self, ctx, argument)
+            return await commands.MemberConverter().convert(ctx, argument)
         except commands.BadArgument:
             pass
         try:
-            return await commands.UserConverter.convert(self, ctx, argument)
+            return await commands.UserConverter().convert(ctx, argument)
         except commands.BadArgument:
             pass
         match = self._get_id_match(argument)
