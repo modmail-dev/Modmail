@@ -345,7 +345,7 @@ class Utility(commands.Cog):
         embed.add_field(
             name="Want Modmail in Your Server?",
             value="Follow the installation guide on [GitHub](https://github.com/kyb3r/modmail/) "
-            "and join our [Discord server](https://discord.gg/F34cRU8/)!",
+            "and join our [Discord server](https://discord.gg/F34cRU8)!",
             inline=False,
         )
 
