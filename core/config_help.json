@@ -303,6 +303,17 @@
       "See also: `thread_creation_title`, `thread_creation_response`, `thread_self_closable_creation_footer`, `thread_close_footer`."
     ]
   },
+  "thread_contact_silently": {
+    "default": "No",
+    "description": "Setting this configuration will always open a new thread silently in contact.",
+    "examples": [
+      "`{prefix}config set thread_contact_silently yes`",
+      "`{prefix}config set thread_contact_silently no`"
+    ],
+    "notes": [
+      "Works like `{prefix}contact <user> silent` for every new thread."
+    ]
+  },
   "thread_self_closable_creation_footer": {
     "default": "\"Click the lock to close the thread\"",
     "description": "This is the message embed footer sent to the recipient upon the creation of a new thread.",

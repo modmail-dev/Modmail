@@ -8,6 +8,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # v3.7.8
 
+### Added
+
+- Added `thread_contact_silently` to allow opening threads silently by default
+
 ### Fixed
 - Permission levels were not respected
 - `perms remove` was not working
