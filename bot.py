@@ -1164,7 +1164,7 @@ class ModmailBot(commands.Bot):
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if self.config["transfer_reactions"]:
+        if self.config["transfer_reactions"] and linked_message is not None:
             if payload.event_type == "REACTION_ADD":
                 if await self.add_reaction(linked_message, reaction):
                     await self.add_reaction(message, reaction)
