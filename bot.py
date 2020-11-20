@@ -1,4 +1,4 @@
-__version__ = "3.7.9"
+__version__ = "3.7.10"
 
 
 import asyncio
@@ -267,6 +267,21 @@ class ModmailBot(commands.Bot):
                 pass
             logger.debug("MENTION_CHANNEL_ID was invalid, removed.")
             self.config.remove("mention_channel_id")
+
+        return self.log_channel
+
+    @property
+    def update_channel(self):
+        channel_id = self.config["update_channel_id"]
+        if channel_id is not None:
+            try:
+                channel = self.get_channel(int(channel_id))
+                if channel is not None:
+                    return channel
+            except ValueError:
+                pass
+            logger.debug("UPDATE_CHANNEL_ID was invalid, removed.")
+            self.config.remove("update_channel_id")
 
         return self.log_channel
 
@@ -1027,8 +1042,9 @@ class ModmailBot(commands.Bot):
                 title="Bot mention",
                 description=f"[Jump URL]({message.jump_url})\n{truncate(message.content, 50)}",
                 color=self.main_color,
-                timestamp=datetime.utcnow(),
             )
+            if self.config["show_timestamp"]:
+                em.timestamp = datetime.utcnow()
             await self.mention_channel.send(content=self.config["mention"], embed=em)
 
         await self.process_commands(message)
@@ -1508,7 +1524,7 @@ class ModmailBot(commands.Bot):
 
                 elif res != "Already up to date.":
                     logger.info("Bot has been updated.")
-                    channel = self.log_channel
+                    channel = self.update_channel
                     if self.hosting_method == HostingMethod.PM2:
                         embed = discord.Embed(title="Bot has been updated", color=self.main_color)
                         await channel.send(embed=embed)

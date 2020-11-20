@@ -460,10 +460,10 @@ class Thread:
         # Thread closed message
 
         embed = discord.Embed(
-            title=self.bot.config["thread_close_title"],
-            color=self.bot.error_color,
-            timestamp=datetime.utcnow(),
+            title=self.bot.config["thread_close_title"], color=self.bot.error_color,
         )
+        if self.bot.config["show_timestamp"]:
+            embed.timestamp = datetime.utcnow()
 
         if not message:
             if self.id == closer.id:
@@ -823,7 +823,9 @@ class Thread:
 
         author = message.author
 
-        embed = discord.Embed(description=message.content, timestamp=message.created_at)
+        embed = discord.Embed(description=message.content)
+        if self.bot.config["show_timestamp"]:
+            embed.timestamp = message.created_at
 
         system_avatar_url = "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
 
