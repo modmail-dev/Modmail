@@ -737,7 +737,7 @@ class ModmailBot(commands.Bot):
 
             if member is None:
                 logger.debug("User not in guild, %s.", author.id)
-        
+
         if member is not None:
             author = member
 
