@@ -1,4 +1,4 @@
-__version__ = "3.7.8"
+__version__ = "3.7.9"
 
 
 import asyncio
@@ -986,7 +986,8 @@ class ModmailBot(commands.Bot):
     async def update_perms(
         self, name: typing.Union[PermissionLevel, str], value: int, add: bool = True
     ) -> None:
-        value = str(value)
+        if value != -1:
+            value = str(value)
         if isinstance(name, PermissionLevel):
             level = True
             permissions = self.config["level_permissions"]
