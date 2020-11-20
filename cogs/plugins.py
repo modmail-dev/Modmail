@@ -248,6 +248,14 @@ class Plugins(commands.Cog):
 
     async def parse_user_input(self, ctx, plugin_name, check_version=False):
 
+        if not self.bot.config["enable_plugins"]:
+            embed = discord.Embed(
+                description="Plugins are disabled, enable them by setting `ENABLE_PLUGINS=true`",
+                color=self.bot.main_color,
+            )
+            await ctx.send(embed=em)
+            return
+
         if not self._ready_event.is_set():
             embed = discord.Embed(
                 description="Plugins are still loading, please try again later.",

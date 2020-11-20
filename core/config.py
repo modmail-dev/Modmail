@@ -310,7 +310,6 @@ class ConfigManager:
                 if isinstance(v, list):
                     new_v = []
                     for n in v:
-                        print("x", n, v)
                         if n != -1 and not isinstance(n, str):
                             changed = True
                             n = str(n)
