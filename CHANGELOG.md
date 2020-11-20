@@ -10,7 +10,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Fixed
 
-- `perms add/remove` should now work again
+- `perms add/remove` should now work again. ([PR #2893](https://github.com/kyb3r/modmail/pull/2893))
 
 # v3.7.8
 
