@@ -1,4 +1,4 @@
-__version__ = "3.7.10"
+__version__ = "3.7.11"
 
 
 import asyncio
@@ -559,7 +559,7 @@ class ModmailBot(commands.Bot):
         ]
         if any(other_guilds):
             logger.warning(
-                "The bot is in more servers other than the main and staff server."
+                "The bot is in more servers other than the main and staff server. "
                 "This may cause data compromise (%s).",
                 ", ".join(guild.name for guild in other_guilds),
             )
@@ -729,8 +729,16 @@ class ModmailBot(commands.Bot):
 
         member = self.guild.get_member(author.id)
         if member is None:
-            logger.debug("User not in guild, %s.", author.id)
-        else:
+            # try to find in other guilds
+            for g in self.guilds:
+                member = g.get_member(author.id)
+                if member:
+                    break
+
+            if member is None:
+                logger.debug("User not in guild, %s.", author.id)
+        
+        if member is not None:
             author = member
 
         if str(author.id) in self.blocked_whitelisted_users:
@@ -1379,10 +1387,6 @@ class ModmailBot(commands.Bot):
 
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.BadUnionArgument):
-            logger.error("Expected exception:", exc_info=exception)
-            msg = "Could not find the specified " + human_join(
-                [c.__name__ for c in exception.converters]
-            )
             await context.trigger_typing()
             await context.send(embed=discord.Embed(color=self.error_color, description=msg))
 
@@ -1535,7 +1539,7 @@ class ModmailBot(commands.Bot):
                             color=self.main_color,
                         )
                         await channel.send(embed=embed)
-                        await self.logout()
+                    await self.logout()
 
     async def before_autoupdate(self):
         await self.wait_for_connected()
