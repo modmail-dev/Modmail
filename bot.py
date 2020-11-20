@@ -1,4 +1,4 @@
-__version__ = "3.7.9"
+__version__ = "3.7.11"
 
 
 import asyncio
@@ -267,6 +267,21 @@ class ModmailBot(commands.Bot):
                 pass
             logger.debug("MENTION_CHANNEL_ID was invalid, removed.")
             self.config.remove("mention_channel_id")
+
+        return self.log_channel
+
+    @property
+    def update_channel(self):
+        channel_id = self.config["update_channel_id"]
+        if channel_id is not None:
+            try:
+                channel = self.get_channel(int(channel_id))
+                if channel is not None:
+                    return channel
+            except ValueError:
+                pass
+            logger.debug("UPDATE_CHANNEL_ID was invalid, removed.")
+            self.config.remove("update_channel_id")
 
         return self.log_channel
 
@@ -544,7 +559,7 @@ class ModmailBot(commands.Bot):
         ]
         if any(other_guilds):
             logger.warning(
-                "The bot is in more servers other than the main and staff server."
+                "The bot is in more servers other than the main and staff server. "
                 "This may cause data compromise (%s).",
                 ", ".join(guild.name for guild in other_guilds),
             )
@@ -714,8 +729,16 @@ class ModmailBot(commands.Bot):
 
         member = self.guild.get_member(author.id)
         if member is None:
-            logger.debug("User not in guild, %s.", author.id)
-        else:
+            # try to find in other guilds
+            for g in self.guilds:
+                member = g.get_member(author.id)
+                if member:
+                    break
+
+            if member is None:
+                logger.debug("User not in guild, %s.", author.id)
+        
+        if member is not None:
             author = member
 
         if str(author.id) in self.blocked_whitelisted_users:
@@ -1027,8 +1050,9 @@ class ModmailBot(commands.Bot):
                 title="Bot mention",
                 description=f"[Jump URL]({message.jump_url})\n{truncate(message.content, 50)}",
                 color=self.main_color,
-                timestamp=datetime.utcnow(),
             )
+            if self.config["show_timestamp"]:
+                em.timestamp = datetime.utcnow()
             await self.mention_channel.send(content=self.config["mention"], embed=em)
 
         await self.process_commands(message)
@@ -1363,10 +1387,6 @@ class ModmailBot(commands.Bot):
 
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.BadUnionArgument):
-            logger.error("Expected exception:", exc_info=exception)
-            msg = "Could not find the specified " + human_join(
-                [c.__name__ for c in exception.converters]
-            )
             await context.trigger_typing()
             await context.send(embed=discord.Embed(color=self.error_color, description=msg))
 
@@ -1508,7 +1528,7 @@ class ModmailBot(commands.Bot):
 
                 elif res != "Already up to date.":
                     logger.info("Bot has been updated.")
-                    channel = self.log_channel
+                    channel = self.update_channel
                     if self.hosting_method == HostingMethod.PM2:
                         embed = discord.Embed(title="Bot has been updated", color=self.main_color)
                         await channel.send(embed=embed)
@@ -1519,7 +1539,7 @@ class ModmailBot(commands.Bot):
                             color=self.main_color,
                         )
                         await channel.send(embed=embed)
-                        await self.logout()
+                    await self.logout()
 
     async def before_autoupdate(self):
         await self.wait_for_connected()

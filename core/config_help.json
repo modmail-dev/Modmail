@@ -185,6 +185,17 @@
       "See also: `log_channel_id`"
     ]
   },
+  "update_channel_id": {
+    "default": "Log Channel (normally `#bot-logs`)",
+    "description": "This is the channel where update notifications are sent to.",
+    "examples": [
+      "`{prefix}config set update_channel_id 9234932582312` (9234932582312 is the channel ID)"
+    ],
+    "notes": [
+      "This has no effect unless `disable_autoupdates` is set to no.",
+      "See also: `log_channel_id`"
+    ]
+  },
   "sent_emoji": {
     "default": "✅",
     "description": "This is the emoji added to the message when when a Modmail action is invoked successfully (ie. DM Modmail, edit message, etc.).",
@@ -646,6 +657,13 @@
     ],
     "notes": [
       "See also: `mention`"
+    ]
+  },
+  "show_timestamp": {
+    "default": "Yes",
+    "description": "Shows timestamps on thread embeds",
+    "examples":[
+      "`{prefix}config set show_timestamp no`"
     ]
   },
   "confirm_thread_creation": {

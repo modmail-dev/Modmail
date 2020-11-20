@@ -43,6 +43,7 @@ class ConfigManager:
         # logging
         "log_channel_id": None,
         "mention_channel_id": None,
+        "update_channel_id": None,
         # threads
         "sent_emoji": "✅",
         "blocked_emoji": "🚫",
@@ -76,6 +77,7 @@ class ConfigManager:
         "close_on_leave": False,
         "close_on_leave_reason": "The recipient has left the server.",
         "alert_on_mention": False,
+        "show_timestamp": True,
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -162,6 +164,7 @@ class ConfigManager:
         "transfer_reactions",
         "close_on_leave",
         "alert_on_mention",
+        "show_timestamp",
         "confirm_thread_creation",
         "use_regex_autotrigger",
         "enable_plugins",
