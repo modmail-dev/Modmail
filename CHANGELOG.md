@@ -12,6 +12,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - `perms add/remove` with permission levels should now work again. ([PR #2893](https://github.com/kyb3r/modmail/pull/2893))
 
+### Improved
+
+- Clearer plugin debug messages when plugins are disabled
+
 # v3.7.8
 
 ### Added
