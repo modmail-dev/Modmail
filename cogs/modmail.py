@@ -1147,7 +1147,7 @@ class Modmail(commands.Cog):
     async def block(
         self,
         ctx,
-        user_or_role: Union[User, discord.Role] = None,
+        user_or_role: Optional[Union[User, discord.Role]] = None,
         *,
         after: UserFriendlyTime = None,
     ):

@@ -1,4 +1,4 @@
-__version__ = "3.7.11"
+__version__ = "3.7.12"
 
 
 import asyncio
@@ -1386,11 +1386,7 @@ class ModmailBot(commands.Bot):
         logger.error("Unexpected exception:", exc_info=sys.exc_info())
 
     async def on_command_error(self, context, exception):
-        if isinstance(exception, commands.BadUnionArgument):
-            await context.trigger_typing()
-            await context.send(embed=discord.Embed(color=self.error_color, description=msg))
-
-        elif isinstance(exception, commands.BadArgument):
+        if isinstance(exception, commands.BadArgument):
             await context.trigger_typing()
             await context.send(
                 embed=discord.Embed(color=self.error_color, description=str(exception))
