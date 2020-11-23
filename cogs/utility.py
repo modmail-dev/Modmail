@@ -892,7 +892,7 @@ class Utility(commands.Cog):
                 embed.add_field(name="Example(s):", value=example_text, inline=False)
 
             note_text = ""
-            for note in info["notes"]:
+            for note in info.get("notes", []):
                 note_text += f"- {fmt(note)}\n"
             if note_text:
                 embed.add_field(name="Note(s):", value=note_text, inline=False)

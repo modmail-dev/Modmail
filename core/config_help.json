@@ -664,7 +664,8 @@
     "description": "Shows timestamps on thread embeds",
     "examples":[
       "`{prefix}config set show_timestamp no`"
-    ]
+    ],
+    "notes": []
   },
   "confirm_thread_creation": {
     "default": "No",
