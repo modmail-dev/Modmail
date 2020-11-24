@@ -506,6 +506,7 @@ class Utility(commands.Cog):
             - `streaming`
             - `listening`
             - `watching`
+            - `competing`
 
         When activity type is set to `listening`,
         it must be followed by a "to": "listening to..."
