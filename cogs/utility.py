@@ -511,6 +511,9 @@ class Utility(commands.Cog):
         When activity type is set to `listening`,
         it must be followed by a "to": "listening to..."
 
+        When activity type is set to `competing`,
+        it must be followed by a "in": "competing in..."
+
         When activity type is set to `streaming`, you can set
         the linked twitch page:
         - `{prefix}config set twitch_url https://www.twitch.tv/somechannel/`
@@ -545,6 +548,8 @@ class Utility(commands.Cog):
         msg = f"Activity set to: {activity.type.name.capitalize()} "
         if activity.type == ActivityType.listening:
             msg += f"to {activity.name}."
+        elif activity.type == ActivityType.competing:
+            msg += f"in {activity.name}."
         else:
             msg += f"{activity.name}."
 
@@ -608,6 +613,11 @@ class Utility(commands.Cog):
             if activity_message.lower().startswith("to "):
                 # The actual message is after listening to [...]
                 # discord automatically add the "to"
+                activity_message = activity_message[3:].strip()
+        elif activity_type == ActivityType.competing:
+            if activity_message.lower().startswith("in "):
+                # The actual message is after listening to [...]
+                # discord automatically add the "in"
                 activity_message = activity_message[3:].strip()
         elif activity_type == ActivityType.streaming:
             url = self.bot.config["twitch_url"]
