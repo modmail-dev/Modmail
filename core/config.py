@@ -44,6 +44,8 @@ class ConfigManager:
         "log_channel_id": None,
         "mention_channel_id": None,
         "update_channel_id": None,
+        # updates
+        "update_notifications": True,
         # threads
         "sent_emoji": "✅",
         "blocked_emoji": "🚫",
@@ -171,6 +173,7 @@ class ConfigManager:
         "data_collection",
         "enable_eval",
         "disable_autoupdates",
+        "update_notifications",
         "thread_contact_silently",
     }
 
