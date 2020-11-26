@@ -8,13 +8,17 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # v3.7.14-dev0
 
-### Fixed
-
-- Mentioned `competing` as an activity type ([PR #2902](https://github.com/kyb3r/modmail/pull/2902))
-
 ### Added
 
-- `update_notifications` configuration option to toggle bot autoupdate notifications ([GH #2896](https://github.com/kyb3r/modmail/issues/2896))
+- `update_notifications` configuration option to toggle bot autoupdate notifications. ([GH #2896](https://github.com/kyb3r/modmail/issues/2896))
+
+### Improved
+
+- Added command validation to `autotrigger add/edit`.
+
+### Fixed
+
+- Mentioned `competing` as an activity type. ([PR #2902](https://github.com/kyb3r/modmail/pull/2902))
 
 # v3.7.13
 

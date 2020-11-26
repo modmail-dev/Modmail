@@ -1727,14 +1727,30 @@ class Utility(commands.Cog):
                 description=f"Another autotrigger with the same name already exists: `{keyword}`.",
             )
         else:
-            self.bot.auto_triggers[keyword] = command
-            await self.bot.config.update()
+            # command validation
+            valid = False
+            split_cmd = command.split(" ")
+            for n in range(1, len(split_cmd) + 1):
+                if self.bot.get_command(" ".join(split_cmd[0:n])):
+                    print(self.bot.get_command(" ".join(split_cmd[0:n])))
+                    valid = True
+                    break
 
-            embed = discord.Embed(
-                title="Success",
-                color=self.bot.main_color,
-                description=f"Keyword `{keyword}` has been linked to `{command}`.",
-            )
+            if valid:
+                self.bot.auto_triggers[keyword] = command
+                await self.bot.config.update()
+
+                embed = discord.Embed(
+                    title="Success",
+                    color=self.bot.main_color,
+                    description=f"Keyword `{keyword}` has been linked to `{command}`.",
+                )
+            else:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                )
 
         await ctx.send(embed=embed)
 
@@ -1747,14 +1763,30 @@ class Utility(commands.Cog):
                 keyword, self.bot.auto_triggers.keys(), "Autotrigger"
             )
         else:
-            self.bot.auto_triggers[keyword] = command
-            await self.bot.config.update()
+            # command validation
+            valid = False
+            split_cmd = command.split(" ")
+            for n in range(1, len(split_cmd) + 1):
+                if self.bot.get_command(" ".join(split_cmd[0:n])):
+                    print(self.bot.get_command(" ".join(split_cmd[0:n])))
+                    valid = True
+                    break
 
-            embed = discord.Embed(
-                title="Success",
-                color=self.bot.main_color,
-                description=f"Keyword `{keyword}` has been linked to `{command}`.",
-            )
+            if valid:
+                self.bot.auto_triggers[keyword] = command
+                await self.bot.config.update()
+
+                embed = discord.Embed(
+                    title="Success",
+                    color=self.bot.main_color,
+                    description=f"Keyword `{keyword}` has been linked to `{command}`.",
+                )
+            else:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                )
 
         await ctx.send(embed=embed)
 
