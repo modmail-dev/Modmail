@@ -20,6 +20,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - Mentioned `competing` as an activity type. ([PR #2902](https://github.com/kyb3r/modmail/pull/2902))
 
+### Internal
+
+- Make use of `git branch --show-current` to retrieve branch insteasd of using prerelease version check.
+
 # v3.7.13
 
 ### Fixed
