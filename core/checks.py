@@ -61,9 +61,10 @@ async def check_permissions(ctx, command_name) -> bool:
 
     if command_name in command_permissions:
         # -1 is for @everyone
-        return -1 in command_permissions[command_name] or any(
+        if -1 in command_permissions[command_name] or any(
             str(check.id) in command_permissions[command_name] for check in checkables
-        )
+        ):
+            return True
 
     level_permissions = ctx.bot.config["level_permissions"]
 

@@ -19,6 +19,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Fixed
 
 - Mentioned `competing` as an activity type. ([PR #2902](https://github.com/kyb3r/modmail/pull/2902))
+- Level permissions were not checked if command permissions were set.
 
 ### Internal
 
