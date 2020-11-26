@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2020-11-12T15:17:38Z",
+  "generated_at": "2020-11-26T11:00:36Z",
   "metrics": {
     "./bot.py": {
       "CONFIDENCE.HIGH": 1.0,
@@ -11,7 +11,7 @@
       "SEVERITY.LOW": 1.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 1264,
+      "loc": 1321,
       "nosec": 0
     },
     "./cogs/modmail.py": {
@@ -23,7 +23,7 @@
       "SEVERITY.LOW": 0.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 1280,
+      "loc": 1273,
       "nosec": 0
     },
     "./cogs/plugins.py": {
@@ -35,7 +35,7 @@
       "SEVERITY.LOW": 1.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 572,
+      "loc": 578,
       "nosec": 0
     },
     "./cogs/utility.py": {
@@ -47,7 +47,7 @@
       "SEVERITY.LOW": 1.0,
       "SEVERITY.MEDIUM": 1.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 1710,
+      "loc": 1755,
       "nosec": 0
     },
     "./core/_color_data.py": {
@@ -63,15 +63,15 @@
       "nosec": 0
     },
     "./core/changelog.py": {
-      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.HIGH": 1.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 0.0,
       "CONFIDENCE.UNDEFINED": 0.0,
       "SEVERITY.HIGH": 0.0,
-      "SEVERITY.LOW": 0.0,
+      "SEVERITY.LOW": 1.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 145,
+      "loc": 155,
       "nosec": 0
     },
     "./core/checks.py": {
@@ -83,7 +83,7 @@
       "SEVERITY.LOW": 0.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 89,
+      "loc": 90,
       "nosec": 0
     },
     "./core/clients.py": {
@@ -95,7 +95,7 @@
       "SEVERITY.LOW": 1.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 585,
+      "loc": 587,
       "nosec": 0
     },
     "./core/config.py": {
@@ -107,7 +107,7 @@
       "SEVERITY.LOW": 0.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 327,
+      "loc": 352,
       "nosec": 0
     },
     "./core/decorators.py": {
@@ -131,7 +131,7 @@
       "SEVERITY.LOW": 0.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 199,
+      "loc": 202,
       "nosec": 0
     },
     "./core/paginator.py": {
@@ -155,7 +155,7 @@
       "SEVERITY.LOW": 0.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 993,
+      "loc": 996,
       "nosec": 0
     },
     "./core/time.py": {
@@ -179,19 +179,31 @@
       "SEVERITY.LOW": 0.0,
       "SEVERITY.MEDIUM": 0.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 283,
+      "loc": 282,
+      "nosec": 0
+    },
+    "./plugins/kyb3r/modmail-plugins/profanity-filter-master/profanity-filter.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 81,
       "nosec": 0
     },
     "_totals": {
-      "CONFIDENCE.HIGH": 4.0,
+      "CONFIDENCE.HIGH": 5.0,
       "CONFIDENCE.LOW": 0.0,
       "CONFIDENCE.MEDIUM": 1.0,
       "CONFIDENCE.UNDEFINED": 0.0,
       "SEVERITY.HIGH": 0.0,
-      "SEVERITY.LOW": 4.0,
+      "SEVERITY.LOW": 5.0,
       "SEVERITY.MEDIUM": 1.0,
       "SEVERITY.UNDEFINED": 0.0,
-      "loc": 8989,
+      "loc": 9214,
       "nosec": 0
     }
   },
@@ -226,41 +238,56 @@
       "test_name": "blacklist"
     },
     {
-      "code": "12 from json import JSONDecodeError, loads\n13 from subprocess import PIPE\n14 from textwrap import indent\n",
+      "code": "13 from json import JSONDecodeError, loads\n14 from subprocess import PIPE\n15 from textwrap import indent\n",
       "filename": "./cogs/utility.py",
       "issue_confidence": "HIGH",
       "issue_severity": "LOW",
       "issue_text": "Consider possible security implications associated with PIPE module.",
-      "line_number": 13,
+      "line_number": 14,
       "line_range": [
-        13
+        14
       ],
       "more_info": "https://bandit.readthedocs.io/en/latest/blacklists/blacklist_imports.html#b404-import-subprocess",
       "test_id": "B404",
       "test_name": "blacklist"
     },
     {
-      "code": "1985         try:\n1986             exec(to_compile, env)  # pylint: disable=exec-used\n1987         except Exception as exc:\n",
+      "code": "2039         try:\n2040             exec(to_compile, env)  # pylint: disable=exec-used\n2041         except Exception as exc:\n",
       "filename": "./cogs/utility.py",
       "issue_confidence": "HIGH",
       "issue_severity": "MEDIUM",
       "issue_text": "Use of exec detected.",
-      "line_number": 1986,
+      "line_number": 2040,
       "line_range": [
-        1986
+        2040
       ],
       "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b102_exec_used.html",
       "test_id": "B102",
       "test_name": "exec_used"
     },
     {
-      "code": "68 \n69     def __init__(self, bot, access_token: str = \"\", username: str = \"\", **kwargs):\n70         self.bot = bot\n71         self.session = bot.session\n72         self.headers: dict = None\n73         self.access_token = access_token\n74         self.username = username\n75         self.avatar_url: str = kwargs.pop(\"avatar_url\", \"\")\n76         self.url: str = kwargs.pop(\"url\", \"\")\n77         if self.access_token:\n78             self.headers = {\"Authorization\": \"token \" + str(access_token)}\n79 \n80     async def request(\n",
+      "code": "2 import re\n3 from subprocess import PIPE\n4 from typing import List\n",
+      "filename": "./core/changelog.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with PIPE module.",
+      "line_number": 3,
+      "line_range": [
+        3
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/latest/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "67 \n68     def __init__(self, bot, access_token: str = \"\", username: str = \"\", **kwargs):\n69         self.bot = bot\n70         self.session = bot.session\n71         self.headers: dict = None\n72         self.access_token = access_token\n73         self.username = username\n74         self.avatar_url: str = kwargs.pop(\"avatar_url\", \"\")\n75         self.url: str = kwargs.pop(\"url\", \"\")\n76         if self.access_token:\n77             self.headers = {\"Authorization\": \"token \" + str(access_token)}\n78 \n79     @property\n80     def BRANCH(self):\n",
       "filename": "./core/clients.py",
       "issue_confidence": "MEDIUM",
       "issue_severity": "LOW",
       "issue_text": "Possible hardcoded password: ''",
-      "line_number": 69,
+      "line_number": 68,
       "line_range": [
+        68,
         69,
         70,
         71,
