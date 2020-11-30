@@ -122,6 +122,7 @@ def github_token_required(ignore_if_not_heroku=False):
     )
     return commands.check(predicate)
 
+
 def updates_enabled():
     """
     A decorator that ensures
