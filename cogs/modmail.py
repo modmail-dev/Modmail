@@ -1,4 +1,5 @@
 import asyncio
+from operator import truediv
 import re
 from datetime import datetime
 from itertools import zip_longest
@@ -834,6 +835,28 @@ class Modmail(commands.Cog):
         ctx.message.content = msg
         async with ctx.typing():
             await ctx.thread.reply(ctx.message)
+
+    @commands.command(aliases=["formatanonreply"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def fareply(self, ctx, *, msg: str = ""):
+        """
+        Anonymously reply to a Modmail thread with variables.
+
+        Works just like `{prefix}areply`, however with the addition of three variables:
+          - `{{channel}}` - the `discord.TextChannel` object
+          - `{{recipient}}` - the `discord.User` object of the recipient
+          - `{{author}}` - the `discord.User` object of the author
+
+        Supports attachments and images as well as
+        automatically embedding image URLs.
+        """
+        msg = self.bot.formatter.format(
+            msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
+        )
+        ctx.message.content = msg
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message, anonymous=True)
 
     @commands.command(aliases=["anonreply", "anonymousreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)

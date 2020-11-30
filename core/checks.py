@@ -121,3 +121,19 @@ def github_token_required(ignore_if_not_heroku=False):
         "personal access token from developer settings."
     )
     return commands.check(predicate)
+
+def updates_enabled():
+    """
+    A decorator that ensures
+    updates are enabled
+    """
+
+    async def predicate(ctx):
+        return not ctx.bot.config["disable_updates"]
+
+    predicate.fail_msg = (
+        "Updates are disabled on this bot instance. "
+        "View `?config help disable_updates` for "
+        "more information."
+    )
+    return commands.check(predicate)
