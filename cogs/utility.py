@@ -1896,6 +1896,7 @@ class Utility(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.OWNER)
     @checks.github_token_required(ignore_if_not_heroku=True)
+    @checks.updates_enabled()
     @trigger_typing
     async def update(self, ctx, *, flag: str = ""):
         """

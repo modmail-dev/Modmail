@@ -80,6 +80,7 @@ class ConfigManager:
         "close_on_leave_reason": "The recipient has left the server.",
         "alert_on_mention": False,
         "show_timestamp": True,
+        "anonymous_snippets": False,
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -143,6 +144,7 @@ class ConfigManager:
         # github access token for private repositories
         "github_token": None,
         "disable_autoupdates": False,
+        "disable_updates": False,
         # Logging
         "log_level": "INFO",
         # data collection
@@ -173,8 +175,10 @@ class ConfigManager:
         "data_collection",
         "enable_eval",
         "disable_autoupdates",
+        "disable_updates",
         "update_notifications",
         "thread_contact_silently",
+        "anonymous_snippets",
     }
 
     enums = {

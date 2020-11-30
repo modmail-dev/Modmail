@@ -1,4 +1,4 @@
-__version__ = "3.7.14-dev1"
+__version__ = "3.7.14-dev2"
 
 
 import asyncio
@@ -1069,7 +1069,10 @@ class ModmailBot(commands.Bot):
             # Process snippets
             if cmd in self.snippets:
                 snippet = self.snippets[cmd]
-                message.content = f"{self.prefix}freply {snippet}"
+                if self.config["anonymous_snippets"]:
+                    message.content = f"{self.prefix}fareply {snippet}"
+                else:
+                    message.content = f"{self.prefix}freply {snippet}"
 
         ctxs = await self.get_contexts(message)
         for ctx in ctxs:
