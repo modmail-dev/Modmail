@@ -1,4 +1,4 @@
-__version__ = "3.7.14-dev2"
+__version__ = "3.7.14-dev3"
 
 
 import asyncio
@@ -196,7 +196,9 @@ class ModmailBot(commands.Bot):
             intents.members = True
             # Try again with members intent
             self._connection._intents = intents
-            logger.warning("Attempting to login with only the server members privileged intent. Some plugins might not work correctly.")
+            logger.warning(
+                "Attempting to login with only the server members privileged intent. Some plugins might not work correctly."
+            )
             try:
                 self.loop.run_until_complete(self.start(self.token))
             except discord.PrivilegedIntentsRequired:
