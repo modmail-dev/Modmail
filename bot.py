@@ -192,9 +192,17 @@ class ModmailBot(commands.Bot):
         except discord.LoginFailure:
             logger.critical("Invalid token")
         except discord.PrivilegedIntentsRequired:
-            logger.critical(
-                "Privileged intents are not explicitly granted in the discord developers dashboard."
-            )
+            intents = discord.Intents.default()
+            intents.members = True
+            # Try again with members intent
+            super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
+            logger.warning("Attempting to login with only the server members privileged intent. Some plugins might not work correctly.")
+            try:
+                self.loop.run_until_complete(self.start(self.token))
+            except discord.PrivilegedIntentsRequired:
+                logger.critical(
+                    "Privileged intents are not explicitly granted in the discord developers dashboard."
+                )
         except Exception:
             logger.critical("Fatal exception", exc_info=True)
         finally:

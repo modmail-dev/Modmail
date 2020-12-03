@@ -14,6 +14,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `?fareply`, anonymously reply with variables.
 - `anonymous_snippets` config variable to toggle if snippets should be anonymous. ([GH #2905](https://github.com/kyb3r/modmail/issues/2905))
 - `disable_updates` config variable to control if the update command should be disabled or not.
+- Support for only the "Server Members" intent.
 
 ### Improved
 
