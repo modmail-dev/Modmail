@@ -195,7 +195,7 @@ class ModmailBot(commands.Bot):
             intents = discord.Intents.default()
             intents.members = True
             # Try again with members intent
-            super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
+            self._connection._intents = intents
             logger.warning("Attempting to login with only the server members privileged intent. Some plugins might not work correctly.")
             try:
                 self.loop.run_until_complete(self.start(self.token))
@@ -1060,7 +1060,12 @@ class ModmailBot(commands.Bot):
             )
             if self.config["show_timestamp"]:
                 em.timestamp = datetime.utcnow()
-            await self.mention_channel.send(content=self.config["mention"], embed=em)
+
+            if not self.config["silent_alert_on_mention"]:
+                content = self.config["mention"]
+            else:
+                content = ""
+            await self.mention_channel.send(content=content, embed=em)
 
         await self.process_commands(message)
 

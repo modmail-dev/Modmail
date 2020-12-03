@@ -79,6 +79,7 @@ class ConfigManager:
         "close_on_leave": False,
         "close_on_leave_reason": "The recipient has left the server.",
         "alert_on_mention": False,
+        "silent_alert_on_mention": False,
         "show_timestamp": True,
         "anonymous_snippets": False,
         # moderation
@@ -168,6 +169,7 @@ class ConfigManager:
         "transfer_reactions",
         "close_on_leave",
         "alert_on_mention",
+        "silent_alert_on_mention",
         "show_timestamp",
         "confirm_thread_creation",
         "use_regex_autotrigger",
