@@ -1,4 +1,4 @@
-__version__ = "3.7.14-dev3"
+__version__ = "3.7.14-dev4"
 
 
 import asyncio
@@ -949,10 +949,10 @@ class ModmailBot(commands.Bot):
 
         if self.config.get("use_regex_autotrigger"):
             trigger = next(
-                filter(lambda x: re.match(x, message.content), self.auto_triggers.keys())
+                filter(lambda x: re.search(x, message.content), self.auto_triggers.keys())
             )
             if trigger:
-                invoker = re.match(trigger, message.content).group(0)
+                invoker = re.search(trigger, message.content).group(0)
         else:
             trigger = next(
                 filter(lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys())

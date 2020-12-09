@@ -1829,7 +1829,7 @@ class Utility(commands.Cog):
         """Tests a string against the current autotrigger setup"""
         for keyword in self.bot.auto_triggers:
             if self.bot.config.get("use_regex_autotrigger"):
-                check = re.match(keyword, text)
+                check = re.search(keyword, text)
                 regex = True
             else:
                 check = keyword.lower() in text.lower()
