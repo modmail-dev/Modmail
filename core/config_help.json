@@ -689,6 +689,16 @@
     ],
     "notes": []
   },
+  "anonymous_snippets": {
+    "default": "No",
+    "description": "Sends snippets anonymously.",
+    "examples":[
+      "`{prefix}config set anonymous_snippets yes`"
+    ],
+    "notes": [
+      "See also: `anon_avatar_url`, `anon_tag`."
+    ]
+  },
   "confirm_thread_creation": {
     "default": "No",
     "description": "Ensure users confirm that they want to create a new thread",
