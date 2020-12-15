@@ -166,6 +166,11 @@ Special thanks to our sponsors for supporting the project.
   <img height=150 src='https://i.imgur.com/WyzaPKY.png' style='margin:10px'>
 </a>
 
+<a href='https://discord.gg/BanCwptMJV'>
+  <img height=150 src='https://i.imgur.com/cs2QEcp.png' style='margin:10px'>
+</a>
+
+
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
 ## Plugins
