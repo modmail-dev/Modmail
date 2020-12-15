@@ -27,6 +27,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Mentioned `competing` as an activity type. ([PR #2902](https://github.com/kyb3r/modmail/pull/2902))
 - Level permissions were not checked if command permissions were set.
 - Regex autotriggers were not working if term was in the middle of strings.
+- `?blocked` now no longers show blocks that have expired.
 
 ### Internal
 
