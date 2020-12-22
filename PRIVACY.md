@@ -81,7 +81,7 @@ The Modmail team does not track any data by users.
 
 ### Opting out
 
-There is no way for users or moderators to opt out frmo this data collection.
+There is no way for users or moderators to opt out from this data collection.
 
 ### Data deletion
 
