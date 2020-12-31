@@ -195,4 +195,4 @@ If you wish to test the new features and play around with them, feel free to joi
 
 Please do not sell a copy of modmail without crediting Kyb3r, or claim the modmail as your own. 
 
-More information can be found [here](https://github.com/kyb3r/modmail/blob/master/LICENSE#}
+More information can be found [here](https://github.com/kyb3r/modmail/blob/master/LICENSE#)
