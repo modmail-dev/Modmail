@@ -1201,7 +1201,7 @@ class ThreadManager:
                 del self.cache[recipient.id]
                 return thread
             else:
-                if r.emoji == deny_emoji:
+                if str(r.emoji) == deny_emoji:
                     thread.cancelled = True
 
                     await confirm.remove_reaction(accept_emoji, self.bot.user)
