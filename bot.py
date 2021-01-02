@@ -673,18 +673,18 @@ class ModmailBot(commands.Bot):
                         end_time = re.search(r"%([^%]+?)%", blocked_reason)
                         if end_time is not None:
                             logger.warning(
-                                r"Deprecated time message for user %s, block and unblock again to update.",
-                                author.name,
+                                r"Deprecated time message for role %s, block and unblock again to update.",
+                                r.name,
                             )
 
                     if end_time is not None:
                         after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
                         if after <= 0:
                             # No longer blocked
-                            self.blocked_users.pop(str(author.id))
-                            logger.debug("No longer blocked, user %s.", author.name)
+                            self.blocked_roles.pop(str(r.id))
+                            logger.debug("No longer blocked, role %s.", r.name)
                             return True
-                    logger.debug("User blocked, user %s.", author.name)
+                    logger.debug("User blocked, role %s.", r.name)
                     return False
 
         return True

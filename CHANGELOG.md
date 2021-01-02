@@ -28,6 +28,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Level permissions were not checked if command permissions were set.
 - Regex autotriggers were not working if term was in the middle of strings.
 - `?blocked` now no longers show blocks that have expired.
+- Blocked roles will no longer trigger an error during unblock
 
 ### Internal
 
