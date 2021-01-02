@@ -34,7 +34,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Internal
 
-- Make use of `git branch --show-current` to retrieve branch insteasd of using prerelease version check.
+- Make use of `git branch --show-current` to retrieve branch instead of using prerelease version check.
 
 # v3.7.13
 
