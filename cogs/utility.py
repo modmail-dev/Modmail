@@ -441,7 +441,7 @@ class Utility(commands.Cog):
     async def debug_hastebin(self, ctx):
         """Posts application-logs to Hastebin."""
 
-        haste_url = os.environ.get("HASTE_URL", "https://hasteb.in")
+        haste_url = os.environ.get("HASTE_URL", "https://hastebin.cc")
         log_file_name = self.bot.token.split(".")[0]
 
         with open(
