@@ -756,7 +756,8 @@ class Thread:
                                "blocked by the recipient.")
             else:
                 description = ("Your message could not be delivered due "
-                               "to an unknown error. ")
+                               "to an unknown error. Check `?debug` for "
+                               "more information")
             tasks.append(
                 message.channel.send(
                     embed=discord.Embed(
@@ -933,7 +934,7 @@ class Thread:
 
         file_upload_count = 1
 
-        for url, filename in attachments:
+        for url, filename, _ in attachments:
             embed.add_field(
                 name=f"File upload ({file_upload_count})", value=f"[{filename}]({url})"
             )

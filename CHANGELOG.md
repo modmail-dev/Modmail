@@ -32,6 +32,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Blocked roles will no longer trigger an error during unblock.
 - Custom emojis are now supported in `confirm_thread_creation_deny`. ([GH #2916](https://github.com/kyb3r/modmail/issues/2916))
 - Finding linked messages in replies work now. ([GH #2920](https://github.com/kyb3r/modmail/issues/2920), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2920#issuecomment-751530495))
+- Sending files in threads (non-images) now work. ([GH #2926](https://github.com/kyb3r/modmail/issues/2926))
 
 ### Internal
 
