@@ -750,20 +750,21 @@ class Thread:
         except Exception as e:
             logger.error("Message delivery failed:", exc_info=True)
             if isinstance(e, discord.Forbidden):
-                description = ("Your message could not be delivered as "
-                               "the recipient is only accepting direct "
-                               "messages from friends, or the bot was "
-                               "blocked by the recipient.")
+                description = (
+                    "Your message could not be delivered as "
+                    "the recipient is only accepting direct "
+                    "messages from friends, or the bot was "
+                    "blocked by the recipient."
+                )
             else:
-                description = ("Your message could not be delivered due "
-                               "to an unknown error. Check `?debug` for "
-                               "more information")
+                description = (
+                    "Your message could not be delivered due "
+                    "to an unknown error. Check `?debug` for "
+                    "more information"
+                )
             tasks.append(
                 message.channel.send(
-                    embed=discord.Embed(
-                        color=self.bot.error_color,
-                        description=description,
-                    )
+                    embed=discord.Embed(color=self.bot.error_color, description=description,)
                 )
             )
         else:

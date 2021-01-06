@@ -91,7 +91,7 @@ class Version:
         """
         embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
-            name=f"v{self.version} - Changelog", icon_url=self.bot.user.avatar_url, url=self.url
+            name=f"v{self.version} - Changelog", icon_url=self.bot.user.avatar_url, url=self.url,
         )
 
         for name, value in self.fields.items():
