@@ -21,6 +21,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - Added command validation to `autotrigger add/edit`.
 - `GITHUB_TOKEN` is now no longer required in Heroku setups.
+- Clearer error messages on reply fails.
 
 ### Fixed
 
