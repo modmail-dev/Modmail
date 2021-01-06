@@ -650,7 +650,7 @@ class Thread:
         tasks = []
         if not isinstance(message, discord.Message):
             tasks += [message1.delete()]
-        if message2 is not None:
+        elif message2 is not None:
             tasks += [message2.delete()]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.delete_note(message1.id)]
