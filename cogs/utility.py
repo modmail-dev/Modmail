@@ -1453,15 +1453,15 @@ class Utility(commands.Cog):
                 if perm == -1:
                     values.insert(0, "**everyone**")
                     continue
-                member = ctx.guild.get_member(perm)
+                member = ctx.guild.get_member(int(perm))
                 if member is not None:
                     values.append(member.mention)
                     continue
-                user = self.bot.get_user(perm)
+                user = self.bot.get_user(int(perm))
                 if user is not None:
                     values.append(user.mention)
                     continue
-                role = ctx.guild.get_role(perm)
+                role = ctx.guild.get_role(int(perm))
                 if role is not None:
                     values.append(role.mention)
                 else:
