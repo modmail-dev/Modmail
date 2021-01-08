@@ -192,8 +192,19 @@
       "`{prefix}config set update_channel_id 9234932582312` (9234932582312 is the channel ID)"
     ],
     "notes": [
-      "This has no effect unless `disable_autoupdates` is set to no.",
+      "This has no effect unless `disable_autoupdates` is set to no and `update_notifications` is set to yes.",
       "See also: `log_channel_id`"
+    ]
+  },
+  "update_notifications": {
+    "default": "Yes",
+    "description": "This is the channel where update notifications are sent to.",
+    "examples": [
+      "`{prefix}config set update_notifications no"
+    ],
+    "notes": [
+      "This has no effect unless `disable_autoupdates` is set to no.",
+      "See also: `update_channel_id`"
     ]
   },
   "sent_emoji": {
@@ -651,12 +662,23 @@
   },
   "alert_on_mention": {
     "default": "No",
-    "description": "Mentions all mods (mention) in logs channel when bot is mentioned",
+    "description": "Mentions all mods (mention) in mention channel when bot is mentioned",
     "examples":[
       "`{prefix}config set alert_on_mention yes`"
     ],
     "notes": [
-      "See also: `mention`"
+      "See also: `mention`, `mention_channel_id`"
+    ]
+  },
+  "silent_alert_on_mention": {
+    "default": "No",
+    "description": "Send a message in the mention channel without mentioning all mods (mention).",
+    "examples":[
+      "`{prefix}config set alert_on_mention yes`"
+    ],
+    "notes": [
+      "This has no effect unless `alert_on_mention` is set to yes.",
+      "See also: `mention`, `mention_channel_id`"
     ]
   },
   "show_timestamp": {
@@ -666,6 +688,16 @@
       "`{prefix}config set show_timestamp no`"
     ],
     "notes": []
+  },
+  "anonymous_snippets": {
+    "default": "No",
+    "description": "Sends snippets anonymously.",
+    "examples":[
+      "`{prefix}config set anonymous_snippets yes`"
+    ],
+    "notes": [
+      "See also: `anon_avatar_url`, `anon_tag`."
+    ]
   },
   "confirm_thread_creation": {
     "default": "No",
@@ -833,6 +865,15 @@
   "disable_autoupdates": {
     "default": "No",
     "description": "Controls if autoupdates should be disabled or not.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "disable_updates": {
+    "default": "No",
+    "description": "Controls if the update command should be disabled or not.",
     "examples": [
     ],
     "notes": [

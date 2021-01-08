@@ -26,5 +26,21 @@
                 }
             ]
         }
+    },
+    {
+        "embed": {
+            "title": "Berkand Karadere",
+            "description": "Berkand Karadere is an German Community Manager who integrated new systems into the game industry. He also is hosting and developing web servers and game servers. He also plays American Football for the Dortmund Giants and his journey has just begun.",
+            "color": 2968248,
+            "thumbnail": {
+                "url": "https://i.imgur.com/cs2QEcp.png"
+            },
+            "fields": [
+                {
+                    "name": "Discord Server!",
+                    "value": "[**Click here**](https://discord.gg/BanCwptMJV)"
+                }
+            ]
+        }
     }
 ]

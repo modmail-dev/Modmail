@@ -650,7 +650,7 @@ class Thread:
         tasks = []
         if not isinstance(message, discord.Message):
             tasks += [message1.delete()]
-        if message2 is not None:
+        elif message2 is not None:
             tasks += [message2.delete()]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.delete_note(message1.id)]
@@ -660,8 +660,10 @@ class Thread:
     async def find_linked_message_from_dm(self, message, either_direction=False):
         if either_direction and message.embeds:
             compare_url = message.embeds[0].author.url
+            compare_id = compare_url.split("#")[-1]
         else:
             compare_url = None
+            compare_id = None
 
         if self.channel is not None:
             async for linked_message in self.channel.history():
@@ -679,6 +681,11 @@ class Thread:
                 msg_id = int(msg_id)
                 if int(msg_id) == message.id:
                     return linked_message
+
+                if compare_id is not None and compare_id.isdigit():
+                    if int(msg_id) == int(compare_id):
+                        return linked_message
+
             raise ValueError("Thread channel message not found.")
 
     async def edit_dm_message(self, message: discord.Message, content: str) -> None:
@@ -740,17 +747,24 @@ class Thread:
                 anonymous=anonymous,
                 plain=plain,
             )
-        except Exception:
+        except Exception as e:
             logger.error("Message delivery failed:", exc_info=True)
+            if isinstance(e, discord.Forbidden):
+                description = (
+                    "Your message could not be delivered as "
+                    "the recipient is only accepting direct "
+                    "messages from friends, or the bot was "
+                    "blocked by the recipient."
+                )
+            else:
+                description = (
+                    "Your message could not be delivered due "
+                    "to an unknown error. Check `?debug` for "
+                    "more information"
+                )
             tasks.append(
                 message.channel.send(
-                    embed=discord.Embed(
-                        color=self.bot.error_color,
-                        description="Your message could not be delivered as "
-                        "the recipient is only accepting direct "
-                        "messages from friends, or the bot was "
-                        "blocked by the recipient.",
-                    )
+                    embed=discord.Embed(color=self.bot.error_color, description=description,)
                 )
             )
         else:
@@ -884,7 +898,14 @@ class Thread:
             if is_image_url(url, convert_size=False)
         ]
         images.extend(image_urls)
-        images.extend((str(i.image_url), f"{i.name} Sticker", True) for i in message.stickers)
+        images.extend(
+            (
+                str(i.image_url) if isinstance(i.image_url, discord.Asset) else i.image_url,
+                f"{i.name} Sticker",
+                True,
+            )
+            for i in message.stickers
+        )
 
         embedded_image = False
 
@@ -894,11 +915,18 @@ class Thread:
         additional_count = 1
 
         for url, filename, is_sticker in images:
-            if not prioritize_uploads or (is_image_url(url) and not embedded_image and filename):
-                embed.set_image(url=url)
+            if not prioritize_uploads or (
+                (url is None or is_image_url(url)) and not embedded_image and filename
+            ):
+                if url is not None:
+                    embed.set_image(url=url)
                 if filename:
                     if is_sticker:
-                        embed.add_field(name=filename, value=f"\u200b")
+                        if url is None:
+                            description = "Unable to retrieve sticker image"
+                        else:
+                            description = "\u200b"
+                        embed.add_field(name=filename, value=description)
                     else:
                         embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
@@ -911,9 +939,12 @@ class Thread:
                     color = self.bot.recipient_color
 
                 img_embed = discord.Embed(color=color)
-                img_embed.set_image(url=url)
+
+                if url is None:
+                    img_embed.set_image(url=url)
+                    img_embed.url = url
+
                 img_embed.title = filename
-                img_embed.url = url
                 img_embed.set_footer(text=f"Additional Image Upload ({additional_count})")
                 img_embed.timestamp = message.created_at
                 additional_images.append(destination.send(embed=img_embed))
@@ -921,7 +952,7 @@ class Thread:
 
         file_upload_count = 1
 
-        for url, filename in attachments:
+        for url, filename, _ in attachments:
             embed.add_field(
                 name=f"File upload ({file_upload_count})", value=f"[{filename}]({url})"
             )
@@ -1201,7 +1232,7 @@ class ThreadManager:
                 del self.cache[recipient.id]
                 return thread
             else:
-                if r.emoji == deny_emoji:
+                if str(r.emoji) == deny_emoji:
                     thread.cancelled = True
 
                     await confirm.remove_reaction(accept_emoji, self.bot.user)

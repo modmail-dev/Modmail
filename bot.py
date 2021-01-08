@@ -1,4 +1,4 @@
-__version__ = "3.7.13"
+__version__ = "3.8.0"
 
 
 import asyncio
@@ -192,9 +192,19 @@ class ModmailBot(commands.Bot):
         except discord.LoginFailure:
             logger.critical("Invalid token")
         except discord.PrivilegedIntentsRequired:
-            logger.critical(
-                "Privileged intents are not explicitly granted in the discord developers dashboard."
+            intents = discord.Intents.default()
+            intents.members = True
+            # Try again with members intent
+            self._connection._intents = intents
+            logger.warning(
+                "Attempting to login with only the server members privileged intent. Some plugins might not work correctly."
             )
+            try:
+                self.loop.run_until_complete(self.start(self.token))
+            except discord.PrivilegedIntentsRequired:
+                logger.critical(
+                    "Privileged intents are not explicitly granted in the discord developers dashboard."
+                )
         except Exception:
             logger.critical("Fatal exception", exc_info=True)
         finally:
@@ -663,18 +673,18 @@ class ModmailBot(commands.Bot):
                         end_time = re.search(r"%([^%]+?)%", blocked_reason)
                         if end_time is not None:
                             logger.warning(
-                                r"Deprecated time message for user %s, block and unblock again to update.",
-                                author.name,
+                                r"Deprecated time message for role %s, block and unblock again to update.",
+                                r.name,
                             )
 
                     if end_time is not None:
                         after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
                         if after <= 0:
                             # No longer blocked
-                            self.blocked_users.pop(str(author.id))
-                            logger.debug("No longer blocked, user %s.", author.name)
+                            self.blocked_roles.pop(str(r.id))
+                            logger.debug("No longer blocked, role %s.", r.name)
                             return True
-                    logger.debug("User blocked, user %s.", author.name)
+                    logger.debug("User blocked, role %s.", r.name)
                     return False
 
         return True
@@ -937,13 +947,12 @@ class ModmailBot(commands.Bot):
         invoked_prefix = self.prefix
         invoker = None
 
-        # Check if there is any aliases being called.
         if self.config.get("use_regex_autotrigger"):
             trigger = next(
-                filter(lambda x: re.match(x, message.content), self.auto_triggers.keys())
+                filter(lambda x: re.search(x, message.content), self.auto_triggers.keys())
             )
             if trigger:
-                invoker = re.match(trigger, message.content).group(0)
+                invoker = re.search(trigger, message.content).group(0)
         else:
             trigger = next(
                 filter(lambda x: x.lower() in message.content.lower(), self.auto_triggers.keys())
@@ -1053,7 +1062,12 @@ class ModmailBot(commands.Bot):
             )
             if self.config["show_timestamp"]:
                 em.timestamp = datetime.utcnow()
-            await self.mention_channel.send(content=self.config["mention"], embed=em)
+
+            if not self.config["silent_alert_on_mention"]:
+                content = self.config["mention"]
+            else:
+                content = ""
+            await self.mention_channel.send(content=content, embed=em)
 
         await self.process_commands(message)
 
@@ -1070,7 +1084,10 @@ class ModmailBot(commands.Bot):
             # Process snippets
             if cmd in self.snippets:
                 snippet = self.snippets[cmd]
-                message.content = f"{self.prefix}freply {snippet}"
+                if self.config["anonymous_snippets"]:
+                    message.content = f"{self.prefix}fareply {snippet}"
+                else:
+                    message.content = f"{self.prefix}freply {snippet}"
 
         ctxs = await self.get_contexts(message)
         for ctx in ctxs:
@@ -1502,7 +1519,8 @@ class ModmailBot(commands.Bot):
                     )
                     logger.info("Bot has been updated.")
                     channel = self.log_channel
-                    await channel.send(embed=embed)
+                    if self.bot.config["update_notifications"]:
+                        await channel.send(embed=embed)
             else:
                 try:
                     # update fork if gh_token exists
@@ -1527,14 +1545,22 @@ class ModmailBot(commands.Bot):
                     channel = self.update_channel
                     if self.hosting_method == HostingMethod.PM2:
                         embed = discord.Embed(title="Bot has been updated", color=self.main_color)
-                        await channel.send(embed=embed)
+                        embed.set_footer(
+                            text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
+                        )
+                        if self.bot.config["update_notifications"]:
+                            await channel.send(embed=embed)
                     else:
                         embed = discord.Embed(
                             title="Bot has been updated and is logging out.",
                             description="If you do not have an auto-restart setup, please manually start the bot.",
                             color=self.main_color,
                         )
-                        await channel.send(embed=embed)
+                        embed.set_footer(
+                            text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
+                        )
+                        if self.bot.config["update_notifications"]:
+                            await channel.send(embed=embed)
                     await self.logout()
 
     async def before_autoupdate(self):
@@ -1562,7 +1588,7 @@ def main():
         pass
 
     # check discord version
-    if discord.__version__ != "1.5.2":
+    if discord.__version__ != "1.6.0":
         logger.error(
             "Dependencies are not updated, run pipenv install. discord.py version expected 1.5.2, recieved %s",
             discord.__version__,

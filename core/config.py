@@ -44,6 +44,8 @@ class ConfigManager:
         "log_channel_id": None,
         "mention_channel_id": None,
         "update_channel_id": None,
+        # updates
+        "update_notifications": True,
         # threads
         "sent_emoji": "✅",
         "blocked_emoji": "🚫",
@@ -77,7 +79,9 @@ class ConfigManager:
         "close_on_leave": False,
         "close_on_leave_reason": "The recipient has left the server.",
         "alert_on_mention": False,
+        "silent_alert_on_mention": False,
         "show_timestamp": True,
+        "anonymous_snippets": False,
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -141,6 +145,7 @@ class ConfigManager:
         # github access token for private repositories
         "github_token": None,
         "disable_autoupdates": False,
+        "disable_updates": False,
         # Logging
         "log_level": "INFO",
         # data collection
@@ -164,6 +169,7 @@ class ConfigManager:
         "transfer_reactions",
         "close_on_leave",
         "alert_on_mention",
+        "silent_alert_on_mention",
         "show_timestamp",
         "confirm_thread_creation",
         "use_regex_autotrigger",
@@ -171,7 +177,10 @@ class ConfigManager:
         "data_collection",
         "enable_eval",
         "disable_autoupdates",
+        "disable_updates",
+        "update_notifications",
         "thread_contact_silently",
+        "anonymous_snippets",
     }
 
     enums = {

@@ -1,4 +1,6 @@
+import asyncio
 import re
+from subprocess import PIPE
 from typing import List
 
 from discord import Embed
@@ -89,7 +91,7 @@ class Version:
         """
         embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
-            name=f"v{self.version} - Changelog", icon_url=self.bot.user.avatar_url, url=self.url
+            name=f"v{self.version} - Changelog", icon_url=self.bot.user.avatar_url, url=self.url,
         )
 
         for name, value in self.fields.items():
@@ -167,7 +169,17 @@ class Changelog:
         Changelog
             The newly created `Changelog` parsed from the `url`.
         """
-        branch = "master" if not bot.version.is_prerelease else "development"
+        # get branch via git cli if available
+        proc = await asyncio.create_subprocess_shell(
+            "git branch --show-current", stderr=PIPE, stdout=PIPE,
+        )
+        err = await proc.stderr.read()
+        err = err.decode("utf-8").rstrip()
+        res = await proc.stdout.read()
+        branch = res.decode("utf-8").rstrip()
+        if not branch or err:
+            branch = "master" if not bot.version.is_prerelease else "development"
+
         url = url or f"https://raw.githubusercontent.com/kyb3r/modmail/{branch}/CHANGELOG.md"
 
         async with await bot.session.get(url) as resp:

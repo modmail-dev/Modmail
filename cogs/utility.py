@@ -506,9 +506,13 @@ class Utility(commands.Cog):
             - `streaming`
             - `listening`
             - `watching`
+            - `competing`
 
         When activity type is set to `listening`,
         it must be followed by a "to": "listening to..."
+
+        When activity type is set to `competing`,
+        it must be followed by a "in": "competing in..."
 
         When activity type is set to `streaming`, you can set
         the linked twitch page:
@@ -544,6 +548,8 @@ class Utility(commands.Cog):
         msg = f"Activity set to: {activity.type.name.capitalize()} "
         if activity.type == ActivityType.listening:
             msg += f"to {activity.name}."
+        elif activity.type == ActivityType.competing:
+            msg += f"in {activity.name}."
         else:
             msg += f"{activity.name}."
 
@@ -607,6 +613,11 @@ class Utility(commands.Cog):
             if activity_message.lower().startswith("to "):
                 # The actual message is after listening to [...]
                 # discord automatically add the "to"
+                activity_message = activity_message[3:].strip()
+        elif activity_type == ActivityType.competing:
+            if activity_message.lower().startswith("in "):
+                # The actual message is after listening to [...]
+                # discord automatically add the "in"
                 activity_message = activity_message[3:].strip()
         elif activity_type == ActivityType.streaming:
             url = self.bot.config["twitch_url"]
@@ -1442,15 +1453,15 @@ class Utility(commands.Cog):
                 if perm == -1:
                     values.insert(0, "**everyone**")
                     continue
-                member = ctx.guild.get_member(perm)
+                member = ctx.guild.get_member(int(perm))
                 if member is not None:
                     values.append(member.mention)
                     continue
-                user = self.bot.get_user(perm)
+                user = self.bot.get_user(int(perm))
                 if user is not None:
                     values.append(user.mention)
                     continue
-                role = ctx.guild.get_role(perm)
+                role = ctx.guild.get_role(int(perm))
                 if role is not None:
                     values.append(role.mention)
                 else:
@@ -1726,14 +1737,30 @@ class Utility(commands.Cog):
                 description=f"Another autotrigger with the same name already exists: `{keyword}`.",
             )
         else:
-            self.bot.auto_triggers[keyword] = command
-            await self.bot.config.update()
+            # command validation
+            valid = False
+            split_cmd = command.split(" ")
+            for n in range(1, len(split_cmd) + 1):
+                if self.bot.get_command(" ".join(split_cmd[0:n])):
+                    print(self.bot.get_command(" ".join(split_cmd[0:n])))
+                    valid = True
+                    break
 
-            embed = discord.Embed(
-                title="Success",
-                color=self.bot.main_color,
-                description=f"Keyword `{keyword}` has been linked to `{command}`.",
-            )
+            if valid:
+                self.bot.auto_triggers[keyword] = command
+                await self.bot.config.update()
+
+                embed = discord.Embed(
+                    title="Success",
+                    color=self.bot.main_color,
+                    description=f"Keyword `{keyword}` has been linked to `{command}`.",
+                )
+            else:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                )
 
         await ctx.send(embed=embed)
 
@@ -1746,14 +1773,30 @@ class Utility(commands.Cog):
                 keyword, self.bot.auto_triggers.keys(), "Autotrigger"
             )
         else:
-            self.bot.auto_triggers[keyword] = command
-            await self.bot.config.update()
+            # command validation
+            valid = False
+            split_cmd = command.split(" ")
+            for n in range(1, len(split_cmd) + 1):
+                if self.bot.get_command(" ".join(split_cmd[0:n])):
+                    print(self.bot.get_command(" ".join(split_cmd[0:n])))
+                    valid = True
+                    break
 
-            embed = discord.Embed(
-                title="Success",
-                color=self.bot.main_color,
-                description=f"Keyword `{keyword}` has been linked to `{command}`.",
-            )
+            if valid:
+                self.bot.auto_triggers[keyword] = command
+                await self.bot.config.update()
+
+                embed = discord.Embed(
+                    title="Success",
+                    color=self.bot.main_color,
+                    description=f"Keyword `{keyword}` has been linked to `{command}`.",
+                )
+            else:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                )
 
         await ctx.send(embed=embed)
 
@@ -1786,7 +1829,7 @@ class Utility(commands.Cog):
         """Tests a string against the current autotrigger setup"""
         for keyword in self.bot.auto_triggers:
             if self.bot.config.get("use_regex_autotrigger"):
-                check = re.match(keyword, text)
+                check = re.search(keyword, text)
                 regex = True
             else:
                 check = keyword.lower() in text.lower()
@@ -1853,6 +1896,7 @@ class Utility(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.OWNER)
     @checks.github_token_required(ignore_if_not_heroku=True)
+    @checks.updates_enabled()
     @trigger_typing
     async def update(self, ctx, *, flag: str = ""):
         """

@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.8.0
+
+### Added
+
+- `update_notifications` configuration option to toggle bot autoupdate notifications. ([GH #2896](https://github.com/kyb3r/modmail/issues/2896))
+- `?fareply`, anonymously reply with variables.
+- `anonymous_snippets` config variable to toggle if snippets should be anonymous. ([GH #2905](https://github.com/kyb3r/modmail/issues/2905))
+- `disable_updates` config variable to control if the update command should be disabled or not.
+- `silent_alert_on_mention` to alert mods silently. ([GH #2907](https://github.com/kyb3r/modmail/issues/2907))
+- Support for only the "Server Members" intent.
+
+### Improved
+
+- Added command validation to `autotrigger add/edit`.
+- `GITHUB_TOKEN` is now no longer required in Heroku setups.
+- Clearer error messages on reply fails.
+
+### Fixed
+
+- Mentioned `competing` as an activity type. ([PR #2902](https://github.com/kyb3r/modmail/pull/2902))
+- Level permissions were not checked if command permissions were set.
+- Regex autotriggers were not working if term was in the middle of strings.
+- `?blocked` now no longers show blocks that have expired.
+- Blocked roles will no longer trigger an error during unblock.
+- Custom emojis are now supported in `confirm_thread_creation_deny`. ([GH #2916](https://github.com/kyb3r/modmail/issues/2916))
+- Finding linked messages in replies work now. ([GH #2920](https://github.com/kyb3r/modmail/issues/2920), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2920#issuecomment-751530495))
+- Sending files in threads (non-images) now work. ([GH #2926](https://github.com/kyb3r/modmail/issues/2926))
+- Deleting messages no longer shows a false error. ([GH #2910](https://github.com/kyb3r/modmail/issues/2910), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2910#issuecomment-753557313))
+- Display an error on [Lottie](https://airbnb.io/lottie/#/) stickers, instead of failing the send.
+- `?perms get` now shows role/user names. ([PR #2927](https://github.com/kyb3r/modmail/pull/2927))
+
+### Internal
+
+- Make use of `git branch --show-current` to retrieve branch instead of using prerelease version check.
+- Use discord.py 1.6.0 from PyPi instead of the development clone.
+
 # v3.7.13
 
 ### Fixed
