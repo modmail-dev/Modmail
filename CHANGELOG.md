@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# v3.8.0-dev7
+# v3.8.0-dev8
 
 ### Added
 
@@ -34,10 +34,12 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Finding linked messages in replies work now. ([GH #2920](https://github.com/kyb3r/modmail/issues/2920), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2920#issuecomment-751530495))
 - Sending files in threads (non-images) now work. ([GH #2926](https://github.com/kyb3r/modmail/issues/2926))
 - Deleting messages no longer shows a false error. ([GH #2910](https://github.com/kyb3r/modmail/issues/2910), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2910#issuecomment-753557313))
+- Display an error on [Lottie](https://airbnb.io/lottie/#/) stickers, instead of failing the send.
 
 ### Internal
 
 - Make use of `git branch --show-current` to retrieve branch instead of using prerelease version check.
+- Use discord.py 1.6.0 from PyPi instead of the development clone.
 
 # v3.7.13
 

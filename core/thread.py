@@ -898,7 +898,11 @@ class Thread:
             if is_image_url(url, convert_size=False)
         ]
         images.extend(image_urls)
-        images.extend((str(i.image_url), f"{i.name} Sticker", True) for i in message.stickers)
+        images.extend((
+            str(i.image_url) if isinstance(i.image_url, discord.Asset) else i.image_url,
+            f"{i.name} Sticker",
+            True
+        ) for i in message.stickers)
 
         embedded_image = False
 
@@ -908,11 +912,16 @@ class Thread:
         additional_count = 1
 
         for url, filename, is_sticker in images:
-            if not prioritize_uploads or (is_image_url(url) and not embedded_image and filename):
-                embed.set_image(url=url)
+            if not prioritize_uploads or ((url is None or is_image_url(url)) and not embedded_image and filename):
+                if url is not None:
+                    embed.set_image(url=url)
                 if filename:
                     if is_sticker:
-                        embed.add_field(name=filename, value=f"\u200b")
+                        if url is None:
+                            description = 'Unable to retrieve sticker image'
+                        else:
+                            description = "\u200b"
+                        embed.add_field(name=filename, value=description)
                     else:
                         embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
@@ -925,9 +934,12 @@ class Thread:
                     color = self.bot.recipient_color
 
                 img_embed = discord.Embed(color=color)
-                img_embed.set_image(url=url)
+
+                if url is None:
+                    img_embed.set_image(url=url)
+                    img_embed.url = url
+
                 img_embed.title = filename
-                img_embed.url = url
                 img_embed.set_footer(text=f"Additional Image Upload ({additional_count})")
                 img_embed.timestamp = message.created_at
                 additional_images.append(destination.send(embed=img_embed))
