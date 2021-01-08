@@ -898,11 +898,14 @@ class Thread:
             if is_image_url(url, convert_size=False)
         ]
         images.extend(image_urls)
-        images.extend((
-            str(i.image_url) if isinstance(i.image_url, discord.Asset) else i.image_url,
-            f"{i.name} Sticker",
-            True
-        ) for i in message.stickers)
+        images.extend(
+            (
+                str(i.image_url) if isinstance(i.image_url, discord.Asset) else i.image_url,
+                f"{i.name} Sticker",
+                True,
+            )
+            for i in message.stickers
+        )
 
         embedded_image = False
 
@@ -912,13 +915,15 @@ class Thread:
         additional_count = 1
 
         for url, filename, is_sticker in images:
-            if not prioritize_uploads or ((url is None or is_image_url(url)) and not embedded_image and filename):
+            if not prioritize_uploads or (
+                (url is None or is_image_url(url)) and not embedded_image and filename
+            ):
                 if url is not None:
                     embed.set_image(url=url)
                 if filename:
                     if is_sticker:
                         if url is None:
-                            description = 'Unable to retrieve sticker image'
+                            description = "Unable to retrieve sticker image"
                         else:
                             description = "\u200b"
                         embed.add_field(name=filename, value=description)

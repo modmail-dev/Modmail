@@ -35,6 +35,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Sending files in threads (non-images) now work. ([GH #2926](https://github.com/kyb3r/modmail/issues/2926))
 - Deleting messages no longer shows a false error. ([GH #2910](https://github.com/kyb3r/modmail/issues/2910), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2910#issuecomment-753557313))
 - Display an error on [Lottie](https://airbnb.io/lottie/#/) stickers, instead of failing the send.
+- `?perms get` now shows role/user names. ([PR #2927](https://github.com/kyb3r/modmail/pull/2927))
 
 ### Internal
 
