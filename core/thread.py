@@ -658,7 +658,7 @@ class Thread:
             await asyncio.gather(*tasks)
 
     async def find_linked_message_from_dm(self, message, either_direction=False):
-        if either_direction and message.embeds:
+        if either_direction and message.embeds and message.embeds[0].author.url:
             compare_url = message.embeds[0].author.url
             compare_id = compare_url.split("#")[-1]
         else:
