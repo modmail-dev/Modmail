@@ -658,7 +658,7 @@ class Thread:
             await asyncio.gather(*tasks)
 
     async def find_linked_message_from_dm(self, message, either_direction=False):
-        if either_direction and message.embeds:
+        if either_direction and message.embeds and message.embeds[0].author.url:
             compare_url = message.embeds[0].author.url
             compare_id = compare_url.split("#")[-1]
         else:
@@ -915,9 +915,9 @@ class Thread:
         additional_count = 1
 
         for url, filename, is_sticker in images:
-            if not prioritize_uploads or (
-                (url is None or is_image_url(url)) and not embedded_image and filename
-            ):
+            if (
+                not prioritize_uploads or ((url is None or is_image_url(url)) and filename)
+            ) and not embedded_image:
                 if url is not None:
                     embed.set_image(url=url)
                 if filename:
@@ -930,7 +930,7 @@ class Thread:
                     else:
                         embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
-            elif filename is not None:
+            else:
                 if note:
                     color = self.bot.main_color
                 elif from_mod:
@@ -940,11 +940,11 @@ class Thread:
 
                 img_embed = discord.Embed(color=color)
 
-                if url is None:
+                if url is not None:
                     img_embed.set_image(url=url)
                     img_embed.url = url
-
-                img_embed.title = filename
+                if filename is not None:
+                    img_embed.title = filename
                 img_embed.set_footer(text=f"Additional Image Upload ({additional_count})")
                 img_embed.timestamp = message.created_at
                 additional_images.append(destination.send(embed=img_embed))
