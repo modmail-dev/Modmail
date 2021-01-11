@@ -227,6 +227,7 @@ class DummyMessage:
     """
 
     def __init__(self, message):
+        message.attachments = []
         self._message = message
 
     def __getattr__(self, name: str):

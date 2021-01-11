@@ -12,6 +12,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - Additional image uploads now render properly. ([PR #2933](https://github.com/kyb3r/modmail/pull/2933)))
 - `confirm_thread_creation` no longer raises unnecessary errors. ([GH #2931](https://github.com/kyb3r/modmail/issues/2931), [PR #2933](https://github.com/kyb3r/modmail/pull/2933))
+- Autotriggers no longer sends attachments back. ([GH #2932](https://github.com/kyb3r/modmail/issues/2932))
 
 
 # v3.8.0
