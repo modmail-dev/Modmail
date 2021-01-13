@@ -680,7 +680,7 @@ class Modmail(commands.Cog):
             thread = ctx.thread
             if not thread:
                 raise commands.MissingRequiredArgument(SimpleNamespace(name="member"))
-            user = thread.recipient
+            user = thread.recipient or await self.bot.fetch_user(thread.id)
 
         default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
         icon_url = getattr(user, "avatar_url", default_avatar)
