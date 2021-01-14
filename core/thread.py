@@ -660,7 +660,9 @@ class Thread:
                     plain_message = f"**({embed1.footer.text.strip('[PLAIN] ')}) "
                 mod_tag = self.bot.config["mod_tag"]
                 if mod_tag is None:
-                    mod = self.bot.modmail_guild.get_member(int(embed1.author.url.split("#")[0].split("/")[-1]))
+                    mod = self.bot.modmail_guild.get_member(
+                        int(embed1.author.url.split("#")[0].split("/")[-1])
+                    )
                     mod_tag = str(mod.top_role)
                 plain_message += f"{embed1.author.name if not anonymous else mod_tag}:** {message}"
                 tasks += [message2.edit(content=plain_message)]
@@ -800,7 +802,12 @@ class Thread:
             # Send the same thing in the thread channel.
             plain_id = recipient_msg.id if plain else None
             msg = await self.send(
-                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain, plain_id=plain_id
+                message,
+                destination=self.channel,
+                from_mod=True,
+                anonymous=anonymous,
+                plain=plain,
+                plain_id=plain_id,
             )
 
             tasks.append(
