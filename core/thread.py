@@ -615,8 +615,12 @@ class Thread:
         except ValueError:
             raise ValueError("Malformed thread message.")
 
+        plain = False
+        if message1.embeds[0].footer:
+            if getattr(message1.embeds[0].footer, "text", "NONE").startswith("[PLAIN]"):
+                plain = True
         async for msg in self.recipient.history():
-            if either_direction:
+            if either_direction or plain:
                 if msg.id == joint_id:
                     return message1, msg
 
@@ -638,12 +642,28 @@ class Thread:
 
         embed1 = message1.embeds[0]
         embed1.description = message
-
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
+
+        plain = getattr(message1.embeds[0].footer, "text", "NONE").startswith("[PLAIN]")
         if message2 is not None:
-            embed2 = message2.embeds[0]
-            embed2.description = message
-            tasks += [message2.edit(embed=embed2)]
+            if message2.embeds:
+                embed2 = message2.embeds[0]
+                embed2.description = message
+                tasks += [message2.edit(embed=embed2)]
+            elif plain:
+                anonymous = False
+                if embed1.footer.text == "[PLAIN] Anonymous Reply":
+                    anonymous = True
+                if anonymous:
+                    plain_message = f"**({self.bot.config['anon_tag']}) "
+                else:
+                    plain_message = f"**({embed1.footer.text.strip('[PLAIN] ')}) "
+                mod_tag = self.bot.config["mod_tag"]
+                if mod_tag is None:
+                    mod = self.bot.modmail_guild.get_member(int(embed1.author.url.split("#")[0].split("/")[-1]))
+                    mod_tag = str(mod.top_role)
+                plain_message += f"{embed1.author.name if not anonymous else mod_tag}:** {message}"
+                tasks += [message2.edit(content=plain_message)]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.edit_note(message1.id, message)]
 
@@ -749,7 +769,7 @@ class Thread:
         tasks = []
 
         try:
-            await self.send(
+            recipient_msg = await self.send(
                 message,
                 destination=self.recipient,
                 from_mod=True,
@@ -778,8 +798,9 @@ class Thread:
             )
         else:
             # Send the same thing in the thread channel.
+            plain_id = recipient_msg.id if plain else None
             msg = await self.send(
-                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain
+                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain, plain_id=plain_id
             )
 
             tasks.append(
@@ -816,9 +837,10 @@ class Thread:
         note: bool = False,
         anonymous: bool = False,
         plain: bool = False,
+        plain_id: int = None,
         persistent_note: bool = False,
         thread_creation: bool = False,
-    ) -> None:
+    ) -> typing.Optional[discord.Message]:
 
         self.bot.loop.create_task(
             self._restart_close_timer()
@@ -1032,6 +1054,11 @@ class Thread:
                 msg = await destination.send(plain_message, files=files)
             else:
                 # Plain to mods
+                embed.set_author(
+                    name=str(author),
+                    icon_url=author.avatar_url,
+                    url=f"https://discordapp.com/users/{author.id}#{plain_id}",
+                )
                 embed.set_footer(text="[PLAIN] " + embed.footer.text)
                 msg = await destination.send(mentions, embed=embed)
 
