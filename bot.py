@@ -1519,7 +1519,7 @@ class ModmailBot(commands.Bot):
                     )
                     logger.info("Bot has been updated.")
                     channel = self.log_channel
-                    if self.bot.config["update_notifications"]:
+                    if self.config["update_notifications"]:
                         await channel.send(embed=embed)
             else:
                 try:
@@ -1548,7 +1548,7 @@ class ModmailBot(commands.Bot):
                         embed.set_footer(
                             text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
                         )
-                        if self.bot.config["update_notifications"]:
+                        if self.config["update_notifications"]:
                             await channel.send(embed=embed)
                     else:
                         embed = discord.Embed(
@@ -1559,7 +1559,7 @@ class ModmailBot(commands.Bot):
                         embed.set_footer(
                             text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
                         )
-                        if self.bot.config["update_notifications"]:
+                        if self.config["update_notifications"]:
                             await channel.send(embed=embed)
                     await self.logout()
 
