@@ -47,7 +47,7 @@ def strtobool(val):
         raise
 
 
-class User(commands.IDConverter):
+class User(commands.MemberConverter):
     """
     A custom discord.py `Converter` that
     supports `Member`, `User`, and string ID's.
