@@ -125,7 +125,7 @@ class Thread:
                 overwrites=overwrites,
                 reason="Creating a thread channel.",
             )
-        except discord.HTTPException as e:
+        except discord.HTTPException:
             # try again but null-discrim (name could be banned)
             try:
                 channel = await self.bot.modmail_guild.create_text_channel(
@@ -631,9 +631,11 @@ class Thread:
                     return message1, msg
             except ValueError:
                 continue
-        raise ValueError("DM message not found. Plain messages are not supported.")
+        raise ValueError("DM message not found.")
 
-    async def edit_message(self, message_id: typing.Optional[int], message: str) -> None:
+    async def edit_message(
+        self, editor: discord.Member, message_id: typing.Optional[int], message: str
+    ) -> None:
         try:
             message1, message2 = await self.find_linked_messages(message_id)
         except ValueError:
@@ -641,6 +643,9 @@ class Thread:
             raise
 
         embed1 = message1.embeds[0]
+        author_id = embed1.author.url.split("#")[0].split("/")[-1]
+        if editor.id != int(author_id):
+            raise ValueError("False author.")
         embed1.description = message
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
 
@@ -660,11 +665,8 @@ class Thread:
                     plain_message = f"**({embed1.footer.text.strip('[PLAIN] ')}) "
                 mod_tag = self.bot.config["mod_tag"]
                 if mod_tag is None:
-                    mod = self.bot.modmail_guild.get_member(
-                        int(embed1.author.url.split("#")[0].split("/")[-1])
-                    )
-                    mod_tag = str(mod.top_role)
-                plain_message += f"{embed1.author.name if not anonymous else mod_tag}:** {message}"
+                    mod_tag = str(editor.top_role)
+                plain_message += f"{str(editor) if not anonymous else mod_tag}:** {message}"
                 tasks += [message2.edit(content=plain_message)]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.edit_note(message1.id, message)]
@@ -734,7 +736,7 @@ class Thread:
 
     async def note(
         self, message: discord.Message, persistent=False, thread_creation=False
-    ) -> None:
+    ) -> typing.Optional[discord.Message]:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 

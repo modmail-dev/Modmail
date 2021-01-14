@@ -947,13 +947,15 @@ class Modmail(commands.Cog):
         thread = ctx.thread
 
         try:
-            await thread.edit_message(message_id, message)
-        except ValueError:
+            await thread.edit_message(ctx.author, message_id, message)
+        except ValueError as e:
+            if "False author." in str(e):
+                description = "You can only edit messages that were sent by you."
+            else:
+                description = "Cannot find a message to edit."
             return await ctx.send(
                 embed=discord.Embed(
-                    title="Failed",
-                    description="Cannot find a message to edit. Plain messages are not supported.",
-                    color=self.bot.error_color,
+                    title="Failed", description=description, color=self.bot.error_color,
                 )
             )
 
