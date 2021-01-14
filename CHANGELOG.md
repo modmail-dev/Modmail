@@ -12,6 +12,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - Retry with `null-discrim` if channel could not be created. ([GH #2934](https://github.com/kyb3r/modmail/issues/2934))
 - Fix update notifications.
+- Retrieve user from Discord API if user has left the server, resolving issues in `?block`. ([GH #2935](https://github.com/kyb3r/modmail/issues/2935), [PR #2936](https://github.com/kyb3r/modmail/pull/2936))
 
 # v3.8.1
 
