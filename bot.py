@@ -1153,7 +1153,7 @@ class ModmailBot(commands.Bot):
 
     async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
-        if user.bot:
+        if user is None or user.bot:
             return
 
         channel = self.get_channel(payload.channel_id)
