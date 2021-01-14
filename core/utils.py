@@ -339,9 +339,12 @@ def escape_code_block(text):
     return re.sub(r"```", "`\u200b``", text)
 
 
-def format_channel_name(author, guild, exclude_channel=None):
+def format_channel_name(author, guild, exclude_channel=None, force_null=False):
     """Sanitises a username for use with text channel names"""
     name = author.name.lower()
+    if force_null:
+        name = "null"
+
     name = new_name = (
         "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
     ) + f"-{author.discriminator}"
