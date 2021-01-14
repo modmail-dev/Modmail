@@ -1,4 +1,4 @@
-__version__ = "3.8.1"
+__version__ = "3.8.2"
 
 
 import asyncio
@@ -1153,7 +1153,7 @@ class ModmailBot(commands.Bot):
 
     async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
-        if user.bot:
+        if user is None or user.bot:
             return
 
         channel = self.get_channel(payload.channel_id)
@@ -1519,7 +1519,7 @@ class ModmailBot(commands.Bot):
                     )
                     logger.info("Bot has been updated.")
                     channel = self.log_channel
-                    if self.bot.config["update_notifications"]:
+                    if self.config["update_notifications"]:
                         await channel.send(embed=embed)
             else:
                 try:
@@ -1548,7 +1548,7 @@ class ModmailBot(commands.Bot):
                         embed.set_footer(
                             text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
                         )
-                        if self.bot.config["update_notifications"]:
+                        if self.config["update_notifications"]:
                             await channel.send(embed=embed)
                     else:
                         embed = discord.Embed(
@@ -1559,7 +1559,7 @@ class ModmailBot(commands.Bot):
                         embed.set_footer(
                             text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
                         )
-                        if self.bot.config["update_notifications"]:
+                        if self.config["update_notifications"]:
                             await channel.send(embed=embed)
                     await self.logout()
 

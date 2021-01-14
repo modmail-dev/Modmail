@@ -6,14 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.8.2
+
+### Fixed
+
+- Retry with `null-discrim` if channel could not be created. ([GH #2934](https://github.com/kyb3r/modmail/issues/2934))
+- Fix update notifications.
+- Retrieve user from Discord API if user has left the server, resolving issues in `?block`. ([GH #2935](https://github.com/kyb3r/modmail/issues/2935), [PR #2936](https://github.com/kyb3r/modmail/pull/2936))
+- IDs in `<member>` commands work now.
+
 # v3.8.1
 
 ### Fixed
 
-- Additional image uploads now render properly. ([PR #2933](https://github.com/kyb3r/modmail/pull/2933)))
+- Additional image uploads now render properly. ([PR #2933](https://github.com/kyb3r/modmail/pull/2933))
 - `confirm_thread_creation` no longer raises unnecessary errors. ([GH #2931](https://github.com/kyb3r/modmail/issues/2931), [PR #2933](https://github.com/kyb3r/modmail/pull/2933))
 - Autotriggers no longer sends attachments back. ([GH #2932](https://github.com/kyb3r/modmail/issues/2932))
-
 
 # v3.8.0
 
