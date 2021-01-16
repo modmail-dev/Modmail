@@ -901,13 +901,14 @@ class Thread:
                     url=f"https://discordapp.com/channels/{self.bot.guild.id}#{message.id}",
                 )
             else:
-                # Normal message
+                # Normal message, for thread or dm.
+                # If plain, just for embed in thread.
                 name = str(author)
                 avatar_url = author.avatar_url
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,
-                    url=f"https://discordapp.com/users/{author.id}#{message.id}",
+                    url=f"https://discordapp.com/users/{author.id}#{message.id if not plain else plain_id}",
                 )
         else:
             # Special note messages
@@ -1063,11 +1064,6 @@ class Thread:
                 msg = await destination.send(plain_message, files=files)
             else:
                 # Plain to mods
-                embed.set_author(
-                    name=str(author),
-                    icon_url=author.avatar_url,
-                    url=f"https://discordapp.com/users/{author.id}#{plain_id}",
-                )
                 embed.set_footer(text="[PLAIN] " + embed.footer.text)
                 msg = await destination.send(mentions, embed=embed)
 
