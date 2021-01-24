@@ -1590,7 +1590,7 @@ def main():
     # check discord version
     if discord.__version__ != "1.6.0":
         logger.error(
-            "Dependencies are not updated, run pipenv install. discord.py version expected 1.5.2, recieved %s",
+            "Dependencies are not updated, run pipenv install. discord.py version expected 1.6.0, recieved %s",
             discord.__version__,
         )
         sys.exit(0)
