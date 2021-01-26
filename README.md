@@ -6,7 +6,7 @@
   <br>
 
   <a href="#">
-    <img src="https://img.shields.io/badge/Latest%20Version-v3.7.13-7289da?style=for-the-badge&logo=data:image/gif;base64,R0lGODlhGAAYAPcAAAAAADQ+Yj5MdThCaEFOekNQfWt5e1lqfEdVhVpriVx1iVtsnFZpll1xlF1znFx5mGNtjGR7hWNzjGd5iWJunGNslmN0lGl1lGN5lWt7lWR0nGp1nWR5nGt8nHJ9l3J9jFxto1xtqlZqqF5zpF15pV10rVx5q1Z2ql1us150s114sV50uVd1smJupGNurGN0pGp1pGR6o2t7o2F0rml0rGR5rGt8q3J9pGNus2Fvu2Bzs2p2smR5s2t7tGF0u2N6vGp7u2l1uXJ+uGJ1wWV7w2l+xWl+yl5zwHWDiWyCmHODnHiGmHSLkW2CpGuEqnSCpHqMo3ODrHWKrXyMq3iHp3yTqGyEtWqFunKDs3uLtHSGvXSMvHuMu3eItnyTs3yTu3iUuW+RsV+ApmuCxG2Dy22LxnSMxHuMxHGGzXSLzXqLzXWFxXyTw3uSy3WSx26E0W+N2m+L1XKG03SL1XmL1HOL2HmL23WF2XiS1m+QyHOK4XmL4XaH4nGM5ImXm4WOlJSjnoOOq4OOpYSUrImXqJOcqYONt4OUtIybtIOUu4ycvImYt5OcuIyiqZekqYyiupOjvJurvJimtp+yvqKruae2ua23trLCucPHvIOMxoOUxIuaw4eYyJKbyISW1YiW0o2kyJWlxJqpxZWkzJury5aoxp6xxZ2zyZio1Jyy2Yuk0aOsyKOyxKOzzKy8zKq2yLO7xqOr1KSz1Ku706W026y73Ki21bK716u75LS95KSu4Zyx6bPDzLjGx63B2LPD1LTE3LvL3brI17/S2bbKzrTE47rF47zM5L3M67bH577R5L7R67zK8rjM8MLM3MPK1sTT3crU3MjW2dLZ2srUy8PN5MTO68nP68jL48TS5MnT5cbR68jS7M3b7Mva5dTb6MTO8srO8szF8MXR8snS8c3a8cnY+NXb9tDL7dnm6dzk8tro99Pq9uTp6+r17fr77eTr/efr+Oz09OXz/Ov0/e37/uj39fX19fX89fz+9vP1/fX9/f7//vr2/ODl4sK75yH5BAEAAAAALAAAAAAYABgAAAj/AAEAmFOnoMGDCAvGmRNHYMKHEOdIhEgRIcGKGDMeTJVO00WNBj194/frFik5IOvgqdaP371N26xpefORYq57/HI+s7Vtmy0eKCmmapcz575FPXt+SfHmociiRae1SroNWIoVTQ2uxAk15yJg1awl7ZSCaUE82uRxhTpt1TNXq0Ip2pSobIqCc0iVoqsI0ipXr1bhywfVXxYdiA3Sourz2dqc8lbNQJz4bDWqix73E7ZjhgrKOjYmvfWLbZcZqCdTPjjHGLdtibi2U5Q6NWiEqqq64ifvVe3at1nX2tTuWQ/QyIMfxHOGi+rkyeMklPMDuvWaBqlbj469IPUU2ykPCOw+53t4AAEBADs=">
+    <img src="https://img.shields.io/badge/Latest%20Version-v3.8.2-7289da?style=for-the-badge&logo=data:image/gif;base64,R0lGODlhGAAYAPcAAAAAADQ+Yj5MdThCaEFOekNQfWt5e1lqfEdVhVpriVx1iVtsnFZpll1xlF1znFx5mGNtjGR7hWNzjGd5iWJunGNslmN0lGl1lGN5lWt7lWR0nGp1nWR5nGt8nHJ9l3J9jFxto1xtqlZqqF5zpF15pV10rVx5q1Z2ql1us150s114sV50uVd1smJupGNurGN0pGp1pGR6o2t7o2F0rml0rGR5rGt8q3J9pGNus2Fvu2Bzs2p2smR5s2t7tGF0u2N6vGp7u2l1uXJ+uGJ1wWV7w2l+xWl+yl5zwHWDiWyCmHODnHiGmHSLkW2CpGuEqnSCpHqMo3ODrHWKrXyMq3iHp3yTqGyEtWqFunKDs3uLtHSGvXSMvHuMu3eItnyTs3yTu3iUuW+RsV+ApmuCxG2Dy22LxnSMxHuMxHGGzXSLzXqLzXWFxXyTw3uSy3WSx26E0W+N2m+L1XKG03SL1XmL1HOL2HmL23WF2XiS1m+QyHOK4XmL4XaH4nGM5ImXm4WOlJSjnoOOq4OOpYSUrImXqJOcqYONt4OUtIybtIOUu4ycvImYt5OcuIyiqZekqYyiupOjvJurvJimtp+yvqKruae2ua23trLCucPHvIOMxoOUxIuaw4eYyJKbyISW1YiW0o2kyJWlxJqpxZWkzJury5aoxp6xxZ2zyZio1Jyy2Yuk0aOsyKOyxKOzzKy8zKq2yLO7xqOr1KSz1Ku706W026y73Ki21bK716u75LS95KSu4Zyx6bPDzLjGx63B2LPD1LTE3LvL3brI17/S2bbKzrTE47rF47zM5L3M67bH577R5L7R67zK8rjM8MLM3MPK1sTT3crU3MjW2dLZ2srUy8PN5MTO68nP68jL48TS5MnT5cbR68jS7M3b7Mva5dTb6MTO8srO8szF8MXR8snS8c3a8cnY+NXb9tDL7dnm6dzk8tro99Pq9uTp6+r17fr77eTr/efr+Oz09OXz/Ov0/e37/uj39fX19fX89fz+9vP1/fX9/f7//vr2/ODl4sK75yH5BAEAAAAALAAAAAAYABgAAAj/AAEAmFOnoMGDCAvGmRNHYMKHEOdIhEgRIcGKGDMeTJVO00WNBj194/frFik5IOvgqdaP371N26xpefORYq57/HI+s7Vtmy0eKCmmapcz575FPXt+SfHmociiRae1SroNWIoVTQ2uxAk15yJg1awl7ZSCaUE82uRxhTpt1TNXq0Ip2pSobIqCc0iVoqsI0ipXr1bhywfVXxYdiA3Sourz2dqc8lbNQJz4bDWqix73E7ZjhgrKOjYmvfWLbZcZqCdTPjjHGLdtibi2U5Q6NWiEqqq64ifvVe3at1nX2tTuWQ/QyIMfxHOGi+rkyeMklPMDuvWaBqlbj469IPUU2ykPCOw+53t4AAEBADs=">
   </a>
 
   <br>
@@ -44,19 +44,19 @@
 </div>
 
 
-## What is Modmail?
+# What is Modmail?
 
 Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.
 
 This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, you can support us on **[Patreon](https://www.patreon.com/kyber)**, cool benefits included! 
 
-## How does it work?
+# How does it work?
 
 When a member sends a direct message to the bot, Modmail will create a channel or "thread" into a designated category. All further DM messages will automatically relay to that channel; any available staff can respond within the channel.
 
 Our Logviewer will save the threads so you can view previous threads through their corresponding log link. Here is an [**example**](https://logs.modmail.dev/example).
 
-## Features
+# Features
 
 * **Highly Customisable:**
   * Bot activity, prefix, category, log channel, etc.
@@ -82,13 +82,16 @@ Our Logviewer will save the threads so you can view previous threads through the
 
 This list is ever-growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `?help` command.
 
-## Installation
+# Installation
 
 Where can I find the Modmail bot invite link? 
 
 Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time).
 
-### Heroku
+## Heroku
+
+[<h3>What is Heroku?<h3/>](https://www.heroku.com/what)
+Heroku is a platform as a service that enables developers to build, run, and operate applications entirely in the cloud.
 
 You can host this bot on Heroku.
 
@@ -102,11 +105,11 @@ To configure automatic updates:
  - Then go to the Deploy tab in your [Heroku account](https://dashboard.heroku.com/apps) of your bot app, select GitHub and connect your fork (usually by typing "Modmail"). 
  - Turn on auto-deploy for the `master` branch.
 
-### Hosting for Patreons
+## Hosting for Patreons
 
 If you don't want to go through the trouble of setting up your very own Modmail bot or wish to support this project, we got a solution for you! We offer the complete installation, hosting, and maintenance of your Modmail with [**Patreon**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for more info! 
 
-### Locally
+## Locally
 
 Local hosting of Modmail is also possible. First, you will need [`Python 3.7`](https://www.python.org/downloads/release/python-376/).
 
@@ -133,7 +136,10 @@ Finally, start Modmail.
 $ pipenv run bot
 ```
 
-#### Docker
+## [Docker] 
+
+[<h3>What is Docker?<h3/>](https://docs.docker.com/get-started/overview/)
+Docker provides the ability to package and run an application in a loosely isolated environment called a container. The isolation and security allow you to run many containers simultaneously on a given host. Containers are lightweight because they don’t need the extra load of a hypervisor, but run directly within the host machine’s kernel. This means you can run more containers on a given hardware combination than if you were using virtual machines. You can even run Docker containers within host machines that are actually virtual machines!
 
 This repo supplies a Dockerfile for simplified deployment. 
 
@@ -158,7 +164,7 @@ $ docker run --env-file .env kyb3rr/modmail
 ```
 - `.env` should be the path to your env file; you can also supply a path: `/path/to/.env`.
 
-## Sponsors
+# Sponsors
 
 Special thanks to our sponsors for supporting the project.
 
@@ -173,7 +179,7 @@ Special thanks to our sponsors for supporting the project.
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
-## Plugins
+# Plugins
 
 Modmail supports the use of third-party plugins to extend or add functionalities to the bot.
 Plugins allow niche features as well as anything else outside of the scope of the core functionality of Modmail. 
@@ -184,13 +190,13 @@ To develop your own, check out the [plugins documentation](https://github.com/ky
 
 Plugins requests and support is available in our [Modmail Plugins Server](https://discord.gg/4JE4XSW).
 
-## Contributing
+# Contributing
 
 Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our [contributing guidelines](https://github.com/kyb3r/modmail/blob/master/.github/CONTRIBUTING.md) before you get started.
 
 If you like this project and would like to show your appreciation, support us on **[Patreon](https://www.patreon.com/kyber)**!
 
-## Beta Testing
+# Beta Testing
 
 Our [development](https://github.com/kyb3r/modmail/tree/development) branch is where most of our features are tested before public release. Be warned that there could be bugs in various commands so keep it away from any large servers you manage.
 
