@@ -1127,7 +1127,9 @@ class ThreadManager:
             )
             if channel:
                 thread = Thread(self, recipient or recipient_id, channel)
-                self.cache[recipient_id] = thread
+                if thread.recipient:
+                    # only save if data is valid
+                    self.cache[recipient_id] = thread
                 thread.ready = True
         return thread
 
