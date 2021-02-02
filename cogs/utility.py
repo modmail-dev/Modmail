@@ -695,8 +695,7 @@ class Utility(commands.Cog):
             option = mention[0]
             if option == "disable":
                 embed = discord.Embed(
-                    description=f"Disabled mention on thread creation.",
-                    color=self.bot.main_color,
+                    description=f"Disabled mention on thread creation.", color=self.bot.main_color,
                 )
                 self.bot.config["mention"] = None
             else:
