@@ -1092,7 +1092,7 @@ class ThreadManager:
     ) -> typing.Optional[Thread]:
         """Finds a thread from cache or from discord channel topics."""
         if recipient is None and channel is not None:
-            thread = self._find_from_channel(channel)
+            thread = await self._find_from_channel(channel)
             if thread is None:
                 user_id, thread = next(
                     ((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None)
@@ -1133,7 +1133,7 @@ class ThreadManager:
                 thread.ready = True
         return thread
 
-    def _find_from_channel(self, channel):
+    async def _find_from_channel(self, channel):
         """
         Tries to find a thread from a channel channel topic,
         if channel topic doesnt exist for some reason, falls back to
@@ -1151,7 +1151,11 @@ class ThreadManager:
         if user_id in self.cache:
             return self.cache[user_id]
 
-        recipient = self.bot.get_user(user_id)
+        try:
+            recipient = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
+        except discord.NotFound:
+            recipient = None
+
         if recipient is None:
             self.cache[user_id] = thread = Thread(self, user_id, channel)
         else:
