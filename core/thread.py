@@ -1157,7 +1157,7 @@ class ThreadManager:
             recipient = None
 
         if recipient is None:
-            self.cache[user_id] = thread = Thread(self, user_id, channel)
+            thread = Thread(self, user_id, channel)
         else:
             self.cache[user_id] = thread = Thread(self, recipient, channel)
         thread.ready = True
