@@ -690,9 +690,9 @@ class Utility(commands.Cog):
         elif (
             len(mention) == 1
             and isinstance(mention[0], str)
-            and mention[0] in ["disable", "reset"]
+            and mention[0].lower() in ["disable", "reset"]
         ):
-            option = mention[0]
+            option = mention[0].lower()
             if option == "disable":
                 embed = discord.Embed(
                     description=f"Disabled mention on thread creation.", color=self.bot.main_color,
@@ -700,7 +700,7 @@ class Utility(commands.Cog):
                 self.bot.config["mention"] = None
             else:
                 embed = discord.Embed(
-                    description="`mention` had been reset to default.", color=self.bot.main_color,
+                    description="`mention` is reset to default.", color=self.bot.main_color,
                 )
                 self.bot.config.remove("mention")
             await self.bot.config.update()
