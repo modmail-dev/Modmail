@@ -182,7 +182,7 @@ You can find a list of third-party plugins using the `?plugins registry`  comman
 
 To develop your own, check out the [plugins documentation](https://github.com/kyb3r/modmail/wiki/Plugins).
 
-Plugins requests and support is available in our [Modmail Plugins Server](https://discord.gg/4JE4XSW).
+Plugins requests and support are available in our [Modmail Support Server](https://discord.gg/j5e9p8w).
 
 ## Contributing
 
