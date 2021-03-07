@@ -674,20 +674,40 @@ class Utility(commands.Cog):
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def mention(self, ctx, *mention: Union[discord.Role, discord.Member]):
+    async def mention(self, ctx, *mention: Union[discord.Role, discord.Member, str]):
         """
         Change what the bot mentions at the start of each thread.
 
         Type only `{prefix}mention` to retrieve your current "mention" message.
+        `{prefix}mention disable` to disable mention.
+        `{prefix}mention reset` to reset it to default value.
         """
-        # TODO: ability to disable mention.
         current = self.bot.config["mention"]
-
         if not mention:
             embed = discord.Embed(
                 title="Current mention:", color=self.bot.main_color, description=str(current)
             )
+        elif (
+            len(mention) == 1
+            and isinstance(mention[0], str)
+            and mention[0].lower() in ["disable", "reset"]
+        ):
+            option = mention[0].lower()
+            if option == "disable":
+                embed = discord.Embed(
+                    description=f"Disabled mention on thread creation.", color=self.bot.main_color,
+                )
+                self.bot.config["mention"] = None
+            else:
+                embed = discord.Embed(
+                    description="`mention` is reset to default.", color=self.bot.main_color,
+                )
+                self.bot.config.remove("mention")
+            await self.bot.config.update()
         else:
+            for m in mention:
+                if not isinstance(m, (discord.Role, discord.Member)):
+                    raise commands.BadArgument(f'Role or Member "{m}" not found.')
             mention = " ".join(i.mention for i in mention)
             embed = discord.Embed(
                 title="Changed mention!",
@@ -1778,7 +1798,6 @@ class Utility(commands.Cog):
             split_cmd = command.split(" ")
             for n in range(1, len(split_cmd) + 1):
                 if self.bot.get_command(" ".join(split_cmd[0:n])):
-                    print(self.bot.get_command(" ".join(split_cmd[0:n])))
                     valid = True
                     break
 

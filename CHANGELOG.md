@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.8.5
+
+### Added
+
+- `?msglink <message id>`, allows you to obtain channel + message ID for T&S reports. ([GH #2963](https://github.com/kyb3r/modmail/issues/2963), [PR #2964](https://github.com/kyb3r/modmail/pull/2964))
+- `?mention disable/reset`, disables or resets mention on thread creation. ([PR #2951](https://github.com/kyb3r/modmail/pull/2951))
+
+### Fixed
+
+- Non-master/development branch deployments no longer cause errors to be raised.
+- Autotriggers now can search for roles/channels in guild context. ([GH #2961](https://github.com/kyb3r/modmail/issues/2961))
+
 # v3.8.4
 
 This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 where users were not properly cached.

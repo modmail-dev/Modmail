@@ -1,4 +1,4 @@
-__version__ = "3.8.4"
+__version__ = "3.8.5"
 
 
 import asyncio
@@ -939,6 +939,7 @@ class ModmailBot(commands.Bot):
     async def trigger_auto_triggers(self, message, channel, *, cls=commands.Context):
         message.author = self.modmail_guild.me
         message.channel = channel
+        message.guild = channel.guild
 
         view = StringView(message.content)
         ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
@@ -967,7 +968,7 @@ class ModmailBot(commands.Bot):
             ctxs = []
             aliases = normalize_alias(alias)
             if not aliases:
-                logger.warning("Alias %s is invalid as called in automove.", invoker)
+                logger.warning("Alias %s is invalid as called in autotrigger.", invoker)
 
             for alias in aliases:
                 view = StringView(invoked_prefix + alias)
