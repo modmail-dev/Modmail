@@ -341,7 +341,11 @@ class Modmail(commands.Cog):
 
         if self.bot.config["thread_move_notify_mods"]:
             mention = self.bot.config["mention"]
-            await thread.channel.send(f"{mention}, thread has been moved.")
+            if mention is not None:
+                msg = f"{mention}, thread has been moved."
+            else:
+                msg = "Thread has been moved."
+            await thread.channel.send(msg)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
