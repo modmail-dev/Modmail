@@ -16,6 +16,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Fixed
 
 - Non-master/development branch deployments no longer cause errors to be raised.
+- Autotriggers now can search for roles/channels in guild context. ([GH #2961](https://github.com/kyb3r/modmail/issues/2961))
 
 # v3.8.4
 
