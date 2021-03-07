@@ -604,11 +604,13 @@ class Modmail(commands.Cog):
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def loglink(self, ctx, message_id: int):
+    async def msglink(self, ctx, message_id: int):
         """Retrieves the link to a message in the current thread."""
         message = await ctx.thread.recipient.fetch_message(message_id)
         if not message:
-            embed = discord.Embed(color=self.bot.main_color, description="Message no longer exists.")
+            embed = discord.Embed(
+                color=self.bot.main_color, description="Message no longer exists."
+            )
         else:
             embed = discord.Embed(color=self.bot.main_color, description=message.jump_url)
         await ctx.send(embed=embed)
