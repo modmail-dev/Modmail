@@ -11,6 +11,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Added
 
 - `?msglink <message id>`, allows you to obtain channel + message ID for T&S reports. ([GH #2963](https://github.com/kyb3r/modmail/issues/2963), [PR #2964](https://github.com/kyb3r/modmail/pull/2964))
+- `?mention disable/reset`, disables or resets mention on thread creation. ([PR #2951](https://github.com/kyb3r/modmail/pull/2951))
 
 ### Fixed
 
