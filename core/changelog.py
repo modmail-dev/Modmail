@@ -180,6 +180,9 @@ class Changelog:
         if not branch or err:
             branch = "master" if not bot.version.is_prerelease else "development"
 
+        if branch not in ("master", "development"):
+            branch = "master"
+
         url = url or f"https://raw.githubusercontent.com/kyb3r/modmail/{branch}/CHANGELOG.md"
 
         async with await bot.session.get(url) as resp:

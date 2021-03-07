@@ -8,15 +8,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # v3.8.5
 
-This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 where users were not properly cached.
-
 ### Added
 
 - `?msglink <message id>`, allows you to obtain channel + message ID for T&S reports. ([GH #2963](https://github.com/kyb3r/modmail/issues/2963), [PR #2964](https://github.com/kyb3r/modmail/pull/2964))
 
 ### Fixed
 
-- Non-master/development branch deployments no longer cause erros to be raised.
+- Non-master/development branch deployments no longer cause errors to be raised.
 
 # v3.8.4
 
