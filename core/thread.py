@@ -1175,6 +1175,7 @@ class ThreadManager:
         message: discord.Message = None,
         creator: typing.Union[discord.Member, discord.User] = None,
         category: discord.CategoryChannel = None,
+        manual_trigger: bool = True,
     ) -> Thread:
         """Creates a Modmail thread"""
 
@@ -1215,8 +1216,12 @@ class ThreadManager:
                 self.bot.config.set("fallback_category_id", category.id)
                 await self.bot.config.update()
 
-        if message and self.bot.config["confirm_thread_creation"]:
-            confirm = await message.channel.send(
+        if (message or not manual_trigger) and self.bot.config["confirm_thread_creation"]:
+            if not manual_trigger:
+                destination = recipient
+            else:
+                destination = message.channel
+            confirm = await destination.send(
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],
                     description=self.bot.config["confirm_thread_response"],
@@ -1231,7 +1236,7 @@ class ThreadManager:
             try:
                 r, _ = await self.bot.wait_for(
                     "reaction_add",
-                    check=lambda r, u: u.id == message.author.id
+                    check=lambda r, u: u.id == recipient.id
                     and r.message.id == confirm.id
                     and r.message.channel.id == confirm.channel.id
                     and str(r.emoji) in (accept_emoji, deny_emoji),
@@ -1243,7 +1248,7 @@ class ThreadManager:
                 await confirm.remove_reaction(accept_emoji, self.bot.user)
                 await asyncio.sleep(0.2)
                 await confirm.remove_reaction(deny_emoji, self.bot.user)
-                await message.channel.send(
+                await destination.send(
                     embed=discord.Embed(
                         title="Cancelled", description="Timed out", color=self.bot.error_color
                     )
@@ -1257,7 +1262,7 @@ class ThreadManager:
                     await confirm.remove_reaction(accept_emoji, self.bot.user)
                     await asyncio.sleep(0.2)
                     await confirm.remove_reaction(deny_emoji, self.bot.user)
-                    await message.channel.send(
+                    await destination.send(
                         embed=discord.Embed(title="Cancelled", color=self.bot.error_color)
                     )
                     del self.cache[recipient.id]
