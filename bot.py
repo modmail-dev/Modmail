@@ -1263,7 +1263,7 @@ class ModmailBot(commands.Bot):
                             )
                             logger.info(
                                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
-                                message.author,
+                                member,
                             )
                             return await member.send(embed=embed)
 
