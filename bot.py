@@ -1188,6 +1188,14 @@ class ModmailBot(commands.Bot):
                     # the reacted message is the corresponding thread creation embed
                     # closing thread
                     return await thread.close(closer=user)
+            if (
+                message.author == self.user
+                and message.embeds
+                and self.config.get("confirm_thread_creation")
+                and message.embeds[0].title == self.config["confirm_thread_creation_title"]
+                and message.embeds[0].description == self.config["confirm_thread_response"]
+            ):
+                return
             if not thread.recipient.dm_channel:
                 await thread.recipient.create_dm()
             try:
