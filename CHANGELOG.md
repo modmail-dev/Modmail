@@ -12,7 +12,8 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Added
 
 - Ability to install local plugins without relying on git / external sources
-  - Simply add your extension to plugins/@local, and use `?plugin add local/plugin-name` 
+  - Simply add your extension to plugins/@local, and use `?plugin add local/plugin-name` to load the plugin as normal
+- Updated deps for requirements.min.txt and pyproject.toml
 
 # v3.8.5
 
