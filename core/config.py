@@ -14,7 +14,7 @@ from discord.ext.commands import BadArgument
 from core._color_data import ALL_COLORS
 from core.models import DMDisabled, InvalidConfigError, Default, getLogger
 from core.time import UserFriendlyTimeSync
-from core.utils import strtobool, tryint
+from core.utils import strtobool
 
 logger = getLogger(__name__)
 load_dotenv()

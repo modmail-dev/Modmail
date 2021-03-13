@@ -178,14 +178,14 @@ class Plugins(commands.Cog):
                     if raw == "Not Found":
                         raise InvalidPluginError("Plugin not found")
                     else:
-                        raise InvalidPluginError("Invalid download recieved, non-bytes object")
+                        raise InvalidPluginError("Invalid download received, non-bytes object")
 
-                plugin_io = io.BytesIO(raw)
-                if not plugin.cache_path.parent.exists():
-                    plugin.cache_path.parent.mkdir(parents=True)
+            plugin_io = io.BytesIO(raw)
+            if not plugin.cache_path.parent.exists():
+                plugin.cache_path.parent.mkdir(parents=True)
 
-                with plugin.cache_path.open("wb") as f:
-                    f.write(raw)
+            with plugin.cache_path.open("wb") as f:
+                f.write(raw)
 
         with zipfile.ZipFile(plugin_io) as zipf:
             for info in zipf.infolist():
@@ -253,7 +253,7 @@ class Plugins(commands.Cog):
                 description="Plugins are disabled, enable them by setting `ENABLE_PLUGINS=true`",
                 color=self.bot.main_color,
             )
-            await ctx.send(embed=em)
+            await ctx.send(embed=embed)
             return
 
         if not self._ready_event.is_set():
