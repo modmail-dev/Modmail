@@ -86,7 +86,7 @@ class Plugin:
 
     @classmethod
     def from_string(cls, s, strict=False):
-        m = match(r"^@local/(.+)$", s)
+        m = match(r"^@?local/(.+)$", s)
         if m is None:
             if not strict:
                 m = match(r"^(.+?)/(.+?)/(.+?)(?:@(.+?))?$", s)
@@ -173,7 +173,7 @@ class Plugins(commands.Cog):
         await self.bot.config.update()
 
     async def download_plugin(self, plugin, force=False):
-        if plugin.abs_path.exists() and not force:
+        if plugin.abs_path.exists() and (not force or plugin.local):
             return
 
         if plugin.local:
@@ -314,7 +314,7 @@ class Plugins(commands.Cog):
                 embed = discord.Embed(
                     description="Invalid plugin name, double check the plugin name "
                     "or use one of the following formats: "
-                    "username/repo/plugin, username/repo/plugin@branch, @local/plugin.",
+                    "username/repo/plugin-name, username/repo/plugin-name@branch, local/plugin-name.",
                     color=self.bot.error_color,
                 )
                 await ctx.send(embed=embed)
@@ -339,7 +339,7 @@ class Plugins(commands.Cog):
 
         `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`,
         or a direct reference to a GitHub hosted plugin (in the format `user/repo/name[@branch]`)
-        or `@local/name` for local plugins.
+        or `local/name` for local plugins.
         """
 
         plugin = await self.parse_user_input(ctx, plugin_name, check_version=True)
@@ -360,10 +360,16 @@ class Plugins(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        embed = discord.Embed(
-            description=f"Starting to download plugin from {plugin.link}...",
-            color=self.bot.main_color,
-        )
+        if plugin.local:
+            embed = discord.Embed(
+                description=f"Starting to load local plugin from {plugin.link}...",
+                color=self.bot.main_color,
+            )
+        else:
+            embed = discord.Embed(
+                description=f"Starting to download plugin from {plugin.link}...",
+                color=self.bot.main_color,
+            )
         msg = await ctx.send(embed=embed)
 
         try:
@@ -420,7 +426,7 @@ class Plugins(commands.Cog):
         Remove an installed plugin of the bot.
 
         `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
-        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `@local/name` for local plugins.
+        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `local/name` for local plugins.
         """
         plugin = await self.parse_user_input(ctx, plugin_name)
         if plugin is None:
@@ -503,7 +509,7 @@ class Plugins(commands.Cog):
         Update a plugin for the bot.
 
         `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
-        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `@local/name` for local plugins.
+        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `local/name` for local plugins.
 
         To update all plugins, do `{prefix}plugins update`.
         """
