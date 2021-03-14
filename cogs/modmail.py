@@ -1,5 +1,4 @@
 import asyncio
-from operator import truediv
 import re
 from datetime import datetime
 from itertools import zip_longest

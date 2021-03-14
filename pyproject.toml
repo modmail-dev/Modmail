@@ -21,7 +21,7 @@ exclude = '''
 
 [tool.poetry]
 name = 'Modmail'
-version = '3.6.0'
+version = '3.8.6'
 description = "Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way."
 license = 'AGPL-3.0-only'
 authors = [
@@ -36,7 +36,7 @@ keywords = ['discord', 'modmail']
 
 [tool.poetry.dependencies]
 python = "^3.7"
-"discord.py" = "./discord.py-1.5.2.tar.gz"
+"discord.py" = "discord.py==1.6.0"
 uvloop = {version = ">=0.12.0", markers = "sys_platform != 'win32'"}
 python-dotenv = ">=0.10.3"
 parsedatetime = "^2.6"

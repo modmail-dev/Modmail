@@ -1,4 +1,4 @@
-__version__ = "3.8.5"
+__version__ = "3.8.6"
 
 
 import asyncio
@@ -46,7 +46,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import human_join, normalize_alias, truncate
+from core.utils import normalize_alias, truncate
 
 logger = getLogger(__name__)
 
@@ -1591,7 +1591,7 @@ def main():
     # check discord version
     if discord.__version__ != "1.6.0":
         logger.error(
-            "Dependencies are not updated, run pipenv install. discord.py version expected 1.6.0, recieved %s",
+            "Dependencies are not updated, run pipenv install. discord.py version expected 1.6.0, received %s",
             discord.__version__,
         )
         sys.exit(0)

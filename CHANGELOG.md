@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+
+# v3.8.6
+
+### Added
+
+- Ability to install local plugins without relying on git / external sources
+  - Simply add your extension to plugins/@local, and use `?plugin add local/plugin-name` to load the plugin as normal
+- Updated deps for requirements.min.txt and pyproject.toml
+
 # v3.8.5
 
 ### Added

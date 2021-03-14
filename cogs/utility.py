@@ -3,7 +3,6 @@ import inspect
 import os
 import random
 import re
-from sys import stdout
 import traceback
 from contextlib import redirect_stdout
 from datetime import datetime

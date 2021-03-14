@@ -190,14 +190,13 @@ class UnseenFormatter(Formatter):
             except KeyError:
                 return "{" + key + "}"
         else:
-            return Formatter.get_value(key, args, kwds)
+            return super().get_value(key, args, kwds)
 
 
 class SimilarCategoryConverter(commands.CategoryChannelConverter):
     async def convert(self, ctx, argument):
         bot = ctx.bot
         guild = ctx.guild
-        result = None
 
         try:
             return await super().convert(ctx, argument)

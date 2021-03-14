@@ -130,9 +130,10 @@ package-lock.json
 node_modules/
 
 # Modmail
-config.json
-plugins/
+plugins/*
 !plugins/registry.json
+!plugins/@local
+config.json
 temp/
 test.py
 stack.yml

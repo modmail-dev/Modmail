@@ -2,9 +2,9 @@ import asyncio
 import copy
 import io
 import re
+import time
 import typing
 from datetime import datetime, timedelta
-import time
 from types import SimpleNamespace
 
 import isodate
