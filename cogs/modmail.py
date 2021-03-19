@@ -1032,6 +1032,9 @@ class Modmail(commands.Cog):
                 category=category,
                 manual_trigger=manual_trigger,
             )
+            if thread.cancelled:
+                return
+
             if self.bot.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
 
