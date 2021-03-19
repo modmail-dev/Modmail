@@ -706,7 +706,7 @@
       "`{prefix}config set confirm_thread_creation yes`"
     ],
     "notes": [
-      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny``"
+      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_creation_title": {

@@ -1,4 +1,4 @@
-__version__ = "3.8.4"
+__version__ = "3.9.0"
 
 
 import asyncio
@@ -46,7 +46,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import human_join, normalize_alias, truncate
+from core.utils import normalize_alias, truncate
 
 logger = getLogger(__name__)
 
@@ -939,6 +939,7 @@ class ModmailBot(commands.Bot):
     async def trigger_auto_triggers(self, message, channel, *, cls=commands.Context):
         message.author = self.modmail_guild.me
         message.channel = channel
+        message.guild = channel.guild
 
         view = StringView(message.content)
         ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
@@ -967,7 +968,7 @@ class ModmailBot(commands.Bot):
             ctxs = []
             aliases = normalize_alias(alias)
             if not aliases:
-                logger.warning("Alias %s is invalid as called in automove.", invoker)
+                logger.warning("Alias %s is invalid as called in autotrigger.", invoker)
 
             for alias in aliases:
                 view = StringView(invoked_prefix + alias)
@@ -1187,6 +1188,14 @@ class ModmailBot(commands.Bot):
                     # the reacted message is the corresponding thread creation embed
                     # closing thread
                     return await thread.close(closer=user)
+            if (
+                message.author == self.user
+                and message.embeds
+                and self.config.get("confirm_thread_creation")
+                and message.embeds[0].title == self.config["confirm_thread_creation_title"]
+                and message.embeds[0].description == self.config["confirm_thread_response"]
+            ):
+                return
             if not thread.recipient.dm_channel:
                 await thread.recipient.create_dm()
             try:
@@ -1237,14 +1246,32 @@ class ModmailBot(commands.Bot):
                     if not member.bot:
                         message = await channel.fetch_message(payload.message_id)
                         await message.remove_reaction(payload.emoji, member)
+                        await message.add_reaction(emoji_fmt)  # bot adds as well
+
+                        if self.config["dm_disabled"] in (
+                            DMDisabled.NEW_THREADS,
+                            DMDisabled.ALL_THREADS,
+                        ):
+                            embed = discord.Embed(
+                                title=self.config["disabled_new_thread_title"],
+                                color=self.error_color,
+                                description=self.config["disabled_new_thread_response"],
+                            )
+                            embed.set_footer(
+                                text=self.config["disabled_new_thread_footer"],
+                                icon_url=self.guild.icon_url,
+                            )
+                            logger.info(
+                                "A new thread using react to contact was blocked from %s due to disabled Modmail.",
+                                member,
+                            )
+                            return await member.send(embed=embed)
 
                         ctx = await self.get_context(message)
                         ctx.author = member
                         await ctx.invoke(
                             self.get_command("contact"), user=member, manual_trigger=False
                         )
-
-                        await message.add_reaction(emoji_fmt)  # bot adds as well
 
     async def on_raw_reaction_remove(self, payload):
         if self.config["transfer_reactions"]:
@@ -1590,7 +1617,7 @@ def main():
     # check discord version
     if discord.__version__ != "1.6.0":
         logger.error(
-            "Dependencies are not updated, run pipenv install. discord.py version expected 1.6.0, recieved %s",
+            "Dependencies are not updated, run pipenv install. discord.py version expected 1.6.0, received %s",
             discord.__version__,
         )
         sys.exit(0)

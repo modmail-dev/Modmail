@@ -30,6 +30,7 @@ __all__ = [
     "escape_code_block",
     "format_channel_name",
     "tryint",
+    "match_title",
 ]
 
 
@@ -222,7 +223,7 @@ TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
 
 def match_title(text: str) -> int:
     """
-    Matches a title in the foramt of "Title: XXXX"
+    Matches a title in the format of "Title: XXXX"
 
     Parameters
     ----------

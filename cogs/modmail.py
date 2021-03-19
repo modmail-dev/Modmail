@@ -1,5 +1,4 @@
 import asyncio
-from operator import truediv
 import re
 from datetime import datetime
 from itertools import zip_longest
@@ -341,7 +340,11 @@ class Modmail(commands.Cog):
 
         if self.bot.config["thread_move_notify_mods"]:
             mention = self.bot.config["mention"]
-            await thread.channel.send(f"{mention}, thread has been moved.")
+            if mention is not None:
+                msg = f"{mention}, thread has been moved."
+            else:
+                msg = "Thread has been moved."
+            await thread.channel.send(msg)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -600,6 +603,21 @@ class Modmail(commands.Cog):
         await ctx.channel.edit(nsfw=False)
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def msglink(self, ctx, message_id: int):
+        """Retrieves the link to a message in the current thread."""
+        try:
+            message = await ctx.thread.recipient.fetch_message(message_id)
+        except discord.NotFound:
+            embed = discord.Embed(
+                color=self.bot.error_color, description="Message not found or no longer exists."
+            )
+        else:
+            embed = discord.Embed(color=self.bot.main_color, description=message.jump_url)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1008,7 +1026,15 @@ class Modmail(commands.Cog):
             await ctx.channel.send(embed=embed, delete_after=3)
 
         else:
-            thread = await self.bot.threads.create(user, creator=ctx.author, category=category)
+            thread = await self.bot.threads.create(
+                recipient=user,
+                creator=ctx.author,
+                category=category,
+                manual_trigger=manual_trigger,
+            )
+            if thread.cancelled:
+                return
+
             if self.bot.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
 

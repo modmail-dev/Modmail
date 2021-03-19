@@ -2,9 +2,9 @@ import asyncio
 import copy
 import io
 import re
+import time
 import typing
 from datetime import datetime, timedelta
-import time
 from types import SimpleNamespace
 
 import isodate
@@ -105,7 +105,7 @@ class Thread:
 
     async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
-        self.bot.dispatch("thread_initiate", self)
+        self.bot.dispatch("thread_initiate", self, creator, category, initial_message)
         recipient = self.recipient
 
         # in case it creates a channel outside of category
@@ -245,8 +245,8 @@ class Thread:
             await self.bot.api.update_note_ids(ids)
 
         async def activate_auto_triggers():
-            message = DummyMessage(copy.copy(initial_message))
-            if message:
+            if initial_message:
+                message = DummyMessage(copy.copy(initial_message))
                 try:
                     return await self.bot.trigger_auto_triggers(message, channel)
                 except RuntimeError:
@@ -258,7 +258,7 @@ class Thread:
             activate_auto_triggers(),
             send_persistent_notes(),
         )
-        self.bot.dispatch("thread_ready", self)
+        self.bot.dispatch("thread_ready", self, creator, category, initial_message)
 
     def _format_info_embed(self, user, log_url, log_count, color):
         """Get information about a member of a server
@@ -300,7 +300,11 @@ class Thread:
         #     embed.add_field(name='Mention', value=user.mention)
         # embed.add_field(name='Registered', value=created + days(created))
 
-        footer = "User ID: " + str(user.id)
+        if user.dm_channel:
+            footer = f"User ID: {user.id} • DM ID: {user.dm_channel.id}"
+        else:
+            footer = f"User ID: {user.id}"
+
         embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
         # embed.set_thumbnail(url=avi)
 
@@ -749,7 +753,7 @@ class Thread:
         tasks = []
 
         try:
-            await self.send(
+            user_msg = await self.send(
                 message,
                 destination=self.recipient,
                 from_mod=True,
@@ -805,6 +809,7 @@ class Thread:
 
         await asyncio.gather(*tasks)
         self.bot.dispatch("thread_reply", self, True, message, anonymous, plain)
+        return (user_msg, msg)  # sent_to_user, sent_to_thread_channel
 
     async def send(
         self,
@@ -1171,6 +1176,7 @@ class ThreadManager:
         message: discord.Message = None,
         creator: typing.Union[discord.Member, discord.User] = None,
         category: discord.CategoryChannel = None,
+        manual_trigger: bool = True,
     ) -> Thread:
         """Creates a Modmail thread"""
 
@@ -1211,8 +1217,12 @@ class ThreadManager:
                 self.bot.config.set("fallback_category_id", category.id)
                 await self.bot.config.update()
 
-        if message and self.bot.config["confirm_thread_creation"]:
-            confirm = await message.channel.send(
+        if (message or not manual_trigger) and self.bot.config["confirm_thread_creation"]:
+            if not manual_trigger:
+                destination = recipient
+            else:
+                destination = message.channel
+            confirm = await destination.send(
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],
                     description=self.bot.config["confirm_thread_response"],
@@ -1227,7 +1237,7 @@ class ThreadManager:
             try:
                 r, _ = await self.bot.wait_for(
                     "reaction_add",
-                    check=lambda r, u: u.id == message.author.id
+                    check=lambda r, u: u.id == recipient.id
                     and r.message.id == confirm.id
                     and r.message.channel.id == confirm.channel.id
                     and str(r.emoji) in (accept_emoji, deny_emoji),
@@ -1239,7 +1249,7 @@ class ThreadManager:
                 await confirm.remove_reaction(accept_emoji, self.bot.user)
                 await asyncio.sleep(0.2)
                 await confirm.remove_reaction(deny_emoji, self.bot.user)
-                await message.channel.send(
+                await destination.send(
                     embed=discord.Embed(
                         title="Cancelled", description="Timed out", color=self.bot.error_color
                     )
@@ -1253,7 +1263,7 @@ class ThreadManager:
                     await confirm.remove_reaction(accept_emoji, self.bot.user)
                     await asyncio.sleep(0.2)
                     await confirm.remove_reaction(deny_emoji, self.bot.user)
-                    await message.channel.send(
+                    await destination.send(
                         embed=discord.Embed(title="Cancelled", color=self.bot.error_color)
                     )
                     del self.cache[recipient.id]
