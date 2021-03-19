@@ -301,7 +301,7 @@ class Thread:
         # embed.add_field(name='Registered', value=created + days(created))
 
         if user.dm_channel:
-            footer = f"User ID: {user.id} • DM ID: {user.dm_channel}"
+            footer = f"User ID: {user.id} • DM ID: {user.dm_channel.id}"
         else:
             footer = f"User ID: {user.id}"
 
