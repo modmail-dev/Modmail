@@ -105,7 +105,7 @@ class Thread:
 
     async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
-        self.bot.dispatch("thread_initiate", self)
+        self.bot.dispatch("thread_initiate", self, creator, category, initial_message)
         recipient = self.recipient
 
         # in case it creates a channel outside of category
@@ -258,7 +258,7 @@ class Thread:
             activate_auto_triggers(),
             send_persistent_notes(),
         )
-        self.bot.dispatch("thread_ready", self)
+        self.bot.dispatch("thread_ready", self, creator, category, initial_message)
 
     def _format_info_embed(self, user, log_url, log_count, color):
         """Get information about a member of a server
@@ -753,7 +753,7 @@ class Thread:
         tasks = []
 
         try:
-            await self.send(
+            user_msg = await self.send(
                 message,
                 destination=self.recipient,
                 from_mod=True,
@@ -809,6 +809,7 @@ class Thread:
 
         await asyncio.gather(*tasks)
         self.bot.dispatch("thread_reply", self, True, message, anonymous, plain)
+        return (user_msg, msg)  # sent_to_user, sent_to_thread_channel
 
     async def send(
         self,
