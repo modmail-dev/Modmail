@@ -12,6 +12,12 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - `on_thread_initiate` and `on_thread_ready` events now have `thread, creator, category, initial_message` as additional arguments.
 
+### Fixed
+
+- `confirm_thread_creation` now properly works when a user opens a thread using react to contact. ([GH #2930](https://github.com/kyb3r/modmail/issues/2930), [PR #2971](https://github.com/kyb3r/modmail/pull/2971))
+- `?disable all/new` now disables react to contact threads. ([GH #2969](https://github.com/kyb3r/modmail/issues/2969), [PR #2971](https://github.com/kyb3r/modmail/pull/2971))
+- Ghost errors are no longer raised when threads are created using non-organic methods.
+
 ### Internal
 
 - `thread.reply` now returns (msg_to_user, msg_to_thread). Can be useful in plugins.

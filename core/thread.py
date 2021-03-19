@@ -245,8 +245,8 @@ class Thread:
             await self.bot.api.update_note_ids(ids)
 
         async def activate_auto_triggers():
-            message = DummyMessage(copy.copy(initial_message))
-            if message:
+            if initial_message:
+                message = DummyMessage(copy.copy(initial_message))
                 try:
                     return await self.bot.trigger_auto_triggers(message, channel)
                 except RuntimeError:
