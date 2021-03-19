@@ -1188,6 +1188,14 @@ class ModmailBot(commands.Bot):
                     # the reacted message is the corresponding thread creation embed
                     # closing thread
                     return await thread.close(closer=user)
+            if (
+                message.author == self.user
+                and message.embeds
+                and self.config.get("confirm_thread_creation")
+                and message.embeds[0].title == self.config["confirm_thread_creation_title"]
+                and message.embeds[0].description == self.config["confirm_thread_response"]
+            ):
+                return
             if not thread.recipient.dm_channel:
                 await thread.recipient.create_dm()
             try:
@@ -1238,14 +1246,32 @@ class ModmailBot(commands.Bot):
                     if not member.bot:
                         message = await channel.fetch_message(payload.message_id)
                         await message.remove_reaction(payload.emoji, member)
+                        await message.add_reaction(emoji_fmt)  # bot adds as well
+
+                        if self.config["dm_disabled"] in (
+                            DMDisabled.NEW_THREADS,
+                            DMDisabled.ALL_THREADS,
+                        ):
+                            embed = discord.Embed(
+                                title=self.config["disabled_new_thread_title"],
+                                color=self.error_color,
+                                description=self.config["disabled_new_thread_response"],
+                            )
+                            embed.set_footer(
+                                text=self.config["disabled_new_thread_footer"],
+                                icon_url=self.guild.icon_url,
+                            )
+                            logger.info(
+                                "A new thread using react to contact was blocked from %s due to disabled Modmail.",
+                                member,
+                            )
+                            return await member.send(embed=embed)
 
                         ctx = await self.get_context(message)
                         ctx.author = member
                         await ctx.invoke(
                             self.get_command("contact"), user=member, manual_trigger=False
                         )
-
-                        await message.add_reaction(emoji_fmt)  # bot adds as well
 
     async def on_raw_reaction_remove(self, payload):
         if self.config["transfer_reactions"]:

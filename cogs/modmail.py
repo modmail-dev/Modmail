@@ -1026,7 +1026,15 @@ class Modmail(commands.Cog):
             await ctx.channel.send(embed=embed, delete_after=3)
 
         else:
-            thread = await self.bot.threads.create(user, creator=ctx.author, category=category)
+            thread = await self.bot.threads.create(
+                recipient=user,
+                creator=ctx.author,
+                category=category,
+                manual_trigger=manual_trigger,
+            )
+            if thread.cancelled:
+                return
+
             if self.bot.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
 
