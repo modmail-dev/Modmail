@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.9.1
+
+### Internal
+
+- `bot.run` now more gracefully handles closing, similar to how discord.py handles it.
+  - No longer displays `PrivilegedIntentsRequired` exception when exiting when presence intent is disabled.
+
 # v3.9.0
 
 ### Breaking
