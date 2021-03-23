@@ -221,5 +221,13 @@
         "bot_version": "3.9.0",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "anime": {
+        "repository": "elfq/modmail-plugins",
+        "branch": "main",
+        "description": "A plugin to browse animes and view information such as air date, description, score, episodes and more!",
+        "title": "Anime",
+        "icon_url": "https://media.discordapp.net/attachments/823712709978750996/823712903270105108/c06b170f3bca38c16a1b8f4138f55d55.png",
+        "thumbnail_url": "https://media.discordapp.net/attachments/823712709978750996/823728787162267679/68747470733a2f2f696d616765732d6578742d312e646973636f72646170702e6e65742f65787465726e616c2f704d5f5563.png"
     }
 }
