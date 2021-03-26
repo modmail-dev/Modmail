@@ -17,12 +17,12 @@
         "icon_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png",
         "thumbnail_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png"
     },
-    "Music": {
+    "music": {
         "repository": "Taaku18/modmail-plugins",
         "branch": "master",
         "description": "Play wonderfull jams through your modmail!",
         "bot_version": "2.20.1",
-        "title": "Music",
+        "title": "music",
         "icon_url": "https://i.imgur.com/JmJPX5W.gif",
         "thumbnail_url": "https://i.imgur.com/jrYL7F8.gif"
     },
