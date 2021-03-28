@@ -277,3 +277,5 @@ class HostingMethod(IntEnum):
     HEROKU = 0
     PM2 = 1
     OTHER = 2
+    SYSTEMD = 3
+    SCREEN = 4
