@@ -109,6 +109,12 @@ class ModmailBot(commands.Bot):
         if os.environ.get("pm_id"):
             return HostingMethod.PM2
 
+        if os.environ.get("INVOCATION_ID"):
+            return HostingMethod.SYSTEMD
+
+        if os.environ.get("TERM"):
+            return HostingMethod.SCREEN
+
         return HostingMethod.OTHER
 
     def startup(self):
