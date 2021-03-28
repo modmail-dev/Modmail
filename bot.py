@@ -1688,7 +1688,7 @@ def main():
         sys.exit(0)
 
     bot = ModmailBot()
-    bot.run(token, bot=False)
+    bot.run()
 
 
 if __name__ == "__main__":
