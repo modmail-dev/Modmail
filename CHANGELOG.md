@@ -12,6 +12,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - Additional HostingMethods (i.e. DOCKER, PM2, SCREEN). Autoupdates are now disabled on all docker instances. ([GH #2977](https://github.com/kyb3r/modmail/issues/2977), [PR #2988](https://github.com/kyb3r/modmail/pull/2988))
 
+### Fixed
+
+- `user_typing` default in the config help is now correct.
+
 # v3.9.1
 
 ### Internal
