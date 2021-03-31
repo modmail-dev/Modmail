@@ -86,7 +86,7 @@
     "thumbnail": "https://placehold.it/100/e74c3c?text=+"
   },
   "user_typing": {
-    "default": "Disabled",
+    "default": "Enabled",
     "description": "When this is set to `yes`, whenever the recipient user starts to type in their DM channel, the moderator will see “{bot.user.display_name} is typing…” in the thread channel.",
     "examples": [
       "`{prefix}config set user_typing yes`",

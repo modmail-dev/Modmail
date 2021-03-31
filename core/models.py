@@ -276,4 +276,7 @@ class DMDisabled(IntEnum):
 class HostingMethod(IntEnum):
     HEROKU = 0
     PM2 = 1
-    OTHER = 2
+    SYSTEMD = 2
+    SCREEN = 3
+    DOCKER = 4
+    OTHER = 5
