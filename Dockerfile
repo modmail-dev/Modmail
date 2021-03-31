@@ -1,4 +1,5 @@
 FROM python:3.7-alpine
+ENV USING_DOCKER yes
 WORKDIR /modmailbot
 COPY . /modmailbot
 RUN  export PIP_NO_CACHE_DIR=false \

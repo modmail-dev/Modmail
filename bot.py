@@ -112,6 +112,12 @@ class ModmailBot(commands.Bot):
         if os.environ.get("INVOCATION_ID"):
             return HostingMethod.SYSTEMD
 
+        if os.environ.get("USING_DOCKER"):
+            return HostingMethod.DOCKER
+
+        if os.environ.get("INVOCATION_ID"):
+            return HostingMethod.SYSTEMD
+
         if os.environ.get("TERM"):
             return HostingMethod.SCREEN
 
@@ -1669,6 +1675,10 @@ class ModmailBot(commands.Bot):
 
         if self.config.get("disable_autoupdates"):
             logger.warning("Autoupdates disabled.")
+            self.autoupdate_loop.cancel()
+
+        if self.hosting_method == HostingMethod.DOCKER:
+            logger.warning("Autoupdates disabled as using Docker.")
             self.autoupdate_loop.cancel()
 
         if not self.config.get("github_token") and self.hosting_method == HostingMethod.HEROKU:
