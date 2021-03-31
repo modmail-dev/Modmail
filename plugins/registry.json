@@ -204,5 +204,22 @@
         "title": "Countdowns",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "action": {
+        "repository": "6days9weeks/modmail-plugins",
+        "branch": "master",
+        "description": "Have fun with others by hugging them or giving them pats~!!",
+        "title": "Action",
+        "icon_url": "https://media.discordapp.net/attachments/720733784970100776/820933433579798528/689105042212388965.png",
+        "thumbnail_url": "https://data.whicdn.com/images/58526601/original.gif"
+    },
+    "menu": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "master",
+        "description": "Adds reaction-based menus into thread creates. Check out `?configmenu`",
+        "title": "Menus",
+        "bot_version": "3.9.0",
+        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
+        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
     }
 }
