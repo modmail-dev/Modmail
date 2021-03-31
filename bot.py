@@ -1,4 +1,4 @@
-__version__ = "3.9.1"
+__version__ = "3.9.2"
 
 
 import asyncio
@@ -108,6 +108,18 @@ class ModmailBot(commands.Bot):
 
         if os.environ.get("pm_id"):
             return HostingMethod.PM2
+
+        if os.environ.get("INVOCATION_ID"):
+            return HostingMethod.SYSTEMD
+
+        if os.environ.get("USING_DOCKER"):
+            return HostingMethod.DOCKER
+
+        if os.environ.get("INVOCATION_ID"):
+            return HostingMethod.SYSTEMD
+
+        if os.environ.get("TERM"):
+            return HostingMethod.SCREEN
 
         return HostingMethod.OTHER
 
@@ -242,39 +254,41 @@ class ModmailBot(commands.Bot):
             if not tasks:
                 return
 
-            logger.info('Cleaning up after %d tasks.', len(tasks))
+            logger.info("Cleaning up after %d tasks.", len(tasks))
             for task in tasks:
                 task.cancel()
 
             loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-            logger.info('All tasks finished cancelling.')
+            logger.info("All tasks finished cancelling.")
 
             for task in tasks:
                 if task.cancelled():
                     continue
                 if task.exception() is not None:
-                    loop.call_exception_handler({
-                        'message': 'Unhandled exception during Client.run shutdown.',
-                        'exception': task.exception(),
-                        'task': task
-                    })
+                    loop.call_exception_handler(
+                        {
+                            "message": "Unhandled exception during Client.run shutdown.",
+                            "exception": task.exception(),
+                            "task": task,
+                        }
+                    )
 
         future = asyncio.ensure_future(runner(), loop=loop)
         future.add_done_callback(stop_loop_on_completion)
         try:
             loop.run_forever()
         except KeyboardInterrupt:
-            logger.info('Received signal to terminate bot and event loop.')
+            logger.info("Received signal to terminate bot and event loop.")
         finally:
             future.remove_done_callback(stop_loop_on_completion)
-            logger.info('Cleaning up tasks.')
+            logger.info("Cleaning up tasks.")
 
             try:
                 _cancel_tasks()
                 if sys.version_info >= (3, 6):
                     loop.run_until_complete(loop.shutdown_asyncgens())
             finally:
-                logger.info('Closing the event loop.')
+                logger.info("Closing the event loop.")
                 loop.close()
 
         if not future.cancelled():
@@ -1635,7 +1649,7 @@ class ModmailBot(commands.Bot):
                 elif res != "Already up to date.":
                     logger.info("Bot has been updated.")
                     channel = self.update_channel
-                    if self.hosting_method == HostingMethod.PM2:
+                    if self.hosting_method in (HostingMethod.PM2, HostingMethod.SYSTEMD):
                         embed = discord.Embed(title="Bot has been updated", color=self.main_color)
                         embed.set_footer(
                             text=f"Updating Modmail v{self.version} " f"-> v{latest.version}"
@@ -1661,6 +1675,10 @@ class ModmailBot(commands.Bot):
 
         if self.config.get("disable_autoupdates"):
             logger.warning("Autoupdates disabled.")
+            self.autoupdate_loop.cancel()
+
+        if self.hosting_method == HostingMethod.DOCKER:
+            logger.warning("Autoupdates disabled as using Docker.")
             self.autoupdate_loop.cancel()
 
         if not self.config.get("github_token") and self.hosting_method == HostingMethod.HEROKU:

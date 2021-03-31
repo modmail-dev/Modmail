@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.9.2
+
+### Improved
+
+- Additional HostingMethods (i.e. DOCKER, PM2, SCREEN). Autoupdates are now disabled on all docker instances. ([GH #2977](https://github.com/kyb3r/modmail/issues/2977), [PR #2988](https://github.com/kyb3r/modmail/pull/2988))
+
+### Fixed
+
+- `user_typing` default in the config help is now correct.
+
 # v3.9.1
 
 ### Internal
