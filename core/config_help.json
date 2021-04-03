@@ -52,7 +52,8 @@
       "`{prefix}mention Yo~ Here's a new thread for ya!`"
     ],
     "notes": [
-      "Unfortunately, it's not currently possible to disable mention. You do not have to include a mention."
+      "To disable mention, use command `{prefix}mention disable`.",
+      "See also: `{prefix}help mention`."
     ]
   },
   "main_color": {
