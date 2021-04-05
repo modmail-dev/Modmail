@@ -170,6 +170,10 @@ Special thanks to our sponsors for supporting the project.
   <img height=150 src='https://i.imgur.com/cs2QEcp.png' style='margin:10px'>
 </a>
 
+<a href='https://primeserversinc.com/'>
+  <img height=150 src='http://primeserversinc.com/images/Prime_Logo_P_Sassy.png' style='margin:10px'>
+</a>
+
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
