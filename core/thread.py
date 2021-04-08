@@ -120,7 +120,7 @@ class Thread:
 
         try:
             channel = await self.bot.modmail_guild.create_text_channel(
-                name=format_channel_name(recipient, self.bot.modmail_guild),
+                name=format_channel_name(self.bot, recipient),
                 category=category,
                 overwrites=overwrites,
                 reason="Creating a thread channel.",
@@ -129,7 +129,7 @@ class Thread:
             # try again but null-discrim (name could be banned)
             try:
                 channel = await self.bot.modmail_guild.create_text_channel(
-                    name=format_channel_name(recipient, self.bot.modmail_guild, force_null=True),
+                    name=format_channel_name(self.bot, recipient, force_null=True),
                     category=category,
                     overwrites=overwrites,
                     reason="Creating a thread channel.",

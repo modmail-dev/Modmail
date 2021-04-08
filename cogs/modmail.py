@@ -1490,7 +1490,7 @@ class Modmail(commands.Cog):
             if len(users) == 1:
                 user = users.pop()
                 name = format_channel_name(
-                    user, self.bot.modmail_guild, exclude_channel=ctx.channel
+                    self.bot, user, exclude_channel=ctx.channel
                 )
                 recipient = self.bot.get_user(user.id)
                 if user.id in self.bot.threads.cache:

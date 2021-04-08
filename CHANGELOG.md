@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.9.3
+
+## Added
+
+- New config: ` use_user_id_channel_name`, when set to TRUE, channel names would get created with the recipient's ID instead of their name and discriminator.
+  - This is now an option to better suit the needs of servers in Server Discovery
+
+## Internal Change
+
+- Signature of `format_channel_name` in core/util.py changed to:
+  - `format_channel_name(bot, author, exclude_channel=None, force_null=False)`
+
+
 # v3.9.2
 
 ### Improved

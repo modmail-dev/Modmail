@@ -50,6 +50,7 @@ class ConfigManager:
         "sent_emoji": "✅",
         "blocked_emoji": "🚫",
         "close_emoji": "🔒",
+        "use_user_id_channel_name": False,
         "recipient_thread_close": False,
         "thread_auto_close_silently": False,
         "thread_auto_close": isodate.Duration(),
@@ -157,6 +158,7 @@ class ConfigManager:
     time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown"}
 
     booleans = {
+        "use_user_id_channel_name",
         "user_typing",
         "mod_typing",
         "reply_without_command",

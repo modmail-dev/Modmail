@@ -96,6 +96,17 @@
       "See also: `mod_typing`."
     ]
   },
+  "use_user_id_channel_name": {
+    "default": "No",
+    "description": "When this is set to `yes`, new thread channels will be named with the recipient's ID instead of the recipient's name.",
+    "examples": [
+      "`{prefix}config set use_user_id_channel_name yes`",
+      "`{prefix}config set use_user_id_channel_name no`"
+    ],
+    "notes": [
+      "This config is suitable for servers in Server Discovery to comply with channel name restrictions."
+    ]
+  },
   "mod_typing": {
     "default": "Disabled",
     "description": "When this is set to `yes`, whenever a moderator starts to type in the thread channel, the recipient user will see \"{bot.user.display_name} is typing…\" in their DM channel.",
