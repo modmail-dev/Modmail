@@ -230,5 +230,14 @@
         "bot_version": "3.9.0",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "claim": {
+        "repository": "coalbyte/better-modmail-plugins",
+        "branch": "master",
+        "description": "Claim and unclaim modmail threads so other staff can't steal them.",
+        "title": "Claim",
+        "bot_version": "3.9.3",
+        "icon_url": "https://cdn.discordapp.com/avatars/589362451506528256/a0dc5e6803d181ab63d7c0fe4e98c6be.webp?size=128",
+        "thumbnail_url": "https://tenor.com/bs5PP.gif"
     }
 }
