@@ -355,7 +355,8 @@ def format_channel_name(bot, author, exclude_channel=None, force_null=False):
                 name = "null"
 
             name = new_name = (
-                "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
+                "".join(l for l in name if l not in string.punctuation and l.isprintable())
+                or "null"
             ) + f"-{author.discriminator}"
 
     counter = 1
