@@ -701,7 +701,7 @@ class Utility(commands.Cog):
         elif (
             len(user_or_role) == 1
             and isinstance(user_or_role[0], str)
-            and user_or_role[0].lower() in ("disable", "reset", "all", "everyone")
+            and user_or_role[0].lower() in ("disable", "reset")
         ):
             option = user_or_role[0].lower()
             if option == "disable":
@@ -709,26 +709,24 @@ class Utility(commands.Cog):
                     description=f"Disabled mention on thread creation.", color=self.bot.main_color,
                 )
                 self.bot.config["mention"] = None
-            elif option == "reset":
+            else:
                 embed = discord.Embed(
                     description="`mention` is reset to default.", color=self.bot.main_color,
                 )
                 self.bot.config.remove("mention")
-            else:
-                embed = discord.Embed(
-                    title="Changed mention!",
-                    description=f'On thread creation the bot now says "@everyone".',
-                    color=self.bot.main_color,
-                )
-                self.bot.config["mention"] = "@everyone"
             await self.bot.config.update()
         else:
+            mention = []
+            everyone = ("all", "everyone")
             for m in user_or_role:
-                if not isinstance(m, (discord.Role, discord.Member)):
+                if not isinstance(m, (discord.Role, discord.Member)) and m not in everyone:
                     raise commands.BadArgument(f'Role or Member "{m}" not found.')
-            mention = " ".join(
-                i.mention if i is not ctx.guild.default_role else str(i) for i in user_or_role
-            )
+                elif m == ctx.guild.default_role or m in everyone:
+                    mention.append("@everyone")
+                    continue
+                mention.append(m.mention)
+
+            mention = " ".join(mention)
             embed = discord.Embed(
                 title="Changed mention!",
                 description=f'On thread creation the bot now says "{mention}".',
