@@ -350,13 +350,13 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name="Support the Developers",
-            value="This bot is completely free for everyone. We rely on kind individuals"
+            value="This bot is completely free for everyone. "
             "like you to support us on [`Patreon`](https://patreon.com/kyber) (perks included) "
             "to keep this bot free forever!",
             inline=False,
         )
 
-        embed.set_footer(text=footer) de
+        embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
     @commands.command()
