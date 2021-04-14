@@ -350,7 +350,7 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name="Support the Developers",
-            value="This bot is completely free for everyone. We rely on kind individuals k8 "
+            value="This bot is completely free for everyone. We rely on kind individuals"
             "like you to support us on [`Patreon`](https://patreon.com/kyber) (perks included) "
             "to keep this bot free forever!",
             inline=False,
