@@ -1205,7 +1205,7 @@ class ThreadManager:
 
         # Schedule thread setup for later
         cat = self.bot.main_category
-        if category is None and len(cat.channels) == 50:
+        if category is None and len(cat.channels) == 49:
             fallback_id = self.bot.config["fallback_category_id"]
             if fallback_id:
                 fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
