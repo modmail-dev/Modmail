@@ -1209,7 +1209,7 @@ class ThreadManager:
             fallback_id = self.bot.config["fallback_category_id"]
             if fallback_id:
                 fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
-                if fallback and len(fallback.channels) != 50:
+                if fallback and len(fallback.channels) < 49:
                     category = fallback
 
             if not category:
