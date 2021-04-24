@@ -1,0 +1,18 @@
+version: "3.7"
+services:
+  bot:
+    image: kyb3rr/modmail
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+  logviewer:
+    image: kyb3rr/logviewer
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo
+    ports:
+      - 8000:8000
+  mongo:
+    image: mongo
