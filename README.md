@@ -176,6 +176,10 @@ SirReddit:
 </a>
 <br>
 
+<a href='https://primeserversinc.com/'>
+  <img height=150 src='https://primeserversinc.com/images/Prime_Logo_P_Sassy.png' style='margin:10px'>
+</a>
+
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
