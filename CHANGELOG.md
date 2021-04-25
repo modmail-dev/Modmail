@@ -20,7 +20,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ## Internal
 
-- Change heroku python version to 3.9.4 [PR #3001](https://github.com/kyb3r/modmail/pull/3001)
+- Change heroku python version to 3.9.4 ([PR #3001](https://github.com/kyb3r/modmail/pull/3001))
 
 # v3.9.3
 

@@ -230,5 +230,13 @@
         "bot_version": "3.9.0",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "claim": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "master",
+        "description": "Allows supporters to claim thread by sending ?claim in the thread channel",
+        "title": "Claim Thread",
+        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
+        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
     }
 }
