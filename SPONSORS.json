@@ -42,5 +42,33 @@
                 }
             ]
         }
+    },
+    {
+        "embed": {
+            "description": "Quality Hosting at Prices You Deserve!",
+            "color": 50195251,
+            "footer": {
+                "icon_url": "https://primeserversinc.com/images/Prime_Logo_P_Sassy.png",
+                "text": "Prime Servers, Inc."
+            },
+            "thumbnail": {
+                "url": "https://primeserversinc.com/images/Prime_Logo_P_Sassy.png"
+            },
+            "author": {
+                "name": "Prime Servers, Inc.",
+                "url": "https://primeserversinc.com",
+                "icon_url": "https://primeserversinc.com/images/Prime_Logo_P_Sassy.png"
+            },
+            "fields": [
+                {
+                    "name": "Twitter",
+                    "value": "[**Click Here**](https://twitter.com/PrimeServersInc)"
+                },
+                {
+                    "name": "Discord Server",
+                    "value": "[**Click Here**](https://discord.gg/cYM6Urn)"
+                }
+            ]
+        }
     }
 ]
