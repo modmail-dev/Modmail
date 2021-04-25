@@ -6,14 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.9.4
+
+## Fixed
+
+- Certain cases where fallback categories were not working as intended. ([GH #3002](https://github.com/kyb3r/modmail/issues/3002), [PR #3003](https://github.com/kyb3r/modmail/pull/3003))
+- There is now a proper message when trying to contact a bot.+
+
+## Improved
+
+- `?mention` can now be disabled with `?mention disable`. ([PR #2993](https://github.com/kyb3r/modmail/pull/2993/files))
+- `?mention` now allows vague entries such as `everyone` or `all`. ([PR #2993](https://github.com/kyb3r/modmail/pull/2993/files))
+
+## Internal
+
+- Change heroku python version to 3.9.4 [PR #3001](https://github.com/kyb3r/modmail/pull/3001)
+
 # v3.9.3
 
 ## Added
 
-- New config: ` use_user_id_channel_name`, when set to TRUE, channel names would get created with the recipient's ID instead of their name and discriminator.
+- New config: `use_user_id_channel_name`, when set to TRUE, channel names would get created with the recipient's ID instead of their name and discriminator.
   - This is now an option to better suit the needs of servers in Server Discovery
 
-## Internal Change
+## Internal
 
 - Signature of `format_channel_name` in core/util.py changed to:
   - `format_channel_name(bot, author, exclude_channel=None, force_null=False)`
