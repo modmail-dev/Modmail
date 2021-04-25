@@ -11,7 +11,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ## Fixed
 
 - Certain cases where fallback categories were not working as intended. ([GH #3002](https://github.com/kyb3r/modmail/issues/3002), [PR #3003](https://github.com/kyb3r/modmail/pull/3003))
-- There is now a proper message when trying to contact a bot.+
+- There is now a proper message when trying to contact a bot.
 
 ## Improved
 
