@@ -1014,7 +1014,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(
                 color=self.bot.error_color, description="Cannot start a thread with a bot."
             )
-            return await ctx.send(embed=embed, delete_afer=3)
+            return await ctx.send(embed=embed, delete_after=3)
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
