@@ -16,3 +16,8 @@ services:
       - 8000:8000
   mongo:
     image: mongo
+    volumes:
+      - mongodb:/data/db
+
+volumes:
+  mongodb:
