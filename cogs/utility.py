@@ -819,7 +819,9 @@ class Utility(commands.Cog):
                 embed = exc.embed
         else:
             embed = discord.Embed(
-                title="Error", color=self.bot.error_color, description=f"{key} is an invalid key."
+                title="Error",
+                color=self.bot.error_color,
+                description=f"`{key}` is an invalid key.",
             )
             valid_keys = [f"`{k}`" for k in sorted(keys)]
             embed.add_field(name="Valid keys", value=truncate(", ".join(valid_keys), 1024))
@@ -841,10 +843,12 @@ class Utility(commands.Cog):
             )
         else:
             embed = discord.Embed(
-                title="Error", color=self.bot.error_color, description=f"{key} is an invalid key."
+                title="Error",
+                color=self.bot.error_color,
+                description=f"`{key}` is an invalid key.",
             )
             valid_keys = [f"`{k}`" for k in sorted(keys)]
-            embed.add_field(name="Valid keys", value=", ".join(valid_keys))
+            embed.add_field(name="Valid keys", value=truncate(", ".join(valid_keys), 1024))
 
         return await ctx.send(embed=embed)
 
