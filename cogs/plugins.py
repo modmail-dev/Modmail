@@ -539,6 +539,7 @@ class Plugins(commands.Cog):
             except Exception:
                 logger.error("Failed to unload plugin: %s.", ext)
         self.bot.config["plugins"].clear()
+        await self.bot.config.update()
 
         cache_path = Path(__file__).absolute().parent.parent / "temp" / "plugins-cache"
         if cache_path.exists():
