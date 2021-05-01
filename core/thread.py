@@ -585,9 +585,10 @@ class Thread:
             ):
                 raise ValueError("Malformed thread message.")
 
-            if message1.embeds[0].color.value == self.bot.main_color and message1.embeds[
-                0
-            ].author.name.startswith("Note"):
+            if message1.embeds[0].color.value == self.bot.main_color and (
+                message1.embeds[0].author.name.startswith("Note")
+                or message1.embeds[0].author.name.startswith("Persistent Note")
+            ):
                 if not note:
                     raise ValueError("Thread message not found.")
                 return message1, None, False
