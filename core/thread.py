@@ -125,7 +125,7 @@ class Thread:
                 overwrites=overwrites,
                 reason="Creating a thread channel.",
             )
-        except discord.HTTPException as e:
+        except discord.HTTPException:
             # try again but null-discrim (name could be banned)
             try:
                 channel = await self.bot.modmail_guild.create_text_channel(
@@ -559,12 +559,18 @@ class Thread:
         either_direction: bool = False,
         message1: discord.Message = None,
         note: bool = True,
-    ) -> typing.Tuple[discord.Message, typing.Optional[discord.Message]]:
+    ) -> typing.Tuple[discord.Message, typing.Optional[discord.Message], bool]:
         if message1 is not None:
-            if (
-                not message1.embeds
-                or not message1.embeds[0].author.url
-                or message1.author != self.bot.user
+            if not (
+                message1.author == self.bot.user and message1.embeds,
+                message1.embeds[0].color
+                and (
+                    message1.embeds[0].color.value == self.bot.mod_color
+                    or (
+                        either_direction
+                        and message1.embeds[0].color.value == self.bot.recipient_color
+                    )
+                ),
             ):
                 raise ValueError("Malformed thread message.")
 
@@ -575,20 +581,16 @@ class Thread:
                 raise ValueError("Thread message not found.")
 
             if not (
-                message1.embeds
-                and message1.embeds[0].author.url
-                and message1.embeds[0].color
-                and message1.author == self.bot.user
+                message1.author == self.bot.user and message1.embeds and message1.embeds[0].color
             ):
-                raise ValueError("Thread message not found.")
+                raise ValueError("Malformed thread message.")
 
-            if message1.embeds[0].color.value == self.bot.main_color and (
-                message1.embeds[0].author.name.startswith("Note")
-                or message1.embeds[0].author.name.startswith("Persistent Note")
-            ):
+            if message1.embeds[0].color.value == self.bot.main_color and message1.embeds[
+                0
+            ].author.name.startswith("Note"):
                 if not note:
                     raise ValueError("Thread message not found.")
-                return message1, None
+                return message1, None, False
 
             if message1.embeds[0].color.value != self.bot.mod_color and not (
                 either_direction and message1.embeds[0].color.value == self.bot.recipient_color
@@ -597,8 +599,8 @@ class Thread:
         else:
             async for message1 in self.channel.history():
                 if (
-                    message1.embeds
-                    and message1.embeds[0].author.url
+                    message1.author == self.bot.user
+                    and message1.embeds
                     and message1.embeds[0].color
                     and (
                         message1.embeds[0].color.value == self.bot.mod_color
@@ -607,35 +609,34 @@ class Thread:
                             and message1.embeds[0].color.value == self.bot.recipient_color
                         )
                     )
-                    and message1.embeds[0].author.url.split("#")[-1].isdigit()
-                    and message1.author == self.bot.user
                 ):
                     break
             else:
                 raise ValueError("Thread message not found.")
 
+        thread_logs = await self.bot.api.logs.find_one({"channel_id": str(self.channel.id)})
+        if thread_logs is None:
+            raise ValueError("Thread logs not found.")
+        messages_logs = thread_logs["messages"]
+        linked_ids, type_ = next(
+            (
+                (data.get("linked_ids"), data.get("type"))
+                for data in messages_logs
+                if str(message1.id) in data.get("linked_ids", [])
+            ),
+            (None, False),
+        )
+        if linked_ids:
+            async for msg in self.recipient.history():
+                if str(msg.id) in linked_ids:
+                    return message1, msg, type_ == "anonymous"
+        raise ValueError("DM message not found.")
+
+    async def edit_message(
+        self, author: discord.Member, message_id: typing.Optional[int], message: str
+    ) -> None:
         try:
-            joint_id = int(message1.embeds[0].author.url.split("#")[-1])
-        except ValueError:
-            raise ValueError("Malformed thread message.")
-
-        async for msg in self.recipient.history():
-            if either_direction:
-                if msg.id == joint_id:
-                    return message1, msg
-
-            if not (msg.embeds and msg.embeds[0].author.url):
-                continue
-            try:
-                if int(msg.embeds[0].author.url.split("#")[-1]) == joint_id:
-                    return message1, msg
-            except ValueError:
-                continue
-        raise ValueError("DM message not found. Plain messages are not supported.")
-
-    async def edit_message(self, message_id: typing.Optional[int], message: str) -> None:
-        try:
-            message1, message2 = await self.find_linked_messages(message_id)
+            message1, message2, anonymous = await self.find_linked_messages(message_id)
         except ValueError:
             logger.warning("Failed to edit message.", exc_info=True)
             raise
@@ -645,9 +646,24 @@ class Thread:
 
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
         if message2 is not None:
-            embed2 = message2.embeds[0]
-            embed2.description = message
-            tasks += [message2.edit(embed=embed2)]
+            if message2.embeds:
+                embed2 = message2.embeds[0]
+                embed2.description = message
+                tasks += [message2.edit(embed=embed2)]
+            else:
+                mod_tag = self.bot.config["mod_tag"]
+                if mod_tag is None:
+                    mod_tag = str(author.top_role)
+                anon_name = self.bot.config["anon_username"]
+                if anon_name is None:
+                    anon_name = mod_tag
+
+                if anonymous:
+                    plain_message = f"**({self.bot.config['anon_tag']}) {anon_name}:** "
+                else:
+                    plain_message = f"**({mod_tag}) {str(author)}:** "
+                plain_message += f"{message}"
+                tasks += [message2.edit(content=plain_message)]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.edit_note(message1.id, message)]
 
@@ -657,9 +673,9 @@ class Thread:
         self, message: typing.Union[int, discord.Message] = None, note: bool = True
     ) -> None:
         if isinstance(message, discord.Message):
-            message1, message2 = await self.find_linked_messages(message1=message, note=note)
+            message1, message2, _ = await self.find_linked_messages(message1=message, note=note)
         else:
-            message1, message2 = await self.find_linked_messages(message, note=note)
+            message1, message2, _ = await self.find_linked_messages(message, note=note)
         tasks = []
         if not isinstance(message, discord.Message):
             tasks += [message1.delete()]
@@ -671,35 +687,28 @@ class Thread:
             await asyncio.gather(*tasks)
 
     async def find_linked_message_from_dm(self, message, either_direction=False):
-        if either_direction and message.embeds and message.embeds[0].author.url:
-            compare_url = message.embeds[0].author.url
-            compare_id = compare_url.split("#")[-1]
-        else:
-            compare_url = None
-            compare_id = None
-
-        if self.channel is not None:
-            async for linked_message in self.channel.history():
-                if not linked_message.embeds:
-                    continue
-                url = linked_message.embeds[0].author.url
-                if not url:
-                    continue
-                if url == compare_url:
-                    return linked_message
-
-                msg_id = url.split("#")[-1]
-                if not msg_id.isdigit():
-                    continue
-                msg_id = int(msg_id)
-                if int(msg_id) == message.id:
-                    return linked_message
-
-                if compare_id is not None and compare_id.isdigit():
-                    if int(msg_id) == int(compare_id):
-                        return linked_message
-
+        if self.channel is None or (not either_direction and message.author == self.bot.user):
             raise ValueError("Thread channel message not found.")
+
+        thread_logs = await self.bot.api.logs.find_one({"channel_id": str(self.channel.id)})
+        if thread_logs is None:
+            raise ValueError("Thread logs not found.")
+
+        messages_logs = thread_logs["messages"]
+        linked_ids = next(
+            (
+                data.get("linked_ids")
+                for data in messages_logs
+                if str(message.id) in data.get("linked_ids", [])
+            ),
+            None,
+        )
+        if linked_ids:
+            async for linked_message in self.channel.history():
+                if str(linked_message.id) in linked_ids:
+                    return linked_message
+
+        raise ValueError("Thread channel message not found.")
 
     async def edit_dm_message(self, message: discord.Message, content: str) -> None:
         try:
@@ -716,7 +725,7 @@ class Thread:
 
     async def note(
         self, message: discord.Message, persistent=False, thread_creation=False
-    ) -> None:
+    ) -> discord.Message:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
@@ -738,7 +747,7 @@ class Thread:
 
     async def reply(
         self, message: discord.Message, anonymous: bool = False, plain: bool = False
-    ) -> None:
+    ) -> typing.Tuple[typing.Optional[discord.Message], typing.Optional[discord.Message]]:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
         if not any(g.get_member(self.id) for g in self.bot.guilds):
@@ -751,7 +760,7 @@ class Thread:
             )
 
         tasks = []
-
+        user_msg, msg = None, None
         try:
             user_msg = await self.send(
                 message,
@@ -792,6 +801,7 @@ class Thread:
                     message_id=msg.id,
                     channel_id=self.channel.id,
                     type_="anonymous" if anonymous else "thread_message",
+                    linked_ids=[msg.id, user_msg.id],
                 )
             )
 
@@ -809,7 +819,7 @@ class Thread:
 
         await asyncio.gather(*tasks)
         self.bot.dispatch("thread_reply", self, True, message, anonymous, plain)
-        return (user_msg, msg)  # sent_to_user, sent_to_thread_channel
+        return user_msg, msg  # sent_to_user, sent_to_thread_channel
 
     async def send(
         self,
@@ -823,7 +833,7 @@ class Thread:
         plain: bool = False,
         persistent_note: bool = False,
         thread_creation: bool = False,
-    ) -> None:
+    ) -> discord.Message:
 
         self.bot.loop.create_task(
             self._restart_close_timer()
@@ -843,9 +853,6 @@ class Thread:
 
         if not self.ready:
             await self.wait_until_ready()
-
-        if not from_mod and not note:
-            self.bot.loop.create_task(self.bot.api.append_log(message, channel_id=self.channel.id))
 
         destination = destination or self.channel
 
@@ -1047,6 +1054,13 @@ class Thread:
             self.ready = False
             await asyncio.gather(*additional_images)
             self.ready = True
+
+        if not from_mod and not note:
+            self.bot.loop.create_task(
+                self.bot.api.append_log(
+                    message, channel_id=self.channel.id, linked_ids=[msg.id, message.id]
+                )
+            )
 
         return msg
 

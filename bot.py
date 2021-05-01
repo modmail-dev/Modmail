@@ -1286,7 +1286,7 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
-                _, linked_message = await thread.find_linked_messages(
+                _, linked_message, _ = await thread.find_linked_messages(
                     message.id, either_direction=True
                 )
             except ValueError as e:

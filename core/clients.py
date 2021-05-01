@@ -329,6 +329,7 @@ class ApiClient:
         message_id: str = "",
         channel_id: str = "",
         type_: str = "thread_message",
+        linked_ids: list = None,
     ) -> dict:
         return NotImplemented
 
@@ -562,13 +563,18 @@ class MongoDBClient(ApiClient):
         message_id: str = "",
         channel_id: str = "",
         type_: str = "thread_message",
+        linked_ids: list = None,
     ) -> dict:
         channel_id = str(channel_id) or str(message.channel.id)
         message_id = str(message_id) or str(message.id)
 
+        # index 0 thread msg id, index 1 dm msg id
+        linked_ids = [str(msg_id) for msg_id in linked_ids] if linked_ids else []
+
         data = {
             "timestamp": str(message.created_at),
             "message_id": message_id,
+            "linked_ids": linked_ids,
             "author": {
                 "id": str(message.author.id),
                 "name": message.author.name,
