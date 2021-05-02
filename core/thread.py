@@ -562,15 +562,16 @@ class Thread:
     ) -> typing.Tuple[discord.Message, typing.Optional[discord.Message], bool]:
         if message1 is not None:
             if not (
-                message1.author == self.bot.user and message1.embeds,
-                message1.embeds[0].color
+                message1.author == self.bot.user
+                and message1.embeds
+                and message1.embeds[0].color
                 and (
                     message1.embeds[0].color.value == self.bot.mod_color
                     or (
                         either_direction
                         and message1.embeds[0].color.value == self.bot.recipient_color
                     )
-                ),
+                )
             ):
                 raise ValueError("Malformed thread message.")
 
