@@ -1405,11 +1405,11 @@ class Modmail(commands.Cog):
         try:
             await thread.delete_message(message_id, note=True)
         except ValueError as e:
-            logger.warning("Failed to delete message: %s.", e)
+            logger.warning("Failed to delete message: %s", e)
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
-                    description="Cannot find a message to delete. Plain messages are not supported.",
+                    description="Cannot find a message to delete.",
                     color=self.bot.error_color,
                 )
             )

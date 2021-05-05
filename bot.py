@@ -1279,7 +1279,8 @@ class ModmailBot(commands.Bot):
                     message, either_direction=True
                 )
             except ValueError as e:
-                logger.warning("Failed to find linked message for reactions: %s", e)
+                if str(e) != "Ignored message.":
+                    logger.warning("Failed to find linked message for reactions: %s", e)
                 return
         else:
             thread = await self.threads.find(channel=channel)
@@ -1290,7 +1291,8 @@ class ModmailBot(commands.Bot):
                     message.id, either_direction=True
                 )
             except ValueError as e:
-                logger.warning("Failed to find linked message for reactions: %s", e)
+                if str(e) != "Ignored message.":
+                    logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
         if self.config["transfer_reactions"] and linked_message is not None:
@@ -1433,8 +1435,10 @@ class ModmailBot(commands.Bot):
             try:
                 message = await thread.find_linked_message_from_dm(message)
             except ValueError as e:
-                if str(e) != "Thread channel message not found.":
-                    logger.debug("Failed to find linked message to delete: %s", e)
+                if str(message.id) in thread.ignored_messages:
+                    thread.ignored_messages.remove(str(message.id))
+                if str(e) not in {"Ignored message.", "Thread channel message not found."}:
+                    logger.error("Failed to find linked message to delete: %s", e)
                 return
             embed = message.embeds[0]
             embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=embed.footer.icon_url)
@@ -1463,7 +1467,11 @@ class ModmailBot(commands.Bot):
                 description="Successfully deleted message.", color=self.main_color
             )
         except ValueError as e:
-            if str(e) not in {"DM message not found.", "Malformed thread message."}:
+            if str(e) not in {
+                "Ignored message.",
+                "DM message not found.",
+                "Malformed thread message.",
+            }:
                 logger.debug("Failed to find linked message to delete: %s", e)
                 embed = discord.Embed(
                     description="Failed to delete message.", color=self.error_color

@@ -52,6 +52,7 @@ class Thread:
         self.close_task = None
         self.auto_close_task = None
         self._cancelled = False
+        self._ignored_messages = set()
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id})'
@@ -102,6 +103,13 @@ class Thread:
         if flag:
             for i in self.wait_tasks:
                 i.cancel()
+
+    @property
+    def ignored_messages(self) -> set:
+        """
+        The list of message IDs to be ignored when linking messages.
+        """
+        return self._ignored_messages
 
     async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
@@ -561,6 +569,8 @@ class Thread:
         note: bool = True,
     ) -> typing.Tuple[discord.Message, typing.Optional[discord.Message], str]:
         if message1 is not None:
+            if str(message1.id) in self.ignored_messages:
+                raise ValueError("Ignored message.")
             if not (
                 message1.author == self.bot.user
                 and message1.embeds
@@ -581,12 +591,15 @@ class Thread:
             except discord.NotFound:
                 raise ValueError("Thread message not found.")
 
+            if str(message1.id) in self.ignored_messages:
+                raise ValueError("Ignored message.")
             if not (message1.author == self.bot.user and message1.embeds):
                 raise ValueError("Malformed thread message.")
         else:
             async for message1 in self.channel.history():
                 if (
-                    message1.author == self.bot.user
+                    str(message1.id) not in self.ignored_messages
+                    and message1.author == self.bot.user
                     and message1.embeds
                     and message1.embeds[0].color
                     and (
@@ -619,7 +632,10 @@ class Thread:
             (None, "Not Found", False),
         )
         if type_ == "Not Found":
-            raise ValueError("Thread message not found.")
+            if str(message1.id) not in self.ignored_messages:
+                self.ignored_messages.add(str(message1.id))
+                logger.error("Not a thread message. This message will be ignored from now.")
+            raise ValueError("Ignored message.")
         if linked_ids:
             if not from_mod and not either_direction:
                 raise ValueError("Thread message not found.")
@@ -628,8 +644,12 @@ class Thread:
                     return message1, msg, type_
             raise ValueError("DM message not found.")
 
-        if type_ == "system" and note:
-            return message1, None, type_
+        if type_ == "system":
+            if note and getattr(message1.embeds[0].author, "name", str()).startswith(
+                ("Note", "Persistent Note")
+            ):
+                return message1, None, type_
+            raise ValueError("DM message not found.")
 
         raise ValueError("Thread message not found.")
 
@@ -680,9 +700,14 @@ class Thread:
         self, message: typing.Union[int, discord.Message] = None, note: bool = True
     ) -> None:
         if isinstance(message, discord.Message):
-            message1, message2, type_ = await self.find_linked_messages(
-                message1=message, note=note
-            )
+            try:
+                message1, message2, type_ = await self.find_linked_messages(
+                    message1=message, note=note
+                )
+            except ValueError:
+                if str(message.id) in self.ignored_messages:
+                    self.ignored_messages.remove(str(message.id))
+                raise
         else:
             message1, message2, type_ = await self.find_linked_messages(message, note=note)
         tasks = []
@@ -721,6 +746,11 @@ class Thread:
             async for linked_message in self.channel.history():
                 if str(linked_message.id) in linked_ids:
                     return linked_message
+        else:
+            if str(message.id) not in self.ignored_messages:
+                self.ignored_messages.add(str(message.id))
+                logger.error("Not a thread message. This message will be ignored from now.")
+                raise ValueError("Ignored message.")
 
         raise ValueError("Thread channel message not found.")
 
