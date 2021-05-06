@@ -191,7 +191,7 @@ class Modmail(commands.Cog):
             val = truncate(escape_code_block(val), 2048 - 7)
             embed = discord.Embed(
                 title=f'Raw snippet - "{name}":',
-                description=f"```\n{val}```",
+                description=f"```md\n{val}\n```",
                 color=self.bot.main_color,
             )
 
