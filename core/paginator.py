@@ -134,18 +134,34 @@ class PaginatorSession:
             await self.show_page(self.current)
         while self.running:
             try:
-                reaction, user = await self.ctx.bot.wait_for(
-                    "reaction_add", check=self.react_check, timeout=self.timeout
+                tasks = [
+                    asyncio.ensure_future(
+                        self.ctx.bot.wait_for(
+                            "reaction_add", check=self.react_check, timeout=self.timeout
+                        )
+                    ),
+                    asyncio.ensure_future(
+                        self.ctx.bot.wait_for(
+                            "reaction_remove", check=self.react_check, timeout=self.timeout
+                        )
+                    ),
+                ]
+                done, pending = await asyncio.wait(
+                    tasks, timeout=self.timeout, return_when=asyncio.FIRST_COMPLETED
                 )
+                for task in pending:
+                    task.cancel()
+
+                if len(done) == 0:
+                    raise asyncio.TimeoutError()
+
+                reaction, user = done.pop().result()
+
             except asyncio.TimeoutError:
                 return await self.close(delete=False)
             else:
                 action = self.reaction_map.get(reaction.emoji)
                 await action()
-            try:
-                await self.base.remove_reaction(reaction, user)
-            except (HTTPException, InvalidArgument):
-                pass
 
     async def previous_page(self) -> None:
         """
