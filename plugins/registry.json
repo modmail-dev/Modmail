@@ -231,6 +231,14 @@
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
     },
+    "statcord": {
+        "repository": "NroxpTheDev/modmail-plugins",
+        "branch": "main",
+        "description": "Get Your Cpu And Many More Thing About Bot On statcord.com!",
+        "title": "Statcord",
+        "icon_url": "https://cdn.discordapp.com/attachments/840525041884200960/841539477847015474/download.jpeg",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/840525041884200960/841539477847015474/download.jpeg"
+    },
     "claim": {
         "repository": "fourjr/modmail-plugins",
         "branch": "master",
