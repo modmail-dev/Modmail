@@ -187,15 +187,6 @@
         "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
     },
-    "publish": {
-        "repository": "codeinteger6/modmail-plugins",
-        "branch": "master",
-        "description": "Publish messages sent in announcement channels.",
-        "bot_version": "3.5.0",
-        "title": "Publish",
-        "icon_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png",
-        "thumbnail_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png"
-    },
     "translate": {
         "repository": "WebKide/modmail-plugins",
         "branch": "master",
