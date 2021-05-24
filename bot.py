@@ -1304,50 +1304,51 @@ class ModmailBot(commands.Bot):
                 except (discord.HTTPException, discord.InvalidArgument) as e:
                     logger.warning("Failed to remove reaction: %s", e)
 
-    async def on_raw_reaction_add(self, payload):
-        await self.handle_reaction_events(payload)
-
+    async def handle_react_to_contact(self, payload):
         react_message_id = tryint(self.config.get("react_to_contact_message"))
         react_message_emoji = self.config.get("react_to_contact_emoji")
-        if all((react_message_id, react_message_emoji)):
-            if payload.message_id == react_message_id:
-                if payload.emoji.is_unicode_emoji():
-                    emoji_fmt = payload.emoji.name
-                else:
-                    emoji_fmt = f"<:{payload.emoji.name}:{payload.emoji.id}>"
+        if (
+            not all((react_message_id, react_message_emoji))
+            or payload.message_id != react_message_id
+        ):
+            return
+        if payload.emoji.is_unicode_emoji():
+            emoji_fmt = payload.emoji.name
+        else:
+            emoji_fmt = f"<:{payload.emoji.name}:{payload.emoji.id}>"
 
-                if emoji_fmt == react_message_emoji:
-                    channel = self.get_channel(payload.channel_id)
-                    member = channel.guild.get_member(payload.user_id)
-                    if not member.bot:
-                        message = await channel.fetch_message(payload.message_id)
-                        await message.remove_reaction(payload.emoji, member)
-                        await message.add_reaction(emoji_fmt)  # bot adds as well
+        if emoji_fmt != react_message_emoji:
+            return
+        channel = self.get_channel(payload.channel_id)
+        member = channel.guild.get_member(payload.user_id)
+        if member.bot:
+            return
+        message = await channel.fetch_message(payload.message_id)
+        await message.remove_reaction(payload.emoji, member)
+        await message.add_reaction(emoji_fmt)  # bot adds as well
 
-                        if self.config["dm_disabled"] in (
-                            DMDisabled.NEW_THREADS,
-                            DMDisabled.ALL_THREADS,
-                        ):
-                            embed = discord.Embed(
-                                title=self.config["disabled_new_thread_title"],
-                                color=self.error_color,
-                                description=self.config["disabled_new_thread_response"],
-                            )
-                            embed.set_footer(
-                                text=self.config["disabled_new_thread_footer"],
-                                icon_url=self.guild.icon_url,
-                            )
-                            logger.info(
-                                "A new thread using react to contact was blocked from %s due to disabled Modmail.",
-                                member,
-                            )
-                            return await member.send(embed=embed)
+        if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
+            embed = discord.Embed(
+                title=self.config["disabled_new_thread_title"],
+                color=self.error_color,
+                description=self.config["disabled_new_thread_response"],
+            )
+            embed.set_footer(
+                text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon_url,
+            )
+            logger.info(
+                "A new thread using react to contact was blocked from %s due to disabled Modmail.",
+                member,
+            )
+            return await member.send(embed=embed)
 
-                        ctx = await self.get_context(message)
-                        ctx.author = member
-                        await ctx.invoke(
-                            self.get_command("contact"), user=member, manual_trigger=False
-                        )
+        ctx = await self.get_context(message)
+        await ctx.invoke(self.get_command("contact"), user=member, manual_trigger=False)
+
+    async def on_raw_reaction_add(self, payload):
+        await asyncio.gather(
+            self.handle_reaction_events(payload), self.handle_react_to_contact(payload),
+        )
 
     async def on_raw_reaction_remove(self, payload):
         if self.config["transfer_reactions"]:

@@ -1002,7 +1002,7 @@ class Modmail(commands.Cog):
 
         `category`, if specified, may be a category ID, mention, or name.
         `user` may be a user ID, mention, or name.
-        `options` can be `silent`
+        `options` can be `silent` or `silently`.
         """
         silent = False
         if isinstance(category, str):
@@ -1018,19 +1018,28 @@ class Modmail(commands.Cog):
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
-            embed = discord.Embed(
-                color=self.bot.error_color,
-                description="A thread for this user already "
-                f"exists in {exists.channel.mention}.",
-            )
+            desc = "A thread for this user already exists"
+            if exists.channel:
+                desc += f" in {exists.channel.mention}"
+            desc += "."
+            embed = discord.Embed(color=self.bot.error_color, description=desc)
             await ctx.channel.send(embed=embed, delete_after=3)
 
         else:
+            creator = ctx.author if manual_trigger else user
+            if await self.bot.is_blocked(user):
+                if not manual_trigger:  # react to contact
+                    return
+
+                ref = f"{user.mention} is" if creator != user else "You are"
+                embed = discord.Embed(
+                    color=self.bot.error_color,
+                    description=f"{ref} currently blocked from contacting {self.bot.user.name}.",
+                )
+                return await ctx.send(embed=embed)
+
             thread = await self.bot.threads.create(
-                recipient=user,
-                creator=ctx.author,
-                category=category,
-                manual_trigger=manual_trigger,
+                recipient=user, creator=creator, category=category, manual_trigger=manual_trigger,
             )
             if thread.cancelled:
                 return
@@ -1039,22 +1048,22 @@ class Modmail(commands.Cog):
                 logger.info("Contacting user %s when Modmail DM is disabled.", user)
 
             if not silent and not self.bot.config.get("thread_contact_silently"):
-                if ctx.author.id == user.id:
+                if creator.id == user.id:
                     description = "You have opened a Modmail thread."
                 else:
-                    description = f"{ctx.author.name} has opened a Modmail thread."
+                    description = f"{creator.name} has opened a Modmail thread."
 
                 em = discord.Embed(
                     title="New Thread", description=description, color=self.bot.main_color,
                 )
                 if self.bot.config["show_timestamp"]:
                     em.timestamp = datetime.utcnow()
-                em.set_footer(icon_url=ctx.author.avatar_url)
+                em.set_footer(text=f"{creator}", icon_url=creator.avatar_url)
                 await user.send(embed=em)
 
             embed = discord.Embed(
                 title="Created Thread",
-                description=f"Thread started by {ctx.author.mention} for {user.mention}.",
+                description=f"Thread started by {creator.mention} for {user.mention}.",
                 color=self.bot.main_color,
             )
             await thread.wait_until_ready()
