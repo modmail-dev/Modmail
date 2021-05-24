@@ -421,7 +421,7 @@
     "default": "Thread Moved",
     "description": "The title of the message embed when a thread is moved.",
     "examples": [
-      "`{prefix}config set thread_move_title Thread transferred to another channel!"
+      "`{prefix}config set thread_move_title Thread transferred to another channel!`"
     ],
     "notes": [
       "See also: `thread_move_notify`, `thread_move_notify_mods`, `thread_move_response`."

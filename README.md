@@ -165,21 +165,29 @@ Special thanks to our sponsors for supporting the project.
 Kingdom Gaming Discord:
 <br>
 <a href='https://discord.gg/kingdomgaming'>
-  <img height=150 src='https://i.imgur.com/GLXfl4E.png' style='margin:10px'>
+  <img height=100 src='https://i.imgur.com/GLXfl4E.png' style='margin:5px'>
 </a>
 <br>
 <br>
 SirReddit:
 <br>
 <a href='https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ/featured'>
-  <img height=150 src='https://i.imgur.com/WyzaPKY.png' style='margin:10px'>
+  <img height=100 src='https://i.imgur.com/WyzaPKY.png' style='margin:5px'>
 </a>
 <br>
-
+<br>
+Prime Servers Inc:
+<br>
 <a href='https://primeserversinc.com/'>
-  <img height=150 src='https://primeserversinc.com/images/Prime_Logo_P_Sassy.png' style='margin:10px'>
+  <img height=100 src='https://i.imgur.com/sVcwtt8.png' style='margin:5px'>
 </a>
-
+<br>
+<br>
+Real Madrid:
+<br>
+<a href='https://discord.gg/realmadrid'>
+  <img height=100 src='https://i.imgur.com/9Rat2Qb.png' style='margin:5px'>
+</a>
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
