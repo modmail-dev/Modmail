@@ -222,6 +222,15 @@
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
     },
+    "starcord": {
+        "repository": "NroxpTheDev/modmail-plugins",
+        "branch": "master",
+        "description": "Get A Cpu Uses And Many More!",
+        "title": "Statcord",
+        "bot_version": "1.0.0",
+        "icon_url": "https://cdn.discordapp.com/attachments/846130389608693762/847050102085255198/logo.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/846130389608693762/847050102085255198/logo.png"
+    },
     "claim": {
         "repository": "fourjr/modmail-plugins",
         "branch": "master",
