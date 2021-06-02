@@ -964,6 +964,15 @@ class ModmailBot(commands.Bot):
                 logger.error("Failed to send message:", exc_info=True)
                 await self.add_reaction(message, blocked_emoji)
             else:
+                for user in thread.recipients:
+                    # send to all other recipients
+                    if user != message.author:
+                        try:
+                            await thread.send(message, user)
+                        except Exception:
+                            # silently ignore
+                            logger.error("Failed to send message:", exc_info=True)
+
                 await self.add_reaction(message, sent_emoji)
                 self.dispatch("thread_reply", thread, False, message, False, False)
 
@@ -1224,9 +1233,10 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.find(channel=channel)
             if thread is not None and thread.recipient:
-                if await self.is_blocked(thread.recipient):
-                    return
-                await thread.recipient.trigger_typing()
+                for user in thread.recipients:
+                    if await self.is_blocked(user):
+                        continue
+                    await user.trigger_typing()
 
     async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
@@ -1286,20 +1296,22 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
-                _, linked_message = await thread.find_linked_messages(
+                _, *linked_message = await thread.find_linked_messages(
                     message.id, either_direction=True
                 )
             except ValueError as e:
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if self.config["transfer_reactions"] and linked_message is not None:
+        if self.config["transfer_reactions"] and linked_message is not [None]:
             if payload.event_type == "REACTION_ADD":
-                if await self.add_reaction(linked_message, reaction):
-                    await self.add_reaction(message, reaction)
+                for msg in linked_message:
+                    await self.add_reaction(msg, reaction)
+                await self.add_reaction(message, reaction)
             else:
                 try:
-                    await linked_message.remove_reaction(reaction, self.user)
+                    for msg in linked_message:
+                        await msg.remove_reaction(reaction, self.user)
                     await message.remove_reaction(reaction, self.user)
                 except (discord.HTTPException, discord.InvalidArgument) as e:
                     logger.warning("Failed to remove reaction: %s", e)

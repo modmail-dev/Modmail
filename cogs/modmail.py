@@ -681,6 +681,48 @@ class Modmail(commands.Cog):
         await ctx.message.pin()
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
+    @commands.command(cooldown_after_parsing=True)
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    @commands.cooldown(1, 600, BucketType.channel)
+    async def adduser(self, ctx, *, user: discord.Member):
+        """Adds a user to a modmail thread"""
+
+        curr_thread = await self.bot.threads.find(recipient=user)
+        if curr_thread:
+            em = discord.Embed(
+                title="Error",
+                description=f"User is already in a thread: {curr_thread.channel.mention}.",
+                color=self.bot.error_color,
+            )
+            await ctx.send(embed=em)
+        else:
+            em = discord.Embed(
+                title="New Thread (Group)",
+                description=f"{ctx.author.name} has added you to a Modmail thread.",
+                color=self.bot.main_color,
+            )
+            if self.bot.config["show_timestamp"]:
+                em.timestamp = datetime.utcnow()
+            em.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+            await user.send(embed=em)
+
+            em = discord.Embed(
+                title="New User",
+                description=f"{ctx.author.name} has added {user.name} to the Modmail thread.",
+                color=self.bot.main_color,
+            )
+            if self.bot.config["show_timestamp"]:
+                em.timestamp = datetime.utcnow()
+            em.set_footer(text=f"{user}", icon_url=user.avatar_url)
+
+            for i in ctx.thread.recipients:
+                await i.send(embed=em)
+
+            await ctx.thread.add_user(user)
+            sent_emoji, _ = await self.bot.retrieve_emoji()
+            await self.bot.add_reaction(ctx.message, sent_emoji)
+
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def logs(self, ctx, *, user: User = None):
@@ -1463,15 +1505,19 @@ class Modmail(commands.Cog):
                 and message.embeds[0].footer.text
             ):
                 user_id = match_user_id(message.embeds[0].footer.text)
+                other_recipients = match_other_recipients(ctx.channel.topic)
+                for n, uid in enumerate(other_recipients):
+                    other_recipients[n] = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
+
                 if user_id != -1:
                     recipient = self.bot.get_user(user_id)
                     if recipient is None:
                         self.bot.threads.cache[user_id] = thread = Thread(
-                            self.bot.threads, user_id, ctx.channel
+                            self.bot.threads, user_id, ctx.channel, other_recipients
                         )
                     else:
                         self.bot.threads.cache[user_id] = thread = Thread(
-                            self.bot.threads, recipient, ctx.channel
+                            self.bot.threads, recipient, ctx.channel, other_recipients
                         )
                     thread.ready = True
                     logger.info(
@@ -1516,13 +1562,18 @@ class Modmail(commands.Cog):
                             await thread.channel.send(embed=embed)
                         except discord.HTTPException:
                             pass
+
+                other_recipients = match_other_recipients(ctx.channel.topic)
+                for n, uid in enumerate(other_recipients):
+                    other_recipients[n] = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
+
                 if recipient is None:
                     self.bot.threads.cache[user.id] = thread = Thread(
-                        self.bot.threads, user_id, ctx.channel
+                        self.bot.threads, user_id, ctx.channel, other_recipients
                     )
                 else:
                     self.bot.threads.cache[user.id] = thread = Thread(
-                        self.bot.threads, recipient, ctx.channel
+                        self.bot.threads, recipient, ctx.channel, other_recipients
                     )
                 thread.ready = True
                 logger.info("Setting current channel's topic to User ID and created new thread.")

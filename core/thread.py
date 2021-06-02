@@ -19,6 +19,7 @@ from core.utils import (
     days,
     match_title,
     match_user_id,
+    match_other_recipients,
     truncate,
     format_channel_name,
 )
@@ -34,6 +35,7 @@ class Thread:
         manager: "ThreadManager",
         recipient: typing.Union[discord.Member, discord.User, int],
         channel: typing.Union[discord.DMChannel, discord.TextChannel] = None,
+        other_recipients: typing.List[typing.Union[discord.Member, discord.User]] = [],
     ):
         self.manager = manager
         self.bot = manager.bot
@@ -45,6 +47,7 @@ class Thread:
                 raise CommandError("Recipient cannot be a bot.")
             self._id = recipient.id
             self._recipient = recipient
+        self._other_recipients = other_recipients
         self._channel = channel
         self.genesis_message = None
         self._ready_event = asyncio.Event()
@@ -54,7 +57,7 @@ class Thread:
         self._cancelled = False
 
     def __repr__(self):
-        return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id})'
+        return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipienets={len(self._other_recipients)})'
 
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
@@ -81,6 +84,10 @@ class Thread:
         return self._recipient
 
     @property
+    def recipients(self) -> typing.List[typing.Union[discord.User, discord.Member]]:
+        return [self._recipient] + self._other_recipients
+
+    @property
     def ready(self) -> bool:
         return self._ready_event.is_set()
 
@@ -102,6 +109,23 @@ class Thread:
         if flag:
             for i in self.wait_tasks:
                 i.cancel()
+
+    @classmethod
+    async def from_channel(
+        cls, manager: "ThreadManager", channel: discord.TextChannel
+    ) -> "Thread":
+        recipient_id = match_user_id(
+            channel.topic
+        )  # there is a chance it grabs from another recipient's main thread
+        recipient = manager.bot.get_user(recipient_id) or await manager.bot.fetch_user(
+            recipient_id
+        )
+
+        other_recipients = match_other_recipients(channel.topic)
+        for n, uid in enumerate(other_recipients):
+            other_recipients[n] = manager.bot.get_user(uid) or await manager.bot.fetch_user(uid)
+
+        return cls(manager, recipient or recipient_id, channel, other_recipients)
 
     async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
@@ -619,23 +643,30 @@ class Thread:
         except ValueError:
             raise ValueError("Malformed thread message.")
 
-        async for msg in self.recipient.history():
-            if either_direction:
-                if msg.id == joint_id:
-                    return message1, msg
+        messages = [message1]
+        for user in self.recipients:
+            async for msg in user.history():
+                if either_direction:
+                    if msg.id == joint_id:
+                        return message1, msg
 
-            if not (msg.embeds and msg.embeds[0].author.url):
-                continue
-            try:
-                if int(msg.embeds[0].author.url.split("#")[-1]) == joint_id:
-                    return message1, msg
-            except ValueError:
-                continue
-        raise ValueError("DM message not found. Plain messages are not supported.")
+                if not (msg.embeds and msg.embeds[0].author.url):
+                    continue
+                try:
+                    if int(msg.embeds[0].author.url.split("#")[-1]) == joint_id:
+                        messages.append(msg)
+                        break
+                except ValueError:
+                    continue
+
+        if len(messages) > 1:
+            return messages
+
+        raise ValueError("DM message not found.")
 
     async def edit_message(self, message_id: typing.Optional[int], message: str) -> None:
         try:
-            message1, message2 = await self.find_linked_messages(message_id)
+            message1, *message2 = await self.find_linked_messages(message_id)
         except ValueError:
             logger.warning("Failed to edit message.", exc_info=True)
             raise
@@ -644,10 +675,11 @@ class Thread:
         embed1.description = message
 
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
-        if message2 is not None:
-            embed2 = message2.embeds[0]
-            embed2.description = message
-            tasks += [message2.edit(embed=embed2)]
+        if message2 is not [None]:
+            for m2 in message2:
+                embed2 = message2.embeds[0]
+                embed2.description = message
+                tasks += [m2.edit(embed=embed2)]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.edit_note(message1.id, message)]
 
@@ -657,14 +689,16 @@ class Thread:
         self, message: typing.Union[int, discord.Message] = None, note: bool = True
     ) -> None:
         if isinstance(message, discord.Message):
-            message1, message2 = await self.find_linked_messages(message1=message, note=note)
+            message1, *message2 = await self.find_linked_messages(message1=message, note=note)
         else:
-            message1, message2 = await self.find_linked_messages(message, note=note)
+            message1, *message2 = await self.find_linked_messages(message, note=note)
+        print(message1, message2)
         tasks = []
         if not isinstance(message, discord.Message):
             tasks += [message1.delete()]
-        elif message2 is not None:
-            tasks += [message2.delete()]
+        elif message2 is not [None]:
+            for m2 in message2:
+                tasks += [m2.delete()]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.delete_note(message1.id)]
         if tasks:
@@ -750,16 +784,18 @@ class Thread:
                 )
             )
 
+        user_msg_tasks = []
         tasks = []
 
-        try:
-            user_msg = await self.send(
-                message,
-                destination=self.recipient,
-                from_mod=True,
-                anonymous=anonymous,
-                plain=plain,
+        for user in self.recipients:
+            user_msg_tasks.append(
+                self.send(
+                    message, destination=user, from_mod=True, anonymous=anonymous, plain=plain,
+                )
             )
+
+        try:
+            user_msg = await asyncio.gather(*user_msg_tasks)
         except Exception as e:
             logger.error("Message delivery failed:", exc_info=True)
             if isinstance(e, discord.Forbidden):
@@ -1063,9 +1099,23 @@ class Thread:
 
         return " ".join(mentions)
 
-    async def set_title(self, title) -> None:
+    async def set_title(self, title: str) -> None:
         user_id = match_user_id(self.channel.topic)
-        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}")
+        ids = ",".join(i.id for i in self._other_recipients)
+
+        await self.channel.edit(
+            topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}"
+        )
+
+    async def add_user(self, user: typing.Union[discord.Member, discord.User]) -> None:
+        title = match_title(self.channel.topic)
+        user_id = match_user_id(self.channel.topic)
+        self._other_recipients.append(user)
+
+        ids = ",".join(str(i.id) for i in self._other_recipients)
+        await self.channel.edit(
+            topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}"
+        )
 
 
 class ThreadManager:
@@ -1127,11 +1177,13 @@ class ThreadManager:
                     await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                     thread = None
         else:
-            channel = discord.utils.get(
-                self.bot.modmail_guild.text_channels, topic=f"User ID: {recipient_id}"
+            channel = discord.utils.find(
+                lambda x: str(recipient_id) in x.topic if x.topic else False,
+                self.bot.modmail_guild.text_channels,
             )
+
             if channel:
-                thread = Thread(self, recipient or recipient_id, channel)
+                thread = await Thread.from_channel(self, channel)
                 if thread.recipient:
                     # only save if data is valid
                     self.cache[recipient_id] = thread
@@ -1161,10 +1213,14 @@ class ThreadManager:
         except discord.NotFound:
             recipient = None
 
+        other_recipients = match_other_recipients(channel.topic)
+        for n, uid in enumerate(other_recipients):
+            other_recipients[n] = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
+
         if recipient is None:
-            thread = Thread(self, user_id, channel)
+            thread = Thread(self, user_id, channel, other_recipients)
         else:
-            self.cache[user_id] = thread = Thread(self, recipient, channel)
+            self.cache[user_id] = thread = Thread(self, recipient, channel, other_recipients)
         thread.ready = True
 
         return thread

@@ -21,7 +21,9 @@ __all__ = [
     "human_join",
     "days",
     "cleanup_code",
+    "match_title",
     "match_user_id",
+    "match_other_recipients",
     "create_not_found_embed",
     "parse_alias",
     "normalize_alias",
@@ -30,7 +32,6 @@ __all__ = [
     "escape_code_block",
     "format_channel_name",
     "tryint",
-    "match_title",
 ]
 
 
@@ -217,6 +218,9 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
+TOPIC_OTHER_RECIPIENTS_REGEX = re.compile(
+    r"Other Recipients:\s*((?:\d{17,21},*)+)", flags=re.IGNORECASE
+)
 TOPIC_TITLE_REGEX = re.compile(r"\bTitle: (.*)\n(?:User ID: )\b", flags=re.IGNORECASE | re.DOTALL)
 TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
 
@@ -258,6 +262,26 @@ def match_user_id(text: str) -> int:
     if match is not None:
         return int(match.group(1))
     return -1
+
+
+def match_other_recipients(text: str) -> int:
+    """
+    Matches a title in the format of "Other Recipients: XXXX,XXXX"
+
+    Parameters
+    ----------
+    text : str
+        The text of the user ID.
+
+    Returns
+    -------
+    Optional[str]
+        The title if found
+    """
+    match = TOPIC_OTHER_RECIPIENTS_REGEX.search(text)
+    if match is not None:
+        return list(map(int, match.group(1).split(",")))
+    return []
 
 
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
