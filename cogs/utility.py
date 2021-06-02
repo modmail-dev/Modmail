@@ -1780,7 +1780,6 @@ class Utility(commands.Cog):
             split_cmd = command.split(" ")
             for n in range(1, len(split_cmd) + 1):
                 if self.bot.get_command(" ".join(split_cmd[0:n])):
-                    print(self.bot.get_command(" ".join(split_cmd[0:n])))
                     valid = True
                     break
 

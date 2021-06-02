@@ -692,7 +692,6 @@ class Thread:
             message1, *message2 = await self.find_linked_messages(message1=message, note=note)
         else:
             message1, *message2 = await self.find_linked_messages(message, note=note)
-        print(message1, message2)
         tasks = []
         if not isinstance(message, discord.Message):
             tasks += [message1.delete()]
