@@ -502,22 +502,24 @@ class Thread:
         if self.bot.config["show_timestamp"]:
             embed.timestamp = datetime.utcnow()
 
-        if not message:
-            if self.id == closer.id:
-                message = self.bot.config["thread_self_close_response"]
-            else:
-                message = self.bot.config["thread_close_response"]
-
         message = self.bot.formatter.format(
             message, closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
         )
 
-        embed.description = message
         footer = self.bot.config["thread_close_footer"]
         embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
 
-        if not silent and self.recipient is not None:
-            tasks.append(self.recipient.send(embed=embed))
+        if not silent:
+            for user in self.recipients:
+                if not message:
+                    if user.id == closer.id:
+                        message = self.bot.config["thread_self_close_response"]
+                    else:
+                        message = self.bot.config["thread_close_response"]
+                    embed.description = message
+
+                if user is not None:
+                    tasks.append(user.send(embed=embed))
 
         if delete_channel:
             tasks.append(self.channel.delete())
