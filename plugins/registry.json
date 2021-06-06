@@ -154,7 +154,7 @@
     "suggest": {
         "repository": "realcyguy/modmail-plugins",
         "branch": "master",
-        "description": "Send suggestions to a selected server! It even has moderation...",
+        "description": "Send suggestions to a selected server! It has accepting, denying, and moderation-ing.",
         "bot_version": "3.4.1",
         "title": "Suggest stuff.",
         "icon_url": "https://i.imgur.com/qtE7AH8.png",
