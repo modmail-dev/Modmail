@@ -12,6 +12,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 - Ability to have group conversations. ([GH #143](https://github.com/kyb3r/modmail/issues/143))
 
+### Internal
+
+- `thread.reply` now returns mod_message, user_message1, user_message2... It is no longer limited at a size 2 tuple. Potentially breaking if plugins depend on this behaviour.
+
 ## Fixed
 
 - Certain situations where the internal thread cache breaks and spams new channels. ([GH #3022](https://github.com/kyb3r/modmail/issues/3022), [PR #3028](https://github.com/kyb3r/modmail/pull/3028))
