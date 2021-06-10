@@ -393,6 +393,7 @@ class Utility(commands.Cog):
                 os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"
             ),
             "r+",
+            encoding="utf-8",
         ) as f:
             logs = f.read().strip()
 
@@ -448,6 +449,7 @@ class Utility(commands.Cog):
                 os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"
             ),
             "rb+",
+            encoding="utf-8",
         ) as f:
             logs = BytesIO(f.read().strip())
 

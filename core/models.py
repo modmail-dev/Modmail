@@ -127,7 +127,7 @@ class FileFormatter(logging.Formatter):
 
 def configure_logging(name, level=None):
     global ch_debug, log_level
-    ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=48000, backupCount=1)
+    ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=48000, backupCount=1, encoding="utf-8")
 
     formatter_debug = FileFormatter(
         "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
