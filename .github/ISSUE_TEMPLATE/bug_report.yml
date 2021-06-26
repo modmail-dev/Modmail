@@ -27,15 +27,19 @@ body:
   - type: input
     id: logs
     attributes:
-      label: Error logs
+      label: Error Logs
       placeholder: https://hastebin.cc/placeholder
       description:
         "If your Modmail bot is online, type `@modmail debug hastebin` and include the link here.
+        
         If your Modmail bot is not online or the previous command did not generate a link, do the following:
 
-        1. Select your *bot* application at https://dashboard.heroku.com    
-        2. [Restart your bot](https://i.imgur.com/3FcrlKz.png)    
-        3. Reproduce the error to populate the error logs    
+        1. Select your *bot* application at https://dashboard.heroku.com
+        
+        2. [Restart your bot](https://i.imgur.com/3FcrlKz.png)
+        
+        3. Reproduce the error to populate the error logs
+        
         4. [Copy and paste the logs](https://i.imgur.com/TTrhitm.png)"
     validations:
       required: true
