@@ -305,9 +305,7 @@ class ApiClient:
     async def get_log_link(self, channel_id: Union[str, int]) -> str:
         return NotImplemented
 
-    async def create_log_entry(
-        self, recipient: Member, channel: TextChannel, creator: Member
-    ) -> str:
+    async def create_log_entry(self, recipient: Member, channel: TextChannel, creator: Member) -> str:
         return NotImplemented
 
     async def delete_log_entry(self, key: str) -> bool:
@@ -479,13 +477,9 @@ class MongoDBClient(ApiClient):
         prefix = self.bot.config["log_url_prefix"].strip("/")
         if prefix == "NONE":
             prefix = ""
-        return (
-            f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{doc['key']}"
-        )
+        return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{doc['key']}"
 
-    async def create_log_entry(
-        self, recipient: Member, channel: TextChannel, creator: Member
-    ) -> str:
+    async def create_log_entry(self, recipient: Member, channel: TextChannel, creator: Member) -> str:
         key = secrets.token_hex(6)
 
         await self.logs.insert_one(
@@ -536,9 +530,7 @@ class MongoDBClient(ApiClient):
 
     async def update_config(self, data: dict):
         toset = self.bot.config.filter_valid(data)
-        unset = self.bot.config.filter_valid(
-            {k: 1 for k in self.bot.config.all_keys if k not in data}
-        )
+        unset = self.bot.config.filter_valid({k: 1 for k in self.bot.config.all_keys if k not in data})
 
         if toset and unset:
             return await self.db.config.update_one(
@@ -635,17 +627,13 @@ class MongoDBClient(ApiClient):
 
     async def update_note_ids(self, ids: dict):
         for object_id, message_id in ids.items():
-            await self.db.notes.update_one(
-                {"_id": object_id}, {"$set": {"message_id": message_id}}
-            )
+            await self.db.notes.update_one({"_id": object_id}, {"$set": {"message_id": message_id}})
 
     async def delete_note(self, message_id: Union[int, str]):
         await self.db.notes.delete_one({"message_id": str(message_id)})
 
     async def edit_note(self, message_id: Union[int, str], message: str):
-        await self.db.notes.update_one(
-            {"message_id": str(message_id)}, {"$set": {"message": message}}
-        )
+        await self.db.notes.update_one({"message_id": str(message_id)}, {"$set": {"message": message}})
 
     def get_plugin_partition(self, cog):
         cls_name = cog.__class__.__name__
@@ -656,7 +644,11 @@ class MongoDBClient(ApiClient):
         data = await user.update_repository()
         return {
             "data": data,
-            "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,},
+            "user": {
+                "username": user.username,
+                "avatar_url": user.avatar_url,
+                "url": user.url,
+            },
         }
 
     async def get_user_info(self) -> dict:

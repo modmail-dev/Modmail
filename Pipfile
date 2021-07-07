@@ -6,7 +6,6 @@ verify_ssl = true
 [dev-packages]
 bandit = "~=1.7.0"
 black = "==21.6b0"
-flake8 = "~=3.9.2"
 pylint = "~=2.9.3"
 
 [packages]

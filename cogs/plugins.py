@@ -251,12 +251,8 @@ class Plugins(commands.Cog):
 
             if stderr:
                 logger.debug("[stderr]\n%s.", stderr.decode())
-                logger.error(
-                    "Failed to download requirements for %s.", plugin.ext_string, exc_info=True
-                )
-                raise InvalidPluginError(
-                    f"Unable to download requirements: ```\n{stderr.decode()}\n```"
-                )
+                logger.error("Failed to download requirements for %s.", plugin.ext_string, exc_info=True)
+                raise InvalidPluginError(f"Unable to download requirements: ```\n{stderr.decode()}\n```")
 
             if os.path.exists(USER_SITE):
                 sys.path.insert(0, USER_SITE)
@@ -347,9 +343,7 @@ class Plugins(commands.Cog):
             return
 
         if str(plugin) in self.bot.config["plugins"]:
-            embed = discord.Embed(
-                description="This plugin is already installed.", color=self.bot.error_color
-            )
+            embed = discord.Embed(description="This plugin is already installed.", color=self.bot.error_color)
             return await ctx.send(embed=embed)
 
         if plugin.name in self.bot.cogs:
@@ -433,9 +427,7 @@ class Plugins(commands.Cog):
             return
 
         if str(plugin) not in self.bot.config["plugins"]:
-            embed = discord.Embed(
-                description="Plugin is not installed.", color=self.bot.error_color
-            )
+            embed = discord.Embed(description="Plugin is not installed.", color=self.bot.error_color)
             return await ctx.send(embed=embed)
 
         if self.bot.config.get("enable_plugins"):
@@ -472,9 +464,7 @@ class Plugins(commands.Cog):
             return
 
         if str(plugin) not in self.bot.config["plugins"]:
-            embed = discord.Embed(
-                description="Plugin is not installed.", color=self.bot.error_color
-            )
+            embed = discord.Embed(description="Plugin is not installed.", color=self.bot.error_color)
             return await ctx.send(embed=embed)
 
         async with ctx.typing():
@@ -598,9 +588,7 @@ class Plugins(commands.Cog):
 
         embeds = []
         for page in pages:
-            embed = discord.Embed(
-                title="Loaded plugins:", description=page, color=self.bot.main_color
-            )
+            embed = discord.Embed(title="Loaded plugins:", description=page, color=self.bot.main_color)
             embeds.append(embed)
         paginator = EmbedPaginatorSession(ctx, *embeds)
         await paginator.run()
@@ -641,9 +629,7 @@ class Plugins(commands.Cog):
             matches = get_close_matches(plugin_name, self.registry.keys())
 
             if matches:
-                embed.add_field(
-                    name="Perhaps you meant:", value="\n".join(f"`{m}`" for m in matches)
-                )
+                embed.add_field(name="Perhaps you meant:", value="\n".join(f"`{m}`" for m in matches))
 
             return await ctx.send(embed=embed)
 
@@ -661,13 +647,9 @@ class Plugins(commands.Cog):
                 title=details["repository"],
             )
 
-            embed.add_field(
-                name="Installation", value=f"```{self.bot.prefix}plugins add {name}```"
-            )
+            embed.add_field(name="Installation", value=f"```{self.bot.prefix}plugins add {name}```")
 
-            embed.set_author(
-                name=details["title"], icon_url=details.get("icon_url"), url=plugin.link
-            )
+            embed.set_author(name=details["title"], icon_url=details.get("icon_url"), url=plugin.link)
 
             if details.get("thumbnail_url"):
                 embed.set_thumbnail(url=details.get("thumbnail_url"))
