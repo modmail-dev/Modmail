@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0700f9473d2588f168a63141ac5f44596d303e7a55db173968edddd0ace2e2ac"
+            "sha256": "0ffab0587a7d21d864d2c5a7a789e7c883caada73c9c23ff275877aad567729e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -279,7 +279,7 @@
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
                 "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==1.16.0"
         },
         "typing-extensions": {
@@ -420,7 +420,7 @@
                 "sha256:83510593e07e433b77bd5bff0f6f607dbafa06d1a89022616f02d8b699cfcd56",
                 "sha256:8e2c107091cfec7286bc0f68a547d0ba4c094d460b732075b6fba674f1035c0c"
             ],
-            "markers": "python_version < '4.0' and python_full_version >= '3.6.1'",
+            "markers": "python_full_version >= '3.6.1' and python_version < '4.0'",
             "version": "==5.9.1"
         },
         "lazy-object-proxy": {
@@ -590,7 +590,7 @@
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
                 "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==1.16.0"
         },
         "smmap": {
@@ -614,7 +614,7 @@
                 "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b",
                 "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==0.10.2"
         },
         "wrapt": {
