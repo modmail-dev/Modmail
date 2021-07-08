@@ -322,8 +322,9 @@ class Modmail(commands.Cog):
             silent_words = ["silent", "silently"]
             silent = any(word in silent_words for word in options.split())
 
-        await thread.channel.move(category=category, end=True, sync_permissions=True,
-                                  reason=f"{ctx.author} moved this thread.")
+        await thread.channel.move(
+            category=category, end=True, sync_permissions=True, reason=f"{ctx.author} moved this thread."
+        )
 
         if self.bot.config["thread_move_notify"] and not silent:
             embed = discord.Embed(

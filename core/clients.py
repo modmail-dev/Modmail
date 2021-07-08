@@ -377,7 +377,8 @@ class MongoDBClient(ApiClient):
         except ConfigurationError as e:
             logger.critical(
                 "Your MongoDB CONNECTION_URI might be copied wrong, try re-copying from the source again. "
-                "Otherwise noted in the following message:\n%s", e
+                "Otherwise noted in the following message:\n%s",
+                e,
             )
             sys.exit(0)
 

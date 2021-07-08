@@ -640,7 +640,7 @@ class ModmailBot(commands.Bot):
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
 
-        if name not in UNICODE_EMOJI['en']:
+        if name not in UNICODE_EMOJI["en"]:
             try:
                 name = await converter.convert(ctx, name.strip(":"))
             except commands.BadArgument as e:
