@@ -188,6 +188,13 @@ Real Madrid:
 <a href='https://discord.gg/realmadrid'>
   <img height=100 src='https://i.imgur.com/9Rat2Qb.png' style='margin:5px'>
 </a>
+<br>
+<br>
+Discord Advice Center:
+<br>
+<a href='https://discord.gg/nkMDQfuK'>
+  <img height=100 src='https://i.imgur.com/1hrjcHd.png' style='margin:5px'>
+</a>
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
