@@ -519,7 +519,7 @@ class ModmailBot(commands.Bot):
             await self.api.validate_database_connection()
         except Exception:
             logger.debug("Logging out due to failed database connection.")
-            return await self.logout()
+            return await self.close()
 
         logger.debug("Connected to gateway.")
         await self.config.refresh()
@@ -534,7 +534,7 @@ class ModmailBot(commands.Bot):
 
         if self.guild is None:
             logger.error("Logging out due to invalid GUILD_ID.")
-            return await self.logout()
+            return await self.close()
 
         logger.line()
         logger.debug("Client ready.")
@@ -640,7 +640,7 @@ class ModmailBot(commands.Bot):
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
 
-        if name not in UNICODE_EMOJI:
+        if name not in UNICODE_EMOJI['en']:
             try:
                 name = await converter.convert(ctx, name.strip(":"))
             except commands.BadArgument as e:
@@ -1607,7 +1607,7 @@ class ModmailBot(commands.Bot):
                         embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version}")
                         if self.config["update_notifications"]:
                             await channel.send(embed=embed)
-                    await self.logout()
+                    return await self.close()
 
     async def before_autoupdate(self):
         await self.wait_for_connected()

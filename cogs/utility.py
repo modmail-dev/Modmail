@@ -1990,7 +1990,7 @@ class Utility(commands.Cog):
                         )
 
                     await ctx.send(embed=embed)
-                    await self.bot.logout()
+                    return await self.bot.close()
                 else:
                     embed = discord.Embed(
                         title="Already up to date",
