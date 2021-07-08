@@ -356,18 +356,25 @@ class Utility(commands.Cog):
             inline=False,
         )
 
+        embed.add_field(
+            name="Project Sponsors",
+            value=f"Checkout the people who supported Modmail with command `{self.bot.prefix}sponsors`!",
+            inline=False,
+        )
+
         embed.set_footer(text=footer)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["sponsor"])
     @checks.has_permissions(PermissionLevel.REGULAR)
     @utils.trigger_typing
     async def sponsors(self, ctx):
-        """Shows a list of sponsors."""
-        resp = await self.bot.session.get(
+        """Shows the sponsors of this project."""
+
+        async with self.bot.session.get(
             "https://raw.githubusercontent.com/kyb3r/modmail/master/SPONSORS.json"
-        )
-        data = loads(await resp.text())
+        ) as resp:
+            data = loads(await resp.text())
 
         embeds = []
 

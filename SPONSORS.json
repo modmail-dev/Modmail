@@ -21,7 +21,7 @@
                     "value": "[**Click Here**](https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1)"
                 },
                 {
-                    "name": "Discord Server!",
+                    "name": "Discord Server",
                     "value": "[**Click Here**](https://discord.gg/V8ErqHb)"
                 }
             ]
@@ -37,7 +37,7 @@
             },
             "fields": [
                 {
-                    "name": "Discord Server!",
+                    "name": "Discord Server",
                     "value": "[**Click here**](https://discord.gg/BanCwptMJV)"
                 }
             ]
@@ -67,6 +67,26 @@
                 {
                     "name": "Discord Server",
                     "value": "[**Click Here**](https://discord.gg/cYM6Urn)"
+                }
+            ]
+        }
+    },
+    {
+        "embed": {
+            "description": "──── 《𝐃𝐢𝐬𝐜𝐨𝐫𝐝 𝐀𝐝𝐯𝐢𝐜𝐞 𝐂𝐞𝐧𝐭𝐞𝐫 》 ────\n\n◈ We are a server aimed to meet your discord needs. We have tools, tricks and tips to grow your server and advertise your server. We offer professional server reviews and suggestions how to run it successfully as a part of our courtesy. Join the server and get the chance to add our very own BUMP BOT called DAC Advertise where you can advertise your server to other servers!\n",
+            "color": 53380,
+            "author": {
+                "name": "Discord Advice Center",
+                "url": "https://discord.gg/nkMDQfuK",
+                "icon_url": "https://i.imgur.com/cjVtRw5.jpg"
+            },
+            "image": {
+                "url":  "https://i.imgur.com/1hrjcHd.png"
+            },
+            "fields": [
+                {
+                    "name": "Discord Server",
+                    "value": "[**Click Here**](https://discord.gg/nkMDQfuK)"
                 }
             ]
         }
