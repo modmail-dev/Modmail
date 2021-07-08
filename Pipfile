@@ -10,13 +10,14 @@ pylint = "~=2.9.3"
 
 [packages]
 aiohttp = "==3.7.4.post0"
-colorama = "~=0.4.4"
+colorama = "~=0.4.4"  # Doesn't officially support Python 3.9 yet, v0.4.5 will support 3.9
 "discord.py" = "==1.7.3"
 emoji = "~=1.2.0"
 isodate = "~=0.6.0"
 motor = "~=2.4.0"
 natural = "~=0.2.0"
 parsedatetime = "~=2.6"
+pymongo = {version = "*", extras = ['srv']}  # Required by motor
 python-dateutil = "~=2.8.1"
 python-dotenv = "~=0.18.0"
 uvloop = {version = ">=0.15.2", markers = "sys_platform != 'win32'"}
