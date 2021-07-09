@@ -192,7 +192,7 @@ Real Madrid:
 <br>
 Discord Advice Center:
 <br>
-<a href='https://discord.gg/nkMDQfuK'>
+<a href='https://discord.gg/zmwZy5fd9v'>
   <img height=100 src='https://i.imgur.com/1hrjcHd.png' style='margin:5px'>
 </a>
 
