@@ -417,10 +417,14 @@ class MongoDBClient(ApiClient):
                 if mongo_uri is None:
                     mongo_uri = self.bot.config["mongo_uri"]
                 for _ in range(3):
-                    logger.warning("FAILED TO VERIFY SSL CERTIFICATE, ATTEMPTING TO START WITHOUT SSL (UNSAFE).")
-                logger.warning("To fix this warning, check there's no proxies blocking SSL cert verification, "
-                               "run \"Certificate.command\" on MacOS, "
-                               "and check certifi is up to date \"pip3 install --upgrade certifi\".")
+                    logger.warning(
+                        "FAILED TO VERIFY SSL CERTIFICATE, ATTEMPTING TO START WITHOUT SSL (UNSAFE)."
+                    )
+                logger.warning(
+                    "To fix this warning, check there's no proxies blocking SSL cert verification, "
+                    'run "Certificate.command" on MacOS, '
+                    'and check certifi is up to date "pip3 install --upgrade certifi".'
+                )
                 self.db = AsyncIOMotorClient(mongo_uri, tlsAllowInvalidCertificates=True).modmail_bot
                 return await self.validate_database_connection(ssl_retry=False)
             if "ServerSelectionTimeoutError" in message:
