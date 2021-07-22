@@ -109,9 +109,7 @@ class Thread:
         recipient = self.recipient
 
         # in case it creates a channel outside of category
-        overwrites = {
-            self.bot.modmail_guild.default_role: discord.PermissionOverwrite(read_messages=False)
-        }
+        overwrites = {self.bot.modmail_guild.default_role: discord.PermissionOverwrite(read_messages=False)}
 
         category = category or self.bot.main_category
 
@@ -170,9 +168,7 @@ class Thread:
             mention = self.bot.config["mention"]
 
         async def send_genesis_message():
-            info_embed = self._format_info_embed(
-                recipient, log_url, log_count, self.bot.main_color
-            )
+            info_embed = self._format_info_embed(recipient, log_url, log_count, self.bot.main_color)
             try:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
@@ -238,9 +234,7 @@ class Thread:
                     "author": Author(),
                 }
                 message = discord.Message(state=State(), channel=None, data=data)
-                ids[note["_id"]] = str(
-                    (await self.note(message, persistent=True, thread_creation=True)).id
-                )
+                ids[note["_id"]] = str((await self.note(message, persistent=True, thread_creation=True)).id)
 
             await self.bot.api.update_note_ids(ids)
 
@@ -330,16 +324,12 @@ class Thread:
 
         mutual_guilds = [g for g in self.bot.guilds if user in g.members]
         if member is None or len(mutual_guilds) > 1:
-            embed.add_field(
-                name="Mutual Server(s)", value=", ".join(g.name for g in mutual_guilds)
-            )
+            embed.add_field(name="Mutual Server(s)", value=", ".join(g.name for g in mutual_guilds))
 
         return embed
 
     def _close_after(self, closer, silent, delete_channel, message):
-        return self.bot.loop.create_task(
-            self._close(closer, silent, delete_channel, message, True)
-        )
+        return self.bot.loop.create_task(self._close(closer, silent, delete_channel, message, True))
 
     async def close(
         self,
@@ -372,9 +362,7 @@ class Thread:
             self.bot.config["closures"][str(self.id)] = items
             await self.bot.config.update()
 
-            task = self.bot.loop.call_later(
-                after, self._close_after, closer, silent, delete_channel, message
-            )
+            task = self.bot.loop.call_later(after, self._close_after, closer, silent, delete_channel, message)
 
             if auto_close:
                 self.auto_close_task = task
@@ -383,9 +371,7 @@ class Thread:
         else:
             await self._close(closer, silent, delete_channel, message)
 
-    async def _close(
-        self, closer, silent=False, delete_channel=True, message=None, scheduled=False
-    ):
+    async def _close(self, closer, silent=False, delete_channel=True, message=None, scheduled=False):
         try:
             self.manager.cache.pop(self.id)
         except KeyError as e:
@@ -425,7 +411,9 @@ class Thread:
             prefix = self.bot.config["log_url_prefix"].strip("/")
             if prefix == "NONE":
                 prefix = ""
-            log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
+            log_url = (
+                f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
+            )
 
             if log_data["title"]:
                 sneak_peak = log_data["title"]
@@ -473,7 +461,8 @@ class Thread:
         # Thread closed message
 
         embed = discord.Embed(
-            title=self.bot.config["thread_close_title"], color=self.bot.error_color,
+            title=self.bot.config["thread_close_title"],
+            color=self.bot.error_color,
         )
         if self.bot.config["show_timestamp"]:
             embed.timestamp = datetime.utcnow()
@@ -531,9 +520,7 @@ class Thread:
         human_time = human_timedelta(dt=reset_time)
 
         if self.bot.config.get("thread_auto_close_silently"):
-            return await self.close(
-                closer=self.bot.user, silent=True, after=int(seconds), auto_close=True
-            )
+            return await self.close(closer=self.bot.user, silent=True, after=int(seconds), auto_close=True)
 
         # Grab message
         close_message = self.bot.formatter.format(
@@ -549,9 +536,7 @@ class Thread:
                 time_marker_regex,
             )
 
-        await self.close(
-            closer=self.bot.user, after=int(seconds), message=close_message, auto_close=True
-        )
+        await self.close(closer=self.bot.user, after=int(seconds), message=close_message, auto_close=True)
 
     async def find_linked_messages(
         self,
@@ -561,11 +546,7 @@ class Thread:
         note: bool = True,
     ) -> typing.Tuple[discord.Message, typing.Optional[discord.Message]]:
         if message1 is not None:
-            if (
-                not message1.embeds
-                or not message1.embeds[0].author.url
-                or message1.author != self.bot.user
-            ):
+            if not message1.embeds or not message1.embeds[0].author.url or message1.author != self.bot.user:
                 raise ValueError("Malformed thread message.")
 
         elif message_id is not None:
@@ -602,10 +583,7 @@ class Thread:
                     and message1.embeds[0].color
                     and (
                         message1.embeds[0].color.value == self.bot.mod_color
-                        or (
-                            either_direction
-                            and message1.embeds[0].color.value == self.bot.recipient_color
-                        )
+                        or (either_direction and message1.embeds[0].color.value == self.bot.recipient_color)
                     )
                     and message1.embeds[0].author.url.split("#")[-1].isdigit()
                     and message1.author == self.bot.user
@@ -710,13 +688,9 @@ class Thread:
         embed = linked_message.embeds[0]
         embed.add_field(name="**Edited, former message:**", value=embed.description)
         embed.description = content
-        await asyncio.gather(
-            self.bot.api.edit_message(message.id, content), linked_message.edit(embed=embed)
-        )
+        await asyncio.gather(self.bot.api.edit_message(message.id, content), linked_message.edit(embed=embed))
 
-    async def note(
-        self, message: discord.Message, persistent=False, thread_creation=False
-    ) -> None:
+    async def note(self, message: discord.Message, persistent=False, thread_creation=False) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
@@ -729,16 +703,12 @@ class Thread:
         )
 
         self.bot.loop.create_task(
-            self.bot.api.append_log(
-                message, message_id=msg.id, channel_id=self.channel.id, type_="system"
-            )
+            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="system")
         )
 
         return msg
 
-    async def reply(
-        self, message: discord.Message, anonymous: bool = False, plain: bool = False
-    ) -> None:
+    async def reply(self, message: discord.Message, anonymous: bool = False, plain: bool = False) -> None:
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
         if not any(g.get_member(self.id) for g in self.bot.guilds):
@@ -777,7 +747,10 @@ class Thread:
                 )
             tasks.append(
                 message.channel.send(
-                    embed=discord.Embed(color=self.bot.error_color, description=description,)
+                    embed=discord.Embed(
+                        color=self.bot.error_color,
+                        description=description,
+                    )
                 )
             )
         else:
@@ -825,9 +798,7 @@ class Thread:
         thread_creation: bool = False,
     ) -> None:
 
-        self.bot.loop.create_task(
-            self._restart_close_timer()
-        )  # Start or restart thread auto close
+        self.bot.loop.create_task(self._restart_close_timer())  # Start or restart thread auto close
 
         if self.close_task is not None:
             # cancel closing if a thread message is sent.
@@ -967,9 +938,7 @@ class Thread:
         file_upload_count = 1
 
         for url, filename, _ in attachments:
-            embed.add_field(
-                name=f"File upload ({file_upload_count})", value=f"[{filename}]({url})"
-            )
+            embed.add_field(name=f"File upload ({file_upload_count})", value=f"[{filename}]({url})")
             file_upload_count += 1
 
         if from_mod:
@@ -1028,9 +997,7 @@ class Thread:
                 files = []
                 for i in embed.fields:
                     if "Image" in i.name:
-                        async with self.bot.session.get(
-                            i.field[i.field.find("http") : -1]
-                        ) as resp:
+                        async with self.bot.session.get(i.field[i.field.find("http") : -1]) as resp:
                             stream = io.BytesIO(await resp.read())
                             files.append(discord.File(stream))
 
@@ -1119,9 +1086,7 @@ class ThreadManager:
                 return thread
             else:
                 if not thread.channel or not self.bot.get_channel(thread.channel.id):
-                    logger.warning(
-                        "Found existing thread for %s but the channel is invalid.", recipient_id
-                    )
+                    logger.warning("Found existing thread for %s but the channel is invalid.", recipient_id)
                     self.bot.loop.create_task(
                         thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                     )
@@ -1192,9 +1157,7 @@ class ThreadManager:
                 if thread.channel and self.bot.get_channel(thread.channel.id):
                     logger.warning("Found an existing thread for %s, abort creating.", recipient)
                     return thread
-                logger.warning(
-                    "Found an existing thread for %s, closing previous thread.", recipient
-                )
+                logger.warning("Found an existing thread for %s, closing previous thread.", recipient)
                 self.bot.loop.create_task(
                     thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                 )
@@ -1263,15 +1226,11 @@ class ThreadManager:
                     await confirm.remove_reaction(accept_emoji, self.bot.user)
                     await asyncio.sleep(0.2)
                     await confirm.remove_reaction(deny_emoji, self.bot.user)
-                    await destination.send(
-                        embed=discord.Embed(title="Cancelled", color=self.bot.error_color)
-                    )
+                    await destination.send(embed=discord.Embed(title="Cancelled", color=self.bot.error_color))
                     del self.cache[recipient.id]
                     return thread
 
-        self.bot.loop.create_task(
-            thread.setup(creator=creator, category=category, initial_message=message)
-        )
+        self.bot.loop.create_task(thread.setup(creator=creator, category=category, initial_message=message))
         return thread
 
     async def find_or_create(self, recipient) -> Thread:
