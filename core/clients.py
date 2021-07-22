@@ -321,12 +321,7 @@ class ApiClient:
         return NotImplemented
 
     async def append_log(
-        self,
-        message: Message,
-        *,
-        message_id: str = "",
-        channel_id: str = "",
-        type_: str = "thread_message",
+        self, message: Message, *, message_id: str = "", channel_id: str = "", type_: str = "thread_message",
     ) -> dict:
         return NotImplemented
 
@@ -548,12 +543,7 @@ class MongoDBClient(ApiClient):
         )
 
     async def append_log(
-        self,
-        message: Message,
-        *,
-        message_id: str = "",
-        channel_id: str = "",
-        type_: str = "thread_message",
+        self, message: Message, *, message_id: str = "", channel_id: str = "", type_: str = "thread_message",
     ) -> dict:
         channel_id = str(channel_id) or str(message.channel.id)
         message_id = str(message_id) or str(message.id)
@@ -599,11 +589,7 @@ class MongoDBClient(ApiClient):
 
     async def search_by_text(self, text: str, limit: Optional[int]):
         return await self.bot.db.logs.find(
-            {
-                "guild_id": str(self.bot.guild_id),
-                "open": False,
-                "$text": {"$search": f'"{text}"'},
-            },
+            {"guild_id": str(self.bot.guild_id), "open": False, "$text": {"$search": f'"{text}"'},},
             {"messages": {"$slice": 5}},
         ).to_list(limit)
 
@@ -644,11 +630,7 @@ class MongoDBClient(ApiClient):
         data = await user.update_repository()
         return {
             "data": data,
-            "user": {
-                "username": user.username,
-                "avatar_url": user.avatar_url,
-                "url": user.url,
-            },
+            "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,},
         }
 
     async def get_user_info(self) -> dict:
@@ -657,13 +639,7 @@ class MongoDBClient(ApiClient):
         except InvalidConfigError:
             return None
         else:
-            return {
-                "user": {
-                    "username": user.username,
-                    "avatar_url": user.avatar_url,
-                    "url": user.url,
-                }
-            }
+            return {"user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,}}
 
 
 class PluginDatabaseClient:

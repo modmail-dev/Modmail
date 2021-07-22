@@ -89,9 +89,7 @@ class Version:
         """
         embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
-            name=f"v{self.version} - Changelog",
-            icon_url=self.bot.user.avatar_url,
-            url=self.url,
+            name=f"v{self.version} - Changelog", icon_url=self.bot.user.avatar_url, url=self.url,
         )
 
         for name, value in self.fields.items():
@@ -170,11 +168,7 @@ class Changelog:
             The newly created `Changelog` parsed from the `url`.
         """
         # get branch via git cli if available
-        proc = await asyncio.create_subprocess_shell(
-            "git branch --show-current",
-            stderr=PIPE,
-            stdout=PIPE,
-        )
+        proc = await asyncio.create_subprocess_shell("git branch --show-current", stderr=PIPE, stdout=PIPE,)
         err = await proc.stderr.read()
         err = err.decode("utf-8").rstrip()
         res = await proc.stdout.read()

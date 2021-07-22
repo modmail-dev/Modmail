@@ -181,9 +181,7 @@ class Thread:
             thread_creation_response = self.bot.config["thread_creation_response"]
 
             embed = discord.Embed(
-                color=self.bot.mod_color,
-                description=thread_creation_response,
-                timestamp=channel.created_at,
+                color=self.bot.mod_color, description=thread_creation_response, timestamp=channel.created_at,
             )
 
             recipient_thread_close = self.bot.config.get("recipient_thread_close")
@@ -460,10 +458,7 @@ class Thread:
 
         # Thread closed message
 
-        embed = discord.Embed(
-            title=self.bot.config["thread_close_title"],
-            color=self.bot.error_color,
-        )
+        embed = discord.Embed(title=self.bot.config["thread_close_title"], color=self.bot.error_color,)
         if self.bot.config["show_timestamp"]:
             embed.timestamp = datetime.utcnow()
 
@@ -695,11 +690,7 @@ class Thread:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
 
         msg = await self.send(
-            message,
-            self.channel,
-            note=True,
-            persistent_note=persistent,
-            thread_creation=thread_creation,
+            message, self.channel, note=True, persistent_note=persistent, thread_creation=thread_creation,
         )
 
         self.bot.loop.create_task(
@@ -724,11 +715,7 @@ class Thread:
 
         try:
             user_msg = await self.send(
-                message,
-                destination=self.recipient,
-                from_mod=True,
-                anonymous=anonymous,
-                plain=plain,
+                message, destination=self.recipient, from_mod=True, anonymous=anonymous, plain=plain,
             )
         except Exception as e:
             logger.error("Message delivery failed:", exc_info=True)
@@ -747,10 +734,7 @@ class Thread:
                 )
             tasks.append(
                 message.channel.send(
-                    embed=discord.Embed(
-                        color=self.bot.error_color,
-                        description=description,
-                    )
+                    embed=discord.Embed(color=self.bot.error_color, description=description,)
                 )
             )
         else:
@@ -774,8 +758,7 @@ class Thread:
                 tasks.append(
                     self.channel.send(
                         embed=discord.Embed(
-                            color=self.bot.error_color,
-                            description="Scheduled close has been cancelled.",
+                            color=self.bot.error_color, description="Scheduled close has been cancelled.",
                         )
                     )
                 )
@@ -806,8 +789,7 @@ class Thread:
             self.bot.loop.create_task(
                 self.channel.send(
                     embed=discord.Embed(
-                        color=self.bot.error_color,
-                        description="Scheduled close has been cancelled.",
+                        color=self.bot.error_color, description="Scheduled close has been cancelled.",
                     )
                 )
             )
