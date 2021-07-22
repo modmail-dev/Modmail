@@ -405,14 +405,24 @@ class MongoDBClient(ApiClient):
             )
         logger.debug("Successfully configured and verified database indexes.")
 
-    async def validate_database_connection(self):
+    async def validate_database_connection(self, *, ssl_retry=True):
         try:
             await self.db.command("buildinfo")
         except Exception as exc:
             logger.critical("Something went wrong while connecting to the database.")
             message = f"{type(exc).__name__}: {str(exc)}"
             logger.critical(message)
-
+            if "CERTIFICATE_VERIFY_FAILED" in message and ssl_retry:
+                mongo_uri = self.bot.config["connection_uri"]
+                if mongo_uri is None:
+                    mongo_uri = self.bot.config["mongo_uri"]
+                for _ in range(3):
+                    logger.warning("FAILED TO VERIFY SSL CERTIFICATE, ATTEMPTING TO START WITHOUT SSL (UNSAFE).")
+                logger.warning("To fix this warning, check there's no proxies blocking SSL cert verification, "
+                               "run \"Certificate.command\" on MacOS, "
+                               "and check certifi is up to date \"pip3 install --upgrade certifi\".")
+                self.db = AsyncIOMotorClient(mongo_uri, tlsAllowInvalidCertificates=True).modmail_bot
+                return await self.validate_database_connection(ssl_retry=False)
             if "ServerSelectionTimeoutError" in message:
                 logger.critical(
                     "This may have been caused by not whitelisting "
