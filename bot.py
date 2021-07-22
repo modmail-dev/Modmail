@@ -506,7 +506,8 @@ class ModmailBot(commands.Bot):
             logger.debug("Command %s not found.", command_name)
             return PermissionLevel.INVALID
         level = next(
-            (check.permission_level for check in command.checks if hasattr(check, "permission_level")), None,
+            (check.permission_level for check in command.checks if hasattr(check, "permission_level")),
+            None,
         )
         if level is None:
             logger.debug("Command %s does not have a permission level.", command_name)
@@ -609,7 +610,13 @@ class ModmailBot(commands.Bot):
 
         if self.config.get("data_collection"):
             self.metadata_loop = tasks.Loop(
-                self.post_metadata, seconds=0, minutes=0, hours=1, count=None, reconnect=True, loop=None,
+                self.post_metadata,
+                seconds=0,
+                minutes=0,
+                hours=1,
+                count=None,
+                reconnect=True,
+                loop=None,
             )
             self.metadata_loop.before_loop(self.before_post_metadata)
             self.metadata_loop.start()
@@ -762,7 +769,8 @@ class ModmailBot(commands.Bot):
             end_time = re.search(r"%([^%]+?)%", blocked_reason)
             if end_time is not None:
                 logger.warning(
-                    r"Deprecated time message for user %s, block and unblock again to update.", author.name,
+                    r"Deprecated time message for user %s, block and unblock again to update.",
+                    author.name,
                 )
 
         if end_time is not None:
@@ -783,7 +791,11 @@ class ModmailBot(commands.Bot):
         return False
 
     async def is_blocked(
-        self, author: discord.User, *, channel: discord.TextChannel = None, send_message: bool = False,
+        self,
+        author: discord.User,
+        *,
+        channel: discord.TextChannel = None,
+        send_message: bool = False,
     ) -> typing.Tuple[bool, str]:
 
         member = self.guild.get_member(author.id)
@@ -814,7 +826,9 @@ class ModmailBot(commands.Bot):
                 if send_message:
                     await channel.send(
                         embed=discord.Embed(
-                            title="Message not sent!", description=new_reason, color=self.error_color,
+                            title="Message not sent!",
+                            description=new_reason,
+                            color=self.error_color,
                         )
                     )
             return True
@@ -913,7 +927,8 @@ class ModmailBot(commands.Bot):
                     description=self.config["disabled_current_thread_response"],
                 )
                 embed.set_footer(
-                    text=self.config["disabled_current_thread_footer"], icon_url=self.guild.icon_url,
+                    text=self.config["disabled_current_thread_footer"],
+                    icon_url=self.guild.icon_url,
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -1274,14 +1289,18 @@ class ModmailBot(commands.Bot):
                         await message.remove_reaction(payload.emoji, member)
                         await message.add_reaction(emoji_fmt)  # bot adds as well
 
-                        if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS,):
+                        if self.config["dm_disabled"] in (
+                            DMDisabled.NEW_THREADS,
+                            DMDisabled.ALL_THREADS,
+                        ):
                             embed = discord.Embed(
                                 title=self.config["disabled_new_thread_title"],
                                 color=self.error_color,
                                 description=self.config["disabled_new_thread_response"],
                             )
                             embed.set_footer(
-                                text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon_url,
+                                text=self.config["disabled_new_thread_footer"],
+                                icon_url=self.guild.icon_url,
                             )
                             logger.info(
                                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
@@ -1340,7 +1359,9 @@ class ModmailBot(commands.Bot):
         if thread:
             if self.config["close_on_leave"]:
                 await thread.close(
-                    closer=member.guild.me, message=self.config["close_on_leave_reason"], silent=True,
+                    closer=member.guild.me,
+                    message=self.config["close_on_leave_reason"],
+                    silent=True,
                 )
             else:
                 embed = discord.Embed(
@@ -1523,7 +1544,9 @@ class ModmailBot(commands.Bot):
                 commit_data = data["data"]
                 user = data["user"]
                 embed.set_author(
-                    name=user["username"] + " - Updating Bot", icon_url=user["avatar_url"], url=user["url"],
+                    name=user["username"] + " - Updating Bot",
+                    icon_url=user["avatar_url"],
+                    url=user["url"],
                 )
 
                 embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version}")
@@ -1552,7 +1575,11 @@ class ModmailBot(commands.Bot):
                     pass
 
                 command = "git pull"
-                proc = await asyncio.create_subprocess_shell(command, stderr=PIPE, stdout=PIPE,)
+                proc = await asyncio.create_subprocess_shell(
+                    command,
+                    stderr=PIPE,
+                    stdout=PIPE,
+                )
                 err = await proc.stderr.read()
                 err = err.decode("utf-8").rstrip()
                 res = await proc.stdout.read()

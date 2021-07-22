@@ -159,7 +159,9 @@ class Plugins(commands.Cog):
             except Exception:
                 self.bot.config["plugins"].remove(plugin_name)
                 logger.error(
-                    "Error when loading plugin %s. Plugin removed from config.", plugin, exc_info=True,
+                    "Error when loading plugin %s. Plugin removed from config.",
+                    plugin,
+                    exc_info=True,
                 )
                 continue
 
@@ -276,7 +278,8 @@ class Plugins(commands.Cog):
 
         if not self._ready_event.is_set():
             embed = discord.Embed(
-                description="Plugins are still loading, please try again later.", color=self.bot.main_color,
+                description="Plugins are still loading, please try again later.",
+                color=self.bot.main_color,
             )
             await ctx.send(embed=embed)
             return
@@ -346,17 +349,20 @@ class Plugins(commands.Cog):
         if plugin.name in self.bot.cogs:
             # another class with the same name
             embed = discord.Embed(
-                description="Cannot install this plugin (dupe cog name).", color=self.bot.error_color,
+                description="Cannot install this plugin (dupe cog name).",
+                color=self.bot.error_color,
             )
             return await ctx.send(embed=embed)
 
         if plugin.local:
             embed = discord.Embed(
-                description=f"Starting to load local plugin from {plugin.link}...", color=self.bot.main_color,
+                description=f"Starting to load local plugin from {plugin.link}...",
+                color=self.bot.main_color,
             )
         else:
             embed = discord.Embed(
-                description=f"Starting to download plugin from {plugin.link}...", color=self.bot.main_color,
+                description=f"Starting to download plugin from {plugin.link}...",
+                color=self.bot.main_color,
             )
         msg = await ctx.send(embed=embed)
 
@@ -556,7 +562,8 @@ class Plugins(commands.Cog):
 
         if not self._ready_event.is_set():
             embed = discord.Embed(
-                description="Plugins are still loading, please try again later.", color=self.bot.main_color,
+                description="Plugins are still loading, please try again later.",
+                color=self.bot.main_color,
             )
             return await ctx.send(embed=embed)
 

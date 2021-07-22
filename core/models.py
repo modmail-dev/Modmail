@@ -87,7 +87,9 @@ class ModmailLogger(logging.Logger):
             level = logging.INFO
         if self.isEnabledFor(level):
             self._log(
-                level, Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL, [],
+                level,
+                Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL,
+                [],
             )
 
 
@@ -128,7 +130,8 @@ def configure_logging(name, level=None):
     ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=78000, backupCount=10)
 
     formatter_debug = FileFormatter(
-        "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S",
+        "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     ch_debug.setFormatter(formatter_debug)
     ch_debug.setLevel(logging.DEBUG)
