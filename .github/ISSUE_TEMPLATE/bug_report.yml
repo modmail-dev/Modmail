@@ -8,7 +8,7 @@ body:
     attributes:
       label: Bot Version
       description: Check it with `@modmail about`
-      placeholder: eg. v3.9.4
+      placeholder: eg. v4.20.69
     validations:
       required: true
   - type: dropdown
