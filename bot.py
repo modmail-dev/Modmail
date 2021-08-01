@@ -122,12 +122,9 @@ class ModmailBot(commands.Bot):
 
     def startup(self):
         logger.line()
-        if os.name != "nt":
-            logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
-            logger.info("││││ │ │││││├─┤││")
-            logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
-        else:
-            logger.info("MODMAIL")
+        logger.info("┌┬┐┌─┐┌┬┐┌┬┐┌─┐┬┬")
+        logger.info("││││ │ │││││├─┤││")
+        logger.info("┴ ┴└─┘─┴┘┴ ┴┴ ┴┴┴─┘")
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
@@ -659,7 +656,7 @@ class ModmailBot(commands.Bot):
             try:
                 name = await converter.convert(ctx, name.strip(":"))
             except commands.BadArgument as e:
-                logger.warning("%s is not a valid emoji. %s.", e)
+                logger.warning("%s is not a valid emoji. %s.", name, e)
                 raise
         return name
 
