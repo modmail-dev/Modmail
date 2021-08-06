@@ -19,6 +19,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Blocked users are now no longer allowed to use `?contact` and react to contact. ([COMMENT #819004157](https://github.com/kyb3r/modmail/issues/2969#issuecomment-819004157), [PR #3027](https://github.com/kyb3r/modmail/pull/3027))
 - UnicodeEncodeError will no longer be raised on Windows. ([PR #3043](https://github.com/kyb3r/modmail/pull/3043))
 - Notifications are no longer duplicated when using both `?notify` and `subscribe`. ([PR #3015](https://github.com/kyb3r/modmail/pull/3015))
+- `?contact` now works properly with both category and silent. ([GH #3076](https://github.com/kyb3r/modmail/issues/3076))
 
 ## Internal
 
