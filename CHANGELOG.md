@@ -21,6 +21,14 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Certain situations where the internal thread cache breaks and spams new channels. ([GH #3022](https://github.com/kyb3r/modmail/issues/3022), [PR #3028](https://github.com/kyb3r/modmail/pull/3028))
 - Blocked users are now no longer allowed to use `?contact` and react to contact. ([COMMENT #819004157](https://github.com/kyb3r/modmail/issues/2969#issuecomment-819004157), [PR #3027](https://github.com/kyb3r/modmail/pull/3027))
 
+# v3.9.5
+
+## Internal
+
+- Bumped discord.py to v1.7.3, updated all other packages to latest.
+- More debug log files are now kept.
+- Resolve SSL errors by retrying without SSL
+
 # v3.9.4
 
 ## Fixed

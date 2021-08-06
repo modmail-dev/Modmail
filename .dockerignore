@@ -140,17 +140,11 @@ test.py
 # Other stuff
 .env.example
 .gitignore
-.lint.py
-.pylintrc
-.travis.yml
+.github/
 app.json
 CHANGELOG.md
-CODE_OF_CONDUCT.md
-CONTRIBUTING.md
-requirements.min.txt
 Procfile
 pyproject.toml
 README.md
-runtime.txt
-SPONSORS.json
-stack.yml
+Pipfile
+Pipfile.lock

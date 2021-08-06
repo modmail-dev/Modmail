@@ -1,0 +1,55 @@
+name: Bug Report
+description: File a bug report
+title: "[BUG]: your bug report title"
+labels: "maybe: bug"
+body:
+  - type: input
+    id: bot-info-version
+    attributes:
+      label: Bot Version
+      description: Check it with `@modmail about`
+      placeholder: eg. v3.9.4
+    validations:
+      required: true
+  - type: dropdown
+    id: bot-info-hosting
+    attributes:
+      label: How are you hosting Modmail?
+      description: You can check it with `@modmail about` if you are unsure
+      options:
+        - Heroku
+        - Systemd
+        - PM2
+        - Patreon
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: logs
+    attributes:
+      label: Error Logs
+      placeholder: https://hastebin.cc/placeholder
+      description:
+        "If your Modmail bot is online, type `@modmail debug hastebin` and include the link here.
+        
+        If your Modmail bot is not online or the previous command did not generate a link, do the following:
+
+        1. Select your *bot* application at https://dashboard.heroku.com
+        
+        2. [Restart your bot](https://i.imgur.com/3FcrlKz.png)
+        
+        3. Reproduce the error to populate the error logs
+        
+        4. [Copy and paste the logs](https://i.imgur.com/TTrhitm.png)"
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: "[optional] You may add screenshots to further explain your problem."
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: "[optional] You may provide additional context for us to better understand how this issue occured."
