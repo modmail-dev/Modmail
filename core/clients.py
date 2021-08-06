@@ -68,7 +68,7 @@ class GitHub:
     def __init__(self, bot, access_token: str = "", username: str = "", **kwargs):
         self.bot = bot
         self.session = bot.session
-        self.headers: dict = None
+        self.headers: Optional[dict] = None
         self.access_token = access_token
         self.username = username
         self.avatar_url: str = kwargs.pop("avatar_url", "")
@@ -317,7 +317,7 @@ class ApiClient:
     async def update_config(self, data: dict):
         return NotImplemented
 
-    async def edit_message(self, message_id: Union[int, str], new_content: str) -> None:
+    async def edit_message(self, message_id: Union[int, str], new_content: str):
         return NotImplemented
 
     async def append_log(
@@ -355,6 +355,12 @@ class ApiClient:
         return NotImplemented
 
     def get_plugin_partition(self, cog):
+        return NotImplemented
+
+    async def update_repository(self) -> dict:
+        return NotImplemented
+
+    async def get_user_info(self) -> Optional[dict]:
         return NotImplemented
 
 
@@ -665,7 +671,7 @@ class MongoDBClient(ApiClient):
             },
         }
 
-    async def get_user_info(self) -> dict:
+    async def get_user_info(self) -> Optional[dict]:
         try:
             user = await GitHub.login(self.bot)
         except InvalidConfigError:

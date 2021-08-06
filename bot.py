@@ -238,6 +238,7 @@ class ModmailBot(commands.Bot):
                 if self._session:
                     await self._session.close()
 
+        # noinspection PyUnusedLocal
         def stop_loop_on_completion(f):
             loop.stop()
 
@@ -797,7 +798,7 @@ class ModmailBot(commands.Bot):
         *,
         channel: discord.TextChannel = None,
         send_message: bool = False,
-    ) -> typing.Tuple[bool, str]:
+    ) -> bool:
 
         member = self.guild.get_member(author.id)
         if member is None:
@@ -876,7 +877,9 @@ class ModmailBot(commands.Bot):
         return
 
     @staticmethod
-    async def add_reaction(msg, reaction: discord.Reaction) -> bool:
+    async def add_reaction(
+        msg, reaction: typing.Union[discord.Emoji, discord.Reaction, discord.PartialEmoji, str]
+    ) -> bool:
         if reaction != "disable":
             try:
                 await msg.add_reaction(reaction)
