@@ -1472,7 +1472,7 @@ class ModmailBot(commands.Bot):
         logger.error("Unexpected exception:", exc_info=sys.exc_info())
 
     async def on_command_error(self, context, exception):
-        if isinstance(exception, commands.BadArgument):
+        if isinstance(exception, (commands.BadArgument, commands.BadUnionArgument)):
             await context.trigger_typing()
             await context.send(embed=discord.Embed(color=self.error_color, description=str(exception)))
         elif isinstance(exception, commands.CommandNotFound):
