@@ -1028,7 +1028,7 @@ class Thread:
             self.bot.config["notification_squad"].pop(key)
             self.bot.loop.create_task(self.bot.config.update())
 
-        return " ".join(mentions)
+        return " ".join(set(mentions))
 
     async def set_title(self, title) -> None:
         user_id = match_user_id(self.channel.topic)
