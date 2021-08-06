@@ -1132,11 +1132,9 @@ class ModmailBot(commands.Bot):
             cmd = message.content[len(self.prefix) :].strip()
 
             # Process snippets
-            try:
-                snippet = self.snippets[cmd.lower()]
-            except KeyError:
-                pass
-            else:
+            cmd = cmd.lower()
+            if cmd in self.snippets:
+                snippet = self.snippets[cmd]
                 if self.config["anonymous_snippets"]:
                     message.content = f"{self.prefix}fareply {snippet}"
                 else:
