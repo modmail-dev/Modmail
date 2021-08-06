@@ -1,4 +1,31 @@
 {
+    "close_message": {
+        "repository": "python-discord/modmail-plugins",
+        "branch": "main",
+        "description": "Add a ?closemessage command that will close the thread after 15 minutes with a default message.",
+        "bot_version": "2.20.1",
+        "title": "Close message",
+        "icon_url": "https://i.imgur.com/ev7BFMz.png",
+        "thumbnail_url": "https://i.imgur.com/ev7BFMz.png"
+    },
+    "mdlink": {
+        "repository": "python-discord/modmail-plugins",
+        "branch": "main",
+        "description": "Generate a ready to paste link to the thread logs.",
+        "bot_version": "2.20.1",
+        "title": "MDLink",
+        "icon_url": "https://i.imgur.com/JA2E63R.png",
+        "thumbnail_url": "https://i.imgur.com/JA2E63R.png"
+    },
+    "reply_cooldown": {
+        "repository": "python-discord/modmail-plugins",
+        "branch": "main",
+        "description": "Forbid you from sending the same message twice in ten seconds.",
+        "bot_version": "2.20.1",
+        "title": "Reply cooldown",
+        "icon_url": "https://i.imgur.com/FtRQveT.png",
+        "thumbnail_url": "https://i.imgur.com/FtRQveT.png"
+    },
     "dragory-migrate": {
         "repository": "kyb3r/modmail-plugins",
         "branch": "master",
