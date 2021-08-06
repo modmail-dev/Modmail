@@ -1145,6 +1145,7 @@ class ModmailBot(commands.Bot):
             cmd = message.content[len(self.prefix) :].strip()
 
             # Process snippets
+            cmd = cmd.lower()
             if cmd in self.snippets:
                 snippet = self.snippets[cmd]
                 if self.config["anonymous_snippets"]:
