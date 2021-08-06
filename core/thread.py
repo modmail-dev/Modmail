@@ -60,7 +60,9 @@ class Thread:
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
 
     def __eq__(self, other):
-        return self.id == other.id
+        if isinstance(other, Thread):
+            return self.id == other.id
+        return super().__eq__(other)
 
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
@@ -1089,23 +1091,22 @@ class Thread:
 
         await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
 
-    async def add_user(self, user: typing.Union[discord.Member, discord.User]) -> None:
+    async def add_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
         title = match_title(self.channel.topic)
         user_id = match_user_id(self.channel.topic)
-        self._other_recipients.append(user)
+        self._other_recipients += users
 
         ids = ",".join(str(i.id) for i in self._other_recipients)
         await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
 
-    async def remove_user(self, user: typing.Union[discord.Member, discord.User]) -> None:
+    async def remove_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
         title = match_title(self.channel.topic)
         user_id = match_user_id(self.channel.topic)
-        self._other_recipients.remove(user)
+        for u in users:
+            self._other_recipients.remove(u)
 
         ids = ",".join(str(i.id) for i in self._other_recipients)
         await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
-        # if user.id in self.manager.cache:
-        #     self.manager.cache.pop(self.id)
 
 
 class ThreadManager:

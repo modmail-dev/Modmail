@@ -711,6 +711,150 @@
       "See also: `anon_avatar_url`, `anon_tag`."
     ]
   },
+  "private_added_to_group_title": {
+    "default": "New Thread (Group)",
+    "description": "This is the message embed title sent to the recipient that is just added to a thread.",
+    "examples": [
+      "`{prefix}config set private_added_to_group_title Welcome to this new group thread!`"
+    ],
+    "notes": [
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_added_to_group_description`, `public_added_to_group_title`"
+    ]
+  },
+  "private_added_to_group_description": {
+    "default": "\"{{moderator.name}} has added you to a Modmail thread.\"",
+    "description": "This is the message embed content sent to the recipient that is just added to a thread.",
+    "examples": [
+      "`{prefix}config set private_added_to_group_description Any message sent here will be sent to all otherthread recipients.`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonadduser is used, `private_added_to_group_description_anon` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_added_to_group_title`, `public_added_to_group_description`"
+    ]
+  },
+  "private_added_to_group_description_anon": {
+    "default": "A moderator has added you to a Modmail thread.",
+    "description": "This is the message embed content sent to the recipient that is just added to a thread when adduser is used anonymously.",
+    "examples": [
+      "`{prefix}config set private_added_to_group_description_anon Any message sent here will be sent to all other thread recipients.`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `private_added_to_group_description` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_added_to_group_title`, `public_added_to_group_description_anon`"
+    ]
+  },
+  "public_added_to_group_title": {
+    "default": "New User",
+    "description": "This is the message embed title sent to all other recipients when someone is added to the thread.",
+    "examples": [
+      "`{prefix}config set public_added_to_group_title Welcome to our new user!`"
+    ],
+    "notes": [
+      "The private_ variant is used when sending to the new user.",
+      "See also: `private_added_to_group_title`, `private_added_to_group_title`"
+    ]
+  },
+  "public_added_to_group_description": {
+    "default": "\"{{moderator.name}} has added {{users}} to the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is added to the thread.",
+    "examples": [
+      "`{prefix}config set public_added_to_group_description Welcome {users}!`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonadduser is used, `public_added_to_group_description_anon` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_added_to_group_title`, `private_added_to_group_description`"
+    ]
+  },
+  "public_added_to_group_description_anon": {
+    "default": "\"A moderator has added {{users}} to the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is added to the thread when adduser is used anonymously.",
+    "examples": [
+      "`{prefix}config set public_added_to_group_description_anon Any message sent here will be sent to all other thread recipients.`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `public_added_to_group_description` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_added_to_group_title`, `private_added_to_group_description_anon`"
+    ]
+  },
+  "private_removed_from_group_title": {
+    "default": "Removed From Thread (Group)",
+    "description": "This is the message embed title sent to the recipient that is just removed from a thread.",
+    "examples": [
+      "`{prefix}config set private_removed_from_group_title Welcome to this new group thread!`"
+    ],
+    "notes": [
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_removed_from_group_description`, `public_removed_from_group_title`"
+    ]
+  },
+  "private_removed_from_group_description": {
+    "default": "\"{{moderator.name}} has removed you from the Modmail thread.\"",
+    "description": "This is the message embed content sent to the recipient that is just removed from a thread.",
+    "examples": [
+      "`{prefix}config set private_removed_from_group_description Bye`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonremoveuser is used, `private_removed_from_group_description_anon` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_removed_from_group_title`, `public_removed_from_group_description`"
+    ]
+  },
+  "private_removed_from_group_description_anon": {
+    "default": "A moderator has removed you from the Modmail thread.",
+    "description": "This is the message embed content sent to the recipient that is just removed from a thread when removeuser is used anonymously.",
+    "examples": [
+      "`{prefix}config set private_removed_from_group_description_anon You are permenantly removed from this thread.`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `private_removed_from_group_description` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_removed_from_group_title`, `public_removed_from_group_description_anon`"
+    ]
+  },
+  "public_removed_from_group_title": {
+    "default": "User Removed",
+    "description": "This is the message embed title sent to all other recipients when someone is removed from the thread.",
+    "examples": [
+      "`{prefix}config set public_removed_from_group_title User is now gone!`"
+    ],
+    "notes": [
+      "The private_ variant is used when sending to the new user.",
+      "See also: `private_removed_from_group_title`, `private_removed_from_group_title`"
+    ]
+  },
+  "public_removed_from_group_description": {
+    "default": "\"{{moderator.name}} has removed {{users}} from the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is removed from the thread.",
+    "examples": [
+      "`{prefix}config set public_removed_from_group_description Goodbye {users}!`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonremoveuser is used, `public_removed_from_group_description_anon` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_removed_from_group_title`, `private_removed_from_group_description`"
+    ]
+  },
+  "public_removed_from_group_description_anon": {
+    "default": "\"A moderator has removed {{users}} from the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is removed from the thread when removeuser is used anonymously.",
+    "examples": [
+      "`{prefix}config set public_removed_from_group_description_anon Goodbye {users}!`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `public_removed_from_group_description` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_removed_from_group_title`, `private_removed_from_group_description_anon`"
+    ]
+  },
   "confirm_thread_creation": {
     "default": "No",
     "description": "Ensure users confirm that they want to create a new thread",
