@@ -8,6 +8,12 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # v3.10.0-dev4
 
+v3.10 adds group conversations while resolving othre bugs and QOL changes. It is potentially breaking to some plugins that adds functionality to threads.
+
+## Breaking
+
+- `Thread.recipient` (`str`) is now `Thread.recipients` (`List[str]`).
+
 ## Added
 
 - Ability to have group conversations. ([GH #143](https://github.com/kyb3r/modmail/issues/143))

@@ -675,8 +675,11 @@ class Modmail(commands.Cog):
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     @commands.cooldown(1, 600, BucketType.channel)
-    async def adduser(self, ctx, *, user: discord.Member):
-        """Adds a user to a modmail thread"""
+    async def adduser(self, ctx, user: discord.Member, *, options: str.lower = ""):
+        """Adds a user to a modmail thread
+
+        `options` can be `silent` or `silently`.
+        """
 
         curr_thread = await self.bot.threads.find(recipient=user)
         if curr_thread:
@@ -686,30 +689,88 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color,
             )
             await ctx.send(embed=em)
+            ctx.command.reset_cooldown(ctx)
         else:
-            em = discord.Embed(
-                title="New Thread (Group)",
-                description=f"{ctx.author.name} has added you to a Modmail thread.",
-                color=self.bot.main_color,
-            )
-            if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar_url)
-            await user.send(embed=em)
+            if 'silent' not in options and 'silently' not in options:
+                em = discord.Embed(
+                    title="New Thread (Group)",
+                    description=f"{ctx.author.name} has added you to a Modmail thread.",
+                    color=self.bot.main_color,
+                )
+                if self.bot.config["show_timestamp"]:
+                    em.timestamp = datetime.utcnow()
+                em.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+                await user.send(embed=em)
 
-            em = discord.Embed(
-                title="New User",
-                description=f"{ctx.author.name} has added {user.name} to the Modmail thread.",
-                color=self.bot.main_color,
-            )
-            if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=f"{user}", icon_url=user.avatar_url)
+                em = discord.Embed(
+                    title="New User",
+                    description=f"{ctx.author.name} has added {user.name} to the Modmail thread.",
+                    color=self.bot.main_color,
+                )
+                if self.bot.config["show_timestamp"]:
+                    em.timestamp = datetime.utcnow()
+                em.set_footer(text=f"{user}", icon_url=user.avatar_url)
 
-            for i in ctx.thread.recipients:
-                await i.send(embed=em)
+                for i in ctx.thread.recipients:
+                    if i != user:
+                        await i.send(embed=em)
 
             await ctx.thread.add_user(user)
+            sent_emoji, _ = await self.bot.retrieve_emoji()
+            await self.bot.add_reaction(ctx.message, sent_emoji)
+
+    @commands.command(cooldown_after_parsing=True)
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    @commands.cooldown(1, 600, BucketType.channel)
+    async def removeuser(self, ctx, user: discord.Member, *, options: str.lower = ""):
+        """Removes a user from a modmail thread
+
+        `options` can be `silent` or `silently`.
+        """
+
+        curr_thread = await self.bot.threads.find(recipient=user)
+        if ctx.thread != curr_thread:
+            em = discord.Embed(
+                title="Error",
+                description="User is not in this thread.",
+                color=self.bot.error_color,
+            )
+            await ctx.send(embed=em)
+            ctx.command.reset_cooldown(ctx)
+        elif ctx.thread.recipient == user:
+            em = discord.Embed(
+                title="Error",
+                description="User is the main recipient of the thread and cannot be removed.",
+                color=self.bot.error_color,
+            )
+            await ctx.send(embed=em)
+            ctx.command.reset_cooldown(ctx)
+        else:
+            if 'silent' not in options and 'silently' not in options:
+                em = discord.Embed(
+                    title="Removed From Thread (Group)",
+                    description=f"{ctx.author.name} has been removed from the Modmail thread.",
+                    color=self.bot.main_color,
+                )
+                if self.bot.config["show_timestamp"]:
+                    em.timestamp = datetime.utcnow()
+                em.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+                await user.send(embed=em)
+
+                em = discord.Embed(
+                    title="User Removed",
+                    description=f"{ctx.author.name} has removed {user.name} from the Modmail thread.",
+                    color=self.bot.main_color,
+                )
+                if self.bot.config["show_timestamp"]:
+                    em.timestamp = datetime.utcnow()
+                em.set_footer(text=f"{user}", icon_url=user.avatar_url)
+
+                for i in ctx.thread.recipients:
+                    await i.send(embed=em)
+
+            await ctx.thread.remove_user(user)
             sent_emoji, _ = await self.bot.retrieve_emoji()
             await self.bot.add_reaction(ctx.message, sent_emoji)
 

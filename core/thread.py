@@ -57,7 +57,10 @@ class Thread:
         self._cancelled = False
 
     def __repr__(self):
-        return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipienets={len(self._other_recipients)})'
+        return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
+
+    def __eq__(self, other):
+        return self.id == other.id
 
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
@@ -115,13 +118,19 @@ class Thread:
         recipient_id = match_user_id(
             channel.topic
         )  # there is a chance it grabs from another recipient's main thread
-        recipient = manager.bot.get_user(recipient_id) or await manager.bot.fetch_user(recipient_id)
 
-        other_recipients = match_other_recipients(channel.topic)
-        for n, uid in enumerate(other_recipients):
-            other_recipients[n] = manager.bot.get_user(uid) or await manager.bot.fetch_user(uid)
+        if recipient_id in manager.cache:
+            thread = manager.cache[recipient_id]
+        else:
+            recipient = manager.bot.get_user(recipient_id) or await manager.bot.fetch_user(recipient_id)
 
-        return cls(manager, recipient or recipient_id, channel, other_recipients)
+            other_recipients = match_other_recipients(channel.topic)
+            for n, uid in enumerate(other_recipients):
+                other_recipients[n] = manager.bot.get_user(uid) or await manager.bot.fetch_user(uid)
+
+            thread = cls(manager, recipient or recipient_id, channel, other_recipients)
+
+        return thread
 
     async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
@@ -1088,6 +1097,16 @@ class Thread:
         ids = ",".join(str(i.id) for i in self._other_recipients)
         await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
 
+    async def remove_user(self, user: typing.Union[discord.Member, discord.User]) -> None:
+        title = match_title(self.channel.topic)
+        user_id = match_user_id(self.channel.topic)
+        self._other_recipients.remove(user)
+
+        ids = ",".join(str(i.id) for i in self._other_recipients)
+        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
+        # if user.id in self.manager.cache:
+        #     self.manager.cache.pop(self.id)
+
 
 class ThreadManager:
     """Class that handles storing, finding and creating Modmail threads."""
@@ -1146,6 +1165,7 @@ class ThreadManager:
                     await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                     thread = None
         else:
+            print('in here')
             channel = discord.utils.find(
                 lambda x: str(recipient_id) in x.topic if x.topic else False,
                 self.bot.modmail_guild.text_channels,
@@ -1157,6 +1177,11 @@ class ThreadManager:
                     # only save if data is valid
                     self.cache[recipient_id] = thread
                 thread.ready = True
+
+        if thread and recipient_id not in [x.id for x in thread.recipients]:
+            self.cache.pop(recipient_id)
+            thread = None
+
         return thread
 
     async def _find_from_channel(self, channel):
