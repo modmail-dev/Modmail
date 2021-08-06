@@ -19,7 +19,6 @@ extend-exclude = '''
 )
 '''
 
-<<<<<<< HEAD
 [tool.poetry]
 name = 'Modmail'
 version = '3.10.0-dev4'
@@ -34,10 +33,6 @@ readme = 'README.md'
 repository = 'https://github.com/kyb3r/modmail'
 homepage = 'https://github.com/kyb3r/modmail'
 keywords = ['discord', 'modmail']
-=======
-[tool.pylint.messages_control]
-disable = "C0330, C0326"
->>>>>>> master
 
 [tool.pylint.format]
 max-line-length = "110"

@@ -1136,7 +1136,6 @@ class ThreadManager:
                 logger.warning("Thread for %s cancelled.", recipient)
                 return thread
             else:
-<<<<<<< HEAD
                 if not thread.cancelled and (
                     not thread.channel or not self.bot.get_channel(thread.channel.id)
                 ):
@@ -1144,13 +1143,6 @@ class ThreadManager:
                         "Found existing thread for %s but the channel is invalid.", recipient_id
                     )
                     await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-=======
-                if not thread.channel or not self.bot.get_channel(thread.channel.id):
-                    logger.warning("Found existing thread for %s but the channel is invalid.", recipient_id)
-                    self.bot.loop.create_task(
-                        thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-                    )
->>>>>>> master
                     thread = None
         else:
             channel = discord.utils.find(
@@ -1224,17 +1216,10 @@ class ThreadManager:
                 if thread.channel and self.bot.get_channel(thread.channel.id):
                     logger.warning("Found an existing thread for %s, abort creating.", recipient)
                     return thread
-<<<<<<< HEAD
-                logger.warning(
-                    "Found an existing thread for %s, closing previous thread.", recipient
-                )
-                await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
-=======
                 logger.warning("Found an existing thread for %s, closing previous thread.", recipient)
                 self.bot.loop.create_task(
                     thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                 )
->>>>>>> master
 
         thread = Thread(self, recipient)
 
@@ -1304,18 +1289,11 @@ class ThreadManager:
                 for emoji in emojis:
                     await confirm.remove_reaction(emoji, self.bot.user)
                     await asyncio.sleep(0.2)
-<<<<<<< HEAD
 
             self.bot.loop.create_task(remove_reactions())
             if thread.cancelled:
                 del self.cache[recipient.id]
                 return thread
-=======
-                    await confirm.remove_reaction(deny_emoji, self.bot.user)
-                    await destination.send(embed=discord.Embed(title="Cancelled", color=self.bot.error_color))
-                    del self.cache[recipient.id]
-                    return thread
->>>>>>> master
 
         self.bot.loop.create_task(thread.setup(creator=creator, category=category, initial_message=message))
         return thread

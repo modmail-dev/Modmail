@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 __version__ = "v3.10.0-dev4"
-=======
-__version__ = "3.9.5"
->>>>>>> master
 
 
 import asyncio
@@ -1268,13 +1264,9 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
-<<<<<<< HEAD
                 _, *linked_message = await thread.find_linked_messages(
                     message.id, either_direction=True
                 )
-=======
-                _, linked_message = await thread.find_linked_messages(message.id, either_direction=True)
->>>>>>> master
             except ValueError as e:
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
@@ -1305,7 +1297,6 @@ class ModmailBot(commands.Bot):
         else:
             emoji_fmt = f"<:{payload.emoji.name}:{payload.emoji.id}>"
 
-<<<<<<< HEAD
         if emoji_fmt != react_message_emoji:
             return
         channel = self.get_channel(payload.channel_id)
@@ -1338,11 +1329,6 @@ class ModmailBot(commands.Bot):
         await asyncio.gather(
             self.handle_reaction_events(payload), self.handle_react_to_contact(payload),
         )
-=======
-                        ctx = await self.get_context(message)
-                        ctx.author = member
-                        await ctx.invoke(self.get_command("contact"), user=member, manual_trigger=False)
->>>>>>> master
 
     async def on_raw_reaction_remove(self, payload):
         if self.config["transfer_reactions"]:

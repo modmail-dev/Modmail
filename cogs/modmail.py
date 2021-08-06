@@ -1046,18 +1046,11 @@ class Modmail(commands.Cog):
 
         exists = await self.bot.threads.find(recipient=user)
         if exists:
-<<<<<<< HEAD
             desc = "A thread for this user already exists"
             if exists.channel:
                 desc += f" in {exists.channel.mention}"
             desc += "."
             embed = discord.Embed(color=self.bot.error_color, description=desc)
-=======
-            embed = discord.Embed(
-                color=self.bot.error_color,
-                description="A thread for this user already " f"exists in {exists.channel.mention}.",
-            )
->>>>>>> master
             await ctx.channel.send(embed=embed, delete_after=3)
 
         else:
@@ -1550,13 +1543,9 @@ class Modmail(commands.Cog):
                     other_recipients[n] = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
 
                 if recipient is None:
-<<<<<<< HEAD
                     self.bot.threads.cache[user.id] = thread = Thread(
                         self.bot.threads, user_id, ctx.channel, other_recipients
                     )
-=======
-                    self.bot.threads.cache[user.id] = thread = Thread(self.bot.threads, user_id, ctx.channel)
->>>>>>> master
                 else:
                     self.bot.threads.cache[user.id] = thread = Thread(
                         self.bot.threads, recipient, ctx.channel, other_recipients
