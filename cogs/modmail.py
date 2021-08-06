@@ -1067,7 +1067,10 @@ class Modmail(commands.Cog):
                 return await ctx.send(embed=embed)
 
             thread = await self.bot.threads.create(
-                recipient=user, creator=creator, category=category, manual_trigger=manual_trigger,
+                recipient=user,
+                creator=creator,
+                category=category,
+                manual_trigger=manual_trigger,
             )
             if thread.cancelled:
                 return

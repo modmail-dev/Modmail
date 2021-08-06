@@ -111,15 +111,11 @@ class Thread:
                 i.cancel()
 
     @classmethod
-    async def from_channel(
-        cls, manager: "ThreadManager", channel: discord.TextChannel
-    ) -> "Thread":
+    async def from_channel(cls, manager: "ThreadManager", channel: discord.TextChannel) -> "Thread":
         recipient_id = match_user_id(
             channel.topic
         )  # there is a chance it grabs from another recipient's main thread
-        recipient = manager.bot.get_user(recipient_id) or await manager.bot.fetch_user(
-            recipient_id
-        )
+        recipient = manager.bot.get_user(recipient_id) or await manager.bot.fetch_user(recipient_id)
 
         other_recipients = match_other_recipients(channel.topic)
         for n, uid in enumerate(other_recipients):
@@ -761,7 +757,11 @@ class Thread:
         for user in self.recipients:
             user_msg_tasks.append(
                 self.send(
-                    message, destination=user, from_mod=True, anonymous=anonymous, plain=plain,
+                    message,
+                    destination=user,
+                    from_mod=True,
+                    anonymous=anonymous,
+                    plain=plain,
                 )
             )
 
@@ -1071,9 +1071,7 @@ class Thread:
         user_id = match_user_id(self.channel.topic)
         ids = ",".join(i.id for i in self._other_recipients)
 
-        await self.channel.edit(
-            topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}"
-        )
+        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
 
     async def add_user(self, user: typing.Union[discord.Member, discord.User]) -> None:
         title = match_title(self.channel.topic)
@@ -1081,9 +1079,7 @@ class Thread:
         self._other_recipients.append(user)
 
         ids = ",".join(str(i.id) for i in self._other_recipients)
-        await self.channel.edit(
-            topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}"
-        )
+        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
 
 
 class ThreadManager:
@@ -1139,9 +1135,7 @@ class ThreadManager:
                 if not thread.cancelled and (
                     not thread.channel or not self.bot.get_channel(thread.channel.id)
                 ):
-                    logger.warning(
-                        "Found existing thread for %s but the channel is invalid.", recipient_id
-                    )
+                    logger.warning("Found existing thread for %s but the channel is invalid.", recipient_id)
                     await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                     thread = None
         else:
@@ -1280,9 +1274,7 @@ class ThreadManager:
                 if str(r.emoji) == deny_emoji:
                     thread.cancelled = True
                     self.bot.loop.create_task(
-                        destination.send(
-                            embed=discord.Embed(title="Cancelled", color=self.bot.error_color)
-                        )
+                        destination.send(embed=discord.Embed(title="Cancelled", color=self.bot.error_color))
                     )
 
             async def remove_reactions():

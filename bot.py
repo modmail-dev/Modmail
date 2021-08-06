@@ -1264,9 +1264,7 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
-                _, *linked_message = await thread.find_linked_messages(
-                    message.id, either_direction=True
-                )
+                _, *linked_message = await thread.find_linked_messages(message.id, either_direction=True)
             except ValueError as e:
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
@@ -1287,10 +1285,7 @@ class ModmailBot(commands.Bot):
     async def handle_react_to_contact(self, payload):
         react_message_id = tryint(self.config.get("react_to_contact_message"))
         react_message_emoji = self.config.get("react_to_contact_emoji")
-        if (
-            not all((react_message_id, react_message_emoji))
-            or payload.message_id != react_message_id
-        ):
+        if not all((react_message_id, react_message_emoji)) or payload.message_id != react_message_id:
             return
         if payload.emoji.is_unicode_emoji():
             emoji_fmt = payload.emoji.name
@@ -1314,7 +1309,8 @@ class ModmailBot(commands.Bot):
                 description=self.config["disabled_new_thread_response"],
             )
             embed.set_footer(
-                text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon_url,
+                text=self.config["disabled_new_thread_footer"],
+                icon_url=self.guild.icon_url,
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
@@ -1327,7 +1323,8 @@ class ModmailBot(commands.Bot):
 
     async def on_raw_reaction_add(self, payload):
         await asyncio.gather(
-            self.handle_reaction_events(payload), self.handle_react_to_contact(payload),
+            self.handle_reaction_events(payload),
+            self.handle_react_to_contact(payload),
         )
 
     async def on_raw_reaction_remove(self, payload):

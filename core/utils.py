@@ -218,9 +218,7 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
-TOPIC_OTHER_RECIPIENTS_REGEX = re.compile(
-    r"Other Recipients:\s*((?:\d{17,21},*)+)", flags=re.IGNORECASE
-)
+TOPIC_OTHER_RECIPIENTS_REGEX = re.compile(r"Other Recipients:\s*((?:\d{17,21},*)+)", flags=re.IGNORECASE)
 TOPIC_TITLE_REGEX = re.compile(r"\bTitle: (.*)\n(?:User ID: )\b", flags=re.IGNORECASE | re.DOTALL)
 TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
 
