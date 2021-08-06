@@ -701,7 +701,9 @@ class Modmail(commands.Cog):
         if not silent:
             em = discord.Embed(
                 title=self.bot.config["private_added_to_group_title"],
-                description=self.bot.config["private_added_to_group_description"].format(moderator=ctx.author),
+                description=self.bot.config["private_added_to_group_description"].format(
+                    moderator=ctx.author
+                ),
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
@@ -712,7 +714,9 @@ class Modmail(commands.Cog):
 
             em = discord.Embed(
                 title=self.bot.config["public_added_to_group_title"],
-                description=self.bot.config["private_added_to_group_description"].format(moderator=ctx.author, users=', '.join(u.name for u in users)),
+                description=self.bot.config["private_added_to_group_description"].format(
+                    moderator=ctx.author, users=", ".join(u.name for u in users)
+                ),
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
@@ -767,7 +771,9 @@ class Modmail(commands.Cog):
         if not silent:
             em = discord.Embed(
                 title=self.bot.config["private_removed_from_group_title"],
-                description=self.bot.config["private_removed_from_group_description"].format(moderator=ctx.author),
+                description=self.bot.config["private_removed_from_group_description"].format(
+                    moderator=ctx.author
+                ),
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
@@ -778,7 +784,9 @@ class Modmail(commands.Cog):
 
             em = discord.Embed(
                 title=self.bot.config["public_removed_from_group_title"],
-                description=self.bot.config["private_removed_from_group_description"].format(moderator=ctx.author, users=', '.join(u.name for u in users)),
+                description=self.bot.config["private_removed_from_group_description"].format(
+                    moderator=ctx.author, users=", ".join(u.name for u in users)
+                ),
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
@@ -845,7 +853,9 @@ class Modmail(commands.Cog):
 
             em = discord.Embed(
                 title=self.bot.config["public_added_to_group_title"],
-                description=self.bot.config["private_added_to_group_description_anon"].format(moderator=ctx.author, users=', '.join(u.name for u in users)),
+                description=self.bot.config["private_added_to_group_description_anon"].format(
+                    moderator=ctx.author, users=", ".join(u.name for u in users)
+                ),
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
@@ -900,7 +910,9 @@ class Modmail(commands.Cog):
         if not silent:
             em = discord.Embed(
                 title=self.bot.config["private_removed_from_group_title"],
-                description=self.bot.config["private_removed_from_group_description_anon"].format(moderator=ctx.author),
+                description=self.bot.config["private_removed_from_group_description_anon"].format(
+                    moderator=ctx.author
+                ),
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
@@ -922,7 +934,9 @@ class Modmail(commands.Cog):
 
             em = discord.Embed(
                 title=self.bot.config["public_removed_from_group_title"],
-                description=self.bot.config["private_removed_from_group_description"].format(moderator=ctx.author, users=', '.join(u.name for u in users)),
+                description=self.bot.config["private_removed_from_group_description"].format(
+                    moderator=ctx.author, users=", ".join(u.name for u in users)
+                ),
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
