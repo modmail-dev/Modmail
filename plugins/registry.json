@@ -1,13 +1,4 @@
 {
-    "case_insensitive_snippets": {
-        "repository": "python-discord/modmail-plugins",
-        "branch": "main",
-        "description": "Allow snippets to be ran even if with the wrong case. For example, ?Dm-RePort will be recognized as ?dm-report.",
-        "bot_version": "2.20.1",
-        "title": "Case insensitive snippets",
-        "icon_url": "https://i.imgur.com/kaJYlMB.png",
-        "thumbnail_url": "https://i.imgur.com/kaJYlMB.png"
-    },
     "close_message": {
         "repository": "python-discord/modmail-plugins",
         "branch": "main",
@@ -34,15 +25,6 @@
         "title": "Reply cooldown",
         "icon_url": "https://i.imgur.com/FtRQveT.png",
         "thumbnail_url": "https://i.imgur.com/FtRQveT.png"
-    },
-    "tagging": {
-        "repository": "python-discord/modmail-plugins",
-        "branch": "main",
-        "description": "Add a ?tag command capable of adding a $message｜ header to the channel name.",
-        "bot_version": "2.20.1",
-        "title": "Tagging",
-        "icon_url": "https://i.imgur.com/WajSLB1.png",
-        "thumbnail_url": "https://i.imgur.com/WajSLB1.png"
     },
     "dragory-migrate": {
         "repository": "kyb3r/modmail-plugins",
