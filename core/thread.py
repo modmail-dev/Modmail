@@ -414,7 +414,7 @@ class Thread:
                     "title": match_title(self.channel.topic),
                     "closed_at": str(datetime.utcnow()),
                     "nsfw": self.channel.nsfw,
-                    "close_message": message if not silent else None,
+                    "close_message": message,
                     "closer": {
                         "id": str(closer.id),
                         "name": closer.name,

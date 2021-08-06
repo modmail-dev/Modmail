@@ -20,6 +20,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - UnicodeEncodeError will no longer be raised on Windows. ([PR #3043](https://github.com/kyb3r/modmail/pull/3043))
 - Notifications are no longer duplicated when using both `?notify` and `subscribe`. ([PR #3015](https://github.com/kyb3r/modmail/pull/3015))
 - `?contact` now works properly with both category and silent. ([GH #3076](https://github.com/kyb3r/modmail/issues/3076))
+- Resolves `close_on_leave_reason` not properly working when `close_on_leave` is enabled. ([GH #3075](https://github.com/kyb3r/modmail/issues/3075))
 
 ## Internal
 
