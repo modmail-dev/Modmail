@@ -31,7 +31,7 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
     ::
         @has_permissions(PermissionLevel.OWNER)
         async def setup(ctx):
-            print("Success")
+            await ctx.send('Success')
     """
 
     return commands.check(has_permissions_predicate(permission_level))

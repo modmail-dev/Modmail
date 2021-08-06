@@ -1165,7 +1165,6 @@ class ThreadManager:
                     await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                     thread = None
         else:
-            print('in here')
             channel = discord.utils.find(
                 lambda x: str(recipient_id) in x.topic if x.topic else False,
                 self.bot.modmail_guild.text_channels,

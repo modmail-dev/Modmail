@@ -691,7 +691,7 @@ class Modmail(commands.Cog):
             await ctx.send(embed=em)
             ctx.command.reset_cooldown(ctx)
         else:
-            if 'silent' not in options and 'silently' not in options:
+            if "silent" not in options and "silently" not in options:
                 em = discord.Embed(
                     title="New Thread (Group)",
                     description=f"{ctx.author.name} has added you to a Modmail thread.",
@@ -747,7 +747,7 @@ class Modmail(commands.Cog):
             await ctx.send(embed=em)
             ctx.command.reset_cooldown(ctx)
         else:
-            if 'silent' not in options and 'silently' not in options:
+            if "silent" not in options and "silently" not in options:
                 em = discord.Embed(
                     title="Removed From Thread (Group)",
                     description=f"{ctx.author.name} has been removed from the Modmail thread.",
@@ -1101,7 +1101,9 @@ class Modmail(commands.Cog):
                 silent = True
                 category = category.strip("silently").strip("silent").strip()
                 try:
-                    category = await SimilarCategoryConverter().convert(ctx, category)  # attempt to find a category again
+                    category = await SimilarCategoryConverter().convert(
+                        ctx, category
+                    )  # attempt to find a category again
                 except commands.BadArgument:
                     category = None
 
