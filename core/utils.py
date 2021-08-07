@@ -32,6 +32,7 @@ __all__ = [
     "escape_code_block",
     "format_channel_name",
     "tryint",
+    "get_top_hoisted_role",
 ]
 
 
@@ -394,3 +395,10 @@ def tryint(x):
         return int(x)
     except (ValueError, TypeError):
         return x
+
+
+def get_top_hoisted_role(member: discord.Member):
+    roles = sorted(member.roles, key=lambda r: r.position, reverse=True)
+    for role in roles:
+        if role.hoist:
+            return role

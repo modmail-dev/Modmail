@@ -22,6 +22,7 @@ from core.utils import (
     match_other_recipients,
     truncate,
     format_channel_name,
+    get_top_hoisted_role,
 )
 
 logger = getLogger(__name__)
@@ -888,7 +889,7 @@ class Thread:
                 # Anonymously sending to the user.
                 tag = self.bot.config["mod_tag"]
                 if tag is None:
-                    tag = str(author.top_role)
+                    tag = str(get_top_hoisted_role(author))
                 name = self.bot.config["anon_username"]
                 if name is None:
                     name = tag
@@ -1005,7 +1006,7 @@ class Thread:
             elif not anonymous:
                 mod_tag = self.bot.config["mod_tag"]
                 if mod_tag is None:
-                    mod_tag = str(message.author.top_role)
+                    mod_tag = str(get_top_hoisted_role(message.author))
                 embed.set_footer(text=mod_tag)  # Normal messages
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])

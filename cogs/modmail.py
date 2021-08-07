@@ -891,7 +891,7 @@ class Modmail(commands.Cog):
 
             tag = self.bot.config["mod_tag"]
             if tag is None:
-                tag = str(ctx.author.top_role)
+                tag = str(get_top_hoisted_role(ctx.author))
             name = self.bot.config["anon_username"]
             if name is None:
                 name = tag
@@ -976,7 +976,7 @@ class Modmail(commands.Cog):
 
             tag = self.bot.config["mod_tag"]
             if tag is None:
-                tag = str(ctx.author.top_role)
+                tag = str(get_top_hoisted_role(ctx.author))
             name = self.bot.config["anon_username"]
             if name is None:
                 name = tag
