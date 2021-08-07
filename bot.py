@@ -74,6 +74,7 @@ class ModmailBot(commands.Bot):
         self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
         self._connected = asyncio.Event()
         self.start_time = datetime.utcnow()
+        self._started = False
 
         self.config = ConfigManager(self)
         self.config.populate_cache()
@@ -534,6 +535,13 @@ class ModmailBot(commands.Bot):
             logger.error("Logging out due to invalid GUILD_ID.")
             return await self.close()
 
+        if self._started:
+            # Bot has started before
+            logger.line()
+            logger.warning("Bot restarted due to internal discord reloading.")
+            logger.line()
+            return
+
         logger.line()
         logger.debug("Client ready.")
         logger.info("Logged in as: %s", self.user)
@@ -633,6 +641,8 @@ class ModmailBot(commands.Bot):
                 ", ".join(guild.name for guild in other_guilds),
             )
             logger.warning("If the external servers are valid, you may ignore this message.")
+
+        self._started = True
 
     async def convert_emoji(self, name: str) -> str:
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
