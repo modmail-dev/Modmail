@@ -467,7 +467,9 @@ def get_joint_id(message: discord.Message) -> typing.Optional[int]:
     """
     if message.embeds:
         try:
-            return int(getattr(message.embeds[0].author, "url", "").split("#")[-1])
+            url = getattr(message.embeds[0].author, "url", "")
+            if url:
+                return int(url.split("#")[-1])
         except ValueError:
             pass
     return None

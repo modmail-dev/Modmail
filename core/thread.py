@@ -695,7 +695,7 @@ class Thread:
             await asyncio.gather(*tasks)
 
     async def find_linked_message_from_dm(
-        self, message, either_direction=False
+        self, message, either_direction=False, get_thread_channel=False
     ) -> typing.List[discord.Message]:
 
         joint_id = None
@@ -725,6 +725,10 @@ class Thread:
                 raise ValueError("Thread channel message not found.")
         else:
             raise ValueError("Thread channel message not found.")
+
+        if get_thread_channel:
+            # end early as we only want the main message from thread channel
+            return linked_messages
 
         if joint_id is None:
             joint_id = get_joint_id(linked_messages[0])
