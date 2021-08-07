@@ -720,7 +720,7 @@ class Modmail(commands.Cog):
 
         if not silent:
             description = self.bot.formatter.format(
-                self.bot.config["private_added_to_group_description"], moderator=ctx.author
+                self.bot.config["private_added_to_group_response"], moderator=ctx.author
             )
             em = discord.Embed(
                 title=self.bot.config["private_added_to_group_title"],
@@ -734,7 +734,7 @@ class Modmail(commands.Cog):
                 await u.send(embed=em)
 
             description = self.bot.formatter.format(
-                self.bot.config["public_added_to_group_description"],
+                self.bot.config["public_added_to_group_response"],
                 moderator=ctx.author,
                 users=", ".join(u.name for u in users),
             )
@@ -799,7 +799,7 @@ class Modmail(commands.Cog):
 
         if not silent:
             description = self.bot.formatter.format(
-                self.bot.config["private_removed_from_group_description"], moderator=ctx.author
+                self.bot.config["private_removed_from_group_response"], moderator=ctx.author
             )
             em = discord.Embed(
                 title=self.bot.config["private_removed_from_group_title"],
@@ -813,7 +813,7 @@ class Modmail(commands.Cog):
                 await u.send(embed=em)
 
             description = self.bot.formatter.format(
-                self.bot.config["public_removed_from_group_description"],
+                self.bot.config["public_removed_from_group_response"],
                 moderator=ctx.author,
                 users=", ".join(u.name for u in users),
             )
@@ -1385,12 +1385,14 @@ class Modmail(commands.Cog):
 
             if not silent and not self.bot.config.get("thread_contact_silently"):
                 if creator.id == user.id:
-                    description = "You have opened a Modmail thread."
+                    description = self.bot.config["thread_creation_self_contact_response"]
                 else:
-                    description = f"{creator.name} has opened a Modmail thread."
+                    description = self.bot.formatter.format(
+                        self.bot.config["thread_creation_contact_response"], creator=creator
+                    )
 
                 em = discord.Embed(
-                    title="New Thread",
+                    title=self.bot.config["thread_creation_contact_title"],
                     description=description,
                     color=self.bot.main_color,
                 )

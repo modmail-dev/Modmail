@@ -286,7 +286,7 @@ class Thread:
         # key = log_url.split('/')[-1]
 
         role_names = ""
-        if member is not None:
+        if member is not None and self.bot.config["thread_show_roles"]:
             sep_server = self.bot.using_multiple_server_setup
             separator = ", " if sep_server else " "
 
@@ -309,13 +309,11 @@ class Thread:
             role_names = separator.join(roles)
 
         created = str((time - user.created_at).days)
-        embed = discord.Embed(
-            color=color, description=f"{user.mention} was created {days(created)}", timestamp=time
-        )
+        user_info = []
+        if self.bot.config["thread_show_account_age"]:
+            user_info.append(f"was created {days(created)}")
 
-        # if not role_names:
-        #     embed.add_field(name='Mention', value=user.mention)
-        # embed.add_field(name='Registered', value=created + days(created))
+        embed = discord.Embed(color=color, description=user.mention, timestamp=time)
 
         if user.dm_channel:
             footer = f"User ID: {user.id} • DM ID: {user.dm_channel.id}"
@@ -328,7 +326,8 @@ class Thread:
         if member is not None:
             joined = str((time - member.joined_at).days)
             # embed.add_field(name='Joined', value=joined + days(joined))
-            embed.description += f", joined {days(joined)}"
+            if self.bot.config["thread_show_join_age"]:
+                user_info.append(f"joined {days(joined)}")
 
             if member.nick:
                 embed.add_field(name="Nickname", value=member.nick, inline=True)
@@ -338,10 +337,12 @@ class Thread:
         else:
             embed.set_footer(text=f"{footer} • (not in main server)")
 
+        embed.description += ", ".join(user_info)
+
         if log_count is not None:
-            # embed.add_field(name="Past logs", value=f"{log_count}")
+            connector = "with" if user_info else "has"
             thread = "thread" if log_count == 1 else "threads"
-            embed.description += f" with **{log_count or 'no'}** past {thread}."
+            embed.description += f" {connector} **{log_count or 'no'}** past {thread}."
         else:
             embed.description += "."
 
@@ -1336,7 +1337,9 @@ class ThreadManager:
                 self.bot.loop.create_task(
                     destination.send(
                         embed=discord.Embed(
-                            title="Cancelled", description="Timed out", color=self.bot.error_color
+                            title=self.bot.config["thread_cancelled"],
+                            description="Timed out",
+                            color=self.bot.error_color,
                         )
                     )
                 )
@@ -1344,7 +1347,11 @@ class ThreadManager:
                 if str(r.emoji) == deny_emoji:
                     thread.cancelled = True
                     self.bot.loop.create_task(
-                        destination.send(embed=discord.Embed(title="Cancelled", color=self.bot.error_color))
+                        destination.send(
+                            embed=discord.Embed(
+                                title=self.bot.config["thread_cancelled"], color=self.bot.error_color
+                            )
+                        )
                     )
 
             async def remove_reactions():

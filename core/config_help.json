@@ -266,6 +266,36 @@
       "See also: `close_emoji`."
     ]
   },
+  "thread_show_roles": {
+    "default": "Yes",
+    "description": "Shows roles on first message sent in thread channels to mods",
+    "examples":[
+      "`{prefix}config set thread_show_roles no`"
+    ],
+    "notes": [
+      "See also: `thread_show_account_age`, `thread_show_join_age`."
+    ]
+  },
+  "thread_show_account_age": {
+    "default": "Yes",
+    "description": "Shows account age on first message sent in thread channels to mods",
+    "examples":[
+      "`{prefix}config set thread_show_account_age no`"
+    ],
+    "notes": [
+      "See also: `thread_show_roles`, `thread_show_join_age`."
+    ]
+  },
+  "thread_show_join_age": {
+    "default": "Yes",
+    "description": "Shows join age on first message sent in thread channels to mods",
+    "examples":[
+      "`{prefix}config set thread_show_join_age no`"
+    ],
+    "notes": [
+      "See also: `thread_show_account_age`, `thread_show_roles`."
+    ]
+  },
   "thread_auto_close_silently": {
     "default": "No",
     "description": "Setting this configuration will close silently when the thread auto-closes.",
@@ -301,6 +331,14 @@
     "notes": [
       "To disable thread cooldown, do `{prefix}config del thread_cooldown`."
     ]
+  },
+  "thread_cancelled": {
+    "default": "\"Cancelled\"",
+    "description": "This is the message to display when a thread times out and creation is cancelled.",
+    "examples": [
+      "`{prefix}config set thread_cancelled Gone.`"
+    ],
+    "notes": []
   },
   "thread_auto_close_response": {
     "default": "\"This thread has been closed automatically due to inactivity after {{timeout}}.\"",
@@ -357,6 +395,39 @@
     "notes": [
       "This is used in place of `thread_creation_footer` when `recipient_thread_close` is disabled.",
       "See also: `thread_creation_title`, `thread_creation_response`, `thread_creation_footer`."
+    ]
+  },
+  "thread_creation_contact_title": {
+    "default": "\"New Thread\"",
+    "description": "This is the message embed title sent to recipients when contacted.",
+    "examples": [
+      "`{prefix}config set thread_creation_contact_title New Message!`"
+    ],
+    "notes": [
+      "See also: `thread_creation_self_contact_response`, `thread_creation_contact_response`."
+    ]
+  },
+  "thread_creation_self_contact_response": {
+    "default": "\"You have opened a Modmail thread.\"",
+    "description": "This is the message embed description sent to recipients when self-contacted.",
+    "examples": [
+      "`{prefix}config set thread_creation_contact_title You contacted yourself.`"
+    ],
+    "notes": [
+      "`thread_creation_contact_response` is used when contacted by another user.",
+      "See also: `thread_creation_contact_title`, `thread_creation_contact_response`."
+    ]
+  },
+  "thread_creation_contact_response": {
+    "default": "\"{creator.name} has opened a Modmail thread.\"",
+    "description": "This is the message embed description sent to recipients when contacted by a mod.",
+    "examples": [
+      "`{prefix}config set thread_creation_contact_response New thread opened.`"
+    ],
+    "notes": [
+      "You may use the `{{creator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that created the thread.",
+      "`thread_creation_self_contact_response` is used when contacted by self.",
+      "See also: `thread_creation_contact_title`, `thread_creation_self_contact_response`."
     ]
   },
   "thread_creation_title": {
@@ -722,7 +793,7 @@
       "See also: `private_added_to_group_description`, `public_added_to_group_title`"
     ]
   },
-  "private_added_to_group_description": {
+  "private_added_to_group_response": {
     "default": "\"{{moderator.name}} has added you to a Modmail thread.\"",
     "description": "This is the message embed content sent to the recipient that is just added to a thread.",
     "examples": [
@@ -758,7 +829,7 @@
       "See also: `private_added_to_group_title`, `private_added_to_group_title`"
     ]
   },
-  "public_added_to_group_description": {
+  "public_added_to_group_response": {
     "default": "\"{{moderator.name}} has added {{users}} to the Modmail thread.\"",
     "description": "This is the message embed content sent to all other recipients when someone is added to the thread.",
     "examples": [
@@ -794,7 +865,7 @@
       "See also: `private_removed_from_group_description`, `public_removed_from_group_title`"
     ]
   },
-  "private_removed_from_group_description": {
+  "private_removed_from_group_response": {
     "default": "\"{{moderator.name}} has removed you from the Modmail thread.\"",
     "description": "This is the message embed content sent to the recipient that is just removed from a thread.",
     "examples": [
@@ -830,7 +901,7 @@
       "See also: `private_removed_from_group_title`, `private_removed_from_group_title`"
     ]
   },
-  "public_removed_from_group_description": {
+  "public_removed_from_group_response": {
     "default": "\"{{moderator.name}} has removed {{users}} from the Modmail thread.\"",
     "description": "This is the message embed content sent to all other recipients when someone is removed from the thread.",
     "examples": [

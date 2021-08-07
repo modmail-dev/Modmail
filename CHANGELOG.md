@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# v3.10.0-dev5
+# v3.10.0-dev6
 
 v3.10 adds group conversations while resolving other bugs and QOL changes. It is potentially breaking to some plugins that adds functionality to threads.
 
@@ -20,6 +20,7 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 - Ability to have group conversations. ([GH #143](https://github.com/kyb3r/modmail/issues/143))
 - Snippets are invoked case insensitively. ([GH #3077](https://github.com/kyb3r/modmail/issues/3077), [PR #3080](https://github.com/kyb3r/modmail/pull/3080))
 - Default tags now use top hoisted role. ([GH #3014](https://github.com/kyb3r/modmail/issues/3014))
+- New thread-related config - `thread_show_roles`, `thread_show_account_age`, `thread_show_join_age`, `thread_cancelled`, `thread_creation_contact_title`, `thread_creation_self_contact_response`, `thread_creation_contact_response`. ([GH #3072](https://github.com/kyb3r/modmail/issues/3072))
 
 ### Fixed
 
