@@ -33,6 +33,7 @@ __all__ = [
     "format_channel_name",
     "tryint",
     "get_top_hoisted_role",
+    "get_joint_id",
 ]
 
 
@@ -224,7 +225,7 @@ TOPIC_TITLE_REGEX = re.compile(r"\bTitle: (.*)\n(?:User ID: )\b", flags=re.IGNOR
 TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
 
 
-def match_title(text: str) -> int:
+def match_title(text: str) -> str:
     """
     Matches a title in the format of "Title: XXXX"
 
@@ -236,7 +237,7 @@ def match_title(text: str) -> int:
     Returns
     -------
     Optional[str]
-        The title if found
+        The title if found.
     """
     match = TOPIC_TITLE_REGEX.search(text)
     if match is not None:
@@ -263,7 +264,7 @@ def match_user_id(text: str) -> int:
     return -1
 
 
-def match_other_recipients(text: str) -> int:
+def match_other_recipients(text: str) -> typing.List[int]:
     """
     Matches a title in the format of "Other Recipients: XXXX,XXXX"
 
@@ -274,8 +275,8 @@ def match_other_recipients(text: str) -> int:
 
     Returns
     -------
-    Optional[str]
-        The title if found
+    List[int]
+        The list of other recipients IDs.
     """
     match = TOPIC_OTHER_RECIPIENTS_REGEX.search(text)
     if match is not None:
@@ -402,3 +403,71 @@ def get_top_hoisted_role(member: discord.Member):
     for role in roles:
         if role.hoist:
             return role
+
+
+async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=[]):
+    name = name or format_channel_name(bot, recipient)
+    try:
+        channel = await bot.modmail_guild.create_text_channel(
+            name=name,
+            category=category,
+            overwrites=overwrites,
+            reason="Creating a thread channel.",
+        )
+    except discord.HTTPException as e:
+        if (e.text, (category, name)) in errors_raised:
+            # Just raise the error to prevent infinite recursion after retrying
+            raise
+
+        errors_raised.append((e.text, (category, name)))
+
+        if "Maximum number of channels in category reached" in e.text:
+            fallback_id = bot.config["fallback_category_id"]
+            if fallback_id:
+                fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
+                if fallback and len(fallback.channels) < 49:
+                    category = fallback
+
+            if not category:
+                category = await category.clone(name="Fallback Modmail")
+                bot.config.set("fallback_category_id", str(category.id))
+                await bot.config.update()
+
+            return await create_thread_channel(
+                bot, recipient, category, overwrites, errors_raised=errors_raised
+            )
+
+        if "Contains words not allowed" in e.text:
+            # try again but null-discrim (name could be banned)
+            return await create_thread_channel(
+                bot,
+                recipient,
+                category,
+                overwrites,
+                name=format_channel_name(bot, recipient, force_null=True),
+                errors_raised=errors_raised,
+            )
+
+        raise
+
+    return channel
+
+
+def get_joint_id(message: discord.Message) -> typing.Optional[int]:
+    """
+    Get the joint ID from `discord.Embed().author.url`.
+    Parameters
+    -----------
+    message : discord.Message
+        The discord.Message object.
+    Returns
+    -------
+    int
+        The joint ID if found. Otherwise, None.
+    """
+    if message.embeds:
+        try:
+            return int(getattr(message.embeds[0].author, "url", "").split("#")[-1])
+        except ValueError:
+            pass
+    return None

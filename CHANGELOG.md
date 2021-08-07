@@ -30,6 +30,7 @@ v3.10 adds group conversations while resolving othre bugs and QOL changes. It is
 - `close_on_leave_reason` now works properly when `close_on_leave` is enabled. ([GH #3075](https://github.com/kyb3r/modmail/issues/3075))
 - Invalid arguments are now properly catched and a proper error message is sent.
 - Update database after resetting/purging all plugins. ([GH #3011](https://github.com/kyb3r/modmail/pull/3011))
+- `thread_auto_close` timer now only resets on non-note and replies from mods. ([GH #3030](https://github.com/kyb3r/modmail/issues/3030))
 
 ## Internal
 

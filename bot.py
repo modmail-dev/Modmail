@@ -1265,7 +1265,7 @@ class ModmailBot(commands.Bot):
             if not thread.recipient.dm_channel:
                 await thread.recipient.create_dm()
             try:
-                linked_message = await thread.find_linked_message_from_dm(message, either_direction=True)
+                linked_messages = await thread.find_linked_message_from_dm(message, either_direction=True)
             except ValueError as e:
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
@@ -1274,19 +1274,19 @@ class ModmailBot(commands.Bot):
             if not thread:
                 return
             try:
-                _, *linked_message = await thread.find_linked_messages(message.id, either_direction=True)
+                _, *linked_messages = await thread.find_linked_messages(message.id, either_direction=True)
             except ValueError as e:
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
 
-        if self.config["transfer_reactions"] and linked_message is not [None]:
+        if self.config["transfer_reactions"] and linked_messages is not [None]:
             if payload.event_type == "REACTION_ADD":
-                for msg in linked_message:
+                for msg in linked_messages:
                     await self.add_reaction(msg, reaction)
                 await self.add_reaction(message, reaction)
             else:
                 try:
-                    for msg in linked_message:
+                    for msg in linked_messages:
                         await msg.remove_reaction(reaction, self.user)
                     await message.remove_reaction(reaction, self.user)
                 except (discord.HTTPException, discord.InvalidArgument) as e:
@@ -1430,13 +1430,6 @@ class ModmailBot(commands.Bot):
 
         thread = await self.threads.find(channel=message.channel)
         if not thread:
-            return
-
-        audit_logs = self.modmail_guild.audit_logs(limit=10, action=discord.AuditLogAction.message_delete)
-
-        entry = await audit_logs.find(lambda a: a.target == self.user)
-
-        if entry is None:
             return
 
         try:
