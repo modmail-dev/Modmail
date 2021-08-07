@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 import functools
 import re
 import string
@@ -373,6 +374,8 @@ def format_channel_name(bot, author, exclude_channel=None, force_null=False):
     else:
         if bot.config["use_user_id_channel_name"]:
             name = new_name = str(author.id)
+        elif bot.config["use_timestamp_channel_name"]:
+            name = new_name = datetime.utcnow().isoformat(sep='-', timesep='minutes')
         else:
             name = author.name.lower()
             if force_null:

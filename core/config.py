@@ -51,6 +51,7 @@ class ConfigManager:
         "blocked_emoji": "\N{NO ENTRY SIGN}",
         "close_emoji": "\N{LOCK}",
         "use_user_id_channel_name": False,
+        "use_timestamp_channel_name": False,
         "recipient_thread_close": False,
         "thread_show_roles": True,
         "thread_show_account_age": True,
@@ -179,6 +180,7 @@ class ConfigManager:
 
     booleans = {
         "use_user_id_channel_name",
+        "use_timestamp_channel_name",
         "user_typing",
         "mod_typing",
         "reply_without_command",
@@ -203,6 +205,10 @@ class ConfigManager:
         "update_notifications",
         "thread_contact_silently",
         "anonymous_snippets",
+        "recipient_thread_close",
+        "thread_show_roles",
+        "thread_show_account_age",
+        "thread_show_join_age",
     }
 
     enums = {
