@@ -679,13 +679,17 @@ class Thread:
         else:
             message1, *message2 = await self.find_linked_messages(message, note=note)
         tasks = []
+
         if not isinstance(message, discord.Message):
             tasks += [message1.delete()]
-        elif message2 is not [None]:
-            for m2 in message2:
+
+        for m2 in message2:
+            if m2 is not None:
                 tasks += [m2.delete()]
-        elif message1.embeds[0].author.name.startswith("Persistent Note"):
+
+        if message1.embeds[0].author.name.startswith("Persistent Note"):
             tasks += [self.bot.api.delete_note(message1.id)]
+
         if tasks:
             await asyncio.gather(*tasks)
 

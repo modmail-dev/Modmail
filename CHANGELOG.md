@@ -31,6 +31,8 @@ v3.10 adds group conversations while resolving othre bugs and QOL changes. It is
 - Invalid arguments are now properly catched and a proper error message is sent.
 - Update database after resetting/purging all plugins. ([GH #3011](https://github.com/kyb3r/modmail/pull/3011))
 - `thread_auto_close` timer now only resets on non-note and replies from mods. ([GH #3030](https://github.com/kyb3r/modmail/issues/3030))
+- Deleted messages are now deleted on both ends. ([GH #3041](https://github.com/kyb3r/modmail/issues/3041), [@JerrieAries](https://github.com/kyb3r/modmail/commit/20b31f8e8b5497943513997fef788d72ae668438))
+- Persistent notes are now properly deleted from the database. ([GH #3013](https://github.com/kyb3r/modmail/issues/3013))
 
 ## Internal
 
