@@ -36,6 +36,7 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 - Persistent notes are now properly deleted from the database. ([GH #3013](https://github.com/kyb3r/modmail/issues/3013))
 
 ### Internal
+
 - Fix return types, type hints and unresolved references ([PR #3009](https://github.com/kyb3r/modmail/pull/3009))
 - Reload thread cache only when it's the first on_ready trigger. ([GH #3037](https://github.com/kyb3r/modmail/issues/3037))
 
