@@ -1026,14 +1026,14 @@ class ModmailBot(commands.Bot):
 
                 # Check for alias
                 if not found_command:
-                    invoked_with = self.aliases.get(invoked_with)[1:-1] # Get command linked to alias
-                    view = StringView(invoked_prefix + invoked_with) # Create StringView for new command
-                    invoked_with = view.get_word().lower()[1:] # Parse the new command
-                    found_command = self.all_commands.get(invoked_with) # Get the command function
+                    invoked_with = self.aliases.get(invoked_with)[1:-1]  # Get command linked to alias
+                    view = StringView(invoked_prefix + invoked_with)  # Create StringView for new command
+                    invoked_with = view.get_word().lower()[1:]  # Parse the new command
+                    found_command = self.all_commands.get(invoked_with)  # Get the command function
 
                 ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
                 ctx_.command = found_command
-                
+
                 ctx_.invoked_with = invoked_with
                 ctx_.thread = thread
                 discord.utils.find(view.skip_string, await self.get_prefix())
@@ -1044,7 +1044,7 @@ class ModmailBot(commands.Bot):
             if ctx.command:
                 old_checks = copy.copy(ctx.command.checks)
                 ctx.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
-                
+
                 await self.invoke(ctx)
 
                 ctx.command.checks = old_checks
