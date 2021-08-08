@@ -1044,6 +1044,7 @@ class ModmailBot(commands.Bot):
             if ctx.command:
                 old_checks = copy.copy(ctx.command.checks)
                 ctx.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+                
                 await self.invoke(ctx)
 
                 ctx.command.checks = old_checks
