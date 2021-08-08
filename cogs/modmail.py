@@ -1829,7 +1829,7 @@ class Modmail(commands.Cog):
             )
             if len(users) == 1:
                 user = users.pop()
-                name = format_channel_name(self.bot, user, exclude_channel=ctx.channel)
+                name = self.bot.format_channel_name(user, exclude_channel=ctx.channel)
                 recipient = self.bot.get_user(user.id)
                 if user.id in self.bot.threads.cache:
                     thread = self.bot.threads.cache[user.id]

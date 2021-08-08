@@ -30,7 +30,6 @@ __all__ = [
     "format_description",
     "trigger_typing",
     "escape_code_block",
-    "format_channel_name",
     "tryint",
     "get_top_hoisted_role",
     "get_joint_id",
@@ -364,35 +363,6 @@ def escape_code_block(text):
     return re.sub(r"```", "`\u200b``", text)
 
 
-def format_channel_name(bot, author, exclude_channel=None, force_null=False):
-    """Sanitises a username for use with text channel names"""
-    guild = bot.modmail_guild
-
-    if force_null:
-        name = new_name = "null"
-    else:
-        if bot.config["use_user_id_channel_name"]:
-            name = new_name = str(author.id)
-        elif bot.config["use_timestamp_channel_name"]:
-            name = new_name = author.created_at.isoformat(sep="-", timespec="minutes")
-        else:
-            name = author.name.lower()
-            if force_null:
-                name = "null"
-
-            name = new_name = (
-                "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
-            ) + f"-{author.discriminator}"
-
-    counter = 1
-    existed = set(c.name for c in guild.text_channels if c != exclude_channel)
-    while new_name in existed:
-        new_name = f"{name}_{counter}"  # multiple channels with same name
-        counter += 1
-
-    return new_name
-
-
 def tryint(x):
     try:
         return int(x)
@@ -408,7 +378,7 @@ def get_top_hoisted_role(member: discord.Member):
 
 
 async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=[]):
-    name = name or format_channel_name(bot, recipient)
+    name = name or bot.format_channel_name(recipient)
     try:
         channel = await bot.modmail_guild.create_text_channel(
             name=name,
@@ -446,7 +416,7 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
                 recipient,
                 category,
                 overwrites,
-                name=format_channel_name(bot, recipient, force_null=True),
+                name=bot.format_channel_name(recipient, force_null=True),
                 errors_raised=errors_raised,
             )
 

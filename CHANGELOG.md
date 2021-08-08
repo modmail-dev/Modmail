@@ -6,14 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# v3.10.0-dev6
+# v3.10.0-dev7
 
 v3.10 adds group conversations while resolving other bugs and QOL changes. It is potentially breaking to some plugins that adds functionality to threads.
 
 ### Breaking
 
 - `Thread.recipient` (`str`) is now `Thread.recipients` (`List[str]`).
-- `thread.reply` now returns mod_message, user_message1, user_message2... It is no longer limited at a size 2 tuple.
+- `Thread.reply` now returns mod_message, user_message1, user_message2... It is no longer limited at a size 2 tuple.
 
 ### Added
 
@@ -41,6 +41,7 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 
 - Fix return types, type hints and unresolved references ([PR #3009](https://github.com/kyb3r/modmail/pull/3009))
 - Reload thread cache only when it's the first on_ready trigger. ([GH #3037](https://github.com/kyb3r/modmail/issues/3037))
+- `format_channel_name` is now extendable to plugins. Modify `Bot.format_channel_name(bot, author, exclude_channel=None, force_null=False):`. ([GH #2982](https://github.com/kyb3r/modmail/issues/2982))
 
 # v3.9.5
 
