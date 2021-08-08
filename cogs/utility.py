@@ -1750,6 +1750,16 @@ class Utility(commands.Cog):
                     print(self.bot.get_command(" ".join(split_cmd[0:n])))
                     valid = True
                     break
+            
+            print("Split command", split_cmd, "Range", range(1, len(split_cmd) + 1), self.bot.aliases)
+
+            if not valid and self.bot.aliases:
+                for n in range(1, len(split_cmd) + 1):
+                    print(" ".join(split_cmd[0:n]), self.bot.aliases.get(" ".join(split_cmd[0:n])))
+                    if self.bot.aliases.get(" ".join(split_cmd[0:n])):
+                        print(self.bot.aliases.get(" ".join(split_cmd[0:n])))
+                        valid = True
+                        break
 
             if valid:
                 self.bot.auto_triggers[keyword] = command
@@ -1783,6 +1793,14 @@ class Utility(commands.Cog):
                 if self.bot.get_command(" ".join(split_cmd[0:n])):
                     valid = True
                     break
+
+            if not valid and self.bot.aliases:
+                for n in range(1, len(split_cmd) + 1):
+                    print(" ".join(split_cmd[0:n]), self.bot.aliases.get(" ".join(split_cmd[0:n])))
+                    if self.bot.aliases.get(" ".join(split_cmd[0:n])):
+                        print(self.bot.aliases.get(" ".join(split_cmd[0:n])))
+                        valid = True
+                        break
 
             if valid:
                 self.bot.auto_triggers[keyword] = command

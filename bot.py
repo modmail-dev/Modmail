@@ -1010,6 +1010,7 @@ class ModmailBot(commands.Bot):
             if trigger:
                 invoker = trigger.lower()
 
+        print("looking for auto trigger", trigger, self.auto_triggers[trigger])
         alias = self.auto_triggers[trigger]
 
         ctxs = []
@@ -1019,24 +1020,45 @@ class ModmailBot(commands.Bot):
             if not aliases:
                 logger.warning("Alias %s is invalid as called in autotrigger.", invoker)
 
+            print("Aliases", aliases)
+
             for alias in aliases:
                 view = StringView(invoked_prefix + alias)
+                invoked_with = view.get_word().lower()
+                invoked_with = invoked_with[1:]
+                print("Looking for", invoked_with)
+                found_command = self.all_commands.get(invoked_with)
+
+                # Check for alias
+                if not found_command:
+                    print("INVOKED WITH", invoked_with)
+                    command_alias = self.aliases.get(invoked_with)[1:-1]
+                    view = StringView(invoked_prefix + command_alias)
+                    split_cmd = command_alias.split(" ")
+                    found_command = self.all_commands.get(split_cmd[0])
+
                 ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                ctx_.command = found_command
+                ctx_.invoked_with = invoked_with
                 ctx_.thread = thread
                 discord.utils.find(view.skip_string, await self.get_prefix())
-                ctx_.invoked_with = view.get_word().lower()
-                ctx_.command = self.all_commands.get(ctx_.invoked_with)
+
+                print("Command info:", view, ctx_, ctx_.thread, ctx_.invoked_with, ctx_.command)
                 ctxs += [ctx_]
 
         for ctx in ctxs:
             if ctx.command:
+                print("Found command")
                 old_checks = copy.copy(ctx.command.checks)
+                print("Old checks set")
                 ctx.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
-
+                print("Command checks added, invoking...", ctx)
                 await self.invoke(ctx)
 
                 ctx.command.checks = old_checks
                 continue
+            else:
+                print("unable to find command")
 
     async def get_context(self, message, *, cls=commands.Context):
         """

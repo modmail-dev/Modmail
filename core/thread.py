@@ -241,6 +241,7 @@ class Thread:
         async def activate_auto_triggers():
             if initial_message:
                 message = DummyMessage(copy.copy(initial_message))
+
                 try:
                     return await self.bot.trigger_auto_triggers(message, channel)
                 except RuntimeError:
