@@ -1771,7 +1771,7 @@ class Utility(commands.Cog):
                 embed = discord.Embed(
                     title="Error",
                     color=self.bot.error_color,
-                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                    description="Invalid command. Please provide a valid command or alias.",
                 )
 
         await ctx.send(embed=embed)
@@ -1812,7 +1812,7 @@ class Utility(commands.Cog):
                 embed = discord.Embed(
                     title="Error",
                     color=self.bot.error_color,
-                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                    description="Invalid command. Please provide a valid command or alias.",
                 )
 
         await ctx.send(embed=embed)
