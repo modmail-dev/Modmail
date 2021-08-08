@@ -1,7 +1,6 @@
 import base64
 import functools
 import re
-import string
 import typing
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
@@ -396,7 +395,7 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
         if "Maximum number of channels in category reached" in e.text:
             fallback_id = bot.config["fallback_category_id"]
             if fallback_id:
-                fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
+                fallback = discord.utils.get(category.guild.categories, id=int(fallback_id))
                 if fallback and len(fallback.channels) < 49:
                     category = fallback
 

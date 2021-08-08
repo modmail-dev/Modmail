@@ -1,4 +1,4 @@
-__version__ = "3.10.0-dev7"
+__version__ = "3.10.0-dev8"
 
 
 import asyncio
@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import signal
+import string
 import sys
 import typing
 from datetime import datetime
