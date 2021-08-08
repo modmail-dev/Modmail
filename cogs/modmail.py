@@ -818,7 +818,7 @@ class Modmail(commands.Cog):
         Supports attachments and images as well as
         automatically embedding image URLs.
         """
-        print("MSG IS", msg, ctx.message.content)
+
         ctx.message.content = msg
         
         async with ctx.typing():

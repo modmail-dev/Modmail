@@ -1048,8 +1048,6 @@ class ModmailBot(commands.Bot):
 
                 ctx.command.checks = old_checks
                 continue
-            else:
-                print("unable to find command")
 
     async def get_context(self, message, *, cls=commands.Context):
         """
