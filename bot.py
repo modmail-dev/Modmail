@@ -1020,7 +1020,6 @@ class ModmailBot(commands.Bot):
                 logger.warning("Alias %s is invalid as called in autotrigger.", invoker)
 
             for alias in aliases:
-                print("Initial view", invoked_prefix + alias)
                 view = StringView(invoked_prefix + alias)
                 invoked_with = view.get_word().lower()[1:]
                 found_command = self.all_commands.get(invoked_with)
