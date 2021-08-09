@@ -1013,32 +1013,20 @@ class ModmailBot(commands.Bot):
         alias = self.auto_triggers[trigger]
 
         ctxs = []
+
         if alias is not None:
             ctxs = []
             aliases = normalize_alias(alias)
             if not aliases:
                 logger.warning("Alias %s is invalid as called in autotrigger.", invoker)
 
-            for alias in aliases:
-                view = StringView(invoked_prefix + alias)
-                invoked_with = view.get_word().lower()[1:]
-                found_command = self.all_commands.get(invoked_with)
+        message.author = thread.recipient  # Allow for get_contexts to work
 
-                # Check for alias
-                if not found_command:
-                    invoked_with = self.aliases.get(invoked_with)[1:-1]  # Get command linked to alias
-                    view = StringView(invoked_prefix + invoked_with)  # Create StringView for new command
-                    invoked_with = view.get_word().lower()[1:]  # Parse the new command
-                    found_command = self.all_commands.get(invoked_with)  # Get the command function
+        for alias in aliases:
+            message.content = invoked_prefix + alias
+            ctxs += await self.get_contexts(message)
 
-                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
-                ctx_.command = found_command
-
-                ctx_.invoked_with = invoked_with
-                ctx_.thread = thread
-                discord.utils.find(view.skip_string, await self.get_prefix())
-
-                ctxs += [ctx_]
+        message.author = self.modmail_guild.me  # Fix message so commands execute properly
 
         for ctx in ctxs:
             if ctx.command:
