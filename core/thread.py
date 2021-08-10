@@ -1294,20 +1294,6 @@ class ThreadManager:
 
         self.cache[recipient.id] = thread
 
-        # Schedule thread setup for later
-        cat = self.bot.main_category
-        if category is None and len(cat.channels) >= 49:
-            fallback_id = self.bot.config["fallback_category_id"]
-            if fallback_id:
-                fallback = discord.utils.get(cat.guild.categories, id=int(fallback_id))
-                if fallback and len(fallback.channels) < 49:
-                    category = fallback
-
-            if not category:
-                category = await cat.clone(name="Fallback Modmail")
-                self.bot.config.set("fallback_category_id", str(category.id))
-                await self.bot.config.update()
-
         if (message or not manual_trigger) and self.bot.config["confirm_thread_creation"]:
             if not manual_trigger:
                 destination = recipient
