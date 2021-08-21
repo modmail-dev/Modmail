@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# v3.10.0-dev9
+# v3.10.0-dev10
 
 v3.10 adds group conversations while resolving other bugs and QOL changes. It is potentially breaking to some plugins that adds functionality to threads.
 
@@ -25,6 +25,7 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 
 ### Improved
 - `?contact` now accepts a role or multiple users (creates a group conversation). ([GH #3082](https://github.com/kyb3r/modmail/issues/3082))
+- Aliases are now supported in autotrigger. ([GH #3081](https://github.com/kyb3r/modmail/pull/3081))
 
 ### Fixed
 
@@ -39,6 +40,7 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 - `thread_auto_close` timer now only resets on non-note and replies from mods. ([GH #3030](https://github.com/kyb3r/modmail/issues/3030))
 - Deleted messages are now deleted on both ends. ([GH #3041](https://github.com/kyb3r/modmail/issues/3041), [@JerrieAries](https://github.com/kyb3r/modmail/commit/20b31f8e8b5497943513997fef788d72ae668438))
 - Persistent notes are now properly deleted from the database. ([GH #3013](https://github.com/kyb3r/modmail/issues/3013))
+- Modmail Bot is now recognized to have `OWNER` permission level. This affects what can be run in autotriggers.
 
 ### Internal
 
