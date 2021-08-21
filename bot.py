@@ -286,7 +286,6 @@ class ModmailBot(commands.Bot):
                     loop.run_until_complete(loop.shutdown_asyncgens())
             finally:
                 logger.info("Closing the event loop.")
-                # loop.close()
 
         if not future.cancelled():
             try:
