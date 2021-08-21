@@ -1166,7 +1166,9 @@ class Modmail(commands.Cog):
         Supports attachments and images as well as
         automatically embedding image URLs.
         """
+
         ctx.message.content = msg
+
         async with ctx.typing():
             await ctx.thread.reply(ctx.message)
 

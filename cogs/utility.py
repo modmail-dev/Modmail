@@ -1752,6 +1752,13 @@ class Utility(commands.Cog):
                     valid = True
                     break
 
+            if not valid and self.bot.aliases:
+                for n in range(1, len(split_cmd) + 1):
+                    if self.bot.aliases.get(" ".join(split_cmd[0:n])):
+                        print(self.bot.aliases.get(" ".join(split_cmd[0:n])))
+                        valid = True
+                        break
+
             if valid:
                 self.bot.auto_triggers[keyword] = command
                 await self.bot.config.update()
@@ -1765,7 +1772,7 @@ class Utility(commands.Cog):
                 embed = discord.Embed(
                     title="Error",
                     color=self.bot.error_color,
-                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                    description="Invalid command. Please provide a valid command or alias.",
                 )
 
         await ctx.send(embed=embed)
@@ -1785,6 +1792,14 @@ class Utility(commands.Cog):
                     valid = True
                     break
 
+            if not valid and self.bot.aliases:
+                for n in range(1, len(split_cmd) + 1):
+                    print(" ".join(split_cmd[0:n]), self.bot.aliases.get(" ".join(split_cmd[0:n])))
+                    if self.bot.aliases.get(" ".join(split_cmd[0:n])):
+                        print(self.bot.aliases.get(" ".join(split_cmd[0:n])))
+                        valid = True
+                        break
+
             if valid:
                 self.bot.auto_triggers[keyword] = command
                 await self.bot.config.update()
@@ -1798,7 +1813,7 @@ class Utility(commands.Cog):
                 embed = discord.Embed(
                     title="Error",
                     color=self.bot.error_color,
-                    description="Invalid command. Note that autotriggers do not work with aliases.",
+                    description="Invalid command. Please provide a valid command or alias.",
                 )
 
         await ctx.send(embed=embed)
