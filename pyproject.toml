@@ -34,5 +34,5 @@ repository = 'https://github.com/kyb3r/modmail'
 homepage = 'https://github.com/kyb3r/modmail'
 keywords = ['discord', 'modmail']
 
-[tool.pylint.format]react_to_contact_message
+[tool.pylint.format]
 max-line-length = "110"
