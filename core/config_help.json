@@ -434,7 +434,7 @@
     ]
   },
   "thread_creation_contact_response": {
-    "default": "\"{creator.name} has opened a Modmail thread.\"",
+    "default": "\"{{creator.name}} has opened a Modmail thread.\"",
     "description": "This is the message embed description sent to recipients when contacted by a mod.",
     "examples": [
       "`{prefix}config set thread_creation_contact_response New thread opened.`"

@@ -444,7 +444,6 @@ class Utility(commands.Cog):
         with open(
             os.path.join(os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"),
             "rb+",
-            encoding="utf-8",
         ) as f:
             logs = BytesIO(f.read().strip())
 
