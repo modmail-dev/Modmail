@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.10.1
+
+This is a hotfix for the edit command.
+
+### Fixed
+
+- `?edit` now works properly.
+
 # v3.10.0
 
 v3.10 adds group conversations while resolving other bugs and QOL changes. It is potentially breaking to some plugins that adds functionality to threads.
@@ -24,6 +32,7 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 - `use_timestamp_channel_name` config to create thread channels by timestamp.
 
 ### Improved
+
 - `?contact` now accepts a role or multiple users (creates a group conversation). ([GH #3082](https://github.com/kyb3r/modmail/issues/3082))
 - Aliases are now supported in autotrigger. ([GH #3081](https://github.com/kyb3r/modmail/pull/3081))
 

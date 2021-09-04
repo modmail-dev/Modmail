@@ -665,7 +665,7 @@ class Thread:
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
         if message2 is not [None]:
             for m2 in message2:
-                embed2 = message2.embeds[0]
+                embed2 = m2.embeds[0]
                 embed2.description = message
                 tasks += [m2.edit(embed=embed2)]
         elif message1.embeds[0].author.name.startswith("Persistent Note"):
