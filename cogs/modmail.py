@@ -206,7 +206,13 @@ class Modmail(commands.Cog):
         {prefix}snippet add "two word" this is a two word snippet.
         ```
         """
-        if name in self.bot.snippets:
+        if self.bot.get_command(name):
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"A command with the same name already exists: `{name}`.",
+            )
+        elif name in self.bot.snippets:
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
