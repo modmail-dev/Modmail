@@ -1,4 +1,4 @@
-__version__ = "3.10.1"
+__version__ = "3.10.0"
 
 
 import asyncio
@@ -1329,7 +1329,7 @@ class ModmailBot(commands.Bot):
             return await member.send(embed=embed)
 
         ctx = await self.get_context(message)
-        await ctx.invoke(self.get_command("contact"), user=member, manual_trigger=False)
+        await ctx.invoke(self.get_command("contact"), users=[member], manual_trigger=False)
 
     async def on_raw_reaction_add(self, payload):
         await asyncio.gather(
