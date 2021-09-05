@@ -426,7 +426,7 @@
     "default": "\"You have opened a Modmail thread.\"",
     "description": "This is the message embed description sent to recipients when self-contacted.",
     "examples": [
-      "`{prefix}config set thread_creation_contact_title You contacted yourself.`"
+      "`{prefix}config set thread_creation_self_contact_response You contacted yourself.`"
     ],
     "notes": [
       "`thread_creation_contact_response` is used when contacted by another user.",
