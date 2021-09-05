@@ -806,7 +806,7 @@ class Thread:
     async def reply(
         self, message: discord.Message, anonymous: bool = False, plain: bool = False
     ) -> typing.Tuple[typing.List[discord.Message], discord.Message]:
-       """Returns List[user_dm_msg] and thread_channel_msg"""
+        """Returns List[user_dm_msg] and thread_channel_msg"""
         if not message.content and not message.attachments:
             raise MissingRequiredArgument(SimpleNamespace(name="msg"))
         if not any(g.get_member(self.id) for g in self.bot.guilds):
