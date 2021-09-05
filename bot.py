@@ -1,4 +1,4 @@
-__version__ = "3.10.2"
+__version__ = "3.10.3"
 
 
 import asyncio
@@ -1693,6 +1693,15 @@ def main():
             discord.__version__,
         )
         sys.exit(0)
+
+    if os.environ.get("LOG_DISCORD"):
+        logger.debug(f"Discord logging enabled: {os.environ['LOG_DISCORD'].upper()}")
+        d_logger = logging.getLogger("discord")
+
+        d_logger.setLevel(os.environ["LOG_DISCORD"].upper())
+        handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
+        handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
+        d_logger.addHandler(handler)
 
     bot = ModmailBot()
     bot.run()

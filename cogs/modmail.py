@@ -212,6 +212,7 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color,
                 description=f"A command with the same name already exists: `{name}`.",
             )
+            return await ctx.send(embed=embed)
         elif name in self.bot.snippets:
             embed = discord.Embed(
                 title="Error",
@@ -812,6 +813,16 @@ class Modmail(commands.Cog):
                 await ctx.send(embed=em)
                 ctx.command.reset_cooldown(ctx)
                 return
+
+        if not users:
+            em = discord.Embed(
+                title="Error",
+                description="No valid users to remove.",
+                color=self.bot.error_color,
+            )
+            await ctx.send(embed=em)
+            ctx.command.reset_cooldown(ctx)
+            return
 
         if not silent:
             description = self.bot.formatter.format(

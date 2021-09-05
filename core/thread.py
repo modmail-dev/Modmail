@@ -51,7 +51,7 @@ class Thread:
             self._recipient = recipient
         self._other_recipients = other_recipients or []
         self._channel = channel
-        self.genesis_message = None
+        self._genesis_message = None
         self._ready_event = asyncio.Event()
         self.wait_tasks = []
         self.close_task = None
@@ -140,6 +140,15 @@ class Thread:
 
         return thread
 
+    async def get_genesis_message(self) -> discord.Message:
+        if self._genesis_message is None:
+            async for m in self.channel.history(limit=5, oldest_first=True):
+                if m.author == self.bot.user:
+                    if m.embeds and m.embeds[0].fields and m.embeds[0].fields[0].name == "Roles":
+                        self._genesis_message = m
+
+        return self._genesis_message
+
     async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
         self.bot.dispatch("thread_initiate", self, creator, category, initial_message)
@@ -195,7 +204,7 @@ class Thread:
             try:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
-                self.genesis_message = msg
+                self._genesis_message = msg
             except Exception:
                 logger.error("Failed unexpectedly:", exc_info=True)
 
@@ -1131,6 +1140,26 @@ class Thread:
 
         await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
 
+    async def _update_users_genesis(self):
+        genesis_message = await self.get_genesis_message()
+        embed = genesis_message.embeds[0]
+        value = " ".join(x.mention for x in self._other_recipients)
+        index = None
+        for n, field in enumerate(embed.fields):
+            if field.name == "Other Recipients":
+                index = n
+                break
+
+        if index is None and value:
+            embed.add_field(name="Other Recipients", value=value, inline=False)
+        else:
+            if value:
+                embed.set_field_at(index, value=value)
+            else:
+                embed.remove_field(index)
+
+        await genesis_message.edit(embed=embed)
+
     async def add_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
         title = match_title(self.channel.topic)
         user_id = match_user_id(self.channel.topic)
@@ -1138,6 +1167,8 @@ class Thread:
 
         ids = ",".join(str(i.id) for i in self._other_recipients)
         await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
+
+        await self._update_users_genesis()
 
     async def remove_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
         title = match_title(self.channel.topic)
@@ -1147,6 +1178,8 @@ class Thread:
 
         ids = ",".join(str(i.id) for i in self._other_recipients)
         await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
+
+        await self._update_users_genesis()
 
 
 class ThreadManager:
