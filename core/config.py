@@ -123,6 +123,7 @@ class ConfigManager:
         "confirm_thread_creation_deny": "\N{NO ENTRY SIGN}",
         # regex
         "use_regex_autotrigger": False,
+        "use_hoisted_top_role": True,
     }
 
     private_keys = {
@@ -209,6 +210,7 @@ class ConfigManager:
         "thread_show_roles",
         "thread_show_account_age",
         "thread_show_join_age",
+        "use_hoisted_top_role",
     }
 
     enums = {

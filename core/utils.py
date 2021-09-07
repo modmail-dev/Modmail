@@ -30,7 +30,7 @@ __all__ = [
     "trigger_typing",
     "escape_code_block",
     "tryint",
-    "get_top_hoisted_role",
+    "get_top_role",
     "get_joint_id",
 ]
 
@@ -369,9 +369,11 @@ def tryint(x):
         return x
 
 
-def get_top_hoisted_role(member: discord.Member):
+def get_top_role(member: discord.Member, hoisted=True):
     roles = sorted(member.roles, key=lambda r: r.position, reverse=True)
     for role in roles:
+        if not hoisted:
+            return role
         if role.hoist:
             return role
 

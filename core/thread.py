@@ -21,7 +21,7 @@ from core.utils import (
     match_user_id,
     match_other_recipients,
     truncate,
-    get_top_hoisted_role,
+    get_top_role,
     create_thread_channel,
     get_joint_id,
 )
@@ -938,7 +938,7 @@ class Thread:
                 # Anonymously sending to the user.
                 tag = self.bot.config["mod_tag"]
                 if tag is None:
-                    tag = str(get_top_hoisted_role(author))
+                    tag = str(get_top_role(author, self.bot.config["use_hoisted_top_role"]))
                 name = self.bot.config["anon_username"]
                 if name is None:
                     name = tag
@@ -1055,7 +1055,7 @@ class Thread:
             elif not anonymous:
                 mod_tag = self.bot.config["mod_tag"]
                 if mod_tag is None:
-                    mod_tag = str(get_top_hoisted_role(message.author))
+                    mod_tag = str(get_top_role(message.author, self.bot.config["use_hoisted_top_role"]))
                 embed.set_footer(text=mod_tag)  # Normal messages
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
