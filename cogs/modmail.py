@@ -1362,9 +1362,16 @@ class Modmail(commands.Cog):
         """
         silent = False
         if isinstance(category, str):
-            if "silent" in category or "silently" in category:
+            category = category.split()
+
+            # just check the last element in the list
+            if category[-1].lower() in ("silent", "silently"):
                 silent = True
-                category = category.strip("silently").strip("silent").strip()
+                # remove the last element as we no longer need it
+                category.pop()
+
+            category = " ".join(category)
+            if category:
                 try:
                     category = await SimilarCategoryConverter().convert(
                         ctx, category
