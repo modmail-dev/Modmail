@@ -1121,5 +1121,16 @@
     "notes": [
       "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
+  },
+  "use_hoisted_top_role": {
+    "default": "Yes",
+    "description": "Controls if only hoisted roles are evaluated when finding top role.",
+    "examples": [
+    ],
+    "notes": [
+      "Top role is displayed in embeds when replying or adding/removing users to a thread in the case mod_tag and anon_username are not set.",
+      "If this configuration is enabled, only roles that are hoisted (displayed seperately in member list) will be used. If a user has no hoisted roles, it will return 'None'.",
+      "If you would like to display the top role of a user regardless of if it's hoisted or not, disable `use_hoisted_top_role`."
+    ]
   }
 }
