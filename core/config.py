@@ -60,7 +60,7 @@ class ConfigManager:
         "thread_auto_close_silently": False,
         "thread_auto_close": isodate.Duration(),
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
-        "thread_creation_response": "The staff team will get back to you as soon as possible.",
+        "thread_creation_response": "THANKS FOR CONTACT.The staff team will get back to you as soon as possible.",
         "thread_creation_footer": "Your message has been sent",
         "thread_contact_silently": False,
         "thread_self_closable_creation_footer": "Click the lock to close the thread",
