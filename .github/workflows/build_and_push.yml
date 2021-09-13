@@ -1,0 +1,46 @@
+name: Build and push to Docker hub
+
+on: 
+  release:
+    types: [released]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Create a shorter commit SHA-based tag for Docker hub
+      - name: Create SHA Container Tag
+        id: sha_tag
+        run: |
+          tag=$(cut -c 1-7 <<< $GITHUB_SHA)
+          echo "::set-output name=tag::$tag"
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build and push the container to Dockerhub.
+      # The container will be tagged as "latest", 
+      # the short SHA of the commit, and the tag
+      # of the release.
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          cache-from: type=registry,ref=kyb3r/modmail:latest
+          cache-to: type=inline
+          tags: |
+            kyb3r/modmail:latest
+            kyb3r/modmail:${{ steps.sha_tag.outputs.tag }}
+            kyb3r/modmail:${{ GITHUB_REF }}
