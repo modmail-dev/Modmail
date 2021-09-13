@@ -28,7 +28,7 @@
     },
     "dragory-migrate": {
         "repository": "kyb3r/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Migrate your logs from Dragory's modmail bot to this one with a simple command. Added at the request of users.",
         "bot_version": "2.20.1",
         "title": "Dragory Logs Migration",
@@ -37,7 +37,7 @@
     },
     "music": {
         "repository": "Taaku18/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Play wonderfull jams through your modmail!",
         "bot_version": "2.20.1",
         "title": "music",
@@ -46,7 +46,7 @@
     },
     "media-only": {
         "repository": "lorenzo132/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Make a channel mediaonly, only the following mediatypes will be accepted `.png` / `.gif` / `.jpg` / `.mp4`/ `.jpeg`",
         "bot_version": "2.20.1",
         "title": "Media-only",
@@ -55,7 +55,7 @@
     },
     "anti-steal-close": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Don't let anyone steal ya close.",
         "title": "Anti Steal Close",
         "icon_url": "https://i.imgur.com/LovxyV3.png",
@@ -63,7 +63,7 @@
     },
     "announcement": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Easily make announcements in your server!",
         "bot_version": "2.20.1",
         "title": "Announcement Plugin",
@@ -72,7 +72,7 @@
     },
     "dm-on-join": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "DM New Users when they join",
         "bot_version": "2.20.1",
         "title": "DM-on-join Plugin",
@@ -81,7 +81,7 @@
     },
     "giveaway": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Host giveaways on your server",
         "bot_version": "2.20.1",
         "title": "\uD83C\uDF89 Giveaway Plugin \uD83C\uDF89",
@@ -90,7 +90,7 @@
     },
     "hastebin": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Easily Upload Text To hastebin!",
         "bot_version": "2.20.1",
         "title": "Hastebin Plugin",
@@ -99,7 +99,7 @@
     },
     "leave-server": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Don't want your bot in a server? Did someone invite it without your permission? If so, this plugin is useful for you!",
         "bot_version": "2.20.1",
         "title": "Leave-server Plugin",
@@ -108,7 +108,7 @@
     },
     "welcomer": {
         "repository": "fourjr/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Add messages to welcome new members! Allows for embedded messages as well. [Read more](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)",
         "bot_version": "2.20.1",
         "title": "New member messages plugin",
@@ -117,7 +117,7 @@
     },
     "tags": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Tag Management For Your Server",
         "bot_version": "2.20.1",
         "title": "Tags Plugin",
@@ -126,7 +126,7 @@
     },
     "backupdb": {
         "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Backup you're current Modmail DB with a single command!\n\n**Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
         "bot_version": "2.20.1",
         "title": "Backup Database (backupdb)",
@@ -135,7 +135,7 @@
     },
     "colors": {
         "repository": "Taaku18/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Conversions between hex, RGB, and color names.",
         "bot_version": "2.20.1",
         "title": "Colors!!",
@@ -144,7 +144,7 @@
     },
     "fun": {
         "repository": "TheKinG2149/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Some fun commands like 8ball, dadjokes",
         "bot_version": "2.24.1",
         "title": "Fun",
@@ -153,7 +153,7 @@
     },
     "stats": {
         "repository": "KarateWumpus/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Get useful stats directly in an embed about either the Modmail bot, a user or the server.",
         "bot_version": "2.24.1",
         "title": "Get Stats",
@@ -171,7 +171,7 @@
     },
     "serverstats": {
         "repository": "dazvise/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Voice channels containing interesting and accurate statistics about your server such as Member Count.",
         "bot_version": "2.20.1",
         "title": "Server Stats",
@@ -180,7 +180,7 @@
     },
     "suggest": {
         "repository": "realcyguy/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Send suggestions to a selected server! It has accepting, denying, and moderation-ing.",
         "bot_version": "3.4.1",
         "title": "Suggest stuff.",
@@ -189,7 +189,7 @@
     },
     "githubstats": {
         "repository": "mischievousdev/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Github statistics in discord",
         "bot_version": "2.20.1",
         "title": "Github Stats",
@@ -198,7 +198,7 @@
     },
     "slowmode": {
         "repository": "teen1/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Configure slow mode for your channels with Modmail!",
         "bot_version": "2.20.1",
         "title": "Slow Mode",
@@ -207,7 +207,7 @@
     },
     "translate": {
         "repository": "WebKide/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "(∩｀-´)⊃━☆ﾟ.*･｡ﾟ translate text from one language to another (defaults to English)\n\nGet full list of available languages at: https://github.com/WebKide/modmail-plugins/blob/master/translate/langs.json\n\nThis command conflicts with Translator-plugin",
         "bot_version": "3.5.0",
         "title": "Translate",
@@ -216,7 +216,7 @@
     },
     "countdowns": {
         "repository": "fourjr/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Setup a countdown voice channel in your server!",
         "bot_version": "3.6.2",
         "title": "Countdowns",
@@ -225,7 +225,7 @@
     },
     "action": {
         "repository": "6days9weeks/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Have fun with others by hugging them or giving them pats~!!",
         "title": "Action",
         "icon_url": "https://media.discordapp.net/attachments/720733784970100776/820933433579798528/689105042212388965.png",
@@ -233,7 +233,7 @@
     },
     "menu": {
         "repository": "fourjr/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Adds reaction-based menus into thread creates. Check out `?configmenu`",
         "title": "Menus",
         "bot_version": "3.9.0",
@@ -242,7 +242,7 @@
     },
     "claim": {
         "repository": "fourjr/modmail-plugins",
-        "branch": "master",
+        "branch": "main",
         "description": "Allows supporters to claim thread by sending ?claim in the thread channel",
         "title": "Claim Thread",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
