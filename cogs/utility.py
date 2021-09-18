@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 import os
+import sys
 import random
 import re
 import traceback
@@ -265,6 +266,11 @@ class Utility(commands.Cog):
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
 
+    @checks.has_permissions_predicate(PermissionLevel.OWNER)
+    async def killbot(self, ctx):
+        await ctx.send("Goodbye!")
+        sys.exit(0)
+    
     @commands.command()
     @checks.has_permissions(PermissionLevel.REGULAR)
     @utils.trigger_typing
