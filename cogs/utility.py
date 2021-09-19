@@ -266,6 +266,7 @@ class Utility(commands.Cog):
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
 
+    @commands.command()
     @checks.has_permissions_predicate(PermissionLevel.OWNER)
     async def killbot(self, ctx):
         await ctx.send("Goodbye!")
