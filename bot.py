@@ -582,7 +582,7 @@ class ModmailBot(commands.Bot):
                 continue
 
             await thread.close(
-                closer=self.get_user(items["closer_id"]),
+                closer=self.get_user(items["closer_id"]) or await self.fetch_user(items["closer_id"]),
                 after=after,
                 silent=items["silent"],
                 delete_channel=items["delete_channel"],
