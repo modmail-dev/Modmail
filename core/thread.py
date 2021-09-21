@@ -126,12 +126,12 @@ class Thread:
         if recipient_id in manager.cache:
             thread = manager.cache[recipient_id]
         else:
-            recipient = manager.bot.get_user(recipient_id) or await manager.bot.fetch_user(recipient_id)
+            recipient = await manager.bot.get_or_fetch_user(recipient_id)
 
             other_recipients = []
             for uid in match_other_recipients(channel.topic):
                 try:
-                    other_recipient = manager.bot.get_user(uid) or await manager.bot.fetch_user(uid)
+                    other_recipient = await manager.bot.get_or_fetch_user(uid)
                 except discord.NotFound:
                     continue
                 other_recipients.append(other_recipient)
@@ -1243,14 +1243,14 @@ class ThreadManager:
             return self.cache[user_id]
 
         try:
-            recipient = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
+            recipient = await self.bot.get_or_fetch_user(user_id)
         except discord.NotFound:
             recipient = None
 
         other_recipients = []
         for uid in match_other_recipients(channel.topic):
             try:
-                other_recipient = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
+                other_recipient = await self.bot.get_or_fetch_user(uid)
             except discord.NotFound:
                 continue
             other_recipients.append(other_recipient)
