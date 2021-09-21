@@ -656,6 +656,15 @@ class ModmailBot(commands.Bot):
                 raise
         return name
 
+    async def get_or_fetch_user(self, id: int) -> discord.User:
+        """
+        Retrieve a User based on their ID.
+
+        This tries getting the user from the cache and falls back to making
+        an API call if they're not found in the cache.
+        """
+        return self.get_user(id) or await self.fetch_user(id)
+
     async def retrieve_emoji(self) -> typing.Tuple[str, str]:
 
         sent_emoji = self.config["sent_emoji"]
