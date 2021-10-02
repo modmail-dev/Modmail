@@ -393,19 +393,20 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
         errors_raised.append((e.text, (category, name)))
 
         if "Maximum number of channels in category reached" in e.text:
+            fallback = None
             fallback_id = bot.config["fallback_category_id"]
             if fallback_id:
                 fallback = discord.utils.get(category.guild.categories, id=int(fallback_id))
-                if fallback and len(fallback.channels) < 49:
-                    category = fallback
+                if fallback and len(fallback.channels) >= 49:
+                    fallback = None
 
-            if not category:
-                category = await category.clone(name="Fallback Modmail")
+            if not fallback:
+                fallback = await category.clone(name="Fallback Modmail")
                 bot.config.set("fallback_category_id", str(category.id))
                 await bot.config.update()
 
             return await create_thread_channel(
-                bot, recipient, category, overwrites, errors_raised=errors_raised
+                bot, recipient, fallback, overwrites, errors_raised=errors_raised
             )
 
         if "Contains words not allowed" in e.text:
