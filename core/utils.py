@@ -376,8 +376,10 @@ def get_top_hoisted_role(member: discord.Member):
             return role
 
 
-async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=[]):
+async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=None):
     name = name or bot.format_channel_name(recipient)
+    errors_raised = errors_raised or []
+
     try:
         channel = await bot.modmail_guild.create_text_channel(
             name=name,
