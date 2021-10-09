@@ -1848,7 +1848,7 @@ class Modmail(commands.Cog):
                 and message.embeds[0].color.value == self.bot.main_color
                 and message.embeds[0].footer.text
             ):
-                user_id = match_user_id(message.embeds[0].footer.text)
+                user_id = match_user_id(message.embeds[0].footer.text, any_string=True)
                 other_recipients = match_other_recipients(ctx.channel.topic)
                 for n, uid in enumerate(other_recipients):
                     other_recipients[n] = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
