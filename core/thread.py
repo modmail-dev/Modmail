@@ -1135,10 +1135,16 @@ class Thread:
         return " ".join(set(mentions))
 
     async def set_title(self, title: str) -> None:
-        user_id = match_user_id(self.channel.topic)
-        ids = ",".join(i.id for i in self._other_recipients)
+        topic = f"Title: {title}\n"
 
-        await self.channel.edit(topic=f"Title: {title}\nUser ID: {user_id}\nOther Recipients: {ids}")
+        user_id = match_user_id(self.channel.topic)
+        topic += f"User ID: {user_id}"
+
+        if self._other_recipients:
+            ids = ",".join(str(i.id) for i in self._other_recipients)
+            topic += f"\nOther Recipients: {ids}"
+
+        await self.channel.edit(topic=topic)
 
     async def _update_users_genesis(self):
         genesis_message = await self.get_genesis_message()
@@ -1161,32 +1167,37 @@ class Thread:
         await genesis_message.edit(embed=embed)
 
     async def add_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
+        topic = ""
         title, user_id, _ = parse_channel_topic(self.channel.topic)
         if title is not None:
-            title = f"Title: {title}\n"
-        else:
-            title = ""
+            topic += f"Title: {title}\n"
+
+        topic += f"User ID: {user_id}"
 
         self._other_recipients += users
-
         ids = ",".join(str(i.id) for i in self._other_recipients)
-        await self.channel.edit(topic=f"{title}User ID: {user_id}\nOther Recipients: {ids}")
 
+        topic += f"\nOther Recipients: {ids}"
+
+        await self.channel.edit(topic=topic)
         await self._update_users_genesis()
 
     async def remove_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
+        topic = ""
         title, user_id, _ = parse_channel_topic(self.channel.topic)
         if title is not None:
-            title = f"Title: {title}\n"
-        else:
-            title = ""
+            topic += f"Title: {title}\n"
+
+        topic += f"User ID: {user_id}"
 
         for u in users:
             self._other_recipients.remove(u)
 
-        ids = ",".join(str(i.id) for i in self._other_recipients)
-        await self.channel.edit(topic=f"{title}User ID: {user_id}\nOther Recipients: {ids}")
+        if self._other_recipients:
+            ids = ",".join(str(i.id) for i in self._other_recipients)
+            topic += f"\nOther Recipients: {ids}"
 
+        await self.channel.edit(topic=topic)
         await self._update_users_genesis()
 
 
