@@ -247,5 +247,13 @@
         "title": "Claim Thread",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "phishchecker": {
+        "repository": "TheDiscordHistorian/historian-cogs",
+        "branch": "main",
+        "description": "Deletes scam links from your server and optionally kick / ban the user.",
+        "title": "Scam Link Detector",
+        "icon_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png"
     }
 }
