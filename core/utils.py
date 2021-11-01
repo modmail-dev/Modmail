@@ -221,9 +221,9 @@ def cleanup_code(content: str) -> str:
 
 
 TOPIC_REGEX = re.compile(
-    r"\b(Title: (?P<title>.*)\n)?"
+    r"(?:\bTitle:\s*(?P<title>.*)\n)?"
     r"\bUser ID:\s*(?P<user_id>\d{17,21})\b"
-    r"(\nOther Recipients:\s*(?P<other_ids>(\d{17,21},?)+))?",
+    r"(?:\nOther Recipients:\s*(?P<other_ids>\d{17,21}(?:(?:\s*,\s*)\d{17,21})*)\b)?",
     flags=re.IGNORECASE | re.DOTALL,
 )
 UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
