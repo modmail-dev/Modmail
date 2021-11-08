@@ -190,11 +190,19 @@ Real Madrid:
 </a>
 <br>
 <br>
+Advertise Your Server:
+<br>
+<a href='https://discord.gg/zP8KcF4VQz'>
+  <img height=100 src='https://user-images.githubusercontent.com/45324516/140673115-dd3e873c-36b6-4383-9eb4-db42e1986ab3.png' style='margin:5px'>
+</a>
+<br>
+<br>
 Discord Advice Center:
 <br>
 <a href='https://discord.gg/zmwZy5fd9v'>
   <img height=100 src='https://i.imgur.com/1hrjcHd.png' style='margin:5px'>
 </a>
+
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
 
