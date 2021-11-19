@@ -20,9 +20,11 @@ __all__ = [
     "human_join",
     "days",
     "cleanup_code",
+    "parse_channel_topic",
     "match_title",
     "match_user_id",
     "match_other_recipients",
+    "create_thread_channel",
     "create_not_found_embed",
     "parse_alias",
     "normalize_alias",
@@ -218,9 +220,45 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
-TOPIC_OTHER_RECIPIENTS_REGEX = re.compile(r"Other Recipients:\s*((?:\d{17,21},*)+)", flags=re.IGNORECASE)
-TOPIC_TITLE_REGEX = re.compile(r"\bTitle: (.*)\n(?:User ID: )\b", flags=re.IGNORECASE | re.DOTALL)
-TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
+TOPIC_REGEX = re.compile(
+    r"(?:\bTitle:\s*(?P<title>.*)\n)?"
+    r"\bUser ID:\s*(?P<user_id>\d{17,21})\b"
+    r"(?:\nOther Recipients:\s*(?P<other_ids>\d{17,21}(?:(?:\s*,\s*)\d{17,21})*)\b)?",
+    flags=re.IGNORECASE | re.DOTALL,
+)
+UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
+
+
+def parse_channel_topic(text: str) -> typing.Tuple[typing.Optional[str], int, typing.List[int]]:
+    """
+    A helper to parse channel topics and respectivefully returns all the required values
+    at once.
+
+    Parameters
+    ----------
+    text : str
+        The text of channel topic.
+
+    Returns
+    -------
+    Tuple[Optional[str], int, List[int]]
+        A tuple of title, user ID, and other recipients IDs.
+    """
+    title, user_id, other_ids = None, -1, []
+    match = TOPIC_REGEX.search(text)
+    if match is not None:
+        groupdict = match.groupdict()
+        title = groupdict["title"]
+
+        # user ID string is the required one in regex, so if match is found
+        # the value of this won't be None
+        user_id = int(groupdict["user_id"])
+
+        oth_ids = groupdict["other_ids"]
+        if oth_ids:
+            other_ids = list(map(int, oth_ids.split(",")))
+
+    return title, user_id, other_ids
 
 
 def match_title(text: str) -> str:
@@ -237,12 +275,10 @@ def match_title(text: str) -> str:
     Optional[str]
         The title if found.
     """
-    match = TOPIC_TITLE_REGEX.search(text)
-    if match is not None:
-        return match.group(1)
+    return parse_channel_topic(text)[0]
 
 
-def match_user_id(text: str) -> int:
+def match_user_id(text: str, any_string: bool = False) -> int:
     """
     Matches a user ID in the format of "User ID: 12345".
 
@@ -250,16 +286,24 @@ def match_user_id(text: str) -> int:
     ----------
     text : str
         The text of the user ID.
+    any_string: bool
+        Whether to search any string that matches the UID_REGEX, e.g. not from channel topic.
+        Defaults to False.
 
     Returns
     -------
     int
         The user ID if found. Otherwise, -1.
     """
-    match = TOPIC_UID_REGEX.search(text)
-    if match is not None:
-        return int(match.group(1))
-    return -1
+    user_id = -1
+    if any_string:
+        match = UID_REGEX.search(text)
+        if match is not None:
+            user_id = int(match.group(1))
+    else:
+        user_id = parse_channel_topic(text)[1]
+
+    return user_id
 
 
 def match_other_recipients(text: str) -> typing.List[int]:
@@ -276,10 +320,7 @@ def match_other_recipients(text: str) -> typing.List[int]:
     List[int]
         The list of other recipients IDs.
     """
-    match = TOPIC_OTHER_RECIPIENTS_REGEX.search(text)
-    if match is not None:
-        return list(map(int, match.group(1).split(",")))
-    return []
+    return parse_channel_topic(text)[2]
 
 
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
