@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v3.11.0
+
+### Added
+
+- `use_hoisted_top_role` config to use change how default mod tags work, see `v3.10.0#Added` for details. ([PR #3093](https://github.com/kyb3r/modmail/pull/3093))
+
+### Fixed
+
+- Several minor typos. ([PR #3095](https://github.com/kyb3r/modmail/pull/3095), [PR #3116](https://github.com/kyb3r/modmail/pull/3116))
+- Certain cases where fallback categories were not working as intended. ([PR #3109](https://github.com/kyb3r/modmail/pull/3109))
+- `?contact` would create in a random category in silent mode. ([GH #3091](https://github.com/kyb3r/modmail/issues/3091), [PR #3092](https://github.com/kyb3r/modmail/pull/3092))
+- Certain cases where `?close` would fail if closer isn't in cache. ([GH #3104](https://github.com/kyb3r/modmail/issues/3104), [PR #3105](https://github.com/kyb3r/modmail/pull/3105))
+
+### Internal
+
+- Improve regex parsing of channel topics. ([PR #3111](https://github.com/kyb3r/modmail/pull/3111))
+
 # v3.10.3
 
 ### Improved
