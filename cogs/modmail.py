@@ -1053,7 +1053,7 @@ class Modmail(commands.Cog):
             thread = ctx.thread
             if not thread:
                 raise commands.MissingRequiredArgument(SimpleNamespace(name="member"))
-            user = thread.recipient or await self.bot.fetch_user(thread.id)
+            user = thread.recipient or await self.bot.get_or_fetch_user(thread.id)
 
         default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
         icon_url = getattr(user, "avatar_url", default_avatar)
@@ -1510,15 +1510,12 @@ class Modmail(commands.Cog):
                     logger.debug("No longer blocked, user %s.", id_)
                     continue
 
-            user = self.bot.get_user(int(id_))
-            if user:
-                users.append((user.mention, reason))
+            try:
+                user = await self.bot.get_or_fetch_user(int(id_))
+            except discord.NotFound:
+                users.append((id_, reason))
             else:
-                try:
-                    user = await self.bot.fetch_user(id_)
-                    users.append((user.mention, reason))
-                except discord.NotFound:
-                    users.append((id_, reason))
+                users.append((user.mention, reason))
 
         blocked_roles = list(self.bot.blocked_roles.items())
         for id_, reason in blocked_roles:
@@ -1858,7 +1855,7 @@ class Modmail(commands.Cog):
                 user_id = match_user_id(message.embeds[0].footer.text, any_string=True)
                 other_recipients = match_other_recipients(ctx.channel.topic)
                 for n, uid in enumerate(other_recipients):
-                    other_recipients[n] = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
+                    other_recipients[n] = await self.bot.get_or_fetch_user(uid)
 
                 if user_id != -1:
                     recipient = self.bot.get_user(user_id)
@@ -1911,7 +1908,7 @@ class Modmail(commands.Cog):
 
                 other_recipients = match_other_recipients(ctx.channel.topic)
                 for n, uid in enumerate(other_recipients):
-                    other_recipients[n] = self.bot.get_user(uid) or await self.bot.fetch_user(uid)
+                    other_recipients[n] = await self.bot.get_or_fetch_user(uid)
 
                 if recipient is None:
                     self.bot.threads.cache[user.id] = thread = Thread(
