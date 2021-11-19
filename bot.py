@@ -1694,6 +1694,7 @@ def main():
         )
         sys.exit(0)
 
+    # Set up discord.py internal logging
     if os.environ.get("LOG_DISCORD"):
         logger.debug(f"Discord logging enabled: {os.environ['LOG_DISCORD'].upper()}")
         d_logger = logging.getLogger("discord")

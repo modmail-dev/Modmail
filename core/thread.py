@@ -321,7 +321,7 @@ class Thread:
         created = str((time - user.created_at).days)
         user_info = []
         if self.bot.config["thread_show_account_age"]:
-            user_info.append(f"was created {days(created)}")
+            user_info.append(f" was created {days(created)}")
 
         embed = discord.Embed(color=color, description=user.mention, timestamp=time)
 
