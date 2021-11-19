@@ -376,8 +376,10 @@ def get_top_hoisted_role(member: discord.Member):
             return role
 
 
-async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=[]):
+async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=None):
     name = name or bot.format_channel_name(recipient)
+    errors_raised = errors_raised or []
+
     try:
         channel = await bot.modmail_guild.create_text_channel(
             name=name,
@@ -393,19 +395,20 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
         errors_raised.append((e.text, (category, name)))
 
         if "Maximum number of channels in category reached" in e.text:
+            fallback = None
             fallback_id = bot.config["fallback_category_id"]
             if fallback_id:
                 fallback = discord.utils.get(category.guild.categories, id=int(fallback_id))
-                if fallback and len(fallback.channels) < 49:
-                    category = fallback
+                if fallback and len(fallback.channels) >= 49:
+                    fallback = None
 
-            if not category:
-                category = await category.clone(name="Fallback Modmail")
-                bot.config.set("fallback_category_id", str(category.id))
+            if not fallback:
+                fallback = await category.clone(name="Fallback Modmail")
+                bot.config.set("fallback_category_id", str(fallback.id))
                 await bot.config.update()
 
             return await create_thread_channel(
-                bot, recipient, category, overwrites, errors_raised=errors_raised
+                bot, recipient, fallback, overwrites, errors_raised=errors_raised
             )
 
         if "Contains words not allowed" in e.text:
