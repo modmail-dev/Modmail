@@ -582,7 +582,7 @@ class ModmailBot(commands.Bot):
                 continue
 
             await thread.close(
-                closer=self.get_user(items["closer_id"]),
+                closer=await self.get_or_fetch_user(items["closer_id"]),
                 after=after,
                 silent=items["silent"],
                 delete_channel=items["delete_channel"],
@@ -655,6 +655,15 @@ class ModmailBot(commands.Bot):
                 logger.warning("%s is not a valid emoji. %s.", name, e)
                 raise
         return name
+
+    async def get_or_fetch_user(self, id: int) -> discord.User:
+        """
+        Retrieve a User based on their ID.
+
+        This tries getting the user from the cache and falls back to making
+        an API call if they're not found in the cache.
+        """
+        return self.get_user(id) or await self.fetch_user(id)
 
     async def retrieve_emoji(self) -> typing.Tuple[str, str]:
 
