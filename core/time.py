@@ -6,12 +6,14 @@ https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 import re
 from datetime import datetime
 
+import discord
 from discord.ext.commands import BadArgument, Converter
 
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 
 from core.models import getLogger
+
 
 logger = getLogger(__name__)
 
@@ -36,7 +38,7 @@ class ShortTime:
             raise BadArgument("Invalid time provided.")
 
         data = {k: int(v) for k, v in match.groupdict(default="0").items()}
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
         self.dt = now + relativedelta(**data)
 
 
@@ -50,7 +52,7 @@ class HumanTime:
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)
 
     def __init__(self, argument):
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
         if not status.hasDateOrTime:
             raise BadArgument('Invalid time provided, try e.g. "tomorrow" or "3 days".')
@@ -104,7 +106,7 @@ class UserFriendlyTimeSync(Converter):
         try:
             calendar = HumanTime.calendar
             regex = ShortTime.compiled
-            self.dt = self.now = datetime.utcnow()
+            self.dt = self.now = discord.utils.utcnow()
 
             match = regex.match(argument)
             if match is not None and match.group(0):
@@ -186,7 +188,7 @@ class UserFriendlyTime(UserFriendlyTimeSync):
 
 
 def human_timedelta(dt, *, source=None):
-    now = source or datetime.utcnow()
+    now = source or discord.utils.utcnow()
     if dt > now:
         delta = relativedelta(dt, now)
         suffix = ""

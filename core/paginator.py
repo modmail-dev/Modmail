@@ -209,7 +209,13 @@ class EmbedPaginatorSession(PaginatorSession):
                 footer_text = f"Page {i + 1} of {len(self.pages)}"
                 if embed.footer.text:
                     footer_text = footer_text + " • " + embed.footer.text
-                embed.set_footer(text=footer_text, icon_url=embed.footer.icon_url)
+
+                if embed.footer.icon:
+                    icon_url = embed.footer.icon.url
+                else:
+                    icon_url = Embed.Empty
+
+                embed.set_footer(text=footer_text, icon_url=icon_url)
 
     def add_page(self, item: Embed) -> None:
         if isinstance(item, Embed):
@@ -241,7 +247,13 @@ class MessagePaginatorSession(PaginatorSession):
             footer_text = f"Page {self.current+1} of {len(self.pages)}"
             if self.footer_text:
                 footer_text = footer_text + " • " + self.footer_text
-            self.embed.set_footer(text=footer_text, icon_url=self.embed.footer.icon_url)
+
+            if self.embed.footer.icon:
+                icon_url = self.embed.footer.icon.url
+            else:
+                icon_url = Embed.Empty
+
+            self.embed.set_footer(text=footer_text, icon_url=icon_url)
 
     async def _create_base(self, item: str) -> None:
         self._set_footer()

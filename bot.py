@@ -22,8 +22,6 @@ from discord.ext.commands.view import StringView
 from emoji import UNICODE_EMOJI
 from pkg_resources import parse_version
 
-from core.utils import tryint
-
 
 try:
     # noinspection PyUnresolvedReferences
@@ -48,7 +46,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import normalize_alias, truncate
+from core.utils import normalize_alias, truncate, tryint
 
 logger = getLogger(__name__)
 
@@ -69,12 +67,10 @@ class ModmailBot(commands.Bot):
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
         self._session = None
         self._api = None
-        self.metadata_loop = None
-        self.autoupdate_loop = None
         self.formatter = SafeFormatter()
         self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
         self._connected = asyncio.Event()
-        self.start_time = datetime.utcnow()
+        self.start_time = discord.utils.utcnow()
         self._started = False
 
         self.config = ConfigManager(self)
@@ -90,7 +86,7 @@ class ModmailBot(commands.Bot):
 
     @property
     def uptime(self) -> str:
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
         delta = now - self.start_time
         hours, remainder = divmod(int(delta.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -241,11 +237,7 @@ class ModmailBot(commands.Bot):
             loop.stop()
 
         def _cancel_tasks():
-            if sys.version_info < (3, 8):
-                task_retriever = asyncio.Task.all_tasks
-            else:
-                task_retriever = asyncio.all_tasks
-
+            task_retriever = asyncio.all_tasks
             tasks = {t for t in task_retriever(loop=loop) if not t.done()}
 
             if not tasks:
@@ -557,6 +549,13 @@ class ModmailBot(commands.Bot):
             logger.info("Receiving guild ID: %s", self.modmail_guild.id)
         logger.line()
 
+        if "dev" in __version__:
+            logger.warning(
+                "You are running a developmental version. This should not be used in production. (v%s)",
+                __version__,
+            )
+            logger.line()
+
         await self.threads.populate_cache()
 
         # closures
@@ -565,7 +564,7 @@ class ModmailBot(commands.Bot):
         logger.line()
 
         for recipient_id, items in tuple(closures.items()):
-            after = (datetime.fromisoformat(items["time"]) - datetime.utcnow()).total_seconds()
+            after = (datetime.fromisoformat(items["time"]) - discord.utils.utcnow()).total_seconds()
             if after <= 0:
                 logger.debug("Closing thread for recipient %s.", recipient_id)
                 after = 0
@@ -598,13 +597,13 @@ class ModmailBot(commands.Bot):
                     {
                         "open": False,
                         "title": None,
-                        "closed_at": str(datetime.utcnow()),
+                        "closed_at": str(discord.utils.utcnow()),
                         "close_message": "Channel has been deleted, no closer found.",
                         "closer": {
                             "id": str(self.user.id),
                             "name": self.user.name,
                             "discriminator": self.user.discriminator,
-                            "avatar_url": str(self.user.avatar_url),
+                            "avatar_url": self.user.display_avatar.url,
                             "mod": True,
                         },
                     },
@@ -613,25 +612,6 @@ class ModmailBot(commands.Bot):
                     logger.debug("Successfully closed thread with channel %s.", log["channel_id"])
                 else:
                     logger.debug("Failed to close thread with channel %s, skipping.", log["channel_id"])
-
-        if self.config.get("data_collection"):
-            self.metadata_loop = tasks.Loop(
-                self.post_metadata,
-                seconds=0,
-                minutes=0,
-                hours=1,
-                count=None,
-                reconnect=True,
-                loop=None,
-            )
-            self.metadata_loop.before_loop(self.before_post_metadata)
-            self.metadata_loop.start()
-
-        self.autoupdate_loop = tasks.Loop(
-            self.autoupdate, seconds=0, minutes=0, hours=1, count=None, reconnect=True, loop=None
-        )
-        self.autoupdate_loop.before_loop(self.before_autoupdate)
-        self.autoupdate_loop.start()
 
         other_guilds = [guild for guild in self.guilds if guild not in {self.guild, self.modmail_guild}]
         if any(other_guilds):
@@ -690,7 +670,7 @@ class ModmailBot(commands.Bot):
 
     def check_account_age(self, author: discord.Member) -> bool:
         account_age = self.config.get("account_age")
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
 
         try:
             min_account_age = author.created_at + account_age
@@ -712,7 +692,7 @@ class ModmailBot(commands.Bot):
 
     def check_guild_age(self, author: discord.Member) -> bool:
         guild_age = self.config.get("guild_age")
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
 
         if not hasattr(author, "joined_at"):
             logger.warning("Not in guild, cannot verify guild_age, %s.", author.name)
@@ -742,7 +722,7 @@ class ModmailBot(commands.Bot):
                 if str(r.id) in self.blocked_roles:
 
                     blocked_reason = self.blocked_roles.get(str(r.id)) or ""
-                    now = datetime.utcnow()
+                    now = discord.utils.utcnow()
 
                     # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
                     end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
@@ -772,7 +752,7 @@ class ModmailBot(commands.Bot):
             return True
 
         blocked_reason = self.blocked_users.get(str(author.id)) or ""
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
 
         if blocked_reason.startswith("System Message:"):
             # Met the limits already, otherwise it would've been caught by the previous checks
@@ -861,7 +841,7 @@ class ModmailBot(commands.Bot):
 
     async def get_thread_cooldown(self, author: discord.Member):
         thread_cooldown = self.config.get("thread_cooldown")
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
 
         if thread_cooldown == isodate.Duration():
             return
@@ -932,7 +912,7 @@ class ModmailBot(commands.Bot):
                     color=self.error_color,
                     description=self.config["disabled_new_thread_response"],
                 )
-                embed.set_footer(text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon_url)
+                embed.set_footer(text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon.url)
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
@@ -947,7 +927,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_current_thread_footer"],
-                    icon_url=self.guild.icon_url,
+                    icon_url=self.guild.icon.url,
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -982,7 +962,7 @@ class ModmailBot(commands.Bot):
         ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
         thread = await self.threads.find(channel=ctx.channel)
 
-        if self._skip_check(message.author.id, self.user.id):
+        if message.author.id == self.user.id:  # type: ignore
             return [ctx]
 
         prefixes = await self.get_prefix()
@@ -1139,7 +1119,7 @@ class ModmailBot(commands.Bot):
                 color=self.main_color,
             )
             if self.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
+                em.timestamp = discord.utils.utcnow()
 
             if not self.config["silent_alert_on_mention"]:
                 content = self.config["mention"]
@@ -1329,7 +1309,7 @@ class ModmailBot(commands.Bot):
             )
             embed.set_footer(
                 text=self.config["disabled_new_thread_footer"],
-                icon_url=self.guild.icon_url,
+                icon_url=self.guild.icon.url,
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
@@ -1431,7 +1411,13 @@ class ModmailBot(commands.Bot):
                 return
             message = message[0]
             embed = message.embeds[0]
-            embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=embed.footer.icon_url)
+
+            if embed.footer.icon:
+                icon_url = embed.footer.icon.url
+            else:
+                icon_url = discord.Embed.Empty
+
+            embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=icon_url)
             await message.edit(embed=embed)
             return
 
@@ -1521,21 +1507,23 @@ class ModmailBot(commands.Bot):
         else:
             logger.error("Unexpected exception:", exc_info=exception)
 
+    @tasks.loop(hours=1)
     async def post_metadata(self):
         info = await self.application_info()
 
+        delta = discord.utils.utcnow() - self.start_time
         data = {
             "bot_id": self.user.id,
             "bot_name": str(self.user),
-            "avatar_url": str(self.user.avatar_url),
+            "avatar_url": self.user.display_avatar.url,
             "guild_id": self.guild_id,
             "guild_name": self.guild.name,
             "member_count": len(self.guild.members),
-            "uptime": (datetime.utcnow() - self.start_time).total_seconds(),
+            "uptime": delta.total_seconds(),
             "latency": f"{self.ws.latency * 1000:.4f}",
             "version": str(self.version),
             "selfhosted": True,
-            "last_updated": str(datetime.utcnow()),
+            "last_updated": str(discord.utils.utcnow()),
         }
 
         if info.team is not None:
@@ -1552,13 +1540,16 @@ class ModmailBot(commands.Bot):
         async with self.session.post("https://api.modmail.dev/metadata", json=data):
             logger.debug("Uploading metadata to Modmail server.")
 
+    @post_metadata.before_loop
     async def before_post_metadata(self):
         await self.wait_for_connected()
+        if not self.config.get("data_collection") or not self.guild:
+            self.post_metadata.cancel()
+
         logger.debug("Starting metadata loop.")
         logger.line("debug")
-        if not self.guild:
-            self.metadata_loop.cancel()
 
+    @tasks.loop(hours=1)
     async def autoupdate(self):
         changelog = await Changelog.from_url(self)
         latest = changelog.latest_version
@@ -1637,6 +1628,7 @@ class ModmailBot(commands.Bot):
                             await channel.send(embed=embed)
                     return await self.close()
 
+    @autoupdate.before_loop
     async def before_autoupdate(self):
         await self.wait_for_connected()
         logger.debug("Starting autoupdate loop")
@@ -1696,9 +1688,9 @@ def main():
         pass
 
     # check discord version
-    if discord.__version__ != "1.7.3":
+    if discord.__version__ != "2.0.0a":
         logger.error(
-            "Dependencies are not updated, run pipenv install. discord.py version expected 1.7.3, received %s",
+            "Dependencies are not updated, run pipenv install. discord.py version expected 2.0.0a, received %s",
             discord.__version__,
         )
         sys.exit(0)

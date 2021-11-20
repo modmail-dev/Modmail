@@ -24,11 +24,11 @@
   </a>
 
   <a href="https://patreon.com/kyber">
-    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge&logo=Patreon" alt="Python 3.7">
+    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge&logo=Patreon" alt="Python 3.8">
   </a>
 
   <a href="https://www.python.org/downloads/">
-    <img src="https://img.shields.io/badge/Made%20With-Python%203.7-blue.svg?style=for-the-badge&logo=Python" alt="Made with Python 3.7">
+    <img src="https://img.shields.io/badge/Made%20With-Python%203.8-blue.svg?style=for-the-badge&logo=Python" alt="Made with Python 3.8">
   </a>
 
   <a href="https://github.com/ambv/black">
@@ -108,7 +108,7 @@ If you don't want to go through the trouble of setting up your very own Modmail 
 
 ### Locally
 
-Local hosting of Modmail is also possible. First, you will need [`Python 3.7`](https://www.python.org/downloads/release/python-376/).
+Local hosting of Modmail is also possible. First, you will need [`Python 3.8`](https://www.python.org/downloads/release/python-376/).
 
 Follow the [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) and disregard deploying the Heroku bot application. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
 

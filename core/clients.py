@@ -1,9 +1,9 @@
 import secrets
 import sys
-from datetime import datetime
 from json import JSONDecodeError
 from typing import Union, Optional
 
+import discord
 from discord import Member, DMChannel, TextChannel, Message
 from discord.ext import commands
 
@@ -507,7 +507,7 @@ class MongoDBClient(ApiClient):
                 "_id": key,
                 "key": key,
                 "open": True,
-                "created_at": str(datetime.utcnow()),
+                "created_at": str(discord.utils.utcnow()),
                 "closed_at": None,
                 "channel_id": str(channel.id),
                 "guild_id": str(self.bot.guild_id),
@@ -516,14 +516,14 @@ class MongoDBClient(ApiClient):
                     "id": str(recipient.id),
                     "name": recipient.name,
                     "discriminator": recipient.discriminator,
-                    "avatar_url": str(recipient.avatar_url),
+                    "avatar_url": recipient.display_avatar.url,
                     "mod": False,
                 },
                 "creator": {
                     "id": str(creator.id),
                     "name": creator.name,
                     "discriminator": creator.discriminator,
-                    "avatar_url": str(creator.avatar_url),
+                    "avatar_url": creator.display_avatar.url,
                     "mod": isinstance(creator, Member),
                 },
                 "closer": None,
@@ -585,7 +585,7 @@ class MongoDBClient(ApiClient):
                 "id": str(message.author.id),
                 "name": message.author.name,
                 "discriminator": message.author.discriminator,
-                "avatar_url": str(message.author.avatar_url),
+                "avatar_url": message.author.display_avatar.url,
                 "mod": not isinstance(message.channel, DMChannel),
             },
             "content": message.content,
@@ -635,7 +635,7 @@ class MongoDBClient(ApiClient):
                     "id": str(message.author.id),
                     "name": message.author.name,
                     "discriminator": message.author.discriminator,
-                    "avatar_url": str(message.author.avatar_url),
+                    "avatar_url": message.author.display_avatar.url,
                 },
                 "message": message.content,
                 "message_id": str(message_id),
@@ -666,7 +666,7 @@ class MongoDBClient(ApiClient):
             "data": data,
             "user": {
                 "username": user.username,
-                "avatar_url": user.avatar_url,
+                "avatar_url": user.display_avatar.url,
                 "url": user.url,
             },
         }
@@ -680,7 +680,7 @@ class MongoDBClient(ApiClient):
             return {
                 "user": {
                     "username": user.username,
-                    "avatar_url": user.avatar_url,
+                    "avatar_url": user.display_avatar.url,
                     "url": user.url,
                 }
             }

@@ -158,7 +158,7 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color, description="You dont have any snippets at the moment."
             )
             embed.set_footer(text=f'Check "{self.bot.prefix}help snippet add" to add a snippet.')
-            embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
+            embed.set_author(name="Snippets", icon_url=ctx.guild.icon.url)
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -166,7 +166,7 @@ class Modmail(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)):
             description = format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Snippets", icon_url=ctx.guild.icon_url)
+            embed.set_author(name="Snippets", icon_url=ctx.guild.icon.url)
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -396,7 +396,7 @@ class Modmail(commands.Cog):
 
         thread = ctx.thread
 
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
 
         close_after = (after.dt - now).total_seconds() if after else 0
         message = after.arg if after else None
@@ -643,7 +643,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(color=self.bot.main_color, timestamp=created_at)
             embed.set_author(name=f"{title} - {username}", icon_url=avatar_url, url=log_url)
             embed.url = log_url
-            embed.add_field(name="Created", value=duration(created_at, now=datetime.utcnow()))
+            embed.add_field(name="Created", value=duration(created_at, now=discord.utils.utcnow()))
             closer = entry.get("closer")
             if closer is None:
                 closer_msg = "Unknown"
@@ -745,8 +745,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=str(ctx.author), icon_url=ctx.author.avatar_url)
+                em.timestamp = discord.utils.utcnow()
+            em.set_footer(text=str(ctx.author), icon_url=ctx.author.display_avatar.url)
             for u in users:
                 await u.send(embed=em)
 
@@ -761,8 +761,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].avatar_url)
+                em.timestamp = discord.utils.utcnow()
+            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -834,8 +834,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=str(ctx.author), icon_url=ctx.author.avatar_url)
+                em.timestamp = discord.utils.utcnow()
+            em.set_footer(text=str(ctx.author), icon_url=ctx.author.display_avatar.url)
             for u in users:
                 await u.send(embed=em)
 
@@ -850,8 +850,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].avatar_url)
+                em.timestamp = discord.utils.utcnow()
+            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -914,7 +914,7 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
+                em.timestamp = discord.utils.utcnow()
 
             tag = self.bot.config["mod_tag"]
             if tag is None:
@@ -924,7 +924,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.guild.icon_url
+                avatar_url = self.bot.guild.icon.url
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -940,8 +940,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].avatar_url)
+                em.timestamp = discord.utils.utcnow()
+            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -999,7 +999,7 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
+                em.timestamp = discord.utils.utcnow()
 
             tag = self.bot.config["mod_tag"]
             if tag is None:
@@ -1009,7 +1009,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.guild.icon_url
+                avatar_url = self.bot.guild.icon.url
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -1025,8 +1025,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].avatar_url)
+                em.timestamp = discord.utils.utcnow()
+            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -1086,7 +1086,7 @@ class Modmail(commands.Cog):
         user = user if user is not None else ctx.author
 
         entries = await self.bot.api.search_closed_by(user.id)
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
+        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon.url)
 
         if not embeds:
             embed = discord.Embed(
@@ -1136,7 +1136,7 @@ class Modmail(commands.Cog):
 
         entries = await self.bot.api.get_responded_logs(user.id)
 
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
+        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon.url)
 
         if not embeds:
             embed = discord.Embed(
@@ -1161,7 +1161,7 @@ class Modmail(commands.Cog):
 
         entries = await self.bot.api.search_by_text(query, limit)
 
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon_url)
+        embeds = self.format_log_embeds(entries, avatar_url=self.bot.guild.icon.url)
 
         if not embeds:
             embed = discord.Embed(
@@ -1452,8 +1452,8 @@ class Modmail(commands.Cog):
                 color=self.bot.main_color,
             )
             if self.bot.config["show_timestamp"]:
-                em.timestamp = datetime.utcnow()
-            em.set_footer(text=f"{creator}", icon_url=creator.avatar_url)
+                em.timestamp = discord.utils.utcnow()
+            em.set_footer(text=f"{creator}", icon_url=creator.display_avatar.url)
 
             for u in users:
                 await u.send(embed=em)

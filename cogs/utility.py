@@ -5,7 +5,6 @@ import random
 import re
 import traceback
 from contextlib import redirect_stdout
-from datetime import datetime
 from difflib import get_close_matches
 from io import BytesIO, StringIO
 from itertools import takewhile, zip_longest
@@ -54,7 +53,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
     async def format_cog_help(self, cog, *, no_cog=False):
         bot = self.context.bot
-        prefix = self.clean_prefix
+        prefix = self.context.clean_prefix
 
         formats = [""]
         for cmd in await self.filter_commands(
@@ -92,7 +91,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
             continued = " (Continued)" if embeds else ""
             name = cog.qualified_name + " - Help" if not no_cog else "Miscellaneous Commands"
-            embed.set_author(name=name + continued, icon_url=bot.user.avatar_url)
+            embed.set_author(name=name + continued, icon_url=bot.user.display_avatar.url)
 
             embed.set_footer(
                 text=f'Type "{prefix}{self.command_attrs["name"]} command" '
@@ -102,7 +101,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         return embeds
 
     def process_help_msg(self, help_: str):
-        return help_.format(prefix=self.clean_prefix) if help_ else "No help message."
+        return help_.format(prefix=self.context.clean_prefix) if help_ else "No help message."
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -174,7 +173,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         embed.add_field(name="Sub Command(s)", value=format_[:1024], inline=False)
         embed.set_footer(
-            text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} command" '
+            text=f'Type "{self.context.clean_prefix}{self.command_attrs["name"]} command" '
             "for more info on a command."
         )
 
@@ -216,7 +215,7 @@ class ModmailHelpCommand(commands.HelpCommand):
                         embed.add_field(name=f"Step {i}:", value=val)
 
             embed.set_footer(
-                text=f'Type "{self.clean_prefix}{self.command_attrs["name"]} alias" '
+                text=f'Type "{self.context.clean_prefix}{self.command_attrs["name"]} alias" '
                 "for more details on aliases."
             )
             return await self.get_destination().send(embed=embed)
@@ -238,7 +237,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         else:
             embed.title = "Cannot find command or category"
             embed.set_footer(
-                text=f'Type "{self.clean_prefix}{self.command_attrs["name"]}" '
+                text=f'Type "{self.context.clean_prefix}{self.command_attrs["name"]}" '
                 "for a list of all available commands."
             )
         await self.get_destination().send(embed=embed)
@@ -303,13 +302,13 @@ class Utility(commands.Cog):
     @utils.trigger_typing
     async def about(self, ctx):
         """Shows information about this bot."""
-        embed = discord.Embed(color=self.bot.main_color, timestamp=datetime.utcnow())
+        embed = discord.Embed(color=self.bot.main_color, timestamp=discord.utils.utcnow())
         embed.set_author(
             name="Modmail - About",
-            icon_url=self.bot.user.avatar_url,
+            icon_url=self.bot.user.display_avatar.url,
             url="https://discord.gg/F34cRU8",
         )
-        embed.set_thumbnail(url=self.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
 
         desc = "This is an open source Discord bot that serves as a means for "
         desc += "members to easily communicate with server administrators in "
@@ -848,7 +847,7 @@ class Utility(commands.Cog):
             if key in keys:
                 desc = f"`{key}` is set to `{self.bot.config[key]}`"
                 embed = discord.Embed(color=self.bot.main_color, description=desc)
-                embed.set_author(name="Config variable", icon_url=self.bot.user.avatar_url)
+                embed.set_author(name="Config variable", icon_url=self.bot.user.display_avatar.url)
 
             else:
                 embed = discord.Embed(
@@ -865,7 +864,7 @@ class Utility(commands.Cog):
                 color=self.bot.main_color,
                 description="Here is a list of currently set configuration variable(s).",
             )
-            embed.set_author(name="Current config(s):", icon_url=self.bot.user.avatar_url)
+            embed.set_author(name="Current config(s):", icon_url=self.bot.user.display_avatar.url)
             config = self.bot.config.filter_default(self.bot.config)
 
             for name, value in config.items():
@@ -1006,7 +1005,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color, description="You dont have any aliases at the moment."
             )
             embed.set_footer(text=f'Do "{self.bot.prefix}help alias" for more commands.')
-            embed.set_author(name="Aliases", icon_url=ctx.guild.icon_url)
+            embed.set_author(name="Aliases", icon_url=ctx.guild.icon.url)
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -1014,7 +1013,7 @@ class Utility(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
             description = utils.format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon_url)
+            embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon.url)
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -1595,7 +1594,7 @@ class Utility(commands.Cog):
                                 for name, level in takewhile(lambda x: x is not None, items)
                             )
                             embed = discord.Embed(color=self.bot.main_color, description=description)
-                            embed.set_author(name="Permission Overrides", icon_url=ctx.guild.icon_url)
+                            embed.set_author(name="Permission Overrides", icon_url=ctx.guild.icon.url)
                             embeds.append(embed)
 
                     session = EmbedPaginatorSession(ctx, *embeds)

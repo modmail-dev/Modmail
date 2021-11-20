@@ -4,7 +4,7 @@ import io
 import re
 import time
 import typing
-from datetime import datetime, timedelta
+from datetime import timedelta
 from types import SimpleNamespace
 
 import isodate
@@ -159,7 +159,7 @@ class Thread:
         category = category or self.bot.main_category
 
         if category is not None:
-            overwrites = None
+            overwrites = {}
 
         try:
             channel = await create_thread_channel(self.bot, recipient, category, overwrites)
@@ -224,7 +224,7 @@ class Thread:
             else:
                 footer = self.bot.config["thread_creation_footer"]
 
-            embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
+            embed.set_footer(text=footer, icon_url=self.bot.guild.icon.url)
             embed.title = self.bot.config["thread_creation_title"]
 
             if creator is None or creator == recipient:
@@ -250,7 +250,7 @@ class Thread:
                     name = author["name"]
                     id = author["id"]
                     discriminator = author["discriminator"]
-                    avatar_url = author["avatar_url"]
+                    display_avatar = SimpleNamespace(url=author["avatar_url"])
 
                 data = {
                     "id": round(time.time() * 1000 - discord.utils.DISCORD_EPOCH) << 22,
@@ -264,7 +264,7 @@ class Thread:
                     "content": note["message"],
                     "author": Author(),
                 }
-                message = discord.Message(state=State(), channel=None, data=data)
+                message = discord.Message(state=State(), channel=self.channel, data=data)
                 ids[note["_id"]] = str((await self.note(message, persistent=True, thread_creation=True)).id)
 
             await self.bot.api.update_note_ids(ids)
@@ -290,7 +290,7 @@ class Thread:
         """Get information about a member of a server
         supports users from the guild or not."""
         member = self.bot.guild.get_member(user.id)
-        time = datetime.utcnow()
+        time = discord.utils.utcnow()
 
         # key = log_url.split('/')[-1]
 
@@ -329,7 +329,7 @@ class Thread:
         else:
             footer = f"User ID: {user.id}"
 
-        embed.set_author(name=str(user), icon_url=user.avatar_url, url=log_url)
+        embed.set_author(name=str(user), icon_url=user.display_avatar.url, url=log_url)
         # embed.set_thumbnail(url=avi)
 
         if member is not None:
@@ -382,7 +382,7 @@ class Thread:
         if after > 0:
             # TODO: Add somewhere to clean up broken closures
             #  (when channel is already deleted)
-            now = datetime.utcnow()
+            now = discord.utils.utcnow()
             items = {
                 # 'initiation_time': now.isoformat(),
                 "time": (now + timedelta(seconds=after)).isoformat(),
@@ -425,14 +425,14 @@ class Thread:
                 {
                     "open": False,
                     "title": match_title(self.channel.topic),
-                    "closed_at": str(datetime.utcnow()),
+                    "closed_at": str(discord.utils.utcnow()),
                     "nsfw": self.channel.nsfw,
                     "close_message": message,
                     "closer": {
                         "id": str(closer.id),
                         "name": closer.name,
                         "discriminator": closer.discriminator,
-                        "avatar_url": str(closer.avatar_url),
+                        "avatar_url": closer.display_avatar.url,
                         "mod": True,
                     },
                 },
@@ -483,8 +483,8 @@ class Thread:
 
         event = "Thread Closed as Scheduled" if scheduled else "Thread Closed"
         # embed.set_author(name=f"Event: {event}", url=log_url)
-        embed.set_footer(text=f"{event} by {_closer}", icon_url=closer.avatar_url)
-        embed.timestamp = datetime.utcnow()
+        embed.set_footer(text=f"{event} by {_closer}", icon_url=closer.display_avatar.url)
+        embed.timestamp = discord.utils.utcnow()
 
         tasks = [self.bot.config.update()]
 
@@ -498,7 +498,7 @@ class Thread:
             color=self.bot.error_color,
         )
         if self.bot.config["show_timestamp"]:
-            embed.timestamp = datetime.utcnow()
+            embed.timestamp = discord.utils.utcnow()
 
         if not message:
             if self.id == closer.id:
@@ -512,7 +512,7 @@ class Thread:
 
         embed.description = message
         footer = self.bot.config["thread_close_footer"]
-        embed.set_footer(text=footer, icon_url=self.bot.guild.icon_url)
+        embed.set_footer(text=footer, icon_url=self.bot.guild.icon.url)
 
         if not silent:
             for user in self.recipients:
@@ -558,7 +558,7 @@ class Thread:
         # Set timeout seconds
         seconds = timeout.total_seconds()
         # seconds = 20  # Uncomment to debug with just 20 seconds
-        reset_time = datetime.utcnow() + timedelta(seconds=seconds)
+        reset_time = discord.utils.utcnow() + timedelta(seconds=seconds)
         human_time = human_timedelta(dt=reset_time)
 
         if self.bot.config.get("thread_auto_close_silently"):
@@ -943,7 +943,7 @@ class Thread:
                     name = tag
                 avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
-                    avatar_url = self.bot.guild.icon_url
+                    avatar_url = self.bot.guild.icon.url
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,
@@ -952,7 +952,7 @@ class Thread:
             else:
                 # Normal message
                 name = str(author)
-                avatar_url = author.avatar_url
+                avatar_url = author.display_avatar.url
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,

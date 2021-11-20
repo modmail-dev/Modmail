@@ -245,7 +245,11 @@ def parse_channel_topic(text: str) -> typing.Tuple[typing.Optional[str], int, ty
         A tuple of title, user ID, and other recipients IDs.
     """
     title, user_id, other_ids = None, -1, []
-    match = TOPIC_REGEX.search(text)
+    if isinstance(text, str):
+        match = TOPIC_REGEX.search(text)
+    else:
+        match = None
+
     if match is not None:
         groupdict = match.groupdict()
         title = groupdict["title"]
