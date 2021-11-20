@@ -23,6 +23,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Certain cases where fallback categories were not working as intended. ([PR #3109](https://github.com/kyb3r/modmail/pull/3109))
 - `?contact` would create in a random category in silent mode. ([GH #3091](https://github.com/kyb3r/modmail/issues/3091), [PR #3092](https://github.com/kyb3r/modmail/pull/3092))
 - Certain cases where `?close` would fail if closer isn't in cache. ([GH #3104](https://github.com/kyb3r/modmail/issues/3104), [PR #3105](https://github.com/kyb3r/modmail/pull/3105))
+- Stickers were not working in Modmail.
 
 ### Internal
 

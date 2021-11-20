@@ -989,8 +989,8 @@ class Thread:
         images.extend(image_urls)
         images.extend(
             (
-                str(i.image_url) if isinstance(i.image_url, discord.Asset) else i.image_url,
-                f"{i.name} Sticker",
+                i.url if i.format in (discord.StickerFormatType.png, discord.StickerFormatType.apng) else None,
+                i.name,
                 True,
             )
             for i in message.stickers
@@ -1012,10 +1012,10 @@ class Thread:
                 if filename:
                     if is_sticker:
                         if url is None:
-                            description = "Unable to retrieve sticker image"
+                            description = f"{filename}: Unable to retrieve sticker image"
                         else:
-                            description = "\u200b"
-                        embed.add_field(name=filename, value=description)
+                            description = f"[{filename}]({url})"
+                        embed.add_field(name="Sticker", value=description)
                     else:
                         embed.add_field(name="Image", value=f"[{filename}]({url})")
                 embedded_image = True
