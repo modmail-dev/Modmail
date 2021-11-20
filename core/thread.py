@@ -989,7 +989,9 @@ class Thread:
         images.extend(image_urls)
         images.extend(
             (
-                i.url if i.format in (discord.StickerFormatType.png, discord.StickerFormatType.apng) else None,
+                i.url
+                if i.format in (discord.StickerFormatType.png, discord.StickerFormatType.apng)
+                else None,
                 i.name,
                 True,
             )
