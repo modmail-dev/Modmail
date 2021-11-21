@@ -1144,10 +1144,12 @@ class ModmailBot(commands.Bot):
             cmd = cmd.lower()
             if cmd in self.snippets:
                 snippet = self.snippets[cmd]
+                modifiers = "f"
+                if self.config["plain_snippets"]:
+                    modifiers += "p"
                 if self.config["anonymous_snippets"]:
-                    message.content = f"{self.prefix}fareply {snippet}"
-                else:
-                    message.content = f"{self.prefix}freply {snippet}"
+                    modifiers += "a"
+                message.content = f"{self.prefix}{modifiers}reply {snippet}"
 
         ctxs = await self.get_contexts(message)
         for ctx in ctxs:

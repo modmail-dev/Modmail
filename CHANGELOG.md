@@ -16,7 +16,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Added
 
 - `use_hoisted_top_role` config to use change how default mod tags work, see `v3.10.0#Added` for details. ([PR #3093](https://github.com/kyb3r/modmail/pull/3093))
-- `require_close_reason` to require a reason to close a thread. ([GH #3107](https://github.com/kyb3r/modmail/issues/3107))
+- `require_close_reason` config to require a reason to close a thread. ([GH #3107](https://github.com/kyb3r/modmail/issues/3107))
+- `plain_snippets` config to force all snippets to be plain. ([GH #3083](https://github.com/kyb3r/modmail/issues/3083))
+- `?fpareply` and `?fpreply` to reply to messages with variables plainly.
 
 ### Improved
 

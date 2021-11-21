@@ -1,5 +1,4 @@
 import asyncio
-from asyncio import tasks
 import re
 from datetime import datetime
 from itertools import zip_longest
@@ -739,7 +738,7 @@ class Modmail(commands.Cog):
             ctx.command.reset_cooldown(ctx)
             return
 
-        tasks = []
+        to_exec = []
         if not silent:
             description = self.bot.formatter.format(
                 self.bot.config["private_added_to_group_response"], moderator=ctx.author
@@ -753,7 +752,7 @@ class Modmail(commands.Cog):
                 em.timestamp = discord.utils.utcnow()
             em.set_footer(text=str(ctx.author), icon_url=ctx.author.display_avatar.url)
             for u in users:
-                tasks.append(u.send(embed=em))
+                to_exec.append(u.send(embed=em))
 
             description = self.bot.formatter.format(
                 self.bot.config["public_added_to_group_response"],
@@ -771,11 +770,11 @@ class Modmail(commands.Cog):
 
             for i in ctx.thread.recipients:
                 if i not in users:
-                    tasks.append(i.send(embed=em))
+                    to_exec.append(i.send(embed=em))
 
         await ctx.thread.add_users(users)
-        if tasks:
-            await asyncio.gather(*tasks)
+        if to_exec:
+            await asyncio.gather(*to_exec)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -832,7 +831,7 @@ class Modmail(commands.Cog):
             ctx.command.reset_cooldown(ctx)
             return
 
-        tasks = []
+        to_exec = []
         if not silent:
             description = self.bot.formatter.format(
                 self.bot.config["private_removed_from_group_response"], moderator=ctx.author
@@ -846,7 +845,7 @@ class Modmail(commands.Cog):
                 em.timestamp = discord.utils.utcnow()
             em.set_footer(text=str(ctx.author), icon_url=ctx.author.display_avatar.url)
             for u in users:
-                tasks.append(u.send(embed=em))
+                to_exec.append(u.send(embed=em))
 
             description = self.bot.formatter.format(
                 self.bot.config["public_removed_from_group_response"],
@@ -864,11 +863,11 @@ class Modmail(commands.Cog):
 
             for i in ctx.thread.recipients:
                 if i not in users:
-                    tasks.append(i.send(embed=em))
+                    to_exec.append(i.send(embed=em))
 
         await ctx.thread.remove_users(users)
-        if tasks:
-            await asyncio.gather(*tasks)
+        if to_exec:
+            await asyncio.gather(*to_exec)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -919,7 +918,7 @@ class Modmail(commands.Cog):
             ctx.command.reset_cooldown(ctx)
             return
 
-        tasks = []
+        to_exec = []
         if not silent:
             em = discord.Embed(
                 title=self.bot.config["private_added_to_group_title"],
@@ -941,7 +940,7 @@ class Modmail(commands.Cog):
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
-                tasks.append(u.send(embed=em))
+                to_exec.append(u.send(embed=em))
 
             description = self.bot.formatter.format(
                 self.bot.config["public_added_to_group_description_anon"],
@@ -958,11 +957,11 @@ class Modmail(commands.Cog):
 
             for i in ctx.thread.recipients:
                 if i not in users:
-                    tasks.append(i.send(embed=em))
+                    to_exec.append(i.send(embed=em))
 
         await ctx.thread.add_users(users)
-        if tasks:
-            await asyncio.gather(*tasks)
+        if to_exec:
+            await asyncio.gather(*to_exec)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -1008,7 +1007,7 @@ class Modmail(commands.Cog):
                 ctx.command.reset_cooldown(ctx)
                 return
 
-        tasks = []
+        to_exec = []
         if not silent:
             em = discord.Embed(
                 title=self.bot.config["private_removed_from_group_title"],
@@ -1030,7 +1029,7 @@ class Modmail(commands.Cog):
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
-                tasks.append(u.send(embed=em))
+                to_exec.append(u.send(embed=em))
 
             description = self.bot.formatter.format(
                 self.bot.config["public_removed_from_group_description_anon"],
@@ -1047,11 +1046,11 @@ class Modmail(commands.Cog):
 
             for i in ctx.thread.recipients:
                 if i not in users:
-                    tasks.append(i.send(embed=em))
+                    to_exec.append(i.send(embed=em))
 
         await ctx.thread.remove_users(users)
-        if tasks:
-            await asyncio.gather(*tasks)
+        if to_exec:
+            await asyncio.gather(*to_exec)
 
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -1252,6 +1251,50 @@ class Modmail(commands.Cog):
         ctx.message.content = msg
         async with ctx.typing():
             await ctx.thread.reply(ctx.message, anonymous=True)
+
+    @commands.command(aliases=["formatplainreply"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def fpreply(self, ctx, *, msg: str = ""):
+        """
+        Reply to a Modmail thread with variables and a plain message.
+
+        Works just like `{prefix}areply`, however with the addition of three variables:
+          - `{{channel}}` - the `discord.TextChannel` object
+          - `{{recipient}}` - the `discord.User` object of the recipient
+          - `{{author}}` - the `discord.User` object of the author
+
+        Supports attachments and images as well as
+        automatically embedding image URLs.
+        """
+        msg = self.bot.formatter.format(
+            msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
+        )
+        ctx.message.content = msg
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message, plain=True)
+
+    @commands.command(aliases=["formatplainanonreply"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def fpareply(self, ctx, *, msg: str = ""):
+        """
+        Anonymously reply to a Modmail thread with variables and a plain message.
+
+        Works just like `{prefix}areply`, however with the addition of three variables:
+          - `{{channel}}` - the `discord.TextChannel` object
+          - `{{recipient}}` - the `discord.User` object of the recipient
+          - `{{author}}` - the `discord.User` object of the author
+
+        Supports attachments and images as well as
+        automatically embedding image URLs.
+        """
+        msg = self.bot.formatter.format(
+            msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
+        )
+        ctx.message.content = msg
+        async with ctx.typing():
+            await ctx.thread.reply(ctx.message, anonymous=True, plain=True)
 
     @commands.command(aliases=["anonreply", "anonymousreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)

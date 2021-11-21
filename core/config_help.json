@@ -794,7 +794,17 @@
       "`{prefix}config set anonymous_snippets yes`"
     ],
     "notes": [
-      "See also: `anon_avatar_url`, `anon_tag`."
+      "See also: `anon_avatar_url`, `anon_tag`, `plain_snippets`."
+    ]
+  },
+  "plain_snippets": {
+    "default": "No",
+    "description": "Sends snippets with a plain interface.",
+    "examples":[
+      "`{prefix}config set plain_snippets yes`"
+    ],
+    "notes": [
+      "See also: `anonymous_snippets`."
     ]
   },
   "require_close_reason": {
