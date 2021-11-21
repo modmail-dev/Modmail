@@ -10,12 +10,16 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Breaking
 
-- Upgraded to discord.py v2.0 master ([internal changes](https://gist.github.com/apple502j/f75b4f24652f04de85c7084ffd73ec58)).
+- Upgraded to discord.py v2.0 master ([internal changes](https://gist.github.com/apple502j/f75b4f24652f04de85c7084ffd73ec58), [GH #2990](https://github.com/kyb3r/modmail/issues/2990)).
 - Python 3.8 or higher is required.
 
 ### Added
 
 - `use_hoisted_top_role` config to use change how default mod tags work, see `v3.10.0#Added` for details. ([PR #3093](https://github.com/kyb3r/modmail/pull/3093))
+
+### Improved
+
+- Modmail now uses per-server avatars if applicable. ([GH #3048](https://github.com/kyb3r/modmail/issues/3048))
 
 ### Fixed
 
@@ -31,7 +35,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Internal
 
-- Improve regex parsing of channel topics. ([PR #3111](https://github.com/kyb3r/modmail/pull/3111))
+- Improve regex parsing of channel topics. ([GH #3114](https://github.com/kyb3r/modmail/issues/3114), [PR #3111](https://github.com/kyb3r/modmail/pull/3111))
 - Add warning if deploying on a developmental version.
 
 # v3.10.3
