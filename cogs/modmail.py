@@ -419,6 +419,9 @@ class Modmail(commands.Cog):
 
             return await ctx.send(embed=embed)
 
+        if self.bot.config["require_close_reason"] and message is None:
+            raise commands.BadArgument("Provide a reason for closing the thread.")
+
         if after and after.dt > now:
             await self.send_scheduled_close_message(ctx, after, silent)
 

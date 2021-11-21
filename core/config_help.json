@@ -797,6 +797,14 @@
       "See also: `anon_avatar_url`, `anon_tag`."
     ]
   },
+  "require_close_reason": {
+    "default" : "No",
+    "description": "Require a reason to close threads.",
+    "examples": [
+      "`{prefix}config set require_close_reason yes`"
+    ],
+    "notes": []
+  },
   "private_added_to_group_title": {
     "default": "New Thread (Group)",
     "description": "This is the message embed title sent to the recipient that is just added to a thread.",

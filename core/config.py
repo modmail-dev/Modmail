@@ -91,6 +91,7 @@ class ConfigManager:
         "silent_alert_on_mention": False,
         "show_timestamp": True,
         "anonymous_snippets": False,
+        "require_close_reason": False,
         # group conversations
         "private_added_to_group_title": "New Thread (Group)",
         "private_added_to_group_response": "{moderator.name} has added you to a Modmail thread.",
@@ -206,6 +207,7 @@ class ConfigManager:
         "update_notifications",
         "thread_contact_silently",
         "anonymous_snippets",
+        "require_close_reason",
         "recipient_thread_close",
         "thread_show_roles",
         "thread_show_account_age",

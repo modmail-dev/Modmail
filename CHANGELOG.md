@@ -16,6 +16,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Added
 
 - `use_hoisted_top_role` config to use change how default mod tags work, see `v3.10.0#Added` for details. ([PR #3093](https://github.com/kyb3r/modmail/pull/3093))
+- `require_close_reason` to require a reason to close a thread. ([GH #3107](https://github.com/kyb3r/modmail/issues/3107))
 
 ### Improved
 
@@ -27,9 +28,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Certain cases where fallback categories were not working as intended. ([PR #3109](https://github.com/kyb3r/modmail/pull/3109))
 - `?contact` would create in a random category in silent mode. ([GH #3091](https://github.com/kyb3r/modmail/issues/3091), [PR #3092](https://github.com/kyb3r/modmail/pull/3092))
 - Certain cases where `?close` would fail if closer isn't in cache. ([GH #3104](https://github.com/kyb3r/modmail/issues/3104), [PR #3105](https://github.com/kyb3r/modmail/pull/3105))
-- Stickers were not working in Modmail.
+- Stickers now work in Modmail.
 - Large server sizes results in Guild.name == None. ([GH #3088](https://github.com/kyb3r/modmail/issues/3088))
-- Attachments did not work on plain replies. ([GH #3102](https://github.com/kyb3r/modmail/issues/3102))
+- Attachments now work on plain replies. ([GH #3102](https://github.com/kyb3r/modmail/issues/3102))
 - Support LOTTIE stickers. ([GH #3119](https://github.com/kyb3r/modmail/issues/3119))
 - Editing notes now work. ([GH #3094](https://github.com/kyb3r/modmail/issues/3094))
 
