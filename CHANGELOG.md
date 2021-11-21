@@ -37,6 +37,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Attachments now work on plain replies. ([GH #3102](https://github.com/kyb3r/modmail/issues/3102))
 - Support LOTTIE stickers. ([GH #3119](https://github.com/kyb3r/modmail/issues/3119))
 - Editing notes now work. ([GH #3094](https://github.com/kyb3r/modmail/issues/3094))
+- Commands now work in threads.
 
 ### Internal
 

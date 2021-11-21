@@ -1281,7 +1281,7 @@ class ThreadManager:
         recipient_id: int = None,
     ) -> typing.Optional[Thread]:
         """Finds a thread from cache or from discord channel topics."""
-        if recipient is None and channel is not None:
+        if recipient is None and channel is not None and isinstance(channel, discord.TextChannel):
             thread = await self._find_from_channel(channel)
             if thread is None:
                 user_id, thread = next(
@@ -1310,7 +1310,6 @@ class ThreadManager:
                     await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                     thread = None
         else:
-
             def check(topic):
                 _, user_id, other_ids = parse_channel_topic(topic)
                 return recipient_id == user_id or recipient_id in other_ids
