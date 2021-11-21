@@ -1203,7 +1203,7 @@ class Thread:
             embed.add_field(name="Other Recipients", value=value, inline=False)
         else:
             if value:
-                embed.set_field_at(index, value=value)
+                embed.set_field_at(index, name="Other Recipients", value=value, inline=False)
             else:
                 embed.remove_field(index)
 
@@ -1211,13 +1211,15 @@ class Thread:
 
     async def add_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
         topic = ""
-        title, user_id, _ = parse_channel_topic(self.channel.topic)
+        title, _, _ = parse_channel_topic(self.channel.topic)
         if title is not None:
             topic += f"Title: {title}\n"
 
-        topic += f"User ID: {user_id}"
+        topic += f"User ID: {self._id}"
 
         self._other_recipients += users
+        self._other_recipients = list(set(self._other_recipients))
+
         ids = ",".join(str(i.id) for i in self._other_recipients)
 
         topic += f"\nOther Recipients: {ids}"
