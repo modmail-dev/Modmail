@@ -1310,6 +1310,7 @@ class ThreadManager:
                     await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                     thread = None
         else:
+
             def check(topic):
                 _, user_id, other_ids = parse_channel_topic(topic)
                 return recipient_id == user_id or recipient_id in other_ids
