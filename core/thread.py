@@ -4,6 +4,7 @@ import io
 import re
 import time
 import typing
+import warnings
 from datetime import timedelta
 from types import SimpleNamespace
 
@@ -835,6 +836,7 @@ class Thread:
             user_msg = await asyncio.gather(*user_msg_tasks)
         except Exception as e:
             logger.error("Message delivery failed:", exc_info=True)
+            user_msg = None
             if isinstance(e, discord.Forbidden):
                 description = (
                     "Your message could not be delivered as "
@@ -848,12 +850,10 @@ class Thread:
                     "to an unknown error. Check `?debug` for "
                     "more information"
                 )
-            tasks.append(
-                message.channel.send(
-                    embed=discord.Embed(
-                        color=self.bot.error_color,
-                        description=description,
-                    )
+            msg = await message.channel.send(
+                embed=discord.Embed(
+                    color=self.bot.error_color,
+                    description=description,
                 )
             )
         else:
@@ -1095,17 +1095,19 @@ class Thread:
         if plain:
             if from_mod and not isinstance(destination, discord.TextChannel):
                 # Plain to user
+                with warnings.catch_warnings():
+                    # Catch coroutines not awaited warning
+                    warnings.simplefilter("ignore")
+                    additional_images = []
+
                 if embed.footer.text:
                     plain_message = f"**({embed.footer.text}) "
                 else:
                     plain_message = "**"
                 plain_message += f"{embed.author.name}:** {embed.description}"
                 files = []
-                for i in embed.fields:
-                    if "Image" in i.name:
-                        async with self.bot.session.get(i.field[i.field.find("http") : -1]) as resp:
-                            stream = io.BytesIO(await resp.read())
-                            files.append(discord.File(stream))
+                for i in message.attachments:
+                    files.append(await i.to_file())
 
                 msg = await destination.send(plain_message, files=files)
             else:

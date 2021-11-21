@@ -50,6 +50,10 @@ from core.utils import normalize_alias, truncate, tryint
 
 logger = getLogger(__name__)
 
+# # prevent "coroutine noop was never awaited" warning.
+# asyncio.coroutines._DEBUG = False  # type: ignore
+
+
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
