@@ -52,6 +52,7 @@ class ConfigManager:
         "close_emoji": "\N{LOCK}",
         "use_user_id_channel_name": False,
         "use_timestamp_channel_name": False,
+        "use_nickname_channel_name": False,
         "recipient_thread_close": False,
         "thread_show_roles": True,
         "thread_show_account_age": True,
@@ -184,6 +185,7 @@ class ConfigManager:
     booleans = {
         "use_user_id_channel_name",
         "use_timestamp_channel_name",
+        "use_nickname_channel_name",
         "user_typing",
         "mod_typing",
         "reply_without_command",

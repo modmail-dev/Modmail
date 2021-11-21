@@ -1,4 +1,4 @@
-__version__ = "3.11.0-dev2"
+__version__ = "3.11.0-dev3"
 
 
 import asyncio
@@ -1663,7 +1663,12 @@ class ModmailBot(commands.Bot):
             elif self.config["use_timestamp_channel_name"]:
                 name = new_name = author.created_at.isoformat(sep="-", timespec="minutes")
             else:
-                name = author.name.lower()
+                if self.config["use_nickname_channel_name"]:
+                    author_member = self.guild.get_member(author.id)
+                    name = author_member.display_name.lower()
+                else:
+                    name = author.name.lower()
+
                 if force_null:
                     name = "null"
 
