@@ -1,6 +1,6 @@
 import asyncio
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import zip_longest
 from typing import Optional, Union
 from types import SimpleNamespace
@@ -12,7 +12,6 @@ from discord.role import Role
 from discord.utils import escape_markdown
 
 from dateutil import parser
-from natural.date import duration
 
 from core import checks
 from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, getLogger
@@ -359,7 +358,7 @@ class Modmail(commands.Cog):
 
         embed = discord.Embed(
             title="Scheduled close",
-            description=f"This thread will close {silent}in {human_delta}.",
+            description=f"This thread will close {silent}{human_delta}.",
             color=self.bot.error_color,
         )
 
@@ -631,7 +630,7 @@ class Modmail(commands.Cog):
         title = f"Total Results Found ({len(logs)})"
 
         for entry in logs:
-            created_at = parser.parse(entry["created_at"])
+            created_at = parser.parse(entry["created_at"]).astimezone(timezone.utc)
 
             prefix = self.bot.config["log_url_prefix"].strip("/")
             if prefix == "NONE":
@@ -646,7 +645,7 @@ class Modmail(commands.Cog):
             embed = discord.Embed(color=self.bot.main_color, timestamp=created_at)
             embed.set_author(name=f"{title} - {username}", icon_url=avatar_url, url=log_url)
             embed.url = log_url
-            embed.add_field(name="Created", value=duration(created_at, now=discord.utils.utcnow()))
+            embed.add_field(name="Created", value=human_timedelta(created_at))
             closer = entry.get("closer")
             if closer is None:
                 closer_msg = "Unknown"

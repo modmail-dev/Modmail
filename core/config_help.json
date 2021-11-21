@@ -571,7 +571,7 @@
     ]
   },
   "cooldown_thread_response": {
-    "default": "You must wait for {delta} before you can contact me again.",
+    "default": "Your cooldown ends {delta}. Try contacting me then.",
     "description": "The description of the message embed when the user has a cooldown before creating a new thread.",
     "examples": [
       "`{prefix}config set cooldown_thread_response Be patient! You are on cooldown, wait {delta} more.`"

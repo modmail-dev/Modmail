@@ -78,7 +78,7 @@ class ConfigManager:
         "thread_move_notify_mods": False,
         "thread_move_response": "This thread has been moved.",
         "cooldown_thread_title": "Message not sent!",
-        "cooldown_thread_response": "You must wait for {delta} before you can contact me again.",
+        "cooldown_thread_response": "Your cooldown ends {delta}. Try contacting me then.",
         "disabled_new_thread_title": "Not Delivered",
         "disabled_new_thread_response": "We are not accepting new threads.",
         "disabled_new_thread_footer": "Please try again later...",
