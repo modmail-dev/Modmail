@@ -8,6 +8,7 @@ import os
 import re
 import signal
 import string
+import struct
 import sys
 import typing
 from datetime import datetime, timezone
@@ -1690,7 +1691,7 @@ class ModmailBot(commands.Bot):
 def main():
     try:
         # noinspection PyUnresolvedReferences
-        import uvloop
+        import uvloop  # type: ignore
 
         logger.debug("Setting up with uvloop.")
         uvloop.install()
@@ -1698,11 +1699,21 @@ def main():
         pass
 
     try:
-        import cairosvg
+        import cairosvg  # noqa: F401
     except OSError:
-        logger.error(
-            "Unable to import cairosvg, install GTK Installer for Windows: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest"
-        )
+        if os.name == "nt":
+            if struct.calcsize("P") * 8 != 64:
+                logger.error(
+                    "Unable to import cairosvg, ensure your Python is a 64-bit version: https://www.python.org/downloads/"
+                )
+            else:
+                logger.error(
+                    "Unable to import cairosvg, install GTK Installer for Windows: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest"
+                )
+        else:
+            logger.error(
+                "Unable to import cairosvg, report on our support server with your OS details: https://discord.gg/etJNHCQ"
+            )
         sys.exit(0)
 
     # check discord version
