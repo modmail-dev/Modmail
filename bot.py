@@ -565,7 +565,9 @@ class ModmailBot(commands.Bot):
         logger.line()
 
         for recipient_id, items in tuple(closures.items()):
-            after = (datetime.fromisoformat(items["time"]).astimezone(timezone.utc) - discord.utils.utcnow()).total_seconds()
+            after = (
+                datetime.fromisoformat(items["time"]).astimezone(timezone.utc) - discord.utils.utcnow()
+            ).total_seconds()
             if after <= 0:
                 logger.debug("Closing thread for recipient %s.", recipient_id)
                 after = 0
