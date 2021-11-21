@@ -335,10 +335,9 @@ class Thread:
         else:
             footer = f"User ID: {user.id}"
 
-        embed.set_author(name=str(user), icon_url=user.display_avatar.url, url=log_url)
-        # embed.set_thumbnail(url=avi)
-
         if member is not None:
+            embed.set_author(name=str(user), icon_url=member.display_avatar.url, url=log_url)
+
             joined = str((time - member.joined_at).days)
             # embed.add_field(name='Joined', value=joined + days(joined))
             if self.bot.config["thread_show_join_age"]:
@@ -350,6 +349,7 @@ class Thread:
                 embed.add_field(name="Roles", value=role_names, inline=True)
             embed.set_footer(text=footer)
         else:
+            embed.set_author(name=str(user), icon_url=user.display_avatar.url, url=log_url)
             embed.set_footer(text=f"{footer} • (not in main server)")
 
         embed.description += ", ".join(user_info)
@@ -931,6 +931,11 @@ class Thread:
         destination = destination or self.channel
 
         author = message.author
+        member = self.bot.guild.get_member(author.id)
+        if member:
+            avatar_url = member.display_avatar.url
+        else:
+            avatar_url = author.display_avatar.url
 
         embed = discord.Embed(description=message.content)
         if self.bot.config["show_timestamp"]:
@@ -958,7 +963,7 @@ class Thread:
             else:
                 # Normal message
                 name = str(author)
-                avatar_url = author.display_avatar.url
+                avatar_url = avatar_url
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,
