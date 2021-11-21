@@ -21,6 +21,7 @@ pymongo = {extras = ["srv"], version = "*"}  # Required by motor
 python-dateutil = "~=2.8.1"
 python-dotenv = "~=0.18.0"
 uvloop = {version = ">=0.15.2", markers = "sys_platform != 'win32'"}
+lottie = {version = "==0.6.10", extras = ["pdf"]}
 
 [scripts]
 bot = "python bot.py"

@@ -50,9 +50,6 @@ from core.utils import normalize_alias, truncate, tryint
 
 logger = getLogger(__name__)
 
-# # prevent "coroutine noop was never awaited" warning.
-# asyncio.coroutines._DEBUG = False  # type: ignore
-
 
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
@@ -1690,6 +1687,14 @@ def main():
         uvloop.install()
     except ImportError:
         pass
+
+    try:
+        import cairosvg
+    except OSError:
+        logger.error(
+            "Unable to import cairosvg, install GTK Installer for Windows: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest"
+        )
+        sys.exit(0)
 
     # check discord version
     if discord.__version__ != "2.0.0a":
