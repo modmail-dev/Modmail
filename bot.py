@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev4"
+__version__ = "4.0.0-dev5"
 
 
 import asyncio
@@ -10,7 +10,7 @@ import signal
 import string
 import sys
 import typing
-from datetime import datetime
+from datetime import datetime, timezone
 from subprocess import PIPE
 from types import SimpleNamespace
 
@@ -565,7 +565,7 @@ class ModmailBot(commands.Bot):
         logger.line()
 
         for recipient_id, items in tuple(closures.items()):
-            after = (datetime.fromisoformat(items["time"]) - discord.utils.utcnow()).total_seconds()
+            after = (datetime.fromisoformat(items["time"]).astimezone(timezone.utc) - discord.utils.utcnow()).total_seconds()
             if after <= 0:
                 logger.debug("Closing thread for recipient %s.", recipient_id)
                 after = 0
