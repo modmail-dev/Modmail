@@ -1017,7 +1017,9 @@ class Thread:
                         data = await resp.read()
 
                     # convert to a png
-                    img_data = await self.bot.loop.run_in_executor(None, functools.partial(lottie_to_png, data))
+                    img_data = await self.bot.loop.run_in_executor(
+                        None, functools.partial(lottie_to_png, data)
+                    )
                     b64_data = base64.b64encode(img_data).decode()
 
                     # upload to imgur
