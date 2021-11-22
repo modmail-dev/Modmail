@@ -21,6 +21,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `?fpareply` and `?fpreply` to reply to messages with variables plainly.
 - `use_nickname_channel_name` config to use nicknames instead of usernames for channel names. ([GH #3112](https://github.com/kyb3r/modmail/issues/3112))
 - `show_log_url_button` config to show Log URL button. ([GH #3122](https://github.com/kyb3r/modmail/issues/3122))
+- Select menus for certain paginators.
 
 ### Improved
 

@@ -1,8 +1,9 @@
+from collections import OrderedDict
 import typing
 
 import discord
 from discord import Message, Embed, ButtonStyle, Interaction
-from discord.ui import View, Button
+from discord.ui import View, Button, Select
 from discord.ext import commands
 
 
@@ -35,6 +36,10 @@ class PaginatorSession:
         The current page number.
     callback_map : Dict[str, method]
         A mapping for text to method.
+    view : PaginatorView
+        The view that is sent along with the base message.
+    select_menu : Select
+        A select menu that will be added to the View.
     """
 
     def __init__(self, ctx: commands.Context, *pages, **options):
@@ -46,6 +51,7 @@ class PaginatorSession:
         self.pages = list(pages)
         self.destination = options.get("destination", ctx)
         self.view = None
+        self.select_menu = None
 
         self.callback_map = {
             "<<": self.first_page,
@@ -195,7 +201,7 @@ class PaginatorView(View):
     def __init__(self, handler: PaginatorSession, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.handler = handler
-        self.clear_items()
+        self.clear_items()  # clear first so we can control the order
         self.fill_items()
 
     @discord.ui.button(label="Stop", style=ButtonStyle.danger)
@@ -204,6 +210,9 @@ class PaginatorView(View):
         await self.handler.close()
 
     def fill_items(self):
+        if self.handler.select_menu is not None:
+            self.add_item(self.handler.select_menu)
+
         for label, callback in self.handler.callback_map.items():
             if len(self.handler.pages) == 2 and label in ("<<", ">>"):
                 continue
@@ -255,11 +264,29 @@ class PageButton(Button):
         await interaction.response.edit_message(view=self.view)
 
 
+class PageSelect(Select):
+    def __init__(self, handler: PaginatorSession, pages: typing.List[typing.Tuple[str]]):
+        self.handler = handler
+        options = []
+        for n, (label, description) in enumerate(pages):
+            options.append(discord.SelectOption(label=label, description=description, value=str(n)))
+
+        options = options[:25]  # max 25 options
+        super().__init__(placeholder="Select a page", min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: Interaction):
+        page = int(self.values[0])
+        await self.handler.show_page(page)
+        await interaction.response.edit_message(view=self.view)
+
+
 class EmbedPaginatorSession(PaginatorSession):
     def __init__(self, ctx: commands.Context, *embeds, **options):
         super().__init__(ctx, *embeds, **options)
 
         if len(self.pages) > 1:
+            select_options = []
+            create_select = True
             for i, embed in enumerate(self.pages):
                 footer_text = f"Page {i + 1} of {len(self.pages)}"
                 if embed.footer.text:
@@ -269,8 +296,31 @@ class EmbedPaginatorSession(PaginatorSession):
                     icon_url = embed.footer.icon.url
                 else:
                     icon_url = Embed.Empty
-
                 embed.set_footer(text=footer_text, icon_url=icon_url)
+
+                # select menu
+                if embed.author.name:
+                    title = embed.author.name[:30].strip()
+                    if len(embed.author.name) > 30:
+                        title += "..."
+                else:
+                    title = embed.title[:30].strip()
+                    if len(embed.title) > 30:
+                        title += "..."
+                    if not title:
+                        create_select = False
+
+                if embed.description:
+                    description = embed.description[:40].replace("*", "").replace("`", "").strip()
+                    if len(embed.description) > 40:
+                        description += "..."
+                else:
+                    description = ""
+                select_options.append((title, description))
+
+            if create_select:
+                if len(set(x[0] for x in select_options)) != 1:  # must have unique authors
+                    self.select_menu = PageSelect(self, select_options)
 
     def add_page(self, item: Embed) -> None:
         if isinstance(item, Embed):
