@@ -497,7 +497,7 @@ class Thread:
         if self.bot.log_channel is not None and self.channel is not None:
             if self.bot.config["show_log_url_button"]:
                 view = discord.ui.View()
-                view.add_item(discord.ui.Button(label='Log link', url=log_url, style=discord.ButtonStyle.url))
+                view.add_item(discord.ui.Button(label="Log link", url=log_url, style=discord.ButtonStyle.url))
             else:
                 view = None
             tasks.append(self.bot.log_channel.send(embed=embed, view=view))

@@ -1,8 +1,8 @@
 import typing
-import asyncio
 
-from discord import User, Reaction, Message, Embed
-from discord import HTTPException, InvalidArgument
+import discord
+from discord import Message, Embed, ButtonStyle, Interaction
+from discord.ui import View, Button
 from discord.ext import commands
 
 
@@ -33,8 +33,8 @@ class PaginatorSession:
         The `Message` of the `Embed`.
     current : int
         The current page number.
-    reaction_map : Dict[str, method]
-        A mapping for reaction to method.
+    callback_map : Dict[str, method]
+        A mapping for text to method.
     """
 
     def __init__(self, ctx: commands.Context, *pages, **options):
@@ -45,38 +45,15 @@ class PaginatorSession:
         self.current = 0
         self.pages = list(pages)
         self.destination = options.get("destination", ctx)
-        self.reaction_map = {
-            "⏮": self.first_page,
-            "◀": self.previous_page,
-            "▶": self.next_page,
-            "⏭": self.last_page,
-            "🛑": self.close,
+        self.view = None
+
+        self.callback_map = {
+            "<<": self.first_page,
+            "<": self.previous_page,
+            ">": self.next_page,
+            ">>": self.last_page,
         }
-
-    def add_page(self, item) -> None:
-        """
-        Add a page.
-        """
-        raise NotImplementedError
-
-    async def create_base(self, item) -> None:
-        """
-        Create a base `Message`.
-        """
-        await self._create_base(item)
-
-        if len(self.pages) == 1:
-            self.running = False
-            return
-
-        self.running = True
-        for reaction in self.reaction_map:
-            if len(self.pages) == 2 and reaction in "⏮⏭":
-                continue
-            await self.ctx.bot.add_reaction(self.base, reaction)
-
-    async def _create_base(self, item) -> None:
-        raise NotImplementedError
+        self._buttons_map = {"<<": None, "<": None, ">": None, ">>": None}
 
     async def show_page(self, index: int) -> None:
         """
@@ -98,66 +75,77 @@ class PaginatorSession:
         else:
             await self.create_base(page)
 
+        self.update_disabled_status()
+
+    def update_disabled_status(self):
+        if self.current == self.first_page():
+            # disable << button
+            if self._buttons_map["<<"]:
+                self._buttons_map["<<"].disabled = True
+
+            self._buttons_map["<"].disabled = True
+        else:
+            if self._buttons_map["<<"]:
+                self._buttons_map["<<"].disabled = False
+
+            self._buttons_map["<"].disabled = False
+
+        if self.current == self.last_page():
+            # disable >> button
+            if self._buttons_map[">>"] is not None:
+                self._buttons_map[">>"].disabled = True
+
+            self._buttons_map[">"].disabled = True
+        else:
+            if self._buttons_map[">>"] is not None:
+                self._buttons_map[">>"].disabled = False
+
+            self._buttons_map[">"].disabled = False
+
+    async def create_base(self, item) -> None:
+        """
+        Create a base `Message`.
+        """
+        if len(self.pages) == 1:
+            self.view = None
+            self.running = False
+        else:
+            self.view = PaginatorView(self, timeout=self.timeout)
+            self.update_disabled_status()
+            self.running = True
+
+        await self._create_base(item, self.view)
+
+    async def _create_base(self, item, view: View) -> None:
+        raise NotImplementedError
+
     async def _show_page(self, page):
         raise NotImplementedError
 
-    def react_check(self, reaction: Reaction, user: User) -> bool:
-        """
+    def first_page(self):
+        """Returns the index of the first page"""
+        return 0
 
-        Parameters
-        ----------
-        reaction : Reaction
-            The `Reaction` object of the reaction.
-        user : User
-            The `User` or `Member` object of who sent the reaction.
+    def next_page(self):
+        """Returns the index of the next page"""
+        return min(self.current + 1, self.last_page())
 
-        Returns
-        -------
-        bool
-        """
-        return (
-            reaction.message.id == self.base.id
-            and user.id == self.ctx.author.id
-            and reaction.emoji in self.reaction_map.keys()
-        )
+    def previous_page(self):
+        """Returns the index of the previous page"""
+        return max(self.current - 1, self.first_page())
+
+    def last_page(self):
+        """Returns the index of the last page"""
+        return len(self.pages) - 1
 
     async def run(self) -> typing.Optional[Message]:
         """
         Starts the pagination session.
-
-        Returns
-        -------
-        Optional[Message]
-            If it's closed before running ends.
         """
         if not self.running:
             await self.show_page(self.current)
-        while self.running:
-            try:
-                reaction, user = await self.ctx.bot.wait_for(
-                    "reaction_add", check=self.react_check, timeout=self.timeout
-                )
-            except asyncio.TimeoutError:
-                return await self.close(delete=False)
-            else:
-                action = self.reaction_map.get(reaction.emoji)
-                await action()
-            try:
-                await self.base.remove_reaction(reaction, user)
-            except (HTTPException, InvalidArgument):
-                pass
-
-    async def previous_page(self) -> None:
-        """
-        Go to the previous page.
-        """
-        await self.show_page(self.current - 1)
-
-    async def next_page(self) -> None:
-        """
-        Go to the next page.
-        """
-        await self.show_page(self.current + 1)
+            await self.view.wait()
+            await self.close(delete=False)
 
     async def close(self, delete: bool = True) -> typing.Optional[Message]:
         """
@@ -179,25 +167,92 @@ class PaginatorSession:
         sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
         await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
 
+        self.view.clear_items()
+        self.view.stop()
         if delete:
             return await self.base.delete()
 
-        try:
-            await self.base.clear_reactions()
-        except HTTPException:
-            pass
 
-    async def first_page(self) -> None:
-        """
-        Go to the first page.
-        """
-        await self.show_page(0)
+class PaginatorView(View):
+    """
+    View that is used for pagination.
 
-    async def last_page(self) -> None:
-        """
-        Go to the last page.
-        """
-        await self.show_page(len(self.pages) - 1)
+    Parameters
+    ----------
+    handler : PaginatorSession
+        The paginator session that spawned this view.
+    timeout : float
+        How long to wait for before the session closes.
+
+    Attributes
+    ----------
+    handler : PaginatorSession
+        The paginator session that spawned this view.
+    timeout : float
+        How long to wait for before the session closes.
+    """
+
+    def __init__(self, handler: PaginatorSession, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.handler = handler
+        self.clear_items()
+        self.fill_items()
+
+    @discord.ui.button(label="Stop", style=ButtonStyle.danger)
+    async def stop_button(self, button: Button, interaction: Interaction):
+        await interaction.response.edit_message(view=self)
+        await self.handler.close()
+
+    def fill_items(self):
+        for label, callback in self.handler.callback_map.items():
+            if len(self.handler.pages) == 2 and label in ("<<", ">>"):
+                continue
+
+            if label in ("<<", ">>"):
+                style = ButtonStyle.secondary
+            else:
+                style = ButtonStyle.primary
+
+            button = PageButton(self.handler, callback, label=label, style=style)
+
+            self.handler._buttons_map[label] = button
+            self.add_item(button)
+        self.add_item(self.stop_button)
+
+    async def interaction_check(self, interaction: Interaction):
+        """Only allow the message author to interact"""
+        if interaction.user != self.handler.ctx.author:
+            return False
+        return True
+
+
+class PageButton(Button):
+    """
+    A button that has a callback to jump to the next page
+
+    Parameters
+    ----------
+    handler : PaginatorSession
+        The paginator session that spawned this view.
+    page_callback : Callable
+        A callable that returns an int of the page to go to.
+
+    Attributes
+    ----------
+    handler : PaginatorSession
+        The paginator session that spawned this view.
+    page_callback : Callable
+        A callable that returns an int of the page to go to.
+    """
+
+    def __init__(self, handler, page_callback, **kwargs):
+        super().__init__(**kwargs)
+        self.handler = handler
+        self.page_callback = page_callback
+
+    async def callback(self, interaction: Interaction):
+        await self.handler.show_page(self.page_callback())
+        await interaction.response.edit_message(view=self.view)
 
 
 class EmbedPaginatorSession(PaginatorSession):
@@ -223,8 +278,8 @@ class EmbedPaginatorSession(PaginatorSession):
         else:
             raise TypeError("Page must be an Embed object.")
 
-    async def _create_base(self, item: Embed) -> None:
-        self.base = await self.destination.send(embed=item)
+    async def _create_base(self, item: Embed, view: View) -> None:
+        self.base = await self.destination.send(embed=item, view=view)
 
     async def _show_page(self, page):
         await self.base.edit(embed=page)
@@ -255,9 +310,9 @@ class MessagePaginatorSession(PaginatorSession):
 
             self.embed.set_footer(text=footer_text, icon_url=icon_url)
 
-    async def _create_base(self, item: str) -> None:
+    async def _create_base(self, item: str, view: View) -> None:
         self._set_footer()
-        self.base = await self.ctx.send(content=item, embed=self.embed)
+        self.base = await self.ctx.send(content=item, embed=self.embed, view=view)
 
     async def _show_page(self, page) -> None:
         self._set_footer()
