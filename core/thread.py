@@ -495,7 +495,12 @@ class Thread:
         tasks = [self.bot.config.update()]
 
         if self.bot.log_channel is not None and self.channel is not None:
-            tasks.append(self.bot.log_channel.send(embed=embed))
+            if self.bot.config["show_log_url_button"]:
+                view = discord.ui.View()
+                view.add_item(discord.ui.Button(label='Log link', url=log_url, style=discord.ButtonStyle.url))
+            else:
+                view = None
+            tasks.append(self.bot.log_channel.send(embed=embed, view=view))
 
         # Thread closed message
 

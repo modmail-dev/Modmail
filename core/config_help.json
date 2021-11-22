@@ -828,6 +828,14 @@
     ],
     "notes": []
   },
+  "show_log_url_button": {
+    "default" : "No",
+    "description": "Shows the button to open the Log URL.",
+    "examples": [
+      "`{prefix}config set show_log_url_button yes`"
+    ],
+    "notes": []
+  },
   "private_added_to_group_title": {
     "default": "New Thread (Group)",
     "description": "This is the message embed title sent to the recipient that is just added to a thread.",

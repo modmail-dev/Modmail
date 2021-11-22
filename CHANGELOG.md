@@ -20,6 +20,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `plain_snippets` config to force all snippets to be plain. ([GH #3083](https://github.com/kyb3r/modmail/issues/3083))
 - `?fpareply` and `?fpreply` to reply to messages with variables plainly.
 - `use_nickname_channel_name` config to use nicknames instead of usernames for channel names. ([GH #3112](https://github.com/kyb3r/modmail/issues/3112))
+- `show_log_url_button` config to show Log URL button. ([GH #3122](https://github.com/kyb3r/modmail/issues/3122))
 
 ### Improved
 

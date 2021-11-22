@@ -94,6 +94,7 @@ class ConfigManager:
         "anonymous_snippets": False,
         "plain_snippets": False,
         "require_close_reason": False,
+        "show_log_url_button": False,
         # group conversations
         "private_added_to_group_title": "New Thread (Group)",
         "private_added_to_group_response": "{moderator.name} has added you to a Modmail thread.",
@@ -191,6 +192,7 @@ class ConfigManager:
         "reply_without_command",
         "anon_reply_without_command",
         "plain_reply_without_command",
+        "show_log_url_button",
         "recipient_thread_close",
         "thread_auto_close_silently",
         "thread_move_notify",
