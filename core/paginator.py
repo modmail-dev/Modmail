@@ -173,6 +173,8 @@ class PaginatorSession:
         await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
 
         self.view.clear_items()
+        await self.message.edit(view=self.view)
+
         self.view.stop()
         if delete:
             return await self.base.delete()
