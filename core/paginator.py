@@ -167,17 +167,18 @@ class PaginatorSession:
         Optional[Message]
             If `delete` is `True`.
         """
-        self.running = False
+        if self.running:
+            self.running = False
 
-        sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
-        await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
+            self.view.stop()
+            if delete:
+                await self.base.delete()
+            else:
+                self.view.clear_items()
+                await self.base.edit(view=self.view)
 
-        self.view.clear_items()
-        await self.message.edit(view=self.view)
-
-        self.view.stop()
-        if delete:
-            return await self.base.delete()
+            sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
+            await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
 
 
 class PaginatorView(View):
