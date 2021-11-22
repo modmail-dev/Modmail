@@ -60,7 +60,7 @@ class PaginatorSession:
         }
         self._buttons_map = {"<<": None, "<": None, ">": None, ">>": None}
 
-    async def show_page(self, index: int) -> None:
+    async def show_page(self, index: int) -> typing.Optional[typing.Dict]:
         """
         Show a page by page number.
 
@@ -74,13 +74,15 @@ class PaginatorSession:
 
         self.current = index
         page = self.pages[index]
+        result = None
 
         if self.running:
-            await self._show_page(page)
+            result = self._show_page(page)
         else:
             await self.create_base(page)
 
         self.update_disabled_status()
+        return result
 
     def update_disabled_status(self):
         if self.current == self.first_page():
@@ -124,7 +126,7 @@ class PaginatorSession:
     async def _create_base(self, item, view: View) -> None:
         raise NotImplementedError
 
-    async def _show_page(self, page):
+    def _show_page(self, page):
         raise NotImplementedError
 
     def first_page(self):
@@ -233,6 +235,7 @@ class PaginatorView(View):
     async def interaction_check(self, interaction: Interaction):
         """Only allow the message author to interact"""
         if interaction.user != self.handler.ctx.author:
+            await interaction.response.send_message("Only the original author can control this!", ephemeral=True)
             return False
         return True
 
@@ -262,8 +265,8 @@ class PageButton(Button):
         self.page_callback = page_callback
 
     async def callback(self, interaction: Interaction):
-        await self.handler.show_page(self.page_callback())
-        await interaction.response.edit_message(view=self.view)
+        kwargs = await self.handler.show_page(self.page_callback())
+        await interaction.response.edit_message(**kwargs, view=self.view)
 
 
 class PageSelect(Select):
@@ -278,8 +281,8 @@ class PageSelect(Select):
 
     async def callback(self, interaction: Interaction):
         page = int(self.values[0])
-        await self.handler.show_page(page)
-        await interaction.response.edit_message(view=self.view)
+        kwargs = await self.handler.show_page(page)
+        await interaction.response.edit_message(**kwargs, view=self.view)
 
 
 class EmbedPaginatorSession(PaginatorSession):
@@ -333,8 +336,8 @@ class EmbedPaginatorSession(PaginatorSession):
     async def _create_base(self, item: Embed, view: View) -> None:
         self.base = await self.destination.send(embed=item, view=view)
 
-    async def _show_page(self, page):
-        await self.base.edit(embed=page)
+    def _show_page(self, page):
+        return dict(embed=page)
 
 
 class MessagePaginatorSession(PaginatorSession):
@@ -366,6 +369,6 @@ class MessagePaginatorSession(PaginatorSession):
         self._set_footer()
         self.base = await self.ctx.send(content=item, embed=self.embed, view=view)
 
-    async def _show_page(self, page) -> None:
+    def _show_page(self, page) -> typing.Dict:
         self._set_footer()
-        await self.base.edit(content=page, embed=self.embed)
+        return dict(content=page, embed=self.embed)
