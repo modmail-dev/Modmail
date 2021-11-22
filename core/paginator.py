@@ -154,7 +154,9 @@ class PaginatorSession:
             await self.view.wait()
             await self.close(delete=False)
 
-    async def close(self, delete: bool = True) -> typing.Optional[Message]:
+    async def close(
+        self, delete: bool = True, *, interaction: Interaction = None
+    ) -> typing.Optional[Message]:
         """
         Closes the pagination session.
 
@@ -170,17 +172,22 @@ class PaginatorSession:
             If `delete` is `True`.
         """
         if self.running:
+            sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
+            await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
+
+            if interaction:
+                message = interaction.message
+            else:
+                message = self.base
+
             self.running = False
 
             self.view.stop()
             if delete:
-                await self.base.delete()
+                await message.delete()
             else:
                 self.view.clear_items()
-                await self.base.edit(view=self.view)
-
-            sent_emoji, _ = await self.ctx.bot.retrieve_emoji()
-            await self.ctx.bot.add_reaction(self.ctx.message, sent_emoji)
+                await message.edit(view=self.view)
 
 
 class PaginatorView(View):
@@ -210,8 +217,7 @@ class PaginatorView(View):
 
     @discord.ui.button(label="Stop", style=ButtonStyle.danger)
     async def stop_button(self, button: Button, interaction: Interaction):
-        await interaction.response.edit_message(view=self)
-        await self.handler.close()
+        await self.handler.close(interaction=interaction)
 
     def fill_items(self):
         if self.handler.select_menu is not None:
@@ -235,7 +241,9 @@ class PaginatorView(View):
     async def interaction_check(self, interaction: Interaction):
         """Only allow the message author to interact"""
         if interaction.user != self.handler.ctx.author:
-            await interaction.response.send_message("Only the original author can control this!", ephemeral=True)
+            await interaction.response.send_message(
+                "Only the original author can control this!", ephemeral=True
+            )
             return False
         return True
 
