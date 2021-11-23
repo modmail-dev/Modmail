@@ -955,6 +955,16 @@ class ModmailBot(commands.Bot):
                 await self.add_reaction(message, sent_emoji)
                 self.dispatch("thread_reply", thread, False, message, False, False)
 
+    def _get_snippet_command(self) -> commands.Command:
+        """Get the correct reply command based on the snippet config"""
+        modifiers = "f"
+        if self.config["plain_snippets"]:
+            modifiers += "p"
+        if self.config["anonymous_snippets"]:
+            modifiers += "a"
+
+        return self.get_command(f'{modifiers}reply')
+
     async def get_contexts(self, message, *, cls=commands.Context):
         """
         Returns all invocation contexts from the message.
@@ -986,18 +996,40 @@ class ModmailBot(commands.Bot):
                 self.aliases.pop(invoker)
 
             for alias in aliases:
-                view = StringView(invoked_prefix + alias)
+                command = None
+                try:
+                    snippet_text = self.snippets[alias]
+                except KeyError:
+                    command_invocation_text = alias
+                else:
+                    command = self._get_snippet_command()
+                    command_invocation_text = f'{invoked_prefix}{command} {snippet_text}'
+
+                view = StringView(invoked_prefix + command_invocation_text)
                 ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
                 ctx_.thread = thread
                 discord.utils.find(view.skip_string, prefixes)
                 ctx_.invoked_with = view.get_word().lower()
-                ctx_.command = self.all_commands.get(ctx_.invoked_with)
+                ctx_.command = command or self.all_commands.get(ctx_.invoked_with)
                 ctxs += [ctx_]
             return ctxs
 
         ctx.thread = thread
-        ctx.invoked_with = invoker
-        ctx.command = self.all_commands.get(invoker)
+
+        try:
+            snippet_text = self.snippets[invoker]
+        except KeyError:
+            # Process regular commands
+            ctx.command = self.all_commands.get(invoker)
+            ctx.invoked_with = invoker
+        else:
+            # Process snippets
+            ctx.command = self._get_snippet_command()
+            reply_view = StringView(f'{invoked_prefix}{ctx.command} {snippet_text}')
+            discord.utils.find(reply_view.skip_string, prefixes)
+            ctx.invoked_with = reply_view.get_word().lower()
+            ctx.view = reply_view
+
         return [ctx]
 
     async def trigger_auto_triggers(self, message, channel, *, cls=commands.Context):
@@ -1138,20 +1170,6 @@ class ModmailBot(commands.Bot):
 
         if isinstance(message.channel, discord.DMChannel):
             return await self.process_dm_modmail(message)
-
-        if message.content.startswith(self.prefix):
-            cmd = message.content[len(self.prefix) :].strip()
-
-            # Process snippets
-            cmd = cmd.lower()
-            if cmd in self.snippets:
-                snippet = self.snippets[cmd]
-                modifiers = "f"
-                if self.config["plain_snippets"]:
-                    modifiers += "p"
-                if self.config["anonymous_snippets"]:
-                    modifiers += "a"
-                message.content = f"{self.prefix}{modifiers}reply {snippet}"
 
         ctxs = await self.get_contexts(message)
         for ctx in ctxs:
