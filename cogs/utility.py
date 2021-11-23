@@ -1070,7 +1070,9 @@ class Utility(commands.Cog):
             linked_command = view.get_word().lower()
             message = view.read_rest()
 
-            if not self.bot.get_command(linked_command):
+            is_snippet = linked_command in self.bot.snippets and not message 
+
+            if not self.bot.get_command(linked_command) and not is_snippet:
                 alias_command = self.bot.aliases.get(linked_command)
                 if alias_command is not None:
                     save_aliases.extend(utils.normalize_alias(alias_command, message))
