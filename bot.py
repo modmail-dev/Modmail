@@ -46,7 +46,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import normalize_alias, truncate, tryint
+from core.utils import normalize_alias, parse_alias, truncate, tryint
 
 logger = getLogger(__name__)
 
@@ -84,6 +84,30 @@ class ModmailBot(commands.Bot):
 
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
+
+    def _resolve_snippet(self, name: str) -> typing.Optional[str]:
+        """
+        Get actual snippet names from direct aliases to snippets.
+
+        If the provided name is a snippet, it's returned unchanged.
+        If there is an alias by this name, it is parsed to see if it
+        refers only to a snippet, in which case that snippet name is
+        returned.
+
+        If no snippets were found, None is returned.
+        """
+        if name in self.snippets:
+            return name
+
+        try:
+            command, = parse_alias(self.aliases[name])
+        except (KeyError, ValueError):
+            # There is either no alias by this name present or the
+            # alias has multiple steps.
+            pass
+        else:
+            if command in self.snippets:
+                return command
 
     @property
     def uptime(self) -> str:
