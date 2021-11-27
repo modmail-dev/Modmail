@@ -1010,9 +1010,17 @@ class ModmailBot(commands.Bot):
 
         invoker = view.get_word().lower()
 
+        # Check if a snippet is being called.
+        # This needs to be done before checking for aliases since
+        # snippets can have multiple words.
+        try:
+            snippet_text = self.snippets[message.content.removeprefix(invoked_prefix)]
+        except KeyError:
+            snippet_text = None
+
         # Check if there is any aliases being called.
         alias = self.aliases.get(invoker)
-        if alias is not None:
+        if alias is not None and snippet_text is None:
             ctxs = []
             aliases = normalize_alias(alias, message.content[len(f"{invoked_prefix}{invoker}") :])
             if not aliases:
@@ -1028,7 +1036,6 @@ class ModmailBot(commands.Bot):
                 else:
                     command = self._get_snippet_command()
                     command_invocation_text = f'{invoked_prefix}{command} {snippet_text}'
-
                 view = StringView(invoked_prefix + command_invocation_text)
                 ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
                 ctx_.thread = thread
@@ -1040,19 +1047,16 @@ class ModmailBot(commands.Bot):
 
         ctx.thread = thread
 
-        try:
-            snippet_text = self.snippets[invoker]
-        except KeyError:
-            # Process regular commands
-            ctx.command = self.all_commands.get(invoker)
-            ctx.invoked_with = invoker
-        else:
+        if snippet_text is not None:
             # Process snippets
             ctx.command = self._get_snippet_command()
             reply_view = StringView(f'{invoked_prefix}{ctx.command} {snippet_text}')
             discord.utils.find(reply_view.skip_string, prefixes)
             ctx.invoked_with = reply_view.get_word().lower()
             ctx.view = reply_view
+        else:
+            ctx.command = self.all_commands.get(invoker)
+            ctx.invoked_with = invoker
 
         return [ctx]
 
