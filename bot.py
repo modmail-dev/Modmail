@@ -100,7 +100,7 @@ class ModmailBot(commands.Bot):
             return name
 
         try:
-            command, = parse_alias(self.aliases[name])
+            (command,) = parse_alias(self.aliases[name])
         except (KeyError, ValueError):
             # There is either no alias by this name present or the
             # alias has multiple steps.
@@ -987,7 +987,7 @@ class ModmailBot(commands.Bot):
         if self.config["anonymous_snippets"]:
             modifiers += "a"
 
-        return self.get_command(f'{modifiers}reply')
+        return self.get_command(f"{modifiers}reply")
 
     async def get_contexts(self, message, *, cls=commands.Context):
         """
@@ -1035,7 +1035,7 @@ class ModmailBot(commands.Bot):
                     command_invocation_text = alias
                 else:
                     command = self._get_snippet_command()
-                    command_invocation_text = f'{invoked_prefix}{command} {snippet_text}'
+                    command_invocation_text = f"{invoked_prefix}{command} {snippet_text}"
                 view = StringView(invoked_prefix + command_invocation_text)
                 ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
                 ctx_.thread = thread
@@ -1050,7 +1050,7 @@ class ModmailBot(commands.Bot):
         if snippet_text is not None:
             # Process snippets
             ctx.command = self._get_snippet_command()
-            reply_view = StringView(f'{invoked_prefix}{ctx.command} {snippet_text}')
+            reply_view = StringView(f"{invoked_prefix}{ctx.command} {snippet_text}")
             discord.utils.find(reply_view.skip_string, prefixes)
             ctx.invoked_with = reply_view.get_word().lower()
             ctx.view = reply_view

@@ -306,37 +306,41 @@ class Modmail(commands.Cog):
         if name in self.bot.snippets:
             deleted_aliases, edited_aliases = self._fix_aliases(name)
 
-            deleted_aliases_string = ','.join(f'`{alias}`' for alias in deleted_aliases)
+            deleted_aliases_string = ",".join(f"`{alias}`" for alias in deleted_aliases)
             if len(deleted_aliases) == 1:
-                deleted_aliases_output = f'The `{deleted_aliases_string}` direct alias has been removed.'
+                deleted_aliases_output = f"The `{deleted_aliases_string}` direct alias has been removed."
             elif deleted_aliases:
-                deleted_aliases_output = f'The following direct aliases have been removed: {deleted_aliases_string}.'
+                deleted_aliases_output = (
+                    f"The following direct aliases have been removed: {deleted_aliases_string}."
+                )
             else:
                 deleted_aliases_output = None
 
             if len(edited_aliases) == 1:
                 alias, val = edited_aliases.popitem()
                 edited_aliases_output = (
-                    f'Steps pointing to this snippet have been removed from the `{alias}` alias'
-                    f' (previous value: `{val}`).`'
+                    f"Steps pointing to this snippet have been removed from the `{alias}` alias"
+                    f" (previous value: `{val}`).`"
                 )
             elif edited_aliases:
-                alias_list = '\n'.join([
-                    f'- `{alias_name}` (previous value: `{val}`)'
-                    for alias_name, val in edited_aliases.items()
-                ])
+                alias_list = "\n".join(
+                    [
+                        f"- `{alias_name}` (previous value: `{val}`)"
+                        for alias_name, val in edited_aliases.items()
+                    ]
+                )
                 edited_aliases_output = (
-                    f'Steps pointing to this snippet have been removed from the following aliases:'
-                    f'\n\n{alias_list}'
+                    f"Steps pointing to this snippet have been removed from the following aliases:"
+                    f"\n\n{alias_list}"
                 )
             else:
                 edited_aliases_output = None
 
             description = f"Snippet `{name}` is now deleted."
             if deleted_aliases_output:
-                description += f'\n\n{deleted_aliases_output}'
+                description += f"\n\n{deleted_aliases_output}"
             if edited_aliases_output:
-                description += f'\n\n{edited_aliases_output}'
+                description += f"\n\n{edited_aliases_output}"
 
             embed = discord.Embed(
                 title="Removed snippet",

@@ -189,13 +189,11 @@ class ModmailHelpCommand(commands.HelpCommand):
             snippet_aliases = []
             for alias in self.context.bot.aliases:
                 if self.context.bot._resolve_snippet(alias) == command:
-                    snippet_aliases.append(f'`{alias}`')
+                    snippet_aliases.append(f"`{alias}`")
 
             if snippet_aliases:
                 embed.add_field(
-                    name=f'Aliases to this snippet:',
-                    value=','.join(snippet_aliases),
-                    inline=False
+                    name=f"Aliases to this snippet:", value=",".join(snippet_aliases), inline=False
                 )
 
             return await self.get_destination().send(embed=embed)
@@ -1083,7 +1081,7 @@ class Utility(commands.Cog):
             linked_command = view.get_word().lower()
             message = view.read_rest()
 
-            is_snippet = val in self.bot.snippets 
+            is_snippet = val in self.bot.snippets
 
             if not self.bot.get_command(linked_command) and not is_snippet:
                 alias_command = self.bot.aliases.get(linked_command)
