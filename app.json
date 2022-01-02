@@ -19,11 +19,11 @@
             "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval).",
             "required": true
         },
-        "CONNECTION_URI": {
+        "mongodb+srv://osrpmodmail:<password>@cluster0.odlme.mongodb.net/modmaildb": {
             "description": "The connection URI for your database.",
             "required": true
         },
-        "DATABASE_TYPE": {
+        "MongoDB": {
             "description": "The type of your database. There is only one supported database at the moment - MongoDB (default).",
             "required": false
         },
