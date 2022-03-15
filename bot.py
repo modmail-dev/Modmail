@@ -1361,6 +1361,9 @@ class ModmailBot(commands.Bot):
             await self.config.update()
             return
 
+        if channel.category_id is not self.main_category.category_id:
+            return
+
         audit_logs = self.modmail_guild.audit_logs(limit=10, action=discord.AuditLogAction.channel_delete)
         entry = await audit_logs.find(lambda a: int(a.target.id) == channel.id)
 
