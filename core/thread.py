@@ -75,7 +75,7 @@ class Thread:
     async def wait_until_ready(self) -> None:
         """Blocks execution until the thread is fully set up."""
         # timeout after 30 seconds
-        task = asyncio.create_task(asyncio.wait_for(self._ready_event.wait(), timeout=25))
+        task = self.bot.loop.create_task(asyncio.wait_for(self._ready_event.wait(), timeout=25))
         self.wait_tasks.append(task)
         try:
             await task
@@ -367,7 +367,8 @@ class Thread:
 
         return embed
 
-    def _close_after(self, closer, silent, delete_channel, message):
+    async def _close_after(self, after, closer, silent, delete_channel, message):
+        await asyncio.sleep(after)
         return self.bot.loop.create_task(self._close(closer, silent, delete_channel, message, True))
 
     async def close(
@@ -401,7 +402,7 @@ class Thread:
             self.bot.config["closures"][str(self.id)] = items
             await self.bot.config.update()
 
-            task = self.bot.loop.call_later(after, self._close_after, closer, silent, delete_channel, message)
+            task = asyncio.create_task(self._close_after(after, closer, silent, delete_channel, message))
 
             if auto_close:
                 self.auto_close_task = task
@@ -1139,7 +1140,7 @@ class Thread:
             raise
 
         if not from_mod and not note:
-            mentions = self.get_notifications()
+            mentions = await self.get_notifications()
         else:
             mentions = None
 
@@ -1176,7 +1177,7 @@ class Thread:
 
         return msg
 
-    def get_notifications(self) -> str:
+    async def get_notifications(self) -> str:
         key = str(self.id)
 
         mentions = []

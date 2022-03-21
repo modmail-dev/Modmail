@@ -308,7 +308,7 @@ class EmbedPaginatorSession(PaginatorSession):
                 if embed.footer.icon:
                     icon_url = embed.footer.icon.url
                 else:
-                    icon_url = Embed.Empty
+                    icon_url = None
                 embed.set_footer(text=footer_text, icon_url=icon_url)
 
                 # select menu
@@ -369,7 +369,7 @@ class MessagePaginatorSession(PaginatorSession):
             if self.embed.footer.icon:
                 icon_url = self.embed.footer.icon.url
             else:
-                icon_url = Embed.Empty
+                icon_url = None
 
             self.embed.set_footer(text=footer_text, icon_url=icon_url)
 

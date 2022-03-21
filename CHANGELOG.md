@@ -10,8 +10,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Breaking
 
+- Modmail now requires [`Message Content` privileged intent](https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-for-Verified-Bots).
 - Upgraded to discord.py v2.0 master ([internal changes](https://gist.github.com/apple502j/f75b4f24652f04de85c7084ffd73ec58), [GH #2990](https://github.com/kyb3r/modmail/issues/2990)).
 - Python 3.8 or higher is required.
+- Asyncio changes ([gist](https://gist.github.com/Rapptz/6706e1c8f23ac27c98cee4dd985c8120))
 
 ### Added
 
@@ -41,11 +43,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Support LOTTIE stickers. ([GH #3119](https://github.com/kyb3r/modmail/issues/3119))
 - Editing notes now work. ([GH #3094](https://github.com/kyb3r/modmail/issues/3094))
 - Commands now work in threads.
+- Audit log searching now properly works.
 
 ### Internal
 
 - Improve regex parsing of channel topics. ([GH #3114](https://github.com/kyb3r/modmail/issues/3114), [PR #3111](https://github.com/kyb3r/modmail/pull/3111))
 - Add warning if deploying on a developmental version.
+- Extensions are now loaded `on_connect`.
 
 # v3.10.3
 

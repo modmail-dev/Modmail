@@ -256,10 +256,12 @@ class Utility(commands.Cog):
             },
         )
         self.bot.help_command.cog = self
-        self.loop_presence.start()  # pylint: disable=no-member
         if not self.bot.config.get("enable_eval"):
             self.eval_.enabled = False
             logger.info("Eval disabled. enable_eval=False")
+
+    async def async_init(self):
+        self.loop_presence.start()  # pylint: disable=no-member
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
@@ -2099,5 +2101,5 @@ class Utility(commands.Cog):
         await self.bot.add_reaction(ctx.message, "\u2705")
 
 
-def setup(bot):
-    bot.add_cog(Utility(bot))
+async def setup(bot):
+    await bot.add_cog(Utility(bot))

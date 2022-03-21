@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev6"
+__version__ = "4.0.0-dev7"
 
 
 import asyncio
@@ -67,7 +67,7 @@ class ModmailBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.all()
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
-        self._session = None
+        self.session = None
         self._api = None
         self.formatter = SafeFormatter()
         self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
@@ -131,10 +131,11 @@ class ModmailBot(commands.Bot):
         logger.info("discord.py: v%s", discord.__version__)
         logger.line()
 
+    async def load_extensions(self):
         for cog in self.loaded_cogs:
             logger.debug("Loading %s.", cog)
             try:
-                self.load_extension(cog)
+                await self.load_extension(cog)
                 logger.debug("Successfully loaded %s.", cog)
             except Exception:
                 logger.exception("Failed to load %s.", cog)
@@ -168,12 +169,6 @@ class ModmailBot(commands.Bot):
         return parse_version(__version__)
 
     @property
-    def session(self) -> ClientSession:
-        if self._session is None:
-            self._session = ClientSession(loop=self.loop)
-        return self._session
-
-    @property
     def api(self) -> ApiClient:
         if self._api is None:
             if self.config["database_type"].lower() == "mongodb":
@@ -192,101 +187,84 @@ class ModmailBot(commands.Bot):
         return [self.prefix, f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
 
     def run(self):
-        loop = self.loop
-
-        try:
-            loop.add_signal_handler(signal.SIGINT, lambda: loop.stop())
-            loop.add_signal_handler(signal.SIGTERM, lambda: loop.stop())
-        except NotImplementedError:
-            pass
-
         async def runner():
-            try:
-                retry_intents = False
+            async with self:
                 try:
-                    await self.start(self.token)
+                    retry_intents = False
+                    try:
+                        await self.start(self.token)
+                    except discord.PrivilegedIntentsRequired:
+                        retry_intents = True
+                    if retry_intents:
+                        await self.http.close()
+                        if self.ws is not None and self.ws.open:
+                            await self.ws.close(code=1000)
+                        self._ready.clear()
+
+                        intents = discord.Intents.default()
+                        intents.members = True
+                        intents.message_content = True
+                        # Try again with members intent
+                        self._connection._intents = intents
+                        logger.warning(
+                            "Attempting to login with only the server members and message content privileged intent. Some plugins might not work correctly."
+                        )
+                        await self.start(self.token)
                 except discord.PrivilegedIntentsRequired:
-                    retry_intents = True
-                if retry_intents:
-                    await self.http.close()
-                    if self.ws is not None and self.ws.open:
-                        await self.ws.close(code=1000)
-                    self._ready.clear()
-                    intents = discord.Intents.default()
-                    intents.members = True
-                    # Try again with members intent
-                    self._connection._intents = intents
-                    logger.warning(
-                        "Attempting to login with only the server members privileged intent. Some plugins might not work correctly."
+                    logger.critical(
+                        "Privileged intents are not explicitly granted in the discord developers dashboard."
                     )
-                    await self.start(self.token)
-            except discord.PrivilegedIntentsRequired:
-                logger.critical(
-                    "Privileged intents are not explicitly granted in the discord developers dashboard."
-                )
-            except discord.LoginFailure:
-                logger.critical("Invalid token")
-            except Exception:
-                logger.critical("Fatal exception", exc_info=True)
-            finally:
-                if not self.is_closed():
-                    await self.close()
-                if self._session:
-                    await self._session.close()
+                except discord.LoginFailure:
+                    logger.critical("Invalid token")
+                except Exception:
+                    logger.critical("Fatal exception", exc_info=True)
+                finally:
+                    if not self.is_closed():
+                        await self.close()
+                    if self.session:
+                        await self.session.close()
 
-        # noinspection PyUnusedLocal
-        def stop_loop_on_completion(f):
-            loop.stop()
+        async def _cancel_tasks():
+            async with self:
+                task_retriever = asyncio.all_tasks
+                loop = self.loop
+                tasks = {t for t in task_retriever() if not t.done() and t.get_coro() != cancel_tasks_coro}
 
-        def _cancel_tasks():
-            task_retriever = asyncio.all_tasks
-            tasks = {t for t in task_retriever(loop=loop) if not t.done()}
+                if not tasks:
+                    return
 
-            if not tasks:
-                return
+                logger.info("Cleaning up after %d tasks.", len(tasks))
+                for task in tasks:
+                    task.cancel()
 
-            logger.info("Cleaning up after %d tasks.", len(tasks))
-            for task in tasks:
-                task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                logger.info("All tasks finished cancelling.")
 
-            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-            logger.info("All tasks finished cancelling.")
+                for task in tasks:
+                    try:
+                        if task.exception() is not None:
+                            loop.call_exception_handler(
+                                {
+                                    "message": "Unhandled exception during Client.run shutdown.",
+                                    "exception": task.exception(),
+                                    "task": task,
+                                }
+                            )
+                    except (asyncio.InvalidStateError, asyncio.CancelledError):
+                        pass
 
-            for task in tasks:
-                if task.cancelled():
-                    continue
-                if task.exception() is not None:
-                    loop.call_exception_handler(
-                        {
-                            "message": "Unhandled exception during Client.run shutdown.",
-                            "exception": task.exception(),
-                            "task": task,
-                        }
-                    )
-
-        future = asyncio.ensure_future(runner(), loop=loop)
-        future.add_done_callback(stop_loop_on_completion)
         try:
-            loop.run_forever()
-        except KeyboardInterrupt:
+            asyncio.run(runner())
+        except (KeyboardInterrupt, SystemExit):
             logger.info("Received signal to terminate bot and event loop.")
         finally:
-            future.remove_done_callback(stop_loop_on_completion)
             logger.info("Cleaning up tasks.")
 
             try:
-                _cancel_tasks()
-                if sys.version_info >= (3, 6):
-                    loop.run_until_complete(loop.shutdown_asyncgens())
+                cancel_tasks_coro = _cancel_tasks()
+                asyncio.run(cancel_tasks_coro)
             finally:
                 logger.info("Closing the event loop.")
-
-        if not future.cancelled():
-            try:
-                return future.result()
-            except KeyboardInterrupt:
-                # I am unsure why this gets raised here but suppress it anyway
-                return None
 
     @property
     def bot_owner_ids(self):
@@ -517,6 +495,8 @@ class ModmailBot(commands.Bot):
         logger.debug("Connected to gateway.")
         await self.config.refresh()
         await self.api.setup_indexes()
+        await self.load_extensions()
+        self.session = ClientSession(loop=self.loop)
         self._connected.set()
 
     async def on_ready(self):
@@ -1421,7 +1401,7 @@ class ModmailBot(commands.Bot):
             if embed.footer.icon:
                 icon_url = embed.footer.icon.url
             else:
-                icon_url = discord.Embed.Empty
+                icon_url = None
 
             embed.set_footer(text=f"{embed.footer.text} (deleted)", icon_url=icon_url)
             await message.edit(embed=embed)
