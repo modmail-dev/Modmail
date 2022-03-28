@@ -105,5 +105,27 @@
             },
             "image": "https://cdn.discordapp.com/attachments/472811257913933834/907068966311166043/unknown_2.png"
         }
+    },
+    {
+        "embed": {
+            "footer": {
+                "text": "Join noch heute!"
+            },
+            "thumbnail": {
+                "url": "https://i.imgur.com/bp0xfyK.png"
+            },
+            "fields": [
+                {
+                    "inline": false,
+                    "name": "Viele Verschiedene Talks",
+                    "value": "Gro\u00dfe Community\nGewinnspiele"
+                }
+            ],
+            "color": 61532,
+            "type": "rich",
+            "description": "Die etwas andere Community",
+            "url": "https://discord.gg/uncommon",
+            "title": "uncommon community"
+        }
     }
 ]
