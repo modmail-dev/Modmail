@@ -103,7 +103,9 @@
             "footer": {
                 "text": "Grow Your Discord Server"
             },
-            "image": "https://cdn.discordapp.com/attachments/472811257913933834/907068966311166043/unknown_2.png"
+            "image": {
+                "url": "https://cdn.discordapp.com/attachments/472811257913933834/907068966311166043/unknown_2.png"
+            }
         }
     },
     {
