@@ -44,6 +44,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Editing notes now work. ([GH #3094](https://github.com/kyb3r/modmail/issues/3094))
 - Commands now work in threads.
 - Audit log searching now properly works.
+- Old data causing `?blocked` to fail. ([GH #3131](https://github.com/kyb3r/modmail/issues/3131))
 
 ### Internal
 
