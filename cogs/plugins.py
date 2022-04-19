@@ -123,7 +123,7 @@ class Plugins(commands.Cog):
         self.loaded_plugins = set()
         self._ready_event = asyncio.Event()
 
-    async def async_init(self):
+    async def cog_load(self):
         await self.populate_registry()
         if self.bot.config.get("enable_plugins"):
             await self.initial_load_plugins()
@@ -136,8 +136,6 @@ class Plugins(commands.Cog):
             self.registry = json.loads(await resp.text())
 
     async def initial_load_plugins(self):
-        await self.bot.wait_for_connected()
-
         for plugin_name in list(self.bot.config["plugins"]):
             try:
                 plugin = Plugin.from_string(plugin_name, strict=True)

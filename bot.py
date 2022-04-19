@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev7"
+__version__ = "4.0.0-dev8"
 
 
 import asyncio
@@ -189,6 +189,7 @@ class ModmailBot(commands.Bot):
     def run(self):
         async def runner():
             async with self:
+                self.session = ClientSession(loop=self.loop)
                 try:
                     retry_intents = False
                     try:
@@ -496,7 +497,6 @@ class ModmailBot(commands.Bot):
         await self.config.refresh()
         await self.api.setup_indexes()
         await self.load_extensions()
-        self.session = ClientSession(loop=self.loop)
         self._connected.set()
 
     async def on_ready(self):

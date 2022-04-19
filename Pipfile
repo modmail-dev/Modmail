@@ -11,7 +11,7 @@ pylint = "~=2.9.3"
 [packages]
 aiohttp = "==3.7.4.post0"
 colorama = "~=0.4.4"  # Doesn't officially support Python 3.9 yet, v0.4.5 will support 3.9
-"discord.py" = {ref = "97fe07edb2f3d0f5a980917fb6ee479bf396fd94", git = "https://github.com/Rapptz/discord.py.git"}
+"discord.py" = {ref = "987235d5649e7c2b1a927637bab6547244ecb2cf", git = "https://github.com/Rapptz/discord.py.git"}
 emoji = "~=1.2.0"
 isodate = "~=0.6.0"
 motor = "~=2.4.0"

@@ -260,7 +260,7 @@ class Utility(commands.Cog):
             self.eval_.enabled = False
             logger.info("Eval disabled. enable_eval=False")
 
-    async def async_init(self):
+    async def cog_load(self):
         self.loop_presence.start()  # pylint: disable=no-member
 
     def cog_unload(self):
