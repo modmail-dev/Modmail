@@ -216,7 +216,7 @@ class PaginatorView(View):
         self.fill_items()
 
     @discord.ui.button(label="Stop", style=ButtonStyle.danger)
-    async def stop_button(self, button: Button, interaction: Interaction):
+    async def stop_button(self, interaction: Interaction, button: Button):
         await self.handler.close(interaction=interaction)
 
     def fill_items(self):
