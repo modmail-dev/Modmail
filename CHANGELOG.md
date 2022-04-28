@@ -24,6 +24,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `use_nickname_channel_name` config to use nicknames instead of usernames for channel names. ([GH #3112](https://github.com/kyb3r/modmail/issues/3112))
 - `show_log_url_button` config to show Log URL button. ([GH #3122](https://github.com/kyb3r/modmail/issues/3122))
 - Select menus for certain paginators.
+- `Title` field in `?logs`. ([GH #3142](https://github.com/kyb3r/modmail/issues/3142))
 
 ### Improved
 
@@ -45,6 +46,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Commands now work in threads.
 - Audit log searching now properly works.
 - Old data causing `?blocked` to fail. ([GH #3131](https://github.com/kyb3r/modmail/issues/3131))
+- Delete channel auto close functionality now works.
 
 ### Internal
 

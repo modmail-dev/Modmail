@@ -1336,9 +1336,13 @@ class ModmailBot(commands.Bot):
             return
 
         audit_logs = self.modmail_guild.audit_logs(limit=10, action=discord.AuditLogAction.channel_delete)
-        entry = await audit_logs.find(lambda a: int(a.target.id) == channel.id)
+        found_entry = False
+        async for entry in audit_logs:
+            if int(entry.target.id) == channel.id:
+                found_entry = True
+                break
 
-        if entry is None:
+        if not found_entry:
             logger.debug("Cannot find the audit log entry for channel delete of %d.", channel.id)
             return
 
