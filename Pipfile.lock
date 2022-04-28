@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "dea4d7675ab1e4a2c4d3f4f8ddcff27db7c0b3851a37e598b10dc429c2eaa5df"
+            "sha256": "8fca2257520573284e4ecaa536309d9e21bee280144e019b7ed97eae0160deee"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -237,7 +237,6 @@
             "version": "==0.6.1"
         },
         "lottie": {
-            "extras": [],
             "hashes": [
                 "sha256:d53e96265887aa9187c7c707fd612b3d52f38da64c81ea82297783efb47f7e3f"
             ],
@@ -333,7 +332,9 @@
             "version": "==2.6"
         },
         "pymongo": {
-            "extras": [],
+            "extras": [
+                "srv"
+            ],
             "hashes": [
                 "sha256:06b64cdf5121f86b78a84e61b8f899b6988732a8d304b503ea1f94a676221c06",
                 "sha256:07398d8a03545b98282f459f2603a6bb271f4448d484ed7f411121a519a7ea48",
@@ -469,6 +470,14 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.16.0"
+        },
+        "typing-extensions": {
+            "hashes": [
+                "sha256:6657594ee297170d19f67d55c05852a874e7eb634f4f753dbd667855e07c1708",
+                "sha256:f1c24655a0da0d1b67f07e17a5e6b2a105894e6824b92096378bb3668ef02376"
+            ],
+            "index": "pypi",
+            "version": "==4.2.0"
         },
         "uvloop": {
             "hashes": [

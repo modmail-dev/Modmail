@@ -22,6 +22,7 @@ python-dateutil = "~=2.8.1"
 python-dotenv = "==0.20.0"
 uvloop = {version = ">=0.15.2", markers = "sys_platform != 'win32'"}
 lottie = "==0.6.11"
+typing-extensions = "==4.2.0"
 
 [scripts]
 bot = "python bot.py"
