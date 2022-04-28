@@ -31,6 +31,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Modmail now uses per-server avatars if applicable. ([GH #3048](https://github.com/kyb3r/modmail/issues/3048))
 - Use discord relative timedeltas. ([GH #3046](https://github.com/kyb3r/modmail/issues/3046))
 - Use discord native buttons for all paginator sessions.
+- Snippets can be used in aliases. ([GH #3108](https://github.com/kyb3r/modmail/issues/3108), [PR #3124](https://github.com/kyb3r/modmail/pull/3124))
 
 ### Fixed
 
