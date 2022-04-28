@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import discord
 from discord.ext import commands
+from discord.ext.commands.view import StringView
 from discord.ext.commands.cooldowns import BucketType
 from discord.role import Role
 from discord.utils import escape_markdown
@@ -143,12 +144,14 @@ class Modmail(commands.Cog):
         """
 
         if name is not None:
-            val = self.bot.snippets.get(name)
-            if val is None:
+            snippet_name = self.bot._resolve_snippet(name)
+
+            if snippet_name is None:
                 embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
             else:
+                val = self.bot.snippets[snippet_name]
                 embed = discord.Embed(
-                    title=f'Snippet - "{name}":', description=val, color=self.bot.main_color
+                    title=f'Snippet - "{snippet_name}":', description=val, color=self.bot.main_color
                 )
             return await ctx.send(embed=embed)
 
@@ -177,13 +180,13 @@ class Modmail(commands.Cog):
         """
         View the raw content of a snippet.
         """
-        val = self.bot.snippets.get(name)
-        if val is None:
+        snippet_name = self.bot._resolve_snippet(name)
+        if snippet_name is None:
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         else:
-            val = truncate(escape_code_block(val), 2048 - 7)
+            val = truncate(escape_code_block(self.bot.snippets[snippet_name]), 2048 - 7)
             embed = discord.Embed(
-                title=f'Raw snippet - "{name}":',
+                title=f'Raw snippet - "{snippet_name}":',
                 description=f"```\n{val}```",
                 color=self.bot.main_color,
             )
@@ -246,16 +249,103 @@ class Modmail(commands.Cog):
         )
         return await ctx.send(embed=embed)
 
+    def _fix_aliases(self, snippet_being_deleted: str) -> tuple[list[str]]:
+        """
+        Remove references to the snippet being deleted from aliases.
+
+        Direct aliases to snippets are deleted, and aliases having
+        other steps are edited.
+
+        A tuple of dictionaries are returned. The first dictionary
+        contains a mapping of alias names which were deleted to their
+        original value, and the second dictionary contains a mapping
+        of alias names which were edited to their original value.
+        """
+        deleted = {}
+        edited = {}
+
+        # Using a copy since we might need to delete aliases
+        for alias, val in self.bot.aliases.copy().items():
+            values = parse_alias(val)
+
+            save_aliases = []
+
+            for val in values:
+                view = StringView(val)
+                linked_command = view.get_word().lower()
+                message = view.read_rest()
+
+                if linked_command == snippet_being_deleted:
+                    continue
+
+                is_valid_snippet = snippet_being_deleted in self.bot.snippets
+
+                if not self.bot.get_command(linked_command) and not is_valid_snippet:
+                    alias_command = self.bot.aliases[linked_command]
+                    save_aliases.extend(normalize_alias(alias_command, message))
+                else:
+                    save_aliases.append(val)
+
+            if not save_aliases:
+                original_value = self.bot.aliases.pop(alias)
+                deleted[alias] = original_value
+            else:
+                original_alias = self.bot.aliases[alias]
+                new_alias = " && ".join(f'"{a}"' for a in save_aliases)
+
+                if original_alias != new_alias:
+                    self.bot.aliases[alias] = new_alias
+                    edited[alias] = original_alias
+
+        return deleted, edited
+
     @snippet.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippet_remove(self, ctx, *, name: str.lower):
         """Remove a snippet."""
-
         if name in self.bot.snippets:
+            deleted_aliases, edited_aliases = self._fix_aliases(name)
+
+            deleted_aliases_string = ",".join(f"`{alias}`" for alias in deleted_aliases)
+            if len(deleted_aliases) == 1:
+                deleted_aliases_output = f"The `{deleted_aliases_string}` direct alias has been removed."
+            elif deleted_aliases:
+                deleted_aliases_output = (
+                    f"The following direct aliases have been removed: {deleted_aliases_string}."
+                )
+            else:
+                deleted_aliases_output = None
+
+            if len(edited_aliases) == 1:
+                alias, val = edited_aliases.popitem()
+                edited_aliases_output = (
+                    f"Steps pointing to this snippet have been removed from the `{alias}` alias"
+                    f" (previous value: `{val}`).`"
+                )
+            elif edited_aliases:
+                alias_list = "\n".join(
+                    [
+                        f"- `{alias_name}` (previous value: `{val}`)"
+                        for alias_name, val in edited_aliases.items()
+                    ]
+                )
+                edited_aliases_output = (
+                    f"Steps pointing to this snippet have been removed from the following aliases:"
+                    f"\n\n{alias_list}"
+                )
+            else:
+                edited_aliases_output = None
+
+            description = f"Snippet `{name}` is now deleted."
+            if deleted_aliases_output:
+                description += f"\n\n{deleted_aliases_output}"
+            if edited_aliases_output:
+                description += f"\n\n{edited_aliases_output}"
+
             embed = discord.Embed(
                 title="Removed snippet",
                 color=self.bot.main_color,
-                description=f"Snippet `{name}` is now deleted.",
+                description=description,
             )
             self.bot.snippets.pop(name)
             await self.bot.config.update()

@@ -184,7 +184,18 @@ class ModmailHelpCommand(commands.HelpCommand):
         val = self.context.bot.snippets.get(command)
         if val is not None:
             embed = discord.Embed(title=f"{command} is a snippet.", color=self.context.bot.main_color)
-            embed.add_field(name=f"`{command}` will send:", value=val)
+            embed.add_field(name=f"`{command}` will send:", value=val, inline=False)
+
+            snippet_aliases = []
+            for alias in self.context.bot.aliases:
+                if self.context.bot._resolve_snippet(alias) == command:
+                    snippet_aliases.append(f"`{alias}`")
+
+            if snippet_aliases:
+                embed.add_field(
+                    name=f"Aliases to this snippet:", value=",".join(snippet_aliases), inline=False
+                )
+
             return await self.get_destination().send(embed=embed)
 
         val = self.context.bot.aliases.get(command)
@@ -1070,7 +1081,9 @@ class Utility(commands.Cog):
             linked_command = view.get_word().lower()
             message = view.read_rest()
 
-            if not self.bot.get_command(linked_command):
+            is_snippet = val in self.bot.snippets
+
+            if not self.bot.get_command(linked_command) and not is_snippet:
                 alias_command = self.bot.aliases.get(linked_command)
                 if alias_command is not None:
                     save_aliases.extend(utils.normalize_alias(alias_command, message))
