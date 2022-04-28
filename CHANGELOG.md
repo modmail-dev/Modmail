@@ -54,6 +54,11 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Improve regex parsing of channel topics. ([GH #3114](https://github.com/kyb3r/modmail/issues/3114), [PR #3111](https://github.com/kyb3r/modmail/pull/3111))
 - Add warning if deploying on a developmental version.
 - Extensions are now loaded `on_connect`.
+- MongoDB v5.0 clients are now supported. ([GH #3126](https://github.com/kyb3r/modmail/issues/3126))
+- Bump python-dotenv to v0.20.0, support for python 3.10
+- Bump emoji to v1.7.0
+- Bump aiohttp to v3.8.1
+- Bump lottie to v0.6.11
 
 # v3.10.3
 
