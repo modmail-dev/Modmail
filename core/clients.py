@@ -680,7 +680,7 @@ class MongoDBClient(ApiClient):
             return {
                 "user": {
                     "username": user.username,
-                    "avatar_url": user.display_avatar.url,
+                    "avatar_url": user.avatar_url,
                     "url": user.url,
                 }
             }
