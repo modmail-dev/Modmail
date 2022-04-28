@@ -915,7 +915,7 @@ class Utility(commands.Cog):
             if current_key == key:
                 index = i
             embed = discord.Embed(
-                title=f"Configuration description on {current_key}:", color=self.bot.main_color
+                title=f"{current_key}", color=self.bot.main_color
             )
             embed.add_field(name="Default:", value=fmt(info["default"]), inline=False)
             embed.add_field(name="Information:", value=fmt(info["description"]), inline=False)
