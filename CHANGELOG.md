@@ -25,13 +25,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `show_log_url_button` config to show Log URL button. ([GH #3122](https://github.com/kyb3r/modmail/issues/3122))
 - Select menus for certain paginators.
 - `Title` field in `?logs`. ([GH #3142](https://github.com/kyb3r/modmail/issues/3142))
+- Snippets can be used in aliases. ([GH #3108](https://github.com/kyb3r/modmail/issues/3108), [PR #3124](https://github.com/kyb3r/modmail/pull/3124))
 
 ### Improved
 
 - Modmail now uses per-server avatars if applicable. ([GH #3048](https://github.com/kyb3r/modmail/issues/3048))
 - Use discord relative timedeltas. ([GH #3046](https://github.com/kyb3r/modmail/issues/3046))
 - Use discord native buttons for all paginator sessions.
-- Snippets can be used in aliases. ([GH #3108](https://github.com/kyb3r/modmail/issues/3108), [PR #3124](https://github.com/kyb3r/modmail/pull/3124))
 
 ### Fixed
 
