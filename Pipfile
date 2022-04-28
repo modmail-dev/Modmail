@@ -7,6 +7,7 @@ verify_ssl = true
 bandit = "~=1.7.0"
 black = "==22.3.0"
 pylint = "~=2.9.3"
+typing-extensions = "==4.2.0"
 
 [packages]
 aiohttp = "==3.8.1"
@@ -22,7 +23,6 @@ python-dateutil = "~=2.8.1"
 python-dotenv = "==0.20.0"
 uvloop = {version = ">=0.15.2", markers = "sys_platform != 'win32'"}
 lottie = {version = "==0.6.11", extras = ["pdf"]}
-typing-extensions = "==4.2.0"
 
 [scripts]
 bot = "python bot.py"
