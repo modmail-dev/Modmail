@@ -914,9 +914,7 @@ class Utility(commands.Cog):
         for i, (current_key, info) in enumerate(config_help.items()):
             if current_key == key:
                 index = i
-            embed = discord.Embed(
-                title=f"{current_key}", color=self.bot.main_color
-            )
+            embed = discord.Embed(title=f"{current_key}", color=self.bot.main_color)
             embed.add_field(name="Default:", value=fmt(info["default"]), inline=False)
             embed.add_field(name="Information:", value=fmt(info["description"]), inline=False)
             if info["examples"]:
