@@ -11,7 +11,7 @@ pylint = "~=2.9.3"
 [packages]
 aiohttp = "==3.7.4.post0"
 colorama = "~=0.4.4"  # Doesn't officially support Python 3.9 yet, v0.4.5 will support 3.9
-"discord.py" = {git = "https://github.com/Rapptz/discord.py.git"}
+"discord.py" = {ref = "a14b43f2fda863ed6555374eb872bf014bdd1adf", git = "https://github.com/Rapptz/discord.py.git"}
 emoji = "~=1.2.0"
 isodate = "~=0.6.0"
 motor = "~=2.4.0"
@@ -25,6 +25,3 @@ lottie = {version = "==0.6.10", extras = ["pdf"]}
 
 [scripts]
 bot = "python bot.py"
-
-[requires]
-python_version = "3.9"

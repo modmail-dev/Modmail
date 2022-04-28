@@ -1,12 +1,10 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c0006885019e90564b0907b571e5a7bcd5f8b47d1dc3c535959f2600d4d15ba6"
+            "sha256": "5280f0d7e4c267e164f83139d89bec37c4691a5815b831b871a3091db1af56eb"
         },
         "pipfile-spec": 6,
-        "requires": {
-            "python_version": "3.9"
-        },
+        "requires": {},
         "sources": [
             {
                 "name": "pypi",
@@ -182,7 +180,8 @@
             "ref": "a14b43f2fda863ed6555374eb872bf014bdd1adf"
         },
         "discord.py": {
-            "git": "https://github.com/Rapptz/discord.py.git"
+            "git": "https://github.com/Rapptz/discord.py.git",
+            "ref": "a14b43f2fda863ed6555374eb872bf014bdd1adf"
         },
         "dnspython": {
             "hashes": [
