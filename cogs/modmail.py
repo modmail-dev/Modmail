@@ -2,7 +2,7 @@ import asyncio
 import re
 from datetime import datetime, timezone
 from itertools import zip_longest
-from typing import Optional, Union
+from typing import Optional, Union, List, Tuple
 from types import SimpleNamespace
 
 import discord
@@ -249,7 +249,7 @@ class Modmail(commands.Cog):
         )
         return await ctx.send(embed=embed)
 
-    def _fix_aliases(self, snippet_being_deleted: str) -> tuple[list[str]]:
+    def _fix_aliases(self, snippet_being_deleted: str) -> Tuple[List[str]]:
         """
         Remove references to the snippet being deleted from aliases.
 
