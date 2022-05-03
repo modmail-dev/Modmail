@@ -60,6 +60,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Bump emoji to v1.7.0
 - Bump aiohttp to v3.8.1
 - Bump lottie to v0.6.11
+- Remove deprecated `core/decorators.py` from v3.3.0
 
 # v3.10.3
 
