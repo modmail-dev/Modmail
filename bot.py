@@ -1742,7 +1742,7 @@ def main():
                 )
             else:
                 logger.error(
-                    "Unable to import cairosvg, install GTK Installer for Windows: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest"
+                    "Unable to import cairosvg, install GTK Installer for Windows and restart your system (https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest)"
                 )
         else:
             logger.error(
