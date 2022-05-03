@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev12"
+__version__ = "4.0.0-dev13"
 
 
 import asyncio
@@ -995,7 +995,7 @@ class ModmailBot(commands.Bot):
         # This needs to be done before checking for aliases since
         # snippets can have multiple words.
         try:
-            snippet_text = self.snippets[message.content.removeprefix(invoked_prefix)]
+            snippet_text = self.snippets[message.content.strip(invoked_prefix)]
         except KeyError:
             snippet_text = None
 
