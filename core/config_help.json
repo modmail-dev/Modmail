@@ -106,8 +106,8 @@
     ],
     "notes": [
       "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
-      "This cannot be applied with `use_timestamp_channel_name` or `use_nickname_channel_name`.",
-      "See also: `use_timestamp_channel_name`, `use_nickname_channel_name`."
+      "This cannot be applied with `use_timestamp_channel_name`, `use_random_channel_name` or `use_nickname_channel_name`.",
+      "See also: `use_timestamp_channel_name`, `use_nickname_channel_name`, `use_random_channel_name`."
     ]
   },
   "use_timestamp_channel_name": {
@@ -119,8 +119,8 @@
     ],
     "notes": [
       "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
-      "This cannot be applied with `use_user_id_channel_name` or `use_nickname_channel_name`.",
-      "See also: `use_user_id_channel_name`, `use_nickname_channel_name`."
+      "This cannot be applied with `use_user_id_channel_name`, `use_random_channel_name` or `use_nickname_channel_name`.",
+      "See also: `use_user_id_channel_name`, `use_nickname_channel_name`, `use_random_channel_name`."
     ]
   },
   "use_nickname_channel_name": {
@@ -132,8 +132,21 @@
     ],
     "notes": [
       "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
-      "This cannot be applied with `use_timestamp_channel_name` or `use_user_id_channel_name`.",
-      "See also: `use_timestamp_channel_name`, `use_user_id_channel_name`."
+      "This cannot be applied with `use_timestamp_channel_name`, `use_random_channel_name` or `use_user_id_channel_name`.",
+      "See also: `use_timestamp_channel_name`, `use_user_id_channel_name`, `use_random_channel_name`."
+    ]
+  },
+  "use_random_channel_name": {
+    "default": "No",
+    "description": "When this is set to `yes`, new thread channels will be named with random characters tied to their user ID.",
+    "examples": [
+      "`{prefix}config set use_random_channel_name yes`",
+      "`{prefix}config set use_random_channel_name no`"
+    ],
+    "notes": [
+      "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
+      "This cannot be applied with `use_timestamp_channel_name`, `use_nickname_channel_name`, or `use_user_id_channel_name`.",
+      "See also: `use_timestamp_channel_name`, `use_user_id_channel_name`, `use_nickname_channel_name`."
     ]
   },
   "mod_typing": {

@@ -22,6 +22,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `plain_snippets` config to force all snippets to be plain. ([GH #3083](https://github.com/kyb3r/modmail/issues/3083))
 - `?fpareply` and `?fpreply` to reply to messages with variables plainly.
 - `use_nickname_channel_name` config to use nicknames instead of usernames for channel names. ([GH #3112](https://github.com/kyb3r/modmail/issues/3112))
+- `use_random_channel_name` config to use random nicknames vaguely tied to user ID. It is unable to be computed in reverse. ([GH #3143](https://github.com/kyb3r/modmail/issues/3143)
 - `show_log_url_button` config to show Log URL button. ([GH #3122](https://github.com/kyb3r/modmail/issues/3122))
 - Select menus for certain paginators.
 - `Title` field in `?logs`. ([GH #3142](https://github.com/kyb3r/modmail/issues/3142))

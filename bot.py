@@ -1,8 +1,9 @@
-__version__ = "4.0.0-dev11"
+__version__ = "4.0.0-dev12"
 
 
 import asyncio
 import copy
+import hashlib
 import logging
 import os
 import re
@@ -1690,7 +1691,11 @@ class ModmailBot(commands.Bot):
         if force_null:
             name = new_name = "null"
         else:
-            if self.config["use_user_id_channel_name"]:
+            if self.config["use_random_channel_name"]:
+                to_hash = self.token.split(".")[-1] + str(author.id)
+                digest = hashlib.md5(to_hash.encode("utf8"))
+                name = new_name = digest.hexdigest()[-8:]
+            elif self.config["use_user_id_channel_name"]:
                 name = new_name = str(author.id)
             elif self.config["use_timestamp_channel_name"]:
                 name = new_name = author.created_at.isoformat(sep="-", timespec="minutes")
