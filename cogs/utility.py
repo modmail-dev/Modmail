@@ -39,7 +39,7 @@ logger = getLogger(__name__)
 
 class ModmailHelpCommand(commands.HelpCommand):
     async def command_callback(self, ctx, *, command=None):
-        """Ovrwrites original command_callback to ensure `help` without any arguments
+        """Overwrites original command_callback to ensure `help` without any arguments
         returns with checks, `help all` returns without checks"""
         if command is None:
             self.verify_checks = True
