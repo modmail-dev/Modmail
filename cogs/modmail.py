@@ -1637,8 +1637,6 @@ class Modmail(commands.Cog):
     async def blocked(self, ctx):
         """Retrieve a list of blocked users."""
 
-        embeds = [discord.Embed(title="Blocked Users", color=self.bot.main_color, description="")]
-
         roles = []
         users = []
         now = ctx.message.created_at
@@ -1700,43 +1698,54 @@ class Modmail(commands.Cog):
             if role:
                 roles.append((role.mention, reason))
 
+        user_embeds = [discord.Embed(title="Blocked Users", color=self.bot.main_color, description="")]
+
         if users:
-            embed = embeds[0]
+            embed = user_embeds[0]
 
             for mention, reason in users:
                 line = mention + f" - {reason or 'No Reason Provided'}\n"
                 if len(embed.description) + len(line) > 2048:
                     embed = discord.Embed(
-                        title="Blocked Users (Continued)",
+                        title="Blocked Users",
                         color=self.bot.main_color,
                         description=line,
                     )
-                    embeds.append(embed)
+                    user_embeds.append(embed)
                 else:
                     embed.description += line
         else:
-            embeds[0].description = "Currently there are no blocked users."
+            user_embeds[0].description = "Currently there are no blocked users."
 
-        embeds.append(discord.Embed(title="Blocked Roles", color=self.bot.main_color, description=""))
+        if len(user_embeds) > 1:
+            for n, em in enumerate(user_embeds):
+                em.title = f'{em.title} [{n + 1}]'
+
+        role_embeds = [discord.Embed(title="Blocked Roles", color=self.bot.main_color, description="")]
 
         if roles:
-            embed = embeds[-1]
+            embed = role_embeds[-1]
 
             for mention, reason in roles:
                 line = mention + f" - {reason or 'No Reason Provided'}\n"
                 if len(embed.description) + len(line) > 2048:
+                    role_embeds[-1].set_author()
                     embed = discord.Embed(
-                        title="Blocked Roles (Continued)",
+                        title="Blocked Roles",
                         color=self.bot.main_color,
                         description=line,
                     )
-                    embeds.append(embed)
+                    role_embeds.append(embed)
                 else:
                     embed.description += line
         else:
-            embeds[-1].description = "Currently there are no blocked roles."
+            role_embeds[-1].description = "Currently there are no blocked roles."
 
-        session = EmbedPaginatorSession(ctx, *embeds)
+        if len(role_embeds) > 1:
+            for n, em in enumerate(role_embeds):
+                em.title = f'{em.title} [{n + 1}]'
+
+        session = EmbedPaginatorSession(ctx, *user_embeds, *role_embeds)
 
         await session.run()
 

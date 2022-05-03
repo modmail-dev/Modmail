@@ -89,15 +89,19 @@ class ModmailHelpCommand(commands.HelpCommand):
 
             embed.add_field(name="Commands", value=format_ or "No commands.")
 
-            continued = " (Continued)" if embeds else ""
             name = cog.qualified_name + " - Help" if not no_cog else "Miscellaneous Commands"
-            embed.set_author(name=name + continued, icon_url=bot.user.display_avatar.url)
+            embed.set_author(name=name, icon_url=bot.user.display_avatar.url)
 
             embed.set_footer(
                 text=f'Type "{prefix}{self.command_attrs["name"]} command" '
                 "for more info on a specific command."
             )
             embeds.append(embed)
+
+        if len(embeds) > 1:
+            for n, em in enumerate(embeds):
+                em.set_author(name=f'{em.author.name} [{n + 1}]', icon_url=em.author.icon_url)
+
         return embeds
 
     def process_help_msg(self, help_: str):
