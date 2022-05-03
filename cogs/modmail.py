@@ -1719,7 +1719,7 @@ class Modmail(commands.Cog):
 
         if len(user_embeds) > 1:
             for n, em in enumerate(user_embeds):
-                em.title = f'{em.title} [{n + 1}]'
+                em.title = f"{em.title} [{n + 1}]"
 
         role_embeds = [discord.Embed(title="Blocked Roles", color=self.bot.main_color, description="")]
 
@@ -1743,7 +1743,7 @@ class Modmail(commands.Cog):
 
         if len(role_embeds) > 1:
             for n, em in enumerate(role_embeds):
-                em.title = f'{em.title} [{n + 1}]'
+                em.title = f"{em.title} [{n + 1}]"
 
         session = EmbedPaginatorSession(ctx, *user_embeds, *role_embeds)
 

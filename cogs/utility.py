@@ -100,7 +100,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         if len(embeds) > 1:
             for n, em in enumerate(embeds):
-                em.set_author(name=f'{em.author.name} [{n + 1}]', icon_url=em.author.icon_url)
+                em.set_author(name=f"{em.author.name} [{n + 1}]", icon_url=em.author.icon_url)
 
         return embeds
 
