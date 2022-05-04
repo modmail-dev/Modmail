@@ -433,6 +433,7 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
             category=category,
             overwrites=overwrites,
             reason="Creating a thread channel.",
+            topic = f"User ID: {recipient.id}"
         )
     except discord.HTTPException as e:
         if (e.text, (category, name)) in errors_raised:
