@@ -4,11 +4,11 @@
     "repository": "https://github.com/kyb3r/modmail",
     "env": {
         "TOKEN": {
-            "description": "Your discord bot's token.",
+            "description": "OTc5NDE4NDc2NzE0MjcwNzIw.GLj887.rr8tVlVgbKmbN-M1D479ro3D98cplKBbWVc7K4",
             "required": true
         },
         "GUILD_ID": {
-            "description": "The id for the server you are hosting this bot for.",
+            "description": "978711089862819930",
             "required": true
         },
         "MODMAIL_GUILD_ID": {
