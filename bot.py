@@ -1594,17 +1594,22 @@ class ModmailBot(commands.Bot):
         latest = changelog.latest_version
 
         if self.version < parse_version(latest.version):
+            error = None
+            data = {}
             try:
                 # update fork if gh_token exists
                 data = await self.api.update_repository()
             except InvalidConfigError:
-                data = {}
+                pass
             except ClientResponseError as exc:
-                logger.error(f"Autoupdate failed! Status {exc.status}.")
-                logger.error(f"Message: {exc.message}")
-                self.autoupdate.cancel()
-                return
+                error = exc
             if self.hosting_method == HostingMethod.HEROKU:
+                if error is not None:
+                    logger.error(f"Autoupdate failed! Status: {error.status}.")
+                    logger.error(f"Error message: {error.message}")
+                    self.autoupdate.cancel()
+                    return
+
                 commit_data = data.get("data")
                 if not commit_data:
                     return
@@ -1681,15 +1686,18 @@ class ModmailBot(commands.Bot):
         if self.config.get("disable_autoupdates"):
             logger.warning("Autoupdates disabled.")
             self.autoupdate.cancel()
+            return
 
         if self.hosting_method == HostingMethod.DOCKER:
             logger.warning("Autoupdates disabled as using Docker.")
             self.autoupdate.cancel()
+            return
 
         if not self.config.get("github_token") and self.hosting_method == HostingMethod.HEROKU:
             logger.warning("GitHub access token not found.")
             logger.warning("Autoupdates disabled.")
             self.autoupdate.cancel()
+            return
 
     def format_channel_name(self, author, exclude_channel=None, force_null=False):
         """Sanitises a username for use with text channel names

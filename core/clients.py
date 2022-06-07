@@ -130,10 +130,18 @@ class GitHub:
                     await resp.read()
                 return resp
 
-            try:
-                return await resp.json()
-            except (JSONDecodeError, ClientResponseError):
-                return await resp.text()
+            return await self._get_response_data(resp)
+
+    @staticmethod
+    async def _get_response_data(response: ClientResponse) -> Union[Dict[str, Any], str]:
+        """
+        Internal method to convert the response data to `dict` if the data is a
+        json object, or to `str` (raw response) if the data is not a valid json.
+        """
+        try:
+            return await response.json()
+        except (JSONDecodeError, ClientResponseError):
+            return await response.text()
 
     def filter_valid(self, data) -> Dict[str, Any]:
         """
@@ -198,14 +206,20 @@ class GitHub:
         # source https://docs.github.com/en/rest/branches/branches#merge-a-branch
 
         status = resp.status
+        data = await self._get_response_data(resp)
         if status in (201, 204):
-            try:
-                return await resp.json()
-            except (JSONDecodeError, ClientResponseError):
-                return await resp.text()
+            return data
 
         args = (resp.request_info, resp.history)
-        kwargs = {"status": status, "message": status_map.get(status)}
+        try:
+            # try to get the response error message if any
+            message = data.get("message")
+        except AttributeError:
+            message = None
+        kwargs = {
+            "status": status,
+            "message": message if message else status_map.get(status),
+        }
         # just raise
         raise ClientResponseError(*args, **kwargs)
 

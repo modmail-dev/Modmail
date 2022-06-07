@@ -1951,20 +1951,24 @@ class Utility(commands.Cog):
                 embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
             await ctx.send(embed=embed)
         else:
+            error = None
+            data = {}
             try:
                 # update fork if gh_token exists
                 data = await self.bot.api.update_repository()
             except InvalidConfigError:
-                data = {}
+                pass
             except ClientResponseError as exc:
-                embed = discord.Embed(
-                    title="Update failed",
-                    description=f"Error status {exc.status}. {exc.message}",
-                    color=self.bot.error_color,
-                )
-                return await ctx.send(embed=embed)
+                error = exc
 
             if self.bot.hosting_method == HostingMethod.HEROKU:
+                if error is not None:
+                    embed = discord.Embed(
+                        title="Update failed",
+                        description=f"Error status: {error.status}.\nError message: {error.message}",
+                        color=self.bot.error_color,
+                    )
+                    return await ctx.send(embed=embed)
                 if not data:
                     # invalid gh_token
                     embed = discord.Embed(
