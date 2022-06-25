@@ -980,7 +980,7 @@ class ModmailBot(commands.Bot):
         ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
         thread = await self.threads.find(channel=ctx.channel)
 
-        if message.author.id == self.user.id:  # type: ignore
+        if self._skip_check(message.author.id, self.user.id):
             return [ctx]
 
         prefixes = await self.get_prefix()
