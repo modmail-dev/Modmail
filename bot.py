@@ -71,7 +71,7 @@ class ModmailBot(commands.Bot):
         self._api = None
         self.formatter = SafeFormatter()
         self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
-        self._connected = asyncio.Event()
+        self._connected = None
         self.start_time = discord.utils.utcnow()
         self._started = False
 
@@ -213,6 +213,7 @@ class ModmailBot(commands.Bot):
     def run(self):
         async def runner():
             async with self:
+                self._connected = asyncio.Event()
                 self.session = ClientSession(loop=self.loop)
                 try:
                     retry_intents = False
