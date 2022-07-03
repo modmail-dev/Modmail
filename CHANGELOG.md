@@ -50,6 +50,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Audit log searching now properly works.
 - Old data causing `?blocked` to fail. ([GH #3131](https://github.com/kyb3r/modmail/issues/3131))
 - Delete channel auto close functionality now works.
+- Improved error handling for autoupdate. ([PR #3161](https://github.com/kyb3r/modmail/pull/3161))
 
 ### Internal
 
