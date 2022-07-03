@@ -1931,7 +1931,7 @@ class Utility(commands.Cog):
     async def update(self, ctx, *, flag: str = ""):
         """
         Update Modmail.
-        To stay up-to-date with the latest commit rom GitHub, specify "force" as the flag.
+        To stay up-to-date with the latest commit from GitHub, specify "force" as the flag.
         """
 
         changelog = await Changelog.from_url(self.bot)
@@ -1939,7 +1939,7 @@ class Utility(commands.Cog):
 
         desc = (
             f"The latest version is [`{self.bot.version}`]"
-            "(https://github.com/kyb3r/modmail/blob/master/bot.py#L25)"
+            "(https://github.com/kyb3r/modmail/blob/master/bot.py#L1)"
         )
 
         if self.bot.version >= parse_version(latest.version) and flag.lower() != "force":
@@ -1951,16 +1951,39 @@ class Utility(commands.Cog):
                 embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
             await ctx.send(embed=embed)
         else:
-            if self.bot.hosting_method == HostingMethod.HEROKU:
+            error = None
+            data = {}
+            try:
+                # update fork if gh_token exists
                 data = await self.bot.api.update_repository()
+            except InvalidConfigError:
+                pass
+            except ClientResponseError as exc:
+                error = exc
+
+            if self.bot.hosting_method == HostingMethod.HEROKU:
+                if error is not None:
+                    embed = discord.Embed(
+                        title="Update failed",
+                        description=f"Error status: {error.status}.\nError message: {error.message}",
+                        color=self.bot.error_color,
+                    )
+                    return await ctx.send(embed=embed)
+                if not data:
+                    # invalid gh_token
+                    embed = discord.Embed(
+                        title="Update failed",
+                        description="Invalid Github token.",
+                        color=self.bot.error_color,
+                    )
+                    return await ctx.send(embed=embed)
 
                 commit_data = data["data"]
                 user = data["user"]
-
                 if commit_data and commit_data.get("html_url"):
                     embed = discord.Embed(color=self.bot.main_color)
 
-                    embed.set_footer(text=f"Updating Modmail v{self.bot.version} " f"-> v{latest.version}")
+                    embed.set_footer(text=f"Updating Modmail v{self.bot.version} -> v{latest.version}")
 
                     embed.set_author(
                         name=user["username"] + " - Updating bot",
@@ -1978,21 +2001,14 @@ class Utility(commands.Cog):
                 else:
                     embed = discord.Embed(
                         title="Already up to date",
-                        description="No further updates required",
+                        description="No further updates required.",
                         color=self.bot.main_color,
                     )
                     embed.set_footer(text="Force update")
                     embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
                 await ctx.send(embed=embed)
             else:
-                # update fork if gh_token exists
-                try:
-                    await self.bot.api.update_repository()
-                except InvalidConfigError:
-                    pass
-
                 command = "git pull"
-
                 proc = await asyncio.create_subprocess_shell(
                     command,
                     stderr=PIPE,

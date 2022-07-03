@@ -17,7 +17,7 @@ from types import SimpleNamespace
 
 import discord
 import isodate
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientResponseError
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
 from emoji import UNICODE_EMOJI
@@ -631,6 +631,8 @@ class ModmailBot(commands.Bot):
             )
             logger.warning("If the external servers are valid, you may ignore this message.")
 
+        self.post_metadata.start()
+        self.autoupdate.start()
         self._started = True
 
     async def convert_emoji(self, name: str) -> str:
@@ -1582,6 +1584,7 @@ class ModmailBot(commands.Bot):
         await self.wait_for_connected()
         if not self.config.get("data_collection") or not self.guild:
             self.post_metadata.cancel()
+            return
 
         logger.debug("Starting metadata loop.")
         logger.line("debug")
@@ -1592,44 +1595,55 @@ class ModmailBot(commands.Bot):
         latest = changelog.latest_version
 
         if self.version < parse_version(latest.version):
-            if self.hosting_method == HostingMethod.HEROKU:
+            error = None
+            data = {}
+            try:
+                # update fork if gh_token exists
                 data = await self.api.update_repository()
+            except InvalidConfigError:
+                pass
+            except ClientResponseError as exc:
+                error = exc
+            if self.hosting_method == HostingMethod.HEROKU:
+                if error is not None:
+                    logger.error(f"Autoupdate failed! Status: {error.status}.")
+                    logger.error(f"Error message: {error.message}")
+                    self.autoupdate.cancel()
+                    return
+
+                commit_data = data.get("data")
+                if not commit_data:
+                    return
+
+                logger.info("Bot has been updated.")
+
+                if not self.config["update_notifications"]:
+                    return
 
                 embed = discord.Embed(color=self.main_color)
-
-                commit_data = data["data"]
+                message = commit_data["commit"]["message"]
+                html_url = commit_data["html_url"]
+                short_sha = commit_data["sha"][:6]
                 user = data["user"]
+                embed.add_field(
+                    name="Merge Commit",
+                    value=f"[`{short_sha}`]({html_url}) " f"{message} - {user['username']}",
+                )
                 embed.set_author(
                     name=user["username"] + " - Updating Bot",
                     icon_url=user["avatar_url"],
                     url=user["url"],
                 )
 
-                embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version}")
+                embed.set_footer(text=f"Updating Modmail v{self.version} -> v{latest.version}")
 
                 embed.description = latest.description
                 for name, value in latest.fields.items():
                     embed.add_field(name=name, value=value)
 
-                if commit_data:
-                    message = commit_data["commit"]["message"]
-                    html_url = commit_data["html_url"]
-                    short_sha = commit_data["sha"][:6]
-                    embed.add_field(
-                        name="Merge Commit",
-                        value=f"[`{short_sha}`]({html_url}) " f"{message} - {user['username']}",
-                    )
-                    logger.info("Bot has been updated.")
-                    channel = self.log_channel
-                    if self.config["update_notifications"]:
-                        await channel.send(embed=embed)
+                channel = self.update_channel
+                await channel.send(embed=embed)
             else:
-                try:
-                    # update fork if gh_token exists
-                    await self.api.update_repository()
-                except InvalidConfigError:
-                    pass
-
                 command = "git pull"
                 proc = await asyncio.create_subprocess_shell(
                     command,
@@ -1643,7 +1657,7 @@ class ModmailBot(commands.Bot):
 
                 if err and not res:
                     logger.warning(f"Autoupdate failed: {err}")
-                    self.autoupdate_loop.cancel()
+                    self.autoupdate.cancel()
                     return
 
                 elif res != "Already up to date.":
@@ -1660,7 +1674,7 @@ class ModmailBot(commands.Bot):
                             description="If you do not have an auto-restart setup, please manually start the bot.",
                             color=self.main_color,
                         )
-                        embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version}")
+                        embed.set_footer(text=f"Updating Modmail v{self.version} -> v{latest.version}")
                         if self.config["update_notifications"]:
                             await channel.send(embed=embed)
                     return await self.close()
@@ -1672,16 +1686,19 @@ class ModmailBot(commands.Bot):
 
         if self.config.get("disable_autoupdates"):
             logger.warning("Autoupdates disabled.")
-            self.autoupdate_loop.cancel()
+            self.autoupdate.cancel()
+            return
 
         if self.hosting_method == HostingMethod.DOCKER:
             logger.warning("Autoupdates disabled as using Docker.")
-            self.autoupdate_loop.cancel()
+            self.autoupdate.cancel()
+            return
 
         if not self.config.get("github_token") and self.hosting_method == HostingMethod.HEROKU:
             logger.warning("GitHub access token not found.")
             logger.warning("Autoupdates disabled.")
-            self.autoupdate_loop.cancel()
+            self.autoupdate.cancel()
+            return
 
     def format_channel_name(self, author, exclude_channel=None, force_null=False):
         """Sanitises a username for use with text channel names
