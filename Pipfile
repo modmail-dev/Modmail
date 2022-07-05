@@ -11,8 +11,8 @@ typing-extensions = "==4.2.0"
 
 [packages]
 aiohttp = "==3.8.1"
-colorama = "~=0.4.4"  # Doesn't officially support Python 3.9 yet, v0.4.5 will support 3.9
-"discord.py" = {ref = "e9c7c09ebfe780d8f9de1e9e4d3c2dddf85eccfd", git = "https://github.com/Rapptz/discord.py.git"}
+colorama = "~=0.4.5"
+"discord.py" = {ref = "9fe19dcc6923e4b6133bdedafb33658bf37c9ab7", git = "https://github.com/Rapptz/discord.py.git"}
 emoji = "==1.7.0"
 isodate = "~=0.6.0"
 motor = "==2.5.1"
