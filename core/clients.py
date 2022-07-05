@@ -90,7 +90,7 @@ class GitHub:
         payload: dict = None,
         headers: dict = None,
         return_response: bool = False,
-        read_before_return: bool = True,
+        read_before_return: bool = False,
     ) -> Union[ClientResponse, Dict[str, Any], str]:
         """
         Makes a HTTP request.
