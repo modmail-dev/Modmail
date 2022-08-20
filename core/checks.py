@@ -5,7 +5,9 @@ from core.models import HostingMethod, PermissionLevel, getLogger
 logger = getLogger(__name__)
 
 
-def has_permissions_predicate(permission_level: PermissionLevel = PermissionLevel.REGULAR):
+def has_permissions_predicate(
+    permission_level: PermissionLevel = PermissionLevel.REGULAR,
+):
     async def predicate(ctx):
         return await check_permissions(ctx, ctx.command.qualified_name)
 
@@ -29,7 +31,7 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
     ::
         @has_permissions(PermissionLevel.OWNER)
         async def setup(ctx):
-            print("Success")
+            await ctx.send('Success')
     """
 
     return commands.check(has_permissions_predicate(permission_level))
@@ -37,7 +39,7 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
 
 async def check_permissions(ctx, command_name) -> bool:
     """Logic for checking permissions for a command for a user"""
-    if await ctx.bot.is_owner(ctx.author):
+    if await ctx.bot.is_owner(ctx.author) or ctx.author.id == ctx.bot.user.id:
         # Bot owner(s) (and creator) has absolute power over the bot
         return True
 
@@ -61,9 +63,10 @@ async def check_permissions(ctx, command_name) -> bool:
 
     if command_name in command_permissions:
         # -1 is for @everyone
-        return -1 in command_permissions[command_name] or any(
+        if -1 in command_permissions[command_name] or any(
             str(check.id) in command_permissions[command_name] for check in checkables
-        )
+        ):
+            return True
 
     level_permissions = ctx.bot.config["level_permissions"]
 
@@ -118,5 +121,22 @@ def github_token_required(ignore_if_not_heroku=False):
         "You can only use this command if you have a "
         "configured `GITHUB_TOKEN`. Get a "
         "personal access token from developer settings."
+    )
+    return commands.check(predicate)
+
+
+def updates_enabled():
+    """
+    A decorator that ensures
+    updates are enabled
+    """
+
+    async def predicate(ctx):
+        return not ctx.bot.config["disable_updates"]
+
+    predicate.fail_msg = (
+        "Updates are disabled on this bot instance. "
+        "View `?config help disable_updates` for "
+        "more information."
     )
     return commands.check(predicate)

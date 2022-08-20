@@ -14,7 +14,7 @@ from discord.ext.commands import BadArgument
 from core._color_data import ALL_COLORS
 from core.models import DMDisabled, InvalidConfigError, Default, getLogger
 from core.time import UserFriendlyTimeSync
-from core.utils import strtobool, tryint
+from core.utils import strtobool
 
 logger = getLogger(__name__)
 load_dotenv()
@@ -44,11 +44,19 @@ class ConfigManager:
         "log_channel_id": None,
         "mention_channel_id": None,
         "update_channel_id": None,
+        # updates
+        "update_notifications": True,
         # threads
-        "sent_emoji": "✅",
-        "blocked_emoji": "🚫",
-        "close_emoji": "🔒",
+        "sent_emoji": "\N{WHITE HEAVY CHECK MARK}",
+        "blocked_emoji": "\N{NO ENTRY SIGN}",
+        "close_emoji": "\N{LOCK}",
+        "use_user_id_channel_name": False,
+        "use_timestamp_channel_name": False,
         "recipient_thread_close": False,
+        "thread_show_roles": True,
+        "thread_show_account_age": True,
+        "thread_show_join_age": True,
+        "thread_cancelled": "Cancelled",
         "thread_auto_close_silently": False,
         "thread_auto_close": isodate.Duration(),
         "thread_auto_close_response": "This thread has been closed automatically due to inactivity after {timeout}.",
@@ -56,6 +64,9 @@ class ConfigManager:
         "thread_creation_footer": "Your message has been sent",
         "thread_contact_silently": False,
         "thread_self_closable_creation_footer": "Click the lock to close the thread",
+        "thread_creation_contact_title": "New Thread",
+        "thread_creation_self_contact_response": "You have opened a Modmail thread.",
+        "thread_creation_contact_response": "{creator.name} has opened a Modmail thread.",
         "thread_creation_title": "Thread Created",
         "thread_close_footer": "Replying will create a new thread",
         "thread_close_title": "Thread Closed",
@@ -77,7 +88,22 @@ class ConfigManager:
         "close_on_leave": False,
         "close_on_leave_reason": "The recipient has left the server.",
         "alert_on_mention": False,
+        "silent_alert_on_mention": False,
         "show_timestamp": True,
+        "anonymous_snippets": False,
+        # group conversations
+        "private_added_to_group_title": "New Thread (Group)",
+        "private_added_to_group_response": "{moderator.name} has added you to a Modmail thread.",
+        "private_added_to_group_description_anon": "A moderator has added you to a Modmail thread.",
+        "public_added_to_group_title": "New User",
+        "public_added_to_group_response": "{moderator.name} has added {users} to the Modmail thread.",
+        "public_added_to_group_description_anon": "A moderator has added {users} to the Modmail thread.",
+        "private_removed_from_group_title": "Removed From Thread (Group)",
+        "private_removed_from_group_response": "{moderator.name} has removed you from the Modmail thread.",
+        "private_removed_from_group_description_anon": "A moderator has removed you from the Modmail thread.",
+        "public_removed_from_group_title": "User Removed",
+        "public_removed_from_group_response": "{moderator.name} has removed {users} from the Modmail thread.",
+        "public_removed_from_group_description_anon": "A moderator has removed {users} from the Modmail thread.",
         # moderation
         "recipient_color": str(discord.Color.gold()),
         "mod_color": str(discord.Color.green()),
@@ -88,13 +114,13 @@ class ConfigManager:
         "anon_tag": "Response",
         # react to contact
         "react_to_contact_message": None,
-        "react_to_contact_emoji": "\u2705",
+        "react_to_contact_emoji": "\N{WHITE HEAVY CHECK MARK}",
         # confirm thread creation
         "confirm_thread_creation": False,
         "confirm_thread_creation_title": "Confirm thread creation",
         "confirm_thread_response": "React to confirm thread creation which will directly contact the moderators",
-        "confirm_thread_creation_accept": "\u2705",
-        "confirm_thread_creation_deny": "\U0001F6AB",
+        "confirm_thread_creation_accept": "\N{WHITE HEAVY CHECK MARK}",
+        "confirm_thread_creation_deny": "\N{NO ENTRY SIGN}",
         # regex
         "use_regex_autotrigger": False,
     }
@@ -141,6 +167,7 @@ class ConfigManager:
         # github access token for private repositories
         "github_token": None,
         "disable_autoupdates": False,
+        "disable_updates": False,
         # Logging
         "log_level": "INFO",
         # data collection
@@ -152,6 +179,8 @@ class ConfigManager:
     time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown"}
 
     booleans = {
+        "use_user_id_channel_name",
+        "use_timestamp_channel_name",
         "user_typing",
         "mod_typing",
         "reply_without_command",
@@ -164,6 +193,7 @@ class ConfigManager:
         "transfer_reactions",
         "close_on_leave",
         "alert_on_mention",
+        "silent_alert_on_mention",
         "show_timestamp",
         "confirm_thread_creation",
         "use_regex_autotrigger",
@@ -171,7 +201,14 @@ class ConfigManager:
         "data_collection",
         "enable_eval",
         "disable_autoupdates",
+        "disable_updates",
+        "update_notifications",
         "thread_contact_silently",
+        "anonymous_snippets",
+        "recipient_thread_close",
+        "thread_show_roles",
+        "thread_show_account_age",
+        "thread_show_join_age",
     }
 
     enums = {
@@ -199,28 +236,18 @@ class ConfigManager:
 
         # populate from env var and .env file
         data.update({k.lower(): v for k, v in os.environ.items() if k.lower() in self.all_keys})
-        config_json = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
-        )
+        config_json = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json")
         if os.path.exists(config_json):
             logger.debug("Loading envs from config.json.")
             with open(config_json, "r", encoding="utf-8") as f:
                 # Config json should override env vars
                 try:
-                    data.update(
-                        {
-                            k.lower(): v
-                            for k, v in json.load(f).items()
-                            if k.lower() in self.all_keys
-                        }
-                    )
+                    data.update({k.lower(): v for k, v in json.load(f).items() if k.lower() in self.all_keys})
                 except json.JSONDecodeError:
                     logger.critical("Failed to load config.json env values.", exc_info=True)
         self._cache = data
 
-        config_help_json = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "config_help.json"
-        )
+        config_help_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config_help.json")
         with open(config_help_json, "r", encoding="utf-8") as f:
             self.config_help = dict(sorted(json.load(f).items()))
 

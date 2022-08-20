@@ -33,7 +33,7 @@
         },
         "GITHUB_TOKEN": {
             "description": "A github personal access token with the repo scope.",
-            "required": true
+            "required": false
         }
     }
 }

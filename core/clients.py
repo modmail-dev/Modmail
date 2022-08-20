@@ -68,7 +68,7 @@ class GitHub:
     def __init__(self, bot, access_token: str = "", username: str = "", **kwargs):
         self.bot = bot
         self.session = bot.session
-        self.headers: dict = None
+        self.headers: Optional[dict] = None
         self.access_token = access_token
         self.username = username
         self.avatar_url: str = kwargs.pop("avatar_url", "")
@@ -305,9 +305,7 @@ class ApiClient:
     async def get_log_link(self, channel_id: Union[str, int]) -> str:
         return NotImplemented
 
-    async def create_log_entry(
-        self, recipient: Member, channel: TextChannel, creator: Member
-    ) -> str:
+    async def create_log_entry(self, recipient: Member, channel: TextChannel, creator: Member) -> str:
         return NotImplemented
 
     async def delete_log_entry(self, key: str) -> bool:
@@ -319,7 +317,7 @@ class ApiClient:
     async def update_config(self, data: dict):
         return NotImplemented
 
-    async def edit_message(self, message_id: Union[int, str], new_content: str) -> None:
+    async def edit_message(self, message_id: Union[int, str], new_content: str):
         return NotImplemented
 
     async def append_log(
@@ -359,6 +357,12 @@ class ApiClient:
     def get_plugin_partition(self, cog):
         return NotImplemented
 
+    async def update_repository(self) -> dict:
+        return NotImplemented
+
+    async def get_user_info(self) -> Optional[dict]:
+        return NotImplemented
+
 
 class MongoDBClient(ApiClient):
     def __init__(self, bot):
@@ -379,9 +383,9 @@ class MongoDBClient(ApiClient):
         except ConfigurationError as e:
             logger.critical(
                 "Your MongoDB CONNECTION_URI might be copied wrong, try re-copying from the source again. "
-                "Otherwise noted in the following message:"
+                "Otherwise noted in the following message:\n%s",
+                e,
             )
-            logger.critical(e)
             sys.exit(0)
 
         super().__init__(bot, db)
@@ -407,14 +411,28 @@ class MongoDBClient(ApiClient):
             )
         logger.debug("Successfully configured and verified database indexes.")
 
-    async def validate_database_connection(self):
+    async def validate_database_connection(self, *, ssl_retry=True):
         try:
             await self.db.command("buildinfo")
         except Exception as exc:
             logger.critical("Something went wrong while connecting to the database.")
             message = f"{type(exc).__name__}: {str(exc)}"
             logger.critical(message)
-
+            if "CERTIFICATE_VERIFY_FAILED" in message and ssl_retry:
+                mongo_uri = self.bot.config["connection_uri"]
+                if mongo_uri is None:
+                    mongo_uri = self.bot.config["mongo_uri"]
+                for _ in range(3):
+                    logger.warning(
+                        "FAILED TO VERIFY SSL CERTIFICATE, ATTEMPTING TO START WITHOUT SSL (UNSAFE)."
+                    )
+                logger.warning(
+                    "To fix this warning, check there's no proxies blocking SSL cert verification, "
+                    'run "Certificate.command" on MacOS, '
+                    'and check certifi is up to date "pip3 install --upgrade certifi".'
+                )
+                self.db = AsyncIOMotorClient(mongo_uri, tlsAllowInvalidCertificates=True).modmail_bot
+                return await self.validate_database_connection(ssl_retry=False)
             if "ServerSelectionTimeoutError" in message:
                 logger.critical(
                     "This may have been caused by not whitelisting "
@@ -479,13 +497,9 @@ class MongoDBClient(ApiClient):
         prefix = self.bot.config["log_url_prefix"].strip("/")
         if prefix == "NONE":
             prefix = ""
-        return (
-            f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{doc['key']}"
-        )
+        return f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{doc['key']}"
 
-    async def create_log_entry(
-        self, recipient: Member, channel: TextChannel, creator: Member
-    ) -> str:
+    async def create_log_entry(self, recipient: Member, channel: TextChannel, creator: Member) -> str:
         key = secrets.token_hex(6)
 
         await self.logs.insert_one(
@@ -536,9 +550,7 @@ class MongoDBClient(ApiClient):
 
     async def update_config(self, data: dict):
         toset = self.bot.config.filter_valid(data)
-        unset = self.bot.config.filter_valid(
-            {k: 1 for k in self.bot.config.all_keys if k not in data}
-        )
+        unset = self.bot.config.filter_valid({k: 1 for k in self.bot.config.all_keys if k not in data})
 
         if toset and unset:
             return await self.db.config.update_one(
@@ -635,17 +647,13 @@ class MongoDBClient(ApiClient):
 
     async def update_note_ids(self, ids: dict):
         for object_id, message_id in ids.items():
-            await self.db.notes.update_one(
-                {"_id": object_id}, {"$set": {"message_id": message_id}}
-            )
+            await self.db.notes.update_one({"_id": object_id}, {"$set": {"message_id": message_id}})
 
     async def delete_note(self, message_id: Union[int, str]):
         await self.db.notes.delete_one({"message_id": str(message_id)})
 
     async def edit_note(self, message_id: Union[int, str], message: str):
-        await self.db.notes.update_one(
-            {"message_id": str(message_id)}, {"$set": {"message": message}}
-        )
+        await self.db.notes.update_one({"message_id": str(message_id)}, {"$set": {"message": message}})
 
     def get_plugin_partition(self, cog):
         cls_name = cog.__class__.__name__
@@ -656,10 +664,14 @@ class MongoDBClient(ApiClient):
         data = await user.update_repository()
         return {
             "data": data,
-            "user": {"username": user.username, "avatar_url": user.avatar_url, "url": user.url,},
+            "user": {
+                "username": user.username,
+                "avatar_url": user.avatar_url,
+                "url": user.url,
+            },
         }
 
-    async def get_user_info(self) -> dict:
+    async def get_user_info(self) -> Optional[dict]:
         try:
             user = await GitHub.login(self.bot)
         except InvalidConfigError:

@@ -1,12 +1,30 @@
 {
-    "profanity-filter": {
-        "repository": "kyb3r/modmail-plugins",
-        "branch": "master",
-        "description": "Checks for profanity in a message using machine learning and deletes it.",
+    "close_message": {
+        "repository": "python-discord/modmail-plugins",
+        "branch": "main",
+        "description": "Add a ?closemessage command that will close the thread after 15 minutes with a default message.",
         "bot_version": "2.20.1",
-        "title": "Profanity Filter Plugin",
-        "icon_url": "https://i.imgur.com/951szZ3.jpg",
-        "thumbnail_url": "https://i.imgur.com/951szZ3.jpg"
+        "title": "Close message",
+        "icon_url": "https://i.imgur.com/ev7BFMz.png",
+        "thumbnail_url": "https://i.imgur.com/ev7BFMz.png"
+    },
+    "mdlink": {
+        "repository": "python-discord/modmail-plugins",
+        "branch": "main",
+        "description": "Generate a ready to paste link to the thread logs.",
+        "bot_version": "2.20.1",
+        "title": "MDLink",
+        "icon_url": "https://i.imgur.com/JA2E63R.png",
+        "thumbnail_url": "https://i.imgur.com/JA2E63R.png"
+    },
+    "reply_cooldown": {
+        "repository": "python-discord/modmail-plugins",
+        "branch": "main",
+        "description": "Forbid you from sending the same message twice in ten seconds.",
+        "bot_version": "2.20.1",
+        "title": "Reply cooldown",
+        "icon_url": "https://i.imgur.com/FtRQveT.png",
+        "thumbnail_url": "https://i.imgur.com/FtRQveT.png"
     },
     "dragory-migrate": {
         "repository": "kyb3r/modmail-plugins",
@@ -16,6 +34,15 @@
         "title": "Dragory Logs Migration",
         "icon_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png",
         "thumbnail_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png"
+    },
+    "music": {
+        "repository": "Taaku18/modmail-plugins",
+        "branch": "master",
+        "description": "Play wonderfull jams through your modmail!",
+        "bot_version": "2.20.1",
+        "title": "music",
+        "icon_url": "https://i.imgur.com/JmJPX5W.gif",
+        "thumbnail_url": "https://i.imgur.com/jrYL7F8.gif"
     },
     "media-only": {
         "repository": "lorenzo132/modmail-plugins",
@@ -154,7 +181,7 @@
     "suggest": {
         "repository": "realcyguy/modmail-plugins",
         "branch": "master",
-        "description": "Send suggestions to a selected server! It even has moderation...",
+        "description": "Send suggestions to a selected server! It has accepting, denying, and moderation-ing.",
         "bot_version": "3.4.1",
         "title": "Suggest stuff.",
         "icon_url": "https://i.imgur.com/qtE7AH8.png",
@@ -178,15 +205,6 @@
         "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
     },
-    "publish": {
-        "repository": "codeinteger6/modmail-plugins",
-        "branch": "master",
-        "description": "Publish messages sent in announcement channels.",
-        "bot_version": "3.5.0",
-        "title": "Publish",
-        "icon_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png",
-        "thumbnail_url": "https://user-images.githubusercontent.com/44692189/89184422-96de3600-d5ba-11ea-98ea-d096aa385ad5.png"
-    },
     "translate": {
         "repository": "WebKide/modmail-plugins",
         "branch": "master",
@@ -204,5 +222,38 @@
         "title": "Countdowns",
         "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
         "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "action": {
+        "repository": "6days9weeks/modmail-plugins",
+        "branch": "master",
+        "description": "Have fun with others by hugging them or giving them pats~!!",
+        "title": "Action",
+        "icon_url": "https://media.discordapp.net/attachments/720733784970100776/820933433579798528/689105042212388965.png",
+        "thumbnail_url": "https://data.whicdn.com/images/58526601/original.gif"
+    },
+    "menu": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "master",
+        "description": "Adds reaction-based menus into thread creates. Check out `?configmenu`",
+        "title": "Menus",
+        "bot_version": "3.9.0",
+        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
+        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "claim": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "master",
+        "description": "Allows supporters to claim thread by sending ?claim in the thread channel",
+        "title": "Claim Thread",
+        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
+        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+    },
+    "phishchecker": {
+        "repository": "TheDiscordHistorian/historian-cogs",
+        "branch": "main",
+        "description": "Deletes scam links from your server and optionally kick / ban the user.",
+        "title": "Scam Link Detector",
+        "icon_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png",
+        "thumbnail_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png"
     }
 }

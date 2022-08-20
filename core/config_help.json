@@ -52,7 +52,8 @@
       "`{prefix}mention Yo~ Here's a new thread for ya!`"
     ],
     "notes": [
-      "Unfortunately, it's not currently possible to disable mention. You do not have to include a mention."
+      "To disable mention, use command `{prefix}mention disable`.",
+      "See also: `{prefix}help mention`."
     ]
   },
   "main_color": {
@@ -86,7 +87,7 @@
     "thumbnail": "https://placehold.it/100/e74c3c?text=+"
   },
   "user_typing": {
-    "default": "Disabled",
+    "default": "Enabled",
     "description": "When this is set to `yes`, whenever the recipient user starts to type in their DM channel, the moderator will see “{bot.user.display_name} is typing…” in the thread channel.",
     "examples": [
       "`{prefix}config set user_typing yes`",
@@ -94,6 +95,32 @@
     ],
     "notes": [
       "See also: `mod_typing`."
+    ]
+  },
+  "use_user_id_channel_name": {
+    "default": "No",
+    "description": "When this is set to `yes`, new thread channels will be named with the recipient's ID instead of the recipient's name.",
+    "examples": [
+      "`{prefix}config set use_user_id_channel_name yes`",
+      "`{prefix}config set use_user_id_channel_name no`"
+    ],
+    "notes": [
+      "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
+      "This cannot be applied with `use_timestamp_channel_name`.",
+      "See also: `use_timestamp_channel_name`."
+    ]
+  },
+  "use_timestamp_channel_name": {
+    "default": "No",
+    "description": "When this is set to `yes`, new thread channels will be named with the recipient's account creation date instead of the recipient's name.",
+    "examples": [
+      "`{prefix}config set use_timestamp_channel_name yes`",
+      "`{prefix}config set use_timestamp_channel_name no`"
+    ],
+    "notes": [
+      "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
+      "This cannot be applied with `use_user_id_channel_name`.",
+      "See also: `use_user_id_channel_name`."
     ]
   },
   "mod_typing": {
@@ -192,8 +219,19 @@
       "`{prefix}config set update_channel_id 9234932582312` (9234932582312 is the channel ID)"
     ],
     "notes": [
-      "This has no effect unless `disable_autoupdates` is set to no.",
+      "This has no effect unless `disable_autoupdates` is set to no and `update_notifications` is set to yes.",
       "See also: `log_channel_id`"
+    ]
+  },
+  "update_notifications": {
+    "default": "Yes",
+    "description": "This is the channel where update notifications are sent to.",
+    "examples": [
+      "`{prefix}config set update_notifications no"
+    ],
+    "notes": [
+      "This has no effect unless `disable_autoupdates` is set to no.",
+      "See also: `update_channel_id`"
     ]
   },
   "sent_emoji": {
@@ -243,6 +281,36 @@
       "See also: `close_emoji`."
     ]
   },
+  "thread_show_roles": {
+    "default": "Yes",
+    "description": "Shows roles on first message sent in thread channels to mods",
+    "examples":[
+      "`{prefix}config set thread_show_roles no`"
+    ],
+    "notes": [
+      "See also: `thread_show_account_age`, `thread_show_join_age`."
+    ]
+  },
+  "thread_show_account_age": {
+    "default": "Yes",
+    "description": "Shows account age on first message sent in thread channels to mods",
+    "examples":[
+      "`{prefix}config set thread_show_account_age no`"
+    ],
+    "notes": [
+      "See also: `thread_show_roles`, `thread_show_join_age`."
+    ]
+  },
+  "thread_show_join_age": {
+    "default": "Yes",
+    "description": "Shows join age on first message sent in thread channels to mods",
+    "examples":[
+      "`{prefix}config set thread_show_join_age no`"
+    ],
+    "notes": [
+      "See also: `thread_show_account_age`, `thread_show_roles`."
+    ]
+  },
   "thread_auto_close_silently": {
     "default": "No",
     "description": "Setting this configuration will close silently when the thread auto-closes.",
@@ -278,6 +346,14 @@
     "notes": [
       "To disable thread cooldown, do `{prefix}config del thread_cooldown`."
     ]
+  },
+  "thread_cancelled": {
+    "default": "\"Cancelled\"",
+    "description": "This is the message to display when a thread times out and creation is cancelled.",
+    "examples": [
+      "`{prefix}config set thread_cancelled Gone.`"
+    ],
+    "notes": []
   },
   "thread_auto_close_response": {
     "default": "\"This thread has been closed automatically due to inactivity after {{timeout}}.\"",
@@ -334,6 +410,39 @@
     "notes": [
       "This is used in place of `thread_creation_footer` when `recipient_thread_close` is disabled.",
       "See also: `thread_creation_title`, `thread_creation_response`, `thread_creation_footer`."
+    ]
+  },
+  "thread_creation_contact_title": {
+    "default": "\"New Thread\"",
+    "description": "This is the message embed title sent to recipients when contacted.",
+    "examples": [
+      "`{prefix}config set thread_creation_contact_title New Message!`"
+    ],
+    "notes": [
+      "See also: `thread_creation_self_contact_response`, `thread_creation_contact_response`."
+    ]
+  },
+  "thread_creation_self_contact_response": {
+    "default": "\"You have opened a Modmail thread.\"",
+    "description": "This is the message embed description sent to recipients when self-contacted.",
+    "examples": [
+      "`{prefix}config set thread_creation_contact_title You contacted yourself.`"
+    ],
+    "notes": [
+      "`thread_creation_contact_response` is used when contacted by another user.",
+      "See also: `thread_creation_contact_title`, `thread_creation_contact_response`."
+    ]
+  },
+  "thread_creation_contact_response": {
+    "default": "\"{{creator.name}} has opened a Modmail thread.\"",
+    "description": "This is the message embed description sent to recipients when contacted by a mod.",
+    "examples": [
+      "`{prefix}config set thread_creation_contact_response New thread opened.`"
+    ],
+    "notes": [
+      "You may use the `{{creator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that created the thread.",
+      "`thread_creation_self_contact_response` is used when contacted by self.",
+      "See also: `thread_creation_contact_title`, `thread_creation_self_contact_response`."
     ]
   },
   "thread_creation_title": {
@@ -398,7 +507,7 @@
     "default": "Thread Moved",
     "description": "The title of the message embed when a thread is moved.",
     "examples": [
-      "`{prefix}config set thread_move_title Thread transferred to another channel!"
+      "`{prefix}config set thread_move_title Thread transferred to another channel!`"
     ],
     "notes": [
       "See also: `thread_move_notify`, `thread_move_notify_mods`, `thread_move_response`."
@@ -651,12 +760,23 @@
   },
   "alert_on_mention": {
     "default": "No",
-    "description": "Mentions all mods (mention) in logs channel when bot is mentioned",
+    "description": "Mentions all mods (mention) in mention channel when bot is mentioned",
     "examples":[
       "`{prefix}config set alert_on_mention yes`"
     ],
     "notes": [
-      "See also: `mention`"
+      "See also: `mention`, `mention_channel_id`"
+    ]
+  },
+  "silent_alert_on_mention": {
+    "default": "No",
+    "description": "Send a message in the mention channel without mentioning all mods (mention).",
+    "examples":[
+      "`{prefix}config set alert_on_mention yes`"
+    ],
+    "notes": [
+      "This has no effect unless `alert_on_mention` is set to yes.",
+      "See also: `mention`, `mention_channel_id`"
     ]
   },
   "show_timestamp": {
@@ -667,6 +787,160 @@
     ],
     "notes": []
   },
+  "anonymous_snippets": {
+    "default": "No",
+    "description": "Sends snippets anonymously.",
+    "examples":[
+      "`{prefix}config set anonymous_snippets yes`"
+    ],
+    "notes": [
+      "See also: `anon_avatar_url`, `anon_tag`."
+    ]
+  },
+  "private_added_to_group_title": {
+    "default": "New Thread (Group)",
+    "description": "This is the message embed title sent to the recipient that is just added to a thread.",
+    "examples": [
+      "`{prefix}config set private_added_to_group_title Welcome to this new group thread!`"
+    ],
+    "notes": [
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_added_to_group_description`, `public_added_to_group_title`"
+    ]
+  },
+  "private_added_to_group_response": {
+    "default": "\"{{moderator.name}} has added you to a Modmail thread.\"",
+    "description": "This is the message embed content sent to the recipient that is just added to a thread.",
+    "examples": [
+      "`{prefix}config set private_added_to_group_description Any message sent here will be sent to all otherthread recipients.`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonadduser is used, `private_added_to_group_description_anon` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_added_to_group_title`, `public_added_to_group_description`"
+    ]
+  },
+  "private_added_to_group_description_anon": {
+    "default": "A moderator has added you to a Modmail thread.",
+    "description": "This is the message embed content sent to the recipient that is just added to a thread when adduser is used anonymously.",
+    "examples": [
+      "`{prefix}config set private_added_to_group_description_anon Any message sent here will be sent to all other thread recipients.`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `private_added_to_group_description` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_added_to_group_title`, `public_added_to_group_description_anon`"
+    ]
+  },
+  "public_added_to_group_title": {
+    "default": "New User",
+    "description": "This is the message embed title sent to all other recipients when someone is added to the thread.",
+    "examples": [
+      "`{prefix}config set public_added_to_group_title Welcome to our new user!`"
+    ],
+    "notes": [
+      "The private_ variant is used when sending to the new user.",
+      "See also: `private_added_to_group_title`, `private_added_to_group_title`"
+    ]
+  },
+  "public_added_to_group_response": {
+    "default": "\"{{moderator.name}} has added {{users}} to the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is added to the thread.",
+    "examples": [
+      "`{prefix}config set public_added_to_group_description Welcome {users}!`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonadduser is used, `public_added_to_group_description_anon` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_added_to_group_title`, `private_added_to_group_description`"
+    ]
+  },
+  "public_added_to_group_description_anon": {
+    "default": "\"A moderator has added {{users}} to the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is added to the thread when adduser is used anonymously.",
+    "examples": [
+      "`{prefix}config set public_added_to_group_description_anon Any message sent here will be sent to all other thread recipients.`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `public_added_to_group_description` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_added_to_group_title`, `private_added_to_group_description_anon`"
+    ]
+  },
+  "private_removed_from_group_title": {
+    "default": "Removed From Thread (Group)",
+    "description": "This is the message embed title sent to the recipient that is just removed from a thread.",
+    "examples": [
+      "`{prefix}config set private_removed_from_group_title Welcome to this new group thread!`"
+    ],
+    "notes": [
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_removed_from_group_description`, `public_removed_from_group_title`"
+    ]
+  },
+  "private_removed_from_group_response": {
+    "default": "\"{{moderator.name}} has removed you from the Modmail thread.\"",
+    "description": "This is the message embed content sent to the recipient that is just removed from a thread.",
+    "examples": [
+      "`{prefix}config set private_removed_from_group_description Bye`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonremoveuser is used, `private_removed_from_group_description_anon` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_removed_from_group_title`, `public_removed_from_group_description`"
+    ]
+  },
+  "private_removed_from_group_description_anon": {
+    "default": "A moderator has removed you from the Modmail thread.",
+    "description": "This is the message embed content sent to the recipient that is just removed from a thread when removeuser is used anonymously.",
+    "examples": [
+      "`{prefix}config set private_removed_from_group_description_anon You are permenantly removed from this thread.`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `private_removed_from_group_description` is used instead.",
+      "The public_ variant is used when sending to other thread recipients.",
+      "See also: `private_removed_from_group_title`, `public_removed_from_group_description_anon`"
+    ]
+  },
+  "public_removed_from_group_title": {
+    "default": "User Removed",
+    "description": "This is the message embed title sent to all other recipients when someone is removed from the thread.",
+    "examples": [
+      "`{prefix}config set public_removed_from_group_title User is now gone!`"
+    ],
+    "notes": [
+      "The private_ variant is used when sending to the new user.",
+      "See also: `private_removed_from_group_title`, `private_removed_from_group_title`"
+    ]
+  },
+  "public_removed_from_group_response": {
+    "default": "\"{{moderator.name}} has removed {{users}} from the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is removed from the thread.",
+    "examples": [
+      "`{prefix}config set public_removed_from_group_description Goodbye {users}!`"
+    ],
+    "notes": [
+      "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
+      "When anonremoveuser is used, `public_removed_from_group_description_anon` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_removed_from_group_title`, `private_removed_from_group_description`"
+    ]
+  },
+  "public_removed_from_group_description_anon": {
+    "default": "\"A moderator has removed {{users}} from the Modmail thread.\"",
+    "description": "This is the message embed content sent to all other recipients when someone is removed from the thread when removeuser is used anonymously.",
+    "examples": [
+      "`{prefix}config set public_removed_from_group_description_anon Goodbye {users}!`"
+    ],
+    "notes": [
+      "When adduser (no anon) is used, `public_removed_from_group_description` is used instead.",
+      "The private_ variant is used when sending to the new user.",
+      "See also: `public_removed_from_group_title`, `private_removed_from_group_description_anon`"
+    ]
+  },
   "confirm_thread_creation": {
     "default": "No",
     "description": "Ensure users confirm that they want to create a new thread",
@@ -674,7 +948,7 @@
       "`{prefix}config set confirm_thread_creation yes`"
     ],
     "notes": [
-      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny``"
+      "See also: `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny`"
     ]
   },
   "confirm_thread_creation_title": {
@@ -833,6 +1107,15 @@
   "disable_autoupdates": {
     "default": "No",
     "description": "Controls if autoupdates should be disabled or not.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "disable_updates": {
+    "default": "No",
+    "description": "Controls if the update command should be disabled or not.",
     "examples": [
     ],
     "notes": [

@@ -2,6 +2,7 @@ import logging
 import re
 import sys
 import os
+from difflib import get_close_matches
 from enum import IntEnum
 from logging.handlers import RotatingFileHandler
 from string import Formatter
@@ -127,7 +128,7 @@ class FileFormatter(logging.Formatter):
 
 def configure_logging(name, level=None):
     global ch_debug, log_level
-    ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=48000, backupCount=1)
+    ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=48000, backupCount=1, encoding="utf-8")
 
     formatter_debug = FileFormatter(
         "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
@@ -190,28 +191,27 @@ class UnseenFormatter(Formatter):
             except KeyError:
                 return "{" + key + "}"
         else:
-            return Formatter.get_value(key, args, kwds)
+            return super().get_value(key, args, kwds)
 
 
 class SimilarCategoryConverter(commands.CategoryChannelConverter):
     async def convert(self, ctx, argument):
         bot = ctx.bot
         guild = ctx.guild
-        result = None
 
         try:
             return await super().convert(ctx, argument)
         except commands.ChannelNotFound:
 
-            def check(c):
-                return isinstance(c, discord.CategoryChannel) and c.name.lower().startswith(
-                    argument.lower()
-                )
-
             if guild:
-                result = discord.utils.find(check, guild.categories)
+                categories = {c.name.casefold(): c for c in guild.categories}
             else:
-                result = discord.utils.find(check, bot.get_all_channels())
+                categories = {c.name.casefold(): c for c in bot.get_all_channels()
+                              if isinstance(c, discord.CategoryChannel)}
+
+            result = get_close_matches(argument.casefold(), categories.keys(), n=1, cutoff=0.75)
+            if result:
+                result = categories[result[0]]
 
             if not isinstance(result, discord.CategoryChannel):
                 raise commands.ChannelNotFound(argument)
@@ -227,6 +227,8 @@ class DummyMessage:
     """
 
     def __init__(self, message):
+        if message:
+            message.attachments = []
         self._message = message
 
     def __getattr__(self, name: str):
@@ -275,4 +277,7 @@ class DMDisabled(IntEnum):
 class HostingMethod(IntEnum):
     HEROKU = 0
     PM2 = 1
-    OTHER = 2
+    SYSTEMD = 2
+    SCREEN = 3
+    DOCKER = 4
+    OTHER = 5
