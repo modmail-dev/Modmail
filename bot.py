@@ -157,6 +157,8 @@ class ModmailBot(commands.Bot):
 
     async def load_extensions(self):
         for cog in self.loaded_cogs:
+            if cog in self.extensions:
+                continue
             logger.debug("Loading %s.", cog)
             try:
                 await self.load_extension(cog)
