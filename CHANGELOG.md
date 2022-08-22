@@ -11,7 +11,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Breaking
 
 - Modmail now requires [`Message Content` privileged intent](https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-for-Verified-Bots).
-- Upgraded to discord.py v2.0 master ([internal changes](https://gist.github.com/apple502j/f75b4f24652f04de85c7084ffd73ec58), [GH #2990](https://github.com/kyb3r/modmail/issues/2990)).
+- Upgraded to discord.py v2.0 ([internal changes](https://discordpy.readthedocs.io/en/latest/migrating.html), [GH #2990](https://github.com/kyb3r/modmail/issues/2990)).
 - Python 3.8 or higher is required.
 - Asyncio changes ([gist](https://gist.github.com/Rapptz/6706e1c8f23ac27c98cee4dd985c8120))
 

@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev16"
+__version__ = "4.0.0-dev17"
 
 
 import asyncio
@@ -1769,9 +1769,9 @@ def main():
         sys.exit(0)
 
     # check discord version
-    if discord.__version__ != "2.0.0a":
+    if discord.__version__ != "2.0.0":
         logger.error(
-            "Dependencies are not updated, run pipenv install. discord.py version expected 2.0.0a, received %s",
+            "Dependencies are not updated, run pipenv install. discord.py version expected 2.0.0, received %s",
             discord.__version__,
         )
         sys.exit(0)
