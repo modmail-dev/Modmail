@@ -27,6 +27,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Select menus for certain paginators.
 - `Title` field in `?logs`. ([GH #3142](https://github.com/kyb3r/modmail/issues/3142))
 - Snippets can be used in aliases. ([GH #3108](https://github.com/kyb3r/modmail/issues/3108), [PR #3124](https://github.com/kyb3r/modmail/pull/3124))
+- `?snippet make/create` as aliases to `?snippet add`. ([GH #3172](https://github.com/kyb3r/modmail/issues/3173), [PR #3174](https://github.com/kyb3r/modmail/pull/3174))
 
 ### Improved
 
