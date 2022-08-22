@@ -12,7 +12,7 @@ typing-extensions = "==4.2.0"
 [packages]
 aiohttp = "==3.8.1"
 colorama = "~=0.4.5"
-"discord.py" = {ref = "9fe19dcc6923e4b6133bdedafb33658bf37c9ab7", git = "https://github.com/Rapptz/discord.py.git"}
+"discord.py" = "==2.0.0"
 emoji = "==1.7.0"
 isodate = "~=0.6.0"
 motor = "==2.5.1"
