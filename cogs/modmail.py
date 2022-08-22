@@ -193,7 +193,7 @@ class Modmail(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @snippet.command(name="add")
+    @snippet.command(name="add", aliases=["create", "make"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def snippet_add(self, ctx, name: str.lower, *, value: commands.clean_content):
         """
