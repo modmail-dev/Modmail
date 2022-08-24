@@ -1511,7 +1511,17 @@ class ModmailBot(commands.Bot):
         logger.error("Ignoring exception in %s.", event_method)
         logger.error("Unexpected exception:", exc_info=sys.exc_info())
 
-    async def on_command_error(self, context, exception):
+    async def on_command_error(
+        self, context: commands.Context, exception: Exception, *, unhandled_by_cog: bool = False
+    ) -> None:
+        if not unhandled_by_cog:
+            command = context.command
+            if command and command.has_error_handler():
+                return
+            cog = context.cog
+            if cog and cog.has_error_handler():
+                return
+
         if isinstance(exception, (commands.BadArgument, commands.BadUnionArgument)):
             await context.typing()
             await context.send(embed=discord.Embed(color=self.error_color, description=str(exception)))
