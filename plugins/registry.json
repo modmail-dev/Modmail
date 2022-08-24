@@ -255,5 +255,11 @@
         "title": "Scam Link Detector",
         "icon_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png",
         "thumbnail_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png"
+    },
+    "raw-content": {
+        "repository": "Nzii3/modmail-plugins",
+        "branch": "main",
+        "description": "Have the ability to get raw embed description (useful for iOS mobile users).",
+        "title": "Raw Content",
     }
 }
