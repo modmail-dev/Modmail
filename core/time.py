@@ -20,8 +20,8 @@ units["minutes"].append("mins")
 units["seconds"].append("secs")
 
 if TYPE_CHECKING:
+    from discord.ext.commands import Context
     from typing_extensions import Self
-    from cogs.utils.context import Context
 
 
 class plural:
@@ -82,7 +82,7 @@ class ShortTime:
         self.dt = now + relativedelta(**data)
 
     @classmethod
-    async def convert(cls, ctx: Context, argument: str) -> Self:
+    async def convert(cls, ctx:  Context, argument: str) -> Self:
         return cls(argument, now=ctx.message.created_at)
 
 
@@ -146,14 +146,23 @@ class TimeTransformer(app_commands.Transformer):
             return short.dt
 
 
+## CHANGE: Added now
 class FriendlyTimeResult:
     dt: datetime.datetime
+    now: datetime.datetime
     arg: str
 
-    __slots__ = ("dt", "arg")
+    __slots__ = ("dt", "arg", "now")
 
-    def __init__(self, dt: datetime.datetime):
+    def __init__(self, dt: datetime.datetime, now: datetime.datetime=None):
         self.dt = dt
+        self.now = now
+
+        if now is None:
+            self.now = dt
+        else:
+            self.now = now
+
         self.arg = ""
 
     async def ensure_constraints(
@@ -162,6 +171,7 @@ class FriendlyTimeResult:
         if self.dt < now:
             raise commands.BadArgument("This time is in the past.")
 
+        # CHANGE
         # if not remaining:
         #     if uft.default is None:
         #         raise commands.BadArgument("Missing argument after the time.")
@@ -200,7 +210,7 @@ class UserFriendlyTime(commands.Converter):
         if match is not None and match.group(0):
             data = {k: int(v) for k, v in match.groupdict(default=0).items()}
             remaining = argument[match.end() :].strip()
-            result = FriendlyTimeResult(now + relativedelta(**data))
+            result = FriendlyTimeResult(now + relativedelta(**data), now)
             await result.ensure_constraints(ctx, self, now, remaining)
             return result
 
@@ -208,7 +218,7 @@ class UserFriendlyTime(commands.Converter):
             match = ShortTime.discord_fmt.match(argument)
             if match is not None:
                 result = FriendlyTimeResult(
-                    datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc)
+                    datetime.datetime.fromtimestamp(int(match.group("ts")), now, tz=datetime.timezone.utc)
                 )
                 remaining = argument[match.end() :].strip()
                 await result.ensure_constraints(ctx, self, now, remaining)
@@ -226,7 +236,10 @@ class UserFriendlyTime(commands.Converter):
 
         elements = calendar.nlp(argument, sourceTime=now)
         if elements is None or len(elements) == 0:
-            raise commands.BadArgument('Invalid time provided, try e.g. "tomorrow" or "3 days".')
+            # CHANGE
+            result = FriendlyTimeResult(now)
+            await result.ensure_constraints(ctx, self, now, argument)
+            return result
 
         # handle the following cases:
         # "date time" foo
@@ -254,7 +267,7 @@ class UserFriendlyTime(commands.Converter):
         if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
             dt = dt.replace(day=now.day + 1)
 
-        result = FriendlyTimeResult(dt.replace(tzinfo=datetime.timezone.utc))
+        result = FriendlyTimeResult(dt.replace(tzinfo=datetime.timezone.utc), now)
         remaining = ""
 
         if begin in (0, 1):
