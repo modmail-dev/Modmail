@@ -18,7 +18,6 @@ from types import SimpleNamespace
 import discord
 import isodate
 from aiohttp import ClientSession, ClientResponseError
-from discord.utils import MISSING
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
 from emoji import UNICODE_EMOJI

@@ -111,7 +111,7 @@ class Time(HumanTime):
     def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
         try:
             o = ShortTime(argument, now=now)
-        except Exception as e:
+        except Exception:
             super().__init__(argument)
         else:
             self.dt = o.dt
@@ -146,7 +146,7 @@ class TimeTransformer(app_commands.Transformer):
             return short.dt
 
 
-## CHANGE: Added now
+# CHANGE: Added now
 class FriendlyTimeResult:
     dt: datetime.datetime
     now: datetime.datetime

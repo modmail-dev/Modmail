@@ -197,7 +197,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
             if snippet_aliases:
                 embed.add_field(
-                    name=f"Aliases to this snippet:", value=",".join(snippet_aliases), inline=False
+                    name="Aliases to this snippet:", value=",".join(snippet_aliases), inline=False
                 )
 
             return await self.get_destination().send(embed=embed)
