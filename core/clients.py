@@ -7,7 +7,7 @@ import discord
 from discord import Member, DMChannel, TextChannel, Message
 from discord.ext import commands
 
-p
+
 from aiohttp import ClientResponseError, ClientResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConfigurationError
