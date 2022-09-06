@@ -54,6 +54,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Improved error handling for autoupdate. ([PR #3161](https://github.com/kyb3r/modmail/pull/3161))
 - Skip loading of already-loaded cog. ([PR #3172](https://github.com/kyb3r/modmail/pull/3172))
 - Respect plugin's `cog_command_error`. ([GH #3170](https://github.com/kyb3r/modmail/issues/3170), [PR #3178](https://github.com/kyb3r/modmail/pull/3178))
+- Use silent as a typing literal for contacting. ([GH #3179](https://github.com/kyb3r/modmail/issues/3179))
 
 ### Internal
 

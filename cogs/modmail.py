@@ -3,7 +3,7 @@ import re
 from datetime import datetime, timezone
 from itertools import zip_longest
 import time
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List, Tuple, Literal
 from types import SimpleNamespace
 
 import discord
@@ -1500,9 +1500,9 @@ class Modmail(commands.Cog):
     async def contact(
         self,
         ctx,
-        users: commands.Greedy[Union[discord.Member, discord.User, discord.Role]],
+        users: commands.Greedy[Union[Literal["silent", "silently"], discord.Member, discord.User, discord.Role]],
         *,
-        category: Union[SimilarCategoryConverter, str] = None,
+        category: SimilarCategoryConverter = None,
         manual_trigger=True,
     ):
         """
@@ -1516,15 +1516,21 @@ class Modmail(commands.Cog):
         A maximum of 5 users are allowed.
         `options` can be `silent` or `silently`.
         """
-        silent = False
+        silent = any(x in users for x in ("silent", "silently"))
+        if silent:
+            try:
+                users.remove("silent")
+            except ValueError:
+                pass
+
+            try:
+                users.remove("silently")
+            except ValueError:
+                pass
+
+        print(users, silent)
         if isinstance(category, str):
             category = category.split()
-
-            # just check the last element in the list
-            if category[-1].lower() in ("silent", "silently"):
-                silent = True
-                # remove the last element as we no longer need it
-                category.pop()
 
             category = " ".join(category)
             if category:
