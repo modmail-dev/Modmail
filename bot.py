@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev17"
+__version__ = "4.0.0-dev18"
 
 
 import asyncio
@@ -18,6 +18,7 @@ from types import SimpleNamespace
 import discord
 import isodate
 from aiohttp import ClientSession, ClientResponseError
+from discord.utils import MISSING
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
 from emoji import UNICODE_EMOJI
@@ -247,10 +248,10 @@ class ModmailBot(commands.Bot):
                 except Exception:
                     logger.critical("Fatal exception", exc_info=True)
                 finally:
-                    if not self.is_closed():
-                        await self.close()
                     if self.session:
                         await self.session.close()
+                    if not self.is_closed():
+                        await self.close()
 
         async def _cancel_tasks():
             async with self:
@@ -282,7 +283,7 @@ class ModmailBot(commands.Bot):
                         pass
 
         try:
-            asyncio.run(runner())
+            asyncio.run(runner(), debug=bool(os.getenv("DEBUG_ASYNCIO")))
         except (KeyboardInterrupt, SystemExit):
             logger.info("Received signal to terminate bot and event loop.")
         finally:
@@ -1771,9 +1772,11 @@ def main():
         sys.exit(0)
 
     # check discord version
-    if discord.__version__ != "2.0.0":
+    discord_version = "2.0.1"
+    if discord.__version__ != discord_version:
         logger.error(
-            "Dependencies are not updated, run pipenv install. discord.py version expected 2.0.0, received %s",
+            "Dependencies are not updated, run pipenv install. discord.py version expected %s, received %s",
+            discord_version,
             discord.__version__,
         )
         sys.exit(0)

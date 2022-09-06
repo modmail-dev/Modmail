@@ -13,7 +13,7 @@ from discord.ext.commands import BadArgument
 
 from core._color_data import ALL_COLORS
 from core.models import DMDisabled, InvalidConfigError, Default, getLogger
-from core.time import UserFriendlyTimeSync
+from core.time import UserFriendlyTime
 from core.utils import strtobool
 
 logger = getLogger(__name__)
@@ -400,7 +400,7 @@ class ConfigManager:
                 isodate.parse_duration(item)
             except isodate.ISO8601Error:
                 try:
-                    converter = UserFriendlyTimeSync()
+                    converter = UserFriendlyTime()
                     time = converter.convert(None, item)
                     if time.arg:
                         raise ValueError
@@ -412,7 +412,8 @@ class ConfigManager:
                         "Unrecognized time, please use ISO-8601 duration format "
                         'string or a simpler "human readable" time.'
                     )
-                item = isodate.duration_isoformat(time.dt - converter.now)
+                now = discord.utils.utcnow()
+                item = isodate.duration_isoformat(time.dt - now)
             return self.__setitem__(key, item)
 
         if key in self.booleans:

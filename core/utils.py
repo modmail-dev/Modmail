@@ -172,10 +172,19 @@ def parse_image_url(url: str, *, convert_size=True) -> str:
     return ""
 
 
-def human_join(strings):
-    if len(strings) <= 2:
-        return " or ".join(strings)
-    return ", ".join(strings[: len(strings) - 1]) + " or " + strings[-1]
+def human_join(seq: typing.Sequence[str], delim: str = ", ", final: str = "or") -> str:
+    """https://github.com/Rapptz/RoboDanny/blob/bf7d4226350dff26df4981dd53134eeb2aceeb87/cogs/utils/formats.py#L21-L32"""
+    size = len(seq)
+    if size == 0:
+        return ""
+
+    if size == 1:
+        return seq[0]
+
+    if size == 2:
+        return f"{seq[0]} {final} {seq[1]}"
+
+    return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
 
 
 def days(day: typing.Union[str, int]) -> str:

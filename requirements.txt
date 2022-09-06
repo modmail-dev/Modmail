@@ -20,7 +20,7 @@ defusedxml==0.7.1; python_version >= '2.7' and python_version not in '3.0, 3.1, 
 dnspython==2.2.1; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 emoji==1.7.0
 frozenlist==1.3.0; python_version >= '3.7'
-git+https://github.com/Rapptz/discord.py.git@e9c7c09ebfe780d8f9de1e9e4d3c2dddf85eccfd#egg=discord.py
+discord.py==2.0.1
 idna==3.3; python_version >= '3.5'
 isodate==0.6.1
 lottie[pdf]==0.6.11

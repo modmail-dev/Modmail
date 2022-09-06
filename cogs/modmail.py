@@ -2,6 +2,7 @@ import asyncio
 import re
 from datetime import datetime, timezone
 from itertools import zip_longest
+import time
 from typing import Optional, Union, List, Tuple
 from types import SimpleNamespace
 
@@ -1848,14 +1849,17 @@ class Modmail(commands.Cog):
             return await ctx.send(embed=embed)
 
         reason = f"by {escape_markdown(ctx.author.name)}#{ctx.author.discriminator}"
+        now = discord.utils.utcnow()
 
         if after is not None:
             if "%" in reason:
                 raise commands.BadArgument('The reason contains illegal character "%".')
+            unixtime = int(after.dt.replace(tzinfo=timezone.utc).timestamp())
+
             if after.arg:
-                reason += f" for `{after.arg}`"
-            if after.dt > after.now:
-                reason += f" until {after.dt.isoformat()}"
+                reason += f" until: <t:{unixtime}:R>"
+            if after.dt > now:
+                reason += f" until <t:{unixtime}:f>"
 
         reason += "."
 
