@@ -1218,7 +1218,6 @@ class Modmail(commands.Cog):
         """
         Get the log link for the specified log ID
         """        
-        default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
         icon_url = ctx.author.avatar.url
         
         logs = await self.bot.api.find_log_entry(key)
