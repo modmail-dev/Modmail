@@ -464,7 +464,13 @@ class Modmail(commands.Cog):
     @commands.command(usage="[after] [close message]")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def close(self, ctx, option: Optional[Literal["silent", "silently", "cancel"]]='', *, after: UserFriendlyTime = None):
+    async def close(
+        self,
+        ctx,
+        option: Optional[Literal["silent", "silently", "cancel"]] = "",
+        *,
+        after: UserFriendlyTime = None,
+    ):
         """
         Close the current thread.
 

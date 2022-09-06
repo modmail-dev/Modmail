@@ -82,7 +82,7 @@ class ShortTime:
         self.dt = now + relativedelta(**data)
 
     @classmethod
-    async def convert(cls, ctx:  Context, argument: str) -> Self:
+    async def convert(cls, ctx: Context, argument: str) -> Self:
         return cls(argument, now=ctx.message.created_at)
 
 
@@ -154,7 +154,7 @@ class FriendlyTimeResult:
 
     __slots__ = ("dt", "arg", "now")
 
-    def __init__(self, dt: datetime.datetime, now: datetime.datetime=None):
+    def __init__(self, dt: datetime.datetime, now: datetime.datetime = None):
         self.dt = dt
         self.now = now
 
