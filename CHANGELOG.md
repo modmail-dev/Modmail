@@ -35,6 +35,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Use discord relative timedeltas. ([GH #3046](https://github.com/kyb3r/modmail/issues/3046))
 - Use discord native buttons for all paginator sessions.
 - `?help` and `?blocked` paginator sessions now have better multi-page UI.
+- Autoupdate now automatically updates pipenv dependencies if possible.
 
 ### Fixed
 

@@ -1674,17 +1674,28 @@ class ModmailBot(commands.Bot):
                     return
 
                 elif res != "Already up to date.":
+                    if os.getenv("PIPENV_ACTIVE"):
+                        # Update pipenv if possible
+                        await asyncio.create_subprocess_shell(
+                            "pipenv sync",
+                            stderr=PIPE,
+                            stdout=PIPE,
+                        )
+                        message = ""
+                    else:
+                        message = "\n\nDo manually update dependencies if your bot has crashed."
+
                     logger.info("Bot has been updated.")
                     channel = self.update_channel
                     if self.hosting_method in (HostingMethod.PM2, HostingMethod.SYSTEMD):
                         embed = discord.Embed(title="Bot has been updated", color=self.main_color)
-                        embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version}")
+                        embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version} {message}")
                         if self.config["update_notifications"]:
                             await channel.send(embed=embed)
                     else:
                         embed = discord.Embed(
                             title="Bot has been updated and is logging out.",
-                            description="If you do not have an auto-restart setup, please manually start the bot.",
+                            description=f"If you do not have an auto-restart setup, please manually start the bot. {message}",
                             color=self.main_color,
                         )
                         embed.set_footer(text=f"Updating Modmail v{self.version} -> v{latest.version}")
