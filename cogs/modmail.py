@@ -1211,15 +1211,15 @@ class Modmail(commands.Cog):
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
-        
+
     @logs.command(name="id")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def logs_id(self, ctx, key: str):
         """
         Get the log link for the specified log ID
-        """        
+        """
         icon_url = ctx.author.avatar.url
-        
+
         logs = await self.bot.api.find_log_entry(key)
 
         if not any(not log["open"] for log in logs):
