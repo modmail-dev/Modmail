@@ -1689,7 +1689,9 @@ class ModmailBot(commands.Bot):
                     channel = self.update_channel
                     if self.hosting_method in (HostingMethod.PM2, HostingMethod.SYSTEMD):
                         embed = discord.Embed(title="Bot has been updated", color=self.main_color)
-                        embed.set_footer(text=f"Updating Modmail v{self.version} " f"-> v{latest.version} {message}")
+                        embed.set_footer(
+                            text=f"Updating Modmail v{self.version} " f"-> v{latest.version} {message}"
+                        )
                         if self.config["update_notifications"]:
                             await channel.send(embed=embed)
                     else:
