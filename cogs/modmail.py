@@ -1500,7 +1500,9 @@ class Modmail(commands.Cog):
     async def contact(
         self,
         ctx,
-        users: commands.Greedy[Union[Literal["silent", "silently"], discord.Member, discord.User, discord.Role]],
+        users: commands.Greedy[
+            Union[Literal["silent", "silently"], discord.Member, discord.User, discord.Role]
+        ],
         *,
         category: SimilarCategoryConverter = None,
         manual_trigger=True,
