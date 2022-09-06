@@ -38,7 +38,7 @@ class ShortTime:
             raise BadArgument("Invalid time provided.")
 
         data = {k: int(v) for k, v in match.groupdict(default="0").items()}
-        now = discord.utils.utcnow()
+        now = now or datetime.datetime.now(datetime.timezone.utc)
         self.dt = now + relativedelta(**data)
 
 
