@@ -2,6 +2,7 @@ import logging
 import re
 import sys
 import os
+from difflib import get_close_matches
 from enum import IntEnum
 from logging.handlers import RotatingFileHandler
 from string import Formatter
@@ -202,13 +203,18 @@ class SimilarCategoryConverter(commands.CategoryChannelConverter):
             return await super().convert(ctx, argument)
         except commands.ChannelNotFound:
 
-            def check(c):
-                return isinstance(c, discord.CategoryChannel) and c.name.lower().startswith(argument.lower())
-
             if guild:
-                result = discord.utils.find(check, guild.categories)
+                categories = {c.name.casefold(): c for c in guild.categories}
             else:
-                result = discord.utils.find(check, bot.get_all_channels())
+                categories = {
+                    c.name.casefold(): c
+                    for c in bot.get_all_channels()
+                    if isinstance(c, discord.CategoryChannel)
+                }
+
+            result = get_close_matches(argument.casefold(), categories.keys(), n=1, cutoff=0.75)
+            if result:
+                result = categories[result[0]]
 
             if not isinstance(result, discord.CategoryChannel):
                 raise commands.ChannelNotFound(argument)

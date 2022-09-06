@@ -1736,7 +1736,7 @@ class ModmailBot(commands.Bot):
         else:
             if self.config["use_random_channel_name"]:
                 to_hash = self.token.split(".")[-1] + str(author.id)
-                digest = hashlib.md5(to_hash.encode("utf8"))
+                digest = hashlib.md5(to_hash.encode("utf8"), usedforsecurity=False)
                 name = new_name = digest.hexdigest()[-8:]
             elif self.config["use_user_id_channel_name"]:
                 name = new_name = str(author.id)
