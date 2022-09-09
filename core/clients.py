@@ -355,7 +355,7 @@ class ApiClient:
 
     async def get_user_logs(self, user_id: Union[str, int]) -> list:
         return NotImplemented
-    
+
     async def find_log_entry(self, key: str) -> list:
         return NotImplemented
 
@@ -531,7 +531,7 @@ class MongoDBClient(ApiClient):
         logger.debug("Retrieving user %s logs.", user_id)
 
         return await self.logs.find(query, projection).to_list(None)
-    
+
     async def find_log_entry(self, key: str) -> list:
         query = {"key": key}
         projection = {"messages": {"$slice": 5}}

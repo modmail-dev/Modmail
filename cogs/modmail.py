@@ -1211,7 +1211,7 @@ class Modmail(commands.Cog):
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
-        
+
     @logs.command(name="id")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def logs_id(self, ctx, key: str):
@@ -1235,7 +1235,6 @@ class Modmail(commands.Cog):
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
-
 
     @logs.command(name="delete", aliases=["wipe"])
     @checks.has_permissions(PermissionLevel.OWNER)
