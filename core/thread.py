@@ -1163,7 +1163,7 @@ class Thread:
                 msg = await destination.send(plain_message, files=files)
             else:
                 # Plain to mods
-                embed.set_footer(text="[PLAIN] " + embed.footer.text)
+                embed.set_footer(text="[PLAIN] " + ctx.msg.id + embed.footer.text)
                 msg = await destination.send(mentions, embed=embed)
 
         else:
