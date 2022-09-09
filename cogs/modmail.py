@@ -1211,6 +1211,31 @@ class Modmail(commands.Cog):
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
+        
+    @logs.command(name="id")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def logs_id(self, ctx, key: str):
+        """
+        Get the log link for the specified log ID
+        """
+        icon_url = ctx.author.avatar.url
+
+        logs = await self.bot.api.find_log_entry(key)
+
+        if not any(not log["open"] for log in logs):
+            embed = discord.Embed(
+                color=self.bot.error_color,
+                description=f"Log entry `{key}` not found.",
+            )
+            return await ctx.send(embed=embed)
+
+        logs = reversed(log for log in logs if not log["open"])
+
+        embeds = self.format_log_embeds(logs, avatar_url=icon_url)
+
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
+
 
     @logs.command(name="delete", aliases=["wipe"])
     @checks.has_permissions(PermissionLevel.OWNER)
