@@ -70,6 +70,12 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Bump lottie to v0.6.11
 - Remove deprecated `core/decorators.py` from v3.3.0
 
+# v3.10.5
+
+### Internal
+
+- Locked plugin registry version impending v4 release.
+
 # v3.10.4
 
 ### Improved
