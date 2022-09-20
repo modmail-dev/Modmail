@@ -131,7 +131,7 @@ class Plugins(commands.Cog):
             logger.info("Plugins not loaded since ENABLE_PLUGINS=false.")
 
     async def populate_registry(self):
-        url = "https://raw.githubusercontent.com/kyb3r/modmail/master/plugins/registry.json"
+        url = "https://raw.githubusercontent.com/kyb3r/modmail/be14cca89742cd691f6b91f0d0931a074ad81e3b/plugins/registry.json"
         async with self.bot.session.get(url) as resp:
             self.registry = json.loads(await resp.text())
 
