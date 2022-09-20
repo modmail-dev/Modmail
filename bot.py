@@ -1000,7 +1000,8 @@ class ModmailBot(commands.Bot):
         # This needs to be done before checking for aliases since
         # snippets can have multiple words.
         try:
-            snippet_text = self.snippets[message.content.strip(invoked_prefix)]
+            # Use removeprefix once PY3.9+
+            snippet_text = self.snippets[message.content[len(invoked_prefix) :]]
         except KeyError:
             snippet_text = None
 
