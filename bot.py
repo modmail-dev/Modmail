@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev20"
+__version__ = "4.0.0"
 
 
 import asyncio

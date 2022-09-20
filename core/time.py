@@ -6,6 +6,7 @@ https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 from __future__ import annotations
 
 import datetime
+import discord
 from typing import TYPE_CHECKING, Any, Optional, Union
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
@@ -37,16 +38,6 @@ class plural:
         if abs(v) != 1:
             return f"{v} {plural}"
         return f"{v} {singular}"
-
-
-def format_dt(dt: datetime.datetime, style: Optional[str] = None) -> str:
-    """https://github.com/Rapptz/RoboDanny/blob/bf7d4226350dff26df4981dd53134eeb2aceeb87/cogs/utils/formats.py#L89-L95"""
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
-
-    if style is None:
-        return f"<t:{int(dt.timestamp())}>"
-    return f"<t:{int(dt.timestamp())}:{style}>"
 
 
 class ShortTime:
@@ -365,4 +356,4 @@ def human_timedelta(
 
 
 def format_relative(dt: datetime.datetime) -> str:
-    return format_dt(dt, "R")
+    return discord.utils.format_dt(dt, "R")

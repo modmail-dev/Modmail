@@ -322,10 +322,10 @@ class Thread:
 
             role_names = separator.join(roles)
 
-        created = str((time - user.created_at).days)
         user_info = []
         if self.bot.config["thread_show_account_age"]:
-            user_info.append(f" was created {days(created)}")
+            created = discord.utils.format_dt(user.created_at, "R")
+            user_info.append(f" was created {created}")
 
         embed = discord.Embed(color=color, description=user.mention, timestamp=time)
 
@@ -337,10 +337,9 @@ class Thread:
         if member is not None:
             embed.set_author(name=str(user), icon_url=member.display_avatar.url, url=log_url)
 
-            joined = str((time - member.joined_at).days)
-            # embed.add_field(name='Joined', value=joined + days(joined))
             if self.bot.config["thread_show_join_age"]:
-                user_info.append(f"joined {days(joined)}")
+                joined = discord.utils.format_dt(member.joined_at, "R")
+                user_info.append(f"joined {joined}")
 
             if member.nick:
                 embed.add_field(name="Nickname", value=member.nick, inline=True)
