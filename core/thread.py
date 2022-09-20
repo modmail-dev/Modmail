@@ -22,7 +22,6 @@ from core.models import DMDisabled, DummyMessage, getLogger
 from core.time import human_timedelta
 from core.utils import (
     is_image_url,
-    days,
     parse_channel_topic,
     match_title,
     match_user_id,

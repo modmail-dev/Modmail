@@ -47,7 +47,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import normalize_alias, parse_alias, truncate, tryint
+from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint
 
 logger = getLogger(__name__)
 
@@ -735,21 +735,13 @@ class ModmailBot(commands.Bot):
                 if str(r.id) in self.blocked_roles:
 
                     blocked_reason = self.blocked_roles.get(str(r.id)) or ""
-                    now = discord.utils.utcnow()
 
-                    # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
-                    end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
-                    if end_time is None:
-                        # backwards compat
-                        end_time = re.search(r"%([^%]+?)%", blocked_reason)
-                        if end_time is not None:
-                            logger.warning(
-                                r"Deprecated time message for role %s, block and unblock again to update.",
-                                r.name,
-                            )
+                    try:
+                        end_time, after = extract_block_timestamp(blocked_reason, author.id)
+                    except ValueError:
+                        return False
 
                     if end_time is not None:
-                        after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
                         if after <= 0:
                             # No longer blocked
                             self.blocked_roles.pop(str(r.id))
@@ -765,26 +757,19 @@ class ModmailBot(commands.Bot):
             return True
 
         blocked_reason = self.blocked_users.get(str(author.id)) or ""
-        now = discord.utils.utcnow()
 
         if blocked_reason.startswith("System Message:"):
             # Met the limits already, otherwise it would've been caught by the previous checks
             logger.debug("No longer internally blocked, user %s.", author.name)
             self.blocked_users.pop(str(author.id))
             return True
-        # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
-        end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
-        if end_time is None:
-            # backwards compat
-            end_time = re.search(r"%([^%]+?)%", blocked_reason)
-            if end_time is not None:
-                logger.warning(
-                    r"Deprecated time message for user %s, block and unblock again to update.",
-                    author.name,
-                )
+
+        try:
+            end_time, after = extract_block_timestamp(blocked_reason, author.id)
+        except ValueError:
+            return False
 
         if end_time is not None:
-            after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
             if after <= 0:
                 # No longer blocked
                 self.blocked_users.pop(str(author.id))
@@ -891,7 +876,7 @@ class ModmailBot(commands.Bot):
         if reaction != "disable":
             try:
                 await msg.add_reaction(reaction)
-            except (discord.HTTPException, discord.InvalidArgument) as e:
+            except (discord.HTTPException, discord.BadArgument) as e:
                 logger.warning("Failed to add reaction %s: %s.", reaction, e)
                 return False
         return True
@@ -1316,7 +1301,7 @@ class ModmailBot(commands.Bot):
                     for msg in linked_messages:
                         await msg.remove_reaction(reaction, self.user)
                     await message.remove_reaction(reaction, self.user)
-                except (discord.HTTPException, discord.InvalidArgument) as e:
+                except (discord.HTTPException, discord.BadArgument) as e:
                     logger.warning("Failed to remove reaction: %s", e)
 
     async def handle_react_to_contact(self, payload):

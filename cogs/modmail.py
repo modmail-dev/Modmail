@@ -1654,46 +1654,10 @@ class Modmail(commands.Cog):
         blocked_users = list(self.bot.blocked_users.items())
         for id_, reason in blocked_users:
             # parse "reason" and check if block is expired
-            # etc "blah blah blah... until <t:XX:f>."
-            end_time = re.search(r"until <t:(\d+):(?:R|f)>.$", reason)
-            attempts = [
-                # backwards compat
-                re.search(r"until ([^`]+?)\.$", reason),
-                re.search(r"%([^%]+?)%", reason),
-            ]
-            if end_time is None:
-                for i in attempts:
-                    if i is not None:
-                        end_time = i
-                        break
-
-                if end_time is not None:
-                    # found a deprecated version
-                    try:
-                        after = (
-                            datetime.fromisoformat(end_time.group(1)).replace(tzinfo=timezone.utc) - now
-                        ).total_seconds()
-                    except ValueError:
-                        logger.warning(
-                            r"Broken block message for user %s, block and unblock again with a different message to prevent further issues",
-                            id_,
-                        )
-                        continue
-                    logger.warning(
-                        r"Deprecated time message for user %s, block and unblock again to update.",
-                        id_,
-                    )
-            else:
-                try:
-                    after = (
-                        datetime.fromtimestamp(int(end_time.group(1))).replace(tzinfo=timezone.utc) - now
-                    ).total_seconds()
-                except ValueError:
-                    logger.warning(
-                        r"Broken block message for user %s, block and unblock again with a different message to prevent further issues",
-                        id_,
-                    )
-                    continue
+            try:
+                end_time, after = extract_block_timestamp(reason, id_)
+            except ValueError:
+                continue
 
             if end_time is not None:
                 if after <= 0:
@@ -1713,15 +1677,10 @@ class Modmail(commands.Cog):
         for id_, reason in blocked_roles:
             # parse "reason" and check if block is expired
             # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
-            end_time = re.search(r"until ([^`]+?)\.$", reason)
-            if end_time is None:
-                # backwards compat
-                end_time = re.search(r"%([^%]+?)%", reason)
-                if end_time is not None:
-                    logger.warning(
-                        r"Deprecated time message for role %s, block and unblock again to update.",
-                        id_,
-                    )
+            try:
+                end_time, after = extract_block_timestamp(reason, id_)
+            except ValueError:
+                continue
 
             if end_time is not None:
                 after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()

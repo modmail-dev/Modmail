@@ -2,6 +2,7 @@ import base64
 import functools
 import re
 import typing
+from datetime import datetime, timezone
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
 from itertools import takewhile, zip_longest
@@ -9,6 +10,9 @@ from urllib import parse
 
 import discord
 from discord.ext import commands
+
+from core.models import getLogger
+
 
 __all__ = [
     "strtobool",
@@ -34,7 +38,11 @@ __all__ = [
     "tryint",
     "get_top_role",
     "get_joint_id",
+    "extract_block_timestamp",
 ]
+
+
+logger = getLogger(__name__)
 
 
 def strtobool(val):
@@ -504,3 +512,50 @@ def get_joint_id(message: discord.Message) -> typing.Optional[int]:
         except ValueError:
             pass
     return None
+
+
+def extract_block_timestamp(reason, id_):
+    # etc "blah blah blah... until <t:XX:f>."
+    now = discord.utils.utcnow()
+    end_time = re.search(r"until <t:(\d+):(?:R|f)>.$", reason)
+    attempts = [
+        # backwards compat
+        re.search(r"until ([^`]+?)\.$", reason),
+        re.search(r"%([^%]+?)%", reason),
+    ]
+    after = None
+    if end_time is None:
+        for i in attempts:
+            if i is not None:
+                end_time = i
+                break
+
+        if end_time is not None:
+            # found a deprecated version
+            try:
+                after = (
+                    datetime.fromisoformat(end_time.group(1)).replace(tzinfo=timezone.utc) - now
+                ).total_seconds()
+            except ValueError:
+                logger.warning(
+                    r"Broken block message for user %s, block and unblock again with a different message to prevent further issues",
+                    id_,
+                )
+                raise
+            logger.warning(
+                r"Deprecated time message for user %s, block and unblock again to update.",
+                id_,
+            )
+    else:
+        try:
+            after = (
+                datetime.utcfromtimestamp(int(end_time.group(1))).replace(tzinfo=timezone.utc) - now
+            ).total_seconds()
+        except ValueError:
+            logger.warning(
+                r"Broken block message for user %s, block and unblock again with a different message to prevent further issues",
+                id_,
+            )
+            raise
+
+    return end_time, after

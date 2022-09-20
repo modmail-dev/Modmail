@@ -63,7 +63,7 @@ class ShortTime:
         if match is None or not match.group(0):
             match = self.discord_fmt.fullmatch(argument)
             if match is not None:
-                self.dt = datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc)
+                self.dt = datetime.datetime.utcfromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc)
                 return
             else:
                 raise commands.BadArgument("invalid time provided")
@@ -209,7 +209,7 @@ class UserFriendlyTime(commands.Converter):
             match = ShortTime.discord_fmt.match(argument)
             if match is not None:
                 result = FriendlyTimeResult(
-                    datetime.datetime.fromtimestamp(int(match.group("ts")), now, tz=datetime.timezone.utc)
+                    datetime.datetime.utcfromtimestamp(int(match.group("ts")), now, tz=datetime.timezone.utc)
                 )
                 remaining = argument[match.end() :].strip()
                 await result.ensure_constraints(ctx, self, now, remaining)
