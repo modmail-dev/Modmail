@@ -568,7 +568,7 @@ class Thread:
         seconds = timeout.total_seconds()
         # seconds = 20  # Uncomment to debug with just 20 seconds
         reset_time = discord.utils.utcnow() + timedelta(seconds=seconds)
-        human_time = human_timedelta(dt=reset_time, spec="manual")
+        human_time = discord.utils.format_dt(reset_time)
 
         if self.bot.config.get("thread_auto_close_silently"):
             return await self.close(closer=self.bot.user, silent=True, after=int(seconds), auto_close=True)

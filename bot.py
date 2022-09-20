@@ -1,4 +1,4 @@
-__version__ = "4.0.0"
+__version__ = "4.0.1"
 
 
 import asyncio
@@ -10,6 +10,7 @@ import re
 import string
 import struct
 import sys
+import platform
 import typing
 from datetime import datetime, timezone
 from subprocess import PIPE
@@ -857,10 +858,12 @@ class ModmailBot(commands.Bot):
             return
 
         try:
-            cooldown = datetime.fromisoformat(last_log_closed_at) + thread_cooldown
+            cooldown = datetime.fromisoformat(last_log_closed_at).astimezone(timezone.utc) + thread_cooldown
         except ValueError:
             logger.warning("Error with 'thread_cooldown'.", exc_info=True)
-            cooldown = datetime.fromisoformat(last_log_closed_at) + self.config.remove("thread_cooldown")
+            cooldown = datetime.fromisoformat(last_log_closed_at).astimezone(
+                timezone.utc
+            ) + self.config.remove("thread_cooldown")
 
         if cooldown > now:
             # User messaged before thread cooldown ended
@@ -1774,9 +1777,14 @@ def main():
                     "Unable to import cairosvg, install GTK Installer for Windows and restart your system (https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest)"
                 )
         else:
-            logger.error(
-                "Unable to import cairosvg, report on our support server with your OS details: https://discord.gg/etJNHCQ"
-            )
+            if "ubuntu" in platform.version().lower() or "debian" in platform.version().lower():
+                logger.error(
+                    "Unable to import cairosvg, try running `sudo apt-get install libpangocairo-1.0-0` or report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                )
+            else:
+                logger.error(
+                    "Unable to import cairosvg, report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                )
         sys.exit(0)
 
     # check discord version

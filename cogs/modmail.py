@@ -1683,7 +1683,6 @@ class Modmail(commands.Cog):
                 continue
 
             if end_time is not None:
-                after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
                 if after <= 0:
                     # No longer blocked
                     self.bot.blocked_roles.pop(str(id_))

@@ -810,7 +810,7 @@ class Utility(commands.Cog):
 
         if key in keys:
             try:
-                self.bot.config.set(key, value)
+                await self.bot.config.set(key, value)
                 await self.bot.config.update()
                 embed = discord.Embed(
                     title="Success",

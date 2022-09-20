@@ -192,10 +192,11 @@ class UserFriendlyTime(commands.Converter):
         self.converter: commands.Converter = converter  # type: ignore  # It doesn't understand this narrowing
         self.default: Any = default
 
-    async def convert(self, ctx: Context, argument: str) -> FriendlyTimeResult:
+    async def convert(self, ctx: Context, argument: str, *, now=None) -> FriendlyTimeResult:
         calendar = HumanTime.calendar
         regex = ShortTime.compiled
-        now = ctx.message.created_at
+        if now is None:
+            now = ctx.message.created_at
 
         match = regex.match(argument)
         if match is not None and match.group(0):

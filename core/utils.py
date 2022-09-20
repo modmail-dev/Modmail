@@ -469,7 +469,7 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
 
             if not fallback:
                 fallback = await category.clone(name="Fallback Modmail")
-                bot.config.set("fallback_category_id", str(fallback.id))
+                await bot.config.set("fallback_category_id", str(fallback.id))
                 await bot.config.update()
 
             return await create_thread_channel(
