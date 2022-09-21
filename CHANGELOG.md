@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v4.0.2
+
+### Fixed
+- `?alias make/create` as aliases to `?alias add`. This improves continuity between the bot and its command structure.
+
 # v4.0.1
 
 This is a hotfix release.
