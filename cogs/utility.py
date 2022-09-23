@@ -1514,6 +1514,7 @@ class Utility(commands.Cog):
                         description=f"The referenced {type_} does not exist: `{name}`.",
                     )
                     return await ctx.send(embed=embed)
+                update = False
                 for command in set(group.walk_commands()):
                     name = command.qualified_name
                     level = self.bot.config["override_command_level"].get(name)
@@ -1522,7 +1523,10 @@ class Utility(commands.Cog):
                     else:
                         logger.info("Restored command permission level for `%s`.", name)
                         self.bot.config["override_command_level"].pop(name)
-                        await self.bot.config.update()
+                        update = True
+
+                if update:
+                    await self.bot.config.update()
                 name = group.qualified_name
                 embed = discord.Embed(
                     title="Success",
