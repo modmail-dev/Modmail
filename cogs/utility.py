@@ -1340,6 +1340,7 @@ class Utility(commands.Cog):
             final = command.qualified_name
 
         if type_ == "group":
+            update = False
             for command in set(group.walk_commands()):
                 logger.info(
                     "Updated command permission level for `%s` to `%s`.",
@@ -1347,6 +1348,9 @@ class Utility(commands.Cog):
                     level.name,
                 )
                 self.bot.config["override_command_level"][command.qualified_name] = level.name
+                update = True
+
+            if update:
                 await self.bot.config.update()
 
             final = group.qualified_name
