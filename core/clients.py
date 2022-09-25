@@ -752,7 +752,7 @@ class MongoDBClient(ApiClient):
             }
 
     async def get_guild_icon(self):
-        if self.bot.guild.icon.url is None:
+        if self.bot.guild.icon is None:
             return self.bot.user.display_avatar.url
         return self.bot.guild.icon.url
 
