@@ -228,7 +228,7 @@ class Thread:
             else:
                 footer = self.bot.config["thread_creation_footer"]
 
-            embed.set_footer(text=footer, icon_url=self.bot.api.get_guild_icon())
+            embed.set_footer(text=footer, icon_url=await self.bot.api.get_guild_icon())
             embed.title = self.bot.config["thread_creation_title"]
 
             if creator is None or creator == recipient:
@@ -521,7 +521,7 @@ class Thread:
 
         embed.description = message
         footer = self.bot.config["thread_close_footer"]
-        embed.set_footer(text=footer, icon_url=self.bot.api.get_guild_icon())
+        embed.set_footer(text=footer, icon_url=await self.bot.api.get_guild_icon())
 
         if not silent:
             for user in self.recipients:
@@ -957,7 +957,7 @@ class Thread:
                     name = tag
                 avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
-                    avatar_url = self.bot.api.get_guild_icon()
+                    avatar_url = await self.bot.api.get_guild_icon()
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,

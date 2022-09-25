@@ -160,7 +160,7 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color, description="You dont have any snippets at the moment."
             )
             embed.set_footer(text=f'Check "{self.bot.prefix}help snippet add" to add a snippet.')
-            embed.set_author(name="Snippets", icon_url=self.bot.api.get_guild_icon())
+            embed.set_author(name="Snippets", icon_url=await self.bot.api.get_guild_icon())
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -168,7 +168,7 @@ class Modmail(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)):
             description = format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Snippets", icon_url=self.bot.api.get_guild_icon())
+            embed.set_author(name="Snippets", icon_url=await self.bot.api.get_guild_icon())
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -1031,7 +1031,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.api.get_guild_icon()
+                avatar_url = await self.bot.api.get_guild_icon()
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -1120,7 +1120,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.api.get_guild_icon()
+                avatar_url = await self.bot.api.get_guild_icon()
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -1200,7 +1200,7 @@ class Modmail(commands.Cog):
         user = user if user is not None else ctx.author
 
         entries = await self.bot.api.search_closed_by(user.id)
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.api.get_guild_icon())
+        embeds = self.format_log_embeds(entries, avatar_url=await self.bot.api.get_guild_icon())
 
         if not embeds:
             embed = discord.Embed(
@@ -1250,7 +1250,7 @@ class Modmail(commands.Cog):
 
         entries = await self.bot.api.get_responded_logs(user.id)
 
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.api.get_guild_icon())
+        embeds = self.format_log_embeds(entries, avatar_url=await self.bot.api.get_guild_icon())
 
         if not embeds:
             embed = discord.Embed(
@@ -1275,7 +1275,7 @@ class Modmail(commands.Cog):
 
         entries = await self.bot.api.search_by_text(query, limit)
 
-        embeds = self.format_log_embeds(entries, avatar_url=self.bot.api.get_guild_icon())
+        embeds = self.format_log_embeds(entries, avatar_url=await self.bot.api.get_guild_icon())
 
         if not embeds:
             embed = discord.Embed(
