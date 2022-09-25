@@ -914,7 +914,8 @@ class ModmailBot(commands.Bot):
                     description=self.config["disabled_new_thread_response"],
                 )
                 embed.set_footer(
-                    text=self.config["disabled_new_thread_footer"], icon_url=await self.bot.api.get_guild_icon()
+                    text=self.config["disabled_new_thread_footer"],
+                    icon_url=await self.bot.api.get_guild_icon(),
                 )
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)

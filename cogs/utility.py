@@ -1611,7 +1611,9 @@ class Utility(commands.Cog):
                                 for name, level in takewhile(lambda x: x is not None, items)
                             )
                             embed = discord.Embed(color=self.bot.main_color, description=description)
-                            embed.set_author(name="Permission Overrides", icon_url=await self.bot.api.get_guild_icon())
+                            embed.set_author(
+                                name="Permission Overrides", icon_url=await self.bot.api.get_guild_icon()
+                            )
                             embeds.append(embed)
 
                     session = EmbedPaginatorSession(ctx, *embeds)
