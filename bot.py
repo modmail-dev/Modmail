@@ -913,7 +913,9 @@ class ModmailBot(commands.Bot):
                     color=self.error_color,
                     description=self.config["disabled_new_thread_response"],
                 )
-                embed.set_footer(text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon.url)
+                embed.set_footer(
+                    text=self.config["disabled_new_thread_footer"], icon_url=self.get_guild_icon()
+                )
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
@@ -928,7 +930,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_current_thread_footer"],
-                    icon_url=self.guild.icon.url,
+                    icon_url=self.get_guild_icon(),
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -1335,7 +1337,7 @@ class ModmailBot(commands.Bot):
             )
             embed.set_footer(
                 text=self.config["disabled_new_thread_footer"],
-                icon_url=self.guild.icon.url,
+                icon_url=self.get_guild_icon(),
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",

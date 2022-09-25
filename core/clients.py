@@ -751,6 +751,11 @@ class MongoDBClient(ApiClient):
                 }
             }
 
+    async def get_guild_icon(self):
+        if self.bot.guild.icon.url is None:
+            return self.bot.user.display_avatar.url
+        return self.bot.guild.icon.url
+
 
 class PluginDatabaseClient:
     def __init__(self, bot):
