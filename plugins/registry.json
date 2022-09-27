@@ -15,7 +15,7 @@
         "bot_version": "4.0.0",
         "title": "Giveaway",
         "icon_url": "https://github.com/Jerrie-Aries.png",
-        "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/giveaway/icon.jpg"
+        "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/.static/giveaway.jpg"
     },
     "suggest": {
         "repository": "realcyguy/modmail-plugins",
