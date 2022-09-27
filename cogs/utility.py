@@ -30,7 +30,7 @@ from core.models import (
     UnseenFormatter,
     getLogger,
 )
-from core.utils import trigger_typing, truncate
+from core.utils import trigger_typing, truncate, get_guild_icon
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 
 
@@ -1020,7 +1020,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color, description="You dont have any aliases at the moment."
             )
             embed.set_footer(text=f'Do "{self.bot.prefix}help alias" for more commands.')
-            embed.set_author(name="Aliases", icon_url=ctx.guild.icon.url)
+            embed.set_author(name="Aliases", icon_url=get_guild_icon(ctx.guild))
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -1028,7 +1028,7 @@ class Utility(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
             description = utils.format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon.url)
+            embed.set_author(name="Command Aliases", icon_url=get_guild_icon(ctx.guild))
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -1611,7 +1611,7 @@ class Utility(commands.Cog):
                                 for name, level in takewhile(lambda x: x is not None, items)
                             )
                             embed = discord.Embed(color=self.bot.main_color, description=description)
-                            embed.set_author(name="Permission Overrides", icon_url=ctx.guild.icon.url)
+                            embed.set_author(name="Permission Overrides", icon_url=get_guild_icon(ctx.guild))
                             embeds.append(embed)
 
                     session = EmbedPaginatorSession(ctx, *embeds)

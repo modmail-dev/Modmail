@@ -39,6 +39,7 @@ __all__ = [
     "get_top_role",
     "get_joint_id",
     "extract_block_timestamp",
+    "get_guild_icon",
 ]
 
 
@@ -559,3 +560,9 @@ def extract_block_timestamp(reason, id_):
             raise
 
     return end_time, after
+
+
+def get_guild_icon(self):
+    if self.bot.guild.icon.url is None:
+        return self.bot.user.display_avatar.url
+    return self.bot.guild.icon.url
