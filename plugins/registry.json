@@ -8,6 +8,15 @@
         "icon_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png",
         "thumbnail_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png"
     },
+    "giveaway": {
+        "repository": "Jerrie-Aries/modmail-plugins",
+        "branch": "master",
+        "description": "Host giveaways on your server with this plugin.",
+        "bot_version": "4.0.0",
+        "title": "Giveaway",
+        "icon_url": "https://github.com/Jerrie-Aries.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/.static/giveaway.jpg"
+    },
     "suggest": {
         "repository": "realcyguy/modmail-plugins",
         "branch": "v4",
