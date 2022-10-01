@@ -60,14 +60,6 @@
         "icon_url": "https://i.imgur.com/Mo60CdK.png",
         "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
     },
-     "claim": {
-        "repository": "fourjr/modmail-plugins",
-        "branch": "master",
-        "description": "Allows supporters to claim thread by sending ?claim in the thread channel",
-        "title": "Claim Thread",
-        "icon_url": "https://i.imgur.com/Mo60CdK.png",
-        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
-    },
      "gen-log": {
         "repository": "fourjr/modmail-plugins",
         "branch": "master",
