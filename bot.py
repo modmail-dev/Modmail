@@ -225,7 +225,6 @@ class ModmailBot(commands.Bot):
                     except discord.PrivilegedIntentsRequired:
                         retry_intents = True
                     if retry_intents:
-                        await self.http.close()
                         if self.ws is not None and self.ws.open:
                             await self.ws.close(code=1000)
                         self._ready.clear()
@@ -236,9 +235,9 @@ class ModmailBot(commands.Bot):
                         # Try again with members intent
                         self._connection._intents = intents
                         logger.warning(
-                            "Attempting to login with only the server members and message content privileged intent. Some plugins might not work correctly."
+                            "Attempting to reconnect with only the server members and message content privileged intent. Some plugins might not work correctly."
                         )
-                        await self.start(self.token)
+                        await self.connect(reconnect=True)
                 except discord.PrivilegedIntentsRequired:
                     logger.critical(
                         "Privileged intents are not explicitly granted in the discord developers dashboard."
