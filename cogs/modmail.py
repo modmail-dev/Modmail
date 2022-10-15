@@ -749,7 +749,7 @@ class Modmail(commands.Cog):
             if entry["recipient"]["id"] != entry["creator"]["id"]:
                 embed.add_field(name="Created by", value=f"<@{entry['creator']['id']}>")
 
-            if entry["title"]:
+            if entry.get("title"):
                 embed.add_field(name="Title", value=entry["title"], inline=False)
 
             embed.add_field(name="Preview", value=format_preview(entry["messages"]), inline=False)
