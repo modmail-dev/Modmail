@@ -949,7 +949,6 @@ class Thread:
     async def send(
         self,
         message: discord.Message,
-        *,
         destination: typing.Union[
             discord.TextChannel, discord.DMChannel, discord.User, discord.Member
         ] = None,
