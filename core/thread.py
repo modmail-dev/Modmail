@@ -646,25 +646,23 @@ class Thread:
                 raise ValueError("Thread message not found.")
 
         messages = [message1]
-        plain = False
         # check plain
-        fields = message1.embeds[0].fields
-        if fields:
-            for field in fields:
-                if field.name == plain_field_name:
-                    plain = True
-                    break
+        plain_field = None
+        for field in message1.embeds[0].fields:
+            if field.name == plain_field_name:
+                plain_field = field
+                break
 
-        if plain:
-            url_re = re.compile(r"^\[Linked\sIDs\]\((?P<url>.+)\)")
-            match = url_re.match(field.value)
+        if plain_field is not None:
+            url_re = re.compile(r"^\[(?:[a-zA-Z]|[0-9]|[$-_@.&+\s]|[!*(),])+\]\((?P<url>.+)\)")
+            match = url_re.match(plain_field.value)
+            if match is None:
+                raise ValueError("Malformed thread message.")
             url = match.groupdict()["url"]
-            linked_ids = [elem for elem in url.split("=")[-1].split("-")]
+            linked_ids = [int(elem) for elem in url.split("=")[-1].split("-")]
             for user in self.recipients:
                 async for msg in user.history():
-                    if str(msg.id) in linked_ids:
-                        # if either_direction:
-                        #     pass
+                    if msg.id in linked_ids:
                         messages.append(msg)
                         break
         else:
@@ -704,6 +702,7 @@ class Thread:
 
         embed1 = message1.embeds[0]
         embed1.description = content
+        plain = any((field.name == plain_field_name for field in embed1.fields))
 
         tasks = [self.bot.api.edit_message(message1.id, content), message1.edit(embed=embed1)]
         if message1.embeds[0].author.name.startswith("Persistent Note"):
@@ -712,7 +711,7 @@ class Thread:
             for m2 in message2:
                 if m2 is None:
                     continue
-                if m2.embeds:
+                if m2.embeds and not plain:
                     embed2 = m2.embeds[0]
                     embed2.description = content
                     tasks += [m2.edit(embed=embed2)]
