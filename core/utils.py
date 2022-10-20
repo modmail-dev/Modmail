@@ -35,6 +35,7 @@ __all__ = [
     "normalize_alias",
     "format_description",
     "trigger_typing",
+    "escape_bold",
     "escape_code_block",
     "tryint",
     "get_top_role",
@@ -423,6 +424,10 @@ def trigger_typing(func):
 
 def escape_code_block(text):
     return re.sub(r"```", "`\u200b``", text)
+
+
+def escape_bold(text: str) -> str:
+    return re.sub(r"\*\*", "*\u200b*", text)
 
 
 def tryint(x):

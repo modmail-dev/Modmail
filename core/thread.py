@@ -28,6 +28,7 @@ from core.utils import (
     truncate,
     get_top_role,
     create_thread_channel,
+    escape_bold,
     get_joint_ids,
 )
 
@@ -682,18 +683,23 @@ class Thread:
                     tasks += [m2.edit(embed=embed2)]
                 else:
                     # plain
-                    mod_tag = self.bot.config["mod_tag"]
-                    if mod_tag is None:
-                        role = get_top_role(author, self.bot.config["use_hoisted_top_role"])
-                        mod_tag = str(role)
-
-                    if url.query.get("anonymous") is not None:
-                        anon_name = self.bot.config["anon_username"]
-                        if anon_name is None:
-                            anon_name = mod_tag
-                        plain_message = f"**({self.bot.config['anon_tag']}) {anon_name}:** "
+                    tag_re = re.compile(r"^\*\*(?P<tag>.+):\*\*")
+                    match = tag_re.match(m2.content)
+                    if match is not None:
+                        tag = match.groupdict().get("tag")
+                        plain_message = f"**{tag}:** "
                     else:
-                        plain_message = f"**({mod_tag}) {str(author)}:** "
+                        tag = self.bot.config["mod_tag"]
+                        if tag is None:
+                            tag = str(get_top_role(author, self.bot.config["use_hoisted_top_role"]))
+
+                        if url.query.get("anonymous") is not None:
+                            anon_name = self.bot.config["anon_username"]
+                            if anon_name is None:
+                                anon_name = tag
+                            plain_message = f"**({self.bot.config['anon_tag']}) {anon_name}:** "
+                        else:
+                            plain_message = f"**({tag}) {str(author)}:** "
 
                     # actual content
                     plain_message += f"{content}"
@@ -726,14 +732,21 @@ class Thread:
     async def find_linked_message_from_dm(
         self, message: discord.Message, either_direction: bool = False, get_thread_channel: bool = False
     ) -> typing.List[discord.Message]:
-
         joint_id = None
-        try:
-            joint_id = get_joint_ids(message)[0]
-        except IndexError:
-            # we'll reassign this variable from thread message
-            # we fetch in the next step
-            pass
+        if message.author == self.bot.user and message.embeds and either_direction:
+            # reaction on bot's message
+            try:
+                joint_id = get_joint_ids(message)[0]
+            except IndexError:
+                # we'll reassign the `joint_id` variable from thread message
+                # we fetch in the next step
+                pass
+            # check if the message is a valid thread message
+            if not joint_id:
+                raise ValueError("Not a thread message.")
+            url = yarl.URL(message.embeds[0].author.url)
+            if url.query.get("type", "") != "thread_message":
+                raise ValueError("Not a thread message.")
 
         linked_messages = []
         if self.channel is not None:
@@ -745,12 +758,27 @@ class Thread:
                 if not joint_ids:
                     continue
 
-                if message.id in joint_ids:
-                    linked_messages.append(msg)
-                    joint_id = joint_ids[0]
-                    break
+                url = yarl.URL(msg.embeds[0].author.url)
+                if url.query.get("type", "") != "thread_message":
+                    continue
+
                 if joint_id is not None and joint_id in joint_ids:
                     linked_messages.append(msg)
+                    if joint_id == joint_ids[0] and either_direction and url.query.get("from", "") == "mod":
+                        # reaction on mod's message
+                        # just return it to transfer the reaction
+                        return linked_messages
+                    # here, probably reaction on other's message
+                    break
+
+                if message.id in joint_ids:
+                    linked_messages.append(msg)
+                    if either_direction:
+                        # recipient reacted on their own message
+                        # just return the thread channel's message to transfer reaction
+                        return linked_messages
+                    joint_id = joint_ids[0]
+                    # user editing their message
                     break
             else:
                 raise ValueError("Thread channel message not found.")
@@ -769,6 +797,8 @@ class Thread:
             async for other_msg in user.history():
                 if other_msg.id == joint_id:
                     if either_direction:
+                        # reaction on other recipient's message
+                        # just return it to transfer the reaction
                         return [other_msg]
                     linked_messages.append(other_msg)
                     break
@@ -1175,10 +1205,10 @@ class Thread:
             if from_mod and not isinstance(destination, discord.TextChannel):
                 # Plain to user
                 if embed.footer.text:
-                    plain_message = f"**({embed.footer.text}) "
+                    plain_message = f"**({escape_bold(embed.footer.text)}) "
                 else:
                     plain_message = "**"
-                plain_message += f"{embed.author.name}:** {embed.description}"
+                plain_message += f"{escape_bold(embed.author.name)}:** {embed.description}"
                 files = []
                 for i in message.attachments:
                     files.append(await i.to_file())

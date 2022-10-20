@@ -1281,6 +1281,9 @@ class ModmailBot(commands.Bot):
             try:
                 linked_messages = await thread.find_linked_message_from_dm(message, either_direction=True)
             except ValueError as e:
+                if str(e) == "Not a thread message.":
+                    # not a thread message, return silently
+                    return
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
         else:
