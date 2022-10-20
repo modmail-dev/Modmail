@@ -1478,12 +1478,12 @@ class Modmail(commands.Cog):
         thread = ctx.thread
 
         try:
-            await thread.edit_message(message_id, message)
+            await thread.edit_message(ctx.author, message_id, message)
         except ValueError:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
-                    description="Cannot find a message to edit. Plain messages are not supported.",
+                    description="Cannot find a message to edit.",
                     color=self.bot.error_color,
                 )
             )
@@ -1972,7 +1972,7 @@ class Modmail(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Failed",
-                    description="Cannot find a message to delete. Plain messages are not supported.",
+                    description="Cannot find a message to delete.",
                     color=self.bot.error_color,
                 )
             )

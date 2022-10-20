@@ -7,11 +7,11 @@ import re
 import time
 import traceback
 import typing
-import warnings
 from datetime import timedelta
 from types import SimpleNamespace
 
 import isodate
+import yarl
 
 import discord
 from discord.ext.commands import MissingRequiredArgument, CommandError
@@ -28,7 +28,7 @@ from core.utils import (
     truncate,
     get_top_role,
     create_thread_channel,
-    get_joint_id,
+    get_joint_ids,
 )
 
 logger = getLogger(__name__)
@@ -606,70 +606,58 @@ class Thread:
             except discord.NotFound:
                 raise ValueError("Thread message not found.")
 
-            if not (
-                message1.embeds
-                and message1.embeds[0].author.url
-                and message1.embeds[0].color
-                and message1.author == self.bot.user
-            ):
+            if not (message1.embeds and message1.embeds[0].author.url and message1.author == self.bot.user):
                 raise ValueError("Thread message not found.")
 
-            if message1.embeds[0].color.value == self.bot.main_color and (
-                message1.embeds[0].author.name.startswith("Note")
-                or message1.embeds[0].author.name.startswith("Persistent Note")
-            ):
+            url = yarl.URL(message1.embeds[0].author.url)
+            msg_type = url.query.get("type", "")
+            if msg_type in ("note", "persistent_note"):
                 if not note:
                     raise ValueError("Thread message not found.")
                 return message1, None
-
-            if message1.embeds[0].color.value != self.bot.mod_color and not (
-                either_direction and message1.embeds[0].color.value == self.bot.recipient_color
-            ):
+            msg_from = url.query.get("from", "")
+            if msg_type != "thread_message" or msg_from != "mod":
                 raise ValueError("Thread message not found.")
         else:
             async for message1 in self.channel.history():
-                if (
-                    message1.embeds
-                    and message1.embeds[0].author.url
-                    and message1.embeds[0].color
-                    and (
-                        message1.embeds[0].color.value == self.bot.mod_color
-                        or (either_direction and message1.embeds[0].color.value == self.bot.recipient_color)
-                    )
-                    and message1.embeds[0].author.url.split("#")[-1].isdigit()
-                    and message1.author == self.bot.user
-                ):
+                if message1.author != self.bot.user or not message1.embeds:
+                    continue
+                embed = message1.embeds[0]
+                if not embed.author.url:
+                    continue
+                url = yarl.URL(embed.author.url)
+                msg_type = url.query.get("type", "")
+                if msg_type != "thread_message":
+                    continue
+                msg_from = url.query.get("from", "")
+                if msg_from == "mod" or (either_direction and msg_from == "recipient"):
                     break
             else:
                 raise ValueError("Thread message not found.")
 
-        try:
-            joint_id = int(message1.embeds[0].author.url.split("#")[-1])
-        except ValueError:
+        joint_ids = get_joint_ids(message1)
+        if not joint_ids:
             raise ValueError("Malformed thread message.")
 
         messages = [message1]
         for user in self.recipients:
             async for msg in user.history():
                 if either_direction:
-                    if msg.id == joint_id:
+                    if msg.id == joint_ids[0]:
                         return message1, msg
 
-                if not (msg.embeds and msg.embeds[0].author.url):
-                    continue
-                try:
-                    if int(msg.embeds[0].author.url.split("#")[-1]) == joint_id:
-                        messages.append(msg)
-                        break
-                except ValueError:
-                    continue
+                if msg.id in joint_ids:
+                    messages.append(msg)
+                    break
 
         if len(messages) > 1:
             return messages
 
         raise ValueError("DM message not found.")
 
-    async def edit_message(self, message_id: typing.Optional[int], message: str) -> None:
+    async def edit_message(
+        self, author: discord.Member, message_id: typing.Optional[int], content: str
+    ) -> None:
         try:
             message1, *message2 = await self.find_linked_messages(message_id)
         except ValueError:
@@ -677,17 +665,39 @@ class Thread:
             raise
 
         embed1 = message1.embeds[0]
-        embed1.description = message
+        embed1.description = content
+        url = yarl.URL(embed1.author.url)
+        plain = url.query.get("plain") is not None
 
-        tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
+        tasks = [self.bot.api.edit_message(message1.id, content), message1.edit(embed=embed1)]
         if message1.embeds[0].author.name.startswith("Persistent Note"):
-            tasks += [self.bot.api.edit_note(message1.id, message)]
+            tasks += [self.bot.api.edit_note(message1.id, content)]
         else:
             for m2 in message2:
-                if m2 is not None:
+                if m2 is None:
+                    continue
+                if m2.embeds and not plain:
                     embed2 = m2.embeds[0]
-                    embed2.description = message
+                    embed2.description = content
                     tasks += [m2.edit(embed=embed2)]
+                else:
+                    # plain
+                    mod_tag = self.bot.config["mod_tag"]
+                    if mod_tag is None:
+                        role = get_top_role(author, self.bot.config["use_hoisted_top_role"])
+                        mod_tag = str(role)
+
+                    if url.query.get("anonymous") is not None:
+                        anon_name = self.bot.config["anon_username"]
+                        if anon_name is None:
+                            anon_name = mod_tag
+                        plain_message = f"**({self.bot.config['anon_tag']}) {anon_name}:** "
+                    else:
+                        plain_message = f"**({mod_tag}) {str(author)}:** "
+
+                    # actual content
+                    plain_message += f"{content}"
+                    tasks += [m2.edit(content=plain_message)]
 
         await asyncio.gather(*tasks)
 
@@ -714,14 +724,16 @@ class Thread:
             await asyncio.gather(*tasks)
 
     async def find_linked_message_from_dm(
-        self, message, either_direction=False, get_thread_channel=False
+        self, message: discord.Message, either_direction: bool = False, get_thread_channel: bool = False
     ) -> typing.List[discord.Message]:
 
         joint_id = None
-        if either_direction:
-            joint_id = get_joint_id(message)
-            # could be None too, if that's the case we'll reassign this variable from
-            # thread message we fetch in the next step
+        try:
+            joint_id = get_joint_ids(message)[0]
+        except IndexError:
+            # we'll reassign this variable from thread message
+            # we fetch in the next step
+            pass
 
         linked_messages = []
         if self.channel is not None:
@@ -729,15 +741,15 @@ class Thread:
                 if not msg.embeds:
                     continue
 
-                msg_joint_id = get_joint_id(msg)
-                if msg_joint_id is None:
+                joint_ids = get_joint_ids(msg)
+                if not joint_ids:
                     continue
 
-                if msg_joint_id == message.id:
+                if message.id in joint_ids:
                     linked_messages.append(msg)
+                    joint_id = joint_ids[0]
                     break
-
-                if joint_id is not None and msg_joint_id == joint_id:
+                if joint_id is not None and joint_id in joint_ids:
                     linked_messages.append(msg)
                     break
             else:
@@ -749,27 +761,23 @@ class Thread:
             # end early as we only want the main message from thread channel
             return linked_messages
 
-        if joint_id is None:
-            joint_id = get_joint_id(linked_messages[0])
-            if joint_id is None:
-                # still None, supress this and return the thread message
-                logger.error("Malformed thread message.")
-                return linked_messages
-
         for user in self.recipients:
+            if not user.dm_channel:
+                await user.create_dm()
             if user.dm_channel == message.channel:
                 continue
             async for other_msg in user.history():
-                if either_direction:
-                    if other_msg.id == joint_id:
-                        linked_messages.append(other_msg)
-                        break
+                if other_msg.id == joint_id:
+                    if either_direction:
+                        return [other_msg]
+                    linked_messages.append(other_msg)
+                    break
 
-                if not other_msg.embeds:
+                try:
+                    other_joint_id = get_joint_ids(other_msg)[0]
+                except IndexError:
                     continue
-
-                other_joint_id = get_joint_id(other_msg)
-                if other_joint_id is not None and other_joint_id == joint_id:
+                if other_joint_id == joint_id:
                     linked_messages.append(other_msg)
                     break
             else:
@@ -868,7 +876,12 @@ class Thread:
         else:
             # Send the same thing in the thread channel.
             msg = await self.send(
-                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain
+                message,
+                destination=self.channel,
+                from_mod=True,
+                anonymous=anonymous,
+                plain=plain,
+                linked_messages=user_msg,
             )
 
             tasks.append(
@@ -908,6 +921,7 @@ class Thread:
         plain: bool = False,
         persistent_note: bool = False,
         thread_creation: bool = False,
+        linked_messages: typing.Optional[typing.List[discord.Message]] = None,
     ) -> None:
 
         if not note and from_mod:
@@ -946,7 +960,9 @@ class Thread:
 
         system_avatar_url = "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
 
+        fragments = str(message.id)
         if not note:
+            # resolve author name and tag
             if anonymous and from_mod and not isinstance(destination, discord.TextChannel):
                 # Anonymously sending to the user.
                 tag = self.bot.config["mod_tag"]
@@ -958,26 +974,38 @@ class Thread:
                 avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
                     avatar_url = self.bot.guild.icon.url
-                embed.set_author(
-                    name=name,
-                    icon_url=avatar_url,
-                    url=f"https://discordapp.com/channels/{self.bot.guild.id}#{message.id}",
-                )
             else:
                 # Normal message
                 name = str(author)
                 avatar_url = avatar_url
-                embed.set_author(
-                    name=name,
-                    icon_url=avatar_url,
-                    url=f"https://discordapp.com/users/{author.id}#{message.id}",
-                )
+
+            # resolve author url (internally for linking messages)
+            queries = {"type": "thread_message"}
+            if isinstance(destination, discord.TextChannel):
+                url = yarl.URL(f"https://discordapp.com/users/{author.id}")
+                if anonymous:
+                    queries["anonymous"] = "true"
+                if isinstance(message.channel, discord.TextChannel):
+                    queries["from"] = "mod"
+                    if plain:
+                        queries["plain"] = "true"
+                else:
+                    queries["from"] = "recipient"
+                if linked_messages:
+                    fragments += "-" + "-".join(str(m.id) for m in linked_messages if m.id != message.id)
+            else:
+                url = yarl.URL(f"https://discordapp.com/channels/{self.bot.guild.id}")
+
+            url = url.update_query(**queries).with_fragment(fragments)
+            embed.set_author(name=name, icon_url=avatar_url, url=str(url))
         else:
             # Special note messages
+            url = yarl.URL(f"https://discordapp.com/users/{author.id}").with_fragment(fragments)
+            url = url.update_query({"type": ("persistent_" if persistent_note else "") + "note"})
             embed.set_author(
                 name=f"{'Persistent' if persistent_note else ''} Note ({author.name})",
                 icon_url=system_avatar_url,
-                url=f"https://discordapp.com/users/{author.id}#{message.id}",
+                url=str(url),
             )
 
         ext = [(a.url, a.filename, False) for a in message.attachments]
@@ -1087,7 +1115,7 @@ class Thread:
                     img_embed.title = filename
                 img_embed.set_footer(text=f"Additional Image Upload ({additional_count})")
                 img_embed.timestamp = message.created_at
-                additional_images.append(destination.send(embed=img_embed))
+                additional_images.append(img_embed)
                 additional_count += 1
 
         file_upload_count = 1
@@ -1141,14 +1169,11 @@ class Thread:
         else:
             mentions = None
 
+        # sending message
+        embeds = [embed] + additional_images
         if plain:
             if from_mod and not isinstance(destination, discord.TextChannel):
                 # Plain to user
-                with warnings.catch_warnings():
-                    # Catch coroutines not awaited warning
-                    warnings.simplefilter("ignore")
-                    additional_images = []
-
                 if embed.footer.text:
                     plain_message = f"**({embed.footer.text}) "
                 else:
@@ -1161,16 +1186,11 @@ class Thread:
                 msg = await destination.send(plain_message, files=files)
             else:
                 # Plain to mods
-                embed.set_footer(text="[PLAIN] " + embed.footer.text)
-                msg = await destination.send(mentions, embed=embed)
+                embed.set_footer(text=f"[PLAIN] " + embed.footer.text)
+                msg = await destination.send(mentions, embeds=embeds)
 
         else:
-            msg = await destination.send(mentions, embed=embed)
-
-        if additional_images:
-            self.ready = False
-            await asyncio.gather(*additional_images)
-            self.ready = True
+            msg = await destination.send(mentions, embeds=embeds)
 
         return msg
 
