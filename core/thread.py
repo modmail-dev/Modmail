@@ -617,7 +617,10 @@ class Thread:
                     raise ValueError("Thread message not found.")
                 return message1, None
             msg_from = url.query.get("from", "")
-            if msg_type != "thread_message" or msg_from != "mod":
+            if msg_type != "thread_message":
+                raise ValueError("Thread message not found.")
+            if msg_from == "recipient" and not either_direction:
+                # trying to edit/delete recipient's message
                 raise ValueError("Thread message not found.")
         else:
             async for message1 in self.channel.history():
