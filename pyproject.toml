@@ -21,7 +21,7 @@ extend-exclude = '''
 
 [tool.poetry]
 name = 'Modmail'
-version = '3.10.3'
+version = '4.0.1'
 description = "Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way."
 license = 'AGPL-3.0-only'
 authors = [
