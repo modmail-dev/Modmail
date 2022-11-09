@@ -33,17 +33,6 @@ In short, when you submit code changes, your submissions are understood to be un
 ## Report bugs using [Github Issues](https://github.com/kyb3r/modmail/issues)
 We use GitHub issues to track public bugs. Report a bug by [opening a new Issue](https://github.com/kyb3r/modmail/issues/new); it's that easy!
 
-## Find pre-existing issues to tackle
-Check out our [unstaged issue tracker](https://github.com/kyb3r/modmail/issues?q=is%3Aissue+is%3Aopen+-label%3Astaged) and start helping out!
-
-Ways to help out:
-- Help out new members
-- Highlight invalid bugs/unsupported use cases
-- Code review of pull requests
-- Add on new use cases or reproduction steps
-- Point out duplicate issues and guide them to the right direction
-- Create a pull request to resolve the issue!
-
 ## Write bug reports with detail, background, and sample code
 **Great Bug Reports** tend to have:
 
@@ -53,6 +42,7 @@ Ways to help out:
 - What you expected would happen
 - What *actually* happens
 - Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
+
 
 ## Use a Consistent Coding Style
 We use [black](https://github.com/python/black) for a unified code style.

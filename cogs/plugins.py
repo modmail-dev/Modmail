@@ -123,10 +123,10 @@ class Plugins(commands.Cog):
         self.loaded_plugins = set()
         self._ready_event = asyncio.Event()
 
-    async def cog_load(self):
-        await self.populate_registry()
+        self.bot.loop.create_task(self.populate_registry())
+
         if self.bot.config.get("enable_plugins"):
-            await self.initial_load_plugins()
+            self.bot.loop.create_task(self.initial_load_plugins())
         else:
             logger.info("Plugins not loaded since ENABLE_PLUGINS=false.")
 
@@ -136,6 +136,8 @@ class Plugins(commands.Cog):
             self.registry = json.loads(await resp.text())
 
     async def initial_load_plugins(self):
+        await self.bot.wait_for_connected()
+
         for plugin_name in list(self.bot.config["plugins"]):
             try:
                 plugin = Plugin.from_string(plugin_name, strict=True)
@@ -256,7 +258,7 @@ class Plugins(commands.Cog):
                 sys.path.insert(0, USER_SITE)
 
         try:
-            await self.bot.load_extension(plugin.ext_string)
+            self.bot.load_extension(plugin.ext_string)
             logger.info("Loaded plugin: %s", plugin.ext_string.split(".")[-1])
             self.loaded_plugins.add(plugin)
 
@@ -430,7 +432,7 @@ class Plugins(commands.Cog):
 
         if self.bot.config.get("enable_plugins"):
             try:
-                await self.bot.unload_extension(plugin.ext_string)
+                self.bot.unload_extension(plugin.ext_string)
                 self.loaded_plugins.remove(plugin)
             except (commands.ExtensionNotLoaded, KeyError):
                 logger.warning("Plugin was never loaded.")
@@ -472,7 +474,7 @@ class Plugins(commands.Cog):
             await self.download_plugin(plugin, force=True)
             if self.bot.config.get("enable_plugins"):
                 try:
-                    await self.bot.unload_extension(plugin.ext_string)
+                    self.bot.unload_extension(plugin.ext_string)
                 except commands.ExtensionError:
                     logger.warning("Plugin unload fail.", exc_info=True)
                 try:
@@ -523,7 +525,7 @@ class Plugins(commands.Cog):
                 continue
             try:
                 logger.error("Unloading plugin: %s.", ext)
-                await self.bot.unload_extension(ext)
+                self.bot.unload_extension(ext)
             except Exception:
                 logger.error("Failed to unload plugin: %s.", ext)
             else:
@@ -728,12 +730,12 @@ class Plugins(commands.Cog):
 
         for page in pages:
             embed = discord.Embed(color=self.bot.main_color, description=page)
-            embed.set_author(name="Plugin Registry", icon_url=self.bot.user.display_avatar.url)
+            embed.set_author(name="Plugin Registry", icon_url=self.bot.user.avatar_url)
             embeds.append(embed)
 
         paginator = EmbedPaginatorSession(ctx, *embeds)
         await paginator.run()
 
 
-async def setup(bot):
-    await bot.add_cog(Plugins(bot))
+def setup(bot):
+    bot.add_cog(Plugins(bot))

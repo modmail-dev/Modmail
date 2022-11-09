@@ -2,7 +2,6 @@ import base64
 import functools
 import re
 import typing
-from datetime import datetime, timezone
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
 from itertools import takewhile, zip_longest
@@ -10,9 +9,6 @@ from urllib import parse
 
 import discord
 from discord.ext import commands
-
-from core.models import getLogger
-
 
 __all__ = [
     "strtobool",
@@ -24,11 +20,9 @@ __all__ = [
     "human_join",
     "days",
     "cleanup_code",
-    "parse_channel_topic",
     "match_title",
     "match_user_id",
     "match_other_recipients",
-    "create_thread_channel",
     "create_not_found_embed",
     "parse_alias",
     "normalize_alias",
@@ -36,13 +30,9 @@ __all__ = [
     "trigger_typing",
     "escape_code_block",
     "tryint",
-    "get_top_role",
+    "get_top_hoisted_role",
     "get_joint_id",
-    "extract_block_timestamp",
 ]
-
-
-logger = getLogger(__name__)
 
 
 def strtobool(val):
@@ -180,19 +170,10 @@ def parse_image_url(url: str, *, convert_size=True) -> str:
     return ""
 
 
-def human_join(seq: typing.Sequence[str], delim: str = ", ", final: str = "or") -> str:
-    """https://github.com/Rapptz/RoboDanny/blob/bf7d4226350dff26df4981dd53134eeb2aceeb87/cogs/utils/formats.py#L21-L32"""
-    size = len(seq)
-    if size == 0:
-        return ""
-
-    if size == 1:
-        return seq[0]
-
-    if size == 2:
-        return f"{seq[0]} {final} {seq[1]}"
-
-    return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
+def human_join(strings):
+    if len(strings) <= 2:
+        return " or ".join(strings)
+    return ", ".join(strings[: len(strings) - 1]) + " or " + strings[-1]
 
 
 def days(day: typing.Union[str, int]) -> str:
@@ -237,49 +218,9 @@ def cleanup_code(content: str) -> str:
     return content.strip("` \n")
 
 
-TOPIC_REGEX = re.compile(
-    r"(?:\bTitle:\s*(?P<title>.*)\n)?"
-    r"\bUser ID:\s*(?P<user_id>\d{17,21})\b"
-    r"(?:\nOther Recipients:\s*(?P<other_ids>\d{17,21}(?:(?:\s*,\s*)\d{17,21})*)\b)?",
-    flags=re.IGNORECASE | re.DOTALL,
-)
-UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
-
-
-def parse_channel_topic(text: str) -> typing.Tuple[typing.Optional[str], int, typing.List[int]]:
-    """
-    A helper to parse channel topics and respectivefully returns all the required values
-    at once.
-
-    Parameters
-    ----------
-    text : str
-        The text of channel topic.
-
-    Returns
-    -------
-    Tuple[Optional[str], int, List[int]]
-        A tuple of title, user ID, and other recipients IDs.
-    """
-    title, user_id, other_ids = None, -1, []
-    if isinstance(text, str):
-        match = TOPIC_REGEX.search(text)
-    else:
-        match = None
-
-    if match is not None:
-        groupdict = match.groupdict()
-        title = groupdict["title"]
-
-        # user ID string is the required one in regex, so if match is found
-        # the value of this won't be None
-        user_id = int(groupdict["user_id"])
-
-        oth_ids = groupdict["other_ids"]
-        if oth_ids:
-            other_ids = list(map(int, oth_ids.split(",")))
-
-    return title, user_id, other_ids
+TOPIC_OTHER_RECIPIENTS_REGEX = re.compile(r"Other Recipients:\s*((?:\d{17,21},*)+)", flags=re.IGNORECASE)
+TOPIC_TITLE_REGEX = re.compile(r"\bTitle: (.*)\n(?:User ID: )\b", flags=re.IGNORECASE | re.DOTALL)
+TOPIC_UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
 
 
 def match_title(text: str) -> str:
@@ -296,10 +237,12 @@ def match_title(text: str) -> str:
     Optional[str]
         The title if found.
     """
-    return parse_channel_topic(text)[0]
+    match = TOPIC_TITLE_REGEX.search(text)
+    if match is not None:
+        return match.group(1)
 
 
-def match_user_id(text: str, any_string: bool = False) -> int:
+def match_user_id(text: str) -> int:
     """
     Matches a user ID in the format of "User ID: 12345".
 
@@ -307,24 +250,16 @@ def match_user_id(text: str, any_string: bool = False) -> int:
     ----------
     text : str
         The text of the user ID.
-    any_string: bool
-        Whether to search any string that matches the UID_REGEX, e.g. not from channel topic.
-        Defaults to False.
 
     Returns
     -------
     int
         The user ID if found. Otherwise, -1.
     """
-    user_id = -1
-    if any_string:
-        match = UID_REGEX.search(text)
-        if match is not None:
-            user_id = int(match.group(1))
-    else:
-        user_id = parse_channel_topic(text)[1]
-
-    return user_id
+    match = TOPIC_UID_REGEX.search(text)
+    if match is not None:
+        return int(match.group(1))
+    return -1
 
 
 def match_other_recipients(text: str) -> typing.List[int]:
@@ -341,7 +276,10 @@ def match_other_recipients(text: str) -> typing.List[int]:
     List[int]
         The list of other recipients IDs.
     """
-    return parse_channel_topic(text)[2]
+    match = TOPIC_OTHER_RECIPIENTS_REGEX.search(text)
+    if match is not None:
+        return list(map(int, match.group(1).split(",")))
+    return []
 
 
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
@@ -414,7 +352,7 @@ def format_description(i, names):
 def trigger_typing(func):
     @functools.wraps(func)
     async def wrapper(self, ctx: commands.Context, *args, **kwargs):
-        await ctx.typing()
+        await ctx.trigger_typing()
         return await func(self, ctx, *args, **kwargs)
 
     return wrapper
@@ -431,25 +369,20 @@ def tryint(x):
         return x
 
 
-def get_top_role(member: discord.Member, hoisted=True):
+def get_top_hoisted_role(member: discord.Member):
     roles = sorted(member.roles, key=lambda r: r.position, reverse=True)
     for role in roles:
-        if not hoisted:
-            return role
         if role.hoist:
             return role
 
 
-async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=None):
+async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=[]):
     name = name or bot.format_channel_name(recipient)
-    errors_raised = errors_raised or []
-
     try:
         channel = await bot.modmail_guild.create_text_channel(
             name=name,
             category=category,
             overwrites=overwrites,
-            topic=f"User ID: {recipient.id}",
             reason="Creating a thread channel.",
         )
     except discord.HTTPException as e:
@@ -460,20 +393,19 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
         errors_raised.append((e.text, (category, name)))
 
         if "Maximum number of channels in category reached" in e.text:
-            fallback = None
             fallback_id = bot.config["fallback_category_id"]
             if fallback_id:
                 fallback = discord.utils.get(category.guild.categories, id=int(fallback_id))
-                if fallback and len(fallback.channels) >= 49:
-                    fallback = None
+                if fallback and len(fallback.channels) < 49:
+                    category = fallback
 
-            if not fallback:
-                fallback = await category.clone(name="Fallback Modmail")
-                await bot.config.set("fallback_category_id", str(fallback.id))
+            if not category:
+                category = await category.clone(name="Fallback Modmail")
+                bot.config.set("fallback_category_id", str(category.id))
                 await bot.config.update()
 
             return await create_thread_channel(
-                bot, recipient, fallback, overwrites, errors_raised=errors_raised
+                bot, recipient, category, overwrites, errors_raised=errors_raised
             )
 
         if "Contains words not allowed" in e.text:
@@ -512,50 +444,3 @@ def get_joint_id(message: discord.Message) -> typing.Optional[int]:
         except ValueError:
             pass
     return None
-
-
-def extract_block_timestamp(reason, id_):
-    # etc "blah blah blah... until <t:XX:f>."
-    now = discord.utils.utcnow()
-    end_time = re.search(r"until <t:(\d+):(?:R|f)>.$", reason)
-    attempts = [
-        # backwards compat
-        re.search(r"until ([^`]+?)\.$", reason),
-        re.search(r"%([^%]+?)%", reason),
-    ]
-    after = None
-    if end_time is None:
-        for i in attempts:
-            if i is not None:
-                end_time = i
-                break
-
-        if end_time is not None:
-            # found a deprecated version
-            try:
-                after = (
-                    datetime.fromisoformat(end_time.group(1)).replace(tzinfo=timezone.utc) - now
-                ).total_seconds()
-            except ValueError:
-                logger.warning(
-                    r"Broken block message for user %s, block and unblock again with a different message to prevent further issues",
-                    id_,
-                )
-                raise
-            logger.warning(
-                r"Deprecated time message for user %s, block and unblock again to update.",
-                id_,
-            )
-    else:
-        try:
-            after = (
-                datetime.utcfromtimestamp(int(end_time.group(1))).replace(tzinfo=timezone.utc) - now
-            ).total_seconds()
-        except ValueError:
-            logger.warning(
-                r"Broken block message for user %s, block and unblock again with a different message to prevent further issues",
-                id_,
-            )
-            raise
-
-    return end_time, after
