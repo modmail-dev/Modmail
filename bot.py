@@ -87,6 +87,13 @@ class ModmailBot(commands.Bot):
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
+    def get_guild_icon(self, guild: typing.Optional[discord.Guild]) -> str:
+        if guild is None:
+            guild = self.guild
+        if guild.icon is None:
+            return self.user.display_avatar.url
+        return guild.icon_url
+
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
         """
         Get actual snippet names from direct aliases to snippets.
@@ -913,7 +920,10 @@ class ModmailBot(commands.Bot):
                     color=self.error_color,
                     description=self.config["disabled_new_thread_response"],
                 )
-                embed.set_footer(text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon.url)
+                embed.set_footer(
+                    text=self.config["disabled_new_thread_footer"],
+                    icon_url=self.get_guild_icon(guild=message.guild),
+                )
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
@@ -928,7 +938,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_current_thread_footer"],
-                    icon_url=self.guild.icon.url,
+                    icon_url=self.get_guild_icon(guild=message.guild),
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -1335,7 +1345,7 @@ class ModmailBot(commands.Bot):
             )
             embed.set_footer(
                 text=self.config["disabled_new_thread_footer"],
-                icon_url=self.guild.icon.url,
+                icon_url=self.get_guild_icon(guild=channel.guild),
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
