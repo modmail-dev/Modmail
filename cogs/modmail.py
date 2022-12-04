@@ -448,7 +448,7 @@ class Modmail(commands.Cog):
 
         embed = discord.Embed(
             title="Scheduled close",
-            description=f"This thread will close {silent}{human_delta}.",
+            description=f"This thread will close in {human_delta} {silent}.",
             color=self.bot.error_color,
         )
 
