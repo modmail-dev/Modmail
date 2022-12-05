@@ -92,7 +92,7 @@ class ModmailBot(commands.Bot):
             guild = self.guild
         if guild.icon is None:
             return self.user.display_avatar.url
-        return guild.icon_url
+        return guild.icon.url
 
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
         """
