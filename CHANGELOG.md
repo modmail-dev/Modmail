@@ -15,7 +15,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Fixed
 
+- Not having a guild icon no longer raises an exception. ([PR #3235](https://github.com/kyb3r/modmail/pull/3235))
+  - When no icon is set, use the default user icon.
 - Resolved an issue where `?logs` doesn't work when the thread has no title. ([PR #3201](https://github.com/kyb3r/modmail/pull/3201))
+
+### Changed
+
+- Plain messages no longer forces `()` around the respondent text. ([PR #3234](https://github.com/kyb3r/modmail/pull/3234))
 
 # v4.0.1
 

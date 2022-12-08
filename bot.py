@@ -94,7 +94,7 @@ class ModmailBot(commands.Bot):
         if guild is None:
             guild = self.guild
         if guild.icon is None:
-            return self.user.display_avatar.url
+            return "https://cdn.discordapp.com/embed/avatars/0.png"
         return guild.icon.url
 
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
