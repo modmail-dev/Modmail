@@ -876,7 +876,7 @@ class ModmailBot(commands.Bot):
         if reaction != "disable":
             try:
                 await msg.add_reaction(reaction)
-            except (discord.HTTPException, discord.BadArgument) as e:
+            except (discord.HTTPException, TypeError) as e:
                 logger.warning("Failed to add reaction %s: %s.", reaction, e)
                 return False
         return True
@@ -1304,7 +1304,7 @@ class ModmailBot(commands.Bot):
                     for msg in linked_messages:
                         await msg.remove_reaction(reaction, self.user)
                     await message.remove_reaction(reaction, self.user)
-                except (discord.HTTPException, discord.BadArgument) as e:
+                except (discord.HTTPException, TypeError) as e:
                     logger.warning("Failed to remove reaction: %s", e)
 
     async def handle_react_to_contact(self, payload):

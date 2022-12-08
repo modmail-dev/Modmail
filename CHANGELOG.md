@@ -18,6 +18,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Not having a guild icon no longer raises an exception. ([PR #3235](https://github.com/kyb3r/modmail/pull/3235))
   - When no icon is set, use the default user icon.
 - Resolved an issue where `?logs` doesn't work when the thread has no title. ([PR #3201](https://github.com/kyb3r/modmail/pull/3201))
+- AttributeError raised when failing to forward a reaction. ([GH #3218](https://github.com/kyb3r/modmail/issues/3218))
 
 ### Changed
 
