@@ -9,10 +9,13 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # [Unreleased]
 
+### Breaking
+
+- Presence intent is now by-default OFF. You can turn it on by setting `ENABLE_PRESENCE_INTENT=true` in the environment variables.
+
 ### Fixed
 
-- Bots without presence intent encountering RuntimeError on start.
-
+- Resolved an issue where `?logs` doesn't work when the thread has no title. ([PR #3201](https://github.com/kyb3r/modmail/pull/3201))
 
 # v4.0.1
 
@@ -25,7 +28,6 @@ This is a hotfix release.
 ### Fixed
 
 - Thread cooldown
-
 
 # v4.0.0
 

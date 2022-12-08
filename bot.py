@@ -66,7 +66,13 @@ if sys.platform == "win32":
 
 class ModmailBot(commands.Bot):
     def __init__(self):
+        self.config = ConfigManager(self)
+        self.config.populate_cache()
+
         intents = discord.Intents.all()
+        if not self.config['enable_presence_intent']:
+            intents.presences = False
+
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
         self.session = None
         self._api = None
@@ -75,9 +81,6 @@ class ModmailBot(commands.Bot):
         self._connected = None
         self.start_time = discord.utils.utcnow()
         self._started = False
-
-        self.config = ConfigManager(self)
-        self.config.populate_cache()
 
         self.threads = ThreadManager(self)
 
@@ -218,26 +221,14 @@ class ModmailBot(commands.Bot):
             async with self:
                 self._connected = asyncio.Event()
                 self.session = ClientSession(loop=self.loop)
-                try:
-                    retry_intents = False
-                    try:
-                        await self.start(self.token)
-                    except discord.PrivilegedIntentsRequired:
-                        retry_intents = True
-                    if retry_intents:
-                        if self.ws is not None and self.ws.open:
-                            await self.ws.close(code=1000)
-                        self._ready.clear()
 
-                        intents = discord.Intents.default()
-                        intents.members = True
-                        intents.message_content = True
-                        # Try again with members intent
-                        self._connection._intents = intents
-                        logger.warning(
-                            "Attempting to reconnect with only the server members and message content privileged intent. Some plugins might not work correctly."
-                        )
-                        await self.connect(reconnect=True)
+                if self.config['enable_presence_intent']:
+                    logger.info("Starting bot with presence intent.")
+                else:
+                    logger.info("Starting bot without presence intent.")
+
+                try:
+                    await self.start(self.token)
                 except discord.PrivilegedIntentsRequired:
                     logger.critical(
                         "Privileged intents are not explicitly granted in the discord developers dashboard."

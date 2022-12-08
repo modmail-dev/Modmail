@@ -166,6 +166,7 @@ class ConfigManager:
         "database_type": "mongodb",
         "connection_uri": None,  # replace mongo uri in the future
         "owners": None,
+        "enable_presence_intent": False,
         # bot
         "token": None,
         "enable_plugins": True,
@@ -221,6 +222,7 @@ class ConfigManager:
         "thread_show_account_age",
         "thread_show_join_age",
         "use_hoisted_top_role",
+        "enable_presence_intent",
     }
 
     enums = {
