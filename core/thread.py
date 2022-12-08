@@ -1150,7 +1150,7 @@ class Thread:
                     additional_images = []
 
                 if embed.footer.text:
-                    plain_message = f"**({embed.footer.text}) "
+                    plain_message = f"**{embed.footer.text} "
                 else:
                     plain_message = "**"
                 plain_message += f"{embed.author.name}:** {embed.description}"
