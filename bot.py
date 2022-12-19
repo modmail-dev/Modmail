@@ -1,4 +1,4 @@
-__version__ = "4.0.1"
+__version__ = "4.0.2"
 
 
 import asyncio
@@ -66,7 +66,13 @@ if sys.platform == "win32":
 
 class ModmailBot(commands.Bot):
     def __init__(self):
+        self.config = ConfigManager(self)
+        self.config.populate_cache()
+
         intents = discord.Intents.all()
+        if not self.config["enable_presence_intent"]:
+            intents.presences = False
+
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
         self.session = None
         self._api = None
@@ -76,9 +82,6 @@ class ModmailBot(commands.Bot):
         self.start_time = discord.utils.utcnow()
         self._started = False
 
-        self.config = ConfigManager(self)
-        self.config.populate_cache()
-
         self.threads = ThreadManager(self)
 
         self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
@@ -86,6 +89,13 @@ class ModmailBot(commands.Bot):
 
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
+
+    def get_guild_icon(self, guild: typing.Optional[discord.Guild]) -> str:
+        if guild is None:
+            guild = self.guild
+        if guild.icon is None:
+            return "https://cdn.discordapp.com/embed/avatars/0.png"
+        return guild.icon.url
 
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
         """
@@ -218,27 +228,14 @@ class ModmailBot(commands.Bot):
             async with self:
                 self._connected = asyncio.Event()
                 self.session = ClientSession(loop=self.loop)
-                try:
-                    retry_intents = False
-                    try:
-                        await self.start(self.token)
-                    except discord.PrivilegedIntentsRequired:
-                        retry_intents = True
-                    if retry_intents:
-                        await self.http.close()
-                        if self.ws is not None and self.ws.open:
-                            await self.ws.close(code=1000)
-                        self._ready.clear()
 
-                        intents = discord.Intents.default()
-                        intents.members = True
-                        intents.message_content = True
-                        # Try again with members intent
-                        self._connection._intents = intents
-                        logger.warning(
-                            "Attempting to login with only the server members and message content privileged intent. Some plugins might not work correctly."
-                        )
-                        await self.start(self.token)
+                if self.config["enable_presence_intent"]:
+                    logger.info("Starting bot with presence intent.")
+                else:
+                    logger.info("Starting bot without presence intent.")
+
+                try:
+                    await self.start(self.token)
                 except discord.PrivilegedIntentsRequired:
                     logger.critical(
                         "Privileged intents are not explicitly granted in the discord developers dashboard."
@@ -879,7 +876,7 @@ class ModmailBot(commands.Bot):
         if reaction != "disable":
             try:
                 await msg.add_reaction(reaction)
-            except (discord.HTTPException, discord.BadArgument) as e:
+            except (discord.HTTPException, TypeError) as e:
                 logger.warning("Failed to add reaction %s: %s.", reaction, e)
                 return False
         return True
@@ -913,7 +910,10 @@ class ModmailBot(commands.Bot):
                     color=self.error_color,
                     description=self.config["disabled_new_thread_response"],
                 )
-                embed.set_footer(text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon.url)
+                embed.set_footer(
+                    text=self.config["disabled_new_thread_footer"],
+                    icon_url=self.get_guild_icon(guild=message.guild),
+                )
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
@@ -928,7 +928,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_current_thread_footer"],
-                    icon_url=self.guild.icon.url,
+                    icon_url=self.get_guild_icon(guild=message.guild),
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -1304,7 +1304,7 @@ class ModmailBot(commands.Bot):
                     for msg in linked_messages:
                         await msg.remove_reaction(reaction, self.user)
                     await message.remove_reaction(reaction, self.user)
-                except (discord.HTTPException, discord.BadArgument) as e:
+                except (discord.HTTPException, TypeError) as e:
                     logger.warning("Failed to remove reaction: %s", e)
 
     async def handle_react_to_contact(self, payload):
@@ -1335,7 +1335,7 @@ class ModmailBot(commands.Bot):
             )
             embed.set_footer(
                 text=self.config["disabled_new_thread_footer"],
-                icon_url=self.guild.icon.url,
+                icon_url=self.get_guild_icon(guild=channel.guild),
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",

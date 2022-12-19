@@ -6,7 +6,7 @@
   <br>
 
   <a href="#">
-    <img src="https://img.shields.io/badge/Latest%20Version-v4.0.1-7289da?style=for-the-badge&logo=data:image/gif;base64,R0lGODlhGAAYAPcAAAAAADQ+Yj5MdThCaEFOekNQfWt5e1lqfEdVhVpriVx1iVtsnFZpll1xlF1znFx5mGNtjGR7hWNzjGd5iWJunGNslmN0lGl1lGN5lWt7lWR0nGp1nWR5nGt8nHJ9l3J9jFxto1xtqlZqqF5zpF15pV10rVx5q1Z2ql1us150s114sV50uVd1smJupGNurGN0pGp1pGR6o2t7o2F0rml0rGR5rGt8q3J9pGNus2Fvu2Bzs2p2smR5s2t7tGF0u2N6vGp7u2l1uXJ+uGJ1wWV7w2l+xWl+yl5zwHWDiWyCmHODnHiGmHSLkW2CpGuEqnSCpHqMo3ODrHWKrXyMq3iHp3yTqGyEtWqFunKDs3uLtHSGvXSMvHuMu3eItnyTs3yTu3iUuW+RsV+ApmuCxG2Dy22LxnSMxHuMxHGGzXSLzXqLzXWFxXyTw3uSy3WSx26E0W+N2m+L1XKG03SL1XmL1HOL2HmL23WF2XiS1m+QyHOK4XmL4XaH4nGM5ImXm4WOlJSjnoOOq4OOpYSUrImXqJOcqYONt4OUtIybtIOUu4ycvImYt5OcuIyiqZekqYyiupOjvJurvJimtp+yvqKruae2ua23trLCucPHvIOMxoOUxIuaw4eYyJKbyISW1YiW0o2kyJWlxJqpxZWkzJury5aoxp6xxZ2zyZio1Jyy2Yuk0aOsyKOyxKOzzKy8zKq2yLO7xqOr1KSz1Ku706W026y73Ki21bK716u75LS95KSu4Zyx6bPDzLjGx63B2LPD1LTE3LvL3brI17/S2bbKzrTE47rF47zM5L3M67bH577R5L7R67zK8rjM8MLM3MPK1sTT3crU3MjW2dLZ2srUy8PN5MTO68nP68jL48TS5MnT5cbR68jS7M3b7Mva5dTb6MTO8srO8szF8MXR8snS8c3a8cnY+NXb9tDL7dnm6dzk8tro99Pq9uTp6+r17fr77eTr/efr+Oz09OXz/Ov0/e37/uj39fX19fX89fz+9vP1/fX9/f7//vr2/ODl4sK75yH5BAEAAAAALAAAAAAYABgAAAj/AAEAmFOnoMGDCAvGmRNHYMKHEOdIhEgRIcGKGDMeTJVO00WNBj194/frFik5IOvgqdaP371N26xpefORYq57/HI+s7Vtmy0eKCmmapcz575FPXt+SfHmociiRae1SroNWIoVTQ2uxAk15yJg1awl7ZSCaUE82uRxhTpt1TNXq0Ip2pSobIqCc0iVoqsI0ipXr1bhywfVXxYdiA3Sourz2dqc8lbNQJz4bDWqix73E7ZjhgrKOjYmvfWLbZcZqCdTPjjHGLdtibi2U5Q6NWiEqqq64ifvVe3at1nX2tTuWQ/QyIMfxHOGi+rkyeMklPMDuvWaBqlbj469IPUU2ykPCOw+53t4AAEBADs=">
+    <img src="https://img.shields.io/badge/Latest%20Version-v4.0.2-7289da?style=for-the-badge&logo=data:image/gif;base64,R0lGODlhGAAYAPcAAAAAADQ+Yj5MdThCaEFOekNQfWt5e1lqfEdVhVpriVx1iVtsnFZpll1xlF1znFx5mGNtjGR7hWNzjGd5iWJunGNslmN0lGl1lGN5lWt7lWR0nGp1nWR5nGt8nHJ9l3J9jFxto1xtqlZqqF5zpF15pV10rVx5q1Z2ql1us150s114sV50uVd1smJupGNurGN0pGp1pGR6o2t7o2F0rml0rGR5rGt8q3J9pGNus2Fvu2Bzs2p2smR5s2t7tGF0u2N6vGp7u2l1uXJ+uGJ1wWV7w2l+xWl+yl5zwHWDiWyCmHODnHiGmHSLkW2CpGuEqnSCpHqMo3ODrHWKrXyMq3iHp3yTqGyEtWqFunKDs3uLtHSGvXSMvHuMu3eItnyTs3yTu3iUuW+RsV+ApmuCxG2Dy22LxnSMxHuMxHGGzXSLzXqLzXWFxXyTw3uSy3WSx26E0W+N2m+L1XKG03SL1XmL1HOL2HmL23WF2XiS1m+QyHOK4XmL4XaH4nGM5ImXm4WOlJSjnoOOq4OOpYSUrImXqJOcqYONt4OUtIybtIOUu4ycvImYt5OcuIyiqZekqYyiupOjvJurvJimtp+yvqKruae2ua23trLCucPHvIOMxoOUxIuaw4eYyJKbyISW1YiW0o2kyJWlxJqpxZWkzJury5aoxp6xxZ2zyZio1Jyy2Yuk0aOsyKOyxKOzzKy8zKq2yLO7xqOr1KSz1Ku706W026y73Ki21bK716u75LS95KSu4Zyx6bPDzLjGx63B2LPD1LTE3LvL3brI17/S2bbKzrTE47rF47zM5L3M67bH577R5L7R67zK8rjM8MLM3MPK1sTT3crU3MjW2dLZ2srUy8PN5MTO68nP68jL48TS5MnT5cbR68jS7M3b7Mva5dTb6MTO8srO8szF8MXR8snS8c3a8cnY+NXb9tDL7dnm6dzk8tro99Pq9uTp6+r17fr77eTr/efr+Oz09OXz/Ov0/e37/uj39fX19fX89fz+9vP1/fX9/f7//vr2/ODl4sK75yH5BAEAAAAALAAAAAAYABgAAAj/AAEAmFOnoMGDCAvGmRNHYMKHEOdIhEgRIcGKGDMeTJVO00WNBj194/frFik5IOvgqdaP371N26xpefORYq57/HI+s7Vtmy0eKCmmapcz575FPXt+SfHmociiRae1SroNWIoVTQ2uxAk15yJg1awl7ZSCaUE82uRxhTpt1TNXq0Ip2pSobIqCc0iVoqsI0ipXr1bhywfVXxYdiA3Sourz2dqc8lbNQJz4bDWqix73E7ZjhgrKOjYmvfWLbZcZqCdTPjjHGLdtibi2U5Q6NWiEqqq64ifvVe3at1nX2tTuWQ/QyIMfxHOGi+rkyeMklPMDuvWaBqlbj469IPUU2ykPCOw+53t4AAEBADs=">
   </a>
 
   <br>
@@ -84,79 +84,88 @@ This list is ever-growing thanks to active development and our exceptional contr
 
 ## Installation
 
-Where can I find the Modmail bot invite link? 
+Q: Where can I find the Modmail bot invite link?
 
-Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time).
+A: Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time).
 
-### Heroku
+There are a few options for hosting your very own dedicated Modmail bot.
 
-You can host this bot on Heroku.
+1. Patreon hosting
+2. Local hosting (VPS, Dedicated Server, RPi, your computer, etc.)
+3. PaaS (we provide a guide for Heroku)
+
+### Patreon Hosting
+
+If you don't want the trouble of renting and configuring your server to host Modmail, we got a solution for you! We offer hosting and maintenance of your own, private Modmail bot (including a Logviewer) through [**Patreon**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for more info! 
+
+### Local hosting (General Guide)
+
+Modmail can be hosted on any modern hardware, including your PC. For stability and reliability, we suggest purchasing a cloud server (VPS) for under $10/mo. If you need recommendations on choosing a VPS, join our [Discord server](https://discord.gg/j5e9p8w), and we'll send you a list of non-affiliated hosting providers. Alternatively, we can host Modmail for you when you're subscribed to our [Patreon](https://patreon.com/kyber).
+
+This guide assumes you've downloaded [`Python 3.10`](https://www.python.org/downloads/release/python-376/) and added python and pip to PATH.
+
+1. Clone this repo
+    ```console
+    $ git clone https://github.com/kyb3r/modmail
+    $ cd modmail
+    ```
+2. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/kyb3r/modmail/wiki/Installation#2-discord-bot-account))
+3. Create a free MongoDB database ([guide](https://github.com/kyb3r/modmail/wiki/Installation-(cont.)#3-create-a-database), follow it carefully!)
+4. Rename the file `.env.example` to `.env` and fill it with appropriate values
+   - If you can't find `.env.example` because it's hidden, create a new text file named `.env`, then copy the contents of [this file](https://raw.githubusercontent.com/kyb3r/modmail/master/.env.example) and replace the placeholders with their values
+   - If you're on Windows and cannot save the file as `.env`, save it as `.env.` instead (this only applies to Windows!)
+   - If you do not have a Logviewer yet, leave the `LOG_URL` field as-is
+5. Update pip, install pipenv, and install dependencies using pipenv
+    ```console
+    $ pip install -U pip
+    $ pip install pipenv
+    $ pipenv install
+    ```
+6. Start the bot
+    ```console
+    $ pipenv run bot
+    ```
+7. Set up the Logviewer, see the [Logviewer installation guide](https://github.com/kyb3r/logviewer)
+
+### Local Hosting (Docker)
+
+We provide support for Docker to simplify the deployment of Modmail and Logviewer. 
+We assume you already have Docker and Docker Compose Plugin installed, if not, see [here](https://docs.docker.com/get-docker/).
+
+1. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/kyb3r/modmail/wiki/Installation#2-discord-bot-account))
+2. Create a file named `.env`, then copy the contents of [this file](https://raw.githubusercontent.com/kyb3r/modmail/master/.env.example) and replace the placeholders with their values
+3. Create a file named `docker-compose.yml`, then copy the contents of [this file](https://raw.githubusercontent.com/kyb3r/modmail/master/docker-compose.yml), do not change anything!
+4. Start the bot
+    ```console
+    $ docker compose up -d
+    ```
+   - For older Docker versions, you may need to run `docker-compose up -d` instead
+5. View the status of your bot, using `docker ps` and `docker logs [container-id]`
+
+Our Docker images are hosted on [GitHub Container Registry](ghcr.io), you can build your own image if you wish:
+```console
+$ docker build --tag=modmail:master .
+```
+
+Then simply remove `ghcr.io/kyb3r/` from the `docker-compose.yml` file.
+
+### Local Hosting (OS-Specific)
+
+This guide is a WIP. Join our [Discord server](https://discord.gg/j5e9p8w) for more info.
+
+### Platform as a Service (PaaS)
+
+You can host this bot on Heroku (no longer free).
 
 Installation via Heroku is possible with your web browser alone. 
 The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) (which includes a video tutorial!) will guide you through the entire installation process. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
 
-To configure automatic updates:
+When using Heroku, you can configure automatic updates:
  - Login to [GitHub](https://github.com/) and verify your account.
  - [Fork the repo](https://github.com/kyb3r/modmail/fork).
  - Install the [Pull app](https://github.com/apps/pull) for your fork. 
  - Then go to the Deploy tab in your [Heroku account](https://dashboard.heroku.com/apps) of your bot app, select GitHub and connect your fork (usually by typing "Modmail"). 
  - Turn on auto-deploy for the `master` branch.
-
-### Hosting for Patreons
-
-If you don't want to go through the trouble of setting up your very own Modmail bot or wish to support this project, we got a solution for you! We offer the complete installation, hosting, and maintenance of your Modmail with [**Patreon**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for more info! 
-
-### Locally
-
-Local hosting of Modmail is also possible. First, you will need at least [`Python 3.8`](https://www.python.org/downloads/release/python-376/).
-
-Follow the [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) and disregard deploying the Heroku bot application. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
-
-Clone the repo:
-
-```console
-$ git clone https://github.com/kyb3r/modmail
-$ cd modmail
-```
-
-Install dependencies:
-
-```console
-$ pipenv install
-```
-
-Rename the `.env.example` to `.env` and fill out the fields. If `.env.example` is nonexistent (hidden), create a text file named `.env` and copy the contents of [`.env.example`](https://raw.githubusercontent.com/kyb3r/modmail/master/.env.example) then modify the values.
-
-Finally, start Modmail.
-
-```console
-$ pipenv run bot
-```
-
-#### Docker
-
-This repo supplies a Dockerfile for simplified deployment. 
-
-You can build your own Docker image:
-
-```console
-$ docker build . --tag=modmail
-```
-
-Or run directly from a pre-built version from https://hub.docker.com/.
-
-- Kyber's:
-
-```console
-$ docker pull kyb3rr/modmail
-```
-
-And to run your docker image:
-
-```console
-$ docker run --env-file .env kyb3rr/modmail
-```
-- `.env` should be the path to your env file; you can also supply a path: `/path/to/.env`.
 
 ## Sponsors
 
