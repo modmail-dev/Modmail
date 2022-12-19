@@ -23,6 +23,8 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Changed
 
 - Plain messages no longer forces `()` around the respondent text. ([PR #3234](https://github.com/kyb3r/modmail/pull/3234))
+- Added workflow to automatically build Docker image ([PR #3232](https://github.com/kyb3r/modmail/pull/3228))
+- Updated installation guide to reflect new preferred hosting methods
 
 # v4.0.1
 
