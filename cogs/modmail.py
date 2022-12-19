@@ -483,7 +483,7 @@ class Modmail(commands.Cog):
 
         Silently close a thread (no message)
         - `{prefix}close silently`
-        - `{prefix}close in 10m silently`
+        - `{prefix}close silently in 10m`
 
         Stop a thread from closing:
         - `{prefix}close cancel`
