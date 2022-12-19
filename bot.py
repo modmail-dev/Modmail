@@ -70,7 +70,7 @@ class ModmailBot(commands.Bot):
         self.config.populate_cache()
 
         intents = discord.Intents.all()
-        if not self.config['enable_presence_intent']:
+        if not self.config["enable_presence_intent"]:
             intents.presences = False
 
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
@@ -229,7 +229,7 @@ class ModmailBot(commands.Bot):
                 self._connected = asyncio.Event()
                 self.session = ClientSession(loop=self.loop)
 
-                if self.config['enable_presence_intent']:
+                if self.config["enable_presence_intent"]:
                     logger.info("Starting bot with presence intent.")
                 else:
                     logger.info("Starting bot without presence intent.")
