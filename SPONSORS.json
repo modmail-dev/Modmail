@@ -90,5 +90,43 @@
                 }
             ]
         }
+    },
+    {
+        "embed": {
+            "title": "Advertise Your Server",
+            "description": "Advertise Your Server is the leading advertising and growth Discord Server. With over 60,000 members we can help grow your community with our range of services.\n\n__**Advertise Your Server offers everything you need to grow and find servers:**__\n\n:chart_with_upwards_trend: **Discord Growth Experts** to give you advice on how to __grow your server.__ (server/advert reviews, growth tips)\n:dividers: Over 40 different channels for **different server categories.**\n:robot: Our own __custom__ **bump bot.** (Liam)\n:bar_chart: Currently the __BIGGEST__ advertising server on Discord.\n:computer: Our own server __Listing Site__!\n:ticket: Small Servers Program for servers with less than 300 members.\n:dvd: Weekly Podcast, Blog, Email Newsletter and YouTube Tutorials. \n\nhttps://discord.gg/zP8KcF4VQz\nhttps://aysdiscord.com",
+            "author": {
+                "name": "Advertise Your Server",
+                "icon_url": "https://cdn.discordapp.com/attachments/563522692418895872/907067815486427176/logo4.png"
+            },
+            "color": 431075,
+            "footer": {
+                "text": "Grow Your Discord Server"
+            },
+            "image": {
+                "url": "https://cdn.discordapp.com/attachments/472811257913933834/907068966311166043/unknown_2.png"
+            }
+        }
+    },
+    {
+        "embed": {
+            "footer": {
+                "text": "Join noch heute!"
+            },
+            "thumbnail": {
+                "url": "https://i.imgur.com/bp0xfyK.png"
+            },
+            "fields": [
+                {
+                    "inline": false,
+                    "name": "Viele Verschiedene Talks",
+                    "value": "Gro\u00dfe Community\nGewinnspiele"
+                }
+            ],
+            "color": 61532,
+            "description": "Die etwas andere Community",
+            "url": "https://discord.gg/uncommon",
+            "title": "uncommon community"
+        }
     }
 ]

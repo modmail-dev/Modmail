@@ -90,14 +90,15 @@ class Version:
         embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
             name=f"v{self.version} - Changelog",
-            icon_url=self.bot.user.avatar_url,
+            icon_url=self.bot.user.display_avatar.url,
             url=self.url,
         )
 
         for name, value in self.fields.items():
             embed.add_field(name=name, value=truncate(value, 1024), inline=False)
         embed.set_footer(text=f"Current version: v{self.bot.version}")
-        embed.set_thumbnail(url=self.bot.user.avatar_url)
+
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         return embed
 
 
