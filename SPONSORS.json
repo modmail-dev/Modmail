@@ -1,0 +1,94 @@
+[
+    {
+        "embed": {
+            "description": "This is a youtube channel that provides high quality reddit content. Videos are uploaded regularly so you are never out of funny, interesting or even creepy content!",
+            "color": 15114050,
+            "footer": {
+                "icon_url": "https://i.imgur.com/fvNKUks.png",
+                "text": "I am a robot, son of Daniel (UK)"
+            },
+            "thumbnail": {
+                "url": "https://i.imgur.com/WyzaPKY.png"
+            },
+            "author": {
+                "name": "Sir Reddit",
+                "url": "https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1",
+                "icon_url": "https://i.imgur.com/WyzaPKY.png"
+            },
+            "fields": [
+                {
+                    "name": "Subscribe!",
+                    "value": "[**Click Here**](https://www.youtube.com/channel/UCgSmBJD9imASmJRleycTCwQ?sub_confirmation=1)"
+                },
+                {
+                    "name": "Discord Server",
+                    "value": "[**Click Here**](https://discord.gg/V8ErqHb)"
+                }
+            ]
+        }
+    },
+    {
+        "embed": {
+            "title": "Berkand Karadere",
+            "description": "Berkand Karadere is an German Community Manager who integrated new systems into the game industry. He also is hosting and developing web servers and game servers. He also plays American Football for the Dortmund Giants and his journey has just begun.",
+            "color": 2968248,
+            "thumbnail": {
+                "url": "https://i.imgur.com/cs2QEcp.png"
+            },
+            "fields": [
+                {
+                    "name": "Discord Server",
+                    "value": "[**Click here**](https://discord.gg/BanCwptMJV)"
+                }
+            ]
+        }
+    },
+    {
+        "embed": {
+            "description": "Quality Hosting at Prices You Deserve!",
+            "color": 3137203,
+            "footer": {
+                "icon_url": "https://primeserversinc.com/images/Prime_Logo_P_Sassy.png",
+                "text": "Prime Servers, Inc."
+            },
+            "thumbnail": {
+                "url": "https://primeserversinc.com/images/Prime_Logo_P_Sassy.png"
+            },
+            "author": {
+                "name": "Prime Servers, Inc.",
+                "url": "https://primeserversinc.com",
+                "icon_url": "https://primeserversinc.com/images/Prime_Logo_P_Sassy.png"
+            },
+            "fields": [
+                {
+                    "name": "Twitter",
+                    "value": "[**Click Here**](https://twitter.com/PrimeServersInc)"
+                },
+                {
+                    "name": "Discord Server",
+                    "value": "[**Click Here**](https://discord.gg/cYM6Urn)"
+                }
+            ]
+        }
+    },
+    {
+        "embed": {
+            "description": "──── 《𝐃𝐢𝐬𝐜𝐨𝐫𝐝 𝐀𝐝𝐯𝐢𝐜𝐞 𝐂𝐞𝐧𝐭𝐞𝐫 》 ────\n\n◈ We are a server aimed to meet your discord needs. We have tools, tricks and tips to grow your server and advertise your server. We offer professional server reviews and suggestions how to run it successfully as a part of our courtesy. Join the server and get the chance to add our very own BUMP BOT called DAC Advertise where you can advertise your server to other servers!\n",
+            "color": 53380,
+            "author": {
+                "name": "Discord Advice Center",
+                "url": "https://discord.gg/nkMDQfuK",
+                "icon_url": "https://i.imgur.com/cjVtRw5.jpg"
+            },
+            "image": {
+                "url":  "https://i.imgur.com/1hrjcHd.png"
+            },
+            "fields": [
+                {
+                    "name": "Discord Server",
+                    "value": "[**Click Here**](https://discord.gg/zmwZy5fd9v)"
+                }
+            ]
+        }
+    }
+]

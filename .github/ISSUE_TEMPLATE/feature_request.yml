@@ -1,0 +1,46 @@
+name: Feature Request
+description: Suggest an idea for this project
+title: "your feature request title"
+labels: "feature request"
+body:
+  - type: textarea
+    id: problem-relation
+    attributes:
+      label: Is your feature request related to a problem? Please elaborate.
+      description: A clear and concise description of what the problem is.
+      placeholder: eg. I'm always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+  - type: checkboxes
+    id: complications
+    attributes:
+      label: Does your solution involve any of the following?
+      options:
+        - label: Logviewer
+        - label: New config option
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+    validations:
+      required: true
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Who will this benefit?
+      description: Does this feature apply to a great portion of users?
+    validations:
+      required: true
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: "[optional] You may provide additional context or screenshots for us to better understand the need of the feature."

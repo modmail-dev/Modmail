@@ -1,0 +1,1 @@
+### You can find guide how to host your own modmail bot on replit here: [go.anondev.ml/modmail-replit](https://go.anondev.ml/modmail-replit)

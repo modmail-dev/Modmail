@@ -1,0 +1,308 @@
+{
+  "errors": [],
+  "generated_at": "2020-11-26T11:00:36Z",
+  "metrics": {
+    "./bot.py": {
+      "CONFIDENCE.HIGH": 1.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 1.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 1321,
+      "nosec": 0
+    },
+    "./cogs/modmail.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 1273,
+      "nosec": 0
+    },
+    "./cogs/plugins.py": {
+      "CONFIDENCE.HIGH": 1.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 1.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 578,
+      "nosec": 0
+    },
+    "./cogs/utility.py": {
+      "CONFIDENCE.HIGH": 2.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 1.0,
+      "SEVERITY.MEDIUM": 1.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 1755,
+      "nosec": 0
+    },
+    "./core/_color_data.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 1166,
+      "nosec": 0
+    },
+    "./core/changelog.py": {
+      "CONFIDENCE.HIGH": 1.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 1.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 155,
+      "nosec": 0
+    },
+    "./core/checks.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 90,
+      "nosec": 0
+    },
+    "./core/clients.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 1.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 1.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 587,
+      "nosec": 0
+    },
+    "./core/config.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 352,
+      "nosec": 0
+    },
+    "./core/decorators.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 9,
+      "nosec": 0
+    },
+    "./core/models.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 202,
+      "nosec": 0
+    },
+    "./core/paginator.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 209,
+      "nosec": 0
+    },
+    "./core/thread.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 996,
+      "nosec": 0
+    },
+    "./core/time.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 158,
+      "nosec": 0
+    },
+    "./core/utils.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 282,
+      "nosec": 0
+    },
+    "./plugins/kyb3r/modmail-plugins/profanity-filter-master/profanity-filter.py": {
+      "CONFIDENCE.HIGH": 0.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 0.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 0.0,
+      "SEVERITY.MEDIUM": 0.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 81,
+      "nosec": 0
+    },
+    "_totals": {
+      "CONFIDENCE.HIGH": 5.0,
+      "CONFIDENCE.LOW": 0.0,
+      "CONFIDENCE.MEDIUM": 1.0,
+      "CONFIDENCE.UNDEFINED": 0.0,
+      "SEVERITY.HIGH": 0.0,
+      "SEVERITY.LOW": 5.0,
+      "SEVERITY.MEDIUM": 1.0,
+      "SEVERITY.UNDEFINED": 0.0,
+      "loc": 9214,
+      "nosec": 0
+    }
+  },
+  "results": [
+    {
+      "code": "11 from datetime import datetime\n12 from subprocess import PIPE\n13 from types import SimpleNamespace\n",
+      "filename": "./bot.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with PIPE module.",
+      "line_number": 12,
+      "line_range": [
+        12
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/latest/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "13 from site import USER_SITE\n14 from subprocess import PIPE\n15 \n16 import discord\n",
+      "filename": "./cogs/plugins.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with PIPE module.",
+      "line_number": 14,
+      "line_range": [
+        14,
+        15
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/latest/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "13 from json import JSONDecodeError, loads\n14 from subprocess import PIPE\n15 from textwrap import indent\n",
+      "filename": "./cogs/utility.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with PIPE module.",
+      "line_number": 14,
+      "line_range": [
+        14
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/latest/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "2039         try:\n2040             exec(to_compile, env)  # pylint: disable=exec-used\n2041         except Exception as exc:\n",
+      "filename": "./cogs/utility.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "MEDIUM",
+      "issue_text": "Use of exec detected.",
+      "line_number": 2040,
+      "line_range": [
+        2040
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b102_exec_used.html",
+      "test_id": "B102",
+      "test_name": "exec_used"
+    },
+    {
+      "code": "2 import re\n3 from subprocess import PIPE\n4 from typing import List\n",
+      "filename": "./core/changelog.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with PIPE module.",
+      "line_number": 3,
+      "line_range": [
+        3
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/latest/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "67 \n68     def __init__(self, bot, access_token: str = \"\", username: str = \"\", **kwargs):\n69         self.bot = bot\n70         self.session = bot.session\n71         self.headers: dict = None\n72         self.access_token = access_token\n73         self.username = username\n74         self.avatar_url: str = kwargs.pop(\"avatar_url\", \"\")\n75         self.url: str = kwargs.pop(\"url\", \"\")\n76         if self.access_token:\n77             self.headers = {\"Authorization\": \"token \" + str(access_token)}\n78 \n79     @property\n80     def BRANCH(self):\n",
+      "filename": "./core/clients.py",
+      "issue_confidence": "MEDIUM",
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 68,
+      "line_range": [
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b107_hardcoded_password_default.html",
+      "test_id": "B107",
+      "test_name": "hardcoded_password_default"
+    }
+  ]
+}

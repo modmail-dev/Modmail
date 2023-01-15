@@ -1,0 +1,38 @@
+[tool.black]
+line-length = "110"
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+(
+  /(
+      \.eggs
+    | \.git
+    | \.venv
+    | venv
+    | venv2
+    | _build
+    | build
+    | dist
+    | plugins
+    | temp
+  )/
+)
+'''
+
+[tool.poetry]
+name = 'Modmail'
+version = '3.10.2'
+description = "Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way."
+license = 'AGPL-3.0-only'
+authors = [
+    'kyb3r <noemail@example.com>',
+    '4jr <noemail@example.com>',
+    'Taki <noemail@example.com>'
+]
+readme = 'README.md'
+repository = 'https://github.com/kyb3r/modmail'
+homepage = 'https://github.com/kyb3r/modmail'
+keywords = ['discord', 'modmail']
+
+[tool.pylint.format]
+max-line-length = "110"
