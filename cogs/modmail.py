@@ -1665,13 +1665,7 @@ class Modmail(commands.Cog):
                     self.bot.blocked_users.pop(str(id_))
                     logger.debug("No longer blocked, user %s.", id_)
                     continue
-
-            try:
-                user = await self.bot.get_or_fetch_user(int(id_))
-            except discord.NotFound:
-                users.append((id_, reason))
-            else:
-                users.append((user.mention, reason))
+            users.append((f"<@{id_}>", reason))
 
         blocked_roles = list(self.bot.blocked_roles.items())
         for id_, reason in blocked_roles:
