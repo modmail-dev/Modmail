@@ -568,6 +568,8 @@ class MongoDBClient(ApiClient):
     async def create_log_entry(self, recipient: Member, channel: TextChannel, creator: Member) -> str:
         key = secrets.token_hex(6)
 
+        dm_channel = await recipient.create_dm()
+
         await self.logs.insert_one(
             {
                 "_id": key,
@@ -578,6 +580,7 @@ class MongoDBClient(ApiClient):
                 "channel_id": str(channel.id),
                 "guild_id": str(self.bot.guild_id),
                 "bot_id": str(self.bot.user.id),
+                "dm_channel_id": str(dm_channel.id),
                 "recipient": {
                     "id": str(recipient.id),
                     "name": recipient.name,
