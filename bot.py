@@ -1346,15 +1346,27 @@ class ModmailBot(commands.Bot):
         ctx = await self.get_context(message)
         await ctx.invoke(self.get_command("contact"), users=[member], manual_trigger=False)
 
-    async def on_raw_reaction_add(self, payload):
-        await asyncio.gather(
-            self.handle_reaction_events(payload),
-            self.handle_react_to_contact(payload),
-        )
+    async def on_raw_reaction_add(self, payload : discord.RawReactionActionEvent):
+        r_channel = (self.get_channel(payload.channel_id))
+        modmail_category = self.config["main_category_id"]
 
-    async def on_raw_reaction_remove(self, payload):
-        if self.config["transfer_reactions"]:
-            await self.handle_reaction_events(payload)
+        if r_channel.category_id == modmail_category or r_channel.type is discord.ChannelType.private:
+            await asyncio.gather(
+                self.handle_reaction_events(payload),
+                self.handle_react_to_contact(payload),
+            )
+        else: 
+            pass
+
+    async def on_raw_reaction_remove(self, payload : discord.RawReactionActionEvent):
+        r_channel = (self.get_channel(payload.channel_id))
+        modmail_category = self.config["main_category_id"]
+
+        if r_channel.category_id == modmail_category or r_channel.type is discord.ChannelType.private:
+            if self.config["transfer_reactions"]:
+                await self.handle_reaction_events(payload)
+        else: 
+            pass
 
     async def on_guild_channel_delete(self, channel):
         if channel.guild != self.modmail_guild:
