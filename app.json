@@ -36,7 +36,7 @@
             "required": false
         },
         "REGISTRY_PLUGINS_ONLY": {
-            "description": "If set to true, only plugins that are in the registry can be loaded",
+            "description": "If set to true, only plugins that are in the registry can be loaded.",
             "required": false
         }
     }
