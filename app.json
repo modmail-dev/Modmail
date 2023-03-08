@@ -35,7 +35,7 @@
             "description": "A github personal access token with the repo scope.",
             "required": false
         },
-        "SECURE_PLUGINS_ONLY": {
+        "REGISTRY_PLUGINS_ONLY": {
             "description": "If set to true, only plugins that are in the registry can be loaded",
             "required": false
         }
