@@ -167,7 +167,7 @@ class ConfigManager:
         "connection_uri": None,  # replace mongo uri in the future
         "owners": None,
         "enable_presence_intent": False,
-        "secure_plugins_only": False,
+        "registry_plugins_only": False,
         # bot
         "token": None,
         "enable_plugins": True,
@@ -224,7 +224,7 @@ class ConfigManager:
         "thread_show_join_age",
         "use_hoisted_top_role",
         "enable_presence_intent",
-        "secure_plugins_only",
+        "registry_plugins_only",
     }
 
     enums = {
