@@ -34,6 +34,10 @@
         "GITHUB_TOKEN": {
             "description": "A github personal access token with the repo scope.",
             "required": false
+        },
+        "REGISTRY_PLUGINS_ONLY": {
+            "description": "If set to true, only plugins that are in the registry can be loaded.",
+            "required": false
         }
     }
 }
