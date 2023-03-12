@@ -1,5 +1,6 @@
 import asyncio
 import re
+import os
 from datetime import datetime, timezone
 from itertools import zip_longest
 from typing import Optional, Union, List, Tuple, Literal
@@ -2185,6 +2186,52 @@ class Modmail(commands.Cog):
             )
 
         return await ctx.send(embed=embed)
+
+    @commands.command(name="export")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def export_backup(self, ctx, collection_name):
+        """
+        Export a backup of a collection in the form of a json file.
+
+        {prefix}export <collection_name>
+        """
+        success_message, file = await self.bot.api.export_backups(collection_name)
+        await ctx.send(success_message)
+        await ctx.author.send(file=file)
+
+    @commands.command(name="import")
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    async def import_backup(self,ctx):
+        """
+        Import a backup from a json file.
+
+        This will overwrite all data in the collection.
+
+        {prefix}import <attach the json file>
+
+        """
+        if len(ctx.message.attachments) == 1:
+            attachment = ctx.message.attachments[0]
+            await attachment.save(attachment.filename)
+            file = discord.File(attachment.filename)
+            collection_name = os.path.splitext(attachment.filename)[0]
+            await ctx.send(f"This will overwrite all data in the {collection_name} collection. Are you sure you want to continue? (yes/no)")
+            try:
+                msg = await self.bot.wait_for("message",timeout=30,check=lambda m: m.author == ctx.author and m.channel.id == ctx.channel.id)
+                if msg.content.lower() == "yes":
+                    success_message = await self.bot.api.import_backups(collection_name, file)
+                    await ctx.send(success_message)
+                    os.remove(attachment.filename)
+                else:
+                    return await ctx.send("Cancelled.")
+
+            except asyncio.TimeoutError:
+                return await ctx.send("You took too long to respond. Please try again.")
+
+        else:
+            return await ctx.send("Please attach 1 json file.")
+
+
 
 
 async def setup(bot):

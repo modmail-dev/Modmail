@@ -1,12 +1,13 @@
 import secrets
 import sys
-from json import JSONDecodeError
+import json
 from typing import Any, Dict, Union, Optional
 
 import discord
 from discord import Member, DMChannel, TextChannel, Message
 from discord.ext import commands
 
+from bson import ObjectId
 from aiohttp import ClientResponseError, ClientResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConfigurationError
@@ -15,6 +16,12 @@ from core.models import InvalidConfigError, getLogger
 
 logger = getLogger(__name__)
 
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, ObjectId):
+            return str(obj)
+        return super().default(obj)
 
 class GitHub:
     """
@@ -750,6 +757,27 @@ class MongoDBClient(ApiClient):
                     "url": user.url,
                 }
             }
+
+    async def export_backups(self, collection_name: str):
+        coll = self.db[collection_name]
+        documents = []
+        async for document in coll.find():
+            documents.append(document)
+        with open(f"{collection_name}.json", "w") as f:
+            json.dump(documents, f, cls=CustomJSONEncoder)
+        with open(f"{collection_name}.json", "rb") as f:
+            file = discord.File(f, f"{collection_name}.json")
+            success_message = f"Exported {len(documents)} documents from {collection_name} to JSON. Check your DMs for the file."
+            return success_message, file
+
+    async def import_backups(self, collection_name: str, file: discord.File):
+        contents = await self.bot.loop.run_in_executor(None, file.fp.read)
+        documents = json.loads(contents.decode('utf-8'))
+        coll = self.db[collection_name]
+        await coll.delete_many({})
+        result = await coll.insert_many(documents)
+        success_message = f"Imported {len(result.inserted_ids)} documents from {file.filename} into {collection_name}."
+        return success_message
 
 
 class PluginDatabaseClient:
