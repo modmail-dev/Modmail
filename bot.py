@@ -642,7 +642,7 @@ class ModmailBot(commands.Bot):
         if name not in UNICODE_EMOJI["en"]:
             try:
                 name = await converter.convert(ctx, name.strip(":"))
-            except commands.BadArgument as e:
+            except commands.TypeError as e:
                 logger.warning("%s is not a valid emoji. %s.", name, e)
                 raise
         return name
@@ -664,7 +664,7 @@ class ModmailBot(commands.Bot):
         if sent_emoji != "disable":
             try:
                 sent_emoji = await self.convert_emoji(sent_emoji)
-            except commands.BadArgument:
+            except commands.TypeError:
                 logger.warning("Removed sent emoji (%s).", sent_emoji)
                 sent_emoji = self.config.remove("sent_emoji")
                 await self.config.update()
@@ -672,7 +672,7 @@ class ModmailBot(commands.Bot):
         if blocked_emoji != "disable":
             try:
                 blocked_emoji = await self.convert_emoji(blocked_emoji)
-            except commands.BadArgument:
+            except commands.TypeError:
                 logger.warning("Removed blocked emoji (%s).", blocked_emoji)
                 blocked_emoji = self.config.remove("blocked_emoji")
                 await self.config.update()
