@@ -35,6 +35,15 @@
         "icon_url": "https://i.imgur.com/qtE7AH8.png",
         "thumbnail_url": "https://i.imgur.com/qtE7AH8.png"
     },
+	"reminder": {
+        "repository": "martinbndr/kyb3r-modmail-plugins",
+        "branch": "master",
+        "description": "Let´s you create reminders.",
+        "bot_version": "4.0.0",          
+        "title": "Reminder",
+        "icon_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/reminder/logo.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/reminder/logo.png"
+    },
     "welcomer": {
         "repository": "fourjr/modmail-plugins",
         "branch": "v4",
