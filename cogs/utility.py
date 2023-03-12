@@ -351,7 +351,7 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name="Want Modmail in Your Server?",
-            value="Follow the installation guide on [GitHub](https://github.com/kyb3r/modmail/) "
+            value="Follow the installation guide on [GitHub](https://github.com/modmail-dev/modmail/) "
             "and join our [Discord server](https://discord.gg/F34cRU8)!",
             inline=False,
         )
@@ -1941,7 +1941,7 @@ class Utility(commands.Cog):
 
         desc = (
             f"The latest version is [`{self.bot.version}`]"
-            "(https://github.com/kyb3r/modmail/blob/master/bot.py#L1)"
+            "(https://github.com/modmail-dev/modmail/blob/master/bot.py#L1)"
         )
 
         if self.bot.version >= parse_version(latest.version) and flag.lower() != "force":

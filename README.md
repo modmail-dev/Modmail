@@ -11,11 +11,11 @@
 
   <br>
   
-  <a href="https://heroku.com/deploy?template=https://github.com/kyb3r/modmail">
+  <a href="https://heroku.com/deploy?template=https://github.com/modmail-dev/modmail">
     <img src="https://img.shields.io/badge/deploy_to-heroku-997FBC.svg?style=for-the-badge&logo=Heroku">
   </a>
 
-  <a href="https://github.com/kyb3r/modmail/">
+  <a href="https://github.com/modmail-dev/modmail/">
     <img src="https://api.modmail.dev/badges/instances.svg" alt="Bot instances">
   </a>
 
@@ -35,7 +35,7 @@
     <img src="https://img.shields.io/badge/Code%20Style-Black-black?style=for-the-badge">
   </a>
 
-  <a href="https://github.com/kyb3r/modmail/blob/master/LICENSE">
+  <a href="https://github.com/modmail-dev/modmail/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-agpl-e74c3c.svg?style=for-the-badge" alt="MIT License">
   </a>
 
@@ -106,11 +106,11 @@ This guide assumes you've downloaded [`Python 3.10`](https://www.python.org/down
 
 1. Clone this repo
     ```console
-    $ git clone https://github.com/kyb3r/modmail
+    $ git clone https://github.com/modmail-dev/modmail
     $ cd modmail
     ```
-2. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/kyb3r/modmail/wiki/Installation#2-discord-bot-account))
-3. Create a free MongoDB database ([guide](https://github.com/kyb3r/modmail/wiki/Installation-(cont.)#3-create-a-database), follow it carefully!)
+2. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/modmail-dev/modmail/wiki/Installation#2-discord-bot-account))
+3. Create a free MongoDB database ([guide](https://github.com/modmail-dev/modmail/wiki/Installation-(cont.)#3-create-a-database), follow it carefully!)
 4. Rename the file `.env.example` to `.env` and fill it with appropriate values
    - If you can't find `.env.example` because it's hidden, create a new text file named `.env`, then copy the contents of [this file](https://raw.githubusercontent.com/kyb3r/modmail/master/.env.example) and replace the placeholders with their values
    - If you're on Windows and cannot save the file as `.env`, save it as `.env.` instead (this only applies to Windows!)
@@ -132,7 +132,7 @@ This guide assumes you've downloaded [`Python 3.10`](https://www.python.org/down
 We provide support for Docker to simplify the deployment of Modmail and Logviewer. 
 We assume you already have Docker and Docker Compose Plugin installed, if not, see [here](https://docs.docker.com/get-docker/).
 
-1. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/kyb3r/modmail/wiki/Installation#2-discord-bot-account))
+1. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/modmail-dev/modmail/wiki/Installation#2-discord-bot-account))
 2. Create a file named `.env`, then copy the contents of [this file](https://raw.githubusercontent.com/kyb3r/modmail/master/.env.example) and replace the placeholders with their values
 3. Create a file named `docker-compose.yml`, then copy the contents of [this file](https://raw.githubusercontent.com/kyb3r/modmail/master/docker-compose.yml), do not change anything!
 4. Start the bot
@@ -158,11 +158,11 @@ This guide is a WIP. Join our [Discord server](https://discord.gg/j5e9p8w) for m
 You can host this bot on Heroku (no longer free).
 
 Installation via Heroku is possible with your web browser alone. 
-The [**installation guide**](https://github.com/kyb3r/modmail/wiki/Installation) (which includes a video tutorial!) will guide you through the entire installation process. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
+The [**installation guide**](https://github.com/modmail-dev/modmail/wiki/Installation) (which includes a video tutorial!) will guide you through the entire installation process. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/etJNHCQ) for help and support.
 
 When using Heroku, you can configure automatic updates:
  - Login to [GitHub](https://github.com/) and verify your account.
- - [Fork the repo](https://github.com/kyb3r/modmail/fork).
+ - [Fork the repo](https://github.com/modmail-dev/modmail/fork).
  - Install the [Pull app](https://github.com/apps/pull) for your fork. 
  - Then go to the Deploy tab in your [Heroku account](https://dashboard.heroku.com/apps) of your bot app, select GitHub and connect your fork (usually by typing "Modmail"). 
  - Turn on auto-deploy for the `master` branch.
@@ -213,20 +213,20 @@ Become a sponsor on [Patreon](https://patreon.com/kyber).
 Modmail supports the use of third-party plugins to extend or add functionalities to the bot.
 Plugins allow niche features as well as anything else outside of the scope of the core functionality of Modmail. 
 
-You can find a list of third-party plugins using the `?plugins registry`  command or visit the [Unofficial List of Plugins](https://github.com/kyb3r/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
+You can find a list of third-party plugins using the `?plugins registry`  command or visit the [Unofficial List of Plugins](https://github.com/modmail-dev/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
 
-To develop your own, check out the [plugins documentation](https://github.com/kyb3r/modmail/wiki/Plugins).
+To develop your own, check out the [plugins documentation](https://github.com/modmail-dev/modmail/wiki/Plugins).
 
 Plugins requests and support are available in our [Modmail Support Server](https://discord.gg/j5e9p8w).
 
 ## Contributing
 
-Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our [contributing guidelines](https://github.com/kyb3r/modmail/blob/master/.github/CONTRIBUTING.md) before you get started.
+Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our [contributing guidelines](https://github.com/modmail-dev/modmail/blob/master/.github/CONTRIBUTING.md) before you get started.
 
 If you like this project and would like to show your appreciation, support us on **[Patreon](https://www.patreon.com/kyber)**!
 
 ## Beta Testing
 
-Our [development](https://github.com/kyb3r/modmail/tree/development) branch is where most of our features are tested before public release. Be warned that there could be bugs in various commands so keep it away from any large servers you manage.
+Our [development](https://github.com/modmail-dev/modmail/tree/development) branch is where most of our features are tested before public release. Be warned that there could be bugs in various commands so keep it away from any large servers you manage.
 
 If you wish to test the new features and play around with them, feel free to join our [Public Test Server](https://discord.gg/v5hTjKC). Bugs can be raised within that server or in our Github issues (state that you are using the development branch though).

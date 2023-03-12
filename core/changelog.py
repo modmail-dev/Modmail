@@ -53,7 +53,7 @@ class Version:
         self.version = version.lstrip("vV")
         self.lines = lines.strip()
         self.fields = {}
-        self.changelog_url = f"https://github.com/kyb3r/modmail/blob/{branch}/CHANGELOG.md"
+        self.changelog_url = f"https://github.com/modmail-dev/modmail/blob/{branch}/CHANGELOG.md"
         self.description = ""
         self.parse()
 
