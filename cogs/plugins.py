@@ -265,7 +265,6 @@ class Plugins(commands.Cog):
             raise InvalidPluginError("Cannot load extension, plugin invalid.") from exc
 
     async def parse_user_input(self, ctx, plugin_name, check_version=False):
-
         if not self.bot.config["enable_plugins"]:
             embed = discord.Embed(
                 description="Plugins are disabled, enable them by setting `ENABLE_PLUGINS=true`",
@@ -380,7 +379,6 @@ class Plugins(commands.Cog):
         await self.bot.config.update()
 
         if self.bot.config.get("enable_plugins"):
-
             invalidate_caches()
 
             try:

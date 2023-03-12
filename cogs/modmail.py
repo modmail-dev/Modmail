@@ -2201,7 +2201,7 @@ class Modmail(commands.Cog):
 
     @commands.command(name="import")
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    async def import_backup(self,ctx):
+    async def import_backup(self, ctx):
         """
         Import a backup from a json file.
 
@@ -2215,9 +2215,15 @@ class Modmail(commands.Cog):
             await attachment.save(attachment.filename)
             file = discord.File(attachment.filename)
             collection_name = os.path.splitext(attachment.filename)[0]
-            await ctx.send(f"This will overwrite all data in the {collection_name} collection. Are you sure you want to continue? (yes/no)")
+            await ctx.send(
+                f"This will overwrite all data in the {collection_name} collection. Are you sure you want to continue? (yes/no)"
+            )
             try:
-                msg = await self.bot.wait_for("message",timeout=30,check=lambda m: m.author == ctx.author and m.channel.id == ctx.channel.id)
+                msg = await self.bot.wait_for(
+                    "message",
+                    timeout=30,
+                    check=lambda m: m.author == ctx.author and m.channel.id == ctx.channel.id,
+                )
                 if msg.content.lower() == "yes":
                     success_message = await self.bot.api.import_backups(collection_name, file)
                     await ctx.send(success_message)
@@ -2230,8 +2236,6 @@ class Modmail(commands.Cog):
 
         else:
             return await ctx.send("Please attach 1 json file.")
-
-
 
 
 async def setup(bot):

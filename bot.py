@@ -657,7 +657,6 @@ class ModmailBot(commands.Bot):
         return self.get_user(id) or await self.fetch_user(id)
 
     async def retrieve_emoji(self) -> typing.Tuple[str, str]:
-
         sent_emoji = self.config["sent_emoji"]
         blocked_emoji = self.config["blocked_emoji"]
 
@@ -731,7 +730,6 @@ class ModmailBot(commands.Bot):
         if isinstance(author, discord.Member):
             for r in author.roles:
                 if str(r.id) in self.blocked_roles:
-
                     blocked_reason = self.blocked_roles.get(str(r.id)) or ""
 
                     try:
@@ -790,7 +788,6 @@ class ModmailBot(commands.Bot):
         channel: discord.TextChannel = None,
         send_message: bool = False,
     ) -> bool:
-
         member = self.guild.get_member(author.id)
         if member is None:
             # try to find in other guilds

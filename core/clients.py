@@ -23,6 +23,7 @@ class CustomJSONEncoder(json.JSONEncoder):
             return str(obj)
         return super().default(obj)
 
+
 class GitHub:
     """
     The client for interacting with GitHub API.
@@ -772,11 +773,13 @@ class MongoDBClient(ApiClient):
 
     async def import_backups(self, collection_name: str, file: discord.File):
         contents = await self.bot.loop.run_in_executor(None, file.fp.read)
-        documents = json.loads(contents.decode('utf-8'))
+        documents = json.loads(contents.decode("utf-8"))
         coll = self.db[collection_name]
         await coll.delete_many({})
         result = await coll.insert_many(documents)
-        success_message = f"Imported {len(result.inserted_ids)} documents from {file.filename} into {collection_name}."
+        success_message = (
+            f"Imported {len(result.inserted_ids)} documents from {file.filename} into {collection_name}."
+        )
         return success_message
 
 
