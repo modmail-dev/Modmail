@@ -4,8 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
-however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
+however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/modmail-dev/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+
+# [UNRELEASED]
+
+### Added
+- New .env config option: `REGISTRY_PLUGINS_ONLY`, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
+
+### Changed
+- Repo moved to https://github.com/modmail-dev/modmail.
 
 # v4.0.2
 
@@ -15,15 +23,15 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Fixed
 
-- Not having a guild icon no longer raises an exception. ([PR #3235](https://github.com/kyb3r/modmail/pull/3235))
+- Not having a guild icon no longer raises an exception. ([PR #3235](https://github.com/modmail-dev/modmail/pull/3235))
   - When no icon is set, use the default user icon.
-- Resolved an issue where `?logs` doesn't work when the thread has no title. ([PR #3201](https://github.com/kyb3r/modmail/pull/3201))
-- AttributeError raised when failing to forward a reaction. ([GH #3218](https://github.com/kyb3r/modmail/issues/3218))
+- Resolved an issue where `?logs` doesn't work when the thread has no title. ([PR #3201](https://github.com/modmail-dev/modmail/pull/3201))
+- AttributeError raised when failing to forward a reaction. ([GH #3218](https://github.com/modmail-dev/modmail/issues/3218))
 
 ### Changed
 
-- Plain messages no longer forces `()` around the respondent text. ([PR #3234](https://github.com/kyb3r/modmail/pull/3234))
-- Added workflow to automatically build Docker image ([PR #3232](https://github.com/kyb3r/modmail/pull/3228))
+- Plain messages no longer forces `()` around the respondent text. ([PR #3234](https://github.com/modmail-dev/modmail/pull/3234))
+- Added workflow to automatically build Docker image ([PR #3232](https://github.com/modmail-dev/modmail/pull/3228))
 - Updated installation guide to reflect new preferred hosting methods
 
 # v4.0.1
@@ -43,59 +51,59 @@ This is a hotfix release.
 ### Breaking
 
 - Modmail now requires [`Message Content` privileged intent](https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-for-Verified-Bots).
-- Upgraded to discord.py v2.0 ([internal changes](https://discordpy.readthedocs.io/en/latest/migrating.html), [GH #2990](https://github.com/kyb3r/modmail/issues/2990)).
+- Upgraded to discord.py v2.0 ([internal changes](https://discordpy.readthedocs.io/en/latest/migrating.html), [GH #2990](https://github.com/modmail-dev/modmail/issues/2990)).
 - Python 3.8 or higher is required.
 - Asyncio changes ([gist](https://gist.github.com/Rapptz/6706e1c8f23ac27c98cee4dd985c8120))
 - Plugin registry is purged and all developers have to re-apply due to breaking changes.
 
 ### Added
 
-- `use_hoisted_top_role` config to use change how default mod tags work, see `v3.10.0#Added` for details. ([PR #3093](https://github.com/kyb3r/modmail/pull/3093))
-- `require_close_reason` config to require a reason to close a thread. ([GH #3107](https://github.com/kyb3r/modmail/issues/3107))
-- `plain_snippets` config to force all snippets to be plain. ([GH #3083](https://github.com/kyb3r/modmail/issues/3083))
+- `use_hoisted_top_role` config to use change how default mod tags work, see `v3.10.0#Added` for details. ([PR #3093](https://github.com/modmail-dev/modmail/pull/3093))
+- `require_close_reason` config to require a reason to close a thread. ([GH #3107](https://github.com/modmail-dev/modmail/issues/3107))
+- `plain_snippets` config to force all snippets to be plain. ([GH #3083](https://github.com/modmail-dev/modmail/issues/3083))
 - `?fpareply` and `?fpreply` to reply to messages with variables plainly.
-- `use_nickname_channel_name` config to use nicknames instead of usernames for channel names. ([GH #3112](https://github.com/kyb3r/modmail/issues/3112))
-- `use_random_channel_name` config to use random nicknames vaguely tied to user ID. It is unable to be computed in reverse. ([GH #3143](https://github.com/kyb3r/modmail/issues/3143))
-- `show_log_url_button` config to show Log URL button. ([GH #3122](https://github.com/kyb3r/modmail/issues/3122))
+- `use_nickname_channel_name` config to use nicknames instead of usernames for channel names. ([GH #3112](https://github.com/modmail-dev/modmail/issues/3112))
+- `use_random_channel_name` config to use random nicknames vaguely tied to user ID. It is unable to be computed in reverse. ([GH #3143](https://github.com/modmail-dev/modmail/issues/3143))
+- `show_log_url_button` config to show Log URL button. ([GH #3122](https://github.com/modmail-dev/modmail/issues/3122))
 - Select menus for certain paginators.
-- `Title` field in `?logs`. ([GH #3142](https://github.com/kyb3r/modmail/issues/3142))
-- Snippets can be used in aliases. ([GH #3108](https://github.com/kyb3r/modmail/issues/3108), [PR #3124](https://github.com/kyb3r/modmail/pull/3124))
-- `?snippet make/create` as aliases to `?snippet add`. ([GH #3172](https://github.com/kyb3r/modmail/issues/3173), [PR #3174](https://github.com/kyb3r/modmail/pull/3174))
+- `Title` field in `?logs`. ([GH #3142](https://github.com/modmail-dev/modmail/issues/3142))
+- Snippets can be used in aliases. ([GH #3108](https://github.com/modmail-dev/modmail/issues/3108), [PR #3124](https://github.com/modmail-dev/modmail/pull/3124))
+- `?snippet make/create` as aliases to `?snippet add`. ([GH #3172](https://github.com/modmail-dev/modmail/issues/3173), [PR #3174](https://github.com/modmail-dev/modmail/pull/3174))
 
 ### Improved
 
-- Modmail now uses per-server avatars if applicable. ([GH #3048](https://github.com/kyb3r/modmail/issues/3048))
-- Use discord relative timedeltas. ([GH #3046](https://github.com/kyb3r/modmail/issues/3046))
+- Modmail now uses per-server avatars if applicable. ([GH #3048](https://github.com/modmail-dev/modmail/issues/3048))
+- Use discord relative timedeltas. ([GH #3046](https://github.com/modmail-dev/modmail/issues/3046))
 - Use discord native buttons for all paginator sessions.
 - `?help` and `?blocked` paginator sessions now have better multi-page UI.
 - Autoupdate now automatically updates pipenv dependencies if possible.
 
 ### Fixed
 
-- Several minor typos. ([PR #3095](https://github.com/kyb3r/modmail/pull/3095), [PR #3116](https://github.com/kyb3r/modmail/pull/3116))
-- Certain cases where fallback categories were not working as intended. ([PR #3109](https://github.com/kyb3r/modmail/pull/3109))
-- `?contact` would create in a random category in silent mode. ([GH #3091](https://github.com/kyb3r/modmail/issues/3091), [PR #3092](https://github.com/kyb3r/modmail/pull/3092))
-- Certain cases where `?close` would fail if closer isn't in cache. ([GH #3104](https://github.com/kyb3r/modmail/issues/3104), [PR #3105](https://github.com/kyb3r/modmail/pull/3105))
+- Several minor typos. ([PR #3095](https://github.com/modmail-dev/modmail/pull/3095), [PR #3116](https://github.com/modmail-dev/modmail/pull/3116))
+- Certain cases where fallback categories were not working as intended. ([PR #3109](https://github.com/modmail-dev/modmail/pull/3109))
+- `?contact` would create in a random category in silent mode. ([GH #3091](https://github.com/modmail-dev/modmail/issues/3091), [PR #3092](https://github.com/modmail-dev/modmail/pull/3092))
+- Certain cases where `?close` would fail if closer isn't in cache. ([GH #3104](https://github.com/modmail-dev/modmail/issues/3104), [PR #3105](https://github.com/modmail-dev/modmail/pull/3105))
 - Stickers now work in Modmail.
-- Large server sizes results in Guild.name == None. ([GH #3088](https://github.com/kyb3r/modmail/issues/3088))
-- Attachments now work on plain replies. ([GH #3102](https://github.com/kyb3r/modmail/issues/3102))
-- Support LOTTIE stickers. ([GH #3119](https://github.com/kyb3r/modmail/issues/3119))
-- Editing notes now work. ([GH #3094](https://github.com/kyb3r/modmail/issues/3094))
+- Large server sizes results in Guild.name == None. ([GH #3088](https://github.com/modmail-dev/modmail/issues/3088))
+- Attachments now work on plain replies. ([GH #3102](https://github.com/modmail-dev/modmail/issues/3102))
+- Support LOTTIE stickers. ([GH #3119](https://github.com/modmail-dev/modmail/issues/3119))
+- Editing notes now work. ([GH #3094](https://github.com/modmail-dev/modmail/issues/3094))
 - Commands now work in threads.
 - Audit log searching now properly works.
-- Old data causing `?blocked` to fail. ([GH #3131](https://github.com/kyb3r/modmail/issues/3131))
+- Old data causing `?blocked` to fail. ([GH #3131](https://github.com/modmail-dev/modmail/issues/3131))
 - Delete channel auto close functionality now works.
-- Improved error handling for autoupdate. ([PR #3161](https://github.com/kyb3r/modmail/pull/3161))
-- Skip loading of already-loaded cog. ([PR #3172](https://github.com/kyb3r/modmail/pull/3172))
-- Respect plugin's `cog_command_error`. ([GH #3170](https://github.com/kyb3r/modmail/issues/3170), [PR #3178](https://github.com/kyb3r/modmail/pull/3178))
-- Use silent as a typing literal for contacting. ([GH #3179](https://github.com/kyb3r/modmail/issues/3179))
+- Improved error handling for autoupdate. ([PR #3161](https://github.com/modmail-dev/modmail/pull/3161))
+- Skip loading of already-loaded cog. ([PR #3172](https://github.com/modmail-dev/modmail/pull/3172))
+- Respect plugin's `cog_command_error`. ([GH #3170](https://github.com/modmail-dev/modmail/issues/3170), [PR #3178](https://github.com/modmail-dev/modmail/pull/3178))
+- Use silent as a typing literal for contacting. ([GH #3179](https://github.com/modmail-dev/modmail/issues/3179))
 
 ### Internal
 
-- Improve regex parsing of channel topics. ([GH #3114](https://github.com/kyb3r/modmail/issues/3114), [PR #3111](https://github.com/kyb3r/modmail/pull/3111))
+- Improve regex parsing of channel topics. ([GH #3114](https://github.com/modmail-dev/modmail/issues/3114), [PR #3111](https://github.com/modmail-dev/modmail/pull/3111))
 - Add warning if deploying on a developmental version.
 - Extensions are now loaded `on_connect`.
-- MongoDB v5.0 clients are now supported. ([GH #3126](https://github.com/kyb3r/modmail/issues/3126))
+- MongoDB v5.0 clients are now supported. ([GH #3126](https://github.com/modmail-dev/modmail/issues/3126))
 - Bump python-dotenv to v0.20.0, support for python 3.10
 - Bump emoji to v1.7.0
 - Bump aiohttp to v3.8.1
@@ -155,37 +163,37 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 
 ### Added
 
-- Ability to have group conversations with up to 5 users. ([GH #143](https://github.com/kyb3r/modmail/issues/143))
-- Snippets are invoked case insensitively. ([GH #3077](https://github.com/kyb3r/modmail/issues/3077), [PR #3080](https://github.com/kyb3r/modmail/pull/3080))
-- Default tags now use top hoisted role. ([GH #3014](https://github.com/kyb3r/modmail/issues/3014))
-- New thread-related config - `thread_show_roles`, `thread_show_account_age`, `thread_show_join_age`, `thread_cancelled`, `thread_creation_contact_title`, `thread_creation_self_contact_response`, `thread_creation_contact_response`. ([GH #3072](https://github.com/kyb3r/modmail/issues/3072))
+- Ability to have group conversations with up to 5 users. ([GH #143](https://github.com/modmail-dev/modmail/issues/143))
+- Snippets are invoked case insensitively. ([GH #3077](https://github.com/modmail-dev/modmail/issues/3077), [PR #3080](https://github.com/modmail-dev/modmail/pull/3080))
+- Default tags now use top hoisted role. ([GH #3014](https://github.com/modmail-dev/modmail/issues/3014))
+- New thread-related config - `thread_show_roles`, `thread_show_account_age`, `thread_show_join_age`, `thread_cancelled`, `thread_creation_contact_title`, `thread_creation_self_contact_response`, `thread_creation_contact_response`. ([GH #3072](https://github.com/modmail-dev/modmail/issues/3072))
 - `use_timestamp_channel_name` config to create thread channels by timestamp.
 
 ### Improved
 
-- `?contact` now accepts a role or multiple users (creates a group conversation). ([GH #3082](https://github.com/kyb3r/modmail/issues/3082))
-- Aliases are now supported in autotrigger. ([GH #3081](https://github.com/kyb3r/modmail/pull/3081))
+- `?contact` now accepts a role or multiple users (creates a group conversation). ([GH #3082](https://github.com/modmail-dev/modmail/issues/3082))
+- Aliases are now supported in autotrigger. ([GH #3081](https://github.com/modmail-dev/modmail/pull/3081))
 
 ### Fixed
 
-- Certain situations where the internal thread cache breaks and spams new channels. ([GH #3022](https://github.com/kyb3r/modmail/issues/3022), [PR #3028](https://github.com/kyb3r/modmail/pull/3028))
-- Blocked users are now no longer allowed to use `?contact` and react to contact. ([COMMENT #819004157](https://github.com/kyb3r/modmail/issues/2969#issuecomment-819004157), [PR #3027](https://github.com/kyb3r/modmail/pull/3027))
-- UnicodeEncodeError will no longer be raised on Windows. ([PR #3043](https://github.com/kyb3r/modmail/pull/3043))
-- Notifications are no longer duplicated when using both `?notify` and `subscribe`. ([PR #3015](https://github.com/kyb3r/modmail/pull/3015))
-- `?contact` now works properly with both category and silent. ([GH #3076](https://github.com/kyb3r/modmail/issues/3076))
-- `close_on_leave_reason` now works properly when `close_on_leave` is enabled. ([GH #3075](https://github.com/kyb3r/modmail/issues/3075))
+- Certain situations where the internal thread cache breaks and spams new channels. ([GH #3022](https://github.com/modmail-dev/modmail/issues/3022), [PR #3028](https://github.com/modmail-dev/modmail/pull/3028))
+- Blocked users are now no longer allowed to use `?contact` and react to contact. ([COMMENT #819004157](https://github.com/modmail-dev/modmail/issues/2969#issuecomment-819004157), [PR #3027](https://github.com/modmail-dev/modmail/pull/3027))
+- UnicodeEncodeError will no longer be raised on Windows. ([PR #3043](https://github.com/modmail-dev/modmail/pull/3043))
+- Notifications are no longer duplicated when using both `?notify` and `subscribe`. ([PR #3015](https://github.com/modmail-dev/modmail/pull/3015))
+- `?contact` now works properly with both category and silent. ([GH #3076](https://github.com/modmail-dev/modmail/issues/3076))
+- `close_on_leave_reason` now works properly when `close_on_leave` is enabled. ([GH #3075](https://github.com/modmail-dev/modmail/issues/3075))
 - Invalid arguments are now properly catched and a proper error message is sent.
-- Update database after resetting/purging all plugins. ([GH #3011](https://github.com/kyb3r/modmail/pull/3011))
-- `thread_auto_close` timer now only resets on non-note and replies from mods. ([GH #3030](https://github.com/kyb3r/modmail/issues/3030))
-- Deleted messages are now deleted on both ends. ([GH #3041](https://github.com/kyb3r/modmail/issues/3041), [@JerrieAries](https://github.com/kyb3r/modmail/commit/20b31f8e8b5497943513997fef788d72ae668438))
-- Persistent notes are now properly deleted from the database. ([GH #3013](https://github.com/kyb3r/modmail/issues/3013))
+- Update database after resetting/purging all plugins. ([GH #3011](https://github.com/modmail-dev/modmail/pull/3011))
+- `thread_auto_close` timer now only resets on non-note and replies from mods. ([GH #3030](https://github.com/modmail-dev/modmail/issues/3030))
+- Deleted messages are now deleted on both ends. ([GH #3041](https://github.com/modmail-dev/modmail/issues/3041), [@JerrieAries](https://github.com/modmail-dev/modmail/commit/20b31f8e8b5497943513997fef788d72ae668438))
+- Persistent notes are now properly deleted from the database. ([GH #3013](https://github.com/modmail-dev/modmail/issues/3013))
 - Modmail Bot is now recognized to have `OWNER` permission level. This affects what can be run in autotriggers.
 
 ### Internal
 
-- Fix return types, type hints and unresolved references ([PR #3009](https://github.com/kyb3r/modmail/pull/3009))
-- Reload thread cache only when it's the first on_ready trigger. ([GH #3037](https://github.com/kyb3r/modmail/issues/3037))
-- `format_channel_name` is now extendable to plugins. Modify `Bot.format_channel_name(bot, author, exclude_channel=None, force_null=False):`. ([GH #2982](https://github.com/kyb3r/modmail/issues/2982))
+- Fix return types, type hints and unresolved references ([PR #3009](https://github.com/modmail-dev/modmail/pull/3009))
+- Reload thread cache only when it's the first on_ready trigger. ([GH #3037](https://github.com/modmail-dev/modmail/issues/3037))
+- `format_channel_name` is now extendable to plugins. Modify `Bot.format_channel_name(bot, author, exclude_channel=None, force_null=False):`. ([GH #2982](https://github.com/modmail-dev/modmail/issues/2982))
 
 # v3.9.5
 
@@ -199,17 +207,17 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 
 ### Fixed
 
-- Certain cases where fallback categories were not working as intended. ([GH #3002](https://github.com/kyb3r/modmail/issues/3002), [PR #3003](https://github.com/kyb3r/modmail/pull/3003))
+- Certain cases where fallback categories were not working as intended. ([GH #3002](https://github.com/modmail-dev/modmail/issues/3002), [PR #3003](https://github.com/modmail-dev/modmail/pull/3003))
 - There is now a proper message when trying to contact a bot.
 
 ### Improved
 
-- `?mention` can now be disabled with `?mention disable`. ([PR #2993](https://github.com/kyb3r/modmail/pull/2993/files))
-- `?mention` now allows vague entries such as `everyone` or `all`. ([PR #2993](https://github.com/kyb3r/modmail/pull/2993/files))
+- `?mention` can now be disabled with `?mention disable`. ([PR #2993](https://github.com/modmail-dev/modmail/pull/2993/files))
+- `?mention` now allows vague entries such as `everyone` or `all`. ([PR #2993](https://github.com/modmail-dev/modmail/pull/2993/files))
 
 ### Internal
 
-- Change heroku python version to 3.9.4 ([PR #3001](https://github.com/kyb3r/modmail/pull/3001))
+- Change heroku python version to 3.9.4 ([PR #3001](https://github.com/modmail-dev/modmail/pull/3001))
 
 # v3.9.3
 
@@ -228,7 +236,7 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 
 ### Improved
 
-- Additional HostingMethods (i.e. DOCKER, PM2, SCREEN). Autoupdates are now disabled on all docker instances. ([GH #2977](https://github.com/kyb3r/modmail/issues/2977), [PR #2988](https://github.com/kyb3r/modmail/pull/2988))
+- Additional HostingMethods (i.e. DOCKER, PM2, SCREEN). Autoupdates are now disabled on all docker instances. ([GH #2977](https://github.com/modmail-dev/modmail/issues/2977), [PR #2988](https://github.com/modmail-dev/modmail/pull/2988))
 
 ### Fixed
 
@@ -249,8 +257,8 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 
 ### Fixed
 
-- `confirm_thread_creation` now properly works when a user opens a thread using react to contact. ([GH #2930](https://github.com/kyb3r/modmail/issues/2930), [PR #2971](https://github.com/kyb3r/modmail/pull/2971))
-- `?disable all/new` now disables react to contact threads. ([GH #2969](https://github.com/kyb3r/modmail/issues/2969), [PR #2971](https://github.com/kyb3r/modmail/pull/2971))
+- `confirm_thread_creation` now properly works when a user opens a thread using react to contact. ([GH #2930](https://github.com/modmail-dev/modmail/issues/2930), [PR #2971](https://github.com/modmail-dev/modmail/pull/2971))
+- `?disable all/new` now disables react to contact threads. ([GH #2969](https://github.com/modmail-dev/modmail/issues/2969), [PR #2971](https://github.com/modmail-dev/modmail/pull/2971))
 - Ghost errors are no longer raised when threads are created using non-organic methods.
 
 ### Internal
@@ -269,13 +277,13 @@ v3.10 adds group conversations while resolving other bugs and QOL changes. It is
 
 ### Added
 
-- `?msglink <message id>`, allows you to obtain channel + message ID for T&S reports. ([GH #2963](https://github.com/kyb3r/modmail/issues/2963), [PR #2964](https://github.com/kyb3r/modmail/pull/2964))
-- `?mention disable/reset`, disables or resets mention on thread creation. ([PR #2951](https://github.com/kyb3r/modmail/pull/2951))
+- `?msglink <message id>`, allows you to obtain channel + message ID for T&S reports. ([GH #2963](https://github.com/modmail-dev/modmail/issues/2963), [PR #2964](https://github.com/modmail-dev/modmail/pull/2964))
+- `?mention disable/reset`, disables or resets mention on thread creation. ([PR #2951](https://github.com/modmail-dev/modmail/pull/2951))
 
 ### Fixed
 
 - Non-master/development branch deployments no longer cause errors to be raised.
-- Autotriggers now can search for roles/channels in guild context. ([GH #2961](https://github.com/kyb3r/modmail/issues/2961))
+- Autotriggers now can search for roles/channels in guild context. ([GH #2961](https://github.com/modmail-dev/modmail/issues/2961))
 
 # v3.8.4
 
@@ -289,28 +297,28 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 
 ### Fixed
 
-- Retry with `null-discrim` if channel could not be created. ([GH #2934](https://github.com/kyb3r/modmail/issues/2934))
+- Retry with `null-discrim` if channel could not be created. ([GH #2934](https://github.com/modmail-dev/modmail/issues/2934))
 - Fix update notifications.
-- Retrieve user from Discord API if user has left the server, resolving issues in `?block`. ([GH #2935](https://github.com/kyb3r/modmail/issues/2935), [PR #2936](https://github.com/kyb3r/modmail/pull/2936))
+- Retrieve user from Discord API if user has left the server, resolving issues in `?block`. ([GH #2935](https://github.com/modmail-dev/modmail/issues/2935), [PR #2936](https://github.com/modmail-dev/modmail/pull/2936))
 - IDs in `<member>` commands work now.
 
 # v3.8.1
 
 ### Fixed
 
-- Additional image uploads now render properly. ([PR #2933](https://github.com/kyb3r/modmail/pull/2933))
-- `confirm_thread_creation` no longer raises unnecessary errors. ([GH #2931](https://github.com/kyb3r/modmail/issues/2931), [PR #2933](https://github.com/kyb3r/modmail/pull/2933))
-- Autotriggers no longer sends attachments back. ([GH #2932](https://github.com/kyb3r/modmail/issues/2932))
+- Additional image uploads now render properly. ([PR #2933](https://github.com/modmail-dev/modmail/pull/2933))
+- `confirm_thread_creation` no longer raises unnecessary errors. ([GH #2931](https://github.com/modmail-dev/modmail/issues/2931), [PR #2933](https://github.com/modmail-dev/modmail/pull/2933))
+- Autotriggers no longer sends attachments back. ([GH #2932](https://github.com/modmail-dev/modmail/issues/2932))
 
 # v3.8.0
 
 ### Added
 
-- `update_notifications` configuration option to toggle bot autoupdate notifications. ([GH #2896](https://github.com/kyb3r/modmail/issues/2896))
+- `update_notifications` configuration option to toggle bot autoupdate notifications. ([GH #2896](https://github.com/modmail-dev/modmail/issues/2896))
 - `?fareply`, anonymously reply with variables.
-- `anonymous_snippets` config variable to toggle if snippets should be anonymous. ([GH #2905](https://github.com/kyb3r/modmail/issues/2905))
+- `anonymous_snippets` config variable to toggle if snippets should be anonymous. ([GH #2905](https://github.com/modmail-dev/modmail/issues/2905))
 - `disable_updates` config variable to control if the update command should be disabled or not.
-- `silent_alert_on_mention` to alert mods silently. ([GH #2907](https://github.com/kyb3r/modmail/issues/2907))
+- `silent_alert_on_mention` to alert mods silently. ([GH #2907](https://github.com/modmail-dev/modmail/issues/2907))
 - Support for only the "Server Members" intent.
 
 ### Improved
@@ -321,17 +329,17 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 
 ### Fixed
 
-- Mentioned `competing` as an activity type. ([PR #2902](https://github.com/kyb3r/modmail/pull/2902))
+- Mentioned `competing` as an activity type. ([PR #2902](https://github.com/modmail-dev/modmail/pull/2902))
 - Level permissions were not checked if command permissions were set.
 - Regex autotriggers were not working if term was in the middle of strings.
 - `?blocked` now no longers show blocks that have expired.
 - Blocked roles will no longer trigger an error during unblock.
-- Custom emojis are now supported in `confirm_thread_creation_deny`. ([GH #2916](https://github.com/kyb3r/modmail/issues/2916))
-- Finding linked messages in replies work now. ([GH #2920](https://github.com/kyb3r/modmail/issues/2920), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2920#issuecomment-751530495))
-- Sending files in threads (non-images) now work. ([GH #2926](https://github.com/kyb3r/modmail/issues/2926))
-- Deleting messages no longer shows a false error. ([GH #2910](https://github.com/kyb3r/modmail/issues/2910), [Jerrie-Aries](https://github.com/kyb3r/modmail/issues/2910#issuecomment-753557313))
+- Custom emojis are now supported in `confirm_thread_creation_deny`. ([GH #2916](https://github.com/modmail-dev/modmail/issues/2916))
+- Finding linked messages in replies work now. ([GH #2920](https://github.com/modmail-dev/modmail/issues/2920), [Jerrie-Aries](https://github.com/modmail-dev/modmail/issues/2920#issuecomment-751530495))
+- Sending files in threads (non-images) now work. ([GH #2926](https://github.com/modmail-dev/modmail/issues/2926))
+- Deleting messages no longer shows a false error. ([GH #2910](https://github.com/modmail-dev/modmail/issues/2910), [Jerrie-Aries](https://github.com/modmail-dev/modmail/issues/2910#issuecomment-753557313))
 - Display an error on [Lottie](https://airbnb.io/lottie/#/) stickers, instead of failing the send.
-- `?perms get` now shows role/user names. ([PR #2927](https://github.com/kyb3r/modmail/pull/2927))
+- `?perms get` now shows role/user names. ([PR #2927](https://github.com/modmail-dev/modmail/pull/2927))
 
 ### Internal
 
@@ -370,13 +378,13 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 ### Added
 
 - Added `update_channel_id` to specify which channel autoupdate notifications were being sent to.
-- Added `show_timestamp` to specify if timestamps should be displayed in message embeds. ([GH #2885](https://github.com/kyb3r/modmail/issues/2885))
+- Added `show_timestamp` to specify if timestamps should be displayed in message embeds. ([GH #2885](https://github.com/modmail-dev/modmail/issues/2885))
 
 # v3.7.9
 
 ### Fixed
 
-- `perms add/remove` with permission levels should now work again. ([GH #2892](https://github.com/kyb3r/modmail/issues/2892), [PR #2893](https://github.com/kyb3r/modmail/pull/2893))
+- `perms add/remove` with permission levels should now work again. ([GH #2892](https://github.com/modmail-dev/modmail/issues/2892), [PR #2893](https://github.com/modmail-dev/modmail/pull/2893))
 
 ### Improved
 
@@ -386,7 +394,7 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 
 ### Added
 
-- Added `thread_contact_silently` to allow opening threads silently by default. ([PR #2887](https://github.com/kyb3r/modmail/pull/2887))
+- Added `thread_contact_silently` to allow opening threads silently by default. ([PR #2887](https://github.com/modmail-dev/modmail/pull/2887))
 
 ### Fixed
 - Permission levels were not respected.
@@ -412,7 +420,7 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 ### Fixed
 
 - Autoupdate persists despite errors.
-- Mention when normal thread created was not working. ([GH #2883](https://github.com/kyb3r/modmail/issues/2883))
+- Mention when normal thread created was not working. ([GH #2883](https://github.com/modmail-dev/modmail/issues/2883))
 
 # v3.7.5
 
@@ -424,13 +432,13 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 
 ### Fixed
 
-- React to contact threads were treated like normal contact threads. ([GH #2881](https://github.com/kyb3r/modmail/issues/2881))
+- React to contact threads were treated like normal contact threads. ([GH #2881](https://github.com/modmail-dev/modmail/issues/2881))
 
 # v3.7.2
 
 ### Added
 
-- Added `mention_channel_id` to specify which channel `alert_on_mention` was being sent to. ([GH #2880](https://github.com/kyb3r/modmail/issues/2880))
+- Added `mention_channel_id` to specify which channel `alert_on_mention` was being sent to. ([GH #2880](https://github.com/modmail-dev/modmail/issues/2880))
 
 ### Fixed
 
@@ -447,31 +455,31 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 
 ### Added
 
-- Plain replies functionality. Added commands `preply`, `pareply` and config `plain_reply_without_command`. ([GH #2872](https://github.com/kyb3r/modmail/issues/2872))
+- Plain replies functionality. Added commands `preply`, `pareply` and config `plain_reply_without_command`. ([GH #2872](https://github.com/modmail-dev/modmail/issues/2872))
 - Added `react_to_contact_message`, `react_to_contact_emoji` to allow users to create threads by reacting to a message.
-- Added `thread_move_notify_mods` to mention all mods again after moving thread. ([GH #215](https://github.com/kyb3r/modmail/issues/215))
-- Added `transfer_reactions` to link reactions between mods and users. ([GH #2763](https://github.com/kyb3r/modmail/issues/2763))
-- Added `close_on_leave`, `close_on_leave_reason` to automatically close threads upon recipient leaving the server. ([GH #2757](https://github.com/kyb3r/modmail/issues/2757))
-- Added `alert_on_mention` to mention mods upon a bot mention. ([GH #2833](https://github.com/kyb3r/modmail/issues/2833))
-- Added `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny` to allow users to confirm that they indeed want to create a new thread. ([GH #2773](https://github.com/kyb3r/modmail/issues/2773))
-- Support Gyazo image links in message embeds. ([GH #282](https://github.com/kyb3r/modmail/issues/282))
+- Added `thread_move_notify_mods` to mention all mods again after moving thread. ([GH #215](https://github.com/modmail-dev/modmail/issues/215))
+- Added `transfer_reactions` to link reactions between mods and users. ([GH #2763](https://github.com/modmail-dev/modmail/issues/2763))
+- Added `close_on_leave`, `close_on_leave_reason` to automatically close threads upon recipient leaving the server. ([GH #2757](https://github.com/modmail-dev/modmail/issues/2757))
+- Added `alert_on_mention` to mention mods upon a bot mention. ([GH #2833](https://github.com/modmail-dev/modmail/issues/2833))
+- Added `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_response`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny` to allow users to confirm that they indeed want to create a new thread. ([GH #2773](https://github.com/modmail-dev/modmail/issues/2773))
+- Support Gyazo image links in message embeds. ([GH #282](https://github.com/modmail-dev/modmail/issues/282))
 - Added `silent` argument to `?contact` to restore old behaviour.
-- Added new functionality: If `?help` is sent, bot does checks on every command, `?help all` restores old behaviour. ([GH #2847](https://github.com/kyb3r/modmail/issues/2847))
-- Added a way to block roles. ([GH #2753](https://github.com/kyb3r/modmail/issues/2753))
-- Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/kyb3r/modmail/issues/2865))
-- Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/kyb3r/modmail/issues/2762))
+- Added new functionality: If `?help` is sent, bot does checks on every command, `?help all` restores old behaviour. ([GH #2847](https://github.com/modmail-dev/modmail/issues/2847))
+- Added a way to block roles. ([GH #2753](https://github.com/modmail-dev/modmail/issues/2753))
+- Added `cooldown_thread_title`, `cooldown_thread_response` to customise message sent when user is on a creating thread cooldown. ([GH #2865](https://github.com/modmail-dev/modmail/issues/2865))
+- Added `?selfcontact` to allow users to open a thread. ([GH #2762](https://github.com/modmail-dev/modmail/issues/2762))
 - Support stickers and reject non-messages. (i.e. pin_add)
-- Added support for thread titles, `?title`. ([GH #2838](https://github.com/kyb3r/modmail/issues/2838))
+- Added support for thread titles, `?title`. ([GH #2838](https://github.com/modmail-dev/modmail/issues/2838))
 - Added `data_collection` to specify if bot metadata should be collected by Modmail developers.
-- Added `?autotrigger`, `use_regex_autotrigger` config to specify keywords to trigger commands. ([GH #130](https://github.com/kyb3r/modmail/issues/130), [GH #649](https://github.com/kyb3r/modmail/issues/649))
-- Added `?note persistent` that creates notes that are persistent for a user. ([GH #2842](https://github.com/kyb3r/modmail/issues/2842), [PR #2878](https://github.com/kyb3r/modmail/pull/2878))
+- Added `?autotrigger`, `use_regex_autotrigger` config to specify keywords to trigger commands. ([GH #130](https://github.com/modmail-dev/modmail/issues/130), [GH #649](https://github.com/modmail-dev/modmail/issues/649))
+- Added `?note persistent` that creates notes that are persistent for a user. ([GH #2842](https://github.com/modmail-dev/modmail/issues/2842), [PR #2878](https://github.com/modmail-dev/modmail/pull/2878))
 - Autoupdates and `?update` which was removed in v3.0.0
 
 ### Fixed
 
 - `?contact` now sends members a DM.
-- `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/kyb3r/modmail/issues/2856))
-- Command truncated after && in alias. ([GH #2870](https://github.com/kyb3r/modmail/issues/2870))
+- `level_permissions` and `command_permissions` would sometimes be reset. ([GH #2856](https://github.com/modmail-dev/modmail/issues/2856))
+- Command truncated after && in alias. ([GH #2870](https://github.com/modmail-dev/modmail/issues/2870))
 - `on_plugins_ready` event for plugins works now.
 
 ### Improved
@@ -480,7 +488,7 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 - `?move` now does not require exact category names, accepts case-insensitive and startswith names.
 
 ### Internal
-- Use enums in config. ([GH #2821](https://github.com/kyb3r/modmail/issues/2821))
+- Use enums in config. ([GH #2821](https://github.com/modmail-dev/modmail/issues/2821))
 - `on_thread_close` event for plugins.
 - `on_thread_reply` event for plugins.
 
@@ -503,14 +511,14 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 ### Added
 
 - Added `thread_move_title` to specify title of thread moved embed.
-- Mark NSFW logs in log message. ([GH #2792](https://github.com/kyb3r/modmail/issues/2792))
-- Icon for moderator that closed the thread in log message. ([GH #2828](https://github.com/kyb3r/modmail/issues/2828))
-- Ability to set mentions via user/role ID. ([GH #2796](https://github.com/kyb3r/modmail/issues/2796))
+- Mark NSFW logs in log message. ([GH #2792](https://github.com/modmail-dev/modmail/issues/2792))
+- Icon for moderator that closed the thread in log message. ([GH #2828](https://github.com/modmail-dev/modmail/issues/2828))
+- Ability to set mentions via user/role ID. ([GH #2796](https://github.com/modmail-dev/modmail/issues/2796))
 
 ### Changed
 
 - `?move` now consumes rest in category name, which means `?move Long Category Name` works without quotes!
-- `?help` shows "No command description" if no description provided. ([PR #2845](https://github.com/kyb3r/modmail/pull/2845))
+- `?help` shows "No command description" if no description provided. ([PR #2845](https://github.com/modmail-dev/modmail/pull/2845))
 
 ### Fixed
 - Unicode errors raised during windows selfhosting
@@ -519,7 +527,7 @@ This update is a quick hotfix for a weird behaviour experienced on 1 Feb 2021 wh
 
 - Bump discord.py version to 1.5.1
 - Explicitly state intents used for connection
-- Use `--diff` for black CI instead of `--check` ([GH #2816](https://github.com/kyb3r/modmail/issues/2816))
+- Use `--diff` for black CI instead of `--check` ([GH #2816](https://github.com/modmail-dev/modmail/issues/2816))
 
 
 # v3.5.0
@@ -529,7 +537,7 @@ Fixed discord.py issue.
 ### Added
 
 - A confirmation when you manually delete a thread message embed.
-- Config var `enable_eval` defaults true, set `enable_eval=no` to disable the eval command. ([GH #2803](https://github.com/kyb3r/modmail/issues/2803))
+- Config var `enable_eval` defaults true, set `enable_eval=no` to disable the eval command. ([GH #2803](https://github.com/modmail-dev/modmail/issues/2803))
 - Added `?plugins reset` command to completely reset everything related to plugins. This will fix some problems caused by broken plugins in the file system.
 - Support private GitHub repos for plugins (thanks to @officialpiyush pr#2767)
 
@@ -838,7 +846,7 @@ Security update!
 
 - Removed auto-update functionality and the `?update` command in favor of the [Pull app](https://github.com/apps/pull).
 
-Read more about updating your bot [here](https://github.com/kyb3r/modmail/wiki/updating)
+Read more about updating your bot [here](https://github.com/modmail-dev/modmail/wiki/updating)
 
 ### Changed
 - Channel names now can contain Unicode characters.
@@ -883,7 +891,7 @@ Added a 🛑 reaction to the paginators to delete the embed.
 
 ### Fixed
 
-`?blocked` is now paginated using reactions. This fixes [#249](https://github.com/kyb3r/modmail/issues/249)
+`?blocked` is now paginated using reactions. This fixes [#249](https://github.com/modmail-dev/modmail/issues/249)
 
 # v2.21.0
 
@@ -922,7 +930,7 @@ This update contains mostly internal changes.
 
 ### What's new? 
 
-New `?oauth whitelist` command, which allows you to whitelist users so they can log in via discord to view logs. To set up oauth login for your logviewer app, check the logviewer [repo](https://github.com/kyb3r/logviewer).
+New `?oauth whitelist` command, which allows you to whitelist users so they can log in via discord to view logs. To set up oauth login for your logviewer app, check the logviewer [repo](https://github.com/modmail-dev/logviewer).
 
 # v2.19.1
 
@@ -1207,7 +1215,7 @@ Added image link in title in case discord fails to embed an image.
 ### What's new? 
 - Plugins:
   - Think of it like addons! Anyone (with the skills) can create a plugin, make it public and distribute it. Add a welcome message to Modmail, or moderation commands? It's all up to your imagination!   Have a niche feature request that you think only your server would benefit? Plugins are your go-to!
-  - [Creating Plugins Documentation](https://github.com/kyb3r/modmail/wiki/Plugins).
+  - [Creating Plugins Documentation](https://github.com/modmail-dev/modmail/wiki/Plugins).
 
 # v2.12.5
 
@@ -1218,7 +1226,7 @@ Added image link in title in case discord fails to embed an image.
 # v2.12.4
 
 ### What's new?
-- Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/kyb3r/modmail/blob/master/core/_color_data.py).
+- Named colors are now supported! Over 900 different common color names are recognized. A list of color names can be found in [core/_color_data.py](https://github.com/modmail-dev/modmail/blob/master/core/_color_data.py).
   - Named colors can be set the same way as hex. But this can only be done through `config set`, which means database modifications will not work.
   - For example: `config set main_color yellowish green`.
 - New config var `main_color` allows you to customize the main Modmail color (as requested by many). Defaults to Discord `blurple`.
@@ -1412,7 +1420,7 @@ Thread channels will now default to being private (`@everyone`'s read message pe
 ### Background
 - Bots hosted by Heroku restart at least once every 27 hours.
 - During this period, local caches will be deleted, which results in the inability to set the scheduled close time to longer than 24 hours. This update resolves this issue. 
-- [PR #135](https://github.com/kyb3r/modmail/pull/135)
+- [PR #135](https://github.com/modmail-dev/modmail/pull/135)
 
 ### Changed
 - Created a new internal config var: `closures`.
@@ -1450,7 +1458,7 @@ Fixed a bug in the `?activity` command where it would fail to set the activity o
 
 ### What's new?
 - Added the `?activity` command for setting the activity
-- [PR #131](https://github.com/kyb3r/modmail/pull/131#issue-244686818) this supports multiple activity types (`playing`, `watching`, `listening`, and `streaming`).
+- [PR #131](https://github.com/modmail-dev/modmail/pull/131#issue-244686818) this supports multiple activity types (`playing`, `watching`, `listening`, and `streaming`).
 
 ### Removed
 - Removed the deprecated `status` command.
@@ -1583,9 +1591,9 @@ Fixed a bug in the `?activity` command where it would fail to set the activity o
 
 # v2.0.0
 
-This release introduces the use of our centralized [API service](https://github.com/kyb3r/webserver) to enable dynamic configuration, auto-updates, and thread logs.
+This release introduces the use of our centralized [API service](https://github.com/modmail-dev/webserver) to enable dynamic configuration, auto-updates, and thread logs.
 To use this release, you must acquire an API token from https://modmail.tk.
-Read the updated installation guide [here](https://github.com/kyb3r/modmail/wiki/installation).
+Read the updated installation guide [here](https://github.com/modmail-dev/modmail/wiki/installation).
 
 ### Changed
 - Stability improvements through synchronization primitives.
