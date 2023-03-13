@@ -12,7 +12,7 @@ import struct
 import sys
 import platform
 import typing
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from subprocess import PIPE
 from types import SimpleNamespace
 
@@ -633,6 +633,7 @@ class ModmailBot(commands.Bot):
 
         self.post_metadata.start()
         self.autoupdate.start()
+        self.log_expiry.start()
         self._started = True
 
     async def convert_emoji(self, name: str) -> str:
@@ -657,7 +658,6 @@ class ModmailBot(commands.Bot):
         return self.get_user(id) or await self.fetch_user(id)
 
     async def retrieve_emoji(self) -> typing.Tuple[str, str]:
-
         sent_emoji = self.config["sent_emoji"]
         blocked_emoji = self.config["blocked_emoji"]
 
@@ -731,7 +731,6 @@ class ModmailBot(commands.Bot):
         if isinstance(author, discord.Member):
             for r in author.roles:
                 if str(r.id) in self.blocked_roles:
-
                     blocked_reason = self.blocked_roles.get(str(r.id)) or ""
 
                     try:
@@ -790,7 +789,6 @@ class ModmailBot(commands.Bot):
         channel: discord.TextChannel = None,
         send_message: bool = False,
     ) -> bool:
-
         member = self.guild.get_member(author.id)
         if member is None:
             # try to find in other guilds
@@ -1713,6 +1711,42 @@ class ModmailBot(commands.Bot):
             logger.warning("Autoupdates disabled.")
             self.autoupdate.cancel()
             return
+
+    @tasks.loop()
+    async def log_expiry(self):
+        log_expire_after = self.config.get("log_expiration")
+        if log_expire_after == isodate.Duration():
+            return self.log_expiry.stop()
+
+        now = datetime.utcnow()
+        expiration_datetime = now - log_expire_after
+        expired_logs = await self.db.logs.find({"closed_at": {"$lte": str(expiration_datetime)}}).to_list(
+            None
+        )
+
+        if not await self.db.logs.find_one():
+            return await discord.utils.sleep_until(now + timedelta(days=1))
+
+        if not expired_logs:
+            fetch = await self.db.logs.find().sort("closed_at", 1).limit(1).to_list(None)
+            if fetch:
+                for x in fetch:
+                    if x["closed_at"] > str(expiration_datetime):
+                        closed_at = datetime.strptime(x["closed_at"], "%Y-%m-%d %H:%M:%S.%f%z")
+                        next_expiry = closed_at + log_expire_after
+                        return await discord.utils.sleep_until(next_expiry)
+
+        for log in expired_logs:
+            await self.db.logs.delete_one({"_id": log["_id"]})
+        logger.info(f"Deleted {len(expired_logs)} expired logs.")
+
+        fetch = await self.db.logs.find().sort("closed_at", 1).limit(1).to_list(None)
+        if fetch:
+            for x in fetch:
+                if x["closed_at"] > str(expiration_datetime):
+                    closed_at = datetime.strptime(x["closed_at"], "%Y-%m-%d %H:%M:%S.%f%z")
+                    next_expiry = closed_at + log_expire_after
+                    return await discord.utils.sleep_until(next_expiry)
 
     def format_channel_name(self, author, exclude_channel=None, force_null=False):
         """Sanitises a username for use with text channel names
