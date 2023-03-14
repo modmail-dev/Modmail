@@ -53,7 +53,7 @@ class Version:
         self.version = version.lstrip("vV")
         self.lines = lines.strip()
         self.fields = {}
-        self.changelog_url = f"https://github.com/kyb3r/modmail/blob/{branch}/CHANGELOG.md"
+        self.changelog_url = f"https://github.com/modmail-dev/modmail/blob/{branch}/CHANGELOG.md"
         self.description = ""
         self.parse()
 
@@ -90,14 +90,15 @@ class Version:
         embed = Embed(color=self.bot.main_color, description=self.description)
         embed.set_author(
             name=f"v{self.version} - Changelog",
-            icon_url=self.bot.user.avatar_url,
+            icon_url=self.bot.user.display_avatar.url,
             url=self.url,
         )
 
         for name, value in self.fields.items():
             embed.add_field(name=name, value=truncate(value, 1024), inline=False)
         embed.set_footer(text=f"Current version: v{self.bot.version}")
-        embed.set_thumbnail(url=self.bot.user.avatar_url)
+
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         return embed
 
 
@@ -185,7 +186,7 @@ class Changelog:
         if branch not in ("master", "development"):
             branch = "master"
 
-        url = url or f"https://raw.githubusercontent.com/kyb3r/modmail/{branch}/CHANGELOG.md"
+        url = url or f"https://raw.githubusercontent.com/modmail-dev/modmail/{branch}/CHANGELOG.md"
 
         async with await bot.session.get(url) as resp:
             return cls(bot, branch, await resp.text())

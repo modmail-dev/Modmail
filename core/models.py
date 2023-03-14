@@ -206,8 +206,11 @@ class SimilarCategoryConverter(commands.CategoryChannelConverter):
             if guild:
                 categories = {c.name.casefold(): c for c in guild.categories}
             else:
-                categories = {c.name.casefold(): c for c in bot.get_all_channels()
-                              if isinstance(c, discord.CategoryChannel)}
+                categories = {
+                    c.name.casefold(): c
+                    for c in bot.get_all_channels()
+                    if isinstance(c, discord.CategoryChannel)
+                }
 
             result = get_close_matches(argument.casefold(), categories.keys(), n=1, cutoff=0.75)
             if result:

@@ -106,8 +106,8 @@
     ],
     "notes": [
       "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
-      "This cannot be applied with `use_timestamp_channel_name`.",
-      "See also: `use_timestamp_channel_name`."
+      "This cannot be applied with `use_timestamp_channel_name`, `use_random_channel_name` or `use_nickname_channel_name`.",
+      "See also: `use_timestamp_channel_name`, `use_nickname_channel_name`, `use_random_channel_name`."
     ]
   },
   "use_timestamp_channel_name": {
@@ -119,8 +119,34 @@
     ],
     "notes": [
       "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
-      "This cannot be applied with `use_user_id_channel_name`.",
-      "See also: `use_user_id_channel_name`."
+      "This cannot be applied with `use_user_id_channel_name`, `use_random_channel_name` or `use_nickname_channel_name`.",
+      "See also: `use_user_id_channel_name`, `use_nickname_channel_name`, `use_random_channel_name`."
+    ]
+  },
+  "use_nickname_channel_name": {
+    "default": "No",
+    "description": "When this is set to `yes`, new thread channels will be named with the recipient's nickname instead of the recipient's name.",
+    "examples": [
+      "`{prefix}config set use_nickname_channel_name yes`",
+      "`{prefix}config set use_nickname_channel_name no`"
+    ],
+    "notes": [
+      "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
+      "This cannot be applied with `use_timestamp_channel_name`, `use_random_channel_name` or `use_user_id_channel_name`.",
+      "See also: `use_timestamp_channel_name`, `use_user_id_channel_name`, `use_random_channel_name`."
+    ]
+  },
+  "use_random_channel_name": {
+    "default": "No",
+    "description": "When this is set to `yes`, new thread channels will be named with random characters tied to their user ID.",
+    "examples": [
+      "`{prefix}config set use_random_channel_name yes`",
+      "`{prefix}config set use_random_channel_name no`"
+    ],
+    "notes": [
+      "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
+      "This cannot be applied with `use_timestamp_channel_name`, `use_nickname_channel_name`, or `use_user_id_channel_name`.",
+      "See also: `use_timestamp_channel_name`, `use_user_id_channel_name`, `use_nickname_channel_name`."
     ]
   },
   "mod_typing": {
@@ -227,7 +253,7 @@
     "default": "Yes",
     "description": "This is the channel where update notifications are sent to.",
     "examples": [
-      "`{prefix}config set update_notifications no"
+      "`{prefix}config set update_notifications no`"
     ],
     "notes": [
       "This has no effect unless `disable_autoupdates` is set to no.",
@@ -426,7 +452,7 @@
     "default": "\"You have opened a Modmail thread.\"",
     "description": "This is the message embed description sent to recipients when self-contacted.",
     "examples": [
-      "`{prefix}config set thread_creation_contact_title You contacted yourself.`"
+      "`{prefix}config set thread_creation_self_contact_response You contacted yourself.`"
     ],
     "notes": [
       "`thread_creation_contact_response` is used when contacted by another user.",
@@ -558,7 +584,7 @@
     ]
   },
   "cooldown_thread_response": {
-    "default": "You must wait for {delta} before you can contact me again.",
+    "default": "Your cooldown ends {delta}. Try contacting me then.",
     "description": "The description of the message embed when the user has a cooldown before creating a new thread.",
     "examples": [
       "`{prefix}config set cooldown_thread_response Be patient! You are on cooldown, wait {delta} more.`"
@@ -794,8 +820,34 @@
       "`{prefix}config set anonymous_snippets yes`"
     ],
     "notes": [
-      "See also: `anon_avatar_url`, `anon_tag`."
+      "See also: `anon_avatar_url`, `anon_tag`, `plain_snippets`."
     ]
+  },
+  "plain_snippets": {
+    "default": "No",
+    "description": "Sends snippets with a plain interface.",
+    "examples":[
+      "`{prefix}config set plain_snippets yes`"
+    ],
+    "notes": [
+      "See also: `anonymous_snippets`."
+    ]
+  },
+  "require_close_reason": {
+    "default" : "No",
+    "description": "Require a reason to close threads.",
+    "examples": [
+      "`{prefix}config set require_close_reason yes`"
+    ],
+    "notes": []
+  },
+  "show_log_url_button": {
+    "default" : "No",
+    "description": "Shows the button to open the Log URL.",
+    "examples": [
+      "`{prefix}config set show_log_url_button yes`"
+    ],
+    "notes": []
   },
   "private_added_to_group_title": {
     "default": "New Thread (Group)",
@@ -1120,6 +1172,17 @@
     ],
     "notes": [
       "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "use_hoisted_top_role": {
+    "default": "Yes",
+    "description": "Controls if only hoisted roles are evaluated when finding top role.",
+    "examples": [
+    ],
+    "notes": [
+      "Top role is displayed in embeds when replying or adding/removing users to a thread in the case mod_tag and anon_username are not set.",
+      "If this configuration is enabled, only roles that are hoisted (displayed seperately in member list) will be used. If a user has no hoisted roles, it will return 'None'.",
+      "If you would like to display the top role of a user regardless of if it's hoisted or not, disable `use_hoisted_top_role`."
     ]
   }
 }
