@@ -1736,8 +1736,7 @@ class ModmailBot(commands.Bot):
                         next_expiry = closed_at + log_expire_after
                         return await discord.utils.sleep_until(next_expiry)
 
-        for log in expired_logs:
-            await self.db.logs.delete_one({"_id": log["_id"]})
+        await self.db.logs.delete_many({"closed_at": {"$lte": str(expiration_datetime)}})
         logger.info(f"Deleted {len(expired_logs)} expired logs.")
 
         fetch = await self.db.logs.find().sort("closed_at", 1).limit(1).to_list(None)
