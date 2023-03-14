@@ -375,7 +375,7 @@
   },
   "log_expiration": {
     "default": "Never",
-    "description": "Specify the duration of how long the thread log will be kept in the log channel. After the duration has passed, the log will be deleted.",
+    "description": "The duration closed threads will be stored within the database before deletion. Logs that have been closed for longer than this duration will be deleted automatically.",
     "examples": [
       "`{prefix}config set thread_cooldown P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
       "`{prefix}config set thread_cooldown 3 days and 5 hours` (accepted readable time)"
