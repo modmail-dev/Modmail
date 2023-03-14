@@ -30,11 +30,11 @@ Pull requests are the best way to propose changes to the codebase. We actively w
 ## Any contributions you make will be under the GNU Affero General Public License v3.0
 In short, when you submit code changes, your submissions are understood to be under the same [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html) that covers the project. Feel free to contact the maintainers if that's a concern.
 
-## Report bugs using [Github Issues](https://github.com/kyb3r/modmail/issues)
-We use GitHub issues to track public bugs. Report a bug by [opening a new Issue](https://github.com/kyb3r/modmail/issues/new); it's that easy!
+## Report bugs using [Github Issues](https://github.com/modmail-dev/modmail/issues)
+We use GitHub issues to track public bugs. Report a bug by [opening a new Issue](https://github.com/modmail-dev/modmail/issues/new); it's that easy!
 
 ## Find pre-existing issues to tackle
-Check out our [unstaged issue tracker](https://github.com/kyb3r/modmail/issues?q=is%3Aissue+is%3Aopen+-label%3Astaged) and start helping out!
+Check out our [unstaged issue tracker](https://github.com/modmail-dev/modmail/issues?q=is%3Aissue+is%3Aopen+-label%3Astaged) and start helping out!
 
 Ways to help out:
 - Help out new members
