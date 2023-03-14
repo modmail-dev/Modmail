@@ -1,6 +1,18 @@
 __version__ = "4.0.2"
 
 
+# early import to initialize colorama
+from core.models import (
+    DMDisabled,
+    HostingMethod,
+    InvalidConfigError,
+    PermissionLevel,
+    SafeFormatter,
+    create_log_handler,
+    configure_logging,
+    getLogger,
+)
+
 import asyncio
 import copy
 import hashlib
@@ -25,33 +37,16 @@ from emoji import UNICODE_EMOJI
 from pkg_resources import parse_version
 
 
-try:
-    # noinspection PyUnresolvedReferences
-    from colorama import init
-
-    init()
-except ImportError:
-    pass
-
 from core import checks
 from core.changelog import Changelog
 from core.clients import ApiClient, MongoDBClient, PluginDatabaseClient
 from core.config import ConfigManager
-from core.models import (
-    DMDisabled,
-    HostingMethod,
-    InvalidConfigError,
-    PermissionLevel,
-    SafeFormatter,
-    configure_logging,
-    getLogger,
-)
 from core.thread import ThreadManager
 from core.time import human_timedelta
 from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint
 
-logger = getLogger(__name__)
 
+logger = getLogger(__name__)
 
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
@@ -199,6 +194,28 @@ class ModmailBot(commands.Bot):
 
         logger.info("Log file: %s", self.log_file_name)
         configure_logging(self.log_file_name, log_level)
+
+        # Set up discord.py logging
+        # repeat the step
+        level_text = os.environ.get("LOG_DISCORD", "INFO").upper()
+        log_level = logging_levels.get(level_text, logging.INFO)
+        logger.info("Setting up discord logger, logging level: %s.", logging.getLevelName(log_level))
+        d_logger = logging.getLogger("discord")
+        d_logger.setLevel(log_level)
+        is_debug = not log_level > logging.DEBUG
+        stream = create_log_handler(level=log_level if not is_debug else logging.INFO)
+        d_logger.addHandler(stream)
+        file_handler = create_log_handler(
+            self.log_file_name, rotating=True, level=log_level if not is_debug else logging.INFO
+        )
+        d_logger.addHandler(file_handler)
+
+        # internal discord.py debug logging
+        if is_debug:
+            debug_handler = create_log_handler("discord.log", level=log_level, mode="w", encoding="utf-8")
+            logger.info("Discord logger DEBUG level is enabled. Log file: %s", "discord.log")
+            d_logger.addHandler(debug_handler)
+
         logger.debug("Successfully configured logging.")
 
     @property
@@ -1796,16 +1813,6 @@ def main():
             discord.__version__,
         )
         sys.exit(0)
-
-    # Set up discord.py internal logging
-    if os.environ.get("LOG_DISCORD"):
-        logger.debug(f"Discord logging enabled: {os.environ['LOG_DISCORD'].upper()}")
-        d_logger = logging.getLogger("discord")
-
-        d_logger.setLevel(os.environ["LOG_DISCORD"].upper())
-        handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
-        handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
-        d_logger.addHandler(handler)
 
     bot = ModmailBot()
     bot.run()

@@ -1,49 +1,24 @@
 import logging
+import os
 import re
 import sys
-import os
-from difflib import get_close_matches
-from enum import IntEnum
+
+from logging import FileHandler, StreamHandler
 from logging.handlers import RotatingFileHandler
-from string import Formatter
+from typing import Optional, Union
 
-import discord
-from discord.ext import commands
-
-import _string
 
 try:
-    from colorama import Fore, Style
+    from colorama import Fore, Style, init as color_init
 except ImportError:
     Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
+else:
+    color_init()
 
 
 if ".heroku" in os.environ.get("PYTHONHOME", ""):
     # heroku
     Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
-
-
-class PermissionLevel(IntEnum):
-    OWNER = 5
-    ADMINISTRATOR = 4
-    ADMIN = 4
-    MODERATOR = 3
-    MOD = 3
-    SUPPORTER = 2
-    RESPONDER = 2
-    REGULAR = 1
-    INVALID = -1
-
-
-class InvalidConfigError(commands.BadArgument):
-    def __init__(self, msg, *args):
-        super().__init__(msg, *args)
-        self.msg = msg
-
-    @property
-    def embed(self):
-        # Single reference of Color.red()
-        return discord.Embed(title="Error", description=self.msg, color=discord.Color.red())
 
 
 class ModmailLogger(logging.Logger):
@@ -94,18 +69,87 @@ class ModmailLogger(logging.Logger):
             )
 
 
+class FileFormatter(logging.Formatter):
+    ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+    def format(self, record):
+        record.msg = self.ansi_escape.sub("", record.msg)
+        return super().format(record)
+
+
+log_stream_formatter = logging.Formatter(
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
+)
+log_file_formatter = FileFormatter(
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+
+def create_log_handler(
+    filename: Optional[str] = None,
+    *,
+    rotating: bool = False,
+    level: int = logging.DEBUG,
+    mode: str = "a+",
+    encoding: str = "utf-8",
+    maxBytes: int = 48000,
+    backupCount: int = 1,
+    **kwargs,
+) -> Union[FileHandler, RotatingFileHandler, StreamHandler]:
+    """
+    Return a pre-configured log handler. This function is made for consistency sake with
+    pre-defined default values for parameters and formatters to pass to handler class.
+    Additional keyword arguments also can be specified, just in case.
+
+    Plugin developers should not use this and only use the `getLogger` instead to instantiate the ModmailLogger object.
+
+    Parameters
+    -----------
+    filename : Optional[Path]
+        Specifies that a `FileHandler` or `RotatingFileHandler` be created, using the specified filename,
+        rather than a `StreamHandler`. Defaults to `None`.
+    rotating : bool
+        Whether the file handler should be the `RotatingFileHandler`. Defaults to `False`. Note, this
+        argument only compatible if the `filename` is specified, otherwise `ValueError` will be raised.
+    level : int
+        The root logger level for the handler. Defaults to `logging.DEBUG`.
+    mode : str
+        If filename is specified, open the file in this mode. Defaults to 'a+'.
+    encoding : str
+        If this keyword argument is specified along with filename, its value is used when the `FileHandler` is created,
+        and thus used when opening the output file. Defaults to 'utf-8'.
+    maxBytes : int
+        The max file size before the rollover occurs. Defaults to 48000. Rollover occurs whenever the current log file
+        is nearly `maxBytes` in length; but if either of `maxBytes` or `backupCount` is zero, rollover never occurs, so you
+        generally want to set `backupCount` to at least 1.
+    backupCount : int
+        Max number of backup files. Defaults to 1. If this is set to zero, rollover will never occur.
+    """
+    if filename is None and rotating:
+        raise ValueError("`filename` must be set to instantiate a `RotatingFileHandler`.")
+
+    if filename is None:
+        handler = StreamHandler(stream=sys.stdout, **kwargs)
+        handler.setFormatter(log_stream_formatter)
+    elif not rotating:
+        handler = FileHandler(filename, mode=mode, encoding=encoding, **kwargs)
+        handler.setFormatter(log_file_formatter)
+    else:
+        handler = RotatingFileHandler(
+            filename, mode=mode, encoding=encoding, maxBytes=maxBytes, backupCount=backupCount, **kwargs
+        )
+        handler.setFormatter(log_file_formatter)
+
+    handler.setLevel(level)
+    return handler
+
+
 logging.setLoggerClass(ModmailLogger)
 log_level = logging.INFO
 loggers = set()
-
-ch = logging.StreamHandler(stream=sys.stdout)
-ch.setLevel(log_level)
-formatter = logging.Formatter(
-    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
-)
-ch.setFormatter(formatter)
-
-ch_debug = None
+ch: StreamHandler = create_log_handler(level=log_level)
+ch_debug: Optional[RotatingFileHandler] = None
 
 
 def getLogger(name=None) -> ModmailLogger:
@@ -118,24 +162,9 @@ def getLogger(name=None) -> ModmailLogger:
     return logger
 
 
-class FileFormatter(logging.Formatter):
-    ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
-
-    def format(self, record):
-        record.msg = self.ansi_escape.sub("", record.msg)
-        return super().format(record)
-
-
-def configure_logging(name, level=None):
+def configure_logging(name, level: Optional[int] = None):
     global ch_debug, log_level
-    ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=48000, backupCount=1, encoding="utf-8")
-
-    formatter_debug = FileFormatter(
-        "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    ch_debug.setFormatter(formatter_debug)
-    ch_debug.setLevel(logging.DEBUG)
+    ch_debug = create_log_handler(name, rotating=True)
 
     if level is not None:
         log_level = level
@@ -145,6 +174,25 @@ def configure_logging(name, level=None):
     for logger in loggers:
         logger.setLevel(log_level)
         logger.addHandler(ch_debug)
+
+
+from string import Formatter
+from difflib import get_close_matches
+from enum import IntEnum
+import _string
+import discord
+from discord.ext import commands
+
+
+class InvalidConfigError(commands.BadArgument):
+    def __init__(self, msg, *args):
+        super().__init__(msg, *args)
+        self.msg = msg
+
+    @property
+    def embed(self):
+        # Single reference of Color.red()
+        return discord.Embed(title="Error", description=self.msg, color=discord.Color.red())
 
 
 class _Default:
@@ -269,6 +317,18 @@ class DummyMessage:
 
     async def ack(self):
         return
+
+
+class PermissionLevel(IntEnum):
+    OWNER = 5
+    ADMINISTRATOR = 4
+    ADMIN = 4
+    MODERATOR = 3
+    MOD = 3
+    SUPPORTER = 2
+    RESPONDER = 2
+    REGULAR = 1
+    INVALID = -1
 
 
 class DMDisabled(IntEnum):
