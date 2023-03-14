@@ -1212,11 +1212,11 @@ class Modmail(commands.Cog):
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
 
-    @logs.command(name="id")
+    @logs.command(name="key", aliases=["id"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def logs_id(self, ctx, key: str):
+    async def logs_key(self, ctx, key: str):
         """
-        Get the log link for the specified log ID
+        Get the log link for the specified log key
         """
         icon_url = ctx.author.avatar.url
 
