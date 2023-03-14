@@ -1222,14 +1222,14 @@ class Modmail(commands.Cog):
 
         logs = await self.bot.api.find_log_entry(key)
 
-        if not any(not log["open"] for log in logs):
+        if not logs:
             embed = discord.Embed(
                 color=self.bot.error_color,
                 description=f"Log entry `{key}` not found.",
             )
             return await ctx.send(embed=embed)
 
-        logs = reversed(log for log in logs if not log["open"])
+        logs = list(reversed(logs))
 
         embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
