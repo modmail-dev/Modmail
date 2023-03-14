@@ -1,4 +1,4 @@
-__version__ = "4.0.0-dev20"
+__version__ = "4.0.2"
 
 
 import asyncio
@@ -10,6 +10,7 @@ import re
 import string
 import struct
 import sys
+import platform
 import typing
 from datetime import datetime, timezone
 from subprocess import PIPE
@@ -47,7 +48,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import normalize_alias, parse_alias, truncate, tryint
+from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint
 
 logger = getLogger(__name__)
 
@@ -65,7 +66,13 @@ if sys.platform == "win32":
 
 class ModmailBot(commands.Bot):
     def __init__(self):
+        self.config = ConfigManager(self)
+        self.config.populate_cache()
+
         intents = discord.Intents.all()
+        if not self.config["enable_presence_intent"]:
+            intents.presences = False
+
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
         self.session = None
         self._api = None
@@ -75,9 +82,6 @@ class ModmailBot(commands.Bot):
         self.start_time = discord.utils.utcnow()
         self._started = False
 
-        self.config = ConfigManager(self)
-        self.config.populate_cache()
-
         self.threads = ThreadManager(self)
 
         self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
@@ -85,6 +89,13 @@ class ModmailBot(commands.Bot):
 
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
+
+    def get_guild_icon(self, guild: typing.Optional[discord.Guild]) -> str:
+        if guild is None:
+            guild = self.guild
+        if guild.icon is None:
+            return "https://cdn.discordapp.com/embed/avatars/0.png"
+        return guild.icon.url
 
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
         """
@@ -217,27 +228,14 @@ class ModmailBot(commands.Bot):
             async with self:
                 self._connected = asyncio.Event()
                 self.session = ClientSession(loop=self.loop)
-                try:
-                    retry_intents = False
-                    try:
-                        await self.start(self.token)
-                    except discord.PrivilegedIntentsRequired:
-                        retry_intents = True
-                    if retry_intents:
-                        await self.http.close()
-                        if self.ws is not None and self.ws.open:
-                            await self.ws.close(code=1000)
-                        self._ready.clear()
 
-                        intents = discord.Intents.default()
-                        intents.members = True
-                        intents.message_content = True
-                        # Try again with members intent
-                        self._connection._intents = intents
-                        logger.warning(
-                            "Attempting to login with only the server members and message content privileged intent. Some plugins might not work correctly."
-                        )
-                        await self.start(self.token)
+                if self.config["enable_presence_intent"]:
+                    logger.info("Starting bot with presence intent.")
+                else:
+                    logger.info("Starting bot without presence intent.")
+
+                try:
+                    await self.start(self.token)
                 except discord.PrivilegedIntentsRequired:
                     logger.critical(
                         "Privileged intents are not explicitly granted in the discord developers dashboard."
@@ -735,21 +733,13 @@ class ModmailBot(commands.Bot):
                 if str(r.id) in self.blocked_roles:
 
                     blocked_reason = self.blocked_roles.get(str(r.id)) or ""
-                    now = discord.utils.utcnow()
 
-                    # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
-                    end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
-                    if end_time is None:
-                        # backwards compat
-                        end_time = re.search(r"%([^%]+?)%", blocked_reason)
-                        if end_time is not None:
-                            logger.warning(
-                                r"Deprecated time message for role %s, block and unblock again to update.",
-                                r.name,
-                            )
+                    try:
+                        end_time, after = extract_block_timestamp(blocked_reason, author.id)
+                    except ValueError:
+                        return False
 
                     if end_time is not None:
-                        after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
                         if after <= 0:
                             # No longer blocked
                             self.blocked_roles.pop(str(r.id))
@@ -765,26 +755,19 @@ class ModmailBot(commands.Bot):
             return True
 
         blocked_reason = self.blocked_users.get(str(author.id)) or ""
-        now = discord.utils.utcnow()
 
         if blocked_reason.startswith("System Message:"):
             # Met the limits already, otherwise it would've been caught by the previous checks
             logger.debug("No longer internally blocked, user %s.", author.name)
             self.blocked_users.pop(str(author.id))
             return True
-        # etc "blah blah blah... until 2019-10-14T21:12:45.559948."
-        end_time = re.search(r"until ([^`]+?)\.$", blocked_reason)
-        if end_time is None:
-            # backwards compat
-            end_time = re.search(r"%([^%]+?)%", blocked_reason)
-            if end_time is not None:
-                logger.warning(
-                    r"Deprecated time message for user %s, block and unblock again to update.",
-                    author.name,
-                )
+
+        try:
+            end_time, after = extract_block_timestamp(blocked_reason, author.id)
+        except ValueError:
+            return False
 
         if end_time is not None:
-            after = (datetime.fromisoformat(end_time.group(1)) - now).total_seconds()
             if after <= 0:
                 # No longer blocked
                 self.blocked_users.pop(str(author.id))
@@ -872,10 +855,12 @@ class ModmailBot(commands.Bot):
             return
 
         try:
-            cooldown = datetime.fromisoformat(last_log_closed_at) + thread_cooldown
+            cooldown = datetime.fromisoformat(last_log_closed_at).astimezone(timezone.utc) + thread_cooldown
         except ValueError:
             logger.warning("Error with 'thread_cooldown'.", exc_info=True)
-            cooldown = datetime.fromisoformat(last_log_closed_at) + self.config.remove("thread_cooldown")
+            cooldown = datetime.fromisoformat(last_log_closed_at).astimezone(
+                timezone.utc
+            ) + self.config.remove("thread_cooldown")
 
         if cooldown > now:
             # User messaged before thread cooldown ended
@@ -891,7 +876,7 @@ class ModmailBot(commands.Bot):
         if reaction != "disable":
             try:
                 await msg.add_reaction(reaction)
-            except (discord.HTTPException, discord.InvalidArgument) as e:
+            except (discord.HTTPException, TypeError) as e:
                 logger.warning("Failed to add reaction %s: %s.", reaction, e)
                 return False
         return True
@@ -925,7 +910,10 @@ class ModmailBot(commands.Bot):
                     color=self.error_color,
                     description=self.config["disabled_new_thread_response"],
                 )
-                embed.set_footer(text=self.config["disabled_new_thread_footer"], icon_url=self.guild.icon.url)
+                embed.set_footer(
+                    text=self.config["disabled_new_thread_footer"],
+                    icon_url=self.get_guild_icon(guild=message.guild),
+                )
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
                 return await message.channel.send(embed=embed)
@@ -940,7 +928,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_current_thread_footer"],
-                    icon_url=self.guild.icon.url,
+                    icon_url=self.get_guild_icon(guild=message.guild),
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -1000,7 +988,8 @@ class ModmailBot(commands.Bot):
         # This needs to be done before checking for aliases since
         # snippets can have multiple words.
         try:
-            snippet_text = self.snippets[message.content.strip(invoked_prefix)]
+            # Use removeprefix once PY3.9+
+            snippet_text = self.snippets[message.content[len(invoked_prefix) :]]
         except KeyError:
             snippet_text = None
 
@@ -1315,7 +1304,7 @@ class ModmailBot(commands.Bot):
                     for msg in linked_messages:
                         await msg.remove_reaction(reaction, self.user)
                     await message.remove_reaction(reaction, self.user)
-                except (discord.HTTPException, discord.InvalidArgument) as e:
+                except (discord.HTTPException, TypeError) as e:
                     logger.warning("Failed to remove reaction: %s", e)
 
     async def handle_react_to_contact(self, payload):
@@ -1346,7 +1335,7 @@ class ModmailBot(commands.Bot):
             )
             embed.set_footer(
                 text=self.config["disabled_new_thread_footer"],
-                icon_url=self.guild.icon.url,
+                icon_url=self.get_guild_icon(guild=channel.guild),
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
@@ -1788,9 +1777,14 @@ def main():
                     "Unable to import cairosvg, install GTK Installer for Windows and restart your system (https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest)"
                 )
         else:
-            logger.error(
-                "Unable to import cairosvg, report on our support server with your OS details: https://discord.gg/etJNHCQ"
-            )
+            if "ubuntu" in platform.version().lower() or "debian" in platform.version().lower():
+                logger.error(
+                    "Unable to import cairosvg, try running `sudo apt-get install libpangocairo-1.0-0` or report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                )
+            else:
+                logger.error(
+                    "Unable to import cairosvg, report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                )
         sys.exit(0)
 
     # check discord version

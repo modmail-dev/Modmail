@@ -1,259 +1,110 @@
 {
-    "close_message": {
-        "repository": "python-discord/modmail-plugins",
-        "branch": "main",
-        "description": "Add a ?closemessage command that will close the thread after 15 minutes with a default message.",
-        "bot_version": "2.20.1",
-        "title": "Close message",
-        "icon_url": "https://i.imgur.com/ev7BFMz.png",
-        "thumbnail_url": "https://i.imgur.com/ev7BFMz.png"
-    },
-    "mdlink": {
-        "repository": "python-discord/modmail-plugins",
-        "branch": "main",
-        "description": "Generate a ready to paste link to the thread logs.",
-        "bot_version": "2.20.1",
-        "title": "MDLink",
-        "icon_url": "https://i.imgur.com/JA2E63R.png",
-        "thumbnail_url": "https://i.imgur.com/JA2E63R.png"
-    },
-    "reply_cooldown": {
-        "repository": "python-discord/modmail-plugins",
-        "branch": "main",
-        "description": "Forbid you from sending the same message twice in ten seconds.",
-        "bot_version": "2.20.1",
-        "title": "Reply cooldown",
-        "icon_url": "https://i.imgur.com/FtRQveT.png",
-        "thumbnail_url": "https://i.imgur.com/FtRQveT.png"
-    },
-    "dragory-migrate": {
-        "repository": "kyb3r/modmail-plugins",
+    "advanced-menu": {
+        "repository": "sebkuip/mm-plugins",
         "branch": "master",
-        "description": "Migrate your logs from Dragory's modmail bot to this one with a simple command. Added at the request of users.",
-        "bot_version": "2.20.1",
-        "title": "Dragory Logs Migration",
-        "icon_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png",
-        "thumbnail_url": "https://cdn1.iconfinder.com/data/icons/web-hosting-2-4/52/200-512.png"
-    },
-    "music": {
-        "repository": "Taaku18/modmail-plugins",
-        "branch": "master",
-        "description": "Play wonderfull jams through your modmail!",
-        "bot_version": "2.20.1",
-        "title": "music",
-        "icon_url": "https://i.imgur.com/JmJPX5W.gif",
-        "thumbnail_url": "https://i.imgur.com/jrYL7F8.gif"
-    },
-    "media-only": {
-        "repository": "lorenzo132/modmail-plugins",
-        "branch": "master",
-        "description": "Make a channel mediaonly, only the following mediatypes will be accepted `.png` / `.gif` / `.jpg` / `.mp4`/ `.jpeg`",
-        "bot_version": "2.20.1",
-        "title": "Media-only",
-        "icon_url": "https://i.imgur.com/ussAoIi.png",
-        "thumbnail_url": "https://i.imgur.com/ussAoIi.png"
-    },
-    "anti-steal-close": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Don't let anyone steal ya close.",
-        "title": "Anti Steal Close",
-        "icon_url": "https://i.imgur.com/LovxyV3.png",
-        "thumbnail_url": "https://i.imgur.com/LovxyV3.png"
+        "description": "Advanced menu plugin using dropdown selectors. Supports submenus (and sub-submenus infinitely).",
+        "bot_version": "v4.0.0",
+        "title": "Advanced menu",
+        "icon_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png"
     },
     "announcement": {
-        "repository": "officialpiyush/modmail-plugins",
+        "repository": "Jerrie-Aries/modmail-plugins",
         "branch": "master",
-        "description": "Easily make announcements in your server!",
-        "bot_version": "2.20.1",
-        "title": "Announcement Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
-    "dm-on-join": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "DM New Users when they join",
-        "bot_version": "2.20.1",
-        "title": "DM-on-join Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
+        "description": "Create and post announcements. Supports both plain and embed. Also customisable using buttons and dropdown menus.",
+        "bot_version": "4.0.0",
+        "title": "Announcement",
+        "icon_url": "https://github.com/Jerrie-Aries.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/.static/announcement.jpg"
     },
     "giveaway": {
-        "repository": "officialpiyush/modmail-plugins",
+        "repository": "Jerrie-Aries/modmail-plugins",
         "branch": "master",
-        "description": "Host giveaways on your server",
-        "bot_version": "2.20.1",
-        "title": "\uD83C\uDF89 Giveaway Plugin \uD83C\uDF89",
-        "icon_url": "https://i.imgur.com/qk85xdi.png",
-        "thumbnail_url": "https://i.imgur.com/gUHB91v.png"
-    },
-    "hastebin": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Easily Upload Text To hastebin!",
-        "bot_version": "2.20.1",
-        "title": "Hastebin Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
-    "leave-server": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Don't want your bot in a server? Did someone invite it without your permission? If so, this plugin is useful for you!",
-        "bot_version": "2.20.1",
-        "title": "Leave-server Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
-    "welcomer": {
-        "repository": "fourjr/modmail-plugins",
-        "branch": "master",
-        "description": "Add messages to welcome new members! Allows for embedded messages as well. [Read more](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)",
-        "bot_version": "2.20.1",
-        "title": "New member messages plugin",
-        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
-        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
-    },
-    "tags": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Tag Management For Your Server",
-        "bot_version": "2.20.1",
-        "title": "Tags Plugin",
-        "icon_url": "https://images.ionadev.ml/b/ZIDUUsl.png",
-        "thumbnail_url": "https://images.ionadev.ml/b/ZIDUUsl.png"
-    },
-    "backupdb": {
-        "repository": "officialpiyush/modmail-plugins",
-        "branch": "master",
-        "description": "Backup you're current Modmail DB with a single command!\n\n**Requires `BACKUP_MONGO_URI` in either config.json or environment variables**",
-        "bot_version": "2.20.1",
-        "title": "Backup Database (backupdb)",
-        "icon_url": "https://images.ionadev.ml/b/nKAlOC4.jpg",
-        "thumbnail_url": "https://images.ionadev.ml/b/nKAlOC4.jpg"
-    },
-    "colors": {
-        "repository": "Taaku18/modmail-plugins",
-        "branch": "master",
-        "description": "Conversions between hex, RGB, and color names.",
-        "bot_version": "2.20.1",
-        "title": "Colors!!",
-        "icon_url": "https://cdn1.iconfinder.com/data/icons/weather-19/32/rainbow-512.png",
-        "thumbnail_url": "https://i.imgur.com/fSxnc9W.jpg"
-    },
-    "fun": {
-        "repository": "TheKinG2149/modmail-plugins",
-        "branch": "master",
-        "description": "Some fun commands like 8ball, dadjokes",
-        "bot_version": "2.24.1",
-        "title": "Fun",
-        "icon_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png",
-        "thumbnail_url": "https://cdn.discordapp.com/attachments/584692239893135362/591588754142265354/43880032.png"
-    },
-    "stats": {
-        "repository": "KarateWumpus/modmail-plugins",
-        "branch": "master",
-        "description": "Get useful stats directly in an embed about either the Modmail bot, a user or the server.",
-        "bot_version": "2.24.1",
-        "title": "Get Stats",
-        "icon_url": "https://image.flaticon.com/icons/png/512/117/117761.png",
-        "thumbnail_url": "http://www.pngmart.com/files/7/Statistics-PNG-Clipart.png"
-    },
-    "moderation": {
-        "repository": "Vincysuper07/modmail-plugins",
-        "branch": "main",
-        "description": "Moderate your server with Modmail, bring the Mod to Modmail!",
-        "bot_version": "3.6.2",
-        "title": "Moderate your server",
-        "icon_url": "https://cdn.discordapp.com/attachments/759829573654544454/773535811143598110/ad2e4d6e7b90ca6005a5038e22b099cc.png",
-        "thumbnail_url": "https://cdn.discordapp.com/attachments/759829573654544454/773535811143598110/ad2e4d6e7b90ca6005a5038e22b099cc.png"
-    },
-    "serverstats": {
-        "repository": "dazvise/modmail-plugins",
-        "branch": "master",
-        "description": "Voice channels containing interesting and accurate statistics about your server such as Member Count.",
-        "bot_version": "2.20.1",
-        "title": "Server Stats",
-        "icon_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png",
-        "thumbnail_url": "https://i.gyazo.com/fadb70740e83f2448b23ffe192a1f32d.png"
+        "description": "Host giveaways on your server with this plugin.",
+        "bot_version": "4.0.0",
+        "title": "Giveaway",
+        "icon_url": "https://github.com/Jerrie-Aries.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/.static/giveaway.jpg"
     },
     "suggest": {
         "repository": "realcyguy/modmail-plugins",
-        "branch": "master",
+        "branch": "v4",
         "description": "Send suggestions to a selected server! It has accepting, denying, and moderation-ing.",
-        "bot_version": "3.4.1",
+        "bot_version": "4.0.0",
         "title": "Suggest stuff.",
         "icon_url": "https://i.imgur.com/qtE7AH8.png",
         "thumbnail_url": "https://i.imgur.com/qtE7AH8.png"
     },
-    "githubstats": {
-        "repository": "mischievousdev/modmail-plugins",
-        "branch": "master",
-        "description": "Github statistics in discord",
-        "bot_version": "2.20.1",
-        "title": "Github Stats",
-        "icon_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg",
-        "thumbnail_url": "https://raw.githubusercontent.com/mischievousdev/modmail-plugins/master/download%20(9).jpeg"
-    },
-    "slowmode": {
-        "repository": "teen1/modmail-plugins",
-        "branch": "master",
-        "description": "Configure slow mode for your channels with Modmail!",
-        "bot_version": "2.20.1",
-        "title": "Slow Mode",
-        "icon_url": "https://cdn.discordapp.com/attachments/717029057635549274/717033838966210601/Slow_mode_-_icon.png",
-        "thumbnail_url": "https://cdn.discordapp.com/attachments/717029057635549274/717029110907666482/Slow_mode_plugin_-_thumbnail.png"
-    },
-    "translate": {
-        "repository": "WebKide/modmail-plugins",
-        "branch": "master",
-        "description": "(∩｀-´)⊃━☆ﾟ.*･｡ﾟ translate text from one language to another (defaults to English)\n\nGet full list of available languages at: https://github.com/WebKide/modmail-plugins/blob/master/translate/langs.json\n\nThis command conflicts with Translator-plugin",
-        "bot_version": "3.5.0",
-        "title": "Translate",
-        "icon_url": "https://i.imgur.com/yeHFKgl.png",
-        "thumbnail_url": "https://i.imgur.com/yeHFKgl.png"
+    "welcomer": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Add messages to welcome new members! Allows for embedded messages as well. [Read more](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)",
+        "bot_version": "4.0.0",
+        "title": "New member messages plugin",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
     },
     "countdowns": {
         "repository": "fourjr/modmail-plugins",
-        "branch": "master",
+        "branch": "v4",
         "description": "Setup a countdown voice channel in your server!",
-        "bot_version": "3.6.2",
+        "bot_version": "4.0.0",
         "title": "Countdowns",
-        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
-        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
-    },
-    "action": {
-        "repository": "6days9weeks/modmail-plugins",
-        "branch": "master",
-        "description": "Have fun with others by hugging them or giving them pats~!!",
-        "title": "Action",
-        "icon_url": "https://media.discordapp.net/attachments/720733784970100776/820933433579798528/689105042212388965.png",
-        "thumbnail_url": "https://data.whicdn.com/images/58526601/original.gif"
-    },
-    "menu": {
-        "repository": "fourjr/modmail-plugins",
-        "branch": "master",
-        "description": "Adds reaction-based menus into thread creates. Check out `?configmenu`",
-        "title": "Menus",
-        "bot_version": "3.9.0",
-        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
-        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
     },
     "claim": {
         "repository": "fourjr/modmail-plugins",
-        "branch": "master",
+        "branch": "v4",
         "description": "Allows supporters to claim thread by sending ?claim in the thread channel",
+        "bot_version": "4.0.0",
         "title": "Claim Thread",
-        "icon_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png",
-        "thumbnail_url": "https://cdn.discordapp.com/avatars/180314310298304512/7552e0089004079304cc9912d13ac81d.png"
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
     },
-    "phishchecker": {
-        "repository": "TheDiscordHistorian/historian-cogs",
-        "branch": "main",
-        "description": "Deletes scam links from your server and optionally kick / ban the user.",
-        "title": "Scam Link Detector",
-        "icon_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png",
-        "thumbnail_url": "https://cdn.discordapp.com/attachments/576521645540245505/895661244743299102/antifish.png"
+    "emote-manager": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Allows managing server emotes via ?emoji",
+        "bot_version": "4.0.0",        
+        "title": "Emote Manager",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+     "gen-log": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Outputs a text log of a thread in a specified channel",
+        "bot_version": "4.0.0",         
+        "title": "Log Generator",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+     "media-logger": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Re-posts detected media from all visible channels into a specified logging channel",
+        "bot_version": "4.0.0",         
+        "title": "Media Logger",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+      "report": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Specify an emoji to react with on messages. Generates a 'report' in specified logging channel upon react.",
+        "bot_version": "4.0.0",          
+        "title": "Report",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+      "top-supporters": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Gathers and prints the top supporters of handling threads.",
+        "bot_version": "4.0.0",          
+        "title": "Top Supporters",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
     }
 }

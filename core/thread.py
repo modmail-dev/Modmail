@@ -22,7 +22,6 @@ from core.models import DMDisabled, DummyMessage, getLogger
 from core.time import human_timedelta
 from core.utils import (
     is_image_url,
-    days,
     parse_channel_topic,
     match_title,
     match_user_id,
@@ -229,7 +228,7 @@ class Thread:
             else:
                 footer = self.bot.config["thread_creation_footer"]
 
-            embed.set_footer(text=footer, icon_url=self.bot.guild.icon.url)
+            embed.set_footer(text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.modmail_guild))
             embed.title = self.bot.config["thread_creation_title"]
 
             if creator is None or creator == recipient:
@@ -322,10 +321,10 @@ class Thread:
 
             role_names = separator.join(roles)
 
-        created = str((time - user.created_at).days)
         user_info = []
         if self.bot.config["thread_show_account_age"]:
-            user_info.append(f" was created {days(created)}")
+            created = discord.utils.format_dt(user.created_at, "R")
+            user_info.append(f" was created {created}")
 
         embed = discord.Embed(color=color, description=user.mention, timestamp=time)
 
@@ -337,10 +336,9 @@ class Thread:
         if member is not None:
             embed.set_author(name=str(user), icon_url=member.display_avatar.url, url=log_url)
 
-            joined = str((time - member.joined_at).days)
-            # embed.add_field(name='Joined', value=joined + days(joined))
             if self.bot.config["thread_show_join_age"]:
-                user_info.append(f"joined {days(joined)}")
+                joined = discord.utils.format_dt(member.joined_at, "R")
+                user_info.append(f"joined {joined}")
 
             if member.nick:
                 embed.add_field(name="Nickname", value=member.nick, inline=True)
@@ -523,7 +521,7 @@ class Thread:
 
         embed.description = message
         footer = self.bot.config["thread_close_footer"]
-        embed.set_footer(text=footer, icon_url=self.bot.guild.icon.url)
+        embed.set_footer(text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.guild))
 
         if not silent:
             for user in self.recipients:
@@ -570,7 +568,7 @@ class Thread:
         seconds = timeout.total_seconds()
         # seconds = 20  # Uncomment to debug with just 20 seconds
         reset_time = discord.utils.utcnow() + timedelta(seconds=seconds)
-        human_time = human_timedelta(dt=reset_time, spec="manual")
+        human_time = discord.utils.format_dt(reset_time)
 
         if self.bot.config.get("thread_auto_close_silently"):
             return await self.close(closer=self.bot.user, silent=True, after=int(seconds), auto_close=True)
@@ -959,7 +957,7 @@ class Thread:
                     name = tag
                 avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
-                    avatar_url = self.bot.guild.icon.url
+                    avatar_url = self.bot.get_guild_icon(guild=self.bot.guild)
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,
@@ -1152,7 +1150,7 @@ class Thread:
                     additional_images = []
 
                 if embed.footer.text:
-                    plain_message = f"**({embed.footer.text}) "
+                    plain_message = f"**{embed.footer.text} "
                 else:
                     plain_message = "**"
                 plain_message += f"{embed.author.name}:** {embed.description}"

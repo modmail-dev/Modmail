@@ -6,6 +6,7 @@ https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 from __future__ import annotations
 
 import datetime
+import discord
 from typing import TYPE_CHECKING, Any, Optional, Union
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
@@ -39,16 +40,6 @@ class plural:
         return f"{v} {singular}"
 
 
-def format_dt(dt: datetime.datetime, style: Optional[str] = None) -> str:
-    """https://github.com/Rapptz/RoboDanny/blob/bf7d4226350dff26df4981dd53134eeb2aceeb87/cogs/utils/formats.py#L89-L95"""
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
-
-    if style is None:
-        return f"<t:{int(dt.timestamp())}>"
-    return f"<t:{int(dt.timestamp())}:{style}>"
-
-
 class ShortTime:
     compiled = re.compile(
         """
@@ -72,7 +63,7 @@ class ShortTime:
         if match is None or not match.group(0):
             match = self.discord_fmt.fullmatch(argument)
             if match is not None:
-                self.dt = datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc)
+                self.dt = datetime.datetime.utcfromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc)
                 return
             else:
                 raise commands.BadArgument("invalid time provided")
@@ -201,10 +192,11 @@ class UserFriendlyTime(commands.Converter):
         self.converter: commands.Converter = converter  # type: ignore  # It doesn't understand this narrowing
         self.default: Any = default
 
-    async def convert(self, ctx: Context, argument: str) -> FriendlyTimeResult:
+    async def convert(self, ctx: Context, argument: str, *, now=None) -> FriendlyTimeResult:
         calendar = HumanTime.calendar
         regex = ShortTime.compiled
-        now = ctx.message.created_at
+        if now is None:
+            now = ctx.message.created_at
 
         match = regex.match(argument)
         if match is not None and match.group(0):
@@ -218,7 +210,7 @@ class UserFriendlyTime(commands.Converter):
             match = ShortTime.discord_fmt.match(argument)
             if match is not None:
                 result = FriendlyTimeResult(
-                    datetime.datetime.fromtimestamp(int(match.group("ts")), now, tz=datetime.timezone.utc)
+                    datetime.datetime.utcfromtimestamp(int(match.group("ts")), now, tz=datetime.timezone.utc)
                 )
                 remaining = argument[match.end() :].strip()
                 await result.ensure_constraints(ctx, self, now, remaining)
@@ -365,4 +357,4 @@ def human_timedelta(
 
 
 def format_relative(dt: datetime.datetime) -> str:
-    return format_dt(dt, "R")
+    return discord.utils.format_dt(dt, "R")

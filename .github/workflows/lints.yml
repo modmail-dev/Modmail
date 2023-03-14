@@ -23,6 +23,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip pipenv
         pipenv install --dev --system
+    # to refresh: bandit -f json -o .bandit_baseline.json -r . 
     # - name: Bandit syntax check
     #   run: bandit -r . -b .bandit_baseline.json
     - name: Pylint

@@ -166,6 +166,7 @@ class ConfigManager:
         "database_type": "mongodb",
         "connection_uri": None,  # replace mongo uri in the future
         "owners": None,
+        "enable_presence_intent": False,
         # bot
         "token": None,
         "enable_plugins": True,
@@ -221,6 +222,7 @@ class ConfigManager:
         "thread_show_account_age",
         "thread_show_join_age",
         "use_hoisted_top_role",
+        "enable_presence_intent",
     }
 
     enums = {
@@ -366,7 +368,7 @@ class ConfigManager:
 
         return value
 
-    def set(self, key: str, item: typing.Any, convert=True) -> None:
+    async def set(self, key: str, item: typing.Any, convert=True) -> None:
         if not convert:
             return self.__setitem__(key, item)
 
@@ -401,7 +403,7 @@ class ConfigManager:
             except isodate.ISO8601Error:
                 try:
                     converter = UserFriendlyTime()
-                    time = converter.convert(None, item)
+                    time = await converter.convert(None, item, now=discord.utils.utcnow())
                     if time.arg:
                         raise ValueError
                 except BadArgument as exc:
