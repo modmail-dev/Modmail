@@ -885,7 +885,7 @@ class ModmailBot(commands.Bot):
             return
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
 
-        if message.type != discord.MessageType.default:
+        if message.type not in [discord.MessageType.default, discord.MessageType.reply]:
             return
 
         thread = await self.threads.find(recipient=message.author)
