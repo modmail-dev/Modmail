@@ -6,13 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/kyb3r/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# [UNRELEASED]
 
-# [Unreleased]
+### Fixed
+- `?alias make/create` as aliases to `?alias add`. This improves continuity between the bot and its command structure. ([PR #3195](https://github.com/kyb3r/modmail/pull/3195))
+- Loading the blocked list with the `?blocked` command takes a long time when the list is large. ([PR #3242](https://github.com/kyb3r/modmail/pull/3242))
+
+# v4.0.2
+
+### Breaking
+
+- Presence intent is now by-default OFF. You can turn it on by setting `ENABLE_PRESENCE_INTENT=true` in the environment variables.
 
 ### Fixed
 
-- Bots without presence intent encountering RuntimeError on start.
+- Not having a guild icon no longer raises an exception. ([PR #3235](https://github.com/kyb3r/modmail/pull/3235))
+  - When no icon is set, use the default user icon.
+- Resolved an issue where `?logs` doesn't work when the thread has no title. ([PR #3201](https://github.com/kyb3r/modmail/pull/3201))
+- AttributeError raised when failing to forward a reaction. ([GH #3218](https://github.com/kyb3r/modmail/issues/3218))
 
+### Changed
+
+- Plain messages no longer forces `()` around the respondent text. ([PR #3234](https://github.com/kyb3r/modmail/pull/3234))
+- Added workflow to automatically build Docker image ([PR #3232](https://github.com/kyb3r/modmail/pull/3228))
+- Updated installation guide to reflect new preferred hosting methods
 
 # v4.0.1
 
@@ -25,7 +42,6 @@ This is a hotfix release.
 ### Fixed
 
 - Thread cooldown
-
 
 # v4.0.0
 
