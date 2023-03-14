@@ -1229,8 +1229,6 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        logs = list(reversed(logs))
-
         embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
         session = EmbedPaginatorSession(ctx, *embeds)
