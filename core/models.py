@@ -1,21 +1,22 @@
-import logging
-import re
-import sys
-import os
-from difflib import get_close_matches
+# Plain imports
+import logging, os, re, sys
 from enum import IntEnum
 from logging.handlers import RotatingFileHandler
 from string import Formatter
 
+# Module imports
 import discord
 from discord.ext import commands
-
-import _string
 
 try:
     from colorama import Fore, Style
 except ImportError:
+    # If colorama is not installed, use dummy objects
     Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
+
+# Custom imports
+import _string
+from difflib import get_close_matches
 
 
 if ".heroku" in os.environ.get("PYTHONHOME", ""):
