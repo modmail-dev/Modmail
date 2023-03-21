@@ -90,7 +90,9 @@ class ModmailBot(commands.Bot):
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
-    def get_guild_icon(self, guild: typing.Optional[discord.Guild], *, size: typing.Optional[int] = None) -> str:
+    def get_guild_icon(
+        self, guild: typing.Optional[discord.Guild], *, size: typing.Optional[int] = None
+    ) -> str:
         if guild is None:
             guild = self.guild
         if guild.icon is None:

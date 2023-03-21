@@ -1028,7 +1028,9 @@ class Utility(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
             description = utils.format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Command Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
+            embed.set_author(
+                name="Command Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128)
+            )
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -1612,7 +1614,8 @@ class Utility(commands.Cog):
                             )
                             embed = discord.Embed(color=self.bot.main_color, description=description)
                             embed.set_author(
-                                name="Permission Overrides", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128)
+                                name="Permission Overrides",
+                                icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
                             )
                             embeds.append(embed)
 
