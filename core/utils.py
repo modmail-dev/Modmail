@@ -1,16 +1,16 @@
-import base64
-import functools
-import re
-import typing
+# Plain imports
+import base64, functools, re, typing
 from datetime import datetime, timezone
 from difflib import get_close_matches
 from distutils.util import strtobool as _stb  # pylint: disable=import-error
 from itertools import takewhile, zip_longest
 from urllib import parse
 
+# Module imports
 import discord
 from discord.ext import commands
 
+# Custom imports
 from core.models import getLogger
 
 
