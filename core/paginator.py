@@ -1,9 +1,11 @@
+# Plain imports
 import typing
 
+# Module imports
 import discord
-from discord import Message, Embed, ButtonStyle, Interaction
-from discord.ui import View, Button, Select
+from discord import Embed, Interaction, Message
 from discord.ext import commands
+from discord.ui import Button, ButtonStyle, Select, View  # ButtonStyle belongs to discord.ui
 
 
 class PaginatorSession:
