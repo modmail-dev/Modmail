@@ -1,34 +1,37 @@
-import asyncio
-import base64
-import copy
-import functools
-import io
-import re
-import time
-import traceback
-import typing
-import warnings
-from datetime import timedelta
-from types import SimpleNamespace
+# Plain imports
+import (
+    discord,
+    asyncio,
+    base64,
+    copy,
+    functools,
+    io,
+    re,
+    time,
+    traceback,
+    typing,
+    warnings
+)
 
-import isodate
-
-import discord
+# Module imports
 from discord.ext.commands import MissingRequiredArgument, CommandError
-from lottie.importers import importers as l_importers
-from lottie.exporters import exporters as l_exporters
+from datetime import timedelta,
+from types import SimpleNamespace,
+from isodate import duration_isoformat
+from lottie import importers as l_importers, exporters as l_exporters
 
+# Custom imports
 from core.models import DMDisabled, DummyMessage, getLogger
 from core.time import human_timedelta
 from core.utils import (
-    is_image_url,
-    parse_channel_topic,
-    match_title,
-    match_user_id,
-    truncate,
-    get_top_role,
     create_thread_channel,
     get_joint_id,
+    get_top_role,
+    is_image_url,
+    match_title,
+    match_user_id,
+    parse_channel_topic,
+    truncate,
 )
 
 logger = getLogger(__name__)
