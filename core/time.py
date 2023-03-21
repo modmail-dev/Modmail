@@ -3,17 +3,20 @@ UserFriendlyTime by Rapptz
 Source:
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 """
+# Plain imports
 from __future__ import annotations
 
-import datetime
-import discord
+import datetime, parsedatetime as pdt, re
 from typing import TYPE_CHECKING, Any, Optional, Union
-import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
-from .utils import human_join
+
+# Module imports
+import discord
 from discord.ext import commands
 from discord import app_commands
-import re
+
+# Custom imports
+from .utils import human_join
 
 # Monkey patch mins and secs into the units
 units = pdt.pdtLocales["en_US"].units
