@@ -2,18 +2,23 @@ import logging
 import os
 import re
 import sys
+import _string
 
+from difflib import get_close_matches
+from enum import IntEnum
 from logging import FileHandler, StreamHandler
 from logging.handlers import RotatingFileHandler
+from string import Formatter
 from typing import Optional, Union
+
+import discord
+from discord.ext import commands
 
 
 try:
-    from colorama import Fore, Style, init as color_init
+    from colorama import Fore, Style
 except ImportError:
     Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
-else:
-    color_init()
 
 
 if ".heroku" in os.environ.get("PYTHONHOME", ""):
@@ -162,26 +167,58 @@ def getLogger(name=None) -> ModmailLogger:
     return logger
 
 
-def configure_logging(name, level: Optional[int] = None):
+def configure_logging(bot, log_dir: str) -> None:
     global ch_debug, log_level
-    ch_debug = create_log_handler(name, rotating=True)
+    logger = getLogger(__name__)
+    level_text = bot.config["log_level"].upper()
+    logging_levels = {
+        "CRITICAL": logging.CRITICAL,
+        "ERROR": logging.ERROR,
+        "WARNING": logging.WARNING,
+        "INFO": logging.INFO,
+        "DEBUG": logging.DEBUG,
+    }
+    logger.line()
 
-    if level is not None:
-        log_level = level
+    level = logging_levels.get(level_text)
+    if level is None:
+        level = bot.config.remove("log_level")
+        logger.warning("Invalid logging level set: %s.", level_text)
+        logger.warning("Using default logging level: INFO.")
+    else:
+        logger.info("Logging level: %s", level_text)
+
+    logger.info("Log file: %s", bot.log_file_name)
+
+    ch_debug = create_log_handler(bot.log_file_name, rotating=True)
+
+    log_level = level
 
     ch.setLevel(log_level)
 
-    for logger in loggers:
-        logger.setLevel(log_level)
-        logger.addHandler(ch_debug)
+    for log in loggers:
+        log.setLevel(log_level)
+        log.addHandler(ch_debug)
 
+    # Set up discord.py logging
+    d_level = logging_levels.get(bot.config["discord_log_level"].upper(), logging.INFO)
+    d_logger = logging.getLogger("discord")
+    d_logger.setLevel(d_level)
 
-from string import Formatter
-from difflib import get_close_matches
-from enum import IntEnum
-import _string
-import discord
-from discord.ext import commands
+    non_verbose_log_level = d_level if d_level != logging.DEBUG else logging.INFO
+    stream_handler = create_log_handler(level=non_verbose_log_level)
+    file_handler = create_log_handler(bot.log_file_name, rotating=True, level=non_verbose_log_level)
+    logger.info("Discord logging level: %s.", logging.getLevelName(non_verbose_log_level))
+    d_logger.addHandler(stream_handler)
+    d_logger.addHandler(file_handler)
+
+    # file handler for discord.py debug level
+    if d_level == logging.DEBUG:
+        dlog_file = os.path.join(log_dir, "discord.log")
+        debug_handler = create_log_handler(dlog_file, level=logging.DEBUG, mode="w", encoding="utf-8")
+        logger.info("Discord logger DEBUG level is enabled. Log file: %s", dlog_file)
+        d_logger.addHandler(debug_handler)
+    logger.debug("Successfully configured logging.")
 
 
 class InvalidConfigError(commands.BadArgument):
