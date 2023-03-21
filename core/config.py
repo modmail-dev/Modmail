@@ -1,16 +1,13 @@
-import asyncio
-import json
-import os
-import re
-import typing
+# Plain imports
+import asyncio, json, os, re, typing, isodate
 from copy import deepcopy
-
 from dotenv import load_dotenv
-import isodate
 
+# Module imports
 import discord
 from discord.ext.commands import BadArgument
 
+# Custom imports
 from core._color_data import ALL_COLORS
 from core.models import DMDisabled, InvalidConfigError, Default, getLogger
 from core.time import UserFriendlyTime
