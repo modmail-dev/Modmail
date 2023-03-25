@@ -142,7 +142,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             perm_level = "NONE"
 
         embed = discord.Embed(
-            title=f"`{self.get_command_signature(topic)}`",
+            title=f"`{self.get_command_signature(topic).strip()}`",
             color=self.context.bot.main_color,
             description=self.process_help_msg(topic.help),
         )
