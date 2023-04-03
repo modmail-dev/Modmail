@@ -1431,7 +1431,7 @@ class ThreadManager:
                 view=view
             )
             await view.wait()
-            if view.value == None:
+            if view.value is None:
                 thread.cancelled = True
                 self.bot.loop.create_task(
                     destination.send(
@@ -1443,7 +1443,7 @@ class ThreadManager:
                     )
                 )
                 await confirm.edit(view=None)
-            if view.value == False:
+            if view.value is False:
                 thread.cancelled = True
                 self.bot.loop.create_task(
                     destination.send(

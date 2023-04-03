@@ -20,6 +20,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Breaking
 
 - Presence intent is now by-default OFF. You can turn it on by setting `ENABLE_PRESENCE_INTENT=true` in the environment variables.
+- Using Buttons instead of reactions in ´´confirm_thread_creation``.
 
 ### Fixed
 
