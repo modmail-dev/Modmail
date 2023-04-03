@@ -39,6 +39,9 @@ __all__ = [
     "get_top_role",
     "get_joint_id",
     "extract_block_timestamp",
+    "AcceptButton",
+    "DenyButton",
+    "ConfirmThreadCreationView"
 ]
 
 
@@ -559,3 +562,32 @@ def extract_block_timestamp(reason, id_):
             raise
 
     return end_time, after
+
+class AcceptButton(discord.ui.Button):
+    def __init__(self, emoji):
+        super().__init__(
+            style=discord.ButtonStyle.gray,
+            emoji=emoji
+        )
+    
+    async def callback(self, interaction: discord.Interaction):
+        self.view.value = True
+        await interaction.response.edit_message(view=None)
+        self.view.stop()
+
+class DenyButton(discord.ui.Button):
+    def __init__(self, emoji):
+        super().__init__(
+            style=discord.ButtonStyle.gray,
+            emoji=emoji
+        )
+    
+    async def callback(self, interaction: discord.Interaction):
+        self.view.value = False
+        await interaction.response.edit_message(view=None)
+        self.view.stop()
+
+class ConfirmThreadCreationView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=20)
+        self.value = None

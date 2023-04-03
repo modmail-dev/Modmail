@@ -29,6 +29,9 @@ from core.utils import (
     get_top_role,
     create_thread_channel,
     get_joint_id,
+    AcceptButton,
+    DenyButton,
+    ConfirmThreadCreationView
 )
 
 logger = getLogger(__name__)
@@ -1416,30 +1419,19 @@ class ThreadManager:
                 destination = recipient
             else:
                 destination = message.channel
+            view = ConfirmThreadCreationView()
+            view.add_item(AcceptButton(self.bot.config["confirm_thread_creation_accept"]))
+            view.add_item(DenyButton(self.bot.config["confirm_thread_creation_deny"]))
             confirm = await destination.send(
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],
                     description=self.bot.config["confirm_thread_response"],
-                    color=self.bot.main_color,
-                )
+                    color=self.bot.main_color
+                ),
+                view=view
             )
-            accept_emoji = self.bot.config["confirm_thread_creation_accept"]
-            deny_emoji = self.bot.config["confirm_thread_creation_deny"]
-            emojis = [accept_emoji, deny_emoji]
-            for emoji in emojis:
-                await confirm.add_reaction(emoji)
-                await asyncio.sleep(0.2)
-
-            try:
-                r, _ = await self.bot.wait_for(
-                    "reaction_add",
-                    check=lambda r, u: u.id == recipient.id
-                    and r.message.id == confirm.id
-                    and r.message.channel.id == confirm.channel.id
-                    and str(r.emoji) in (accept_emoji, deny_emoji),
-                    timeout=20,
-                )
-            except asyncio.TimeoutError:
+            await view.wait()
+            if view.value == None:
                 thread.cancelled = True
                 self.bot.loop.create_task(
                     destination.send(
@@ -1450,23 +1442,16 @@ class ThreadManager:
                         )
                     )
                 )
-            else:
-                if str(r.emoji) == deny_emoji:
-                    thread.cancelled = True
-                    self.bot.loop.create_task(
-                        destination.send(
-                            embed=discord.Embed(
-                                title=self.bot.config["thread_cancelled"], color=self.bot.error_color
-                            )
+                await confirm.edit(view=None)
+            if view.value == False:
+                thread.cancelled = True
+                self.bot.loop.create_task(
+                    destination.send(
+                        embed=discord.Embed(
+                            title=self.bot.config["thread_cancelled"], color=self.bot.error_color
                         )
                     )
-
-            async def remove_reactions():
-                for emoji in emojis:
-                    await confirm.remove_reaction(emoji, self.bot.user)
-                    await asyncio.sleep(0.2)
-
-            self.bot.loop.create_task(remove_reactions())
+                )
             if thread.cancelled:
                 del self.cache[recipient.id]
                 return thread
