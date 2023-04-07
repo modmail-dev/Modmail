@@ -1320,7 +1320,9 @@ class ModmailBot(commands.Bot):
         if emoji_fmt != react_message_emoji:
             return
         channel = self.get_channel(payload.channel_id)
-        member = channel.guild.get_member(payload.user_id) or await channel.guild.fetch_member(payload.user_id)
+        member = channel.guild.get_member(payload.user_id) or await channel.guild.fetch_member(
+            payload.user_id
+        )
         if member.bot:
             return
         message = await channel.fetch_message(payload.message_id)
