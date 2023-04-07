@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/modmail-dev/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# [UNRELEASED]
+
+### Fixed
+- `?alias make/create` as aliases to `?alias add`. This improves continuity between the bot and its command structure. ([PR #3195](https://github.com/kyb3r/modmail/pull/3195))
+- Loading the blocked list with the `?blocked` command takes a long time when the list is large. ([PR #3242](https://github.com/kyb3r/modmail/pull/3242))
+- Reply not being forwarded from DM. (PR [#3239](https://github.com/modmail-dev/modmail/pull/3239))
 
 # [UNRELEASED]
 
