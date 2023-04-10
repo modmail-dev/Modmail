@@ -131,7 +131,7 @@
       "`{prefix}config set use_nickname_channel_name no`"
     ],
     "notes": [
-      "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
+      "This config is NOT suitable for servers in Server Discovery to comply with channel name restrictions.",
       "This cannot be applied with `use_timestamp_channel_name`, `use_random_channel_name` or `use_user_id_channel_name`.",
       "See also: `use_timestamp_channel_name`, `use_user_id_channel_name`, `use_random_channel_name`."
     ]
@@ -864,7 +864,7 @@
     "default": "\"{{moderator.name}} has added you to a Modmail thread.\"",
     "description": "This is the message embed content sent to the recipient that is just added to a thread.",
     "examples": [
-      "`{prefix}config set private_added_to_group_description Any message sent here will be sent to all otherthread recipients.`"
+      "`{prefix}config set private_added_to_group_response Any message sent here will be sent to all other thread recipients.`"
     ],
     "notes": [
       "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
@@ -936,7 +936,7 @@
     "default": "\"{{moderator.name}} has removed you from the Modmail thread.\"",
     "description": "This is the message embed content sent to the recipient that is just removed from a thread.",
     "examples": [
-      "`{prefix}config set private_removed_from_group_description Bye`"
+      "`{prefix}config set private_removed_from_group_response Bye`"
     ],
     "notes": [
       "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
