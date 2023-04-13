@@ -21,6 +21,7 @@ import isodate
 from aiohttp import ClientSession, ClientResponseError
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
+from discord.ext.commands import MemberConverter
 from emoji import UNICODE_EMOJI
 from pkg_resources import parse_version
 
@@ -791,7 +792,7 @@ class ModmailBot(commands.Bot):
         send_message: bool = False,
     ) -> bool:
 
-        member = self.guild.get_member(author.id)
+        member = self.guild.get_member(author.id) or await MemberConverter.convert(author)
         if member is None:
             # try to find in other guilds
             for g in self.guilds:
