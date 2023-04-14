@@ -499,7 +499,7 @@ class MongoDBClient(ApiClient):
                     'run "Certificate.command" on MacOS, '
                     'and check certifi is up to date "pip3 install --upgrade certifi".'
                 )
-                database = parse_uri(mongo_uri).get('database') if parse_uri(mongo_uri).get('database') else 'modmail_bot'
+                database = parse_uri(mongo_uri).get('database') or 'modmail_bot'
                 self.db = AsyncIOMotorClient(mongo_uri, tlsAllowInvalidCertificates=True)[database]
                 return await self.validate_database_connection(ssl_retry=False)
             if "ServerSelectionTimeoutError" in message:
