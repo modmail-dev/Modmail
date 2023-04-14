@@ -446,7 +446,7 @@ class MongoDBClient(ApiClient):
                 raise RuntimeError
 
         try:
-            database = parse_uri(mongo_uri).get('database') if parse_uri(mongo_uri).get('database') else 'modmail_bot'
+            database = parse_uri(mongo_uri).get('database') or 'modmail_bot'
             db = AsyncIOMotorClient(mongo_uri)[database]
         except ConfigurationError as e:
             logger.critical(
