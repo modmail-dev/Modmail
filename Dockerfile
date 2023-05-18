@@ -14,3 +14,6 @@ COPY --from=build /inst /usr/local
 WORKDIR /modmailbot
 CMD ["python", "bot.py"]
 COPY . /modmailbot
+RUN adduser --disabled-password --gecos '' app && \
+  chown -R app /modmailbot
+USER app
