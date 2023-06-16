@@ -211,8 +211,8 @@ def days(day: typing.Union[str, int]) -> str:
     """
     day = int(day)
     if day == 0:
-        return "**today**"
-    return f"{day} day ago" if day == 1 else f"{day} days ago"
+        return "**Heute**"
+    return f"vor {day} Tag" if day == 1 else f" vor {day} Tagen"
 
 
 def cleanup_code(content: str) -> str:
@@ -347,11 +347,11 @@ def match_other_recipients(text: str) -> typing.List[int]:
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
     # Single reference of Color.red()
     embed = discord.Embed(
-        color=discord.Color.red(), description=f"**{name.capitalize()} `{word}` cannot be found.**"
+        color=discord.Color.red(), description=f"**{name.capitalize()} `{word}` kann nicht gefunden werden.**"
     )
     val = get_close_matches(word, possibilities, n=n, cutoff=cutoff)
     if val:
-        embed.description += "\nHowever, perhaps you meant...\n" + "\n".join(val)
+        embed.description += "\nAber vielleicht meintest du ...\n" + "\n".join(val)
     return embed
 
 
@@ -449,8 +449,8 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
             name=name,
             category=category,
             overwrites=overwrites,
-            topic=f"User ID: {recipient.id}",
-            reason="Creating a thread channel.",
+            topic=f"Nutzer ID: {recipient.id}",
+            reason="Erstellen eines Threadkanals.",
         )
     except discord.HTTPException as e:
         if (e.text, (category, name)) in errors_raised:
@@ -459,7 +459,7 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
 
         errors_raised.append((e.text, (category, name)))
 
-        if "Maximum number of channels in category reached" in e.text:
+        if "Maximale Anzahl an Kanälen in der Kategorie erreicht" in e.text:
             fallback = None
             fallback_id = bot.config["fallback_category_id"]
             if fallback_id:
@@ -469,14 +469,14 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
 
             if not fallback:
                 fallback = await category.clone(name="Fallback Modmail")
-                await bot.config.set("fallback_category_id", str(fallback.id))
+                bot.config.set("fallback_category_id", str(fallback.id))
                 await bot.config.update()
 
             return await create_thread_channel(
                 bot, recipient, fallback, overwrites, errors_raised=errors_raised
             )
 
-        if "Contains words not allowed" in e.text:
+        if "Enthält unzulässige Wörter" in e.text:
             # try again but null-discrim (name could be banned)
             return await create_thread_channel(
                 bot,
