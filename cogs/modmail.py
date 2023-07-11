@@ -1216,7 +1216,7 @@ class Modmail(commands.Cog):
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def logs_key(self, ctx, key: str):
         """
-        Get the log link for the specified log key
+        Get the log link for the specified log key.
         """
         icon_url = ctx.author.avatar.url
 
