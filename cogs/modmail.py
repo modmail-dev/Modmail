@@ -444,11 +444,9 @@ class Modmail(commands.Cog):
     async def send_scheduled_close_message(self, ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
 
-        silent = "*silently* " if silent else ""
-
         embed = discord.Embed(
             title="Scheduled close",
-            description=f"This thread will close in {human_delta} {silent}.",
+            description=f"This thread will{' silently' if silent else ''} close in {human_delta}.",
             color=self.bot.error_color,
         )
 
