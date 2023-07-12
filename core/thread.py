@@ -31,7 +31,7 @@ from core.utils import (
     get_joint_id,
     AcceptButton,
     DenyButton,
-    ConfirmThreadCreationView
+    ConfirmThreadCreationView,
 )
 
 logger = getLogger(__name__)
@@ -1426,9 +1426,9 @@ class ThreadManager:
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],
                     description=self.bot.config["confirm_thread_response"],
-                    color=self.bot.main_color
+                    color=self.bot.main_color,
                 ),
-                view=view
+                view=view,
             )
             await view.wait()
             if view.value is None:
