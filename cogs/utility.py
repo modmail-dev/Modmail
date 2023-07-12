@@ -351,7 +351,7 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name="Want Modmail in Your Server?",
-            value="Follow the installation guide on [GitHub](https://github.com/kyb3r/modmail/) "
+            value="Follow the installation guide on [GitHub](https://github.com/modmail-dev/modmail/) "
             "and join our [Discord server](https://discord.gg/F34cRU8)!",
             inline=False,
         )
@@ -380,7 +380,7 @@ class Utility(commands.Cog):
         """Shows the sponsors of this project."""
 
         async with self.bot.session.get(
-            "https://raw.githubusercontent.com/kyb3r/modmail/master/SPONSORS.json"
+            "https://raw.githubusercontent.com/modmail-dev/modmail/master/SPONSORS.json"
         ) as resp:
             data = loads(await resp.text())
 
@@ -1020,7 +1020,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color, description="You dont have any aliases at the moment."
             )
             embed.set_footer(text=f'Do "{self.bot.prefix}help alias" for more commands.')
-            embed.set_author(name="Aliases", icon_url=ctx.guild.icon.url)
+            embed.set_author(name="Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -1028,7 +1028,7 @@ class Utility(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
             description = utils.format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Command Aliases", icon_url=ctx.guild.icon.url)
+            embed.set_author(name="Command Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -1115,7 +1115,7 @@ class Utility(commands.Cog):
         await self.bot.config.update()
         return embed
 
-    @alias.command(name="add")
+    @alias.command(name="add", aliases=["create", "make"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_add(self, ctx, name: str.lower, *, value):
         """
@@ -1611,7 +1611,9 @@ class Utility(commands.Cog):
                                 for name, level in takewhile(lambda x: x is not None, items)
                             )
                             embed = discord.Embed(color=self.bot.main_color, description=description)
-                            embed.set_author(name="Permission Overrides", icon_url=ctx.guild.icon.url)
+                            embed.set_author(
+                                name="Permission Overrides", icon_url=self.bot.get_guild_icon(guild=ctx.guild)
+                            )
                             embeds.append(embed)
 
                     session = EmbedPaginatorSession(ctx, *embeds)
@@ -1939,7 +1941,7 @@ class Utility(commands.Cog):
 
         desc = (
             f"The latest version is [`{self.bot.version}`]"
-            "(https://github.com/kyb3r/modmail/blob/master/bot.py#L1)"
+            "(https://github.com/modmail-dev/modmail/blob/master/bot.py#L1)"
         )
 
         if self.bot.version >= parse_version(latest.version) and flag.lower() != "force":
