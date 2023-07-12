@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   bot:
-    image: ghcr.io/kyb3r/modmail:master
+    image: ghcr.io/modmail-dev/modmail:master
     restart: always
     env_file:
       - .env
@@ -10,7 +10,7 @@ services:
     depends_on:
       - mongo
   logviewer:
-    image: ghcr.io/kyb3r/logviewer:master
+    image: ghcr.io/modmail-dev/logviewer:master
     restart: always
     depends_on:
       - mongo

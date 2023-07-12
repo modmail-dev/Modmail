@@ -114,7 +114,7 @@ class Plugins(commands.Cog):
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
     Learn how to create a plugin yourself here:
-    https://github.com/kyb3r/modmail/wiki/Plugins
+    https://github.com/modmail-dev/modmail/wiki/Plugins
     """
 
     def __init__(self, bot):
@@ -131,7 +131,7 @@ class Plugins(commands.Cog):
             logger.info("Plugins not loaded since ENABLE_PLUGINS=false.")
 
     async def populate_registry(self):
-        url = "https://raw.githubusercontent.com/kyb3r/modmail/master/plugins/registry.json"
+        url = "https://raw.githubusercontent.com/modmail-dev/modmail/master/plugins/registry.json"
         async with self.bot.session.get(url) as resp:
             self.registry = json.loads(await resp.text())
 
@@ -313,6 +313,14 @@ class Plugins(commands.Cog):
             plugin = Plugin(user, repo, plugin_name, branch)
 
         else:
+            if not self.bot.config.get("registry_plugins_only", False):
+                embed = discord.Embed(
+                    description="This plugin is not in the registry. "
+                    "To install it, you must set `REGISTRY_PLUGINS_ONLY=false` in your .env file or config settings.",
+                    color=self.bot.error_color,
+                )
+                await ctx.send(embed=embed)
+                return
             try:
                 plugin = Plugin.from_string(plugin_name)
             except InvalidPluginError:
