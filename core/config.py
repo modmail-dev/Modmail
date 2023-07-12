@@ -123,7 +123,7 @@ class ConfigManager:
         # confirm thread creation
         "confirm_thread_creation": False,
         "confirm_thread_creation_title": "Confirm thread creation",
-        "confirm_thread_response": "React to confirm thread creation which will directly contact the moderators",
+        "confirm_thread_response": "Click the button to confirm thread creation which will directly contact the moderators.",
         "confirm_thread_creation_accept": "\N{WHITE HEAVY CHECK MARK}",
         "confirm_thread_creation_deny": "\N{NO ENTRY SIGN}",
         # regex

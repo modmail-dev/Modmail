@@ -1014,10 +1014,10 @@
     ]
   },
   "confirm_thread_response": {
-    "default": "React to confirm thread creation which will directly contact the moderators",
+    "default": "Click the button to confirm thread creation which will directly contact the moderators.",
     "description": "Description for the embed message sent to users to confirm a thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_response React to confirm`"
+      "`{prefix}config set confirm_thread_response Click to confirm`"
     ],
     "notes": [
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny`"
