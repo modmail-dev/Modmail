@@ -99,7 +99,7 @@ class ModmailBot(commands.Bot):
             return "https://cdn.discordapp.com/embed/avatars/0.png"
         if size is None:
             return guild.icon.url
-        return guild.icon.with_size(size)
+        return guild.icon.with_size(size).url
 
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
         """
