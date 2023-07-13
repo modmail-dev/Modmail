@@ -11,10 +11,6 @@
             "description": "The id for the server you are hosting this bot for.",
             "required": true
         },
-        "MODMAIL_GUILD_ID": {
-            "description": "The ID of the discord server where the threads channels should be created (receiving server). Default to GUILD_ID.",
-            "required": false
-        },
         "OWNERS": {
             "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval).",
             "required": true
