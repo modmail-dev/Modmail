@@ -427,7 +427,7 @@ class Utility(commands.Cog):
                     msg = "```Haskell\n"
             msg += line
             if len(msg) + 3 > 2000:
-                msg = msg[:1993] + "[...]```"
+                msg = msg[:1992] + "[...]```"
                 messages.append(msg)
                 msg = "```Haskell\n"
 
