@@ -83,8 +83,11 @@ class ModmailBot(commands.Bot):
 
         self.threads = ThreadManager(self)
 
-        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
-        configure_logging(self, temp_dir)
+        log_dir = os.path.join(temp_dir, "logs")
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+        self.log_file_path = os.path.join(log_dir, "modmail.log")
+        configure_logging(self)
 
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()

@@ -6,10 +6,10 @@ import _string
 
 from difflib import get_close_matches
 from enum import IntEnum
-from logging import FileHandler, StreamHandler
+from logging import FileHandler, StreamHandler, Handler
 from logging.handlers import RotatingFileHandler
 from string import Formatter
-from typing import Optional, Union
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -98,19 +98,19 @@ def create_log_handler(
     level: int = logging.DEBUG,
     mode: str = "a+",
     encoding: str = "utf-8",
-    maxBytes: int = 48000,
+    maxBytes: int = 28000000,
     backupCount: int = 1,
     **kwargs,
-) -> Union[FileHandler, RotatingFileHandler, StreamHandler]:
+) -> Handler:
     """
-    Return a pre-configured log handler. This function is made for consistency sake with
+    Creates a pre-configured log handler. This function is made for consistency's sake with
     pre-defined default values for parameters and formatters to pass to handler class.
     Additional keyword arguments also can be specified, just in case.
 
-    Plugin developers should not use this and only use the `getLogger` instead to instantiate the ModmailLogger object.
+    Plugin developers should not use this and use `models.getLogger` instead.
 
     Parameters
-    -----------
+    ----------
     filename : Optional[Path]
         Specifies that a `FileHandler` or `RotatingFileHandler` be created, using the specified filename,
         rather than a `StreamHandler`. Defaults to `None`.
@@ -125,11 +125,16 @@ def create_log_handler(
         If this keyword argument is specified along with filename, its value is used when the `FileHandler` is created,
         and thus used when opening the output file. Defaults to 'utf-8'.
     maxBytes : int
-        The max file size before the rollover occurs. Defaults to 48000. Rollover occurs whenever the current log file
-        is nearly `maxBytes` in length; but if either of `maxBytes` or `backupCount` is zero, rollover never occurs, so you
-        generally want to set `backupCount` to at least 1.
+        The max file size before the rollover occurs. Defaults to 28000000 (28MB). Rollover occurs whenever the current
+        log file is nearly `maxBytes` in length; but if either of `maxBytes` or `backupCount` is zero,
+        rollover never occurs, so you generally want to set `backupCount` to at least 1.
     backupCount : int
         Max number of backup files. Defaults to 1. If this is set to zero, rollover will never occur.
+
+    Returns
+    -------
+    `StreamHandler` when `filename` is `None`, otherwise `FileHandler` or `RotatingFileHandler`
+    depending on the `rotating` value.
     """
     if filename is None and rotating:
         raise ValueError("`filename` must be set to instantiate a `RotatingFileHandler`.")
@@ -153,7 +158,7 @@ def create_log_handler(
 logging.setLoggerClass(ModmailLogger)
 log_level = logging.INFO
 loggers = set()
-ch: StreamHandler = create_log_handler(level=log_level)
+ch = create_log_handler(level=log_level)
 ch_debug: Optional[RotatingFileHandler] = None
 
 
@@ -167,8 +172,9 @@ def getLogger(name=None) -> ModmailLogger:
     return logger
 
 
-def configure_logging(bot, log_dir: str) -> None:
+def configure_logging(bot) -> None:
     global ch_debug, log_level
+
     logger = getLogger(__name__)
     level_text = bot.config["log_level"].upper()
     logging_levels = {
@@ -184,16 +190,14 @@ def configure_logging(bot, log_dir: str) -> None:
     if level is None:
         level = bot.config.remove("log_level")
         logger.warning("Invalid logging level set: %s.", level_text)
-        logger.warning("Using default logging level: INFO.")
+        logger.warning("Using default logging level: %s.", level)
+        level = logging_levels[level]
     else:
         logger.info("Logging level: %s", level_text)
-
-    logger.info("Log file: %s", bot.log_file_name)
-
-    ch_debug = create_log_handler(bot.log_file_name, rotating=True)
-
     log_level = level
 
+    logger.info("Log file: %s", bot.log_file_path)
+    ch_debug = create_log_handler(bot.log_file_path, rotating=True)
     ch.setLevel(log_level)
 
     for log in loggers:
@@ -201,23 +205,26 @@ def configure_logging(bot, log_dir: str) -> None:
         log.addHandler(ch_debug)
 
     # Set up discord.py logging
-    d_level = logging_levels.get(bot.config["discord_log_level"].upper(), logging.INFO)
+    d_level_text = bot.config["discord_log_level"].upper()
+    d_level = logging_levels.get(d_level_text)
+    if d_level is None:
+        d_level = bot.config.remove("discord_log_level")
+        logger.warning("Invalid discord logging level set: %s.", d_level_text)
+        logger.warning("Using default discord logging level: %s.", d_level)
+        d_level = logging_levels[d_level]
     d_logger = logging.getLogger("discord")
     d_logger.setLevel(d_level)
 
-    non_verbose_log_level = d_level if d_level != logging.DEBUG else logging.INFO
+    non_verbose_log_level = max(d_level, logging.INFO)
     stream_handler = create_log_handler(level=non_verbose_log_level)
-    file_handler = create_log_handler(bot.log_file_name, rotating=True, level=non_verbose_log_level)
-    logger.info("Discord logging level: %s.", logging.getLevelName(non_verbose_log_level))
+    if non_verbose_log_level != d_level:
+        logger.info("Discord logging level (stdout): %s.", logging.getLevelName(non_verbose_log_level))
+        logger.info("Discord logging level (logfile): %s.", logging.getLevelName(d_level))
+    else:
+        logger.info("Discord logging level: %s.", logging.getLevelName(d_level))
     d_logger.addHandler(stream_handler)
-    d_logger.addHandler(file_handler)
+    d_logger.addHandler(ch_debug)
 
-    # file handler for discord.py debug level
-    if d_level == logging.DEBUG:
-        dlog_file = os.path.join(log_dir, "discord.log")
-        debug_handler = create_log_handler(dlog_file, level=logging.DEBUG, mode="w", encoding="utf-8")
-        logger.info("Discord logger DEBUG level is enabled. Log file: %s", dlog_file)
-        d_logger.addHandler(debug_handler)
     logger.debug("Successfully configured logging.")
 
 
