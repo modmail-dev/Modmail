@@ -416,7 +416,7 @@ class Utility(commands.Cog):
                 title="Debug Logs:",
                 description="You don't have any logs at the moment.",
             )
-            embed.set_footer(text="Go to Heroku to see your logs.")
+            embed.set_footer(text="Go to your console to see your logs.")
             return await ctx.send(embed=embed)
 
         messages = []
