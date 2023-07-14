@@ -552,6 +552,10 @@ class Plugins(commands.Cog):
             except Exception:
                 logger.error("Failed to unload plugin: %s.", ext)
 
+        for module in list(sys.modules.keys()):
+            if module.startswith("plugins."):
+                del sys.modules[module]
+
         self.bot.config["plugins"].clear()
         await self.bot.config.update()
 
