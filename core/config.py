@@ -301,7 +301,7 @@ class ConfigManager:
     def __delitem__(self, key: str) -> None:
         return self.remove(key)
 
-    def get(self, key: str, convert=True) -> typing.Any:
+    def get(self, key: str, *, convert: bool = True) -> typing.Any:
         key = key.lower()
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')

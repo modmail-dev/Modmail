@@ -15,6 +15,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Changed
 - Repo moved to https://github.com/modmail-dev/modmail.
 
+### Internal
+- `ConfigManager.get` no longer accepts two positional arguments: the `convert` argument is now keyword-only.
+
 # v4.0.2
 
 ### Breaking
