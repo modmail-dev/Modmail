@@ -63,10 +63,10 @@ class GitHub:
     """
 
     BASE = "https://api.github.com"
-    REPO = BASE + "/repos/kyb3r/modmail"
+    REPO = BASE + "/repos/modmail-dev/modmail"
     MERGE_URL = BASE + "/repos/{username}/modmail/merges"
     FORK_URL = REPO + "/forks"
-    STAR_URL = BASE + "/user/starred/kyb3r/modmail"
+    STAR_URL = BASE + "/user/starred/modmail-dev/modmail"
 
     def __init__(self, bot, access_token: str = "", username: str = "", **kwargs):
         self.bot = bot

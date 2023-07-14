@@ -30,8 +30,8 @@ authors = [
     'Taki <noemail@example.com>'
 ]
 readme = 'README.md'
-repository = 'https://github.com/kyb3r/modmail'
-homepage = 'https://github.com/kyb3r/modmail'
+repository = 'https://github.com/modmail-dev/modmail'
+homepage = 'https://github.com/modmail-dev/modmail'
 keywords = ['discord', 'modmail']
 
 [tool.pylint.format]
