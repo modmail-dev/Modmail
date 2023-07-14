@@ -1115,7 +1115,7 @@ class Utility(commands.Cog):
         await self.bot.config.update()
         return embed
 
-    @alias.command(name="add")
+    @alias.command(name="add", aliases=["create", "make"])
     @checks.has_permissions(PermissionLevel.MODERATOR)
     async def alias_add(self, ctx, name: str.lower, *, value):
         """
