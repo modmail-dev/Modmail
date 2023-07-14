@@ -302,10 +302,10 @@ class Plugins(commands.Cog):
             plugin = Plugin(user, repo, plugin_name, branch)
 
         else:
-            if not self.bot.config.get("registry_plugins_only", False):
+            if self.bot.config.get("registry_plugins_only"):
                 embed = discord.Embed(
-                    description="This plugin is not in the registry. "
-                    "To install it, you must set `REGISTRY_PLUGINS_ONLY=false` in your .env file or config settings.",
+                    description="This plugin is not in the registry. To install this plugin, "
+                                "you must set `REGISTRY_PLUGINS_ONLY=no` or remove this key in your .env file.",
                     color=self.bot.error_color,
                 )
                 await ctx.send(embed=embed)
