@@ -21,6 +21,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `?log key <key>` to retrieve the log link and view a preview using a log key. ([PR #3196](https://github.com/modmail-dev/Modmail/pull/3196))
 - `REGISTRY_PLUGINS_ONLY`, environment variable, when set, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
 - `DISCORD_LOG_LEVEL` environment variable to set the log level of discord.py. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
+- New registry plugin: [`autoreact`](https://github.com/martinbndr/kyb3r-modmail-plugins/tree/master/autoreact).
 
 ### Changed
 - Repo moved to https://github.com/modmail-dev/modmail.
@@ -32,8 +33,6 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Internal
 - Renamed `Bot.log_file_name` to `Bot.log_file_path`. Log files are now created at `temp/logs/modmail.log`. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
-
-### Internal
 - `ConfigManager.get` no longer accepts two positional arguments: the `convert` argument is now keyword-only.
 
 # v4.0.2
