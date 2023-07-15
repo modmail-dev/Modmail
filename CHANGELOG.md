@@ -28,6 +28,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Discord.py internal logging is now enabled by default. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 - The confirm-thread-creation dialog now uses buttons instead of reactions. ([PR #3273](https://github.com/modmail-dev/Modmail/pull/3273))
 - `?disable all` no longer overrides `?disable new`. ([PR #3278](https://github.com/modmail-dev/Modmail/pull/3278))
+- Dropped root privileges for Modmail running under Docker. ([PR #3284](https://github.com/modmail-dev/Modmail/pull/3284))
 
 ### Internal
 - Renamed `Bot.log_file_name` to `Bot.log_file_path`. Log files are now created at `temp/logs/modmail.log`. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
