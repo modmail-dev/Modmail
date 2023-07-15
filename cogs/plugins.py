@@ -264,6 +264,17 @@ class Plugins(commands.Cog):
             logger.error("Plugin load failure: %s", plugin.ext_string, exc_info=True)
             raise InvalidPluginError("Cannot load extension, plugin invalid.") from exc
 
+    async def unload_plugin(self, plugin: Plugin) -> None:
+        try:
+            await self.bot.unload_extension(plugin.ext_string)
+        except commands.ExtensionError as exc:
+            raise exc
+
+        ext_parent = ".".join(plugin.ext_string.split(".")[:-1])
+        for module in list(sys.modules.keys()):
+            if module == ext_parent or module.startswith(ext_parent + "."):
+                del sys.modules[module]
+
     async def parse_user_input(self, ctx, plugin_name, check_version=False):
 
         if not self.bot.config["enable_plugins"]:
@@ -302,10 +313,10 @@ class Plugins(commands.Cog):
             plugin = Plugin(user, repo, plugin_name, branch)
 
         else:
-            if not self.bot.config.get("registry_plugins_only", False):
+            if self.bot.config.get("registry_plugins_only"):
                 embed = discord.Embed(
-                    description="This plugin is not in the registry. "
-                    "To install it, you must set `REGISTRY_PLUGINS_ONLY=false` in your .env file or config settings.",
+                    description="This plugin is not in the registry. To install this plugin, "
+                                "you must set `REGISTRY_PLUGINS_ONLY=no` or remove this key in your .env file.",
                     color=self.bot.error_color,
                 )
                 await ctx.send(embed=embed)
@@ -378,7 +389,7 @@ class Plugins(commands.Cog):
             logger.warning("Unable to download plugin %s.", plugin, exc_info=True)
 
             embed = discord.Embed(
-                description=f"Failed to download plugin, check logs for error.\n{type(e)}: {e}",
+                description=f"Failed to download plugin, check logs for error.\n{type(e).__name__}: {e}",
                 color=self.bot.error_color,
             )
 
@@ -397,7 +408,7 @@ class Plugins(commands.Cog):
                 logger.warning("Unable to load plugin %s.", plugin, exc_info=True)
 
                 embed = discord.Embed(
-                    description=f"Failed to download plugin, check logs for error.\n{type(e)}: {e}",
+                    description=f"Failed to load plugin, check logs for error.\n{type(e).__name__}: {e}",
                     color=self.bot.error_color,
                 )
 
@@ -438,7 +449,7 @@ class Plugins(commands.Cog):
 
         if self.bot.config.get("enable_plugins"):
             try:
-                await self.bot.unload_extension(plugin.ext_string)
+                await self.unload_plugin(plugin)
                 self.loaded_plugins.remove(plugin)
             except (commands.ExtensionNotLoaded, KeyError):
                 logger.warning("Plugin was never loaded.")
@@ -480,9 +491,10 @@ class Plugins(commands.Cog):
             await self.download_plugin(plugin, force=True)
             if self.bot.config.get("enable_plugins"):
                 try:
-                    await self.bot.unload_extension(plugin.ext_string)
+                    await self.unload_plugin(plugin)
                 except commands.ExtensionError:
                     logger.warning("Plugin unload fail.", exc_info=True)
+
                 try:
                     await self.load_plugin(plugin)
                 except Exception:
@@ -529,17 +541,20 @@ class Plugins(commands.Cog):
         for ext in list(self.bot.extensions):
             if not ext.startswith("plugins."):
                 continue
+            logger.error("Unloading plugin: %s.", ext)
             try:
-                logger.error("Unloading plugin: %s.", ext)
-                await self.bot.unload_extension(ext)
-            except Exception:
-                logger.error("Failed to unload plugin: %s.", ext)
-            else:
-                if not self.loaded_plugins:
-                    continue
                 plugin = next((p for p in self.loaded_plugins if p.ext_string == ext), None)
                 if plugin:
+                    await self.unload_plugin(plugin)
                     self.loaded_plugins.remove(plugin)
+                else:
+                    await self.bot.unload_extension(ext)
+            except Exception:
+                logger.error("Failed to unload plugin: %s.", ext)
+
+        for module in list(sys.modules.keys()):
+            if module.startswith("plugins."):
+                del sys.modules[module]
 
         self.bot.config["plugins"].clear()
         await self.bot.config.update()
