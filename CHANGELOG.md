@@ -13,13 +13,18 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Loading the blocked list with the `?blocked` command takes a long time when the list is large. ([PR #3242](https://github.com/kyb3r/modmail/pull/3242))
 - Reply not being forwarded from DM. (PR [#3239](https://github.com/modmail-dev/modmail/pull/3239))
 
-# [UNRELEASED]
-
 ### Added
-- New .env config option: `REGISTRY_PLUGINS_ONLY`, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
+- `?log key <key>` to retrieve the log link and view a preview using a log key. ([PR #3196](https://github.com/modmail-dev/Modmail/pull/3196))
+- `REGISTRY_PLUGINS_ONLY`, environment variable, when set, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
+- `DISCORD_LOG_LEVEL` environment variable to set the log level of discord.py. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 
 ### Changed
 - Repo moved to https://github.com/modmail-dev/modmail.
+- Guild icons in embed footers and author urls now have a fixed size of 128. ([PR #3261](https://github.com/modmail-dev/modmail/pull/3261))
+- Discord.py internal logging is now enabled by default. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
+
+### Internal
+- Renamed `Bot.log_file_name` to `Bot.log_file_path`. Log files are now created at `temp/logs/modmail.log`. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 
 # v4.0.2
 

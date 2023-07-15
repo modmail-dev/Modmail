@@ -356,6 +356,9 @@ class ApiClient:
     async def get_user_logs(self, user_id: Union[str, int]) -> list:
         return NotImplemented
 
+    async def find_log_entry(self, key: str) -> list:
+        return NotImplemented
+
     async def get_latest_user_logs(self, user_id: Union[str, int]):
         return NotImplemented
 
@@ -526,6 +529,13 @@ class MongoDBClient(ApiClient):
         query = {"recipient.id": str(user_id), "guild_id": str(self.bot.guild_id)}
         projection = {"messages": {"$slice": 5}}
         logger.debug("Retrieving user %s logs.", user_id)
+
+        return await self.logs.find(query, projection).to_list(None)
+
+    async def find_log_entry(self, key: str) -> list:
+        query = {"key": key}
+        projection = {"messages": {"$slice": 5}}
+        logger.debug(f"Retrieving log ID {key}.")
 
         return await self.logs.find(query, projection).to_list(None)
 
