@@ -1,7 +1,7 @@
 {
     "name": "Modmail",
     "description": "An easy to install Modmail bot for Discord - DM to contact mods!",
-    "repository": "https://github.com/kyb3r/modmail",
+    "repository": "https://github.com/modmail-dev/modmail",
     "env": {
         "TOKEN": {
             "description": "Your discord bot's token.",
@@ -10,10 +10,6 @@
         "GUILD_ID": {
             "description": "The id for the server you are hosting this bot for.",
             "required": true
-        },
-        "MODMAIL_GUILD_ID": {
-            "description": "The ID of the discord server where the threads channels should be created (receiving server). Default to GUILD_ID.",
-            "required": false
         },
         "OWNERS": {
             "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval).",
@@ -33,6 +29,10 @@
         },
         "GITHUB_TOKEN": {
             "description": "A github personal access token with the repo scope.",
+            "required": false
+        },
+        "REGISTRY_PLUGINS_ONLY": {
+            "description": "If set to true, only plugins that are in the registry can be loaded.",
             "required": false
         }
     }
