@@ -13,12 +13,11 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Loading the blocked list with the `?blocked` command takes a long time when the list is large. ([PR #3242](https://github.com/kyb3r/modmail/pull/3242))
 - Reply not being forwarded from DM. (PR [#3239](https://github.com/modmail-dev/modmail/pull/3239))
 
-# [UNRELEASED]
-
 ### Added
 - New .env config option: `REGISTRY_PLUGINS_ONLY`, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
 
 ### Changed
+- Guild icons in embed footers and author urls now have a fixed size of 128. ([PR #3261](https://github.com/modmail-dev/modmail/pull/3261))
 - Repo moved to https://github.com/modmail-dev/modmail.
 
 # v4.0.2
