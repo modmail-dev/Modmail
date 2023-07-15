@@ -142,7 +142,7 @@ class ModmailHelpCommand(commands.HelpCommand):
             perm_level = "NONE"
 
         embed = discord.Embed(
-            title=f"`{self.get_command_signature(topic)}`",
+            title=f"`{self.get_command_signature(topic).strip()}`",
             color=self.context.bot.main_color,
             description=self.process_help_msg(topic.help),
         )
@@ -401,13 +401,7 @@ class Utility(commands.Cog):
     async def debug(self, ctx):
         """Shows the recent application logs of the bot."""
 
-        log_file_name = self.bot.token.split(".")[0]
-
-        with open(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"),
-            "r+",
-            encoding="utf-8",
-        ) as f:
+        with open(self.bot.log_file_path, "r+", encoding="utf-8") as f:
             logs = f.read().strip()
 
         if not logs:
@@ -433,7 +427,7 @@ class Utility(commands.Cog):
                     msg = "```Haskell\n"
             msg += line
             if len(msg) + 3 > 2000:
-                msg = msg[:1993] + "[...]```"
+                msg = msg[:1992] + "[...]```"
                 messages.append(msg)
                 msg = "```Haskell\n"
 
@@ -455,12 +449,8 @@ class Utility(commands.Cog):
         """Posts application-logs to Hastebin."""
 
         haste_url = os.environ.get("HASTE_URL", "https://hastebin.cc")
-        log_file_name = self.bot.token.split(".")[0]
 
-        with open(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"),
-            "rb+",
-        ) as f:
+        with open(self.bot.log_file_path, "rb+") as f:
             logs = BytesIO(f.read().strip())
 
         try:
@@ -491,12 +481,7 @@ class Utility(commands.Cog):
     async def debug_clear(self, ctx):
         """Clears the locally cached logs."""
 
-        log_file_name = self.bot.token.split(".")[0]
-
-        with open(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), f"../temp/{log_file_name}.log"),
-            "w",
-        ):
+        with open(self.bot.log_file_path, "w"):
             pass
         await ctx.send(
             embed=discord.Embed(color=self.bot.main_color, description="Cached logs are now cleared.")
@@ -1020,7 +1005,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color, description="You dont have any aliases at the moment."
             )
             embed.set_footer(text=f'Do "{self.bot.prefix}help alias" for more commands.')
-            embed.set_author(name="Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
+            embed.set_author(name="Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -1028,7 +1013,9 @@ class Utility(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.aliases)),) * 15)):
             description = utils.format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Command Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
+            embed.set_author(
+                name="Command Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128)
+            )
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -1612,7 +1599,8 @@ class Utility(commands.Cog):
                             )
                             embed = discord.Embed(color=self.bot.main_color, description=description)
                             embed.set_author(
-                                name="Permission Overrides", icon_url=self.bot.get_guild_icon(guild=ctx.guild)
+                                name="Permission Overrides",
+                                icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
                             )
                             embeds.append(embed)
 
