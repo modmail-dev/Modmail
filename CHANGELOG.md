@@ -15,8 +15,10 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Added
 - New .env config option: `REGISTRY_PLUGINS_ONLY`, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
+- `?log key <key>` to retrieve the log link and view a preview using a log key. ([PR #3196](https://github.com/modmail-dev/Modmail/pull/3196))
 
 ### Changed
+- Guild icons in embed footers and author urls now have a fixed size of 128. ([PR #3261](https://github.com/modmail-dev/modmail/pull/3261))
 - Repo moved to https://github.com/modmail-dev/modmail.
 - Discord.py internal logging is now enabled by default. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 

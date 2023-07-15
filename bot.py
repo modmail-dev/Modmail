@@ -92,12 +92,16 @@ class ModmailBot(commands.Bot):
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
-    def get_guild_icon(self, guild: typing.Optional[discord.Guild]) -> str:
+    def get_guild_icon(
+        self, guild: typing.Optional[discord.Guild], *, size: typing.Optional[int] = None
+    ) -> str:
         if guild is None:
             guild = self.guild
         if guild.icon is None:
             return "https://cdn.discordapp.com/embed/avatars/0.png"
-        return guild.icon.url
+        if size is None:
+            return guild.icon.url
+        return guild.icon.with_size(size).url
 
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
         """
@@ -891,7 +895,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_new_thread_footer"],
-                    icon_url=self.get_guild_icon(guild=message.guild),
+                    icon_url=self.get_guild_icon(guild=message.guild, size=128),
                 )
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -907,7 +911,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_current_thread_footer"],
-                    icon_url=self.get_guild_icon(guild=message.guild),
+                    icon_url=self.get_guild_icon(guild=message.guild, size=128),
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -1314,7 +1318,7 @@ class ModmailBot(commands.Bot):
             )
             embed.set_footer(
                 text=self.config["disabled_new_thread_footer"],
-                icon_url=self.get_guild_icon(guild=channel.guild),
+                icon_url=self.get_guild_icon(guild=channel.guild, size=128),
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
