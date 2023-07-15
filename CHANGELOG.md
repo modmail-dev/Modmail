@@ -27,6 +27,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Guild icons in embed footers and author urls now have a fixed size of 128. ([PR #3261](https://github.com/modmail-dev/modmail/pull/3261))
 - Discord.py internal logging is now enabled by default. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 - The confirm-thread-creation dialog now uses buttons instead of reactions. ([PR #3273](https://github.com/modmail-dev/Modmail/pull/3273))
+- `?disable all` no longer overrides `?disable new`. ([PR #3278](https://github.com/modmail-dev/Modmail/pull/3278))
 
 ### Internal
 - Renamed `Bot.log_file_name` to `Bot.log_file_path`. Log files are now created at `temp/logs/modmail.log`. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))

@@ -2152,7 +2152,7 @@ class Modmail(commands.Cog):
             description="Modmail will not create any new threads.",
             color=self.bot.main_color,
         )
-        if self.bot.config["dm_disabled"] < DMDisabled.NEW_THREADS:
+        if self.bot.config["dm_disabled"] != DMDisabled.NEW_THREADS:
             self.bot.config["dm_disabled"] = DMDisabled.NEW_THREADS
             await self.bot.config.update()
 
