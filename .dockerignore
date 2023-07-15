@@ -138,11 +138,15 @@ temp/
 test.py
 
 # Other stuff
+.dockerignore
 .env.example
+.git/
 .gitignore
 .github/
 app.json
 CHANGELOG.md
+Dockerfile
+docker-compose.yml
 Procfile
 pyproject.toml
 README.md

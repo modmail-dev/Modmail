@@ -160,7 +160,7 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color, description="You dont have any snippets at the moment."
             )
             embed.set_footer(text=f'Check "{self.bot.prefix}help snippet add" to add a snippet.')
-            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
+            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -168,7 +168,7 @@ class Modmail(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)):
             description = format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
+            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -444,11 +444,9 @@ class Modmail(commands.Cog):
     async def send_scheduled_close_message(self, ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
 
-        silent = "*silently* " if silent else ""
-
         embed = discord.Embed(
             title="Scheduled close",
-            description=f"This thread will close {silent}{human_delta}.",
+            description=f"This thread will{' silently' if silent else ''} close in {human_delta}.",
             color=self.bot.error_color,
         )
 
@@ -1031,7 +1029,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.get_guild_icon(guild=ctx.guild)
+                avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -1120,7 +1118,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.get_guild_icon(guild=ctx.guild)
+                avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -1208,6 +1206,28 @@ class Modmail(commands.Cog):
                 description="No log entries have been found for that query.",
             )
             return await ctx.send(embed=embed)
+
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
+
+    @logs.command(name="key", aliases=["id"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def logs_key(self, ctx, key: str):
+        """
+        Get the log link for the specified log key.
+        """
+        icon_url = ctx.author.avatar.url
+
+        logs = await self.bot.api.find_log_entry(key)
+
+        if not logs:
+            embed = discord.Embed(
+                color=self.bot.error_color,
+                description=f"Log entry `{key}` not found.",
+            )
+            return await ctx.send(embed=embed)
+
+        embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
@@ -2132,7 +2152,7 @@ class Modmail(commands.Cog):
             description="Modmail will not create any new threads.",
             color=self.bot.main_color,
         )
-        if self.bot.config["dm_disabled"] < DMDisabled.NEW_THREADS:
+        if self.bot.config["dm_disabled"] != DMDisabled.NEW_THREADS:
             self.bot.config["dm_disabled"] = DMDisabled.NEW_THREADS
             await self.bot.config.update()
 

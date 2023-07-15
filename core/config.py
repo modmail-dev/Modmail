@@ -123,7 +123,7 @@ class ConfigManager:
         # confirm thread creation
         "confirm_thread_creation": False,
         "confirm_thread_creation_title": "Confirm thread creation",
-        "confirm_thread_response": "React to confirm thread creation which will directly contact the moderators",
+        "confirm_thread_response": "Click the button to confirm thread creation which will directly contact the moderators.",
         "confirm_thread_creation_accept": "\N{WHITE HEAVY CHECK MARK}",
         "confirm_thread_creation_deny": "\N{NO ENTRY SIGN}",
         # regex
@@ -178,6 +178,7 @@ class ConfigManager:
         "disable_updates": False,
         # Logging
         "log_level": "INFO",
+        "discord_log_level": "INFO",
         # data collection
         "data_collection": True,
     }
@@ -301,7 +302,7 @@ class ConfigManager:
     def __delitem__(self, key: str) -> None:
         return self.remove(key)
 
-    def get(self, key: str, convert=True) -> typing.Any:
+    def get(self, key: str, *, convert: bool = True) -> typing.Any:
         key = key.lower()
         if key not in self.all_keys:
             raise InvalidConfigError(f'Configuration "{key}" is invalid.')
