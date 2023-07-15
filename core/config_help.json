@@ -1014,10 +1014,10 @@
     ]
   },
   "confirm_thread_response": {
-    "default": "React to confirm thread creation which will directly contact the moderators",
+    "default": "Click the button to confirm thread creation which will directly contact the moderators.",
     "description": "Description for the embed message sent to users to confirm a thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_response React to confirm`"
+      "`{prefix}config set confirm_thread_response Click to confirm`"
     ],
     "notes": [
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny`"
@@ -1123,6 +1123,15 @@
   "log_level": {
     "default": "INFO",
     "description": "The logging level for logging to stdout.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "discord_log_level": {
+    "default": "INFO",
+    "description": "The `discord.py` library logging level for logging to stdout.",
     "examples": [
     ],
     "notes": [

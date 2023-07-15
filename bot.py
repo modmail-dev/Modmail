@@ -52,7 +52,6 @@ from core.utils import extract_block_timestamp, normalize_alias, parse_alias, tr
 
 logger = getLogger(__name__)
 
-
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
     os.mkdir(temp_dir)
@@ -84,18 +83,25 @@ class ModmailBot(commands.Bot):
 
         self.threads = ThreadManager(self)
 
-        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
-        self._configure_logging()
+        log_dir = os.path.join(temp_dir, "logs")
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+        self.log_file_path = os.path.join(log_dir, "modmail.log")
+        configure_logging(self)
 
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
-    def get_guild_icon(self, guild: typing.Optional[discord.Guild]) -> str:
+    def get_guild_icon(
+        self, guild: typing.Optional[discord.Guild], *, size: typing.Optional[int] = None
+    ) -> str:
         if guild is None:
             guild = self.guild
         if guild.icon is None:
             return "https://cdn.discordapp.com/embed/avatars/0.png"
-        return guild.icon.url
+        if size is None:
+            return guild.icon.url
+        return guild.icon.with_size(size).url
 
     def _resolve_snippet(self, name: str) -> typing.Optional[str]:
         """
@@ -177,29 +183,6 @@ class ModmailBot(commands.Bot):
             except Exception:
                 logger.exception("Failed to load %s.", cog)
         logger.line("debug")
-
-    def _configure_logging(self):
-        level_text = self.config["log_level"].upper()
-        logging_levels = {
-            "CRITICAL": logging.CRITICAL,
-            "ERROR": logging.ERROR,
-            "WARNING": logging.WARNING,
-            "INFO": logging.INFO,
-            "DEBUG": logging.DEBUG,
-        }
-        logger.line()
-
-        log_level = logging_levels.get(level_text)
-        if log_level is None:
-            log_level = self.config.remove("log_level")
-            logger.warning("Invalid logging level set: %s.", level_text)
-            logger.warning("Using default logging level: INFO.")
-        else:
-            logger.info("Logging level: %s", level_text)
-
-        logger.info("Log file: %s", self.log_file_name)
-        configure_logging(self.log_file_name, log_level)
-        logger.debug("Successfully configured logging.")
 
     @property
     def version(self):
@@ -888,7 +871,7 @@ class ModmailBot(commands.Bot):
             return
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
 
-        if message.type != discord.MessageType.default:
+        if message.type not in [discord.MessageType.default, discord.MessageType.reply]:
             return
 
         thread = await self.threads.find(recipient=message.author)
@@ -912,7 +895,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_new_thread_footer"],
-                    icon_url=self.get_guild_icon(guild=message.guild),
+                    icon_url=self.get_guild_icon(guild=message.guild, size=128),
                 )
                 logger.info("A new thread was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -928,7 +911,7 @@ class ModmailBot(commands.Bot):
                 )
                 embed.set_footer(
                     text=self.config["disabled_current_thread_footer"],
-                    icon_url=self.get_guild_icon(guild=message.guild),
+                    icon_url=self.get_guild_icon(guild=message.guild, size=128),
                 )
                 logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                 await self.add_reaction(message, blocked_emoji)
@@ -1335,7 +1318,7 @@ class ModmailBot(commands.Bot):
             )
             embed.set_footer(
                 text=self.config["disabled_new_thread_footer"],
-                icon_url=self.get_guild_icon(guild=channel.guild),
+                icon_url=self.get_guild_icon(guild=channel.guild, size=128),
             )
             logger.info(
                 "A new thread using react to contact was blocked from %s due to disabled Modmail.",
@@ -1796,16 +1779,6 @@ def main():
             discord.__version__,
         )
         sys.exit(0)
-
-    # Set up discord.py internal logging
-    if os.environ.get("LOG_DISCORD"):
-        logger.debug(f"Discord logging enabled: {os.environ['LOG_DISCORD'].upper()}")
-        d_logger = logging.getLogger("discord")
-
-        d_logger.setLevel(os.environ["LOG_DISCORD"].upper())
-        handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
-        handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
-        d_logger.addHandler(handler)
 
     bot = ModmailBot()
     bot.run()
