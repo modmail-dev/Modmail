@@ -33,6 +33,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Internal
 - Renamed `Bot.log_file_name` to `Bot.log_file_path`. Log files are now created at `temp/logs/modmail.log`. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 
+### Internal
+- `ConfigManager.get` no longer accepts two positional arguments: the `convert` argument is now keyword-only.
+
 # v4.0.2
 
 ### Breaking
