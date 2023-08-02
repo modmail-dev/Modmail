@@ -195,7 +195,7 @@ Real Madrid:
 Advertise Your Server:
 <br>
 <a href='https://discord.gg/zP8KcF4VQz'>
-  <img height=100 src='https://user-images.githubusercontent.com/45324516/140673115-dd3e873c-36b6-4383-9eb4-db42e1986ab3.png' style='margin:5px'>
+  <img height=100 src='https://media.discordapp.net/attachments/574701358612086814/1136294392685150239/Asset_4.png?width=616&height=564' style='margin:5px'>
 </a>
 <br>
 <br>
