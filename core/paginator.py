@@ -324,12 +324,15 @@ class EmbedPaginatorSession(PaginatorSession):
                     title = embed.author.name[:30].strip()
                     if len(embed.author.name) > 30:
                         title += "..."
-                else:
+                elif embed.title:
                     title = embed.title[:30].strip()
                     if len(embed.title) > 30:
                         title += "..."
-                    if not title:
-                        create_select = False
+                else:
+                    title = None
+
+                if not title:
+                    create_select = False
 
                 if embed.description:
                     description = embed.description[:40].replace("*", "").replace("`", "").strip()
