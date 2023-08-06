@@ -288,13 +288,13 @@ class PageSelect(Select):
         A helper to dynamically update the select menu options based on the current page.
         """
         current = self.handler.current
-        n = prev = after = 0
+        differ = prev = after = 0
 
         def max_reached():
             return prev + after >= 25  # max select options
 
         while not max_reached():
-            differ = n + 1
+            differ += 1
             inc_prev = current - differ >= 0
             inc_next = current + differ <= len(self._all_options)
             if not any((inc_prev, inc_next)):
@@ -303,7 +303,6 @@ class PageSelect(Select):
                 prev += 1
             if inc_next and not max_reached():
                 after += 1
-            n += 1
 
         options = self._all_options[current - prev : current + after]
         if refresh_options:
