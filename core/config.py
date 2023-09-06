@@ -178,6 +178,7 @@ class ConfigManager:
         "disable_updates": False,
         # Logging
         "log_level": "INFO",
+        "log_format": "basic",
         # data collection
         "data_collection": True,
     }

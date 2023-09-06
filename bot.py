@@ -43,6 +43,7 @@ from core.models import (
     InvalidConfigError,
     PermissionLevel,
     SafeFormatter,
+    configure_log_format,
     configure_logging,
     getLogger,
 )
@@ -69,6 +70,9 @@ class ModmailBot(commands.Bot):
         self.config = ConfigManager(self)
         self.config.populate_cache()
 
+        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
+        self._configure_logging()
+
         intents = discord.Intents.all()
         if not self.config["enable_presence_intent"]:
             intents.presences = False
@@ -83,10 +87,6 @@ class ModmailBot(commands.Bot):
         self._started = False
 
         self.threads = ThreadManager(self)
-
-        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
-        self._configure_logging()
-
         self.plugin_db = PluginDatabaseClient(self)  # Deprecated
         self.startup()
 
@@ -180,6 +180,12 @@ class ModmailBot(commands.Bot):
 
     def _configure_logging(self):
         level_text = self.config["log_level"].upper()
+        format = self.config["log_format"].lower()
+
+        # Initial call to configure the format, so that any errors
+        # that occur from now on will be formatted correctly
+        configure_log_format(format)
+
         logging_levels = {
             "CRITICAL": logging.CRITICAL,
             "ERROR": logging.ERROR,
@@ -198,6 +204,7 @@ class ModmailBot(commands.Bot):
             logger.info("Logging level: %s", level_text)
 
         logger.info("Log file: %s", self.log_file_name)
+        logger.info("Log format: %s", format)
         configure_logging(self.log_file_name, log_level)
         logger.debug("Successfully configured logging.")
 
