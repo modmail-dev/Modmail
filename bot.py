@@ -1712,40 +1712,17 @@ class ModmailBot(commands.Bot):
             self.autoupdate.cancel()
             return
 
-    @tasks.loop()
+    @tasks.loop(hours=1, reconnect=False)
     async def log_expiry(self):
         log_expire_after = self.config.get("log_expiration")
         if log_expire_after == isodate.Duration():
             return self.log_expiry.stop()
 
-        now = datetime.utcnow()
+        now = discord.utils.utcnow()
         expiration_datetime = now - log_expire_after
-        expired_logs = await self.db.logs.find({"closed_at": {"$lte": str(expiration_datetime)}}).to_list(
-            None
-        )
+        expired_logs = await self.db.logs.delete_many({"closed_at": {"$lte": str(expiration_datetime)}})
 
-        if not await self.db.logs.find_one():
-            return await discord.utils.sleep_until(now + timedelta(days=1))
-
-        if not expired_logs:
-            fetch = await self.db.logs.find().sort("closed_at", 1).limit(1).to_list(None)
-            if fetch:
-                for x in fetch:
-                    if x["closed_at"] > str(expiration_datetime):
-                        closed_at = datetime.strptime(x["closed_at"], "%Y-%m-%d %H:%M:%S.%f%z")
-                        next_expiry = closed_at + log_expire_after
-                        return await discord.utils.sleep_until(next_expiry)
-
-        await self.db.logs.delete_many({"closed_at": {"$lte": str(expiration_datetime)}})
-        logger.info(f"Deleted {len(expired_logs)} expired logs.")
-
-        fetch = await self.db.logs.find().sort("closed_at", 1).limit(1).to_list(None)
-        if fetch:
-            for x in fetch:
-                if x["closed_at"] > str(expiration_datetime):
-                    closed_at = datetime.strptime(x["closed_at"], "%Y-%m-%d %H:%M:%S.%f%z")
-                    next_expiry = closed_at + log_expire_after
-                    return await discord.utils.sleep_until(next_expiry)
+        logger.info(f"Deleted {expired_logs.deleted_count} expired logs.")
 
     def format_channel_name(self, author, exclude_channel=None, force_null=False):
         """Sanitises a username for use with text channel names
