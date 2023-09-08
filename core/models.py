@@ -1,16 +1,19 @@
 import logging
+import os
 import re
 import sys
-import os
+import _string
+
 from difflib import get_close_matches
 from enum import IntEnum
+from logging import FileHandler, StreamHandler, Handler
 from logging.handlers import RotatingFileHandler
 from string import Formatter
+from typing import Optional
 
 import discord
 from discord.ext import commands
 
-import _string
 
 try:
     from colorama import Fore, Style
@@ -21,29 +24,6 @@ except ImportError:
 if ".heroku" in os.environ.get("PYTHONHOME", ""):
     # heroku
     Fore = Style = type("Dummy", (object,), {"__getattr__": lambda self, item: ""})()
-
-
-class PermissionLevel(IntEnum):
-    OWNER = 5
-    ADMINISTRATOR = 4
-    ADMIN = 4
-    MODERATOR = 3
-    MOD = 3
-    SUPPORTER = 2
-    RESPONDER = 2
-    REGULAR = 1
-    INVALID = -1
-
-
-class InvalidConfigError(commands.BadArgument):
-    def __init__(self, msg, *args):
-        super().__init__(msg, *args)
-        self.msg = msg
-
-    @property
-    def embed(self):
-        # Single reference of Color.red()
-        return discord.Embed(title="Error", description=self.msg, color=discord.Color.red())
 
 
 class ModmailLogger(logging.Logger):
@@ -94,18 +74,92 @@ class ModmailLogger(logging.Logger):
             )
 
 
+class FileFormatter(logging.Formatter):
+    ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+    def format(self, record):
+        record.msg = self.ansi_escape.sub("", record.msg)
+        return super().format(record)
+
+
+log_stream_formatter = logging.Formatter(
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
+)
+log_file_formatter = FileFormatter(
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+
+def create_log_handler(
+    filename: Optional[str] = None,
+    *,
+    rotating: bool = False,
+    level: int = logging.DEBUG,
+    mode: str = "a+",
+    encoding: str = "utf-8",
+    maxBytes: int = 28000000,
+    backupCount: int = 1,
+    **kwargs,
+) -> Handler:
+    """
+    Creates a pre-configured log handler. This function is made for consistency's sake with
+    pre-defined default values for parameters and formatters to pass to handler class.
+    Additional keyword arguments also can be specified, just in case.
+
+    Plugin developers should not use this and use `models.getLogger` instead.
+
+    Parameters
+    ----------
+    filename : Optional[Path]
+        Specifies that a `FileHandler` or `RotatingFileHandler` be created, using the specified filename,
+        rather than a `StreamHandler`. Defaults to `None`.
+    rotating : bool
+        Whether the file handler should be the `RotatingFileHandler`. Defaults to `False`. Note, this
+        argument only compatible if the `filename` is specified, otherwise `ValueError` will be raised.
+    level : int
+        The root logger level for the handler. Defaults to `logging.DEBUG`.
+    mode : str
+        If filename is specified, open the file in this mode. Defaults to 'a+'.
+    encoding : str
+        If this keyword argument is specified along with filename, its value is used when the `FileHandler` is created,
+        and thus used when opening the output file. Defaults to 'utf-8'.
+    maxBytes : int
+        The max file size before the rollover occurs. Defaults to 28000000 (28MB). Rollover occurs whenever the current
+        log file is nearly `maxBytes` in length; but if either of `maxBytes` or `backupCount` is zero,
+        rollover never occurs, so you generally want to set `backupCount` to at least 1.
+    backupCount : int
+        Max number of backup files. Defaults to 1. If this is set to zero, rollover will never occur.
+
+    Returns
+    -------
+    `StreamHandler` when `filename` is `None`, otherwise `FileHandler` or `RotatingFileHandler`
+    depending on the `rotating` value.
+    """
+    if filename is None and rotating:
+        raise ValueError("`filename` must be set to instantiate a `RotatingFileHandler`.")
+
+    if filename is None:
+        handler = StreamHandler(stream=sys.stdout, **kwargs)
+        handler.setFormatter(log_stream_formatter)
+    elif not rotating:
+        handler = FileHandler(filename, mode=mode, encoding=encoding, **kwargs)
+        handler.setFormatter(log_file_formatter)
+    else:
+        handler = RotatingFileHandler(
+            filename, mode=mode, encoding=encoding, maxBytes=maxBytes, backupCount=backupCount, **kwargs
+        )
+        handler.setFormatter(log_file_formatter)
+
+    handler.setLevel(level)
+    return handler
+
+
 logging.setLoggerClass(ModmailLogger)
 log_level = logging.INFO
 loggers = set()
-
-ch = logging.StreamHandler(stream=sys.stdout)
-ch.setLevel(log_level)
-formatter = logging.Formatter(
-    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
-)
-ch.setFormatter(formatter)
-
-ch_debug = None
+ch = create_log_handler(level=log_level)
+ch_debug: Optional[RotatingFileHandler] = None
 
 
 def getLogger(name=None) -> ModmailLogger:
@@ -118,33 +172,71 @@ def getLogger(name=None) -> ModmailLogger:
     return logger
 
 
-class FileFormatter(logging.Formatter):
-    ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
-
-    def format(self, record):
-        record.msg = self.ansi_escape.sub("", record.msg)
-        return super().format(record)
-
-
-def configure_logging(name, level=None):
+def configure_logging(bot) -> None:
     global ch_debug, log_level
-    ch_debug = RotatingFileHandler(name, mode="a+", maxBytes=48000, backupCount=1, encoding="utf-8")
 
-    formatter_debug = FileFormatter(
-        "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    ch_debug.setFormatter(formatter_debug)
-    ch_debug.setLevel(logging.DEBUG)
+    logger = getLogger(__name__)
+    level_text = bot.config["log_level"].upper()
+    logging_levels = {
+        "CRITICAL": logging.CRITICAL,
+        "ERROR": logging.ERROR,
+        "WARNING": logging.WARNING,
+        "INFO": logging.INFO,
+        "DEBUG": logging.DEBUG,
+    }
+    logger.line()
 
-    if level is not None:
-        log_level = level
+    level = logging_levels.get(level_text)
+    if level is None:
+        level = bot.config.remove("log_level")
+        logger.warning("Invalid logging level set: %s.", level_text)
+        logger.warning("Using default logging level: %s.", level)
+        level = logging_levels[level]
+    else:
+        logger.info("Logging level: %s", level_text)
+    log_level = level
 
+    logger.info("Log file: %s", bot.log_file_path)
+    ch_debug = create_log_handler(bot.log_file_path, rotating=True)
     ch.setLevel(log_level)
 
-    for logger in loggers:
-        logger.setLevel(log_level)
-        logger.addHandler(ch_debug)
+    for log in loggers:
+        log.setLevel(log_level)
+        log.addHandler(ch_debug)
+
+    # Set up discord.py logging
+    d_level_text = bot.config["discord_log_level"].upper()
+    d_level = logging_levels.get(d_level_text)
+    if d_level is None:
+        d_level = bot.config.remove("discord_log_level")
+        logger.warning("Invalid discord logging level set: %s.", d_level_text)
+        logger.warning("Using default discord logging level: %s.", d_level)
+        d_level = logging_levels[d_level]
+    d_logger = logging.getLogger("discord")
+    d_logger.setLevel(d_level)
+
+    non_verbose_log_level = max(d_level, logging.INFO)
+    stream_handler = create_log_handler(level=non_verbose_log_level)
+    if non_verbose_log_level != d_level:
+        logger.info("Discord logging level (stdout): %s.", logging.getLevelName(non_verbose_log_level))
+        logger.info("Discord logging level (logfile): %s.", logging.getLevelName(d_level))
+    else:
+        logger.info("Discord logging level: %s.", logging.getLevelName(d_level))
+    d_logger.addHandler(stream_handler)
+    d_logger.addHandler(ch_debug)
+
+    logger.debug("Successfully configured logging.")
+
+
+class InvalidConfigError(commands.BadArgument):
+    def __init__(self, msg, *args):
+        super().__init__(msg, *args)
+        self.msg = msg
+
+    @property
+    def embed(self):
+        # Single reference of Color.red()
+        return discord.Embed(title="Error", description=self.msg, color=discord.Color.red())
 
 
 class _Default:
@@ -268,6 +360,18 @@ class DummyMessage:
 
     async def ack(self):
         return
+
+
+class PermissionLevel(IntEnum):
+    OWNER = 5
+    ADMINISTRATOR = 4
+    ADMIN = 4
+    MODERATOR = 3
+    MOD = 3
+    SUPPORTER = 2
+    RESPONDER = 2
+    REGULAR = 1
+    INVALID = -1
 
 
 class DMDisabled(IntEnum):
