@@ -43,7 +43,6 @@ from core.models import (
     InvalidConfigError,
     PermissionLevel,
     SafeFormatter,
-    configure_log_format,
     configure_logging,
     getLogger,
 )
@@ -68,8 +67,6 @@ class ModmailBot(commands.Bot):
     def __init__(self):
         self.config = ConfigManager(self)
         self.config.populate_cache()
-
-        self.log_file_name = os.path.join(temp_dir, f"{self.token.split('.')[0]}.log")
 
         intents = discord.Intents.all()
         if not self.config["enable_presence_intent"]:
