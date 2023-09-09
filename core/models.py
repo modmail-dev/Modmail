@@ -135,14 +135,25 @@ class FileFormatter(logging.Formatter):
         record.msg = self.ansi_escape.sub("", record.msg)
         return super().format(record)
 
-
 log_stream_formatter = logging.Formatter(
     "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
 )
+
 log_file_formatter = FileFormatter(
     "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+
+json_formatter = JsonFormatter({
+    "level": "levelname", 
+    "message": "message", 
+    "loggerName": "name", 
+    "processName": "processName",
+    "processID": "process", 
+    "threadName": "threadName", 
+    "threadID": "thread",
+    "timestamp": "asctime"
+})
 
 
 def create_log_handler(
@@ -152,6 +163,7 @@ def create_log_handler(
     level: int = logging.DEBUG,
     mode: str = "a+",
     encoding: str = "utf-8",
+    format: str = 'plain',
     maxBytes: int = 28000000,
     backupCount: int = 1,
     **kwargs,
@@ -178,6 +190,9 @@ def create_log_handler(
     encoding : str
         If this keyword argument is specified along with filename, its value is used when the `FileHandler` is created,
         and thus used when opening the output file. Defaults to 'utf-8'.
+    format : str
+        The format to output with, can either be 'json' or 'plain'. Will apply to whichever handler is created,
+        based on other conditional logic.
     maxBytes : int
         The max file size before the rollover occurs. Defaults to 28000000 (28MB). Rollover occurs whenever the current
         log file is nearly `maxBytes` in length; but if either of `maxBytes` or `backupCount` is zero,
@@ -192,20 +207,24 @@ def create_log_handler(
     """
     if filename is None and rotating:
         raise ValueError("`filename` must be set to instantiate a `RotatingFileHandler`.")
-
+    
     if filename is None:
         handler = StreamHandler(stream=sys.stdout, **kwargs)
-        handler.setFormatter(log_stream_formatter)
+        formatter = log_stream_formatter
     elif not rotating:
         handler = FileHandler(filename, mode=mode, encoding=encoding, **kwargs)
-        handler.setFormatter(log_file_formatter)
+        formatter = log_file_formatter
     else:
         handler = RotatingFileHandler(
             filename, mode=mode, encoding=encoding, maxBytes=maxBytes, backupCount=backupCount, **kwargs
         )
-        handler.setFormatter(log_file_formatter)
+        formatter = log_file_formatter
+    
+    if format == 'json':
+        formatter = json_formatter
 
     handler.setLevel(level)
+    handler.setFormatter(formatter)
     return handler
 
 
@@ -213,29 +232,8 @@ logging.setLoggerClass(ModmailLogger)
 log_level = logging.INFO
 loggers = set()
 
-ch = logging.StreamHandler(stream=sys.stdout)
-ch.setLevel(log_level)
-basic_formatter = logging.Formatter(
-    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
-)
-
-json_formatter = JsonFormatter({
-    "level": "levelname", 
-    "message": "message", 
-    "loggerName": "name", 
-    "processName": "processName",
-    "processID": "process", 
-    "threadName": "threadName", 
-    "threadID": "thread",
-    "timestamp": "asctime"
-})
-
-ch.setFormatter(basic_formatter)
-
-ch_debug = None
 ch = create_log_handler(level=log_level)
 ch_debug: Optional[RotatingFileHandler] = None
-
 
 def getLogger(name=None) -> ModmailLogger:
     logger = logging.getLogger(name)
@@ -247,23 +245,6 @@ def getLogger(name=None) -> ModmailLogger:
     return logger
 
 
-class FileFormatter(logging.Formatter):
-    ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
-
-    def format(self, record):
-        record.msg = self.ansi_escape.sub("", record.msg)
-        return super().format(record)
-
-
-def configure_log_format(format):
-    global ch
-
-    if format == 'json':
-        ch.setFormatter(json_formatter)
-    else:
-        ch.setFormatter(basic_formatter)
-
-def configure_logging(name, level=None):
 def configure_logging(bot) -> None:
     global ch_debug, log_level
 
