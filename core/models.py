@@ -246,7 +246,11 @@ def getLogger(name=None) -> ModmailLogger:
 
 
 def configure_logging(bot) -> None:
-    global ch_debug, log_level
+    global ch_debug, log_level, ch
+
+    stream_log_format, file_log_format = bot.config['stream_log_format'], bot.config['file_log_format']
+    if stream_log_format == 'json':
+        ch.setFormatter(json_formatter)
 
     logger = getLogger(__name__)
     level_text = bot.config["log_level"].upper()
@@ -271,7 +275,14 @@ def configure_logging(bot) -> None:
 
     logger.info("Log file: %s", bot.log_file_path)
     ch_debug = create_log_handler(bot.log_file_path, rotating=True)
+
+    if file_log_format == 'json':
+        ch_debug.setFormatter(json_formatter)
+
     ch.setLevel(log_level)
+
+    logger.info('Stream log format: %s', stream_log_format)
+    logger.info('File log format: %s', file_log_format)
 
     for log in loggers:
         log.setLevel(log_level)

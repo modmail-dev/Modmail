@@ -178,7 +178,8 @@ class ConfigManager:
         "disable_updates": False,
         # Logging
         "log_level": "INFO",
-        "log_format": "basic",
+        "stream_log_format": "plain",
+        "file_log_format": "plain",
         "discord_log_level": "INFO",
         # data collection
         "data_collection": True,
