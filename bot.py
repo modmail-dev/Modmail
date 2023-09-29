@@ -1280,7 +1280,9 @@ class ModmailBot(commands.Bot):
                 return
         else:
             try:
-                _, *linked_messages = await thread.find_linked_messages(message.id, either_direction=True)
+                _, *linked_messages = await thread.find_linked_messages(
+                    message1=message, either_direction=True
+                )
             except ValueError as e:
                 logger.warning("Failed to find linked message for reactions: %s", e)
                 return
