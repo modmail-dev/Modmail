@@ -28,7 +28,7 @@
   </a>
 
   <a href="https://www.python.org/downloads/">
-    <img src="https://img.shields.io/badge/Made%20With-Python%203.8-blue.svg?style=for-the-badge&logo=Python" alt="Made with Python 3.8">
+    <img src="https://img.shields.io/badge/Made%20With-Python%203.10-blue.svg?style=for-the-badge&logo=Python" alt="Made with Python 3.10">
   </a>
 
   <a href="https://github.com/ambv/black">
@@ -50,11 +50,13 @@ Modmail is similar to Reddit's Modmail, both in functionality and purpose. It se
 
 This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, you can support us on **[Patreon](https://www.patreon.com/kyber)**, cool benefits included! 
 
+For up-to-date setup instructions, please visit our [**documentation**](https://docs.modmail.dev/installation) page.
+
 ## How does it work?
 
 When a member sends a direct message to the bot, Modmail will create a channel or "thread" into a designated category. All further DM messages will automatically relay to that channel; any available staff can respond within the channel.
 
-Our Logviewer will save the threads so you can view previous threads through their corresponding log link. Here is an [**example**](https://logs.modmail.dev/example).
+Our Logviewer will save the threads so you can view previous threads through their corresponding log link. ~~Here is an [**example**](https://logs.modmail.dev/example)~~ (demo not available at the moment).
 
 ## Features
 
@@ -67,7 +69,7 @@ Our Logviewer will save the threads so you can view previous threads through the
   * Minimum length for members to be in the guild before allowed to contact Modmail (`guild_age`). 
 
 * **Advanced Logging Functionality:**
-  * When you close a thread, Modmail will generate a [log link](https://logs.modmail.dev/example) and post it to your log channel.
+  * When you close a thread, Modmail will generate a log link and post it to your log channel.
   * Native Discord dark-mode feel.
   * Markdown/formatting support.
   * Login via Discord to protect your logs ([premium Patreon feature](https://patreon.com/kyber)).
@@ -84,88 +86,34 @@ This list is ever-growing thanks to active development and our exceptional contr
 
 ## Installation
 
-Q: Where can I find the Modmail bot invite link?
+There are a number of options for hosting your very own dedicated Modmail bot.
 
-A: Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following one of the methods listed below (roughly takes 15 minutes of your time).
-
-There are a few options for hosting your very own dedicated Modmail bot.
-
-1. Patreon hosting
-2. Local hosting (VPS, Dedicated Server, RPi, your computer, etc.)
-3. PaaS (we provide a guide for Heroku)
+Visit our [**documentation**](https://docs.modmail.dev/installation) page for detailed guidance on how to deploy your Modmail bot.
 
 ### Patreon Hosting
 
-If you don't want the trouble of renting and configuring your server to host Modmail, we got a solution for you! We offer hosting and maintenance of your own, private Modmail bot (including a Logviewer) through [**Patreon**](https://patreon.com/kyber). Join our [Modmail Discord Server](https://discord.gg/cnUpwrnpYb) for more info! 
+If you don't want the trouble of renting and configuring your server to host Modmail, we got a solution for you! We offer hosting and maintenance of your own, private Modmail bot (including a Logviewer) through [**Patreon**](https://patreon.com/kyber).
 
-### Local hosting (General Guide)
+## FAQ
 
-Modmail can be hosted on any modern hardware, including your PC. For stability and reliability, we suggest purchasing a cloud server (VPS) for under $10/mo. If you need recommendations on choosing a VPS, join our [Discord server](https://discord.gg/cnUpwrnpYb), and we'll send you a list of non-affiliated hosting providers. Alternatively, we can host Modmail for you when you're subscribed to our [Patreon](https://patreon.com/kyber).
+**Q: Where can I find the Modmail bot invite link?**
 
-This guide assumes you've downloaded [`Python 3.10`](https://www.python.org/downloads/release/python-376/) and added python and pip to PATH.
+**A:** Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following our [**documentation**](https://docs.modmail.dev/installation) steps or subscribe to [**Patreon**](https://patreon.com/kyber).
 
-1. Clone this repo
-    ```console
-    $ git clone https://github.com/modmail-dev/modmail
-    $ cd modmail
-    ```
-2. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/modmail-dev/modmail/wiki/Installation#2-discord-bot-account))
-3. Create a free MongoDB database ([guide](https://github.com/modmail-dev/modmail/wiki/Installation-(cont.)#3-create-a-database), follow it carefully!)
-4. Rename the file `.env.example` to `.env` and fill it with appropriate values
-   - If you can't find `.env.example` because it's hidden, create a new text file named `.env`, then copy the contents of [this file](https://raw.githubusercontent.com/modmail-dev/modmail/master/.env.example) and replace the placeholders with their values
-   - If you're on Windows and cannot save the file as `.env`, save it as `.env.` instead (this only applies to Windows!)
-   - If you do not have a Logviewer yet, leave the `LOG_URL` field as-is
-5. Update pip, install pipenv, and install dependencies using pipenv
-    ```console
-    $ pip install -U pip
-    $ pip install pipenv
-    $ pipenv install
-    ```
-6. Start the bot
-    ```console
-    $ pipenv run bot
-    ```
-7. Set up the Logviewer, see the [Logviewer installation guide](https://github.com/modmail-dev/logviewer)
+**Q: Where can I find out more info about Modmail?**
 
-### Local Hosting (Docker)
+**A:** You can find more info about Modmail on our [**documentation**](https://docs.modmail.dev) page. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/cnUpwrnpYb) for help and support.
 
-We provide support for Docker to simplify the deployment of Modmail and Logviewer. 
-We assume you already have Docker and Docker Compose Plugin installed, if not, see [here](https://docs.docker.com/get-docker/).
+## Plugins
 
-1. Create a Discord bot account, grant the necessary intents, and invite the bot ([guide](https://github.com/modmail-dev/modmail/wiki/Installation#2-discord-bot-account))
-2. Create a file named `.env`, then copy the contents of [this file](https://raw.githubusercontent.com/modmail-dev/modmail/master/.env.example) and replace the placeholders with their values
-3. Create a file named `docker-compose.yml`, then copy the contents of [this file](https://raw.githubusercontent.com/modmail-dev/modmail/master/docker-compose.yml), do not change anything!
-4. Start the bot
-    ```console
-    $ docker compose up -d
-    ```
-   - For older Docker versions, you may need to run `docker-compose up -d` instead
-5. View the status of your bot, using `docker ps` and `docker logs [container-id]`
+Modmail supports the use of third-party plugins to extend or add functionalities to the bot.
+Plugins allow niche features as well as anything else outside of the scope of the core functionality of Modmail. 
 
-Our Docker images are hosted on [GitHub Container Registry](ghcr.io), you can build your own image if you wish:
-```console
-$ docker build --tag=modmail:master .
-```
+You can find a list of third-party plugins using the `?plugins registry`  command or visit the [Unofficial List of Plugins](https://github.com/modmail-dev/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
 
-Then simply remove `ghcr.io/modmail-dev/` from the `docker-compose.yml` file.
+To develop your own, check out the [plugins documentation](https://github.com/modmail-dev/modmail/wiki/Plugins).
 
-### Local Hosting (OS-Specific)
-
-This guide is a WIP. Join our [Discord server](https://discord.gg/cnUpwrnpYb) for more info.
-
-### Platform as a Service (PaaS)
-
-You can host this bot on Heroku (no longer free).
-
-Installation via Heroku is possible with your web browser alone. 
-The [**installation guide**](https://github.com/modmail-dev/modmail/wiki/Installation) (which includes a video tutorial!) will guide you through the entire installation process. If you run into any problems, join our [Modmail Discord Server](https://discord.gg/cnUpwrnpYb) for help and support.
-
-When using Heroku, you can configure automatic updates:
- - Login to [GitHub](https://github.com/) and verify your account.
- - [Fork the repo](https://github.com/modmail-dev/modmail/fork).
- - Install the [Pull app](https://github.com/apps/pull) for your fork. 
- - Then go to the Deploy tab in your [Heroku account](https://dashboard.heroku.com/apps) of your bot app, select GitHub and connect your fork (usually by typing "Modmail"). 
- - Turn on auto-deploy for the `master` branch.
+Plugins requests and support are available in our [Modmail Support Server](https://discord.gg/cnUpwrnpYb).
 
 ## Sponsors
 
@@ -207,17 +155,6 @@ Discord Advice Center:
 
 
 Become a sponsor on [Patreon](https://patreon.com/kyber).
-
-## Plugins
-
-Modmail supports the use of third-party plugins to extend or add functionalities to the bot.
-Plugins allow niche features as well as anything else outside of the scope of the core functionality of Modmail. 
-
-You can find a list of third-party plugins using the `?plugins registry`  command or visit the [Unofficial List of Plugins](https://github.com/modmail-dev/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
-
-To develop your own, check out the [plugins documentation](https://github.com/modmail-dev/modmail/wiki/Plugins).
-
-Plugins requests and support are available in our [Modmail Support Server](https://discord.gg/cnUpwrnpYb).
 
 ## Contributing
 
