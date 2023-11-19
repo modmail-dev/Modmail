@@ -22,9 +22,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - `?log key <key>` to retrieve the log link and view a preview using a log key. ([PR #3196](https://github.com/modmail-dev/Modmail/pull/3196))
 - `REGISTRY_PLUGINS_ONLY`, environment variable, when set, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
 - `DISCORD_LOG_LEVEL` environment variable to set the log level of discord.py. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
-- New registry plugin: [`autoreact`](https://github.com/martinbndr/kyb3r-modmail-plugins/tree/master/autoreact).
 - `STREAM_LOG_FORMAT` and `FILE_LOG_FORMAT` environment variable to set the log format of the stream and file handlers respectively. Possible options are `json` and `plain` (default). ([PR #3305](https://github.com/modmail-dev/Modmail/pull/3305))
 - `LOG_EXPIRATION` environment variable to set the expiration time of logs. ([PR #3257](https://github.com/modmail-dev/Modmail/pull/3257))
+- New registry plugins: [`autoreact`](https://github.com/martinbndr/kyb3r-modmail-plugins/tree/master/autoreact) and [`rename`](https://github.com/Nicklaus-s/modmail-plugins/tree/main/rename).
 
 ### Changed
 - Repo moved to https://github.com/modmail-dev/modmail.
