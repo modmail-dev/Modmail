@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -9,7 +10,7 @@ from enum import IntEnum
 from logging import FileHandler, StreamHandler, Handler
 from logging.handlers import RotatingFileHandler
 from string import Formatter
-from typing import Optional
+from typing import Dict, Optional
 
 import discord
 from discord.ext import commands
@@ -74,6 +75,71 @@ class ModmailLogger(logging.Logger):
             )
 
 
+class JsonFormatter(logging.Formatter):
+    """
+    Formatter that outputs JSON strings after parsing the LogRecord.
+
+    Parameters
+    ----------
+    fmt_dict : Optional[Dict[str, str]]
+        {key: logging format attribute} pairs. Defaults to {"message": "message"}.
+    time_format: str
+        time.strftime() format string. Default: "%Y-%m-%dT%H:%M:%S"
+    msec_format: str
+        Microsecond formatting. Appended at the end. Default: "%s.%03dZ"
+    """
+
+    def __init__(
+        self,
+        fmt_dict: Optional[Dict[str, str]] = None,
+        time_format: str = "%Y-%m-%dT%H:%M:%S",
+        msec_format: str = "%s.%03dZ",
+    ):
+        self.fmt_dict: Dict[str, str] = fmt_dict if fmt_dict is not None else {"message": "message"}
+        self.default_time_format: str = time_format
+        self.default_msec_format: str = msec_format
+        self.datefmt: Optional[str] = None
+
+    def usesTime(self) -> bool:
+        """
+        Overwritten to look for the attribute in the format dict values instead of the fmt string.
+        """
+        return "asctime" in self.fmt_dict.values()
+
+    def formatMessage(self, record) -> Dict[str, str]:
+        """
+        Overwritten to return a dictionary of the relevant LogRecord attributes instead of a string.
+        KeyError is raised if an unknown attribute is provided in the fmt_dict.
+        """
+        return {fmt_key: record.__dict__[fmt_val] for fmt_key, fmt_val in self.fmt_dict.items()}
+
+    def format(self, record) -> str:
+        """
+        Mostly the same as the parent's class method, the difference being that a dict is manipulated and dumped as JSON
+        instead of a string.
+        """
+        record.message = record.getMessage()
+
+        if self.usesTime():
+            record.asctime = self.formatTime(record, self.datefmt)
+
+        message_dict = self.formatMessage(record)
+
+        if record.exc_info:
+            # Cache the traceback text to avoid converting it multiple times
+            # (it's constant anyway)
+            if not record.exc_text:
+                record.exc_text = self.formatException(record.exc_info)
+
+        if record.exc_text:
+            message_dict["exc_info"] = record.exc_text
+
+        if record.stack_info:
+            message_dict["stack_info"] = self.formatStack(record.stack_info)
+
+        return json.dumps(message_dict, default=str)
+
+
 class FileFormatter(logging.Formatter):
     ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
@@ -85,9 +151,23 @@ class FileFormatter(logging.Formatter):
 log_stream_formatter = logging.Formatter(
     "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
 )
+
 log_file_formatter = FileFormatter(
     "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+json_formatter = JsonFormatter(
+    {
+        "level": "levelname",
+        "message": "message",
+        "loggerName": "name",
+        "processName": "processName",
+        "processID": "process",
+        "threadName": "threadName",
+        "threadID": "thread",
+        "timestamp": "asctime",
+    }
 )
 
 
@@ -98,6 +178,7 @@ def create_log_handler(
     level: int = logging.DEBUG,
     mode: str = "a+",
     encoding: str = "utf-8",
+    format: str = "plain",
     maxBytes: int = 28000000,
     backupCount: int = 1,
     **kwargs,
@@ -124,6 +205,9 @@ def create_log_handler(
     encoding : str
         If this keyword argument is specified along with filename, its value is used when the `FileHandler` is created,
         and thus used when opening the output file. Defaults to 'utf-8'.
+    format : str
+        The format to output with, can either be 'json' or 'plain'. Will apply to whichever handler is created,
+        based on other conditional logic.
     maxBytes : int
         The max file size before the rollover occurs. Defaults to 28000000 (28MB). Rollover occurs whenever the current
         log file is nearly `maxBytes` in length; but if either of `maxBytes` or `backupCount` is zero,
@@ -141,23 +225,28 @@ def create_log_handler(
 
     if filename is None:
         handler = StreamHandler(stream=sys.stdout, **kwargs)
-        handler.setFormatter(log_stream_formatter)
+        formatter = log_stream_formatter
     elif not rotating:
         handler = FileHandler(filename, mode=mode, encoding=encoding, **kwargs)
-        handler.setFormatter(log_file_formatter)
+        formatter = log_file_formatter
     else:
         handler = RotatingFileHandler(
             filename, mode=mode, encoding=encoding, maxBytes=maxBytes, backupCount=backupCount, **kwargs
         )
-        handler.setFormatter(log_file_formatter)
+        formatter = log_file_formatter
+
+    if format == "json":
+        formatter = json_formatter
 
     handler.setLevel(level)
+    handler.setFormatter(formatter)
     return handler
 
 
 logging.setLoggerClass(ModmailLogger)
 log_level = logging.INFO
 loggers = set()
+
 ch = create_log_handler(level=log_level)
 ch_debug: Optional[RotatingFileHandler] = None
 
@@ -173,7 +262,11 @@ def getLogger(name=None) -> ModmailLogger:
 
 
 def configure_logging(bot) -> None:
-    global ch_debug, log_level
+    global ch_debug, log_level, ch
+
+    stream_log_format, file_log_format = bot.config["stream_log_format"], bot.config["file_log_format"]
+    if stream_log_format == "json":
+        ch.setFormatter(json_formatter)
 
     logger = getLogger(__name__)
     level_text = bot.config["log_level"].upper()
@@ -198,7 +291,14 @@ def configure_logging(bot) -> None:
 
     logger.info("Log file: %s", bot.log_file_path)
     ch_debug = create_log_handler(bot.log_file_path, rotating=True)
+
+    if file_log_format == "json":
+        ch_debug.setFormatter(json_formatter)
+
     ch.setLevel(log_level)
+
+    logger.info("Stream log format: %s", stream_log_format)
+    logger.info("File log format: %s", file_log_format)
 
     for log in loggers:
         log.setLevel(log_level)
