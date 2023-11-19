@@ -21,7 +21,6 @@ load_dotenv()
 
 
 class ConfigManager:
-
     public_keys = {
         # activity
         "twitch_url": "https://www.twitch.tv/discordmodmail/",
@@ -37,6 +36,7 @@ class ConfigManager:
         "account_age": isodate.Duration(),
         "guild_age": isodate.Duration(),
         "thread_cooldown": isodate.Duration(),
+        "log_expiration": isodate.Duration(),
         "reply_without_command": False,
         "anon_reply_without_command": False,
         "plain_reply_without_command": False,
@@ -187,7 +187,7 @@ class ConfigManager:
 
     colors = {"mod_color", "recipient_color", "main_color", "error_color"}
 
-    time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown"}
+    time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown", "log_expiration"}
 
     booleans = {
         "use_user_id_channel_name",

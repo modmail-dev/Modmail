@@ -394,7 +394,6 @@ class SimilarCategoryConverter(commands.CategoryChannelConverter):
         try:
             return await super().convert(ctx, argument)
         except commands.ChannelNotFound:
-
             if guild:
                 categories = {c.name.casefold(): c for c in guild.categories}
             else:

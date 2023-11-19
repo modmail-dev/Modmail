@@ -584,7 +584,6 @@ class Utility(commands.Cog):
         return await ctx.send(embed=embed)
 
     async def set_presence(self, *, status=None, activity_type=None, activity_message=None):
-
         if status is None:
             status = self.bot.config.get("status")
 

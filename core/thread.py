@@ -721,7 +721,6 @@ class Thread:
     async def find_linked_message_from_dm(
         self, message, either_direction=False, get_thread_channel=False
     ) -> typing.List[discord.Message]:
-
         joint_id = None
         if either_direction:
             joint_id = get_joint_id(message)
@@ -914,7 +913,6 @@ class Thread:
         persistent_note: bool = False,
         thread_creation: bool = False,
     ) -> None:
-
         if not note and from_mod:
             self.bot.loop.create_task(self._restart_close_timer())  # Start or restart thread auto close
 
