@@ -16,12 +16,14 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Fixed a syntactic error in the close message when a thread is closed after a certain duration. ([PR #3233](https://github.com/modmail-dev/Modmail/pull/3233))
 - Removed an extra space in the help command title when the command has no parameters. ([PR #3271](https://github.com/modmail-dev/Modmail/pull/3271))
 - Corrected some incorrect config help descriptions. ([PR #3277](https://github.com/modmail-dev/Modmail/pull/3277))
+- Rate limit issue when fetch the messages due to reaction linking. ([PR #3306](https://github.com/modmail-dev/Modmail/pull/3306))
 
 ### Added
 - `?log key <key>` to retrieve the log link and view a preview using a log key. ([PR #3196](https://github.com/modmail-dev/Modmail/pull/3196))
 - `REGISTRY_PLUGINS_ONLY`, environment variable, when set, restricts to only allow adding registry plugins. ([PR #3247](https://github.com/modmail-dev/modmail/pull/3247))
 - `DISCORD_LOG_LEVEL` environment variable to set the log level of discord.py. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 - New registry plugin: [`autoreact`](https://github.com/martinbndr/kyb3r-modmail-plugins/tree/master/autoreact).
+- `STREAM_LOG_FORMAT` and `FILE_LOG_FORMAT` for settings the log format of the stream and file handlers respectively. Possible options are `json` and `plain` (default). ([PR #3305](https://github.com/modmail-dev/Modmail/pull/3305))
 
 ### Changed
 - Repo moved to https://github.com/modmail-dev/modmail.

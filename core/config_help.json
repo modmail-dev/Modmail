@@ -1140,6 +1140,24 @@
       "This configuration can only to be set through `.env` file or environment (config) variables."
     ]
   },
+  "stream_log_format": {
+    "default": "plain",
+    "description": "The logging format when through a stream, can be 'plain' or 'json'",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "file_log_format": {
+    "default": "plain",
+    "description": "The logging format when logging to a file, can be 'plain' or 'json'",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
   "discord_log_level": {
     "default": "INFO",
     "description": "The `discord.py` library logging level for logging to stdout.",
