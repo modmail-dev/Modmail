@@ -500,12 +500,12 @@ class Plugins(commands.Cog):
                         description=f"Failed to update {plugin.name}. This plugin will now be removed from your bot.",
                         color=self.bot.error_color,
                     )
-                    self.bot.config["plugins"].remove(plugin_name)
-                    logger.debug("Failed to update %s. Removed plugin from config.", plugin_name)
+                    self.bot.config["plugins"].remove(str(plugin))
+                    logger.debug("Failed to update %s. Removed plugin from config.", plugin)
                 else:
-                    logger.debug("Updated %s.", plugin_name)
+                    logger.debug("Updated %s.", plugin)
             else:
-                logger.debug("Updated %s.", plugin_name)
+                logger.debug("Updated %s.", plugin)
             return await ctx.send(embed=embed)
 
     @plugins.command(name="update")
