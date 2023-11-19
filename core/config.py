@@ -21,7 +21,6 @@ load_dotenv()
 
 
 class ConfigManager:
-
     public_keys = {
         # activity
         "twitch_url": "https://www.twitch.tv/discordmodmail/",

@@ -276,7 +276,6 @@ class Plugins(commands.Cog):
                 del sys.modules[module]
 
     async def parse_user_input(self, ctx, plugin_name, check_version=False):
-
         if not self.bot.config["enable_plugins"]:
             embed = discord.Embed(
                 description="Plugins are disabled, enable them by setting `ENABLE_PLUGINS=true`",
@@ -399,7 +398,6 @@ class Plugins(commands.Cog):
         await self.bot.config.update()
 
         if self.bot.config.get("enable_plugins"):
-
             invalidate_caches()
 
             try:
