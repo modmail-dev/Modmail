@@ -16,6 +16,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 - Fixed a syntactic error in the close message when a thread is closed after a certain duration. ([PR #3233](https://github.com/modmail-dev/Modmail/pull/3233))
 - Removed an extra space in the help command title when the command has no parameters. ([PR #3271](https://github.com/modmail-dev/Modmail/pull/3271))
 - Corrected some incorrect config help descriptions. ([PR #3277](https://github.com/modmail-dev/Modmail/pull/3277))
+- Rate limit issue when fetch the messages due to reaction linking. ([PR #3306](https://github.com/modmail-dev/Modmail/pull/3306))
 
 ### Added
 - `?log key <key>` to retrieve the log link and view a preview using a log key. ([PR #3196](https://github.com/modmail-dev/Modmail/pull/3196))
