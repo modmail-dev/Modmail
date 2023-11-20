@@ -48,7 +48,7 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint
+from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint, human_join
 
 logger = getLogger(__name__)
 
@@ -1388,28 +1388,44 @@ class ModmailBot(commands.Bot):
             await thread.close(closer=mod, silent=True, delete_channel=False)
 
     async def on_member_remove(self, member):
-        if member.guild != self.guild:
-            return
         thread = await self.threads.find(recipient=member)
         if thread:
-            if self.config["close_on_leave"]:
+            if member.guild == self.guild and self.config["close_on_leave"]:
                 await thread.close(
                     closer=member.guild.me,
                     message=self.config["close_on_leave_reason"],
                     silent=True,
                 )
             else:
-                embed = discord.Embed(
-                    description=self.config["close_on_leave_reason"], color=self.error_color
-                )
+                if len(self.guilds) > 1:
+                    guild_left = member.guild
+                    remaining_guilds = member.mutual_guilds
+
+                    if remaining_guilds:
+                        remaining_guild_names = [guild.name for guild in remaining_guilds]
+                        leave_message = (
+                            f"The recipient has left {guild_left}. "
+                            f"They are still in {human_join(remaining_guild_names, final='and')}."
+                        )
+                    else:
+                        leave_message = (
+                            f"The recipient has left {guild_left}. We no longer share any mutual servers."
+                        )
+                else:
+                    leave_message = "The recipient has left the server."
+
+                embed = discord.Embed(description=leave_message, color=self.error_color)
                 await thread.channel.send(embed=embed)
 
     async def on_member_join(self, member):
-        if member.guild != self.guild:
-            return
         thread = await self.threads.find(recipient=member)
         if thread:
-            embed = discord.Embed(description="The recipient has joined the server.", color=self.mod_color)
+            if len(self.guilds) > 1:
+                guild_joined = member.guild
+                join_message = f"The recipient has joined {guild_joined}."
+            else:
+                join_message = "The recipient has joined the server."
+            embed = discord.Embed(description=join_message, color=self.mod_color)
             await thread.channel.send(embed=embed)
 
     async def on_message_delete(self, message):
