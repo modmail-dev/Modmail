@@ -1793,7 +1793,7 @@ def main():
         sys.exit(0)
 
     # check discord version
-    discord_version = "2.0.1"
+    discord_version = "2.3.2"
     if discord.__version__ != discord_version:
         logger.error(
             "Dependencies are not updated, run pipenv install. discord.py version expected %s, received %s",
