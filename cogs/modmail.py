@@ -3,7 +3,6 @@ import re
 from datetime import datetime, timezone
 from itertools import zip_longest
 from typing import Optional, Union, List, Tuple, Literal
-from types import SimpleNamespace
 
 import discord
 from discord.ext import commands
@@ -1164,7 +1163,7 @@ class Modmail(commands.Cog):
         if not user:
             thread = ctx.thread
             if not thread:
-                raise commands.MissingRequiredArgument(SimpleNamespace(name="member"))
+                raise commands.MissingRequiredArgument(DummyParam("user"))
             user = thread.recipient or await self.bot.get_or_fetch_user(thread.id)
 
         default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
@@ -1839,7 +1838,7 @@ class Modmail(commands.Cog):
             if thread:
                 user_or_role = thread.recipient
             elif after is None:
-                raise commands.MissingRequiredArgument(SimpleNamespace(name="user or role"))
+                raise commands.MissingRequiredArgument(DummyParam("user or role"))
             else:
                 raise commands.BadArgument(f'User or role "{after.arg}" not found.')
 
@@ -1919,7 +1918,7 @@ class Modmail(commands.Cog):
             if thread:
                 user_or_role = thread.recipient
             else:
-                raise commands.MissingRequiredArgument(SimpleNamespace(name="user"))
+                raise commands.MissingRequiredArgument(DummyParam("user or role"))
 
         mention = getattr(user_or_role, "mention", f"`{user_or_role.id}`")
         name = getattr(user_or_role, "name", f"`{user_or_role.id}`")

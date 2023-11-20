@@ -11,7 +11,6 @@ from itertools import takewhile, zip_longest
 from json import JSONDecodeError, loads
 from subprocess import PIPE
 from textwrap import indent
-from types import SimpleNamespace
 from typing import Union
 
 import discord
@@ -30,7 +29,7 @@ from core.models import (
     UnseenFormatter,
     getLogger,
 )
-from core.utils import trigger_typing, truncate
+from core.utils import trigger_typing, truncate, DummyParam
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 
 
@@ -522,12 +521,12 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         if not message:
-            raise commands.MissingRequiredArgument(SimpleNamespace(name="message"))
+            raise commands.MissingRequiredArgument(DummyParam("message"))
 
         try:
             activity_type = ActivityType[activity_type]
         except KeyError:
-            raise commands.MissingRequiredArgument(SimpleNamespace(name="activity"))
+            raise commands.MissingRequiredArgument(DummyParam("activity"))
 
         activity, _ = await self.set_presence(activity_type=activity_type, activity_message=message)
 
@@ -572,7 +571,7 @@ class Utility(commands.Cog):
         try:
             status = Status[status_type]
         except KeyError:
-            raise commands.MissingRequiredArgument(SimpleNamespace(name="status"))
+            raise commands.MissingRequiredArgument(DummyParam("status"))
 
         _, status = await self.set_presence(status=status)
 

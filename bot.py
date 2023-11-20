@@ -1746,9 +1746,10 @@ class ModmailBot(commands.Bot):
                 if force_null:
                     name = "null"
 
-                name = new_name = (
-                    "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
-                ) + f"-{author.discriminator}"
+                name = "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
+                if author.discriminator != "0":
+                    name += f"-{author.discriminator}"
+                new_name = name
 
         counter = 1
         existed = set(c.name for c in guild.text_channels if c != exclude_channel)

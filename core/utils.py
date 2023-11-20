@@ -42,6 +42,7 @@ __all__ = [
     "AcceptButton",
     "DenyButton",
     "ConfirmThreadCreationView",
+    "DummyParam",
 ]
 
 
@@ -588,3 +589,12 @@ class ConfirmThreadCreationView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=20)
         self.value = None
+
+
+class DummyParam:
+    """
+    A dummy parameter that can be used for MissingRequiredArgument.
+    """
+    def __init__(self, name):
+        self.name = name
+        self.displayed_name = name
