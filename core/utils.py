@@ -595,6 +595,7 @@ class DummyParam:
     """
     A dummy parameter that can be used for MissingRequiredArgument.
     """
+
     def __init__(self, name):
         self.name = name
         self.displayed_name = name

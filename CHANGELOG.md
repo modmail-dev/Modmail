@@ -8,6 +8,8 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # [UNRELEASED]
 
+Drops support for Python 3.9. Python 3.10 and Python 3.11 are now the only supported versions.
+
 ### Fixed
 - `?alias make/create` as aliases to `?alias add`. This improves continuity between the bot and its command structure. ([PR #3195](https://github.com/kyb3r/modmail/pull/3195))
 - Loading the blocked list with the `?blocked` command takes a long time when the list is large. ([PR #3242](https://github.com/kyb3r/modmail/pull/3242))
@@ -29,6 +31,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Changed
 - Repo moved to https://github.com/modmail-dev/modmail.
+- Channel name no longer shows `-0` if the user has migrated to the new username system.
 - Guild icons in embed footers and author urls now have a fixed size of 128. ([PR #3261](https://github.com/modmail-dev/modmail/pull/3261))
 - Discord.py internal logging is now enabled by default. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 - The confirm-thread-creation dialog now uses buttons instead of reactions. ([PR #3273](https://github.com/modmail-dev/Modmail/pull/3273))
