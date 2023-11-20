@@ -154,7 +154,7 @@ def is_image_url(url: str, **kwargs) -> str:
     """
     try:
         result = parse.urlparse(url)
-        if result.netloc == 'gyazo.com' and result.scheme in ['http', 'https']:
+        if result.netloc == "gyazo.com" and result.scheme in ["http", "https"]:
             # gyazo support
             url = re.sub(
                 r"(https?://)((?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|%[0-9a-fA-F][0-9a-fA-F])+)",
