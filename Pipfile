@@ -17,6 +17,7 @@ emoji = "==2.8.0"
 isodate = "==0.6.1"
 motor = "==3.3.2"
 natural = "==0.2.0"  # Why is this needed?
+packaging = "==23.2"
 parsedatetime = "==2.6"
 pymongo = {extras = ["srv"], version = "*"}  # Required by motor
 python-dateutil = "==2.8.2"

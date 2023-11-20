@@ -14,11 +14,12 @@ from textwrap import indent
 from typing import Union
 
 import discord
-from aiohttp import ClientResponseError
 from discord.enums import ActivityType, Status
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
-from pkg_resources import parse_version
+
+from aiohttp import ClientResponseError
+from packaging.version import Version
 
 from core import checks, utils
 from core.changelog import Changelog
@@ -341,9 +342,9 @@ class Utility(commands.Cog):
         latest = changelog.latest_version
 
         if self.bot.version.is_prerelease:
-            stable = next(filter(lambda v: not parse_version(v.version).is_prerelease, changelog.versions))
+            stable = next(filter(lambda v: not Version(v.version).is_prerelease, changelog.versions))
             footer = f"You are on the prerelease version • the latest version is v{stable.version}."
-        elif self.bot.version < parse_version(latest.version):
+        elif self.bot.version < Version(latest.version):
             footer = f"A newer version is available v{latest.version}."
         else:
             footer = "You are up to date with the latest version."
@@ -1930,7 +1931,7 @@ class Utility(commands.Cog):
             "(https://github.com/modmail-dev/modmail/blob/master/bot.py#L1)"
         )
 
-        if self.bot.version >= parse_version(latest.version) and flag.lower() != "force":
+        if self.bot.version >= Version(latest.version) and flag.lower() != "force":
             embed = discord.Embed(title="Already up to date", description=desc, color=self.bot.main_color)
 
             data = await self.bot.api.get_user_info()
