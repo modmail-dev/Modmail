@@ -28,6 +28,7 @@ Drops support for Python 3.9. Python 3.10 and Python 3.11 are now the only suppo
 - `STREAM_LOG_FORMAT` and `FILE_LOG_FORMAT` environment variable to set the log format of the stream and file handlers respectively. Possible options are `json` and `plain` (default). ([PR #3305](https://github.com/modmail-dev/Modmail/pull/3305))
 - `LOG_EXPIRATION` environment variable to set the expiration time of logs. ([PR #3257](https://github.com/modmail-dev/Modmail/pull/3257))
 - New registry plugins: [`autoreact`](https://github.com/martinbndr/kyb3r-modmail-plugins/tree/master/autoreact) and [`rename`](https://github.com/Nicklaus-s/modmail-plugins/tree/main/rename).
+- Improved join/leave message for multiple servers.
 
 ### Changed
 - Repo moved to https://github.com/modmail-dev/modmail.
