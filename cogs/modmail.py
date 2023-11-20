@@ -729,8 +729,9 @@ class Modmail(commands.Cog):
                 f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{entry['key']}"
             )
 
-            username = entry["recipient"]["name"] + "#"
-            username += entry["recipient"]["discriminator"]
+            username = entry["recipient"]["name"]
+            if entry["recipient"]["discriminator"] != "0":
+                username += "#" + entry["recipient"]["discriminator"]
 
             embed = discord.Embed(color=self.bot.main_color, timestamp=created_at)
             embed.set_author(name=f"{title} - {username}", icon_url=avatar_url, url=log_url)
@@ -1855,7 +1856,7 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        reason = f"by {escape_markdown(ctx.author.name)}#{ctx.author.discriminator}"
+        reason = f"by {escape_markdown(str(ctx.author))}"
 
         if after is not None:
             if "%" in reason:
@@ -2054,11 +2055,12 @@ class Modmail(commands.Cog):
 
         # match username from channel name
         # username-1234, username-1234_1, username-1234_2
-        m = re.match(r"^(.+)-(\d{4})(?:_\d+)?$", ctx.channel.name)
+        m = re.match(r"^(.+?)(?:-(\d{4}))?(?:_\d+)?$", ctx.channel.name)
         if m is not None:
             users = set(
                 filter(
-                    lambda member: member.name == m.group(1) and member.discriminator == m.group(2),
+                    lambda member: member.name == m.group(1)
+                    and (member.discriminator == "0" or member.discriminator == m.group(2)),
                     ctx.guild.members,
                 )
             )

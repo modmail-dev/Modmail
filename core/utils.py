@@ -127,7 +127,11 @@ def format_preview(messages: typing.List[typing.Dict[str, typing.Any]]):
             continue
         author = message["author"]
         content = str(message["content"]).replace("\n", " ")
-        name = author["name"] + "#" + str(author["discriminator"])
+
+        name = author["name"]
+        discriminator = str(author["discriminator"])
+        if discriminator != "0":
+            name += "#" + discriminator
         prefix = "[M]" if author["mod"] else "[R]"
         out += truncate(f"`{prefix} {name}:` {content}", max=75) + "\n"
 
