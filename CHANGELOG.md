@@ -41,6 +41,7 @@ Drops support for Python 3.9. Python 3.10 and Python 3.11 are now the only suppo
 ### Internal
 - Renamed `Bot.log_file_name` to `Bot.log_file_path`. Log files are now created at `temp/logs/modmail.log`. ([PR #3216](https://github.com/modmail-dev/Modmail/pull/3216))
 - `ConfigManager.get` no longer accepts two positional arguments: the `convert` argument is now keyword-only.
+- Various dependencies have been updated to their latest versions.
 
 # v4.0.2
 
