@@ -21,7 +21,7 @@ import isodate
 from aiohttp import ClientSession, ClientResponseError
 from discord.ext import commands, tasks
 from discord.ext.commands.view import StringView
-from emoji import UNICODE_EMOJI
+from emoji import is_emoji
 from pkg_resources import parse_version
 
 
@@ -623,11 +623,11 @@ class ModmailBot(commands.Bot):
         ctx = SimpleNamespace(bot=self, guild=self.modmail_guild)
         converter = commands.EmojiConverter()
 
-        if name not in UNICODE_EMOJI["en"]:
+        if not is_emoji(name):
             try:
                 name = await converter.convert(ctx, name.strip(":"))
             except commands.BadArgument as e:
-                logger.warning("%s is not a valid emoji. %s.", name, e)
+                logger.warning("%s is not a valid emoji: %s", name, e)
                 raise
         return name
 

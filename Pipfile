@@ -10,10 +10,10 @@ pylint = "~=2.9.3"
 typing-extensions = "==4.2.0"
 
 [packages]
-aiohttp = "==3.8.1"
-colorama = "~=0.4.5"
+aiohttp = "==3.9.0"
+colorama = "==0.4.6"
 "discord.py" = "==2.0.1"
-emoji = "==1.7.0"
+emoji = "==2.8.0"
 isodate = "~=0.6.0"
 motor = "==2.5.1"
 natural = "~=0.2.0"
