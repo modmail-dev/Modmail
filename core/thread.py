@@ -800,7 +800,7 @@ class Thread:
     async def note(
         self, message: discord.Message, persistent=False, thread_creation=False
     ) -> discord.Message:
-        if not message.content and not message.attachments:
+        if not message.content and not message.attachments and not message.stickers:
             raise MissingRequiredArgument(DummyParam("msg"))
 
         msg = await self.send(
@@ -821,7 +821,7 @@ class Thread:
         self, message: discord.Message, anonymous: bool = False, plain: bool = False
     ) -> typing.Tuple[typing.List[discord.Message], discord.Message]:
         """Returns List[user_dm_msg] and thread_channel_msg"""
-        if not message.content and not message.attachments:
+        if not message.content and not message.attachments and not message.stickers:
             raise MissingRequiredArgument(DummyParam("msg"))
         if not any(g.get_member(self.id) for g in self.bot.guilds):
             return await message.channel.send(
@@ -1020,8 +1020,14 @@ class Thread:
                 return stream.read()
 
         for i in message.stickers:
-            if i.format in (discord.StickerFormatType.png, discord.StickerFormatType.apng):
-                images.append((i.url, i.name, True))
+            if i.format in (
+                discord.StickerFormatType.png,
+                discord.StickerFormatType.apng,
+                discord.StickerFormatType.gif,
+            ):
+                images.append(
+                    (f"https://media.discordapp.net/stickers/{i.id}.{i.format.file_extension}", i.name, True)
+                )
             elif i.format == discord.StickerFormatType.lottie:
                 # save the json lottie representation
                 try:
