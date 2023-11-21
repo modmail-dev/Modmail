@@ -11,7 +11,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 Drops support for Python 3.9. Python 3.10 and Python 3.11 are now the only supported versions.
 
 ### Fixed
-- GIF stickers causes the bot to crash.
+- GIF stickers no longer cause the bot to crash.
 - `?alias make/create` as aliases to `?alias add`. This improves continuity between the bot and its command structure. ([PR #3195](https://github.com/kyb3r/modmail/pull/3195))
 - Loading the blocked list with the `?blocked` command takes a long time when the list is large. ([PR #3242](https://github.com/kyb3r/modmail/pull/3242))
 - Reply not being forwarded from DM. (PR [#3239](https://github.com/modmail-dev/modmail/pull/3239))
