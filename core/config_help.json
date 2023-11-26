@@ -131,7 +131,7 @@
       "`{prefix}config set use_nickname_channel_name no`"
     ],
     "notes": [
-      "This config is suitable for servers in Server Discovery to comply with channel name restrictions.",
+      "This config is NOT suitable for servers in Server Discovery to comply with channel name restrictions.",
       "This cannot be applied with `use_timestamp_channel_name`, `use_random_channel_name` or `use_user_id_channel_name`.",
       "See also: `use_timestamp_channel_name`, `use_user_id_channel_name`, `use_random_channel_name`."
     ]
@@ -371,6 +371,17 @@
     ],
     "notes": [
       "To disable thread cooldown, do `{prefix}config del thread_cooldown`."
+    ]
+  },
+  "log_expiration": {
+    "default": "Never",
+    "description": "The duration closed threads will be stored within the database before deletion. Logs that have been closed for longer than this duration will be deleted automatically.",
+    "examples": [
+      "`{prefix}config set log_expiration P12DT3H` (stands for 12 days and 3 hours in [ISO-8601 Duration Format](https://en.wikipedia.org/wiki/ISO_8601#Durations))",
+      "`{prefix}config set log_expiration 3 days and 5 hours` (accepted readable time)"
+    ],
+    "notes": [
+      "To disable log expiration, do `{prefix}config del log_expiration`."
     ]
   },
   "thread_cancelled": {
@@ -864,7 +875,7 @@
     "default": "\"{{moderator.name}} has added you to a Modmail thread.\"",
     "description": "This is the message embed content sent to the recipient that is just added to a thread.",
     "examples": [
-      "`{prefix}config set private_added_to_group_description Any message sent here will be sent to all otherthread recipients.`"
+      "`{prefix}config set private_added_to_group_response Any message sent here will be sent to all other thread recipients.`"
     ],
     "notes": [
       "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
@@ -936,7 +947,7 @@
     "default": "\"{{moderator.name}} has removed you from the Modmail thread.\"",
     "description": "This is the message embed content sent to the recipient that is just removed from a thread.",
     "examples": [
-      "`{prefix}config set private_removed_from_group_description Bye`"
+      "`{prefix}config set private_removed_from_group_response Bye`"
     ],
     "notes": [
       "You may use the `{{moderator}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that added the user.",
@@ -1014,10 +1025,10 @@
     ]
   },
   "confirm_thread_response": {
-    "default": "React to confirm thread creation which will directly contact the moderators",
+    "default": "Click the button to confirm thread creation which will directly contact the moderators.",
     "description": "Description for the embed message sent to users to confirm a thread creation",
     "examples":[
-      "`{prefix}config set confirm_thread_response React to confirm`"
+      "`{prefix}config set confirm_thread_response Click to confirm`"
     ],
     "notes": [
       "See also: `confirm_thread_creation`, `confirm_thread_creation_title`, `confirm_thread_creation_accept`, `confirm_thread_creation_deny`"
@@ -1123,6 +1134,33 @@
   "log_level": {
     "default": "INFO",
     "description": "The logging level for logging to stdout.",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "stream_log_format": {
+    "default": "plain",
+    "description": "The logging format when through a stream, can be 'plain' or 'json'",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "file_log_format": {
+    "default": "plain",
+    "description": "The logging format when logging to a file, can be 'plain' or 'json'",
+    "examples": [
+    ],
+    "notes": [
+      "This configuration can only to be set through `.env` file or environment (config) variables."
+    ]
+  },
+  "discord_log_level": {
+    "default": "INFO",
+    "description": "The `discord.py` library logging level for logging to stdout.",
     "examples": [
     ],
     "notes": [
