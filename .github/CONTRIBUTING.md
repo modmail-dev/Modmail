@@ -8,7 +8,7 @@ We love your input! We want to make contributing to this project as easy and tra
 - Proposing new features
 - Becoming a maintainer
 
-If you are proposing new features, please discuss them with us in the [development server](https://discord.gg/etJNHCQ) before you start working on them!
+If you are proposing new features, please discuss them with us in the [development server](https://discord.gg/cnUpwrnpYb) before you start working on them!
 
 ## We Develop with Github
 We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
