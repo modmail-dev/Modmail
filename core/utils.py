@@ -9,6 +9,7 @@ from itertools import takewhile, zip_longest
 from urllib import parse
 
 import discord
+import yarl
 from discord.ext import commands
 
 from core.models import getLogger
@@ -34,10 +35,11 @@ __all__ = [
     "normalize_alias",
     "format_description",
     "trigger_typing",
+    "escape_bold",
     "escape_code_block",
     "tryint",
     "get_top_role",
-    "get_joint_id",
+    "get_joint_ids",
     "extract_block_timestamp",
     "AcceptButton",
     "DenyButton",
@@ -436,6 +438,10 @@ def escape_code_block(text):
     return re.sub(r"```", "`\u200b``", text)
 
 
+def escape_bold(text: str) -> str:
+    return re.sub(r"\*\*", "*\u200b*", text)
+
+
 def tryint(x):
     try:
         return int(x)
@@ -504,26 +510,29 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
     return channel
 
 
-def get_joint_id(message: discord.Message) -> typing.Optional[int]:
+def get_joint_ids(message: discord.Message) -> typing.List[int]:
     """
-    Get the joint ID from `discord.Embed().author.url`.
+    Get the joint IDs from `discord.Embed().author.url`.
+
     Parameters
     -----------
     message : discord.Message
         The discord.Message object.
+
     Returns
     -------
-    int
-        The joint ID if found. Otherwise, None.
+    List[int]
+        The list of joint ID if found. Otherwise, empty list.
     """
     if message.embeds:
         try:
             url = getattr(message.embeds[0].author, "url", "")
             if url:
-                return int(url.split("#")[-1])
+                url = yarl.URL(url)
+                return [int(msg_id) for msg_id in url.fragment.split("-")]
         except ValueError:
             pass
-    return None
+    return []
 
 
 def extract_block_timestamp(reason, id_):
