@@ -3,7 +3,6 @@ import re
 from datetime import datetime, timezone
 from itertools import zip_longest
 from typing import Optional, Union, List, Tuple, Literal
-from types import SimpleNamespace
 
 import discord
 from discord.ext import commands
@@ -160,7 +159,7 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color, description="You dont have any snippets at the moment."
             )
             embed.set_footer(text=f'Check "{self.bot.prefix}help snippet add" to add a snippet.')
-            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
+            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -168,7 +167,7 @@ class Modmail(commands.Cog):
         for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)):
             description = format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
-            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild))
+            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
             embeds.append(embed)
 
         session = EmbedPaginatorSession(ctx, *embeds)
@@ -444,11 +443,9 @@ class Modmail(commands.Cog):
     async def send_scheduled_close_message(self, ctx, after, silent=False):
         human_delta = human_timedelta(after.dt)
 
-        silent = "*silently* " if silent else ""
-
         embed = discord.Embed(
             title="Scheduled close",
-            description=f"This thread will close {silent}{human_delta}.",
+            description=f"This thread will{' silently' if silent else ''} close in {human_delta}.",
             color=self.bot.error_color,
         )
 
@@ -483,7 +480,7 @@ class Modmail(commands.Cog):
 
         Silently close a thread (no message)
         - `{prefix}close silently`
-        - `{prefix}close in 10m silently`
+        - `{prefix}close silently in 10m`
 
         Stop a thread from closing:
         - `{prefix}close cancel`
@@ -732,8 +729,9 @@ class Modmail(commands.Cog):
                 f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{entry['key']}"
             )
 
-            username = entry["recipient"]["name"] + "#"
-            username += entry["recipient"]["discriminator"]
+            username = entry["recipient"]["name"]
+            if entry["recipient"]["discriminator"] != "0":
+                username += "#" + entry["recipient"]["discriminator"]
 
             embed = discord.Embed(color=self.bot.main_color, timestamp=created_at)
             embed.set_author(name=f"{title} - {username}", icon_url=avatar_url, url=log_url)
@@ -1031,7 +1029,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.get_guild_icon(guild=ctx.guild)
+                avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -1120,7 +1118,7 @@ class Modmail(commands.Cog):
                 name = tag
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
-                avatar_url = self.bot.get_guild_icon(guild=ctx.guild)
+                avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
             em.set_footer(text=name, icon_url=avatar_url)
 
             for u in users:
@@ -1166,7 +1164,7 @@ class Modmail(commands.Cog):
         if not user:
             thread = ctx.thread
             if not thread:
-                raise commands.MissingRequiredArgument(SimpleNamespace(name="member"))
+                raise commands.MissingRequiredArgument(DummyParam("user"))
             user = thread.recipient or await self.bot.get_or_fetch_user(thread.id)
 
         default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
@@ -1208,6 +1206,28 @@ class Modmail(commands.Cog):
                 description="No log entries have been found for that query.",
             )
             return await ctx.send(embed=embed)
+
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
+
+    @logs.command(name="key", aliases=["id"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def logs_key(self, ctx, key: str):
+        """
+        Get the log link for the specified log key.
+        """
+        icon_url = ctx.author.avatar.url
+
+        logs = await self.bot.api.find_log_entry(key)
+
+        if not logs:
+            embed = discord.Embed(
+                color=self.bot.error_color,
+                description=f"Log entry `{key}` not found.",
+            )
+            return await ctx.send(embed=embed)
+
+        embeds = self.format_log_embeds(logs, avatar_url=icon_url)
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
@@ -1665,13 +1685,7 @@ class Modmail(commands.Cog):
                     self.bot.blocked_users.pop(str(id_))
                     logger.debug("No longer blocked, user %s.", id_)
                     continue
-
-            try:
-                user = await self.bot.get_or_fetch_user(int(id_))
-            except discord.NotFound:
-                users.append((id_, reason))
-            else:
-                users.append((user.mention, reason))
+            users.append((f"<@{id_}>", reason))
 
         blocked_roles = list(self.bot.blocked_roles.items())
         for id_, reason in blocked_roles:
@@ -1825,7 +1839,7 @@ class Modmail(commands.Cog):
             if thread:
                 user_or_role = thread.recipient
             elif after is None:
-                raise commands.MissingRequiredArgument(SimpleNamespace(name="user or role"))
+                raise commands.MissingRequiredArgument(DummyParam("user or role"))
             else:
                 raise commands.BadArgument(f'User or role "{after.arg}" not found.')
 
@@ -1842,7 +1856,7 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        reason = f"by {escape_markdown(ctx.author.name)}#{ctx.author.discriminator}"
+        reason = f"by {escape_markdown(str(ctx.author))}"
 
         if after is not None:
             if "%" in reason:
@@ -1905,7 +1919,7 @@ class Modmail(commands.Cog):
             if thread:
                 user_or_role = thread.recipient
             else:
-                raise commands.MissingRequiredArgument(SimpleNamespace(name="user"))
+                raise commands.MissingRequiredArgument(DummyParam("user or role"))
 
         mention = getattr(user_or_role, "mention", f"`{user_or_role.id}`")
         name = getattr(user_or_role, "name", f"`{user_or_role.id}`")
@@ -2041,11 +2055,12 @@ class Modmail(commands.Cog):
 
         # match username from channel name
         # username-1234, username-1234_1, username-1234_2
-        m = re.match(r"^(.+)-(\d{4})(?:_\d+)?$", ctx.channel.name)
+        m = re.match(r"^(.+?)(?:-(\d{4}))?(?:_\d+)?$", ctx.channel.name)
         if m is not None:
             users = set(
                 filter(
-                    lambda member: member.name == m.group(1) and member.discriminator == m.group(2),
+                    lambda member: member.name == m.group(1)
+                    and (member.discriminator == "0" or member.discriminator == m.group(2)),
                     ctx.guild.members,
                 )
             )
@@ -2138,7 +2153,7 @@ class Modmail(commands.Cog):
             description="Modmail will not create any new threads.",
             color=self.bot.main_color,
         )
-        if self.bot.config["dm_disabled"] < DMDisabled.NEW_THREADS:
+        if self.bot.config["dm_disabled"] != DMDisabled.NEW_THREADS:
             self.bot.config["dm_disabled"] = DMDisabled.NEW_THREADS
             await self.bot.config.update()
 

@@ -17,6 +17,15 @@
         "icon_url": "https://github.com/Jerrie-Aries.png",
         "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/.static/announcement.jpg"
     },
+    "autoreact": {
+        "repository": "martinbndr/kyb3r-modmail-plugins",
+        "branch": "master",
+        "description": "Automatically reacts with emojis in certain channels.",
+        "bot_version": "4.0.0",
+        "title": "Autoreact",
+        "icon_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/autoreact/logo.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/autoreact/logo.png"
+    },
     "giveaway": {
         "repository": "Jerrie-Aries/modmail-plugins",
         "branch": "master",
@@ -115,5 +124,14 @@
         "title": "Top Supporters",
         "icon_url": "https://i.imgur.com/Mo60CdK.png",
         "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "rename": {
+        "repository": "Nicklaus-s/modmail-plugins",
+        "branch": "master",
+        "description": "Set a thread channel name.",
+        "bot_version": "4.0.0",
+        "title": "Rename",
+        "icon_url": "https://i.imgur.com/A1auJ95.png",
+        "thumbnail_url": "https://i.imgur.com/A1auJ95.png"
     }
 }
