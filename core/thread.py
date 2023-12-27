@@ -250,7 +250,7 @@ class Thread:
             ids = {}
 
             class State:
-                def store_user(self, user):
+                def store_user(self, user, cache):
                     return user
 
             for note in notes:
