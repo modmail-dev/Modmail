@@ -6,8 +6,8 @@ import shutil
 import sys
 import typing
 import zipfile
-from importlib import invalidate_caches
 from difflib import get_close_matches
+from importlib import invalidate_caches
 from pathlib import Path, PurePath
 from re import match
 from site import USER_SITE
@@ -15,13 +15,12 @@ from subprocess import PIPE
 
 import discord
 from discord.ext import commands
-
 from packaging.version import Version
 
 from core import checks
 from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
-from core.utils import truncate, trigger_typing
+from core.utils import trigger_typing, truncate
 
 logger = getLogger(__name__)
 
@@ -645,7 +644,7 @@ class Plugins(commands.Cog):
         if registry == {}:
             embed = discord.Embed(
                 color=self.bot.error_color,
-                description='Registry is empty. This could be because it failed to load.'
+                description="Registry is empty. This could be because it failed to load.",
             )
             await ctx.send(embed=embed)
             return
