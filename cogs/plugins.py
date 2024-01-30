@@ -135,8 +135,8 @@ class Plugins(commands.Cog):
             async with self.bot.session.get(url) as resp:
                 self.registry = json.loads(await resp.text())
         except asyncio.TimeoutError:
-            logger.warn("Failed to fetch registry. Loading with empty registry")
-            self.registry = {}
+            logger.warning("Failed to fetch registry. Loading with empty registry")
+            self.registry = {} if not self.registry else self.registry
 
     async def initial_load_plugins(self):
         for plugin_name in list(self.bot.config["plugins"]):
