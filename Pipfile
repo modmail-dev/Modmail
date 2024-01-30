@@ -10,7 +10,7 @@ pylint = "==3.0.2"
 typing-extensions = "==4.8.0"
 
 [packages]
-aiohttp = "==3.9.0"
+aiohttp = "==3.9.2"
 colorama = "==0.4.6"
 "discord.py" = {version = "==2.3.2", extras = ["speed"]}
 emoji = "==2.8.0"
