@@ -1,20 +1,38 @@
-FROM python:3.10 as py
+FROM python:3.11-alpine as base
 
-FROM py as build
+RUN apk add --no-cache \
+    # cairosvg dependencies
+    cairo-dev cairo cairo-tools \
+    # pillow dependencies
+    jpeg-dev zlib-dev \
+    && adduser -D -h /home/modmail -g 'Modmail' modmail
 
-RUN apt update && apt install -y g++ git
+ENV VIRTUAL_ENV=/home/modmail/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-COPY requirements.txt /
-RUN pip install --prefix=/inst -U -r /requirements.txt
+WORKDIR /home/modmail
 
-FROM py
+FROM base as builder
 
-COPY --from=build /inst /usr/local
+RUN apk add build-base libffi-dev
 
+RUN python -m venv $VIRTUAL_ENV
+
+COPY --chown=modmail:modmail requirements.txt .
+RUN pip install --upgrade pip setuptools && \
+    pip install -r requirements.txt
+
+FROM base as runtime
+
+# copy the entire venv
+COPY --from=builder --chown=modmail:modmail $VIRTUAL_ENV $VIRTUAL_ENV
+
+# copy repository files
+COPY --chown=modmail:modmail . .
+
+# this disables the internal auto-update
 ENV USING_DOCKER yes
-RUN useradd --system --no-create-home modmail
+
 USER modmail
 
-WORKDIR /modmailbot
 CMD ["python", "bot.py"]
-COPY --chown=modmail:modmail . /modmailbot
