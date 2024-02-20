@@ -1,4 +1,5 @@
 import asyncio
+import aiohttp
 import inspect
 import os
 import random
@@ -2119,6 +2120,34 @@ class Utility(commands.Cog):
                         await ctx.send(f"```py\n{page}\n```")
 
         await self.bot.add_reaction(ctx.message, "\u2705")
+
+    @commands.command(name="avatar")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def avatar(self, ctx: commands.Context, url: str = None):
+        """
+        Updates the bots avatar within discord.
+        """
+        if not ctx.message.attachments and url is None:
+            embed = discord.Embed(title='Error', description='You need to upload or link a image file.', color=self.bot.error_color)
+            return await ctx.send(embed=embed)
+        dc_avatar = None
+        if ctx.message.attachments:
+            dc_avatar = await ctx.message.attachments[0].read()
+        elif url:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    dc_avatar = await resp.read()
+        
+        if dc_avatar is None:
+            embed = discord.Embed(title='Error', description='Reading the attachment failed, is it valid?', color=self.bot.error_color)
+            return await ctx.send(embed=embed)
+        try:
+            await self.bot.user.edit(avatar=dc_avatar)
+            logger.info('Bot Avatar updated.')
+        except Exception:
+            raise ValueError('Uploading the avatar to discord failed.')
+        embed = discord.Embed(title='Successfully updated', description='Successfully updated avatar.', color=self.bot.main_color)
+        await ctx.send(embed=embed)
 
 
 async def setup(bot):
