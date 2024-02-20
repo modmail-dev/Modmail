@@ -2128,7 +2128,11 @@ class Utility(commands.Cog):
         Updates the bots avatar within discord.
         """
         if not ctx.message.attachments and url is None:
-            embed = discord.Embed(title='Error', description='You need to upload or link a image file.', color=self.bot.error_color)
+            embed = discord.Embed(
+                title="Error", 
+                description="You need to upload or link a image file.", 
+                color=self.bot.error_color
+                )
             return await ctx.send(embed=embed)
         dc_avatar = None
         if ctx.message.attachments:
@@ -2139,14 +2143,23 @@ class Utility(commands.Cog):
                     dc_avatar = await resp.read()
         
         if dc_avatar is None:
-            embed = discord.Embed(title='Error', description='Reading the attachment failed, is it valid?', color=self.bot.error_color)
+            embed = discord.Embed(
+                title="Error", 
+                description="Reading the attachment failed, is it valid?", 
+                color=self.bot.error_color
+                )
             return await ctx.send(embed=embed)
         try:
             await self.bot.user.edit(avatar=dc_avatar)
-            logger.info('Bot Avatar updated.')
+            logger.info("Bot Avatar updated.")
         except Exception:
-            raise ValueError('Uploading the avatar to discord failed.')
-        embed = discord.Embed(title='Successfully updated', description='Successfully updated avatar.', color=self.bot.main_color)
+            raise ValueError("Uploading the avatar to discord failed.")
+        
+        embed = discord.Embed(
+            title="Successfully updated", 
+            description="Successfully updated avatar.", 
+            color=self.bot.main_color
+            )
         await ctx.send(embed=embed)
 
 
