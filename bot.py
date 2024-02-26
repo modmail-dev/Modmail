@@ -1042,7 +1042,6 @@ class ModmailBot(commands.Bot):
         ctxs = []
 
         if alias is not None:
-            ctxs = []
             aliases = normalize_alias(alias)
             if not aliases:
                 logger.warning("Alias %s is invalid as called in autotrigger.", invoker)
@@ -1063,7 +1062,6 @@ class ModmailBot(commands.Bot):
                 await self.invoke(ctx)
 
                 ctx.command.checks = old_checks
-                continue
 
     async def get_context(self, message, *, cls=commands.Context):
         """
