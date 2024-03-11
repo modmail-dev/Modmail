@@ -136,7 +136,6 @@ class Plugins(commands.Cog):
                 self.registry = json.loads(await resp.text())
         except asyncio.TimeoutError:
             logger.warning("Failed to fetch registry. Loading with empty registry")
-            self.registry = {} if not self.registry else self.registry
 
     async def initial_load_plugins(self):
         for plugin_name in list(self.bot.config["plugins"]):
@@ -641,7 +640,7 @@ class Plugins(commands.Cog):
 
         registry = sorted(self.registry.items(), key=lambda elem: elem[0])
 
-        if registry == {}:
+        if not registry:
             embed = discord.Embed(
                 color=self.bot.error_color,
                 description="Registry is empty. This could be because it failed to load.",
