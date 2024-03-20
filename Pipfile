@@ -5,7 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 bandit = ">=1.7.5"
-black = "==23.11.0"
+black = "==24.3.0"
 pylint = "==3.0.2"
 typing-extensions = "==4.8.0"
 
