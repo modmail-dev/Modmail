@@ -696,9 +696,15 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def msglink(self, ctx, message_id: int):
         """Retrieves the link to a message in the current thread."""
-        try:
-            message = await ctx.thread.recipient.fetch_message(message_id)
-        except discord.NotFound:
+        found = False
+        for recipient in ctx.thread.recipients:
+            try:
+                message = await recipient.fetch_message(message_id)
+                found = True
+                break
+            except discord.NotFound:
+                continue
+        if not found:
             embed = discord.Embed(
                 color=self.bot.error_color, description="Message not found or no longer exists."
             )
