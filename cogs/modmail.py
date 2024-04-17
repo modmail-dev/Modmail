@@ -706,8 +706,8 @@ class Modmail(commands.Cog):
                 continue
         if not found:
             embed = discord.Embed(
-                    color=self.bot.error_color, description="Message not found or no longer exists."
-                )
+                color=self.bot.error_color, description="Message not found or no longer exists."
+            )
         else:
             embed = discord.Embed(color=self.bot.main_color, description=message.jump_url)
         await ctx.send(embed=embed)
