@@ -63,10 +63,10 @@ class GitHub:
     """
 
     BASE = "https://api.github.com"
-    REPO = BASE + "/repos/kyb3r/modmail"
+    REPO = BASE + "/repos/modmail-dev/modmail"
     MERGE_URL = BASE + "/repos/{username}/modmail/merges"
     FORK_URL = REPO + "/forks"
-    STAR_URL = BASE + "/user/starred/kyb3r/modmail"
+    STAR_URL = BASE + "/user/starred/modmail-dev/modmail"
 
     def __init__(self, bot, access_token: str = "", username: str = "", **kwargs):
         self.bot = bot
@@ -356,6 +356,9 @@ class ApiClient:
     async def get_user_logs(self, user_id: Union[str, int]) -> list:
         return NotImplemented
 
+    async def find_log_entry(self, key: str) -> list:
+        return NotImplemented
+
     async def get_latest_user_logs(self, user_id: Union[str, int]):
         return NotImplemented
 
@@ -526,6 +529,13 @@ class MongoDBClient(ApiClient):
         query = {"recipient.id": str(user_id), "guild_id": str(self.bot.guild_id)}
         projection = {"messages": {"$slice": 5}}
         logger.debug("Retrieving user %s logs.", user_id)
+
+        return await self.logs.find(query, projection).to_list(None)
+
+    async def find_log_entry(self, key: str) -> list:
+        query = {"key": key}
+        projection = {"messages": {"$slice": 5}}
+        logger.debug(f"Retrieving log ID {key}.")
 
         return await self.logs.find(query, projection).to_list(None)
 

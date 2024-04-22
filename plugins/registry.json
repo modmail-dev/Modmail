@@ -1,4 +1,40 @@
 {
+    "advanced-menu": {
+        "repository": "sebkuip/mm-plugins",
+        "branch": "master",
+        "description": "Advanced menu plugin using dropdown selectors. Supports submenus (and sub-submenus infinitely).",
+        "bot_version": "v4.0.0",
+        "title": "Advanced menu",
+        "icon_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png"
+    },
+    "announcement": {
+        "repository": "Jerrie-Aries/modmail-plugins",
+        "branch": "master",
+        "description": "Create and post announcements. Supports both plain and embed. Also customisable using buttons and dropdown menus.",
+        "bot_version": "4.0.0",
+        "title": "Announcement",
+        "icon_url": "https://github.com/Jerrie-Aries.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/.static/announcement.jpg"
+    },
+    "autoreact": {
+        "repository": "martinbndr/kyb3r-modmail-plugins",
+        "branch": "master",
+        "description": "Automatically reacts with emojis in certain channels.",
+        "bot_version": "4.0.0",
+        "title": "Autoreact",
+        "icon_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/autoreact/logo.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/autoreact/logo.png"
+    },
+    "giveaway": {
+        "repository": "Jerrie-Aries/modmail-plugins",
+        "branch": "master",
+        "description": "Host giveaways on your server with this plugin.",
+        "bot_version": "4.0.0",
+        "title": "Giveaway",
+        "icon_url": "https://github.com/Jerrie-Aries.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/Jerrie-Aries/modmail-plugins/master/.static/giveaway.jpg"
+    },
     "suggest": {
         "repository": "realcyguy/modmail-plugins",
         "branch": "v4",
@@ -7,5 +43,95 @@
         "title": "Suggest stuff.",
         "icon_url": "https://i.imgur.com/qtE7AH8.png",
         "thumbnail_url": "https://i.imgur.com/qtE7AH8.png"
+    },
+    "reminder": {
+        "repository": "martinbndr/kyb3r-modmail-plugins",
+        "branch": "master",
+        "description": "Let´s you create reminders.",
+        "bot_version": "4.0.0",
+        "title": "Reminder",
+        "icon_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/reminder/logo.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/reminder/logo.png"
+    },
+    "welcomer": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Add messages to welcome new members! Allows for embedded messages as well. [Read more](https://github.com/fourjr/modmail-plugins/blob/master/welcomer/README.md)",
+        "bot_version": "4.0.0",
+        "title": "New member messages plugin",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "countdowns": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Setup a countdown voice channel in your server!",
+        "bot_version": "4.0.0",
+        "title": "Countdowns",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "claim": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Allows supporters to claim thread by sending ?claim in the thread channel",
+        "bot_version": "4.0.0",
+        "title": "Claim Thread",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "emote-manager": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Allows managing server emotes via ?emoji",
+        "bot_version": "4.0.0",
+        "title": "Emote Manager",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "gen-log": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Outputs a text log of a thread in a specified channel",
+        "bot_version": "4.0.0",
+        "title": "Log Generator",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "media-logger": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Re-posts detected media from all visible channels into a specified logging channel",
+        "bot_version": "4.0.0",
+        "title": "Media Logger",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "report": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Specify an emoji to react with on messages. Generates a 'report' in specified logging channel upon react.",
+        "bot_version": "4.0.0",
+        "title": "Report",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "top-supporters": {
+        "repository": "fourjr/modmail-plugins",
+        "branch": "v4",
+        "description": "Gathers and prints the top supporters of handling threads.",
+        "bot_version": "4.0.0",
+        "title": "Top Supporters",
+        "icon_url": "https://i.imgur.com/Mo60CdK.png",
+        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+    },
+    "rename": {
+        "repository": "Nicklaus-s/modmail-plugins",
+        "branch": "master",
+        "description": "Set a thread channel name.",
+        "bot_version": "4.0.0",
+        "title": "Rename",
+        "icon_url": "https://i.imgur.com/A1auJ95.png",
+        "thumbnail_url": "https://i.imgur.com/A1auJ95.png"
     }
 }

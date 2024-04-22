@@ -1,8 +1,8 @@
 version: "1"
 rules:
   - base: master
-    upstream: kyb3r:master
+    upstream: modmail-dev:master
     mergeMethod: hardreset
   - base: development
-    upstream: kyb3r:development
+    upstream: modmail-dev:development
     mergeMethod: hardreset
