@@ -37,6 +37,33 @@ from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 logger = getLogger(__name__)
 
 
+class ArgParser(commands.Converter):
+    async def convert(self, ctx: commands.Context, argument: str):
+        words = argument.split()
+        if len(words) < 2:
+            raise commands.BadArgument("Not enough arguments")
+
+        *name, user_or_role = words
+        second_argument = None
+
+        try:
+            second_argument = await utils.User().convert(ctx, user_or_role)
+        except commands.BadArgument:
+            pass
+
+        try:
+            second_argument = await commands.RoleConverter().convert(ctx, user_or_role)
+        except commands.BadArgument:
+            pass
+
+        if second_argument is None:
+            first_argument = argument
+        else:
+            first_argument = " ".join(name)
+
+        return first_argument, second_argument
+
+
 class ModmailHelpCommand(commands.HelpCommand):
     async def command_callback(self, ctx, *, command=None):
         """Overwrites original command_callback to ensure `help` without any arguments
@@ -956,7 +983,7 @@ class Utility(commands.Cog):
 
         For example:
         - `{prefix}alias add r reply`
-        - Now you can use `{prefix}r` as an replacement for `{prefix}reply`.
+        - Now you can use `{prefix}r` as a replacement for `{prefix}reply`.
 
         See also `{prefix}snippet`.
         """
@@ -1235,31 +1262,47 @@ class Utility(commands.Cog):
         }
         return transform.get(name, PermissionLevel.INVALID)
 
-    @permissions.command(name="override")
+    @permissions.command(name="override", usage="[command/group] [name] [permission_level]")
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_override(self, ctx, command_name: str.lower, *, level_name: str):
+    async def permissions_override(self, ctx, type_: str.lower, name: str.lower, *, level_name: str):
         """
-        Change a permission level for a specific command.
+        Change a permission level for a specific command or group.
 
         Examples:
-        - `{prefix}perms override reply administrator`
-        - `{prefix}perms override "plugin enabled" moderator`
+        - `{prefix}perms override command reply administrator`
+        - `{prefix}perms override command "plugin enabled" moderator`
+        - `{prefix}perms override group modmail moderator`
+        - `{prefix}perms override group utility moderator`
 
         To undo a permission override, see `{prefix}help permissions remove`.
 
         Example:
-        - `{prefix}perms remove override reply`
-        - `{prefix}perms remove override plugin enabled`
+        - `{prefix}perms remove override command reply`
+        - `{prefix}perms remove override command plugin enabled`
+        - `{prefix}perms remove override group modmail`
+        - `{prefix}perms remove override group utility`
 
         You can retrieve a single or all command level override(s), see`{prefix}help permissions get`.
         """
 
-        command = self.bot.get_command(command_name)
-        if command is None:
+        if type_ not in {"command", "group"}:
+            return await ctx.send_help(ctx.command)
+
+        command = group = None
+
+        if type_ == "command":
+            command = self.bot.get_command(name)
+            check = command is not None
+        if type_ == "group":
+            name = name.capitalize()
+            group = self.bot.get_cog(name)
+            check = group is not None
+
+        if not check:
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
-                description=f"The referenced command does not exist: `{command_name}`.",
+                description=f"The referenced {type_} does not exist: `{name}`.",
             )
             return await ctx.send(embed=embed)
 
@@ -1270,7 +1313,8 @@ class Utility(commands.Cog):
                 color=self.bot.error_color,
                 description=f"The referenced level does not exist: `{level_name}`.",
             )
-        else:
+            return await ctx.send(embed=embed)
+        if type_ == "command":
             logger.info(
                 "Updated command permission level for `%s` to `%s`.",
                 command.qualified_name,
@@ -1279,15 +1323,32 @@ class Utility(commands.Cog):
             self.bot.config["override_command_level"][command.qualified_name] = level.name
 
             await self.bot.config.update()
-            embed = discord.Embed(
-                title="Success",
-                color=self.bot.main_color,
-                description="Successfully set command permission level for "
-                f"`{command.qualified_name}` to `{level.name}`.",
-            )
+            final = command.qualified_name
+
+        if type_ == "group":
+            update = False
+            for command in set(group.walk_commands()):
+                logger.info(
+                    "Updated command permission level for `%s` to `%s`.",
+                    command.qualified_name,
+                    level.name,
+                )
+                self.bot.config["override_command_level"][command.qualified_name] = level.name
+                update = True
+
+            if update:
+                await self.bot.config.update()
+
+            final = group.qualified_name
+
+        embed = discord.Embed(
+            title="Success",
+            color=self.bot.main_color,
+            description="Successfully set permission level for " f"`{final}` to `{level.name}`.",
+        )
         return await ctx.send(embed=embed)
 
-    @permissions.command(name="add", usage="[command/level] [name] [user/role]")
+    @permissions.command(name="add", usage="[command/level/group] [name] [user/role]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_add(
         self,
@@ -1300,6 +1361,8 @@ class Utility(commands.Cog):
         """
         Add a permission to a command or a permission level.
 
+        You can use the `group` option to add multiple permissions at once.
+
         For sub commands, wrap the complete command name with quotes.
         To find a list of permission levels, see `{prefix}help perms`.
 
@@ -1308,21 +1371,28 @@ class Utility(commands.Cog):
         - `{prefix}perms add command reply @user`
         - `{prefix}perms add command "plugin enabled" @role`
         - `{prefix}perms add command help 984301093849028`
+        - `{prefix}perms add group modmail @user`
+        - `{prefix}perms add group modmail @role`
+        - `{prefix}perms add group utility @user`
 
         Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead.
         """
 
-        if type_ not in {"command", "level"}:
+        if type_ not in {"command", "level", "group"}:
             return await ctx.send_help(ctx.command)
 
-        command = level = None
+        command = level = group = None
         if type_ == "command":
             name = name.lower()
             command = self.bot.get_command(name)
             check = command is not None
-        else:
+        if type_ == "level":
             level = self._parse_level(name)
             check = level is not PermissionLevel.INVALID
+        if type_ == "group":
+            name = name.capitalize()
+            group = self.bot.get_cog(name)
+            check = group is not None
 
         if not check:
             embed = discord.Embed(
@@ -1336,7 +1406,7 @@ class Utility(commands.Cog):
         if type_ == "command":
             name = command.qualified_name
             await self.bot.update_perms(name, value)
-        else:
+        if type_ == "level":
             await self.bot.update_perms(level, value)
             name = level.name
             if level > PermissionLevel.REGULAR:
@@ -1349,6 +1419,10 @@ class Utility(commands.Cog):
                 if key is not None:
                     logger.info("Granting %s access to Modmail category.", key.name)
                     await self.bot.main_category.set_permissions(key, read_messages=True)
+        if type_ == "group":
+            for command in set(group.walk_commands()):
+                await self.bot.update_perms(command.qualified_name, value)
+                name = group.qualified_name
 
         embed = discord.Embed(
             title="Success",
@@ -1360,17 +1434,11 @@ class Utility(commands.Cog):
     @permissions.command(
         name="remove",
         aliases=["del", "delete", "revoke"],
-        usage="[command/level] [name] [user/role] or [override] [command name]",
+        usage="[command/level/group] [name] [user/role] or [override] [command/group] [name]",
     )
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def permissions_remove(
-        self,
-        ctx,
-        type_: str.lower,
-        name: str,
-        *,
-        user_or_role: Union[discord.Role, utils.User, str] = None,
-    ):
+    async def permissions_remove(self, ctx, type_: str.lower, *, name_and_role_or_user: ArgParser):
+        name, user_or_role = name_and_role_or_user
         """
         Remove permission to use a command, permission level, or command level override.
 
@@ -1382,46 +1450,86 @@ class Utility(commands.Cog):
         - `{prefix}perms remove command reply @user`
         - `{prefix}perms remove command "plugin enabled" @role`
         - `{prefix}perms remove command help 984301093849028`
-        - `{prefix}perms remove override block`
-        - `{prefix}perms remove override "snippet add"`
+        - `{prefix}perms remove override command block`
+        - `{prefix}perms remove override command "snippet add"`
+        - `{prefix}perms remove override group modmail`
+        - `{prefix}perms remove group modmail @user`
+        - `{prefix}perms remove group modmail @role`
 
         Do not ping `@everyone` for granting permission to everyone, use "everyone" or "all" instead.
         """
-        if type_ not in {"command", "level", "override"} or (type_ != "override" and user_or_role is None):
+        if type_ not in {"command", "level", "override", "group"} or (
+            type_ != "override" and user_or_role is None
+        ):
             return await ctx.send_help(ctx.command)
 
         if type_ == "override":
-            extension = ctx.kwargs["user_or_role"]
-            if extension is not None:
-                name += f" {extension}"
-            name = name.lower()
-            name = getattr(self.bot.get_command(name), "qualified_name", name)
-            level = self.bot.config["override_command_level"].get(name)
-            if level is None:
-                perm = self.bot.command_perm(name)
-                embed = discord.Embed(
-                    title="Error",
-                    color=self.bot.error_color,
-                    description=f"The command permission level was never overridden: `{name}`, "
-                    f"current permission level is {perm.name}.",
-                )
-            else:
-                logger.info("Restored command permission level for `%s`.", name)
-                self.bot.config["override_command_level"].pop(name)
-                await self.bot.config.update()
-                perm = self.bot.command_perm(name)
+            name = name.split(" ")
+            type_ = name[0]
+            name = name[1]
+            if type_ not in {"command", "group"}:
+                return await ctx.send_help(ctx.command)
+            if type_ == "command":
+                extension = ctx.kwargs["name_and_role_or_user"]
+                if extension is not None:
+                    name += f" {extension}"
+                name = name.lower()
+                name = getattr(self.bot.get_command(name), "qualified_name", name)
+                level = self.bot.config["override_command_level"].get(name)
+                if level is None:
+                    perm = self.bot.command_perm(name)
+                    embed = discord.Embed(
+                        title="Error",
+                        color=self.bot.error_color,
+                        description=f"The command permission level was never overridden: `{name}`, "
+                        f"current permission level is {perm.name}.",
+                    )
+                else:
+                    logger.info("Restored command permission level for `%s`.", name)
+                    self.bot.config["override_command_level"].pop(name)
+                    await self.bot.config.update()
+                    perm = self.bot.command_perm(name)
+                    embed = discord.Embed(
+                        title="Success",
+                        color=self.bot.main_color,
+                        description=f"Command permission level for `{name}` was successfully restored to {perm.name}.",
+                    )
+                return await ctx.send(embed=embed)
+            if type_ == "group":
+                group = self.bot.get_cog(name.capitalize())
+                if group is None:
+                    embed = discord.Embed(
+                        title="Error",
+                        color=self.bot.error_color,
+                        description=f"The referenced {type_} does not exist: `{name}`.",
+                    )
+                    return await ctx.send(embed=embed)
+                update = False
+                for command in set(group.walk_commands()):
+                    name = command.qualified_name
+                    level = self.bot.config["override_command_level"].get(name)
+                    if level is None:
+                        continue
+                    else:
+                        logger.info("Restored command permission level for `%s`.", name)
+                        self.bot.config["override_command_level"].pop(name)
+                        update = True
+
+                if update:
+                    await self.bot.config.update()
+                name = group.qualified_name
                 embed = discord.Embed(
                     title="Success",
                     color=self.bot.main_color,
-                    description=f"Command permission level for `{name}` was successfully restored to {perm.name}.",
+                    description=f"Group permission level for `{name}` was successfully restored to its individual defaults.",
                 )
-            return await ctx.send(embed=embed)
+                return await ctx.send(embed=embed)
 
         level = None
         if type_ == "command":
             name = name.lower()
             name = getattr(self.bot.get_command(name), "qualified_name", name)
-        else:
+        if type_ == "level":
             level = self._parse_level(name)
             if level is PermissionLevel.INVALID:
                 embed = discord.Embed(
@@ -1450,6 +1558,16 @@ class Utility(commands.Cog):
                     if member is not None and member != self.bot.modmail_guild.me:
                         logger.info("Denying %s access to Modmail category.", member.name)
                         await self.bot.main_category.set_permissions(member, overwrite=None)
+
+        if type_ == "group":
+            group = self.bot.get_cog(name.capitalize())
+            value = self._verify_user_or_role(user_or_role)
+            if group is None:
+                return await ctx.send_help(ctx.command)
+            for command in set(group.walk_commands()):
+                name = command.qualified_name
+                await self.bot.update_perms(name, value, add=False)
+            name = group.qualified_name
 
         embed = discord.Embed(
             title="Success",
