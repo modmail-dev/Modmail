@@ -8,7 +8,7 @@ RUN apt-get update &&  \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     # Create a non-root user.
-    useradd --create-home -d /opt/modmail modmail
+    useradd --shell /usr/sbin/nologin --create-home -d /opt/modmail modmail
 
 FROM base as builder
 
