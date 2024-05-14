@@ -24,7 +24,7 @@ FROM base
 # Copy the entire venv.
 COPY --from=builder --chown=modmail:modmail /opt/modmail/.venv /opt/modmail/.venv
 
-# copy repository files
+# Copy repository files.
 WORKDIR /opt/modmail
 USER modmail:modmail
 COPY --chown=modmail:modmail . .
