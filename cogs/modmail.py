@@ -143,6 +143,19 @@ class Modmail(commands.Cog):
         """
 
         if name is not None:
+            if name == "compact":
+                embeds = []
+
+                for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.snippets)),) * 15)):
+                    description = format_description(i, names)
+                    embed = discord.Embed(color=self.bot.main_color, description=description)
+                    embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
+                    embeds.append(embed)
+
+                session = EmbedPaginatorSession(ctx, *embeds)
+                await session.run()
+                return
+
             snippet_name = self.bot._resolve_snippet(name)
 
             if snippet_name is None:
