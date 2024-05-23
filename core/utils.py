@@ -39,6 +39,7 @@ __all__ = [
     "get_top_role",
     "get_joint_id",
     "extract_block_timestamp",
+    "return_or_truncate",
     "AcceptButton",
     "DenyButton",
     "ConfirmThreadCreationView",
@@ -572,6 +573,11 @@ def extract_block_timestamp(reason, id_):
 
     return end_time, after
 
+
+def return_or_truncate(text, max_length):
+    if len(text) <= max_length:
+        return text
+    return text[: max_length - 3] + "..."
 
 class AcceptButton(discord.ui.Button):
     def __init__(self, emoji):
