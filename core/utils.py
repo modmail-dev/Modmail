@@ -579,6 +579,7 @@ def return_or_truncate(text, max_length):
         return text
     return text[: max_length - 3] + "..."
 
+
 class AcceptButton(discord.ui.Button):
     def __init__(self, emoji):
         super().__init__(style=discord.ButtonStyle.gray, emoji=emoji)
