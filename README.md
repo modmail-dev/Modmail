@@ -147,6 +147,13 @@ Advertise Your Server:
 </a>
 <br>
 <br>
+Help Us • Help Other's:
+<br>
+<a href='https://discord.gg/5yQCFzY6HU'>
+  <img height=100 src='https://i.imgur.com/Gi3jxeH.gif' style='margin:5px'>
+</a>
+<br>
+<br>
 Discord Advice Center:
 <br>
 <a href='https://discord.gg/zmwZy5fd9v'>
