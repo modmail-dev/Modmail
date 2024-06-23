@@ -81,7 +81,7 @@
                 "icon_url": "https://i.imgur.com/cjVtRw5.jpg"
             },
             "image": {
-                "url":  "https://i.imgur.com/1hrjcHd.png"
+                "url": "https://i.imgur.com/1hrjcHd.png"
             },
             "fields": [
                 {
@@ -153,6 +153,19 @@
             "color": 45300,
             "footer": {
                 "text": "Help Us • Help Others"
+            }
+        }
+    },
+    {
+        "embed": {
+            "description": "> Be apart of our community as we start to grow! and embark on a long journey.\n——————————————————-\n**What we offer?**\n\n➺〚🖌️〛Custom Liveries \n➺〚❤️〛Friendly and Growing community.\n➺〚🤝〛Partnerships.\n➺〚🎮〛Daily SSUs. \n➺〚🚨〛Great roleplays.\n➺〚💬〛Kind and Professional staff\n➺〚🎉〛Giveaways!!! \n——————————————————-\n**Emergency Services**\n\n➺〚🚔〛NY Police Force\n➺〚🚒〛Fire & Emergency NY\n➺〚🚧〛NY department of transportation \n\n——————————————————-\n**Whitelisted**\nComing soon!\n——————————————————-\n**What are we looking for!**\n\n➺〚💬〛More members\n➺〚⭐〛Staff Members - **WE'RE HIRING!**\n➺〚🤝〛Partnerships\n➺〚💎〛Boosters\n——————————————————\n\n**[Join now](https://discord.com/invite/qt62qSnKVa)**",
+            "author": {
+                "name": "New York Roleplay",
+                "icon_url": "https://cdn.discordapp.com/icons/1172553254882775111/648d5bc50393a21216527a1aaa61286d.webp"
+            },
+            "color": 431075,
+            "thumbnail": {
+                "url": "https://cdn.discordapp.com/icons/1172553254882775111/648d5bc50393a21216527a1aaa61286d.webp"
             }
         }
     }
