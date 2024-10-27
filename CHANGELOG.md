@@ -10,6 +10,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 ### Fixed
 - `?msglink` now supports threads with multiple recipients. ([PR #3341](https://github.com/modmail-dev/Modmail/pull/3341))
+- Fixed persistent notes not working due to discord.py internal change. ([PR #3324](https://github.com/modmail-dev/Modmail/pull/3324))
 
 ### Added
 - Support for custom activities with `?activity custom <text>` ([PR #3352](https://github.com/modmail-dev/Modmail/pull/3352))
