@@ -8,6 +8,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # v4.1.1
 
+### Fixed
+- `?msglink` now supports threads with multiple recipients. ([PR #3341](https://github.com/modmail-dev/Modmail/pull/3341))
+
 ### Added
 - Support for custom activities with `?activity custom <text>` ([PR #3352](https://github.com/modmail-dev/Modmail/pull/3352))
 
