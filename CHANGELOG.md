@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/modmail-dev/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v4.1.1
+
+### Fixed
+- `?msglink` now supports threads with multiple recipients. ([PR #3341](https://github.com/modmail-dev/Modmail/pull/3341))
+- Fixed persistent notes not working due to discord.py internal change. ([PR #3324](https://github.com/modmail-dev/Modmail/pull/3324))
+
+### Added
+- Support for custom activities with `?activity custom <text>` ([PR #3352](https://github.com/modmail-dev/Modmail/pull/3352))
+
 # v4.1.0
 
 Drops support for Python 3.9. Python 3.10 and Python 3.11 are now the only supported versions.
@@ -14,7 +23,7 @@ Drops support for Python 3.9. Python 3.10 and Python 3.11 are now the only suppo
 - GIF stickers no longer cause the bot to crash.
 - `?alias make/create` as aliases to `?alias add`. This improves continuity between the bot and its command structure. ([PR #3195](https://github.com/kyb3r/modmail/pull/3195))
 - Loading the blocked list with the `?blocked` command takes a long time when the list is large. ([PR #3242](https://github.com/kyb3r/modmail/pull/3242))
-- Reply not being forwarded from DM. (PR [#3239](https://github.com/modmail-dev/modmail/pull/3239))
+- Reply not being forwarded from DM. ([PR #3239](https://github.com/modmail-dev/modmail/pull/3239))
 - Cleanup imports after removing/unloading a plugin. ([PR #3226](https://github.com/modmail-dev/Modmail/pull/3226))
 - Fixed a syntactic error in the close message when a thread is closed after a certain duration. ([PR #3233](https://github.com/modmail-dev/Modmail/pull/3233))
 - Removed an extra space in the help command title when the command has no parameters. ([PR #3271](https://github.com/modmail-dev/Modmail/pull/3271))
