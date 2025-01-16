@@ -2006,7 +2006,7 @@ class Utility(commands.Cog):
                 if self.bot.check_local_git() is False:
                     embed = discord.Embed(
                         title="Update Command Unavailable",
-                        description="The bot cannot be updated due to not being installed via a git."
+                        description="The bot cannot be updated due to not being installed via git."
                         "You need to manually update the bot according to your hosting method.",
                         color=discord.Color.red(),
                     )
