@@ -1443,7 +1443,7 @@ Thread channels will now default to being private (`@everyone`'s read message pe
 - Log URLs are moved to their own collection.
 - Log URLs are now `https://logs.modmail.tk/LOGKEY`, no more numbers before the log key.
 - We still support the numbers to not break everyone's URLs so quickly, but both work at the moment.
-- This is a huge change to the backend logging, and there might be migration errors. If so, please contact us in our [Discord server](https://discord.gg/2fMbf2N).
+- This is a huge change to the backend logging, and there might be migration errors. If so, please contact us in our [Discord server](https://discord.gg/cnUpwrnpYb).
 
 # v2.5.2
 
