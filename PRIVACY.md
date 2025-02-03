@@ -48,7 +48,7 @@ The bot owner can opt out of this data collection by setting `data_collection` t
 
 ### Data deletion
 
-Data can be deleted with a request in a DM to our [support server](https://discord.gg/zmdYe3ZVHG)'s Modmail bot.
+Data can be deleted with a request in a DM to our [support server](https://discord.gg/cnUpwrnpYb)'s Modmail bot.
 
 ## The Data You Collect
 
