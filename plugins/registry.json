@@ -44,6 +44,15 @@
         "icon_url": "https://i.imgur.com/qtE7AH8.png",
         "thumbnail_url": "https://i.imgur.com/qtE7AH8.png"
     },
+    "support-times": {
+        "repository": "martinbndr/kyb3r-modmail-plugins",
+        "branch": "master",
+        "description": "With this plugin you can set certain times when modmail should be enabled/disabled.",
+        "bot_version": "4.0.0",
+        "title": "Support-Times",
+        "icon_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/support-times/logo.png",
+        "thumbnail_url": "https://raw.githubusercontent.com/martinbndr/kyb3r-modmail-plugins/master/support-times/logo.png"
+    },
     "reminder": {
         "repository": "martinbndr/kyb3r-modmail-plugins",
         "branch": "master",
