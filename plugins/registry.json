@@ -133,5 +133,14 @@
         "title": "Rename",
         "icon_url": "https://i.imgur.com/A1auJ95.png",
         "thumbnail_url": "https://i.imgur.com/A1auJ95.png"
+    },
+	"logviewer": {
+        "repository": "raidensakura/modmail-plugins",
+        "branch": "main",
+        "description": "Run the logviewer application alongside Modmail as a plugin.",
+        "bot_version": "4.0.0",
+        "title": "Logviewer",
+        "icon_url": "https://i.imgur.com/A1auJ95.png",
+        "thumbnail_url": "https://i.imgur.com/A1auJ95.png"
     }
 }
