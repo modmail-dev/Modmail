@@ -138,7 +138,7 @@
         "repository": "noinoiexists/modmail-plugins",
         "branch": "main",
         "description": "Customizable polling system to create polls with role restrictions, multiple options, and automatic result announcement.",
-        "bot_version": "4.0.0",
+        "bot_version": "4.1.1",
         "title": "Polls",
         "icon_url": "https://i.imgur.com/Mo60CdK.png",
         "thumbnail_url": "https://i.imgur.com/jmoLr6X.jpeg"
