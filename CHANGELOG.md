@@ -8,6 +8,9 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 
 # v4.1.1
 
+### Breaking
+- Modmail threads are now potentially Discord threads
+
 ### Fixed
 - `?msglink` now supports threads with multiple recipients. ([PR #3341](https://github.com/modmail-dev/Modmail/pull/3341))
 - Fixed persistent notes not working due to discord.py internal change. ([PR #3324](https://github.com/modmail-dev/Modmail/pull/3324))
