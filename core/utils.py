@@ -457,13 +457,17 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
     errors_raised = errors_raised or []
 
     try:
-        channel = await bot.modmail_guild.create_text_channel(
-            name=name,
-            category=category,
-            overwrites=overwrites,
-            topic=f"User ID: {recipient.id}",
-            reason="Creating a thread channel.",
-        )
+        if isinstance(category, discord.TextChannel):
+            # we ignore `overwrites`... maybe make private threads so it's similar?
+            channel = await category.create_thread(name=name, reason="Creating a thread channel.", type=discord.ChannelType.public_thread)
+        else:
+            channel = await bot.modmail_guild.create_text_channel(
+                name=name,
+                category=category,
+                overwrites=overwrites,
+                topic=f"User ID: {recipient.id}",
+                reason="Creating a thread channel.",
+            )
     except discord.HTTPException as e:
         if (e.text, (category, name)) in errors_raised:
             # Just raise the error to prevent infinite recursion after retrying

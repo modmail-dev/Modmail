@@ -678,6 +678,9 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def nsfw(self, ctx):
         """Flags a Modmail thread as NSFW (not safe for work)."""
+        if isinstance(ctx.channel, discord.Thread):
+            await ctx.send("Unable to set NSFW status for Discord threads.")
+            return
         await ctx.channel.edit(nsfw=True)
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -687,6 +690,9 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def sfw(self, ctx):
         """Flags a Modmail thread as SFW (safe for work)."""
+        if isinstance(ctx.channel, discord.Thread):
+            await ctx.send("Unable to set NSFW status for Discord threads.")
+            return
         await ctx.channel.edit(nsfw=False)
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await self.bot.add_reaction(ctx.message, sent_emoji)
@@ -775,6 +781,9 @@ class Modmail(commands.Cog):
     @commands.cooldown(1, 600, BucketType.channel)
     async def title(self, ctx, *, name: str):
         """Sets title for a thread"""
+        if isinstance(ctx.channel, discord.Thread):
+            await ctx.send("Unable to set titles for Discord threads.")
+            return
         await ctx.thread.set_title(name)
         sent_emoji, _ = await self.bot.retrieve_emoji()
         await ctx.message.pin()
