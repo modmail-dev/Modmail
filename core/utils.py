@@ -459,7 +459,7 @@ async def create_thread_channel(bot, recipient, category, overwrites, *, name=No
     try:
         if isinstance(category, discord.TextChannel):
             # we ignore `overwrites`... maybe make private threads so it's similar?
-            channel = await category.create_thread(name=name, reason="Creating a thread channel.")
+            channel = await category.create_thread(name=name, reason="Creating a thread channel.", type=discord.ChannelType.public_thread)
         else:
             channel = await bot.modmail_guild.create_text_channel(
                 name=name,

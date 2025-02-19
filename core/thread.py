@@ -298,6 +298,11 @@ class Thread:
             activate_auto_triggers(),
             send_persistent_notes(),
         )
+        if creator is not None:
+            # now that the genesis message is sent,
+            # we can cache things.
+            creator.cache[self.recipient.id] = self
+
         self.bot.dispatch("thread_ready", self, creator, category, initial_message)
 
     def _format_info_embed(self, user, log_url, log_count, color):
@@ -1312,14 +1317,16 @@ class ThreadManager:
             and channel is not None
             and isinstance(channel, (discord.TextChannel, discord.Thread))
         ):
+            # check cache *before* potentially awaiting
+            user_id, cache_thread = next(
+                ((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None)
+            )
+
             thread = await self._find_from_channel(channel)
-            if thread is None:
-                user_id, thread = next(
-                    ((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None)
-                )
-                if thread is not None:
-                    logger.debug("Found thread with tempered ID.")
-                    await channel.edit(topic=f"User ID: {user_id}")
+            if thread is None and cache_thread is not None:
+                logger.debug("Found thread with tampered ID.")
+                await channel.edit(topic=f"User ID: {user_id}")
+                thread = cache_thread
             return thread
 
         if recipient:
@@ -1448,8 +1455,6 @@ class ThreadManager:
                 )
 
         thread = Thread(self, recipient)
-
-        self.cache[recipient.id] = thread
 
         if (message or not manual_trigger) and self.bot.config["confirm_thread_creation"]:
             if not manual_trigger:
