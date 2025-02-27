@@ -48,7 +48,15 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint, human_join
+from core.utils import (
+    extract_block_timestamp,
+    normalize_alias,
+    parse_alias,
+    truncate,
+    tryint,
+    human_join,
+    ThreadSelfCloseView,
+)
 
 logger = getLogger(__name__)
 
@@ -617,6 +625,7 @@ class ModmailBot(commands.Bot):
         self.post_metadata.start()
         self.autoupdate.start()
         self.log_expiry.start()
+        self.add_view(ThreadSelfCloseView(self))
         self._started = True
 
     async def convert_emoji(self, name: str) -> str:
@@ -1275,19 +1284,7 @@ class ModmailBot(commands.Bot):
             return
 
         reaction = payload.emoji
-        close_emoji = await self.convert_emoji(self.config["close_emoji"])
         if from_dm:
-            if (
-                payload.event_type == "REACTION_ADD"
-                and message.embeds
-                and str(reaction) == str(close_emoji)
-                and self.config.get("recipient_thread_close")
-            ):
-                ts = message.embeds[0].timestamp
-                if ts == thread.channel.created_at:
-                    # the reacted message is the corresponding thread creation embed
-                    # closing thread
-                    return await thread.close(closer=user)
             if (
                 message.author == self.user
                 and message.embeds
