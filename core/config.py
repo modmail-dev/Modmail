@@ -49,12 +49,14 @@ class ConfigManager:
         # threads
         "sent_emoji": "\N{WHITE HEAVY CHECK MARK}",
         "blocked_emoji": "\N{NO ENTRY SIGN}",
-        "close_emoji": "\N{LOCK}",
+        "close_emoji": None,
         "use_user_id_channel_name": False,
         "use_timestamp_channel_name": False,
         "use_nickname_channel_name": False,
         "use_random_channel_name": False,
         "recipient_thread_close": False,
+        "recipient_thread_close_button_label": None,
+        "recipient_thread_close_button_style": "red",
         "thread_show_roles": True,
         "thread_show_account_age": True,
         "thread_show_join_age": True,
@@ -65,7 +67,7 @@ class ConfigManager:
         "thread_creation_response": "The staff team will get back to you as soon as possible.",
         "thread_creation_footer": "Your message has been sent",
         "thread_contact_silently": False,
-        "thread_self_closable_creation_footer": "Click the lock to close the thread",
+        "thread_self_closable_creation_footer": "Click the button to close the thread",
         "thread_creation_contact_title": "New Thread",
         "thread_creation_self_contact_response": "You have opened a Modmail thread.",
         "thread_creation_contact_response": "{creator.name} has opened a Modmail thread.",
@@ -233,7 +235,8 @@ class ConfigManager:
     enums = {
         "dm_disabled": DMDisabled,
         "status": discord.Status,
-        "activity_type": discord.ActivityType,
+        "activity_type": discord.ActivityType
+        #"recipient_thread_close_button_style": discord.ButtonStyle
     }
 
     force_str = {"command_permissions", "level_permissions"}
