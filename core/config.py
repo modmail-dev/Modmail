@@ -232,12 +232,7 @@ class ConfigManager:
         "registry_plugins_only",
     }
 
-    enums = {
-        "dm_disabled": DMDisabled,
-        "status": discord.Status,
-        "activity_type": discord.ActivityType
-        #"recipient_thread_close_button_style": discord.ButtonStyle
-    }
+    enums = {"dm_disabled": DMDisabled, "status": discord.Status, "activity_type": discord.ActivityType}
 
     force_str = {"command_permissions", "level_permissions"}
 
