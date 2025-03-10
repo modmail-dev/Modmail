@@ -81,7 +81,7 @@
                 "icon_url": "https://i.imgur.com/cjVtRw5.jpg"
             },
             "image": {
-                "url":  "https://i.imgur.com/1hrjcHd.png"
+                "url": "https://i.imgur.com/1hrjcHd.png"
             },
             "fields": [
                 {
@@ -89,23 +89,6 @@
                     "value": "[**Click Here**](https://discord.gg/zmwZy5fd9v)"
                 }
             ]
-        }
-    },
-    {
-        "embed": {
-            "title": "Advertise Your Server",
-            "description": "Advertise Your Server is the leading advertising and growth Discord Server. With over 60,000 members we can help grow your community with our range of services.\n\n__**Advertise Your Server offers everything you need to grow and find servers:**__\n\n:chart_with_upwards_trend: **Discord Growth Experts** to give you advice on how to __grow your server.__ (server/advert reviews, growth tips)\n:dividers: Over 40 different channels for **different server categories.**\n:robot: Our own __custom__ **bump bot.** (Liam)\n:bar_chart: Currently the __BIGGEST__ advertising server on Discord.\n:computer: Our own server __Listing Site__!\n:ticket: Small Servers Program for servers with less than 300 members.\n:dvd: Weekly Podcast, Blog, Email Newsletter and YouTube Tutorials. \n\nhttps://discord.gg/zP8KcF4VQz\nhttps://aysdiscord.com",
-            "author": {
-                "name": "Advertise Your Server",
-                "icon_url": "https://cdn.discordapp.com/attachments/563522692418895872/907067815486427176/logo4.png"
-            },
-            "color": 431075,
-            "footer": {
-                "text": "Grow Your Discord Server"
-            },
-            "image": {
-                "url": "https://cdn.discordapp.com/attachments/472811257913933834/907068966311166043/unknown_2.png"
-            }
         }
     },
     {
@@ -127,6 +110,53 @@
             "description": "Die etwas andere Community",
             "url": "https://discord.gg/uncommon",
             "title": "uncommon community"
+        }
+    },
+    {
+        "embed": {
+            "author": {
+                "name": "Help us • Help Others"
+            },
+            "title": "Join Today",
+            "url": "https://discord.gg/5yQCFzY6HU",
+            "description": "At Help Us • Help Others, we accept as true with inside the transformative electricity of cooperation and kindness. Each one people has the capability to make a meaningful impact by means of helping and caring for others. Whether you want assistance or want to offer it, this is the right region for you!",
+            "fields": [
+                {
+                    "name": "What we offer:",
+                    "value": "`🎬` - Active community\n`👮` - Active staff around the globe! \n`🛜` - 40+ Advertising channels to grow your socials!\n`💎` - Boosting Perks\n`🎉` - Event's monthly especially bank holiday roles!!\n`🔢` - Unique levelling systems\n`📞` - Multiple voice channels including gaming!\n`🎁` - Exclusive giveaways!"
+                },
+                {
+                    "name": "We Are Hiring",
+                    "value": "`🔵` - Moderators\n`🔵` - Human Resources\n`🔵` - Community Team\n`🔵` - Partnership Manager\n`🔵` - Growth Manager\n`🚀` Much more to come!\n\n\nJoin Today!"
+                }
+            ],
+            "image": {
+                "url": "https://cdn.discordapp.com/attachments/1218338794416246874/1243635366326567002/AD_animated.gif"
+            },
+            "color": 45300,
+            "footer": {
+                "text": "Help Us • Help Others"
+            }
+        }
+    },
+    {
+        "embed": {
+            "description": "> Be apart of our community as we start to grow! and embark on a long journey.\n——————————————————-\n**What we offer?**\n\n➺〚🖌️〛Custom Liveries \n➺〚❤️〛Friendly and Growing community.\n➺〚🤝〛Partnerships.\n➺〚🎮〛Daily SSUs. \n➺〚🚨〛Great roleplays.\n➺〚💬〛Kind and Professional staff\n➺〚🎉〛Giveaways!!! \n——————————————————-\n**Emergency Services**\n\n➺〚🚔〛NY Police Force\n➺〚🚒〛Fire & Emergency NY\n➺〚🚧〛NY department of transportation \n\n——————————————————-\n**Whitelisted**\nComing soon!\n——————————————————-\n**What are we looking for!**\n\n➺〚💬〛More members\n➺〚⭐〛Staff Members - **WE'RE HIRING!**\n➺〚🤝〛Partnerships\n➺〚💎〛Boosters\n——————————————————\n\n**[Join now](https://discord.com/invite/qt62qSnKVa)**",
+            "author": {
+                "name": "New York Roleplay",
+                "icon_url": "https://cdn.discordapp.com/icons/1172553254882775111/648d5bc50393a21216527a1aaa61286d.webp"
+            },
+            "color": 431075,
+            "thumbnail": {
+                "url": "https://cdn.discordapp.com/icons/1172553254882775111/648d5bc50393a21216527a1aaa61286d.webp"
+            }
+        }
+    },
+    {
+        "embed": {
+            "title": "CityStore PLC",
+            "description": "*Your Retail Journey*\n*\"Better choice and better value in food, fashion & homewares.\"*\n\n\n**------------------------------------------**\n*__About us__*\nSupermarket, CityStore PLC! Attend a training to become staff!\n\nThis game is currently in V3\n\nWe have a training Centre and applications center!\n\n**------------------------------------------**\n\n> *❤️ Don't hesitate! Dive into the excitement today by joining our vibrant community on Discord. Experience our unique perspective and become an integral part of our group. Your **journey** with us promises to be unforgettable no regrets, only great memories await! ❤️*\n\n*We hope to see you. *\n\n*Signed,*\n**CityStore PLC**\n> Discord: https://discord.gg/yjFQb5mrSk\n> Roblox Group: https://www.roblox.com/groups/32819373/CityStore-PLC#!/about\n\nJoin us now and become apart of Citystore PLC community!  🎉",
+            "color": 15523550
         }
     }
 ]
