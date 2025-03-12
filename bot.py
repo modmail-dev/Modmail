@@ -640,6 +640,16 @@ class ModmailBot(commands.Bot):
         """
         return self.get_user(id) or await self.fetch_user(id)
 
+    @staticmethod
+    async def get_or_fetch_member(guild: discord.Guild, member_id: int) -> typing.Optional[discord.Member]:
+        """
+        Attempt to get a member from cache; on failure fetch from the API.
+
+        Returns:
+            The :obj:`discord.Member` or :obj:`None` to indicate the member could not be found.
+        """
+        return guild.get_member(member_id) or await guild.fetch_member(member_id)
+
     async def retrieve_emoji(self) -> typing.Tuple[str, str]:
         sent_emoji = self.config["sent_emoji"]
         blocked_emoji = self.config["blocked_emoji"]

@@ -823,7 +823,13 @@ class Thread:
         """Returns List[user_dm_msg] and thread_channel_msg"""
         if not message.content and not message.attachments and not message.stickers:
             raise MissingRequiredArgument(DummyParam("msg"))
-        if not any(g.get_member(self.id) for g in self.bot.guilds):
+        for guild in self.bot.guilds:
+            try:
+                if await self.bot.get_or_fetch_member(guild, self.id):
+                    break
+            except discord.NotFound:
+                pass
+        else:
             return await message.channel.send(
                 embed=discord.Embed(
                     color=self.bot.error_color,
@@ -995,7 +1001,7 @@ class Thread:
                 attachments.append(attachment)
 
         image_urls = re.findall(
-            r"http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            r"http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$\-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
             message.content,
         )
 
