@@ -42,6 +42,7 @@ __all__ = [
     "AcceptButton",
     "DenyButton",
     "ConfirmThreadCreationView",
+    "ThreadSelfCloseView",
     "DummyParam",
 ]
 
@@ -597,6 +598,41 @@ class ConfirmThreadCreationView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=20)
         self.value = None
+
+
+class ThreadSelfCloseView(discord.ui.View):
+    def __init__(
+        self,
+        style: typing.Optional[discord.ButtonStyle] = None,
+        label: typing.Optional[str] = None,
+        emoji: typing.Optional[str] = None,
+        bot: typing.Any = None,
+    ):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+        self.self_close_button.label = label
+        self.self_close_button.style = style
+        self.self_close_button.emoji = emoji
+
+    @discord.ui.button(label="default", style=discord.ButtonStyle.secondary, custom_id="SelfCloseView")
+    async def self_close_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(ephemeral=False, thinking=True)
+        thread = await self.bot.threads.find(recipient=interaction.user)
+        if not thread:
+            error_embed = discord.Embed(
+                description="A thread could not be found.", color=self.bot.config["error_color"]
+            )
+            return await interaction.followup.send(embed=error_embed)
+
+        message = self.bot.config["thread_self_close_response"]
+        embed = discord.Embed(
+            title="Thread closed", description=message, color=self.bot.config["error_color"]
+        )
+        await thread.close(closer=interaction.user, silent=True)
+        self.self_close_button.disabled = True
+        await interaction.message.edit(view=self)
+        await interaction.followup.send(embed=embed)
 
 
 class DummyParam:

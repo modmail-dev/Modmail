@@ -32,6 +32,7 @@ from core.utils import (
     AcceptButton,
     DenyButton,
     ConfirmThreadCreationView,
+    ThreadSelfCloseView,
     DummyParam,
 )
 
@@ -239,11 +240,33 @@ class Thread:
 
             if creator is None or creator == recipient:
                 msg = await recipient.send(embed=embed)
-
-                if recipient_thread_close:
+                close_emoji = self.bot.config["close_emoji"]
+                close_label = self.bot.config["recipient_thread_close_button_label"]
+                if (
+                    recipient_thread_close
+                    and self.bot.config["recipient_thread_close_button_style"].lower()
+                    in ["red", "green", "blurple", "gray"]
+                    and (close_emoji is not None and close_label is not None)
+                ):
                     close_emoji = self.bot.config["close_emoji"]
-                    close_emoji = await self.bot.convert_emoji(close_emoji)
-                    await self.bot.add_reaction(msg, close_emoji)
+                    if close_emoji:
+                        close_emoji = await self.bot.convert_emoji(close_emoji)
+
+                    button_style = discord.ButtonStyle(
+                        int(
+                            discord.ButtonStyle[
+                                self.bot.config["recipient_thread_close_button_style"].lower()
+                            ]
+                        )
+                    )
+                    view = ThreadSelfCloseView(
+                        button_style,
+                        close_label,
+                        close_emoji,
+                        self.bot,
+                    )
+                    await msg.edit(view=view)
+                    # await self.bot.add_reaction(msg, close_emoji)
 
         async def send_persistent_notes():
             notes = await self.bot.api.find_notes(self.recipient)

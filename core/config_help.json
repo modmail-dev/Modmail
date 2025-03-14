@@ -285,8 +285,8 @@
     ]
   },
   "close_emoji": {
-    "default": "🔒",
-    "description": "This is the emoji the recipient can click to close a thread themselves. The emoji is automatically added to the `thread_creation_response` embed.",
+    "default": "None",
+    "description": "This is the emoji for the close button the recipient can click to close a thread themselves. The emoji (attached to the button) is automatically added to the `thread_creation_response` embed.",
     "examples": [
       "`{prefix}config set close_emoji 👍‍`"
     ],
@@ -297,14 +297,37 @@
   },
   "recipient_thread_close": {
     "default": "Disabled",
-    "description": "Setting this configuration will allow recipients to use the `close_emoji` to close the thread themselves.",
+    "description": "Setting this configuration will allow recipients to close threads by themselves via a button.",
     "examples": [
       "`{prefix}config set recipient_thread_close yes`",
       "`{prefix}config set recipient_thread_close no`"
     ],
     "notes": [
-      "The close emoji is dictated by the configuration `close_emoji`.",
-      "See also: `close_emoji`."
+      "The button attached to the `thread_creation_response` can have set a custom label, emoji or even both.",
+      "See also: `close_emoji`, `recipient_thread_close_button_label`, `recipient_thread_close_button_style`."
+    ]
+  },
+  "recipient_thread_close_button_label": {
+    "default": "None",
+    "description": "This configuration changes the label of the button for the `recipient_thread_close` feature.",
+    "examples": [
+      "`{prefix}config set recipient_thread_close_button_label Your label`"
+    ],
+    "notes": [
+      "The label cannot exceed 80 characters.",
+      "See also: `recipient_thread_close`, `close_emoji`, `recipient_thread_close_button_style`."
+    ]
+  },
+  "recipient_thread_close_button_style": {
+    "default": "red",
+    "description": "This configuration changes the style of the button for the `recipient_thread_close` feature.",
+    "examples": [
+      "`{prefix}config set recipient_thread_close_button_style green`",
+      "`{prefix}config set recipient_thread_close_button_style blurple`"
+    ],
+    "notes": [
+      "The style is limited by discord to the following colors: blurple, green, red, gray.",
+      "See also: `recipient_thread_close`, `close_emoji`, `recipient_thread_close_button_label`."
     ]
   },
   "thread_show_roles": {
