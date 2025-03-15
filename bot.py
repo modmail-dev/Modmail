@@ -305,13 +305,21 @@ class ModmailBot(commands.Bot):
             logger.debug("LOG_CHANNEL_ID was invalid, removed.")
             self.config.remove("log_channel_id")
         if self.main_category is not None:
-            try:
-                channel = self.main_category.channels[0]
-                self.config["log_channel_id"] = channel.id
-                logger.warning("No log channel set, setting #%s to be the log channel.", channel.name)
-                return channel
-            except IndexError:
-                pass
+            if isinstance(self.main_category, discord.CategoryChannel):
+                try:
+                    channel = self.main_category.channels[0]
+                    self.config["log_channel_id"] = channel.id
+                    logger.warning("No log channel set, setting #%s to be the log channel.", channel.name)
+                    return channel
+                except IndexError:
+                    pass
+            elif isinstance(self.main_category, discord.TextChannel):
+                self.config["log_channel_id"] = self.main_category.id
+                logger.warning(
+                    "No log channel set, setting #%s to be the log channel.", self.main_category.name
+                )
+                return self.main_category
+
         logger.warning(
             "No log channel set, set one with `%ssetup` or `%sconfig set log_channel_id <id>`.",
             self.prefix,
@@ -419,13 +427,13 @@ class ModmailBot(commands.Bot):
         return self.modmail_guild != self.guild
 
     @property
-    def main_category(self) -> typing.Optional[discord.CategoryChannel]:
+    def main_category(self) -> typing.Optional[discord.abc.GuildChannel]:
         if self.modmail_guild is not None:
             category_id = self.config["main_category_id"]
             if category_id is not None:
                 try:
-                    cat = discord.utils.get(self.modmail_guild.categories, id=int(category_id))
-                    if cat is not None:
+                    cat = discord.utils.get(self.modmail_guild.channels, id=int(category_id))
+                    if cat is not None and isinstance(cat, (discord.CategoryChannel, discord.TextChannel)):
                         return cat
                 except ValueError:
                     pass
@@ -1361,11 +1369,12 @@ class ModmailBot(commands.Bot):
         if channel.guild != self.modmail_guild:
             return
 
+        if self.main_category == channel:
+            logger.debug("Main category was deleted.")
+            self.config.remove("main_category_id")
+            await self.config.update()
+
         if isinstance(channel, discord.CategoryChannel):
-            if self.main_category == channel:
-                logger.debug("Main category was deleted.")
-                self.config.remove("main_category_id")
-                await self.config.update()
             return
 
         if not isinstance(channel, discord.TextChannel):

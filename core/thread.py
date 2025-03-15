@@ -150,12 +150,16 @@ class Thread:
 
     async def get_genesis_message(self) -> discord.Message:
         if self._genesis_message is None:
-            async for m in self.channel.history(limit=5, oldest_first=True):
-                if m.author == self.bot.user:
-                    if m.embeds and m.embeds[0].fields and m.embeds[0].fields[0].name == "Roles":
-                        self._genesis_message = m
+            self._genesis_message = await self._get_genesis_message(self.channel, self.bot.user)
 
         return self._genesis_message
+
+    @staticmethod
+    async def _get_genesis_message(channel, own_user) -> discord.Message | None:
+        async for m in channel.history(limit=5, oldest_first=True):
+            if m.author == own_user:
+                if m.embeds and m.embeds[0].fields and m.embeds[0].fields[0].name == "Roles":
+                    return m
 
     async def setup(self, *, creator=None, category=None, initial_message=None):
         """Create the thread channel and other io related initialisation tasks"""
@@ -294,6 +298,11 @@ class Thread:
             activate_auto_triggers(),
             send_persistent_notes(),
         )
+        if creator is not None:
+            # now that the genesis message is sent,
+            # we can cache things.
+            creator.cache[self.recipient.id] = self
+
         self.bot.dispatch("thread_ready", self, creator, category, initial_message)
 
     def _format_info_embed(self, user, log_url, log_count, color):
@@ -434,9 +443,11 @@ class Thread:
                 self.channel.id,
                 {
                     "open": False,
-                    "title": match_title(self.channel.topic),
+                    "title": match_title(self.channel.topic)
+                    if isinstance(self.channel, discord.TextChannel)
+                    else None,
                     "closed_at": str(discord.utils.utcnow()),
-                    "nsfw": self.channel.nsfw,
+                    "nsfw": self.channel.nsfw if isinstance(self.channel, discord.TextChannel) else False,
                     "close_message": message,
                     "closer": {
                         "id": str(closer.id),
@@ -466,7 +477,7 @@ class Thread:
             else:
                 sneak_peak = "No content"
 
-            if self.channel.nsfw:
+            if isinstance(self.channel, discord.TextChannel) and self.channel.nsfw:
                 _nsfw = "NSFW-"
             else:
                 _nsfw = ""
@@ -1236,39 +1247,39 @@ class Thread:
         await genesis_message.edit(embed=embed)
 
     async def add_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
-        topic = ""
-        title, _, _ = parse_channel_topic(self.channel.topic)
-        if title is not None:
-            topic += f"Title: {title}\n"
-
-        topic += f"User ID: {self._id}"
-
         self._other_recipients += users
         self._other_recipients = list(set(self._other_recipients))
+        if isinstance(self.channel, discord.TextChannel):
+            topic = ""
+            title, _, _ = parse_channel_topic(self.channel.topic)
+            if title is not None:
+                topic += f"Title: {title}\n"
 
-        ids = ",".join(str(i.id) for i in self._other_recipients)
+            topic += f"User ID: {self._id}"
 
-        topic += f"\nOther Recipients: {ids}"
+            ids = ",".join(str(i.id) for i in self._other_recipients)
 
-        await self.channel.edit(topic=topic)
+            topic += f"\nOther Recipients: {ids}"
+
+            await self.channel.edit(topic=topic)
         await self._update_users_genesis()
 
     async def remove_users(self, users: typing.List[typing.Union[discord.Member, discord.User]]) -> None:
-        topic = ""
-        title, user_id, _ = parse_channel_topic(self.channel.topic)
-        if title is not None:
-            topic += f"Title: {title}\n"
-
-        topic += f"User ID: {user_id}"
-
         for u in users:
             self._other_recipients.remove(u)
+        if isinstance(self.channel, discord.TextChannel):
+            topic = ""
+            title, user_id, _ = parse_channel_topic(self.channel.topic)
+            if title is not None:
+                topic += f"Title: {title}\n"
 
-        if self._other_recipients:
-            ids = ",".join(str(i.id) for i in self._other_recipients)
-            topic += f"\nOther Recipients: {ids}"
+            topic += f"User ID: {user_id}"
 
-        await self.channel.edit(topic=topic)
+            if self._other_recipients:
+                ids = ",".join(str(i.id) for i in self._other_recipients)
+                topic += f"\nOther Recipients: {ids}"
+
+            await self.channel.edit(topic=topic)
         await self._update_users_genesis()
 
 
@@ -1282,6 +1293,13 @@ class ThreadManager:
     async def populate_cache(self) -> None:
         for channel in self.bot.modmail_guild.text_channels:
             await self.find(channel=channel)
+        for thread in self.bot.modmail_guild.threads:
+            await self.find(channel=thread)
+        # handle any threads archived while bot was offline (is this slow? yes. whatever....)
+        # (maybe this should only iterate until the archived_at timestamp is fine)
+        if isinstance(self.bot.main_category, discord.TextChannel):
+            async for thread in self.bot.main_category.archived_threads():
+                await self.find(channel=thread)
 
     def __len__(self):
         return len(self.cache)
@@ -1296,19 +1314,25 @@ class ThreadManager:
         self,
         *,
         recipient: typing.Union[discord.Member, discord.User] = None,
-        channel: discord.TextChannel = None,
+        channel: discord.TextChannel | discord.Thread = None,
         recipient_id: int = None,
     ) -> typing.Optional[Thread]:
         """Finds a thread from cache or from discord channel topics."""
-        if recipient is None and channel is not None and isinstance(channel, discord.TextChannel):
+        if (
+            recipient is None
+            and channel is not None
+            and isinstance(channel, (discord.TextChannel, discord.Thread))
+        ):
+            # check cache *before* potentially awaiting
+            user_id, cache_thread = next(
+                ((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None)
+            )
+
             thread = await self._find_from_channel(channel)
-            if thread is None:
-                user_id, thread = next(
-                    ((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None)
-                )
-                if thread is not None:
-                    logger.debug("Found thread with tempered ID.")
-                    await channel.edit(topic=f"User ID: {user_id}")
+            if thread is None and cache_thread is not None:
+                logger.debug("Found thread with tampered ID.")
+                await channel.edit(topic=f"User ID: {user_id}")
+                thread = cache_thread
             return thread
 
         if recipient:
@@ -1363,10 +1387,23 @@ class ThreadManager:
         extracts user_id from that.
         """
 
-        if not channel.topic:
-            return None
+        if isinstance(channel, discord.Thread) or not channel.topic:
+            # actually check for genesis embed :)
+            msg = await Thread._get_genesis_message(channel, self.bot.user)
+            if not msg:
+                return None
 
-        _, user_id, other_ids = parse_channel_topic(channel.topic)
+            embed = msg.embeds[0]
+            user_id = int((embed.footer.text or "-1").removeprefix("User ID: ").split(" ", 1)[0])
+            other_ids = []
+            for field in embed.fields:
+                if field.name == "Other Recipients" and field.value:
+                    other_ids = map(
+                        lambda mention: int(mention.removeprefix("<@").removeprefix("!").removesuffix(">")),
+                        field.value.split(" "),
+                    )
+        else:
+            _, user_id, other_ids = parse_channel_topic(channel.topic)
 
         if user_id == -1:
             return None
@@ -1424,8 +1461,6 @@ class ThreadManager:
                 )
 
         thread = Thread(self, recipient)
-
-        self.cache[recipient.id] = thread
 
         if (message or not manual_trigger) and self.bot.config["confirm_thread_creation"]:
             if not manual_trigger:
