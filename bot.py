@@ -1752,7 +1752,7 @@ class ModmailBot(commands.Bot):
         guild = self.modmail_guild
 
         if force_null:
-            return "null"
+            return ensure_unique_channel_name("null", guild, excluse_channel)
         else:
             if self.config["use_random_channel_name"]:
                 to_hash = self.token.split(".")[-1] + str(author.id)
@@ -1772,11 +1772,11 @@ class ModmailBot(commands.Bot):
                 else:
                     name = author.name.lower()
 
-                name = "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
+                sanitized_name = "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
                 if author.discriminator != "0":
-                    name += f"-{author.discriminator}"
+                    sanitized_name += f"-{author.discriminator}"
 
-        return ensure_unique_channel_name(name, guild, excluse_channel)
+        return ensure_unique_channel_name(sanitized_name, guild, excluse_channel)
 
     def ensure_unique_channel_name(self, name, guild, exclude_channel) -> str:
         counter = 1
