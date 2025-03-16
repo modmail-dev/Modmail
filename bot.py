@@ -1745,7 +1745,7 @@ class ModmailBot(commands.Bot):
 
         logger.info(f"Deleted {expired_logs.deleted_count} expired logs.")
 
-        def format_channel_name(self, author, exclude_channel=None, force_null=False):
+    def format_channel_name(self, author, exclude_channel=None, force_null=False):
         """Sanitises a username for use with text channel names
 
         Placed in main bot class to be extendable to plugins"""
@@ -1757,7 +1757,7 @@ class ModmailBot(commands.Bot):
             if self.config["use_random_channel_name"]:
                 to_hash = self.token.split(".")[-1] + str(author.id)
                 digest = hashlib.md5(to_hash.encode("utf8"), usedforsecurity=False)
-                name  = digest.hexdigest()[-8:]
+                name = digest.hexdigest()[-8:]
             elif self.config["use_user_id_channel_name"]:
                 name = str(author.id)
             elif self.config["use_timestamp_channel_name"]:
@@ -1772,11 +1772,15 @@ class ModmailBot(commands.Bot):
                 else:
                     name = author.name.lower()
 
-                sanitized_name = "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
-                if author.discriminator != "0":
-                    sanitized_name += f"-{author.discriminator}"
+        sanitized_name = self.sanitize_name(name)
+
+        if author.discriminator != "0":
+            sanitized_name += f"-{author.discriminator}"
 
         return ensure_unique_channel_name(sanitized_name, guild, excluse_channel)
+
+    def sanitize_name(self, name: str) -> str:
+        return "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
 
     def ensure_unique_channel_name(self, name, guild, exclude_channel) -> str:
         counter = 1
