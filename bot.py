@@ -1745,38 +1745,40 @@ class ModmailBot(commands.Bot):
 
         logger.info(f"Deleted {expired_logs.deleted_count} expired logs.")
 
-    def format_channel_name(self, author, exclude_channel=None, force_null=False):
+        def format_channel_name(self, author, exclude_channel=None, force_null=False):
         """Sanitises a username for use with text channel names
 
         Placed in main bot class to be extendable to plugins"""
         guild = self.modmail_guild
 
         if force_null:
-            name = new_name = "null"
+            return "null"
         else:
             if self.config["use_random_channel_name"]:
                 to_hash = self.token.split(".")[-1] + str(author.id)
                 digest = hashlib.md5(to_hash.encode("utf8"), usedforsecurity=False)
-                name = new_name = digest.hexdigest()[-8:]
+                name  = digest.hexdigest()[-8:]
             elif self.config["use_user_id_channel_name"]:
-                name = new_name = str(author.id)
+                name = str(author.id)
             elif self.config["use_timestamp_channel_name"]:
-                name = new_name = author.created_at.isoformat(sep="-", timespec="minutes")
+                name = author.created_at.isoformat(sep="-", timespec="minutes")
             else:
                 if self.config["use_nickname_channel_name"]:
                     author_member = self.guild.get_member(author.id)
-                    name = author_member.display_name.lower()
+                    if author_member is None:
+                        name = author.display_name.lower()
+                    else:
+                        name = author_member.display_name.lower()
                 else:
                     name = author.name.lower()
-
-                if force_null:
-                    name = "null"
 
                 name = "".join(l for l in name if l not in string.punctuation and l.isprintable()) or "null"
                 if author.discriminator != "0":
                     name += f"-{author.discriminator}"
-                new_name = name
 
+        return ensure_unique_channel_name(name, guild, excluse_channel)
+
+    def ensure_unique_channel_name(self, name, guild, exclude_channel) -> str:
         counter = 1
         existed = set(c.name for c in guild.text_channels if c != exclude_channel)
         while new_name in existed:
