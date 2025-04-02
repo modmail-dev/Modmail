@@ -1811,11 +1811,11 @@ def main():
         else:
             if "ubuntu" in platform.version().lower() or "debian" in platform.version().lower():
                 logger.error(
-                    "Unable to import cairosvg, try running `sudo apt-get install libpangocairo-1.0-0` or report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                    "Unable to import cairosvg, try running `sudo apt-get install libpangocairo-1.0-0` or report on our support server with your OS details: https://discord.gg/cnUpwrnpYb"
                 )
             else:
                 logger.error(
-                    "Unable to import cairosvg, report on our support server with your OS details: https://discord.gg/etJNHCQ"
+                    "Unable to import cairosvg, report on our support server with your OS details: https://discord.gg/cnUpwrnpYb"
                 )
         sys.exit(0)
 
