@@ -232,9 +232,7 @@ class Thread:
             else:
                 footer = self.bot.config["thread_creation_footer"]
 
-            embed.set_footer(
-                text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.guild, size=128)
-            )
+            embed.set_footer(text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.guild, size=128))
             embed.title = self.bot.config["thread_creation_title"]
 
             if creator is None or creator == recipient:
