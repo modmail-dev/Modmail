@@ -233,7 +233,7 @@ class Thread:
                 footer = self.bot.config["thread_creation_footer"]
 
             embed.set_footer(
-                text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.modmail_guild, size=128)
+                text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.guild, size=128)
             )
             embed.title = self.bot.config["thread_creation_title"]
 
