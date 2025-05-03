@@ -257,7 +257,8 @@ class Thread:
                 author = note["author"]
 
                 class Author:
-                    name = author["name"]
+                    print(author)
+                    name = author["nickname"]
                     id = author["id"]
                     discriminator = author["discriminator"]
                     display_avatar = SimpleNamespace(url=author["avatar_url"])
@@ -975,13 +976,14 @@ class Thread:
                 )
             else:
                 # Normal message
-                name = str(author)
-                avatar_url = avatar_url
-                embed.set_author(
-                    name=name,
-                    icon_url=avatar_url,
-                    url=f"https://discordapp.com/users/{author.id}#{message.id}",
-                )
+                author = message.author
+                member = self.bot.guild.get_member(author.id)
+                name = member.display_name if member else str(author)
+            embed.set_author(
+                 name=name,
+                 icon_url=avatar_url,
+                 url=f"https://discordapp.com/users/{author.id}#{message.id}",
+           )
         else:
             # Special note messages
             embed.set_author(
