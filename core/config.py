@@ -129,6 +129,11 @@ class ConfigManager:
         # regex
         "use_regex_autotrigger": False,
         "use_hoisted_top_role": True,
+        # Minimum characters for thread creation
+        "thread_min_characters": 0,
+        "thread_min_characters_title": "Message too short",
+        "thread_min_characters_response": "Your message is too short to create a thread. Please provide more details.",
+        "thread_min_characters_footer": "Minimum {min_characters} characters required.",
     }
 
     private_keys = {

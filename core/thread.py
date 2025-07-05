@@ -1406,6 +1406,27 @@ class ThreadManager:
     ) -> Thread:
         """Creates a Modmail thread"""
 
+        # Minimum character check
+        min_chars = self.bot.config.get("thread_min_characters")
+        if min_chars is None:
+            min_chars = 0
+        try:
+            min_chars = int(min_chars)
+        except Exception:
+            min_chars = 0
+        if min_chars > 0 and message is not None and message.content is not None:
+            if len(message.content.strip()) < min_chars:
+                embed = discord.Embed(
+                    title=self.bot.config.get("thread_min_characters_title", "Message too short"),
+                    description=self.bot.config.get("thread_min_characters_response", "Your message is too short to create a thread. Please provide more details.").replace("{min_characters}", str(min_chars)),
+                    color=self.bot.error_color,
+                )
+                embed.set_footer(text=self.bot.config.get("thread_min_characters_footer", "Minimum {min_characters} characters required.").replace("{min_characters}", str(min_chars)))
+                await message.channel.send(embed=embed)
+                thread = Thread(self, recipient)
+                thread.cancelled = True
+                return thread
+
         # checks for existing thread in cache
         thread = self.cache.get(recipient.id)
         if thread:

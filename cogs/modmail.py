@@ -1637,6 +1637,7 @@ class Modmail(commands.Cog):
             creator=creator,
             category=category,
             manual_trigger=manual_trigger,
+            # The minimum character check is enforced in ThreadManager.create
         )
 
         if thread.cancelled:

@@ -12,7 +12,7 @@
   },
   "main_category_id": {
     "default": "`Modmail` (created with `{prefix}setup`)",
-    "description": "This is the category where all new threads will be created.\n\nTo change the Modmail category, you will need to find the [category’s ID](https://support.discordapp.com/hc/en-us/articles/206346498).",
+    "description": "This is the category where all new threads will be created.\n\nTo change the Modmail category, you will need to find the [category's ID](https://support.discordapp.com/hc/en-us/articles/206346498).",
     "examples": [
       "`{prefix}config set main_category_id 9234932582312` (`9234932582312` is the category ID)"
     ],
@@ -24,7 +24,7 @@
   },
   "fallback_category_id": {
     "default": "`Fallback Modmail` (created when the main category is full)",
-    "description": "This is the category that will hold the threads when the main category is full.\n\nTo change the Fallback category, you will need to find the [category’s ID](https://support.discordapp.com/hc/en-us/articles/206346498).",
+    "description": "This is the category that will hold the threads when the main category is full.\n\nTo change the Fallback category, you will need to find the [category's ID](https://support.discordapp.com/hc/en-us/articles/206346498).",
     "examples": [
       "`{prefix}config set fallback_category_id 9234932582312` (`9234932582312` is the category ID)"
     ],
@@ -88,7 +88,7 @@
   },
   "user_typing": {
     "default": "Enabled",
-    "description": "When this is set to `yes`, whenever the recipient user starts to type in their DM channel, the moderator will see “{bot.user.display_name} is typing…” in the thread channel.",
+    "description": "When this is set to `yes`, whenever the recipient user starts to type in their DM channel, the moderator will see "{bot.user.display_name} is typing..." in the thread channel.",
     "examples": [
       "`{prefix}config set user_typing yes`",
       "`{prefix}config set user_typing no`"
@@ -151,7 +151,7 @@
   },
   "mod_typing": {
     "default": "Disabled",
-    "description": "When this is set to `yes`, whenever a moderator starts to type in the thread channel, the recipient user will see \"{bot.user.display_name} is typing…\" in their DM channel.",
+    "description": "When this is set to `yes`, whenever a moderator starts to type in the thread channel, the recipient user will see "{bot.user.display_name} is typing..." in their DM channel.",
     "examples": [
       "`{prefix}config set mod_typing yes`",
       "`{prefix}config set mod_typing no`"
@@ -219,7 +219,7 @@
   },
   "log_channel_id": {
     "default": "`#bot-logs` (created with `{prefix}setup`)",
-    "description": "This is the channel where all log messages will be sent (ie. thread close message, update message, etc.).\n\nTo change the log channel, you will need to find the [channel’s ID](https://support.discordapp.com/hc/en-us/articles/206346498). The channel doesn’t necessary have to be under the `main_category`.",
+    "description": "This is the channel where all log messages will be sent (ie. thread close message, update message, etc.).\n\nTo change the log channel, you will need to find the [channel's ID](https://support.discordapp.com/hc/en-us/articles/206346498). The channel doesn't necessary have to be under the `main_category`.",
     "examples": [
       "`{prefix}config set log_channel_id 9234932582312` (9234932582312 is the channel ID)"
     ],
@@ -704,7 +704,7 @@
   },
   "mod_tag": {
     "default": "The moderator's highest role",
-    "description": "This is the name tag in the “footer” section of the embeds sent by moderators in the recipient DM and thread channel.",
+    "description": "This is the name tag in the "footer" section of the embeds sent by moderators in the recipient DM and thread channel.",
     "examples": [
       "`{prefix}config set mod_tag Moderator`"
     ],
@@ -715,7 +715,7 @@
   },
   "anon_username": {
     "default": "Fallback on `mod_tag`",
-    "description": "This is the name in the “author” section of the embeds sent by anonymous moderators in the recipient DM.",
+    "description": "This is the name in the "author" section of the embeds sent by anonymous moderators in the recipient DM.",
     "examples": [
       "`{prefix}config set anon_username Incognito Mod`"
     ],
@@ -737,7 +737,7 @@
   },
   "anon_tag": {
     "default": "\"Response\"",
-    "description": "This is the name tag in the “footer” section of the embeds sent by anonymous moderators in the recipient DM.",
+    "description": "This is the name tag in the "footer" section of the embeds sent by anonymous moderators in the recipient DM.",
     "examples": [
       "`{prefix}config set anon_tag Support Agent`"
     ],
@@ -976,7 +976,7 @@
     ],
     "notes": [
       "The private_ variant is used when sending to the new user.",
-      "See also: `private_removed_from_group_title`, `private_removed_from_group_title`"
+      "See also: `private_removed_from_group_title`, `private_removed_from_group_title`
     ]
   },
   "public_removed_from_group_response": {
@@ -1221,6 +1221,49 @@
       "Top role is displayed in embeds when replying or adding/removing users to a thread in the case mod_tag and anon_username are not set.",
       "If this configuration is enabled, only roles that are hoisted (displayed seperately in member list) will be used. If a user has no hoisted roles, it will return 'None'.",
       "If you would like to display the top role of a user regardless of if it's hoisted or not, disable `use_hoisted_top_role`."
+    ]
+  },
+  "thread_min_characters": {
+    "default": "0",
+    "description": "The minimum number of characters required in the initial message to create a thread. Set to 0 to disable.",
+    "examples": [
+      "`{prefix}config set thread_min_characters 20`"
+    ],
+    "notes": [
+      "If a user tries to create a thread with a message shorter than this, an error will be shown.",
+      "See also: `thread_min_characters_title`, `thread_min_characters_response`, `thread_min_characters_footer`."
+    ]
+  },
+  "thread_min_characters_title": {
+    "default": "Message too short",
+    "description": "The title of the error embed when a user tries to create a thread with too few characters.",
+    "examples": [
+      "`{prefix}config set thread_min_characters_title Too short!`"
+    ],
+    "notes": [
+      "See also: `thread_min_characters`, `thread_min_characters_response`, `thread_min_characters_footer`."
+    ]
+  },
+  "thread_min_characters_response": {
+    "default": "Your message is too short to create a thread. Please provide more details.",
+    "description": "The description of the error embed when a user tries to create a thread with too few characters.",
+    "examples": [
+      "`{prefix}config set thread_min_characters_response Please write a longer message.`"
+    ],
+    "notes": [
+      "You can use `{min_characters}` as a placeholder for the minimum required characters.",
+      "See also: `thread_min_characters`, `thread_min_characters_title`, `thread_min_characters_footer`."
+    ]
+  },
+  "thread_min_characters_footer": {
+    "default": "Minimum {min_characters} characters required.",
+    "description": "The footer of the error embed when a user tries to create a thread with too few characters.",
+    "examples": [
+      "`{prefix}config set thread_min_characters_footer At least {min_characters} characters needed.`"
+    ],
+    "notes": [
+      "You can use `{min_characters}` as a placeholder for the minimum required characters.",
+      "See also: `thread_min_characters`, `thread_min_characters_title`, `thread_min_characters_response`."
     ]
   }
 }
