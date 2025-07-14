@@ -1412,7 +1412,7 @@ class ThreadManager:
             min_chars = 0
         try:
             min_chars = int(min_chars)
-        except Exception:
+        except ValueError:
             min_chars = 0
         if min_chars > 0 and message is not None and message.content is not None:
             if len(message.content.strip()) < min_chars:
