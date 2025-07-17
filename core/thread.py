@@ -1418,10 +1418,16 @@ class ThreadManager:
             if len(message.content.strip()) < min_chars:
                 embed = discord.Embed(
                     title=self.bot.config["thread_min_characters_title"],
-                    description=self.bot.config["thread_min_characters_response"].replace("{min_characters}", str(min_chars)),
+                    description=self.bot.config["thread_min_characters_response"].replace(
+                        "{min_characters}", str(min_chars)
+                    ),
                     color=self.bot.error_color,
                 )
-                embed.set_footer(text=self.bot.config["thread_min_characters_footer"].replace("{min_characters}", str(min_chars)))
+                embed.set_footer(
+                    text=self.bot.config["thread_min_characters_footer"].replace(
+                        "{min_characters}", str(min_chars)
+                    )
+                )
                 await message.channel.send(embed=embed)
                 thread = Thread(self, recipient)
                 thread.cancelled = True
