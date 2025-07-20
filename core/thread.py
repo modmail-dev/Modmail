@@ -138,7 +138,33 @@ class Thread:
         channel = self.channel
         if not isinstance(channel, discord.TextChannel):
             return False
+
         # Save channel info
+        def classify_message(m):
+            msg_type = getattr(m, "type", None)
+            # Detect mod-only messages: not the bot, not the thread recipient, and not a user message
+            if (
+                msg_type is None
+                and hasattr(m, "author")
+                and m.author.id != self.bot.user.id
+                and (not self.recipient or m.author.id != self.recipient.id)
+                and hasattr(m.channel, "guild")
+                and m.channel.guild is not None
+            ):
+                # Check if author is a moderator (manage_messages or administrator)
+                perms = m.channel.permissions_for(m.author)
+                if perms.manage_messages or perms.administrator:
+                    msg_type = "mod_only"
+            return {
+                "author_id": m.author.id,
+                "content": m.content,
+                "attachments": [a.url for a in m.attachments],
+                "embeds": [e.to_dict() for e in m.embeds],
+                "created_at": m.created_at.isoformat(),
+                "type": msg_type,
+                "author_name": getattr(m.author, "name", None),
+            }
+
         self.snooze_data = {
             "category_id": channel.category_id,
             "position": channel.position,
@@ -147,18 +173,7 @@ class Thread:
             "slowmode_delay": channel.slowmode_delay,
             "nsfw": channel.nsfw,
             "overwrites": [(role.id, perm._values) for role, perm in channel.overwrites.items()],
-            "messages": [
-                {
-                    "author_id": m.author.id,
-                    "content": m.content,
-                    "attachments": [a.url for a in m.attachments],
-                    "embeds": [e.to_dict() for e in m.embeds],
-                    "created_at": m.created_at.isoformat(),
-                    "type": getattr(m, "type", None),
-                    "author_name": getattr(m.author, "name", None),
-                }
-                async for m in channel.history(limit=None, oldest_first=True)
-            ],
+            "messages": [classify_message(m) async for m in channel.history(limit=None, oldest_first=True)],
             "snoozed_by": getattr(moderator, "name", None) if moderator else None,
             "snooze_command": command_used,
         }
