@@ -270,16 +270,22 @@ class Thread:
         # Store snooze_data for notification before clearing
         snooze_data_for_notify = self.snooze_data
         self.snooze_data = None
-        # Update channel_id in DB and clear snooze_data (robust: try recipient.id, then channel_id)
-        result = await self.bot.api.logs.update_one(
-            {"recipient.id": str(self.id)},
-            {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
-        )
-        if result.modified_count == 0:
+        # Update channel_id in DB and clear snooze_data (robust: try log_key first)
+        if self.log_key:
             result = await self.bot.api.logs.update_one(
-                {"channel_id": str(channel.id)},
+                {"key": self.log_key},
                 {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
             )
+        else:
+            result = await self.bot.api.logs.update_one(
+                {"recipient.id": str(self.id)},
+                {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
+            )
+            if result.modified_count == 0:
+                result = await self.bot.api.logs.update_one(
+                    {"channel_id": str(channel.id)},
+                    {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
+                )
         import logging
 
         logging.info(f"[UNSNOOZE] DB update result: {result.modified_count}")
