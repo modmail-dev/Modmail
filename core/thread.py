@@ -155,14 +155,14 @@ class Thread:
                     "attachments": [a.url for a in m.attachments],
                     "embeds": [e.to_dict() for e in m.embeds],
                     "created_at": m.created_at.isoformat(),
-                    # Only use 'mod_only' if this is a note (note command)
+                    # Only use 'mod_only' if this is an internal note (note command)
                     "type": (
                         "mod_only"
                         if m.embeds and hasattr(m.embeds[0], 'author') and (
                             getattr(m.embeds[0].author, 'name', '').startswith('Note') or
                             getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
                         )
-                        else (getattr(m, "type", None) if getattr(m, "type", None) != "mod_only" else None)
+                        else None
                     ),
                     "author_name": getattr(m.author, "name", None),
                 }
