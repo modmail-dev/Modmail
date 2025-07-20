@@ -155,21 +155,27 @@ class Thread:
                     "attachments": [a.url for a in m.attachments],
                     "embeds": [e.to_dict() for e in m.embeds],
                     "created_at": m.created_at.isoformat(),
-                    # Only use 'mod_only' if this is an internal note (note command)
+                    # Only use 'mod_only' if this is an internal note (note command), safe check for embed author
                     "type": (
                         "mod_only"
-                        if m.embeds and hasattr(m.embeds[0], 'author') and (
-                            getattr(m.embeds[0].author, 'name', '').startswith('Note') or
-                            getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
+                        if (
+                            m.embeds
+                            and getattr(m.embeds[0], 'author', None)
+                            and (
+                                getattr(m.embeds[0].author, 'name', '').startswith('Note') or
+                                getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
+                            )
                         )
                         else None
                     ),
                     "author_name": getattr(m.author, "name", None),
                 }
                 async for m in channel.history(limit=None, oldest_first=True)
-                # Only include if not already internal/note
+                # Only include if not already internal/note, safe check for embed author
                 if not (
-                    m.embeds and hasattr(m.embeds[0], 'author') and (
+                    m.embeds
+                    and getattr(m.embeds[0], 'author', None)
+                    and (
                         getattr(m.embeds[0].author, 'name', '').startswith('Note') or
                         getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
                     )
