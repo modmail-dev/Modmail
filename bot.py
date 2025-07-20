@@ -880,9 +880,7 @@ class ModmailBot(commands.Bot):
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
 
         # Handle forwarded messages (Discord forwards)
-        # See: https://discord.com/developers/docs/resources/message#message-reference-content-attribution-forwards
-        import discord
-
+        # See: https://discord.com/developers/docs/resources/message#message-reference-content-attribution-forward
         # 1. Multi-forward (message_snapshots)
         if hasattr(message, "flags") and getattr(message.flags, "has_snapshot", False):
             if hasattr(message, "message_snapshots") and message.message_snapshots:
