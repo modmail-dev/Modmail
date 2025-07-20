@@ -90,7 +90,9 @@ class ModmailHelpCommand(commands.HelpCommand):
             embed.add_field(name="Commands", value=format_ or "No commands.")
 
             name = cog.qualified_name + " - Help" if not no_cog else "Miscellaneous Commands"
-            embed.set_author(name=name, icon_url=bot.user.display_avatar.url)
+            embed.set_author(
+                name=name, icon_url=bot.user.display_avatar.url if bot.user.display_avatar else None
+            )
 
             embed.set_footer(
                 text=f'Type "{prefix}{self.command_attrs["name"]} command" '
@@ -322,10 +324,10 @@ class Utility(commands.Cog):
         embed = discord.Embed(color=self.bot.main_color, timestamp=discord.utils.utcnow())
         embed.set_author(
             name="Modmail - About",
-            icon_url=self.bot.user.display_avatar.url,
+            icon_url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None,
             url="https://discord.gg/F34cRU8",
         )
-        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None)
 
         desc = "This is an open source Discord bot that serves as a means for "
         desc += "members to easily communicate with server administrators in "
@@ -854,7 +856,10 @@ class Utility(commands.Cog):
             if key in keys:
                 desc = f"`{key}` is set to `{self.bot.config[key]}`"
                 embed = discord.Embed(color=self.bot.main_color, description=desc)
-                embed.set_author(name="Config variable", icon_url=self.bot.user.display_avatar.url)
+                embed.set_author(
+                    name="Config variable",
+                    icon_url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None,
+                )
 
             else:
                 embed = discord.Embed(
@@ -871,7 +876,10 @@ class Utility(commands.Cog):
                 color=self.bot.main_color,
                 description="Here is a list of currently set configuration variable(s).",
             )
-            embed.set_author(name="Current config(s):", icon_url=self.bot.user.display_avatar.url)
+            embed.set_author(
+                name="Current config(s):",
+                icon_url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None,
+            )
             config = self.bot.config.filter_default(self.bot.config)
 
             for name, value in config.items():
@@ -1912,8 +1920,12 @@ class Utility(commands.Cog):
         if data:
             embed = discord.Embed(title="GitHub", description="Current User", color=self.bot.main_color)
             user = data["user"]
-            embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
-            embed.set_thumbnail(url=user["avatar_url"])
+            embed.set_author(
+                name=user["username"],
+                icon_url=user["avatar_url"] if user["avatar_url"] else None,
+                url=user["url"],
+            )
+            embed.set_thumbnail(url=user["avatar_url"] if user["avatar_url"] else None)
             await ctx.send(embed=embed)
         else:
             await ctx.send(embed=discord.Embed(title="Invalid Github Token", color=self.bot.error_color))
@@ -1943,7 +1955,11 @@ class Utility(commands.Cog):
             data = await self.bot.api.get_user_info()
             if data:
                 user = data["user"]
-                embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
+                embed.set_author(
+                    name=user["username"],
+                    icon_url=user["avatar_url"] if user["avatar_url"] else None,
+                    url=user["url"],
+                )
             await ctx.send(embed=embed)
         else:
             error = None
@@ -1982,7 +1998,7 @@ class Utility(commands.Cog):
 
                     embed.set_author(
                         name=user["username"] + " - Updating bot",
-                        icon_url=user["avatar_url"],
+                        icon_url=user["avatar_url"] if user["avatar_url"] else None,
                         url=user["url"],
                     )
 
@@ -2000,7 +2016,11 @@ class Utility(commands.Cog):
                         color=self.bot.main_color,
                     )
                     embed.set_footer(text="Force update")
-                    embed.set_author(name=user["username"], icon_url=user["avatar_url"], url=user["url"])
+                    embed.set_author(
+                        name=user["username"],
+                        icon_url=user["avatar_url"] if user["avatar_url"] else None,
+                        url=user["url"],
+                    )
                 await ctx.send(embed=embed)
             else:
                 command = "git pull"

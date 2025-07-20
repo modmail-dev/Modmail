@@ -66,6 +66,9 @@ class Thread:
         self.close_task = None
         self.auto_close_task = None
         self._cancelled = False
+        # --- SNOOZE STATE ---
+        self.snoozed = False  # True if thread is snoozed
+        self.snooze_data = None  # Dict with channel/category/position/messages for restoration
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
@@ -125,6 +128,137 @@ class Thread:
         if flag:
             for i in self.wait_tasks:
                 i.cancel()
+
+    async def snooze(self, moderator=None, command_used=None):
+        """
+        Save channel/category/position/messages to DB, mark as snoozed, delete channel.
+        """
+        if self.snoozed:
+            return False  # Already snoozed
+        channel = self.channel
+        if not isinstance(channel, discord.TextChannel):
+            return False
+        # Save channel info
+        self.snooze_data = {
+            "category_id": channel.category_id,
+            "position": channel.position,
+            "name": channel.name,
+            "topic": channel.topic,
+            "slowmode_delay": channel.slowmode_delay,
+            "nsfw": channel.nsfw,
+            "overwrites": [(role.id, perm._values) for role, perm in channel.overwrites.items()],
+            "messages": [
+                {
+                    "author_id": m.author.id,
+                    "content": m.content,
+                    "attachments": [a.url for a in m.attachments],
+                    "embeds": [e.to_dict() for e in m.embeds],
+                    "created_at": m.created_at.isoformat(),
+                    "type": getattr(m, 'type', None),
+                    "author_name": getattr(m.author, 'name', None),
+                }
+                async for m in channel.history(limit=None, oldest_first=True)
+            ],
+            'snoozed_by': getattr(moderator, 'name', None) if moderator else None,
+            'snooze_command': command_used,
+        }
+        self.snoozed = True
+        # Save to DB (robust: try recipient.id, then channel_id)
+        result = await self.bot.api.logs.update_one(
+            {'recipient.id': str(self.id)},
+            {'$set': {'snoozed': True, 'snooze_data': self.snooze_data}},
+        )
+        if result.modified_count == 0 and self.channel:
+            result = await self.bot.api.logs.update_one(
+                {'channel_id': str(self.channel.id)},
+                {'$set': {'snoozed': True, 'snooze_data': self.snooze_data}},
+            )
+        import logging
+        logging.info(f"[SNOOZE] DB update result: {result.modified_count}")
+        # Delete channel
+        await channel.delete(reason="Thread snoozed by moderator")
+        self._channel = None
+        return True
+
+    async def restore_from_snooze(self):
+        """
+        Recreate channel in original category/position, replay messages, mark as not snoozed.
+        """
+        if not self.snooze_data or not isinstance(self.snooze_data, dict):
+            import logging
+            logging.warning(f"[UNSNOOZE] Tried to restore thread {self.id} but snooze_data is None or not a dict.")
+            return False
+        # Now safe to access self.snooze_data
+        snoozed_by = self.snooze_data.get('snoozed_by')
+        snooze_command = self.snooze_data.get('snooze_command')
+        guild = self.bot.modmail_guild
+        category = guild.get_channel(self.snooze_data["category_id"])
+        overwrites = {}
+        for role_id, perm_values in self.snooze_data["overwrites"]:
+            role = guild.get_role(role_id) or guild.get_member(role_id)
+            if role:
+                overwrites[role] = discord.PermissionOverwrite(**perm_values)
+        channel = await guild.create_text_channel(
+            name=self.snooze_data["name"],
+            category=category,
+            topic=self.snooze_data["topic"],
+            slowmode_delay=self.snooze_data["slowmode_delay"],
+            overwrites=overwrites,
+            nsfw=self.snooze_data["nsfw"],
+            position=self.snooze_data["position"],
+            reason="Thread unsnoozed/restored",
+        )
+        self._channel = channel
+        # Replay messages
+        for msg in self.snooze_data['messages']:
+            author = self.bot.get_user(msg['author_id']) or await self.bot.get_or_fetch_user(msg['author_id'])
+            content = msg['content']
+            embeds = [discord.Embed.from_dict(e) for e in msg.get('embeds', []) if e]
+            attachments = msg.get('attachments', [])
+            msg_type = msg.get('type')
+            # Only send if there is content, embeds, or attachments
+            if not content and not embeds and not attachments:
+                continue  # Skip empty messages
+            # Format internal/system messages as 'username: textcontent'
+            if msg_type in ('internal', 'note', 'system'):
+                username = msg.get('author_name') or (getattr(author, 'name', None)) or 'Unknown'
+                formatted = f"{username}: {content}" if content else username
+                await channel.send(formatted)
+            else:
+                await channel.send(content=content or None, embeds=embeds or None)
+        self.snoozed = False
+        # Store snooze_data for notification before clearing
+        snooze_data_for_notify = self.snooze_data
+        self.snooze_data = None
+        # Update channel_id in DB and clear snooze_data (robust: try recipient.id, then channel_id)
+        result = await self.bot.api.logs.update_one(
+            {'recipient.id': str(self.id)},
+            {'$set': {'snoozed': False, 'channel_id': str(channel.id)}, '$unset': {'snooze_data': ""}},
+        )
+        if result.modified_count == 0:
+            result = await self.bot.api.logs.update_one(
+                {'channel_id': str(channel.id)},
+                {'$set': {'snoozed': False, 'channel_id': str(channel.id)}, '$unset': {'snooze_data': ""}},
+            )
+        import logging
+        logging.info(f"[UNSNOOZE] DB update result: {result.modified_count}")
+        # Notify in the configured channel
+        notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
+        notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
+        if notify_channel == 'thread':
+            await channel.send(notify_text)
+        else:
+            ch = self.bot.get_channel(int(notify_channel))
+            if ch:
+                await ch.send(f"Thread for user <@{self.id}> has been unsnoozed and restored.")
+        # Show who ran the snooze command and the command used
+        # Use snooze_data_for_notify to avoid accessing self.snooze_data after it is set to None
+        snoozed_by = snooze_data_for_notify.get('snoozed_by') if snooze_data_for_notify else None
+        snooze_command = snooze_data_for_notify.get('snooze_command') if snooze_data_for_notify else None
+        if snoozed_by or snooze_command:
+            info = f"Snoozed by: {snoozed_by or 'Unknown'} | Command: {snooze_command or '?snooze'}"
+            await channel.send(info)
+        return True
 
     @classmethod
     async def from_channel(cls, manager: "ThreadManager", channel: discord.TextChannel) -> "Thread":
@@ -950,7 +1084,27 @@ class Thread:
         else:
             avatar_url = author.display_avatar.url
 
-        embed = discord.Embed(description=message.content)
+        #  Extract content for blank/forwarded messages ---
+        content = message.content
+        if not content:
+            # Try to extract from referenced message (replies)
+            if hasattr(message, "reference") and message.reference is not None:
+                try:
+                    ref = message.reference.resolved
+                    if ref and hasattr(ref, "content") and ref.content:
+                        content = f"(Reply to: {ref.author}: {ref.content})"
+                except Exception:
+                    pass
+            # Try to extract from first embed's description
+            if not content and message.embeds:
+                first_embed = message.embeds[0]
+                if hasattr(first_embed, "description") and first_embed.description:
+                    content = first_embed.description
+            # Fallback: show something generic if still blank
+            if not content:
+                content = "[This is a forwarded message.]"
+
+        embed = discord.Embed(description=content)
         if self.bot.config["show_timestamp"]:
             embed.timestamp = message.created_at
 
@@ -1322,11 +1476,8 @@ class ThreadManager:
                 logger.warning("Thread for %s cancelled.", recipient)
                 return thread
             else:
-                if not thread.cancelled and (
-                    not thread.channel or not self.bot.get_channel(thread.channel.id)
-                ):
-                    logger.warning("Found existing thread for %s but the channel is invalid.", recipient_id)
-                    await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
+                # If the thread is snoozed (channel is None), return it for restoration
+                if thread.cancelled:
                     thread = None
         else:
 

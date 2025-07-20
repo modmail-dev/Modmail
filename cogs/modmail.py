@@ -1,8 +1,9 @@
 import asyncio
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from itertools import zip_longest
 from typing import Optional, Union, List, Tuple, Literal
+import logging
 
 import discord
 from discord.ext import commands
@@ -28,6 +29,19 @@ class Modmail(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    def _resolve_user(self, user_str):
+        """Helper to resolve a user from mention, ID, or username."""
+        import re
+
+        if not user_str:
+            return None
+        if user_str.isdigit():
+            return int(user_str)
+        match = re.match(r"<@!?(\d+)>", user_str)
+        if match:
+            return int(match.group(1))
+        return None
 
     @commands.command()
     @trigger_typing
@@ -865,7 +879,10 @@ class Modmail(commands.Cog):
             )
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
-            em.set_footer(text=str(ctx.author), icon_url=ctx.author.display_avatar.url)
+            em.set_footer(
+                text=str(ctx.author),
+                icon_url=ctx.author.display_avatar.url if ctx.author.display_avatar else None,
+            )
             for u in users:
                 to_exec.append(u.send(embed=em))
 
@@ -881,7 +898,9 @@ class Modmail(commands.Cog):
             )
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
+            em.set_footer(
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
+            )
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -958,7 +977,10 @@ class Modmail(commands.Cog):
             )
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
-            em.set_footer(text=str(ctx.author), icon_url=ctx.author.display_avatar.url)
+            em.set_footer(
+                text=str(ctx.author),
+                icon_url=ctx.author.display_avatar.url if ctx.author.display_avatar else None,
+            )
             for u in users:
                 to_exec.append(u.send(embed=em))
 
@@ -974,7 +996,9 @@ class Modmail(commands.Cog):
             )
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
+            em.set_footer(
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
+            )
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -1052,7 +1076,7 @@ class Modmail(commands.Cog):
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
                 avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
-            em.set_footer(text=name, icon_url=avatar_url)
+            em.set_footer(text=name, icon_url=avatar_url if avatar_url else None)
 
             for u in users:
                 to_exec.append(u.send(embed=em))
@@ -1068,7 +1092,9 @@ class Modmail(commands.Cog):
             )
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
+            em.set_footer(
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
+            )
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -1141,7 +1167,7 @@ class Modmail(commands.Cog):
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
                 avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
-            em.set_footer(text=name, icon_url=avatar_url)
+            em.set_footer(text=name, icon_url=avatar_url if avatar_url else None)
 
             for u in users:
                 to_exec.append(u.send(embed=em))
@@ -1157,7 +1183,9 @@ class Modmail(commands.Cog):
             )
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
-            em.set_footer(text=f"{users[0]}", icon_url=users[0].display_avatar.url)
+            em.set_footer(
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
+            )
 
             for i in ctx.thread.recipients:
                 if i not in users:
@@ -1172,6 +1200,7 @@ class Modmail(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
     async def logs(self, ctx, *, user: User = None):
         """
         Get previous Modmail thread logs of a member.
@@ -1661,7 +1690,9 @@ class Modmail(commands.Cog):
             )
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
-            em.set_footer(text=f"{creator}", icon_url=creator.display_avatar.url)
+            em.set_footer(
+                text=f"{creator}", icon_url=creator.display_avatar.url if creator.display_avatar else None
+            )
 
             for u in users:
                 await u.send(embed=em)
@@ -2229,6 +2260,225 @@ class Modmail(commands.Cog):
             )
 
         return await ctx.send(embed=embed)
+
+    @commands.command(usage="[after]")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @checks.thread_only()
+    async def snooze(self, ctx, *, after: UserFriendlyTime = None):
+        """
+        Snooze this thread: deletes the channel, keeps the ticket open in DM, and restores it when the user replies or a moderator unsnoozes it.
+        Optionally specify a duration, e.g. 'snooze 2d' for 2 days.
+        Uses config: max_snooze_time, snooze_title, snooze_text
+        """
+        thread = ctx.thread
+        if thread.snoozed:
+            await ctx.send("This thread is already snoozed.")
+            logging.info(f"[SNOOZE] Thread for {getattr(thread.recipient, 'id', None)} already snoozed.")
+            return
+        max_snooze = self.bot.config.get("max_snooze_time")
+        if max_snooze is None:
+            max_snooze = 604800
+        max_snooze = int(max_snooze)
+        if after:
+            snooze_for = int((after.dt - after.now).total_seconds())
+            if snooze_for > max_snooze:
+                snooze_for = max_snooze
+        else:
+            snooze_for = max_snooze
+        now = datetime.utcnow()
+        await self.bot.api.logs.update_one(
+            {"recipient.id": str(thread.id)},
+            {"$set": {"snooze_start": now.isoformat(), "snooze_for": snooze_for}},
+        )
+        embed = discord.Embed(
+            title=self.bot.config.get("snooze_title") or "Thread Snoozed",
+            description=self.bot.config.get("snooze_text") or "This thread has been snoozed.",
+            color=self.bot.error_color,
+        )
+        await ctx.send(embed=embed)
+        ok = await thread.snooze(moderator=ctx.author)
+        if ok:
+            logging.info(
+                f"[SNOOZE] Thread for {getattr(thread.recipient, 'id', None)} snoozed for {snooze_for}s."
+            )
+            self.bot.threads.cache[thread.id] = thread
+        else:
+            await ctx.send("Failed to snooze this thread.")
+            logging.error(f"[SNOOZE] Failed to snooze thread for {getattr(thread.recipient, 'id', None)}.")
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def unsnooze(self, ctx, *, user: str = None):
+        """
+        Unsnooze a thread: restores the channel and replays messages.
+        You can specify a user by mention or ID, or run in a thread channel to unsnooze that thread.
+        Uses config: unsnooze_text
+        """
+        import discord
+
+        thread = None
+        user_obj = None
+        if user is not None:
+            user_id = self._resolve_user(user)
+            if user_id:
+                try:
+                    user_obj = await self.bot.get_or_fetch_user(user_id)
+                except Exception:
+                    user_obj = discord.Object(user_id)
+            if user_obj:
+                thread = await self.bot.threads.find(recipient=user_obj)
+            if not thread:
+                await ctx.send(f"[DEBUG] No thread found for user {user} (obj: {user_obj}).")
+                logging.warning(f"[UNSNOOZE] No thread found for user {user} (obj: {user_obj})")
+                return
+        elif hasattr(ctx, "thread"):
+            thread = ctx.thread
+        else:
+            await ctx.send("This is not a Modmail thread.")
+            logging.warning("[UNSNOOZE] Not a Modmail thread context.")
+            return
+        if not thread.snoozed:
+            await ctx.send("This thread is not snoozed.")
+            logging.info(f"[UNSNOOZE] Thread for {getattr(thread.recipient, 'id', None)} is not snoozed.")
+            return
+        ok = await thread.restore_from_snooze()
+        if ok:
+            self.bot.threads.cache[thread.id] = thread
+            await ctx.send(
+                self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
+            )
+            logging.info(f"[UNSNOOZE] Thread for {getattr(thread.recipient, 'id', None)} unsnoozed.")
+        else:
+            await ctx.send("Failed to unsnooze this thread.")
+            logging.error(
+                f"[UNSNOOZE] Failed to unsnooze thread for {getattr(thread.recipient, 'id', None)}."
+            )
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def snoozed(self, ctx):
+        """
+        List all currently snoozed threads/users.
+        """
+        snoozed = await self.bot.api.logs.find({"snoozed": True}).to_list(None)
+        if not snoozed:
+            await ctx.send("No threads are currently snoozed.")
+            return
+        lines = []
+        now = datetime.utcnow()
+        for entry in snoozed:
+            user = entry.get("recipient", {}).get("name", "Unknown")
+            user_id = entry.get("recipient", {}).get("id", "?")
+            since = entry.get("snooze_start")
+            duration = entry.get("snooze_for")
+            if since:
+                try:
+                    since_dt = datetime.fromisoformat(since)
+                    since_str = f"<t:{int(since_dt.timestamp())}:R>"  # Discord relative timestamp
+                except Exception as e:
+                    since_str = "?"
+                    logging.warning(f"[SNOOZED] Invalid snooze_start for {user_id}: {since} ({e})")
+            else:
+                since_str = "?"
+                logging.warning(f"[SNOOZED] Missing snooze_start for {user_id}")
+            if duration and since_str != "?":
+                try:
+                    until_dt = datetime.fromisoformat(since) + timedelta(seconds=int(duration))
+                    until_str = f"<t:{int(until_dt.timestamp())}:R>"
+                except Exception as e:
+                    until_str = "?"
+                    logging.warning(f"[SNOOZED] Invalid until time for {user_id}: {since} + {duration} ({e})")
+            else:
+                until_str = "?"
+            lines.append(f"- {user} (`{user_id}`) since {since_str}, until {until_str}")
+        await ctx.send("Snoozed threads:\n" + "\n".join(lines))
+
+    async def cog_load(self):
+        self.bot.loop.create_task(self.snooze_auto_unsnooze_task())
+
+    async def snooze_auto_unsnooze_task(self):
+        await self.bot.wait_until_ready()
+        while True:
+            now = datetime.utcnow()
+            snoozed = await self.bot.api.logs.find({"snoozed": True}).to_list(None)
+            for entry in snoozed:
+                start = entry.get("snooze_start")
+                snooze_for = entry.get("snooze_for")
+                if not start:
+                    continue
+                start_dt = datetime.fromisoformat(start)
+                if snooze_for is not None:
+                    duration = int(snooze_for)
+                else:
+                    max_snooze = self.bot.config.get("max_snooze_time")
+                    if max_snooze is None:
+                        max_snooze = 604800
+                    duration = int(max_snooze)
+                if (now - start_dt).total_seconds() > duration:
+                    # Auto-unsnooze
+                    thread = await self.bot.threads.find(recipient_id=int(entry["recipient"]["id"]))
+                    if thread and thread.snoozed:
+                        await thread.restore_from_snooze()
+            await asyncio.sleep(60)
+
+    async def process_dm_modmail(self, message: discord.Message) -> None:
+        # ... existing code ...
+        # Before processing, check if thread is snoozed and auto-unsnooze
+        thread = await self.threads.find(recipient=message.author)
+        if thread and thread.snoozed:
+            await thread.restore_from_snooze()
+            # Ensure the thread object in the cache is updated with the new channel
+            self.threads.cache[thread.id] = thread
+        # ... rest of the method unchanged ...
+
+    @commands.command()
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def clearsnoozed(self, ctx):
+        """
+        List all snoozed threads and ask for confirmation before clearing (unsnoozing) all of them.
+        Only proceed if the user confirms.
+        """
+        snoozed = await self.bot.api.logs.find({"snoozed": True}).to_list(None)
+        if not snoozed:
+            await ctx.send("No threads are currently snoozed.")
+            return
+        lines = []
+        for entry in snoozed:
+            user = entry.get("recipient", {}).get("name", "Unknown")
+            user_id = entry.get("recipient", {}).get("id", "?")
+            lines.append(f"- {user} (`{user_id}`)")
+        msg = await ctx.send(
+            "The following threads are currently snoozed and will be unsnoozed if you confirm:\n"
+            + "\n".join(lines)
+            + "\n\nType `yes` to confirm, or anything else to cancel."
+        )
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        try:
+            reply = await self.bot.wait_for("message", check=check, timeout=30)
+        except asyncio.TimeoutError:
+            await ctx.send("Timed out. No threads were unsnoozed.")
+            return
+        if reply.content.strip().lower() != "yes":
+            await ctx.send("Cancelled. No threads were unsnoozed.")
+            return
+        count = 0
+        for entry in snoozed:
+            user_id = entry.get("recipient", {}).get("id")
+            if not user_id:
+                continue
+            user_obj = None
+            try:
+                user_obj = await self.bot.get_or_fetch_user(int(user_id))
+            except Exception:
+                user_obj = discord.Object(int(user_id))
+            thread = await self.bot.threads.find(recipient=user_obj)
+            if thread and thread.snoozed:
+                ok = await thread.restore_from_snooze()
+                if ok:
+                    self.bot.threads.cache[thread.id] = thread
+                    count += 1
+        await ctx.send(f"Unsnoozed {count} threads.")
 
 
 async def setup(bot):

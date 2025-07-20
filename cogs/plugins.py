@@ -759,7 +759,10 @@ class Plugins(commands.Cog):
 
         for page in pages:
             embed = discord.Embed(color=self.bot.main_color, description=page)
-            embed.set_author(name="Plugin Registry", icon_url=self.bot.user.display_avatar.url)
+            embed.set_author(
+                name="Plugin Registry",
+                icon_url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None,
+            )
             embeds.append(embed)
 
         paginator = EmbedPaginatorSession(ctx, *embeds)

@@ -314,7 +314,7 @@ class EmbedPaginatorSession(PaginatorSession):
                     footer_text = footer_text + " • " + embed.footer.text
 
                 if embed.footer.icon:
-                    icon_url = embed.footer.icon.url
+                    icon_url = embed.footer.icon.url if embed.footer.icon else None
                 else:
                     icon_url = None
                 embed.set_footer(text=footer_text, icon_url=icon_url)
@@ -375,7 +375,7 @@ class MessagePaginatorSession(PaginatorSession):
                 footer_text = footer_text + " • " + self.footer_text
 
             if self.embed.footer.icon:
-                icon_url = self.embed.footer.icon.url
+                icon_url = self.embed.footer.icon.url if self.embed.footer.icon else None
             else:
                 icon_url = None
 
