@@ -139,7 +139,18 @@ class Thread:
         channel = self.channel
         if not isinstance(channel, discord.TextChannel):
             return False
-        # Save channel info
+        # Ensure self.log_key is set before snoozing
+        if not self.log_key:
+            # Try to fetch from DB using channel_id
+            log_entry = await self.bot.api.get_log(self.channel.id)
+            if log_entry and 'key' in log_entry:
+                self.log_key = log_entry['key']
+            # Fallback: try by recipient id
+            elif hasattr(self, 'id'):
+                log_entry = await self.bot.api.get_log(str(self.id))
+                if log_entry and 'key' in log_entry:
+                    self.log_key = log_entry['key']
+
         self.snooze_data = {
             "category_id": channel.category_id,
             "position": channel.position,
@@ -236,7 +247,7 @@ class Thread:
             reason="Thread unsnoozed/restored",
         )
         self._channel = channel
-        # Restore the log_key from snooze_data (preserve log continuity)
+        # Strictly restore the log_key from snooze_data (never create a new one)
         self.log_key = self.snooze_data.get("log_key")
         # Replay messages
         for msg in self.snooze_data["messages"]:
