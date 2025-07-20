@@ -880,7 +880,9 @@ class ModmailBot(commands.Bot):
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
 
         # Handle forwarded messages (Discord forwards)
-        # See: https://discord.com/developers/docs/resources/message#message-reference-content-attribution-forward
+        # See: https://discord.com/developers/docs/resources/message#message-reference-content-attribution-forwards
+        import discord
+
         # 1. Multi-forward (message_snapshots)
         if hasattr(message, "flags") and getattr(message.flags, "has_snapshot", False):
             if hasattr(message, "message_snapshots") and message.message_snapshots:
@@ -1037,8 +1039,7 @@ class ModmailBot(commands.Bot):
             # Update the DB with the new channel_id after restoration
             if thread.channel:
                 await self.api.logs.update_one(
-                    {"recipient.id": str(thread.id)},
-                    {"$set": {"channel_id": str(thread.channel.id)}}
+                    {"recipient.id": str(thread.id)}, {"$set": {"channel_id": str(thread.channel.id)}}
                 )
         # Re-fetch the thread object to ensure channel is valid
         thread = await self.threads.find(recipient=message.author)
