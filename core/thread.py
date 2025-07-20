@@ -345,10 +345,11 @@ class Thread:
         try:
             # create_log_entry now returns the log key (URL)
             log_url = await self.bot.api.create_log_entry(recipient, channel, creator or recipient)
-            # Extract the log key from the URL
+            # Extract the log key from the URL and store it for this thread
             self.log_key = log_url.rstrip("/").split("/")[-1]
-            log_data = await self.bot.api.get_user_logs(recipient.id)
-            log_count = sum(1 for log in log_data if not log["open"])
+            log_count = (
+                None  # Optionally, you can fetch log count if needed, but do NOT overwrite self.log_key
+            )
         except Exception:
             logger.error("An error occurred while posting logs to the database.", exc_info=True)
             log_url = log_count = None
@@ -627,8 +628,9 @@ class Thread:
             prefix = self.bot.config["log_url_prefix"].strip("/")
             if prefix == "NONE":
                 prefix = ""
-            log_key = log_data.get("key") or self.log_key
-            log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_key}"
+            log_url = (
+                f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{self.log_key}"
+            )
 
             if log_data["title"]:
                 sneak_peak = log_data["title"]
@@ -643,7 +645,7 @@ class Thread:
             else:
                 _nsfw = ""
 
-            desc = f"[`{_nsfw}{log_data['key']}`]({log_url}): "
+            desc = f"[`{_nsfw}{self.log_key}`]({log_url}): "
             desc += truncate(sneak_peak, max=75 - 13)
         else:
             desc = "Could not resolve log url."
@@ -693,9 +695,7 @@ class Thread:
             else:
                 message = self.bot.config["thread_close_response"]
 
-        message = self.bot.formatter.format(
-            message, closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
-        )
+        message = self.bot.formatter.format(message, closer=closer, loglink=log_url, logkey=self.log_key)
 
         embed.description = message
         footer = self.bot.config["thread_close_footer"]
