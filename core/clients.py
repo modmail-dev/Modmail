@@ -648,6 +648,7 @@ class MongoDBClient(ApiClient):
         message: Message,
         *,
         message_id: str = "",
+        log_key: str = None,
         channel_id: str = "",
         type_: str = "thread_message",
     ) -> dict:
@@ -678,14 +679,31 @@ class MongoDBClient(ApiClient):
             ],
         }
 
-        return await self.logs.find_one_and_update(
-            {"channel_id": channel_id}, {"$push": {"messages": data}}, return_document=True
-        )
+        # Use log_key if provided, fallback to channel_id for legacy support
+        if log_key:
+            return await self.logs.find_one_and_update(
+                {"key": log_key}, {"$push": {"messages": data}}, return_document=True
+            )
+        else:
+            return await self.logs.find_one_and_update(
+                {"channel_id": channel_id}, {"$push": {"messages": data}}, return_document=True
+            )
 
-    async def post_log(self, channel_id: Union[int, str], data: dict) -> dict:
-        return await self.logs.find_one_and_update(
-            {"channel_id": str(channel_id)}, {"$set": data}, return_document=True
-        )
+    async def get_log_by_key(self, log_key: str) -> dict:
+        return await self.logs.find_one({"key": log_key})
+
+    async def post_log_by_key(self, log_key: str, data: dict) -> dict:
+        return await self.logs.find_one_and_update({"key": log_key}, {"$set": data}, return_document=True)
+
+    async def post_log(
+        self, channel_id: Union[int, str] = None, data: dict = None, log_key: str = None
+    ) -> dict:
+        if log_key:
+            return await self.post_log_by_key(log_key, data)
+        else:
+            return await self.logs.find_one_and_update(
+                {"channel_id": str(channel_id)}, {"$set": data}, return_document=True
+            )
 
     async def search_closed_by(self, user_id: Union[int, str]):
         return await self.logs.find(

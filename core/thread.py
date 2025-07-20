@@ -69,6 +69,7 @@ class Thread:
         # --- SNOOZE STATE ---
         self.snoozed = False  # True if thread is snoozed
         self.snooze_data = None  # Dict with channel/category/position/messages for restoration
+        self.log_key = None  # Unique log key for this thread
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
@@ -342,11 +343,11 @@ class Thread:
         self._channel = channel
 
         try:
-            log_url, log_data = await asyncio.gather(
-                self.bot.api.create_log_entry(recipient, channel, creator or recipient),
-                self.bot.api.get_user_logs(recipient.id),
-            )
-
+            # create_log_entry now returns the log key (URL)
+            log_url = await self.bot.api.create_log_entry(recipient, channel, creator or recipient)
+            # Extract the log key from the URL
+            self.log_key = log_url.rstrip("/").split("/")[-1]
+            log_data = await self.bot.api.get_user_logs(recipient.id)
             log_count = sum(1 for log in log_data if not log["open"])
         except Exception:
             logger.error("An error occurred while posting logs to the database.", exc_info=True)
@@ -583,7 +584,25 @@ class Thread:
         self.bot.config["notification_squad"].pop(str(self.id), None)
 
         # Logging
-        if self.channel:
+        if self.log_key:
+            log_data = await self.bot.api.post_log(
+                log_key=self.log_key,
+                data={
+                    "open": False,
+                    "title": match_title(self.channel.topic) if self.channel else None,
+                    "closed_at": str(discord.utils.utcnow()),
+                    "nsfw": self.channel.nsfw if self.channel else None,
+                    "close_message": message,
+                    "closer": {
+                        "id": str(closer.id),
+                        "name": closer.name,
+                        "discriminator": closer.discriminator,
+                        "avatar_url": closer.display_avatar.url,
+                        "mod": True,
+                    },
+                },
+            )
+        elif self.channel:
             log_data = await self.bot.api.post_log(
                 self.channel.id,
                 {
@@ -608,9 +627,8 @@ class Thread:
             prefix = self.bot.config["log_url_prefix"].strip("/")
             if prefix == "NONE":
                 prefix = ""
-            log_url = (
-                f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
-            )
+            log_key = log_data.get("key") or self.log_key
+            log_url = f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_key}"
 
             if log_data["title"]:
                 sneak_peak = log_data["title"]
@@ -967,7 +985,9 @@ class Thread:
 
         # Log as 'internal' type for logviewer visibility
         self.bot.loop.create_task(
-            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="internal")
+            self.bot.api.append_log(
+                message, message_id=msg.id, log_key=self.log_key, channel_id=self.channel.id, type_="internal"
+            )
         )
 
         return msg
@@ -1041,6 +1061,7 @@ class Thread:
                 self.bot.api.append_log(
                     message,
                     message_id=msg.id,
+                    log_key=self.log_key,
                     channel_id=self.channel.id,
                     type_="anonymous" if anonymous else "thread_message",
                 )
@@ -1094,7 +1115,9 @@ class Thread:
             await self.wait_until_ready()
 
         if not from_mod and not note:
-            self.bot.loop.create_task(self.bot.api.append_log(message, channel_id=self.channel.id))
+            self.bot.loop.create_task(
+                self.bot.api.append_log(message, log_key=self.log_key, channel_id=self.channel.id)
+            )
 
         destination = destination or self.channel
 
