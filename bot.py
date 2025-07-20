@@ -1037,8 +1037,7 @@ class ModmailBot(commands.Bot):
             # Update the DB with the new channel_id after restoration
             if thread.channel:
                 await self.api.logs.update_one(
-                    {"recipient.id": str(thread.id)},
-                    {"$set": {"channel_id": str(thread.channel.id)}}
+                    {"recipient.id": str(thread.id)}, {"$set": {"channel_id": str(thread.channel.id)}}
                 )
         # Re-fetch the thread object to ensure channel is valid
         thread = await self.threads.find(recipient=message.author)
