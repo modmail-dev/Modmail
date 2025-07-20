@@ -69,7 +69,7 @@ class Thread:
         # --- SNOOZE STATE ---
         self.snoozed = False  # True if thread is snoozed
         self.snooze_data = None  # Dict with channel/category/position/messages for restoration
-        self.log_key = None  # Unique log key for this thread
+        self.log_key = None  # Ensure log_key always exists
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
@@ -139,33 +139,7 @@ class Thread:
         channel = self.channel
         if not isinstance(channel, discord.TextChannel):
             return False
-
         # Save channel info
-        def classify_message(m):
-            msg_type = getattr(m, "type", None)
-            # Detect mod-only messages: not the bot, not the thread recipient, and not a user message
-            if (
-                msg_type is None
-                and hasattr(m, "author")
-                and m.author.id != self.bot.user.id
-                and (not self.recipient or m.author.id != self.recipient.id)
-                and hasattr(m.channel, "guild")
-                and m.channel.guild is not None
-            ):
-                # Check if author is a moderator (manage_messages or administrator)
-                perms = m.channel.permissions_for(m.author)
-                if perms.manage_messages or perms.administrator:
-                    msg_type = "mod_only"
-            return {
-                "author_id": m.author.id,
-                "content": m.content,
-                "attachments": [a.url for a in m.attachments],
-                "embeds": [e.to_dict() for e in m.embeds],
-                "created_at": m.created_at.isoformat(),
-                "type": msg_type,
-                "author_name": getattr(m.author, "name", None),
-            }
-
         self.snooze_data = {
             "category_id": channel.category_id,
             "position": channel.position,
@@ -174,9 +148,36 @@ class Thread:
             "slowmode_delay": channel.slowmode_delay,
             "nsfw": channel.nsfw,
             "overwrites": [(role.id, perm._values) for role, perm in channel.overwrites.items()],
-            "messages": [classify_message(m) async for m in channel.history(limit=None, oldest_first=True)],
+            "messages": [
+                {
+                    "author_id": m.author.id,
+                    "content": m.content,
+                    "attachments": [a.url for a in m.attachments],
+                    "embeds": [e.to_dict() for e in m.embeds],
+                    "created_at": m.created_at.isoformat(),
+                    # Only use 'mod_only' if this is a note (note command)
+                    "type": (
+                        "mod_only"
+                        if m.embeds and hasattr(m.embeds[0], 'author') and (
+                            getattr(m.embeds[0].author, 'name', '').startswith('Note') or
+                            getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
+                        )
+                        else (getattr(m, "type", None) if getattr(m, "type", None) != "mod_only" else None)
+                    ),
+                    "author_name": getattr(m.author, "name", None),
+                }
+                async for m in channel.history(limit=None, oldest_first=True)
+                # Only include if not already internal/note
+                if not (
+                    m.embeds and hasattr(m.embeds[0], 'author') and (
+                        getattr(m.embeds[0].author, 'name', '').startswith('Note') or
+                        getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
+                    )
+                ) and getattr(m, "type", None) not in ("internal", "note")
+            ],
             "snoozed_by": getattr(moderator, "name", None) if moderator else None,
             "snooze_command": command_used,
+            "log_key": self.log_key,  # Preserve the log_key
         }
         self.snoozed = True
         # Save to DB (robust: try recipient.id, then channel_id)
@@ -229,6 +230,8 @@ class Thread:
             reason="Thread unsnoozed/restored",
         )
         self._channel = channel
+        # Restore the log_key from snooze_data (preserve log continuity)
+        self.log_key = self.snooze_data.get("log_key")
         # Replay messages
         for msg in self.snooze_data["messages"]:
             author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(msg["author_id"])
@@ -343,13 +346,12 @@ class Thread:
         self._channel = channel
 
         try:
-            # create_log_entry now returns the log key (URL)
-            log_url = await self.bot.api.create_log_entry(recipient, channel, creator or recipient)
-            # Extract the log key from the URL and store it for this thread
-            self.log_key = log_url.rstrip("/").split("/")[-1]
-            log_count = (
-                None  # Optionally, you can fetch log count if needed, but do NOT overwrite self.log_key
+            log_url, log_data = await asyncio.gather(
+                self.bot.api.create_log_entry(recipient, channel, creator or recipient),
+                self.bot.api.get_user_logs(recipient.id),
             )
+
+            log_count = sum(1 for log in log_data if not log["open"])
         except Exception:
             logger.error("An error occurred while posting logs to the database.", exc_info=True)
             log_url = log_count = None
@@ -585,25 +587,7 @@ class Thread:
         self.bot.config["notification_squad"].pop(str(self.id), None)
 
         # Logging
-        if self.log_key:
-            log_data = await self.bot.api.post_log(
-                log_key=self.log_key,
-                data={
-                    "open": False,
-                    "title": match_title(self.channel.topic) if self.channel else None,
-                    "closed_at": str(discord.utils.utcnow()),
-                    "nsfw": self.channel.nsfw if self.channel else None,
-                    "close_message": message,
-                    "closer": {
-                        "id": str(closer.id),
-                        "name": closer.name,
-                        "discriminator": closer.discriminator,
-                        "avatar_url": closer.display_avatar.url,
-                        "mod": True,
-                    },
-                },
-            )
-        elif self.channel:
+        if self.channel:
             log_data = await self.bot.api.post_log(
                 self.channel.id,
                 {
@@ -629,7 +613,7 @@ class Thread:
             if prefix == "NONE":
                 prefix = ""
             log_url = (
-                f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{self.log_key}"
+                f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{log_data['key']}"
             )
 
             if log_data["title"]:
@@ -645,7 +629,7 @@ class Thread:
             else:
                 _nsfw = ""
 
-            desc = f"[`{_nsfw}{self.log_key}`]({log_url}): "
+            desc = f"[`{_nsfw}{log_data['key']}`]({log_url}): "
             desc += truncate(sneak_peak, max=75 - 13)
         else:
             desc = "Could not resolve log url."
@@ -695,7 +679,9 @@ class Thread:
             else:
                 message = self.bot.config["thread_close_response"]
 
-        message = self.bot.formatter.format(message, closer=closer, loglink=log_url, logkey=self.log_key)
+        message = self.bot.formatter.format(
+            message, closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
+        )
 
         embed.description = message
         footer = self.bot.config["thread_close_footer"]
@@ -985,9 +971,7 @@ class Thread:
 
         # Log as 'internal' type for logviewer visibility
         self.bot.loop.create_task(
-            self.bot.api.append_log(
-                message, message_id=msg.id, log_key=self.log_key, channel_id=self.channel.id, type_="internal"
-            )
+            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="internal")
         )
 
         return msg
@@ -1061,7 +1045,6 @@ class Thread:
                 self.bot.api.append_log(
                     message,
                     message_id=msg.id,
-                    log_key=self.log_key,
                     channel_id=self.channel.id,
                     type_="anonymous" if anonymous else "thread_message",
                 )
@@ -1115,11 +1098,18 @@ class Thread:
             await self.wait_until_ready()
 
         if not from_mod and not note:
-            self.bot.loop.create_task(
-                self.bot.api.append_log(message, log_key=self.log_key, channel_id=self.channel.id)
-            )
+            self.bot.loop.create_task(self.bot.api.append_log(message, channel_id=self.channel.id))
 
         destination = destination or self.channel
+
+        if destination is None:
+            logger.error("Attempted to send a message to a thread with no channel (destination is None).")
+            return
+        try:
+            await destination.typing()
+        except discord.NotFound:
+            logger.warning("Channel not found when trying to send message.")
+            return
 
         author = message.author
         member = self.bot.guild.get_member(author.id)
