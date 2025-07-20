@@ -2452,10 +2452,8 @@ class Modmail(commands.Cog):
             + "\n".join(lines)
             + "\n\nType `yes` to confirm, or anything else to cancel."
         )
-
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
-
         try:
             reply = await self.bot.wait_for("message", check=check, timeout=30)
         except asyncio.TimeoutError:

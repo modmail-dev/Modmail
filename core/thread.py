@@ -154,27 +154,26 @@ class Thread:
                     "attachments": [a.url for a in m.attachments],
                     "embeds": [e.to_dict() for e in m.embeds],
                     "created_at": m.created_at.isoformat(),
-                    "type": getattr(m, "type", None),
-                    "author_name": getattr(m.author, "name", None),
+                    "type": getattr(m, 'type', None),
+                    "author_name": getattr(m.author, 'name', None),
                 }
                 async for m in channel.history(limit=None, oldest_first=True)
             ],
-            "snoozed_by": getattr(moderator, "name", None) if moderator else None,
-            "snooze_command": command_used,
+            'snoozed_by': getattr(moderator, 'name', None) if moderator else None,
+            'snooze_command': command_used,
         }
         self.snoozed = True
         # Save to DB (robust: try recipient.id, then channel_id)
         result = await self.bot.api.logs.update_one(
-            {"recipient.id": str(self.id)},
-            {"$set": {"snoozed": True, "snooze_data": self.snooze_data}},
+            {'recipient.id': str(self.id)},
+            {'$set': {'snoozed': True, 'snooze_data': self.snooze_data}},
         )
         if result.modified_count == 0 and self.channel:
             result = await self.bot.api.logs.update_one(
-                {"channel_id": str(self.channel.id)},
-                {"$set": {"snoozed": True, "snooze_data": self.snooze_data}},
+                {'channel_id': str(self.channel.id)},
+                {'$set': {'snoozed': True, 'snooze_data': self.snooze_data}},
             )
         import logging
-
         logging.info(f"[SNOOZE] DB update result: {result.modified_count}")
         # Delete channel
         await channel.delete(reason="Thread snoozed by moderator")
@@ -187,14 +186,11 @@ class Thread:
         """
         if not self.snooze_data or not isinstance(self.snooze_data, dict):
             import logging
-
-            logging.warning(
-                f"[UNSNOOZE] Tried to restore thread {self.id} but snooze_data is None or not a dict."
-            )
+            logging.warning(f"[UNSNOOZE] Tried to restore thread {self.id} but snooze_data is None or not a dict.")
             return False
         # Now safe to access self.snooze_data
-        snoozed_by = self.snooze_data.get("snoozed_by")
-        snooze_command = self.snooze_data.get("snooze_command")
+        snoozed_by = self.snooze_data.get('snoozed_by')
+        snooze_command = self.snooze_data.get('snooze_command')
         guild = self.bot.modmail_guild
         category = guild.get_channel(self.snooze_data["category_id"])
         overwrites = {}
@@ -214,18 +210,18 @@ class Thread:
         )
         self._channel = channel
         # Replay messages
-        for msg in self.snooze_data["messages"]:
-            author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(msg["author_id"])
-            content = msg["content"]
-            embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
-            attachments = msg.get("attachments", [])
-            msg_type = msg.get("type")
+        for msg in self.snooze_data['messages']:
+            author = self.bot.get_user(msg['author_id']) or await self.bot.get_or_fetch_user(msg['author_id'])
+            content = msg['content']
+            embeds = [discord.Embed.from_dict(e) for e in msg.get('embeds', []) if e]
+            attachments = msg.get('attachments', [])
+            msg_type = msg.get('type')
             # Only send if there is content, embeds, or attachments
             if not content and not embeds and not attachments:
                 continue  # Skip empty messages
-            # Format internal/system messages as 'username: textcontent'
-            if msg_type in ("internal", "note", "system"):
-                username = msg.get("author_name") or (getattr(author, "name", None)) or "Unknown"
+            # Format internal/system/mod-only messages as 'username: textcontent'
+            if msg_type in ('internal', 'note', 'system', 'mod_only'):
+                username = msg.get('author_name') or (getattr(author, 'name', None)) or 'Unknown'
                 formatted = f"{username}: {content}" if content else username
                 await channel.send(formatted)
             else:
@@ -236,21 +232,20 @@ class Thread:
         self.snooze_data = None
         # Update channel_id in DB and clear snooze_data (robust: try recipient.id, then channel_id)
         result = await self.bot.api.logs.update_one(
-            {"recipient.id": str(self.id)},
-            {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
+            {'recipient.id': str(self.id)},
+            {'$set': {'snoozed': False, 'channel_id': str(channel.id)}, '$unset': {'snooze_data': ""}},
         )
         if result.modified_count == 0:
             result = await self.bot.api.logs.update_one(
-                {"channel_id": str(channel.id)},
-                {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
+                {'channel_id': str(channel.id)},
+                {'$set': {'snoozed': False, 'channel_id': str(channel.id)}, '$unset': {'snooze_data': ""}},
             )
         import logging
-
         logging.info(f"[UNSNOOZE] DB update result: {result.modified_count}")
         # Notify in the configured channel
         notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
         notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
-        if notify_channel == "thread":
+        if notify_channel == 'thread':
             await channel.send(notify_text)
         else:
             ch = self.bot.get_channel(int(notify_channel))
@@ -258,8 +253,8 @@ class Thread:
                 await ch.send(f"Thread for user <@{self.id}> has been unsnoozed and restored.")
         # Show who ran the snooze command and the command used
         # Use snooze_data_for_notify to avoid accessing self.snooze_data after it is set to None
-        snoozed_by = snooze_data_for_notify.get("snoozed_by") if snooze_data_for_notify else None
-        snooze_command = snooze_data_for_notify.get("snooze_command") if snooze_data_for_notify else None
+        snoozed_by = snooze_data_for_notify.get('snoozed_by') if snooze_data_for_notify else None
+        snooze_command = snooze_data_for_notify.get('snooze_command') if snooze_data_for_notify else None
         if snoozed_by or snooze_command:
             info = f"Snoozed by: {snoozed_by or 'Unknown'} | Command: {snooze_command or '?snooze'}"
             await channel.send(info)
@@ -950,8 +945,9 @@ class Thread:
             thread_creation=thread_creation,
         )
 
+        # Log as 'internal' type for logviewer visibility
         self.bot.loop.create_task(
-            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="system")
+            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="internal")
         )
 
         return msg

@@ -881,8 +881,6 @@ class ModmailBot(commands.Bot):
 
         # Handle forwarded messages (Discord forwards)
         # See: https://discord.com/developers/docs/resources/message#message-reference-content-attribution-forwards
-        import discord
-
         # 1. Multi-forward (message_snapshots)
         if hasattr(message, "flags") and getattr(message.flags, "has_snapshot", False):
             if hasattr(message, "message_snapshots") and message.message_snapshots:
@@ -1039,7 +1037,8 @@ class ModmailBot(commands.Bot):
             # Update the DB with the new channel_id after restoration
             if thread.channel:
                 await self.api.logs.update_one(
-                    {"recipient.id": str(thread.id)}, {"$set": {"channel_id": str(thread.channel.id)}}
+                    {"recipient.id": str(thread.id)},
+                    {"$set": {"channel_id": str(thread.channel.id)}}
                 )
         # Re-fetch the thread object to ensure channel is valid
         thread = await self.threads.find(recipient=message.author)
@@ -1316,6 +1315,19 @@ class ModmailBot(commands.Bot):
             else:
                 content = ""
             await self.mention_channel.send(content=content, embed=em)
+
+        # --- MODERATOR-ONLY MESSAGE LOGGING ---
+        # If a moderator sends a message directly in a thread channel (not via modmail command), log it
+        if not message.author.bot and not isinstance(message.channel, discord.DMChannel):
+            thread = await self.threads.find(channel=message.channel)
+            if thread is not None:
+                ctxs = await self.get_contexts(message)
+                is_command = any(ctx.command for ctx in ctxs)
+                if not is_command:
+                    # Only log if not a command
+                    perms = message.channel.permissions_for(message.author)
+                    if perms.manage_messages or perms.administrator:
+                        await self.api.append_log(message, type_="mod_only")
 
         await self.process_commands(message)
 
