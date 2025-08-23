@@ -143,13 +143,13 @@ class Thread:
         if not self.log_key:
             # Try to fetch from DB using channel_id
             log_entry = await self.bot.api.get_log(self.channel.id)
-            if log_entry and 'key' in log_entry:
-                self.log_key = log_entry['key']
+            if log_entry and "key" in log_entry:
+                self.log_key = log_entry["key"]
             # Fallback: try by recipient id
-            elif hasattr(self, 'id'):
+            elif hasattr(self, "id"):
                 log_entry = await self.bot.api.get_log(str(self.id))
-                if log_entry and 'key' in log_entry:
-                    self.log_key = log_entry['key']
+                if log_entry and "key" in log_entry:
+                    self.log_key = log_entry["key"]
 
         self.snooze_data = {
             "category_id": channel.category_id,
@@ -171,10 +171,10 @@ class Thread:
                         "mod_only"
                         if (
                             m.embeds
-                            and getattr(m.embeds[0], 'author', None)
+                            and getattr(m.embeds[0], "author", None)
                             and (
-                                getattr(m.embeds[0].author, 'name', '').startswith('Note') or
-                                getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
+                                getattr(m.embeds[0].author, "name", "").startswith("Note")
+                                or getattr(m.embeds[0].author, "name", "").startswith("Persistent Note")
                             )
                         )
                         else None
@@ -185,12 +185,13 @@ class Thread:
                 # Only include if not already internal/note, safe check for embed author
                 if not (
                     m.embeds
-                    and getattr(m.embeds[0], 'author', None)
+                    and getattr(m.embeds[0], "author", None)
                     and (
-                        getattr(m.embeds[0].author, 'name', '').startswith('Note') or
-                        getattr(m.embeds[0].author, 'name', '').startswith('Persistent Note')
+                        getattr(m.embeds[0].author, "name", "").startswith("Note")
+                        or getattr(m.embeds[0].author, "name", "").startswith("Persistent Note")
                     )
-                ) and getattr(m, "type", None) not in ("internal", "note")
+                )
+                and getattr(m, "type", None) not in ("internal", "note")
             ],
             "snoozed_by": getattr(moderator, "name", None) if moderator else None,
             "snooze_command": command_used,
@@ -264,10 +265,19 @@ class Thread:
                 username = msg.get("author_name") or (getattr(author, "name", None)) or "Unknown"
                 user_id = msg.get("author_id")
                 if embeds:
-                    embeds[0].set_author(name=f"{username} ({user_id})", icon_url=author.display_avatar.url if author and hasattr(author, "display_avatar") else None)
+                    embeds[0].set_author(
+                        name=f"{username} ({user_id})",
+                        icon_url=(
+                            author.display_avatar.url
+                            if author and hasattr(author, "display_avatar")
+                            else None
+                        ),
+                    )
                     await channel.send(embeds=embeds)
                 else:
-                    formatted = f"**{username} ({user_id})**: {content}" if content else f"**{username} ({user_id})**"
+                    formatted = (
+                        f"**{username} ({user_id})**: {content}" if content else f"**{username} ({user_id})**"
+                    )
                     await channel.send(formatted)
             else:
                 await channel.send(content=content or None, embeds=embeds or None)
@@ -289,7 +299,10 @@ class Thread:
             if result.modified_count == 0:
                 result = await self.bot.api.logs.update_one(
                     {"channel_id": str(channel.id)},
-                    {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
+                    {
+                        "$set": {"snoozed": False, "channel_id": str(channel.id)},
+                        "$unset": {"snooze_data": ""},
+                    },
                 )
         import logging
 
