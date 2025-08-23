@@ -259,11 +259,16 @@ class Thread:
             # Only send if there is content, embeds, or attachments
             if not content and not embeds and not attachments:
                 continue  # Skip empty messages
-            # Format internal/system/mod-only messages as 'username: textcontent'
-            if msg_type in ("internal", "note", "system", "mod_only"):
+            author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
+            if author_is_mod:
                 username = msg.get("author_name") or (getattr(author, "name", None)) or "Unknown"
-                formatted = f"{username}: {content}" if content else username
-                await channel.send(formatted)
+                user_id = msg.get("author_id")
+                if embeds:
+                    embeds[0].set_author(name=f"{username} ({user_id})", icon_url=author.display_avatar.url if author and hasattr(author, "display_avatar") else None)
+                    await channel.send(embeds=embeds)
+                else:
+                    formatted = f"**{username} ({user_id})**: {content}" if content else f"**{username} ({user_id})**"
+                    await channel.send(formatted)
             else:
                 await channel.send(content=content or None, embeds=embeds or None)
         self.snoozed = False
@@ -596,6 +601,8 @@ class Thread:
             await self._close(closer, silent, delete_channel, message)
 
     async def _close(self, closer, silent=False, delete_channel=True, message=None, scheduled=False):
+        if self.channel:
+            self.manager.closing.add(self.channel.id)
         try:
             self.manager.cache.pop(self.id)
         except KeyError as e:
@@ -722,10 +729,15 @@ class Thread:
                 if user is not None:
                     tasks.append(user.send(embed=embed))
 
-        if delete_channel:
+        if delete_channel and self.channel:
             tasks.append(self.channel.delete())
 
-        await asyncio.gather(*tasks)
+        try:
+            await asyncio.gather(*tasks)
+        finally:
+            if self.channel:
+                self.manager.closing.discard(self.channel.id)
+
         self.bot.dispatch("thread_close", self, closer, silent, delete_channel, message, scheduled)
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
@@ -801,10 +813,7 @@ class Thread:
             ):
                 raise ValueError("Thread message not found.")
 
-            if message1.embeds[0].color.value == self.bot.main_color and (
-                message1.embeds[0].author.name.startswith("Note")
-                or message1.embeds[0].author.name.startswith("Persistent Note")
-            ):
+            if message1.embeds[0].footer and "Internal Message" in message1.embeds[0].footer.text:
                 if not note:
                     raise ValueError("Thread message not found.")
                 return message1, None
@@ -867,7 +876,7 @@ class Thread:
         embed1.description = message
 
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
-        if message1.embeds[0].author.name.startswith("Persistent Note"):
+        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.edit_note(message1.id, message)]
         else:
             for m2 in message2:
@@ -894,7 +903,7 @@ class Thread:
             if m2 is not None:
                 tasks += [m2.delete()]
 
-        if message1.embeds[0].author.name.startswith("Persistent Note"):
+        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.delete_note(message1.id)]
 
         if tasks:
@@ -992,9 +1001,9 @@ class Thread:
             thread_creation=thread_creation,
         )
 
-        # Log as 'internal' type for logviewer visibility
+        # Log as 'system' type for logviewer visibility
         self.bot.loop.create_task(
-            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="internal")
+            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="system")
         )
 
         return msg
@@ -1194,10 +1203,10 @@ class Thread:
                     url=f"https://discordapp.com/users/{author.id}#{message.id}",
                 )
         else:
-            # Special note messages
+            # Notes are just replies with a different footer and color
             embed.set_author(
-                name=f"{'Persistent' if persistent_note else ''} Note ({author.name})",
-                icon_url=system_avatar_url,
+                name=str(author),
+                icon_url=avatar_url,
                 url=f"https://discordapp.com/users/{author.id}#{message.id}",
             )
 
@@ -1325,8 +1334,10 @@ class Thread:
 
         if from_mod:
             embed.colour = self.bot.mod_color
+            if note:
+                embed.set_footer(text=f"{'Persistent' if persistent_note else ''} Internal Message")
             # Anonymous reply sent in thread channel
-            if anonymous and isinstance(destination, discord.TextChannel):
+            elif anonymous and isinstance(destination, discord.TextChannel):
                 embed.set_footer(text="Anonymous Reply")
             # Normal messages
             elif not anonymous:
@@ -1336,8 +1347,6 @@ class Thread:
                 embed.set_footer(text=mod_tag)  # Normal messages
             else:
                 embed.set_footer(text=self.bot.config["anon_tag"])
-        elif note:
-            embed.colour = self.bot.main_color
         else:
             embed.set_footer(text=f"Message ID: {message.id}")
             embed.colour = self.bot.recipient_color
@@ -1489,6 +1498,7 @@ class ThreadManager:
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
+        self.closing = set()
 
     async def populate_cache(self) -> None:
         for channel in self.bot.modmail_guild.text_channels:
@@ -1512,6 +1522,8 @@ class ThreadManager:
     ) -> typing.Optional[Thread]:
         """Finds a thread from cache or from discord channel topics."""
         if recipient is None and channel is not None and isinstance(channel, discord.TextChannel):
+            if channel.id in self.closing:
+                return None
             thread = await self._find_from_channel(channel)
             if thread is None:
                 user_id, thread = next(
