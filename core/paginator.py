@@ -223,8 +223,7 @@ class PaginatorView(View):
         self.clear_items()  # clear first so we can control the order
         self.fill_items()
 
-    @discord.ui.button(label="Stop", style=ButtonStyle.danger)
-    async def stop_button(self, interaction: Interaction, button: Button):
+    async def stop_callback(self, interaction: Interaction):
         await self.handler.close(interaction=interaction)
 
     def fill_items(self):
@@ -244,7 +243,10 @@ class PaginatorView(View):
 
             self.handler._buttons_map[label] = button
             self.add_item(button)
-        self.add_item(self.stop_button)
+
+        stop_button = Button(label="Stop", style=ButtonStyle.danger)
+        stop_button.callback = self.stop_callback
+        self.add_item(stop_button)
 
     async def interaction_check(self, interaction: Interaction):
         """Only allow the message author to interact"""

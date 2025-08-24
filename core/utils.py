@@ -581,8 +581,9 @@ def return_or_truncate(text, max_length):
 
 
 class AcceptButton(discord.ui.Button):
-    def __init__(self, emoji):
-        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji)
+    def __init__(self, custom_id: str, emoji: str):
+        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
+        self.view: ConfirmThreadCreationView
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = True
@@ -591,8 +592,9 @@ class AcceptButton(discord.ui.Button):
 
 
 class DenyButton(discord.ui.Button):
-    def __init__(self, emoji):
-        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji)
+    def __init__(self, custom_id: str, emoji: str):
+        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
+        self.view: ConfirmThreadCreationView
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = False

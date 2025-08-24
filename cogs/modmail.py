@@ -2415,7 +2415,7 @@ class Modmail(commands.Cog):
     async def snooze_auto_unsnooze_task(self):
         await self.bot.wait_until_ready()
         while True:
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             snoozed = await self.bot.api.logs.find({"snoozed": True}).to_list(None)
             for entry in snoozed:
                 start = entry.get("snooze_start")

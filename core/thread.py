@@ -1694,8 +1694,10 @@ class ThreadManager:
             else:
                 destination = message.channel
             view = ConfirmThreadCreationView()
-            view.add_item(AcceptButton(self.bot.config["confirm_thread_creation_accept"]))
-            view.add_item(DenyButton(self.bot.config["confirm_thread_creation_deny"]))
+            view.add_item(
+                AcceptButton("accept-thread-creation", self.bot.config["confirm_thread_creation_accept"])
+            )
+            view.add_item(DenyButton("deny-thread-creation", self.bot.config["confirm_thread_creation_deny"]))
             confirm = await destination.send(
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],
