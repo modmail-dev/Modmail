@@ -8,7 +8,7 @@ import time
 import traceback
 import typing
 import warnings
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from types import SimpleNamespace
 
 import isodate
@@ -130,7 +130,7 @@ class Thread:
             for i in self.wait_tasks:
                 i.cancel()
 
-    async def snooze(self, moderator=None, command_used=None):
+    async def snooze(self, moderator=None, command_used=None, snooze_for=None):
         """
         Save channel/category/position/messages to DB, mark as snoozed, delete channel.
         """
@@ -151,6 +151,7 @@ class Thread:
                 if log_entry and "key" in log_entry:
                     self.log_key = log_entry["key"]
 
+        now = datetime.now(timezone.utc)
         self.snooze_data = {
             "category_id": channel.category_id,
             "position": channel.position,
@@ -166,7 +167,6 @@ class Thread:
                     "attachments": [a.url for a in m.attachments],
                     "embeds": [e.to_dict() for e in m.embeds],
                     "created_at": m.created_at.isoformat(),
-                    # Only use 'mod_only' if this is an internal note (note command), safe check for embed author
                     "type": (
                         "mod_only"
                         if (
@@ -182,7 +182,6 @@ class Thread:
                     "author_name": getattr(m.author, "name", None),
                 }
                 async for m in channel.history(limit=None, oldest_first=True)
-                # Only include if not already internal/note, safe check for embed author
                 if not (
                     m.embeds
                     and getattr(m.embeds[0], "author", None)
@@ -195,7 +194,9 @@ class Thread:
             ],
             "snoozed_by": getattr(moderator, "name", None) if moderator else None,
             "snooze_command": command_used,
-            "log_key": self.log_key,  # Preserve the log_key
+            "log_key": self.log_key,
+            "snooze_start": now.isoformat(),
+            "snooze_for": snooze_for,
         }
         self.snoozed = True
         # Save to DB (robust: try recipient.id, then channel_id)
@@ -289,19 +290,19 @@ class Thread:
         if self.log_key:
             result = await self.bot.api.logs.update_one(
                 {"key": self.log_key},
-                {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
+                {"$set": {"channel_id": str(channel.id)}, "$unset": {"snoozed": "", "snooze_data": ""}},
             )
         else:
             result = await self.bot.api.logs.update_one(
                 {"recipient.id": str(self.id)},
-                {"$set": {"snoozed": False, "channel_id": str(channel.id)}, "$unset": {"snooze_data": ""}},
+                {"$set": {"channel_id": str(channel.id)}, "$unset": {"snoozed": "", "snooze_data": ""}},
             )
             if result.modified_count == 0:
                 result = await self.bot.api.logs.update_one(
                     {"channel_id": str(channel.id)},
                     {
-                        "$set": {"snoozed": False, "channel_id": str(channel.id)},
-                        "$unset": {"snooze_data": ""},
+                        "$set": {"channel_id": str(channel.id)},
+                        "$unset": {"snoozed": "", "snooze_data": ""},
                     },
                 )
         import logging

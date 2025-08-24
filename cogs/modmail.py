@@ -2285,7 +2285,9 @@ class Modmail(commands.Cog):
                 snooze_for = max_snooze
         else:
             snooze_for = max_snooze
-        now = datetime.utcnow()
+
+        # Storing snooze_start and snooze_for in the log entry
+        now = datetime.now(timezone.utc)
         await self.bot.api.logs.update_one(
             {"recipient.id": str(thread.id)},
             {"$set": {"snooze_start": now.isoformat(), "snooze_for": snooze_for}},
@@ -2296,7 +2298,7 @@ class Modmail(commands.Cog):
             color=self.bot.error_color,
         )
         await ctx.send(embed=embed)
-        ok = await thread.snooze(moderator=ctx.author)
+        ok = await thread.snooze(moderator=ctx.author, snooze_for=snooze_for)
         if ok:
             logging.info(
                 f"[SNOOZE] Thread for {getattr(thread.recipient, 'id', None)} snoozed for {snooze_for}s."
@@ -2341,6 +2343,13 @@ class Modmail(commands.Cog):
             await ctx.send("This thread is not snoozed.")
             logging.info(f"[UNSNOOZE] Thread for {getattr(thread.recipient, 'id', None)} is not snoozed.")
             return
+
+        # Manually fetch snooze_data if the thread object doesn't have it
+        if not thread.snooze_data:
+            log_entry = await self.bot.api.logs.find_one({"recipient.id": str(thread.id), "snoozed": True})
+            if log_entry:
+                thread.snooze_data = log_entry.get("snooze_data")
+
         ok = await thread.restore_from_snooze()
         if ok:
             self.bot.threads.cache[thread.id] = thread
@@ -2360,37 +2369,44 @@ class Modmail(commands.Cog):
         """
         List all currently snoozed threads/users.
         """
-        snoozed = await self.bot.api.logs.find({"snoozed": True}).to_list(None)
-        if not snoozed:
+        snoozed_threads = [thread for thread in self.bot.threads.cache.values() if thread.snoozed]
+        if not snoozed_threads:
             await ctx.send("No threads are currently snoozed.")
             return
+
         lines = []
-        now = datetime.utcnow()
-        for entry in snoozed:
-            user = entry.get("recipient", {}).get("name", "Unknown")
-            user_id = entry.get("recipient", {}).get("id", "?")
-            since = entry.get("snooze_start")
-            duration = entry.get("snooze_for")
-            if since:
-                try:
-                    since_dt = datetime.fromisoformat(since)
-                    since_str = f"<t:{int(since_dt.timestamp())}:R>"  # Discord relative timestamp
-                except Exception as e:
-                    since_str = "?"
-                    logging.warning(f"[SNOOZED] Invalid snooze_start for {user_id}: {since} ({e})")
-            else:
-                since_str = "?"
-                logging.warning(f"[SNOOZED] Missing snooze_start for {user_id}")
-            if duration and since_str != "?":
-                try:
-                    until_dt = datetime.fromisoformat(since) + timedelta(seconds=int(duration))
-                    until_str = f"<t:{int(until_dt.timestamp())}:R>"
-                except Exception as e:
-                    until_str = "?"
-                    logging.warning(f"[SNOOZED] Invalid until time for {user_id}: {since} + {duration} ({e})")
-            else:
-                until_str = "?"
+        now = datetime.now(timezone.utc)
+        for thread in snoozed_threads:
+            user = thread.recipient.name if thread.recipient else "Unknown"
+            user_id = thread.id
+
+            since_str = "?"
+            until_str = "?"
+
+            if thread.snooze_data:
+                since = thread.snooze_data.get("snooze_start")
+                duration = thread.snooze_data.get("snooze_for")
+
+                if since:
+                    try:
+                        since_dt = datetime.fromisoformat(since)
+                        since_str = f"<t:{int(since_dt.timestamp())}:R>"  # Discord relative timestamp
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"[SNOOZED] Invalid snooze_start for {user_id}: {since} ({e})")
+                else:
+                    logging.warning(f"[SNOOZED] Missing snooze_start for {user_id}")
+
+                if duration and since_str != "?":
+                    try:
+                        until_dt = datetime.fromisoformat(since) + timedelta(seconds=int(duration))
+                        until_str = f"<t:{int(until_dt.timestamp())}:R>"
+                    except (ValueError, TypeError) as e:
+                        logging.warning(
+                            f"[SNOOZED] Invalid until time for {user_id}: {since} + {duration} ({e})"
+                        )
+
             lines.append(f"- {user} (`{user_id}`) since {since_str}, until {until_str}")
+
         await ctx.send("Snoozed threads:\n" + "\n".join(lines))
 
     async def cog_load(self):
