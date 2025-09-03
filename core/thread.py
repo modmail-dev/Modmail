@@ -173,8 +173,8 @@ class Thread:
                             m.embeds
                             and getattr(m.embeds[0], "author", None)
                             and (
-                                getattr(m.embeds[0].author, "name", "").startswith("Note")
-                                or getattr(m.embeds[0].author, "name", "").startswith("Persistent Note")
+                                getattr(m.embeds[0].author, "name", "").startswith("📝 Note")
+                                or getattr(m.embeds[0].author, "name", "").startswith("📝 Persistent Note")
                             )
                         )
                         else None
@@ -186,8 +186,8 @@ class Thread:
                     m.embeds
                     and getattr(m.embeds[0], "author", None)
                     and (
-                        getattr(m.embeds[0].author, "name", "").startswith("Note")
-                        or getattr(m.embeds[0].author, "name", "").startswith("Persistent Note")
+                        getattr(m.embeds[0].author, "name", "").startswith("📝 Note")
+                        or getattr(m.embeds[0].author, "name", "").startswith("📝 Persistent Note")
                     )
                 )
                 and getattr(m, "type", None) not in ("internal", "note")
@@ -1015,9 +1015,9 @@ class Thread:
             thread_creation=thread_creation,
         )
 
-        # Log as 'system' type for logviewer visibility
+        # Log as 'note' type for logviewer
         self.bot.loop.create_task(
-            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="system")
+            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="note")
         )
 
         return msg
@@ -1125,6 +1125,30 @@ class Thread:
         persistent_note: bool = False,
         thread_creation: bool = False,
     ) -> None:
+        # Handle notes with Discord-like system message format - return early
+        if note and from_mod:
+            destination = destination or self.channel
+            content = message.content or "[No content]"
+
+            # Create embed for note with Discord system message style
+            embed = discord.Embed(
+                description=content, color=0x5865F2  # Discord blurple color for system messages
+            )
+
+            # Set author with note icon and username
+            embed.set_author(
+                name=f"📝 Note ({message.author.name})", icon_url=message.author.display_avatar.url
+            )
+
+            # Add timestamp if enabled
+            if self.bot.config["show_timestamp"]:
+                embed.timestamp = message.created_at
+
+            # Add a subtle footer to distinguish from replies
+            embed.set_footer(text="Internal Note")
+
+            return await destination.send(embed=embed)
+
         if not note and from_mod:
             self.bot.loop.create_task(self._restart_close_timer())  # Start or restart thread auto close
 
@@ -1217,12 +1241,18 @@ class Thread:
                     url=f"https://discordapp.com/users/{author.id}#{message.id}",
                 )
         else:
-            # Notes are just replies with a different footer and color
+            # Notes use system message style with note icon
+            if persistent_note:
+                note_type = "Persistent Note"
+            else:
+                note_type = "Note"
+
             embed.set_author(
-                name=str(author),
+                name=f"📝 {note_type} ({str(author)})",
                 icon_url=avatar_url,
                 url=f"https://discordapp.com/users/{author.id}#{message.id}",
             )
+            embed.color = 0x5865F2  # Discord blurple for system messages
 
         ext = [(a.url, a.filename, False) for a in message.attachments]
 
@@ -1347,20 +1377,27 @@ class Thread:
             file_upload_count += 1
 
         if from_mod:
-            embed.colour = self.bot.mod_color
             if note:
-                embed.set_footer(text=f"{'Persistent' if persistent_note else ''} Internal Message")
-            # Anonymous reply sent in thread channel
-            elif anonymous and isinstance(destination, discord.TextChannel):
-                embed.set_footer(text="Anonymous Reply")
-            # Normal messages
-            elif not anonymous:
-                mod_tag = self.bot.config["mod_tag"]
-                if mod_tag is None:
-                    mod_tag = str(get_top_role(message.author, self.bot.config["use_hoisted_top_role"]))
-                embed.set_footer(text=mod_tag)  # Normal messages
+                # Notes use Discord blurple and special footer
+                embed.colour = 0x5865F2
+                if persistent_note:
+                    embed.set_footer(text="Persistent Internal Message")
+                else:
+                    embed.set_footer(text="Internal Message")
             else:
-                embed.set_footer(text=self.bot.config["anon_tag"])
+                # Regular mod messages
+                embed.colour = self.bot.mod_color
+                # Anonymous reply sent in thread channel
+                if anonymous and isinstance(destination, discord.TextChannel):
+                    embed.set_footer(text="Anonymous Reply")
+                # Normal messages
+                elif not anonymous:
+                    mod_tag = self.bot.config["mod_tag"]
+                    if mod_tag is None:
+                        mod_tag = str(get_top_role(message.author, self.bot.config["use_hoisted_top_role"]))
+                    embed.set_footer(text=mod_tag)  # Normal messages
+                else:
+                    embed.set_footer(text=self.bot.config["anon_tag"])
         else:
             embed.set_footer(text=f"Message ID: {message.id}")
             embed.colour = self.bot.recipient_color

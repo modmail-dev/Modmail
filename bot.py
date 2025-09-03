@@ -1326,7 +1326,7 @@ class ModmailBot(commands.Bot):
                     # Only log if not a command
                     perms = message.channel.permissions_for(message.author)
                     if perms.manage_messages or perms.administrator:
-                        await self.api.append_log(message, type_="mod_only")
+                        await self.api.append_log(message, type_="internal")
 
         await self.process_commands(message)
 
@@ -1365,8 +1365,6 @@ class ModmailBot(commands.Bot):
                     or self.config.get("plain_reply_without_command")
                 ):
                     await thread.reply(message, anonymous=anonymous, plain=plain)
-                else:
-                    await self.api.append_log(message, type_="internal")
             elif ctx.invoked_with:
                 exc = commands.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
                 self.dispatch("command_error", ctx, exc)
