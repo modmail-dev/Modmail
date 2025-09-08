@@ -1200,16 +1200,20 @@ class Thread:
                 content = snap.content or ""
 
             # Get jump_url from cached_message, fetch if not cached
-            if hasattr(snap, "cached_message") and snap.cached_message:
+            if hasattr(snap, "cached_message") and snap.cached_message is not None:
                 forwarded_jump_url = snap.cached_message.jump_url
-            elif hasattr(snap, "message") and snap.message:
-                # Try to fetch the original message to get the correct jump_url
-                try:
-                    original_msg = await snap.message.channel.fetch_message(snap.message.id)
-                    forwarded_jump_url = original_msg.jump_url
-                except (discord.NotFound, discord.Forbidden, AttributeError):
-                    # If we can't fetch the message, we'll proceed without the jump_url
-                    pass
+            else:
+                if (
+                    hasattr(message, "reference")
+                    and message.reference
+                    and message.reference.type == discord.MessageReferenceType.forward
+                ):
+                    try:
+                        original_msg_channel = self.bot.get_channel(message.reference.channel_id)
+                        original_msg = await original_msg_channel.fetch_message(message.reference.message_id)
+                        forwarded_jump_url = original_msg.jump_url
+                    except (discord.NotFound, discord.Forbidden, AttributeError):
+                        pass
 
             content = f"📨 **Forwarded message:**\n{content}" if content else "📨 **Forwarded message:**"
         else:
