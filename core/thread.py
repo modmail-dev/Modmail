@@ -1127,7 +1127,7 @@ class Thread:
         thread_creation: bool = False,
     ) -> None:
         # Handle notes with Discord-like system message format - return early
-        if note and from_mod:
+        if note:
             destination = destination or self.channel
             content = message.content or "[No content]"
 
@@ -1137,8 +1137,13 @@ class Thread:
             )
 
             # Set author with note icon and username
+            if persistent_note:
+                note_type = "Persistent Note"
+            else:
+                note_type = "Note"
+
             embed.set_author(
-                name=f"📝 Note ({message.author.name})", icon_url=message.author.display_avatar.url
+                name=f"📝 {note_type} ({message.author.name})", icon_url=message.author.display_avatar.url
             )
 
             # Add timestamp if enabled
@@ -1146,7 +1151,10 @@ class Thread:
                 embed.timestamp = message.created_at
 
             # Add a subtle footer to distinguish from replies
-            embed.set_footer(text="Internal Note")
+            if persistent_note:
+                embed.set_footer(text="Persistent Internal Note")
+            else:
+                embed.set_footer(text="Internal Note")
 
             return await destination.send(embed=embed)
 
@@ -1409,9 +1417,9 @@ class Thread:
                 # Notes use Discord blurple and special footer
                 embed.colour = 0x5865F2
                 if persistent_note:
-                    embed.set_footer(text="Persistent Internal Message")
+                    embed.set_footer(text="Persistent Internal Note")
                 else:
-                    embed.set_footer(text="Internal Message")
+                    embed.set_footer(text="Internal Note")
             else:
                 # Regular mod messages
                 embed.colour = self.bot.mod_color
