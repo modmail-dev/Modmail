@@ -12,7 +12,7 @@ typing-extensions = "==4.8.0"
 [packages]
 aiohttp = "==3.9.0"
 colorama = "==0.4.6"
-"discord.py" = {version = "==2.5.2", extras = ["speed"]}
+"discord.py" = {version = "==2.6.3", extras = ["speed"]}
 emoji = "==2.8.0"
 isodate = "==0.6.1"
 motor = "==3.3.2"

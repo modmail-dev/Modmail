@@ -48,7 +48,15 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint, human_join
+from core.utils import (
+    extract_block_timestamp,
+    normalize_alias,
+    parse_alias,
+    truncate,
+    tryint,
+    human_join,
+    extract_forwarded_content,
+)
 
 logger = getLogger(__name__)
 
@@ -169,7 +177,7 @@ class ModmailBot(commands.Bot):
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
-        logger.info("discord.py: v2.5.2")
+        logger.info("discord.py: v2.6.3")
         logger.line()
 
     async def load_extensions(self):
@@ -926,32 +934,24 @@ class ModmailBot(commands.Bot):
                         logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                         await self.add_reaction(message, blocked_emoji)
                         return await message.channel.send(embed=embed)
-                for snap in message.message_snapshots:
-                    author = getattr(snap, "author", None)
-                    author_name = getattr(author, "name", "Unknown") if author else "Unknown"
-                    author_avatar = getattr(author, "display_avatar", None)
-                    author_avatar_url = author_avatar.url if author_avatar else None
-                    # fix: Only use '[This is a forwarded message.]' if snap.content is actually empty
-                    content = snap.content if snap.content else "[This is a forwarded message.]"
-                    if snap.embeds:
-                        content += "\n" + "\n".join(
-                            [e.to_dict().get("description", "[embed]") for e in snap.embeds]
-                        )
-                    if snap.attachments:
-                        content += "\n" + "\n".join([a.url for a in snap.attachments])
+                # Extract forwarded content using utility function
+                combined_content = extract_forwarded_content(message) or "[Forwarded message with no content]"
 
-                    class DummySnap:
-                        def __init__(self, snap, author, content):
-                            self.author = author
-                            self.content = content
-                            self.attachments = getattr(snap, "attachments", [])
-                            self.stickers = getattr(snap, "stickers", [])
-                            self.created_at = getattr(snap, "created_at", message.created_at)
-                            self.embeds = getattr(snap, "embeds", [])
-                            self.id = getattr(snap, "id", 0)
+                class ForwardedMessage:
+                    def __init__(self, original_message, forwarded_content):
+                        self.author = original_message.author
+                        self.content = forwarded_content
+                        self.attachments = []
+                        self.stickers = []
+                        self.created_at = original_message.created_at
+                        self.embeds = []
+                        self.id = original_message.id
+                        self.flags = original_message.flags
+                        self.message_snapshots = original_message.message_snapshots
+                        self.type = getattr(original_message, "type", None)
 
-                    dummy_msg = DummySnap(snap, author, content)
-                    await thread.send(dummy_msg)
+                forwarded_msg = ForwardedMessage(message, combined_content)
+                await thread.send(forwarded_msg)
                 await self.add_reaction(message, sent_emoji)
                 self.dispatch("thread_reply", thread, False, message, False, False)
                 return
@@ -1020,7 +1020,28 @@ class ModmailBot(commands.Bot):
                             )
                             await self.add_reaction(message, blocked_emoji)
                             return await message.channel.send(embed=embed)
-                    await thread.send(ref_msg)
+
+                    # Create a forwarded message wrapper to preserve forward info
+                    class ForwardedMessage:
+                        def __init__(self, original_message, ref_message):
+                            self.author = original_message.author
+                            # Use the utility function to extract content or fallback to ref message content
+                            extracted_content = extract_forwarded_content(original_message)
+                            self.content = (
+                                extracted_content
+                                or ref_message.content
+                                or "[Forwarded message with no text content]"
+                            )
+                            self.attachments = getattr(ref_message, "attachments", [])
+                            self.stickers = getattr(ref_message, "stickers", [])
+                            self.created_at = original_message.created_at
+                            self.embeds = getattr(ref_message, "embeds", [])
+                            self.id = original_message.id
+                            self.type = getattr(original_message, "type", None)
+                            self.reference = original_message.reference
+
+                    forwarded_msg = ForwardedMessage(message, ref_msg)
+                    await thread.send(forwarded_msg)
                     await self.add_reaction(message, sent_emoji)
                     self.dispatch("thread_reply", thread, False, message, False, False)
                     return
@@ -1990,7 +2011,7 @@ def main():
         sys.exit(0)
 
     # check discord version
-    discord_version = "2.5.2"
+    discord_version = "2.6.3"
     if discord.__version__ != discord_version:
         logger.error(
             "Dependencies are not updated, run pipenv install. discord.py version expected %s, received %s",

@@ -33,6 +33,7 @@ from core.utils import (
     DenyButton,
     ConfirmThreadCreationView,
     DummyParam,
+    extract_forwarded_content,
 )
 
 logger = getLogger(__name__)
@@ -1188,29 +1189,52 @@ class Thread:
         else:
             avatar_url = author.display_avatar.url
 
-        #  Extract content for blank/forwarded messages ---
-        content = message.content
-        if not content:
-            # Try to extract from referenced message (replies)
-            if hasattr(message, "reference") and message.reference is not None:
-                try:
-                    ref = message.reference.resolved
-                    if ref and hasattr(ref, "content") and ref.content:
-                        content = f"(Reply to: {ref.author}: {ref.content})"
-                except Exception:
-                    pass
-            # Try to extract from first embed's description
-            if not content and message.embeds:
-                first_embed = message.embeds[0]
-                if hasattr(first_embed, "description") and first_embed.description:
-                    content = first_embed.description
-            # Fallback: show something generic if still blank
-            if not content:
-                content = "[This is a forwarded message.]"
+        # Handle forwarded messages first
+        forwarded_jump_url = None
+        if hasattr(message, "message_snapshots") and len(message.message_snapshots) > 0:
+            snap = message.message_snapshots[0]
+            # Only show "No content" if there's truly no content (no text, attachments, embeds, or stickers)
+            if not snap.content and not message.attachments and not message.embeds and not message.stickers:
+                content = "No content"
+            else:
+                content = snap.content or ""
 
-        embed = discord.Embed(description=content)
+            # Get jump_url from cached_message, fetch if not cached
+            if hasattr(snap, "cached_message") and snap.cached_message:
+                forwarded_jump_url = snap.cached_message.jump_url
+            elif hasattr(snap, "message") and snap.message:
+                # Try to fetch the original message to get the correct jump_url
+                try:
+                    original_msg = await snap.message.channel.fetch_message(snap.message.id)
+                    forwarded_jump_url = original_msg.jump_url
+                except (discord.NotFound, discord.Forbidden, AttributeError):
+                    # If we can't fetch the message, we'll proceed without the jump_url
+                    pass
+
+            content = f"📨 **Forwarded message:**\n{content}" if content else "📨 **Forwarded message:**"
+        else:
+            # Only show "No content" if there's truly no content (no text, attachments, embeds, or stickers)
+            if (
+                not message.content
+                and not message.attachments
+                and not message.embeds
+                and not message.stickers
+            ):
+                content = "No content"
+            else:
+                content = message.content or ""
+
+        # Only set description if there's actual content to show
+        if content:
+            embed = discord.Embed(description=content)
+        else:
+            embed = discord.Embed()
         if self.bot.config["show_timestamp"]:
             embed.timestamp = message.created_at
+
+        # Add forwarded message context
+        if forwarded_jump_url:
+            embed.add_field(name="Context", value=f"- {forwarded_jump_url}", inline=True)
 
         system_avatar_url = "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
 
@@ -1399,7 +1423,11 @@ class Thread:
                 else:
                     embed.set_footer(text=self.bot.config["anon_tag"])
         else:
-            embed.set_footer(text=f"Message ID: {message.id}")
+            # Add forwarded message indicator in footer for mods
+            footer_text = f"Message ID: {message.id}"
+            if hasattr(message, "message_snapshots") and len(message.message_snapshots) > 0:
+                footer_text += " • Forwarded"
+            embed.set_footer(text=footer_text)
             embed.colour = self.bot.recipient_color
 
         if (from_mod or note) and not thread_creation:
