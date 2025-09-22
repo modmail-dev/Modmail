@@ -8,6 +8,7 @@ bandit = ">=1.7.5"
 black = "==23.11.0"
 pylint = "==3.0.2"
 typing-extensions = "==4.8.0"
+tomli = "==2.2.1"  # Needed for black on Python < 3.11
 
 [packages]
 aiohttp = "==3.9.0"
@@ -28,3 +29,4 @@ requests = "==2.31.0"
 
 [scripts]
 bot = "python bot.py"
+
