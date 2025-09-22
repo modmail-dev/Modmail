@@ -177,7 +177,7 @@ class ModmailBot(commands.Bot):
         logger.info("v%s", __version__)
         logger.info("Authors: kyb3r, fourjr, Taaku18")
         logger.line()
-        logger.info("discord.py: v2.6.3")
+        logger.info("discord.py: v%s", discord.__version__)
         logger.line()
 
     async def load_extensions(self):
@@ -2026,3 +2026,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
