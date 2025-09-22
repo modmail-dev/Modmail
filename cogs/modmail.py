@@ -2261,10 +2261,10 @@ class Modmail(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @commands.command(usage="[after]")
+    @commands.command(usage="[duration]")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
-    async def snooze(self, ctx, *, after: UserFriendlyTime = None):
+    async def snooze(self, ctx, *, duration: UserFriendlyTime = None):
         """
         Snooze this thread: deletes the channel, keeps the ticket open in DM, and restores it when the user replies or a moderator unsnoozes it.
         Optionally specify a duration, e.g. 'snooze 2d' for 2 days.
@@ -2279,8 +2279,8 @@ class Modmail(commands.Cog):
         if max_snooze is None:
             max_snooze = 604800
         max_snooze = int(max_snooze)
-        if after:
-            snooze_for = int((after.dt - after.now).total_seconds())
+        if duration:
+            snooze_for = int((duration.dt - duration.now).total_seconds())
             if snooze_for > max_snooze:
                 snooze_for = max_snooze
         else:
