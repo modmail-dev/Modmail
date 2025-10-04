@@ -20,7 +20,7 @@ from packaging.version import Version
 from core import checks
 from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
-from core.utils import trigger_typing, truncate
+from core.utils import trigger_typing, truncate, safe_typing
 
 logger = getLogger(__name__)
 
@@ -484,7 +484,7 @@ class Plugins(commands.Cog):
             embed = discord.Embed(description="Plugin is not installed.", color=self.bot.error_color)
             return await ctx.send(embed=embed)
 
-        async with ctx.typing():
+        async with safe_typing(ctx):
             embed = discord.Embed(
                 description=f"Successfully updated {plugin.name}.", color=self.bot.main_color
             )

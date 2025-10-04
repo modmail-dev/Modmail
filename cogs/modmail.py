@@ -1210,7 +1210,8 @@ class Modmail(commands.Cog):
         `user` may be a user ID, mention, or name.
         """
 
-        await ctx.typing()
+        async with safe_typing(ctx):
+            pass
 
         if not user:
             thread = ctx.thread
@@ -1342,7 +1343,8 @@ class Modmail(commands.Cog):
         Provide a `limit` to specify the maximum number of logs the bot should find.
         """
 
-        await ctx.typing()
+        async with safe_typing(ctx):
+            pass
 
         entries = await self.bot.api.search_by_text(query, limit)
 
@@ -1371,7 +1373,7 @@ class Modmail(commands.Cog):
 
         ctx.message.content = msg
 
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message)
 
     @commands.command(aliases=["formatreply"])
@@ -1393,7 +1395,7 @@ class Modmail(commands.Cog):
             msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
         )
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message)
 
     @commands.command(aliases=["formatanonreply"])
@@ -1415,7 +1417,7 @@ class Modmail(commands.Cog):
             msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
         )
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, anonymous=True)
 
     @commands.command(aliases=["formatplainreply"])
@@ -1437,7 +1439,7 @@ class Modmail(commands.Cog):
             msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
         )
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, plain=True)
 
     @commands.command(aliases=["formatplainanonreply"])
@@ -1459,7 +1461,7 @@ class Modmail(commands.Cog):
             msg, channel=ctx.channel, recipient=ctx.thread.recipient, author=ctx.message.author
         )
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, anonymous=True, plain=True)
 
     @commands.command(aliases=["anonreply", "anonymousreply"])
@@ -1476,7 +1478,7 @@ class Modmail(commands.Cog):
         and `anon_tag` config variables to do so.
         """
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, anonymous=True)
 
     @commands.command(aliases=["plainreply"])
@@ -1490,7 +1492,7 @@ class Modmail(commands.Cog):
         automatically embedding image URLs.
         """
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, plain=True)
 
     @commands.command(aliases=["plainanonreply", "plainanonymousreply"])
@@ -1504,7 +1506,7 @@ class Modmail(commands.Cog):
         automatically embedding image URLs.
         """
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, anonymous=True, plain=True)
 
     @commands.group(invoke_without_command=True)
@@ -1517,7 +1519,7 @@ class Modmail(commands.Cog):
         Useful for noting context.
         """
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             msg = await ctx.thread.note(ctx.message)
             await msg.pin()
 
@@ -1529,7 +1531,7 @@ class Modmail(commands.Cog):
         Take a persistent note about the current user.
         """
         ctx.message.content = msg
-        async with ctx.typing():
+        async with safe_typing(ctx):
             msg = await ctx.thread.note(ctx.message, persistent=True)
             await msg.pin()
         await self.bot.api.create_note(recipient=ctx.thread.recipient, message=ctx.message, message_id=msg.id)
