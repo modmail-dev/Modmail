@@ -460,10 +460,9 @@ def safe_typing(target):
 def trigger_typing(func):
     @functools.wraps(func)
     async def wrapper(self, ctx: commands.Context, *args, **kwargs):
-        # Fire and forget typing; do not block on failures
+        # Keep typing active for the duration of the command; suppress failures
         async with safe_typing(ctx):
-            pass
-        return await func(self, ctx, *args, **kwargs)
+            return await func(self, ctx, *args, **kwargs)
 
     return wrapper
 
