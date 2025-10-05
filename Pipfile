@@ -23,10 +23,8 @@ parsedatetime = "==2.6"
 pymongo = {extras = ["srv"], version = "*"}  # Required by motor
 python-dateutil = "==2.8.2"
 python-dotenv = "==1.0.0"
-
 lottie = {version = "==0.7.0", extras = ["pdf"]}
 requests = "==2.31.0"
 
 [scripts]
 bot = "python bot.py"
-
