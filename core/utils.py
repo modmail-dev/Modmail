@@ -1,5 +1,6 @@
 import base64
 import functools
+import contextlib
 import re
 import typing
 from datetime import datetime, timezone
@@ -34,6 +35,7 @@ __all__ = [
     "normalize_alias",
     "format_description",
     "trigger_typing",
+    "safe_typing",
     "escape_code_block",
     "tryint",
     "get_top_role",
@@ -425,11 +427,42 @@ def format_description(i, names):
     )
 
 
+class _SafeTyping:
+    """Best-effort typing context manager.
+
+    Suppresses errors from Discord's typing endpoint so core flows continue
+    when typing is disabled or experiencing outages.
+    """
+
+    def __init__(self, target):
+        # target can be a Context or any Messageable (channel/DM/user)
+        self._target = target
+        self._cm = None
+
+    async def __aenter__(self):
+        try:
+            self._cm = self._target.typing()
+            return await self._cm.__aenter__()
+        except Exception:
+            # typing is best-effort; ignore any failure
+            self._cm = None
+
+    async def __aexit__(self, exc_type, exc, tb):
+        if self._cm is not None:
+            with contextlib.suppress(Exception):
+                return await self._cm.__aexit__(exc_type, exc, tb)
+
+
+def safe_typing(target):
+    return _SafeTyping(target)
+
+
 def trigger_typing(func):
     @functools.wraps(func)
     async def wrapper(self, ctx: commands.Context, *args, **kwargs):
-        await ctx.typing()
-        return await func(self, ctx, *args, **kwargs)
+        # Keep typing active for the duration of the command; suppress failures
+        async with safe_typing(ctx):
+            return await func(self, ctx, *args, **kwargs)
 
     return wrapper
 

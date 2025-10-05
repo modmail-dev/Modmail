@@ -1,4 +1,4 @@
-__version__ = "4.1.2"
+__version__ = "4.2.0"
 
 
 import asyncio
@@ -1403,7 +1403,10 @@ class ModmailBot(commands.Bot):
             thread = await self.threads.find(recipient=user)
 
             if thread:
-                await thread.channel.typing()
+                try:
+                    await thread.channel.typing()
+                except Exception:
+                    pass
         else:
             if not self.config.get("mod_typing"):
                 return
@@ -1413,7 +1416,10 @@ class ModmailBot(commands.Bot):
                 for user in thread.recipients:
                     if await self.is_blocked(user):
                         continue
-                    await user.typing()
+                    try:
+                        await user.typing()
+                    except Exception:
+                        pass
 
     async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
@@ -1720,7 +1726,10 @@ class ModmailBot(commands.Bot):
                 return
 
         if isinstance(exception, (commands.BadArgument, commands.BadUnionArgument)):
-            await context.typing()
+            try:
+                await context.typing()
+            except Exception:
+                pass
             await context.send(embed=discord.Embed(color=self.error_color, description=str(exception)))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning("CommandNotFound: %s", exception)

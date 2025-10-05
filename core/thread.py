@@ -1457,11 +1457,14 @@ class Thread:
         ):
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
+        # Best-effort typing: never block message delivery if typing fails
         try:
             await destination.typing()
         except discord.NotFound:
             logger.warning("Channel not found.")
             raise
+        except (discord.Forbidden, discord.HTTPException, Exception) as e:
+            logger.warning("Unable to send typing to %s: %s. Continuing without typing.", destination, e)
 
         if not from_mod and not note:
             mentions = await self.get_notifications()
