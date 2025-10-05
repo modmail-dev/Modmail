@@ -160,6 +160,14 @@ class FriendlyTimeResult:
     async def ensure_constraints(
         self, ctx: Context, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
     ) -> None:
+        # Strip stray connector words like "in", "to", or "at" that may
+        # remain when the natural language parser isolates the time token
+        # positioned at the end (e.g. "in 10m" leaves "in" before the token).
+        if isinstance(remaining, str):
+            cleaned = remaining.strip(" ,.!")
+            if cleaned.lower() in {"in", "to", "at", "me"}:
+                remaining = ""
+
         if self.dt < now:
             raise commands.BadArgument("This time is in the past.")
 
@@ -198,6 +206,26 @@ class UserFriendlyTime(commands.Converter):
         regex = ShortTime.compiled
         if now is None:
             now = ctx.message.created_at
+
+        # Heuristic: If the user provides only certain single words that are commonly
+        # used as salutations or vague times of day, interpret them as a message
+        # rather than a schedule. This avoids accidental scheduling when the intent
+        # is a short message (e.g. '?close evening'). Explicit scheduling still works
+        # via 'in 2h', '2m30s', 'at 8pm', etc.
+        if argument.strip().lower() in {
+            "evening",
+            "night",
+            "midnight",
+            "morning",
+            "afternoon",
+            "tonight",
+            "noon",
+            "today",
+            "tomorrow",
+        }:
+            result = FriendlyTimeResult(now)
+            await result.ensure_constraints(ctx, self, now, argument)
+            return result
 
         match = regex.match(argument)
         if match is not None and match.group(0):

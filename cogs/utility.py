@@ -1363,7 +1363,18 @@ class Utility(commands.Cog):
                     key = self.bot.modmail_guild.get_member(value)
                 if key is not None:
                     logger.info("Granting %s access to Modmail category.", key.name)
-                    await self.bot.main_category.set_permissions(key, read_messages=True)
+                    try:
+                        await self.bot.main_category.set_permissions(key, read_messages=True)
+                    except discord.Forbidden:
+                        warn = discord.Embed(
+                            title="Missing Permissions",
+                            color=self.bot.error_color,
+                            description=(
+                                "I couldn't update the Modmail category permissions. "
+                                "Please grant me 'Manage Channels' and 'Manage Roles' for this category."
+                            ),
+                        )
+                        await ctx.send(embed=warn)
 
         embed = discord.Embed(
             title="Success",
@@ -1454,17 +1465,50 @@ class Utility(commands.Cog):
             if level > PermissionLevel.REGULAR:
                 if value == -1:
                     logger.info("Denying @everyone access to Modmail category.")
-                    await self.bot.main_category.set_permissions(
-                        self.bot.modmail_guild.default_role, read_messages=False
-                    )
+                    try:
+                        await self.bot.main_category.set_permissions(
+                            self.bot.modmail_guild.default_role, read_messages=False
+                        )
+                    except discord.Forbidden:
+                        warn = discord.Embed(
+                            title="Missing Permissions",
+                            color=self.bot.error_color,
+                            description=(
+                                "I couldn't update the Modmail category permissions. "
+                                "Please grant me 'Manage Channels' and 'Manage Roles' for this category."
+                            ),
+                        )
+                        await ctx.send(embed=warn)
                 elif isinstance(user_or_role, discord.Role):
                     logger.info("Denying %s access to Modmail category.", user_or_role.name)
-                    await self.bot.main_category.set_permissions(user_or_role, overwrite=None)
+                    try:
+                        await self.bot.main_category.set_permissions(user_or_role, overwrite=None)
+                    except discord.Forbidden:
+                        warn = discord.Embed(
+                            title="Missing Permissions",
+                            color=self.bot.error_color,
+                            description=(
+                                "I couldn't update the Modmail category permissions. "
+                                "Please grant me 'Manage Channels' and 'Manage Roles' for this category."
+                            ),
+                        )
+                        await ctx.send(embed=warn)
                 else:
                     member = self.bot.modmail_guild.get_member(value)
                     if member is not None and member != self.bot.modmail_guild.me:
                         logger.info("Denying %s access to Modmail category.", member.name)
-                        await self.bot.main_category.set_permissions(member, overwrite=None)
+                        try:
+                            await self.bot.main_category.set_permissions(member, overwrite=None)
+                        except discord.Forbidden:
+                            warn = discord.Embed(
+                                title="Missing Permissions",
+                                color=self.bot.error_color,
+                                description=(
+                                    "I couldn't update the Modmail category permissions. "
+                                    "Please grant me 'Manage Channels' and 'Manage Roles' for this category."
+                                ),
+                            )
+                            await ctx.send(embed=warn)
 
         embed = discord.Embed(
             title="Success",
