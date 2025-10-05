@@ -165,7 +165,23 @@ class FriendlyTimeResult:
         # positioned at the end (e.g. "in 10m" leaves "in" before the token).
         if isinstance(remaining, str):
             cleaned = remaining.strip(" ,.!")
-            if cleaned.lower() in {"in", "to", "at", "me"}:
+            stray_tokens = {
+                "in",
+                "to",
+                "at",
+                "me",
+                # also treat vague times of day as stray tokens when they are the only leftover word
+                "evening",
+                "night",
+                "midnight",
+                "morning",
+                "afternoon",
+                "tonight",
+                "noon",
+                "today",
+                "tomorrow",
+            }
+            if cleaned.lower() in stray_tokens:
                 remaining = ""
 
         if self.dt < now:
@@ -273,7 +289,10 @@ class UserFriendlyTime(commands.Converter):
         if not status.hasDateOrTime:
             raise commands.BadArgument('Invalid time provided, try e.g. "tomorrow" or "3 days".')
 
-        if begin not in (0, 1) and end != len(argument):
+        # If the parsed time token is embedded in the text but only followed by
+        # trailing punctuation/whitespace, treat it as if it's positioned at the end.
+        trailing = argument[end:].strip(" ,.!")
+        if begin not in (0, 1) and trailing != "":
             raise commands.BadArgument(
                 "Time is either in an inappropriate location, which "
                 "must be either at the end or beginning of your input, "
@@ -287,6 +306,20 @@ class UserFriendlyTime(commands.Converter):
         # if midnight is provided, just default to next day
         if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
             dt = dt.replace(day=now.day + 1)
+
+        # Heuristic: If the matched time string is a vague time-of-day (e.g.,
+        # 'evening', 'morning', 'afternoon', 'night') and there's additional
+        # non-punctuation text besides that token, assume the user intended a
+        # closing message rather than scheduling. This avoids cases like
+        # '?close Have a good evening!' being treated as a scheduled close.
+        vague_tod = {"evening", "morning", "afternoon", "night"}
+        matched_text = dt_string.strip().strip('"').rstrip(" ,.!").lower()
+        pre_text = argument[:begin].strip(" ,.!")
+        post_text = argument[end:].strip(" ,.!")
+        if matched_text in vague_tod and (pre_text or post_text):
+            result = FriendlyTimeResult(now)
+            await result.ensure_constraints(ctx, self, now, argument)
+            return result
 
         result = FriendlyTimeResult(dt.replace(tzinfo=datetime.timezone.utc), now)
         remaining = ""
