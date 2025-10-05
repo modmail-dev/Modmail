@@ -19,7 +19,7 @@ Upgraded discord.py to version 2.6.3, added support for CV2.
 - Addressed inconsistent use of `logkey` after ticket restoration.
 - Fixed issues with identifying the user who sent internal messages.
 - Solved an ancient bug where closing with words like `evening` wouldnt work.
-- Fixed the command from in rare conditions being included in the reply.
+- Fixed the command from being included in the reply  in rare conditions.
 
 ### Added
 Commands:
