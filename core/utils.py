@@ -5,7 +5,6 @@ import re
 import typing
 from datetime import datetime, timezone
 from difflib import get_close_matches
-from distutils.util import strtobool as _stb  # pylint: disable=import-error
 from itertools import takewhile, zip_longest
 from urllib import parse
 
@@ -56,15 +55,12 @@ logger = getLogger(__name__)
 def strtobool(val):
     if isinstance(val, bool):
         return val
-    try:
-        return _stb(str(val))
-    except ValueError:
-        val = val.lower()
-        if val == "enable":
-            return 1
-        if val == "disable":
-            return 0
-        raise
+    val = str(val).lower()
+    if val in ("y", "yes", "on", "1", "true", "t", "enable"):
+        return 1
+    if val in ("n", "no", "off", "0", "false", "f", "disable"):
+        return 0
+    raise ValueError(f"invalid truth value {val}")
 
 
 class User(commands.MemberConverter):
@@ -373,7 +369,7 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
 
 def parse_alias(alias, *, split=True):
     def encode_alias(m):
-        return "\x1aU" + base64.b64encode(m.group(1).encode()).decode() + "\x1aU"
+        return "\x1AU" + base64.b64encode(m.group(1).encode()).decode() + "\x1AU"
 
     def decode_alias(m):
         return base64.b64decode(m.group(1).encode()).decode()
@@ -395,7 +391,7 @@ def parse_alias(alias, *, split=True):
         iterate = [alias]
 
     for a in iterate:
-        a = re.sub("\x1aU(.+?)\x1aU", decode_alias, a)
+        a = re.sub(r"\x1AU(.+?)\x1AU", decode_alias, a)
         if a[0] == a[-1] == '"':
             a = a[1:-1]
         aliases.append(a)
@@ -617,7 +613,6 @@ def return_or_truncate(text, max_length):
 class AcceptButton(discord.ui.Button):
     def __init__(self, custom_id: str, emoji: str):
         super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
-        self.view: ConfirmThreadCreationView
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = True
@@ -628,7 +623,6 @@ class AcceptButton(discord.ui.Button):
 class DenyButton(discord.ui.Button):
     def __init__(self, custom_id: str, emoji: str):
         super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
-        self.view: ConfirmThreadCreationView
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = False
