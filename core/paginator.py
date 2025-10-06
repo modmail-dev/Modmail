@@ -156,9 +156,20 @@ class PaginatorSession:
         if not self.running:
             await self.show_page(self.current)
 
-            if self.view is not None:
-                await self.view.wait()
+        # Don't block command execution while waiting for the View timeout.
+        # Schedule the wait-and-close sequence in the background so the command
+        # returns immediately (prevents typing indicator from hanging).
+        if self.view is not None:
 
+            async def _wait_and_close():
+                try:
+                    await self.view.wait()
+                finally:
+                    await self.close(delete=False)
+
+            # Fire and forget
+            self.ctx.bot.loop.create_task(_wait_and_close())
+        else:
             await self.close(delete=False)
 
     async def close(

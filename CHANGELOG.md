@@ -9,6 +9,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 # v4.2.0
 
 Upgraded discord.py to version 2.6.3, added support for CV2.
+Forwarded messages now properly show in threads, rather then showing as an empty embed.
 
 ### Fixed
 - Make Modmail keep working when typing is disabled due to a outage caused by Discord.
@@ -18,6 +19,8 @@ Upgraded discord.py to version 2.6.3, added support for CV2.
 - Eliminated duplicate logs and notes.
 - Addressed inconsistent use of `logkey` after ticket restoration.
 - Fixed issues with identifying the user who sent internal messages.
+- Solved an ancient bug where closing with words like `evening` wouldnt work.
+- Fixed the command from being included in the reply  in rare conditions.
 
 ### Added
 Commands:
