@@ -180,18 +180,18 @@ class Thread:
                         )
                         else None
                     ),
-                    "author_name": getattr(m.author, "name", None),
+                    "author_name": (
+                        getattr(m.embeds[0].author, "name", "").split(" (")[0]
+                        if m.embeds and m.embeds[0].author and m.author == self.bot.user
+                        else getattr(m.author, "name", None) if m.author != self.bot.user else None
+                    ),
+                    "author_avatar": (
+                        getattr(m.embeds[0].author, "icon_url", None)
+                        if m.embeds and m.embeds[0].author and m.author == self.bot.user
+                        else m.author.display_avatar.url if m.author != self.bot.user else None
+                    ),
                 }
                 async for m in channel.history(limit=None, oldest_first=True)
-                if not (
-                    m.embeds
-                    and getattr(m.embeds[0], "author", None)
-                    and (
-                        getattr(m.embeds[0].author, "name", "").startswith("📝 Note")
-                        or getattr(m.embeds[0].author, "name", "").startswith("📝 Persistent Note")
-                    )
-                )
-                and getattr(m, "type", None) not in ("internal", "note")
             ],
             "snoozed_by": getattr(moderator, "name", None) if moderator else None,
             "snooze_command": command_used,
@@ -254,7 +254,12 @@ class Thread:
         self.log_key = self.snooze_data.get("log_key")
         # Replay messages
         for msg in self.snooze_data["messages"]:
-            author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(msg["author_id"])
+            try:
+                author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
+                    msg["author_id"]
+                )
+            except discord.NotFound:
+                author = None
             content = msg["content"]
             embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
             attachments = msg.get("attachments", [])
@@ -264,12 +269,16 @@ class Thread:
                 continue  # Skip empty messages
             author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
             if author_is_mod:
-                username = msg.get("author_name") or (getattr(author, "name", None)) or "Unknown"
+                # Prioritize stored author_name from snooze data over fetched user
+                username = (
+                    msg.get("author_name") or (getattr(author, "name", None) if author else None) or "Unknown"
+                )
                 user_id = msg.get("author_id")
                 if embeds:
                     embeds[0].set_author(
                         name=f"{username} ({user_id})",
-                        icon_url=(
+                        icon_url=msg.get("author_avatar")
+                        or (
                             author.display_avatar.url
                             if author and hasattr(author, "display_avatar")
                             else None
@@ -811,31 +820,73 @@ class Thread:
         note: bool = True,
     ) -> typing.Tuple[discord.Message, typing.List[typing.Optional[discord.Message]]]:
         if message1 is not None:
-            if not message1.embeds or not message1.embeds[0].author.url or message1.author != self.bot.user:
-                raise ValueError("Malformed thread message.")
+            if note:
+                # For notes, don't require author.url; rely on footer/author.name markers
+                if not message1.embeds or message1.author != self.bot.user:
+                    logger.warning(
+                        f"Malformed note for deletion: embeds={bool(message1.embeds)}, author={message1.author}"
+                    )
+                    raise ValueError("Malformed note message.")
+            else:
+                if (
+                    not message1.embeds
+                    or not message1.embeds[0].author.url
+                    or message1.author != self.bot.user
+                ):
+                    logger.debug(
+                        f"Malformed thread message for deletion: embeds={bool(message1.embeds)}, author_url={getattr(message1.embeds[0], 'author', None) and message1.embeds[0].author.url}, author={message1.author}"
+                    )
+                    # Keep original error string to avoid extra failure embeds in on_message_delete
+                    raise ValueError("Malformed thread message.")
 
         elif message_id is not None:
             try:
                 message1 = await self.channel.fetch_message(message_id)
             except discord.NotFound:
+                logger.warning(f"Message ID {message_id} not found in channel history.")
                 raise ValueError("Thread message not found.")
 
+            if note:
+                # Try to treat as note/persistent note first
+                if message1.embeds and message1.author == self.bot.user:
+                    footer_text = (message1.embeds[0].footer and message1.embeds[0].footer.text) or ""
+                    author_name = getattr(message1.embeds[0].author, "name", "") or ""
+                    is_note = (
+                        "internal note" in footer_text.lower()
+                        or "persistent internal note" in footer_text.lower()
+                        or author_name.startswith("📝 Note")
+                        or author_name.startswith("📝 Persistent Note")
+                    )
+                    if is_note:
+                        # Notes have no linked DM counterpart; keep None sentinel
+                        return message1, None
+                # else: fall through to relay checks below
+
+            # Non-note path (regular relayed messages): require author.url and colors
             if not (
                 message1.embeds
                 and message1.embeds[0].author.url
                 and message1.embeds[0].color
                 and message1.author == self.bot.user
             ):
+                logger.warning(
+                    f"Message {message_id} is not a valid modmail relay message. embeds={bool(message1.embeds)}, author_url={getattr(message1.embeds[0], 'author', None) and message1.embeds[0].author.url}, color={getattr(message1.embeds[0], 'color', None)}, author={message1.author}"
+                )
                 raise ValueError("Thread message not found.")
 
             if message1.embeds[0].footer and "Internal Message" in message1.embeds[0].footer.text:
                 if not note:
-                    raise ValueError("Thread message not found.")
+                    logger.warning(
+                        f"Message {message_id} is an internal message, but note deletion not requested."
+                    )
+                    raise ValueError("Thread message is an internal message, not a note.")
+                # Internal bot-only message treated similarly; keep None sentinel
                 return message1, None
 
             if message1.embeds[0].color.value != self.bot.mod_color and not (
                 either_direction and message1.embeds[0].color.value == self.bot.recipient_color
             ):
+                logger.warning("Message color does not match mod/recipient colors.")
                 raise ValueError("Thread message not found.")
         else:
             async for message1 in self.channel.history():
@@ -891,7 +942,7 @@ class Thread:
         embed1.description = message
 
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
-        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
+        if message1.embeds[0].footer and "Persistent Internal Note" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.edit_note(message1.id, message)]
         else:
             for m2 in message2:
@@ -910,15 +961,14 @@ class Thread:
         else:
             message1, *message2 = await self.find_linked_messages(message, note=note)
         tasks = []
-
-        if not isinstance(message, discord.Message):
-            tasks += [message1.delete()]
+        # Always delete the primary thread message
+        tasks += [message1.delete()]
 
         for m2 in message2:
             if m2 is not None:
                 tasks += [m2.delete()]
 
-        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
+        if message1.embeds[0].footer and "Persistent Internal Note" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.delete_note(message1.id)]
 
         if tasks:
@@ -1457,12 +1507,25 @@ class Thread:
         ):
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
-        # Best-effort typing: never block message delivery if typing fails
+        # Best-effort typing with snooze-aware retry: if channel was deleted during snooze, restore and retry once
+        restored = False
         try:
             await destination.typing()
         except discord.NotFound:
-            logger.warning("Channel not found.")
-            raise
+            # Unknown Channel: if snoozed or we have snooze data, attempt to restore and retry once
+            if isinstance(destination, discord.TextChannel) and (self.snoozed or self.snooze_data):
+                logger.info("Thread channel missing while typing; attempting restore from snooze.")
+                try:
+                    await self.restore_from_snooze()
+                    destination = self.channel or destination
+                    restored = True
+                    await destination.typing()
+                except Exception as e:
+                    logger.warning("Restore/typing retry failed: %s", e)
+                    raise
+            else:
+                logger.warning("Channel not found.")
+                raise
         except (discord.Forbidden, discord.HTTPException, Exception) as e:
             logger.warning("Unable to send typing to %s: %s. Continuing without typing.", destination, e)
 
@@ -1495,7 +1558,22 @@ class Thread:
                 msg = await destination.send(mentions, embed=embed)
 
         else:
-            msg = await destination.send(mentions, embed=embed)
+            try:
+                msg = await destination.send(mentions, embed=embed)
+            except discord.NotFound:
+                # If channel vanished right before send, try to restore and resend once
+                if (
+                    isinstance(destination, discord.TextChannel)
+                    and (self.snoozed or self.snooze_data)
+                    and not restored
+                ):
+                    logger.info("Thread channel missing while sending; attempting restore and resend.")
+                    await self.restore_from_snooze()
+                    destination = self.channel or destination
+                    msg = await destination.send(mentions, embed=embed)
+                else:
+                    logger.warning("Channel not found during send.")
+                    raise
 
         if additional_images:
             self.ready = False

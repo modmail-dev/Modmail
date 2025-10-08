@@ -90,6 +90,7 @@ class ModmailBot(commands.Bot):
         self._started = False
 
         self.threads = ThreadManager(self)
+        self._message_queues = {}  # User ID -> asyncio.Queue for message ordering
 
         log_dir = os.path.join(temp_dir, "logs")
         if not os.path.exists(log_dir):
@@ -880,6 +881,36 @@ class ModmailBot(commands.Bot):
                 return False
         return True
 
+    async def _queue_dm_message(self, message: discord.Message) -> None:
+        """Queue DM messages to ensure they're processed in order per user."""
+        user_id = message.author.id
+
+        if user_id not in self._message_queues:
+            self._message_queues[user_id] = asyncio.Queue()
+            # Start processing task for this user
+            self.loop.create_task(self._process_user_messages(user_id))
+
+        await self._message_queues[user_id].put(message)
+
+    async def _process_user_messages(self, user_id: int) -> None:
+        """Process messages for a specific user in order."""
+        queue = self._message_queues[user_id]
+
+        while True:
+            try:
+                # Wait for a message with timeout to clean up inactive queues
+                message = await asyncio.wait_for(queue.get(), timeout=300)  # 5 minutes
+                await self.process_dm_modmail(message)
+                queue.task_done()
+            except asyncio.TimeoutError:
+                # Clean up inactive queue
+                if queue.empty():
+                    self._message_queues.pop(user_id, None)
+                    break
+            except Exception as e:
+                logger.error(f"Error processing message for user {user_id}: {e}", exc_info=True)
+                queue.task_done()
+
     async def process_dm_modmail(self, message: discord.Message) -> None:
         """Processes messages sent to the bot."""
         blocked = await self._process_blocked(message)
@@ -1055,13 +1086,7 @@ class ModmailBot(commands.Bot):
         if thread and thread.snoozed:
             await thread.restore_from_snooze()
             self.threads.cache[thread.id] = thread
-            # Update the DB with the new channel_id after restoration
-            if thread.channel:
-                await self.api.logs.update_one(
-                    {"recipient.id": str(thread.id)}, {"$set": {"channel_id": str(thread.channel.id)}}
-                )
-        # Re-fetch the thread object to ensure channel is valid
-        thread = await self.threads.find(recipient=message.author)
+            # No need to re-fetch the thread - it's already restored and cached properly
 
         if thread is None:
             delta = await self.get_thread_cooldown(message.author)
@@ -1356,7 +1381,7 @@ class ModmailBot(commands.Bot):
             return
 
         if isinstance(message.channel, discord.DMChannel):
-            return await self.process_dm_modmail(message)
+            return await self._queue_dm_message(message)
 
         ctxs = await self.get_contexts(message)
         for ctx in ctxs:
@@ -1676,7 +1701,12 @@ class ModmailBot(commands.Bot):
             await thread.delete_message(message, note=False)
             embed = discord.Embed(description="Successfully deleted message.", color=self.main_color)
         except ValueError as e:
-            if str(e) not in {"DM message not found.", "Malformed thread message."}:
+            # Treat common non-fatal cases as benign: relay counterpart not present, note embeds, etc.
+            if str(e) not in {
+                "DM message not found.",
+                "Malformed thread message.",
+                "Thread message not found.",
+            }:
                 logger.debug("Failed to find linked message to delete: %s", e)
                 embed = discord.Embed(description="Failed to delete message.", color=self.error_color)
             else:

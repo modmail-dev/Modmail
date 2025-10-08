@@ -1522,6 +1522,14 @@ class Modmail(commands.Cog):
         async with safe_typing(ctx):
             msg = await ctx.thread.note(ctx.message)
             await msg.pin()
+        # Acknowledge and clean up the invoking command message
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        await self.bot.add_reaction(ctx.message, sent_emoji)
+        try:
+            await asyncio.sleep(3)
+            await ctx.message.delete()
+        except (discord.Forbidden, discord.NotFound):
+            pass
 
     @note.command(name="persistent", aliases=["persist"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1535,6 +1543,14 @@ class Modmail(commands.Cog):
             msg = await ctx.thread.note(ctx.message, persistent=True)
             await msg.pin()
         await self.bot.api.create_note(recipient=ctx.thread.recipient, message=ctx.message, message_id=msg.id)
+        # Acknowledge and clean up the invoking command message
+        sent_emoji, _ = await self.bot.retrieve_emoji()
+        await self.bot.add_reaction(ctx.message, sent_emoji)
+        try:
+            await asyncio.sleep(3)
+            await ctx.message.delete()
+        except (discord.Forbidden, discord.NotFound):
+            pass
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -2277,10 +2293,16 @@ class Modmail(commands.Cog):
             await ctx.send("This thread is already snoozed.")
             logging.info(f"[SNOOZE] Thread for {getattr(thread.recipient, 'id', None)} already snoozed.")
             return
+        from core.time import ShortTime
+
         max_snooze = self.bot.config.get("max_snooze_time")
         if max_snooze is None:
             max_snooze = 604800
-        max_snooze = int(max_snooze)
+        else:
+            try:
+                max_snooze = int((ShortTime(str(max_snooze)).dt - ShortTime("0s").dt).total_seconds())
+            except Exception:
+                max_snooze = 604800
         if duration:
             snooze_for = int((duration.dt - duration.now).total_seconds())
             if snooze_for > max_snooze:
