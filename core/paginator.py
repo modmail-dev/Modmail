@@ -149,7 +149,7 @@ class PaginatorSession:
         """Returns the index of the last page"""
         return len(self.pages) - 1
 
-    async def run(self) -> typing.Optional[Message]:
+    async def run(self) -> None:
         """
         Starts the pagination session.
         """
