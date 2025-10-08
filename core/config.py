@@ -140,6 +140,9 @@ class ConfigManager:
         "snooze_text": "This thread has been snoozed. The channel will be restored when the user replies or a moderator unsnoozes it.",
         "unsnooze_text": "This thread has been unsnoozed and restored.",
         "unsnooze_notify_channel": "thread",  # Can be a channel ID or 'thread' for the thread's own channel
+        # snooze behavior
+        "snooze_behavior": "delete",  # 'delete' to delete channel, 'move' to move channel to snoozed_category_id
+        "snoozed_category_id": None,  # Category ID to move snoozed channels into when snooze_behavior == 'move'
     }
 
     private_keys = {

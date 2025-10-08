@@ -2284,9 +2284,11 @@ class Modmail(commands.Cog):
     @checks.thread_only()
     async def snooze(self, ctx, *, duration: UserFriendlyTime = None):
         """
-        Snooze this thread: deletes the channel, keeps the ticket open in DM, and restores it when the user replies or a moderator unsnoozes it.
-        Optionally specify a duration, e.g. 'snooze 2d' for 2 days.
-        Uses config: max_snooze_time, snooze_title, snooze_text
+        Snooze this thread. Behavior depends on config:
+        - delete (default): deletes the channel and restores it later
+        - move: moves the channel to the configured snoozed category
+            Optionally specify a duration, e.g. 'snooze 2d' for 2 days.
+            Uses config: max_snooze_time, snooze_title, snooze_text
         """
         thread = ctx.thread
         if thread.snoozed:
@@ -2309,6 +2311,85 @@ class Modmail(commands.Cog):
                 snooze_for = max_snooze
         else:
             snooze_for = max_snooze
+
+        # Capacity pre-check: if behavior is move, ensure snoozed category has room (<49 channels)
+        behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
+        if behavior == "move":
+            snoozed_cat_id = self.bot.config.get("snoozed_category_id")
+            target_category = None
+            if snoozed_cat_id:
+                try:
+                    target_category = self.bot.modmail_guild.get_channel(int(snoozed_cat_id))
+                except Exception:
+                    target_category = None
+            # Auto-create snoozed category if missing
+            if not isinstance(target_category, discord.CategoryChannel):
+                try:
+                    # Hide category by default; only bot can view/manage
+                    overwrites = {
+                        self.bot.modmail_guild.default_role: discord.PermissionOverwrite(view_channel=False)
+                    }
+                    bot_member = self.bot.modmail_guild.me
+                    if bot_member is not None:
+                        overwrites[bot_member] = discord.PermissionOverwrite(
+                            view_channel=True,
+                            send_messages=True,
+                            read_message_history=True,
+                            manage_channels=True,
+                            manage_messages=True,
+                            attach_files=True,
+                            embed_links=True,
+                            add_reactions=True,
+                        )
+                    target_category = await self.bot.modmail_guild.create_category(
+                        name="Snoozed Threads",
+                        overwrites=overwrites,
+                        reason="Auto-created snoozed category for move-based snoozing",
+                    )
+                    try:
+                        await self.bot.config.set("snoozed_category_id", target_category.id)
+                        await self.bot.config.update()
+                    except Exception:
+                        pass
+                    await ctx.send(
+                        embed=discord.Embed(
+                            title="Snoozed category created",
+                            description=(
+                                f"Created category {target_category.mention if hasattr(target_category,'mention') else target_category.name} "
+                                "and set it as `snoozed_category_id`."
+                            ),
+                            color=self.bot.main_color,
+                        )
+                    )
+                except Exception as e:
+                    await ctx.send(
+                        embed=discord.Embed(
+                            title="Could not create snoozed category",
+                            description=(
+                                "I couldn't create a category automatically. Please ensure I have Manage Channels "
+                                "permission, or set `snoozed_category_id` manually."
+                            ),
+                            color=self.bot.error_color,
+                        )
+                    )
+                    logging.warning("Failed to auto-create snoozed category: %s", e)
+            # Capacity check after ensuring category exists
+            if isinstance(target_category, discord.CategoryChannel):
+                try:
+                    if len(target_category.channels) >= 49:
+                        await ctx.send(
+                            embed=discord.Embed(
+                                title="Snooze unavailable",
+                                description=(
+                                    "The configured snoozed category is full (49 channels). "
+                                    "Unsnooze or move some channels out before snoozing more."
+                                ),
+                                color=self.bot.error_color,
+                            )
+                        )
+                        return
+                except Exception:
+                    pass
 
         # Storing snooze_start and snooze_for in the log entry
         now = datetime.now(timezone.utc)

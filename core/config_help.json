@@ -1322,5 +1322,28 @@
       "If set to a channel ID, the notification will be sent to that specific channel.",
       "See also: `unsnooze_text`, `max_snooze_time`."
     ]
+  },
+  "snooze_behavior": {
+    "default": "\"delete\"",
+    "description": "Controls how snoozing behaves. 'delete' removes the thread channel and restores it later; 'move' moves the channel into the 'snoozed_category_id' without deleting it.",
+    "examples": [
+      "`{prefix}config set snooze_behavior delete`",
+      "`{prefix}config set snooze_behavior move`"
+    ],
+    "notes": [
+      "When set to 'move', set `snoozed_category_id` to a valid Category ID.",
+      "When unsnoozed, channels moved will return to their original category and position when possible; if original no longer exists they will be moved under `main_category_id`."
+    ]
+  },
+  "snoozed_category_id": {
+    "default": "None",
+    "description": "The category ID where snoozed threads are moved when `snooze_behavior` is set to 'move'.",
+    "examples": [
+      "`{prefix}config set snoozed_category_id 123456789012345678`"
+    ],
+    "notes": [
+      "Only used when `snooze_behavior` is 'move'.",
+      "If not set or invalid, the channel will remain in its current category or the bot will fall back to deleting on failure."
+    ]
   }
 }

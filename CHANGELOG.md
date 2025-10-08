@@ -34,10 +34,16 @@ Configuration Options:
 * `snooze_text`: Customizes the text for snooze notifications.
 * `unsnooze_text`: Customizes the text for unsnooze notifications.
 * `unsnooze_notify_channel`: Specifies the channel for unsnooze notifications.
+* `snooze_behavior`: Choose between `delete` (legacy) or `move` behavior for snoozing.
+* `snoozed_category_id`: Target category for `move` snoozing; required when `snooze_behavior` is `move`.
 * `thread_min_characters`: Minimum number of characters required.
 * `thread_min_characters_title`: Title shown when the message is too short.
 * `thread_min_characters_response`: Response shown to the user if their message is too short.
 * `thread_min_characters_footer`: Footer displaying the minimum required characters.
+
+Behavioral changes:
+- When `snooze_behavior` is set to `move`, the snoozed category now has a hard limit of 49 channels. New snoozes are blocked once it’s full until space is freed.
+- When switching `snooze_behavior` to `move` via `?config set`, the bot reminds admins to set `snoozed_category_id` if it’s missing.
 
 # v4.1.2
 

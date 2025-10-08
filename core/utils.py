@@ -369,7 +369,7 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
 
 def parse_alias(alias, *, split=True):
     def encode_alias(m):
-        return "\x1AU" + base64.b64encode(m.group(1).encode()).decode() + "\x1AU"
+        return "\x1aU" + base64.b64encode(m.group(1).encode()).decode() + "\x1aU"
 
     def decode_alias(m):
         return base64.b64decode(m.group(1).encode()).decode()

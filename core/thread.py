@@ -133,13 +133,38 @@ class Thread:
 
     async def snooze(self, moderator=None, command_used=None, snooze_for=None):
         """
-        Save channel/category/position/messages to DB, mark as snoozed, delete channel.
+        Save channel/category/position/messages to DB, mark as snoozed.
+        Behavior is configurable:
+        - delete (default): delete the channel and store all data for full restore later
+        - move: move channel to a configured snoozed category and hide it (keeps channel alive)
         """
         if self.snoozed:
             return False  # Already snoozed
         channel = self.channel
         if not isinstance(channel, discord.TextChannel):
             return False
+        # If using move-based snooze, hard-cap snoozed category to 49 channels
+        behavior_pre = (self.bot.config.get("snooze_behavior") or "delete").lower()
+        if behavior_pre == "move":
+            snoozed_cat_id = self.bot.config.get("snoozed_category_id")
+            target_category = None
+            if snoozed_cat_id:
+                try:
+                    target_category = self.bot.modmail_guild.get_channel(int(snoozed_cat_id))
+                except Exception:
+                    target_category = None
+            if isinstance(target_category, discord.CategoryChannel):
+                try:
+                    if len(target_category.channels) >= 49:
+                        logger.warning(
+                            "Snoozed category (%s) is full (>=49 channels). Blocking snooze for thread %s.",
+                            target_category.id,
+                            self.id,
+                        )
+                        return False
+                except Exception:
+                    # If we cannot determine channel count, proceed; downstream will handle errors
+                    pass
         # Ensure self.log_key is set before snoozing
         if not self.log_key:
             # Try to fetch from DB using channel_id
@@ -213,14 +238,79 @@ class Thread:
         import logging
 
         logging.info(f"[SNOOZE] DB update result: {result.modified_count}")
-        # Delete channel
-        await channel.delete(reason="Thread snoozed by moderator")
-        self._channel = None
+
+        behavior = behavior_pre
+        if behavior == "move":
+            # Move the channel to the snoozed category (if configured) and optionally apply a prefix
+            snoozed_cat_id = self.bot.config.get("snoozed_category_id")
+            target_category = None
+            guild = self.bot.modmail_guild
+            if snoozed_cat_id:
+                try:
+                    target_category = guild.get_channel(int(snoozed_cat_id))
+                except Exception:
+                    target_category = None
+            # If no valid snooze category is configured, create one automatically
+            if not isinstance(target_category, discord.CategoryChannel):
+                try:
+                    # By default, hide the snoozed category from everyone and allow only the bot to see it
+                    overwrites = {guild.default_role: discord.PermissionOverwrite(view_channel=False)}
+                    bot_member = guild.me
+                    if bot_member is not None:
+                        overwrites[bot_member] = discord.PermissionOverwrite(
+                            view_channel=True,
+                            send_messages=True,
+                            read_message_history=True,
+                            manage_channels=True,
+                            manage_messages=True,
+                            attach_files=True,
+                            embed_links=True,
+                            add_reactions=True,
+                        )
+
+                    target_category = await guild.create_category(
+                        name="Snoozed Threads",
+                        overwrites=overwrites,
+                        reason="Auto-created snoozed category for move-based snoozing",
+                    )
+                    # Persist the newly created category ID into config for future runs
+                    try:
+                        await self.bot.config.set("snoozed_category_id", target_category.id)
+                        await self.bot.config.update()
+                    except Exception:
+                        logger.warning("Failed to persist snoozed_category_id after auto-creation.")
+                except Exception as e:
+                    logger.warning(
+                        "Failed to auto-create snoozed category (%s). Falling back to current category.", e
+                    )
+                    target_category = channel.category
+            try:
+                # Move and sync permissions so the channel inherits the hidden snoozed-category perms
+                await channel.edit(
+                    category=target_category,
+                    reason="Thread snoozed (moved)",
+                    sync_permissions=True,
+                )
+                # Keep channel reference; just moved
+                self._channel = channel
+                # mark in snooze data that this was a move-based snooze
+                self.snooze_data["moved"] = True
+            except Exception as e:
+                logger.warning("Failed to move channel to snoozed category: %s. Falling back to delete.", e)
+                await channel.delete(reason="Thread snoozed by moderator (fallback delete)")
+                self._channel = None
+        else:
+            # Delete channel
+            await channel.delete(reason="Thread snoozed by moderator")
+            self._channel = None
         return True
 
     async def restore_from_snooze(self):
         """
-        Recreate channel in original category/position, replay messages, mark as not snoozed.
+        Restore a snoozed thread.
+        - If channel was deleted (delete behavior), recreate and replay messages.
+        - If channel was moved (move behavior), move back to original category and position.
+        Mark as not snoozed and clear snooze data.
         """
         if not self.snooze_data or not isinstance(self.snooze_data, dict):
             import logging
@@ -233,65 +323,111 @@ class Thread:
         snoozed_by = self.snooze_data.get("snoozed_by")
         snooze_command = self.snooze_data.get("snooze_command")
         guild = self.bot.modmail_guild
-        category = guild.get_channel(self.snooze_data["category_id"])
-        overwrites = {}
-        for role_id, perm_values in self.snooze_data["overwrites"]:
-            role = guild.get_role(role_id) or guild.get_member(role_id)
-            if role:
-                overwrites[role] = discord.PermissionOverwrite(**perm_values)
-        channel = await guild.create_text_channel(
-            name=self.snooze_data["name"],
-            category=category,
-            topic=self.snooze_data["topic"],
-            slowmode_delay=self.snooze_data["slowmode_delay"],
-            overwrites=overwrites,
-            nsfw=self.snooze_data["nsfw"],
-            position=self.snooze_data["position"],
-            reason="Thread unsnoozed/restored",
+        behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
+        # Determine original category; fall back to main_category_id if original missing
+        orig_category = (
+            guild.get_channel(self.snooze_data["category_id"])
+            if self.snooze_data.get("category_id")
+            else None
         )
-        self._channel = channel
+        if not isinstance(orig_category, discord.CategoryChannel):
+            main_cat_id = self.bot.config.get("main_category_id")
+            orig_category = guild.get_channel(int(main_cat_id)) if main_cat_id else None
+
+        if behavior == "move" and isinstance(self.channel, discord.TextChannel):
+            # Channel exists but is snoozed in another category; move back
+            try:
+                await self.channel.edit(
+                    category=orig_category,
+                    position=self.snooze_data.get("position", self.channel.position),
+                    reason="Thread unsnoozed/restored",
+                )
+                # After moving back, restore original overwrites captured at snooze time
+                try:
+                    overwrites = {}
+                    for role_id, perm_values in self.snooze_data.get("overwrites", []):
+                        target = guild.get_role(role_id) or guild.get_member(role_id)
+                        if target:
+                            overwrites[target] = discord.PermissionOverwrite(**perm_values)
+                    if overwrites:
+                        await self.channel.edit(overwrites=overwrites, reason="Restore original overwrites")
+                except Exception as e:
+                    logger.warning("Failed to restore original overwrites on unsnooze: %s", e)
+
+                channel = self.channel
+            except Exception as e:
+                logger.warning("Failed to move snoozed channel back, recreating: %s", e)
+                channel = None
+        else:
+            channel = None
+
+        if channel is None:
+            # Recreate channel and replay messages (delete behavior or move fallback)
+            overwrites = {}
+            for role_id, perm_values in self.snooze_data["overwrites"]:
+                role = guild.get_role(role_id) or guild.get_member(role_id)
+                if role:
+                    overwrites[role] = discord.PermissionOverwrite(**perm_values)
+            channel = await guild.create_text_channel(
+                name=self.snooze_data["name"],
+                category=orig_category,
+                topic=self.snooze_data["topic"],
+                slowmode_delay=self.snooze_data["slowmode_delay"],
+                overwrites=overwrites,
+                nsfw=self.snooze_data["nsfw"],
+                position=self.snooze_data["position"],
+                reason="Thread unsnoozed/restored",
+            )
+            self._channel = channel
+        else:
+            self._channel = channel
         # Strictly restore the log_key from snooze_data (never create a new one)
         self.log_key = self.snooze_data.get("log_key")
-        # Replay messages
-        for msg in self.snooze_data["messages"]:
-            try:
-                author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
-                    msg["author_id"]
-                )
-            except discord.NotFound:
-                author = None
-            content = msg["content"]
-            embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
-            attachments = msg.get("attachments", [])
-            msg_type = msg.get("type")
-            # Only send if there is content, embeds, or attachments
-            if not content and not embeds and not attachments:
-                continue  # Skip empty messages
-            author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
-            if author_is_mod:
-                # Prioritize stored author_name from snooze data over fetched user
-                username = (
-                    msg.get("author_name") or (getattr(author, "name", None) if author else None) or "Unknown"
-                )
-                user_id = msg.get("author_id")
-                if embeds:
-                    embeds[0].set_author(
-                        name=f"{username} ({user_id})",
-                        icon_url=msg.get("author_avatar")
-                        or (
-                            author.display_avatar.url
-                            if author and hasattr(author, "display_avatar")
-                            else None
-                        ),
+        # Replay messages only if we re-created the channel (delete behavior or move fallback)
+        if behavior != "move" or (behavior == "move" and not self.snooze_data.get("moved", False)):
+            for msg in self.snooze_data["messages"]:
+                try:
+                    author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
+                        msg["author_id"]
                     )
-                    await channel.send(embeds=embeds)
+                except discord.NotFound:
+                    author = None
+                content = msg["content"]
+                embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
+                attachments = msg.get("attachments", [])
+                msg_type = msg.get("type")
+                # Only send if there is content, embeds, or attachments
+                if not content and not embeds and not attachments:
+                    continue  # Skip empty messages
+                author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
+                if author_is_mod:
+                    # Prioritize stored author_name from snooze data over fetched user
+                    username = (
+                        msg.get("author_name")
+                        or (getattr(author, "name", None) if author else None)
+                        or "Unknown"
+                    )
+                    user_id = msg.get("author_id")
+                    if embeds:
+                        embeds[0].set_author(
+                            name=f"{username} ({user_id})",
+                            icon_url=msg.get("author_avatar")
+                            or (
+                                author.display_avatar.url
+                                if author and hasattr(author, "display_avatar")
+                                else None
+                            ),
+                        )
+                        await channel.send(embeds=embeds)
+                    else:
+                        formatted = (
+                            f"**{username} ({user_id})**: {content}"
+                            if content
+                            else f"**{username} ({user_id})**"
+                        )
+                        await channel.send(formatted)
                 else:
-                    formatted = (
-                        f"**{username} ({user_id})**: {content}" if content else f"**{username} ({user_id})**"
-                    )
-                    await channel.send(formatted)
-            else:
-                await channel.send(content=content or None, embeds=embeds or None)
+                    await channel.send(content=content or None, embeds=embeds or None)
         self.snoozed = False
         # Store snooze_data for notification before clearing
         snooze_data_for_notify = self.snooze_data
@@ -1077,6 +1213,27 @@ class Thread:
         self, message: discord.Message, anonymous: bool = False, plain: bool = False
     ) -> typing.Tuple[typing.List[discord.Message], discord.Message]:
         """Returns List[user_dm_msg] and thread_channel_msg"""
+        # If this thread was snoozed using move-behavior, unsnooze automatically when a mod replies
+        try:
+            behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
+        except Exception:
+            behavior = "delete"
+        if self.snoozed and behavior == "move":
+            # Ensure we have snooze_data to restore location
+            if not self.snooze_data:
+                try:
+                    log_entry = await self.bot.api.logs.find_one(
+                        {"recipient.id": str(self.id), "snoozed": True}
+                    )
+                    if log_entry:
+                        self.snooze_data = log_entry.get("snooze_data")
+                except Exception:
+                    pass
+            try:
+                await self.restore_from_snooze()
+            except Exception as e:
+                logger.warning("Auto-unsnooze on reply failed: %s", e)
+
         if not message.content and not message.attachments and not message.stickers:
             raise MissingRequiredArgument(DummyParam("msg"))
         for guild in self.bot.guilds:

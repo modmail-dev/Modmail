@@ -1398,6 +1398,27 @@ class ModmailBot(commands.Bot):
 
             thread = await self.threads.find(channel=ctx.channel)
             if thread is not None:
+                # If thread is snoozed (moved), auto-unsnooze when a mod sends a message directly in channel
+                try:
+                    behavior = (self.config.get("snooze_behavior") or "delete").lower()
+                except Exception:
+                    behavior = "delete"
+                if thread.snoozed and behavior == "move":
+                    if not thread.snooze_data:
+                        try:
+                            log_entry = await self.api.logs.find_one(
+                                {"recipient.id": str(thread.id), "snoozed": True}
+                            )
+                            if log_entry:
+                                thread.snooze_data = log_entry.get("snooze_data")
+                        except Exception:
+                            pass
+                    try:
+                        await thread.restore_from_snooze()
+                        # refresh local cache
+                        self.threads.cache[thread.id] = thread
+                    except Exception as e:
+                        logger.warning("Auto-unsnooze on direct message failed: %s", e)
                 anonymous = False
                 plain = False
                 if self.config.get("anon_reply_without_command"):

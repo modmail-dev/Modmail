@@ -810,6 +810,31 @@ class Utility(commands.Cog):
                     color=self.bot.main_color,
                     description=f"Set `{key}` to `{self.bot.config[key]}`.",
                 )
+                # If turning on move-based snoozing, remind to set snoozed_category_id
+                if key == "snooze_behavior":
+                    behavior = (
+                        str(self.bot.config.get("snooze_behavior", convert=False)).strip().lower().strip('"')
+                    )
+                    if behavior == "move":
+                        cat_id = self.bot.config.get("snoozed_category_id", convert=False)
+                        valid = False
+                        if cat_id:
+                            try:
+                                cat_obj = self.bot.modmail_guild.get_channel(int(str(cat_id)))
+                                valid = isinstance(cat_obj, discord.CategoryChannel)
+                            except Exception:
+                                valid = False
+                        if not valid:
+                            example = f"`{self.bot.prefix}config set snoozed_category_id <category_id>`"
+                            embed.add_field(
+                                name="Action required",
+                                value=(
+                                    "You set `snooze_behavior` to `move`. Please set `snoozed_category_id` "
+                                    "to the category where snoozed threads should be moved.\n"
+                                    f"For example: {example}"
+                                ),
+                                inline=False,
+                            )
             except InvalidConfigError as exc:
                 embed = exc.embed
         else:
