@@ -1345,5 +1345,29 @@
       "Only used when `snooze_behavior` is 'move'.",
       "If not set or invalid, the channel will remain in its current category or the bot will fall back to deleting on failure."
     ]
+  },
+  "snooze_store_attachments": {
+    "default": "No",
+    "description": "When enabled and `snooze_behavior` is 'delete', image attachments are stored as base64 within the snooze data so they can be re-uploaded on unsnooze, preserving media even if the original channel was deleted.",
+    "examples": [
+      "`{prefix}config set snooze_store_attachments yes`",
+      "`{prefix}config set snooze_store_attachments no`"
+    ],
+    "notes": [
+      "Only applies to delete-behavior snoozes. In move-behavior, attachments remain in the channel history.",
+      "To avoid exceeding Mongo's 16MB document size, consider also adjusting `snooze_attachment_max_bytes`."
+    ]
+  },
+  "snooze_attachment_max_bytes": {
+    "default": "4194304 (4 MiB)",
+    "description": "Maximum size per attachment to store as base64 when `snooze_store_attachments` is enabled.",
+    "examples": [
+      "`{prefix}config set snooze_attachment_max_bytes 2097152` (2 MiB)",
+      "`{prefix}config set snooze_attachment_max_bytes 0` (disable size check; not recommended)"
+    ],
+    "notes": [
+      "This cap helps prevent hitting MongoDB's 16MB per-document limit when storing large attachments.",
+      "Non-image files are not stored as base64 and will be preserved as their original URLs if available."
+    ]
   }
 }

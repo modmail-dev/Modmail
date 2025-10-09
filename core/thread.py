@@ -1,6 +1,6 @@
 import asyncio
-import base64
 import copy
+import base64
 import functools
 import io
 import re
@@ -431,6 +431,14 @@ class Thread:
                                 else None
                             ),
                         )
+                        # If there were attachment URLs, include them as a field so mods can access them
+                        if attachments:
+                            try:
+                                embeds[0].add_field(
+                                    name="Attachments", value="\n".join(attachments), inline=False
+                                )
+                            except Exception:
+                                pass
                         await channel.send(embeds=embeds, allowed_mentions=discord.AllowedMentions.none())
                     else:
                         # Build a non-empty message; include attachment URLs if no content
@@ -444,7 +452,9 @@ class Thread:
                         await channel.send(formatted, allowed_mentions=discord.AllowedMentions.none())
                 else:
                     # Recipient message: include attachment URLs if content is empty
-                    content_to_send = content if content else ("\n".join(attachments) if attachments else None)
+                    content_to_send = (
+                        content if content else ("\n".join(attachments) if attachments else None)
+                    )
                     await channel.send(
                         content=content_to_send,
                         embeds=embeds or None,
@@ -480,9 +490,7 @@ class Thread:
         notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
         notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
         if notify_channel == "thread":
-            await channel.send(
-                notify_text, allowed_mentions=discord.AllowedMentions.none()
-            )
+            await channel.send(notify_text, allowed_mentions=discord.AllowedMentions.none())
         else:
             ch = self.bot.get_channel(int(notify_channel))
             if ch:
@@ -1720,32 +1728,33 @@ class Thread:
 
         if plain:
             if from_mod and not isinstance(destination, discord.TextChannel):
-                # Plain to user
+                # Plain to user (DM)
                 with warnings.catch_warnings():
-                    # Catch coroutines not awaited warning
                     warnings.simplefilter("ignore")
                     additional_images = []
 
-                if embed.footer.text:
-                    plain_message = f"**{embed.footer.text} "
-                else:
-                    plain_message = "**"
-                plain_message += f"{embed.author.name}:** {embed.description}"
-                files = []
-                for i in message.attachments:
-                    files.append(await i.to_file())
+                prefix = f"**{embed.footer.text} " if embed.footer and embed.footer.text else "**"
+                body = embed.description or ""
+                plain_message = f"{prefix}{embed.author.name}:** {body}"
 
-                msg = await destination.send(plain_message, files=files)
+                files = []
+                for att in message.attachments:
+                    try:
+                        files.append(await att.to_file())
+                    except Exception:
+                        logger.warning("Failed to attach file in plain DM.", exc_info=True)
+
+                msg = await destination.send(plain_message, files=files or None)
             else:
                 # Plain to mods
-                embed.set_footer(text="[PLAIN] " + embed.footer.text)
+                footer_text = embed.footer.text if embed.footer else ""
+                embed.set_footer(text=f"[PLAIN] {footer_text}".strip())
                 msg = await destination.send(mentions, embed=embed)
 
         else:
             try:
                 msg = await destination.send(mentions, embed=embed)
             except discord.NotFound:
-                # If channel vanished right before send, try to restore and resend once
                 if (
                     isinstance(destination, discord.TextChannel)
                     and (self.snoozed or self.snooze_data)
@@ -1768,16 +1777,19 @@ class Thread:
 
     async def get_notifications(self) -> str:
         key = str(self.id)
+        mentions: typing.List[str] = []
+        subs = self.bot.config["subscriptions"].get(key, [])
+        mentions.extend(subs)
+        one_time = self.bot.config["notification_squad"].get(key, [])
+        mentions.extend(one_time)
 
-        mentions = []
-        mentions.extend(self.bot.config["subscriptions"].get(key, []))
-
-        if key in self.bot.config["notification_squad"]:
-            mentions.extend(self.bot.config["notification_squad"][key])
-            self.bot.config["notification_squad"].pop(key)
+        if one_time:
+            self.bot.config["notification_squad"].pop(key, None)
             self.bot.loop.create_task(self.bot.config.update())
 
-        return " ".join(set(mentions))
+        if not mentions:
+            return ""
+        return " ".join(list(dict.fromkeys(mentions)))
 
     async def set_title(self, title: str) -> None:
         topic = f"Title: {title}\n"

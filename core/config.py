@@ -143,6 +143,9 @@ class ConfigManager:
         # snooze behavior
         "snooze_behavior": "delete",  # 'delete' to delete channel, 'move' to move channel to snoozed_category_id
         "snoozed_category_id": None,  # Category ID to move snoozed channels into when snooze_behavior == 'move'
+        # attachments persistence for delete-behavior snooze
+        "snooze_store_attachments": False,  # when True, store image attachments as base64 in snooze_data
+        "snooze_attachment_max_bytes": 4_194_304,  # 4 MiB per attachment cap to avoid Mongo 16MB limit
     }
 
     private_keys = {
@@ -242,6 +245,8 @@ class ConfigManager:
         "use_hoisted_top_role",
         "enable_presence_intent",
         "registry_plugins_only",
+        # snooze
+        "snooze_store_attachments",
     }
 
     enums = {
