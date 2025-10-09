@@ -390,18 +390,17 @@ class Thread:
             except Exception:
                 logger.error("Failed to recreate thread channel during unsnooze.", exc_info=True)
                 return False
+
         # Helper to safely send to thread channel, recreating once if deleted
         async def _safe_send_to_channel(*, content=None, embeds=None, allowed_mentions=None):
             nonlocal channel
             try:
-                return await channel.send(
-                    content=content, embeds=embeds, allowed_mentions=allowed_mentions
-                )
+                return await channel.send(content=content, embeds=embeds, allowed_mentions=allowed_mentions)
             except discord.NotFound:
                 # Channel was deleted between restore and send; try to recreate once
                 try:
                     ow_map: dict = {}
-                    for role_id, perm_values in (self.snooze_data.get("overwrites", []) or []):
+                    for role_id, perm_values in self.snooze_data.get("overwrites", []) or []:
                         target = guild.get_role(role_id) or guild.get_member(role_id)
                         if target is None:
                             continue
@@ -528,9 +527,7 @@ class Thread:
         notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
         notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
         if notify_channel == "thread":
-            await _safe_send_to_channel(
-                content=notify_text, allowed_mentions=discord.AllowedMentions.none()
-            )
+            await _safe_send_to_channel(content=notify_text, allowed_mentions=discord.AllowedMentions.none())
         else:
             ch = self.bot.get_channel(int(notify_channel))
             if ch:
@@ -926,9 +923,7 @@ class Thread:
             view = None
             if self.bot.config.get("show_log_url_button") and log_url:
                 view = discord.ui.View()
-                view.add_item(
-                    discord.ui.Button(label="Log link", url=log_url, style=discord.ButtonStyle.url)
-                )
+                view.add_item(discord.ui.Button(label="Log link", url=log_url, style=discord.ButtonStyle.url))
             tasks.append(self.bot.log_channel.send(embed=embed, view=view))
 
         # Thread closed message
