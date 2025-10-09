@@ -319,14 +319,17 @@ class Thread:
                 f"[UNSNOOZE] Tried to restore thread {self.id} but snooze_data is None or not a dict."
             )
             return False
-        # Now safe to access self.snooze_data
+
+        # Cache some fields we need later (before we potentially clear snooze_data)
         snoozed_by = self.snooze_data.get("snoozed_by")
         snooze_command = self.snooze_data.get("snooze_command")
+
         guild = self.bot.modmail_guild
         behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
+
         # Determine original category; fall back to main_category_id if original missing
         orig_category = (
-            guild.get_channel(self.snooze_data["category_id"])
+            guild.get_channel(self.snooze_data.get("category_id"))
             if self.snooze_data.get("category_id")
             else None
         )
@@ -334,23 +337,27 @@ class Thread:
             main_cat_id = self.bot.config.get("main_category_id")
             orig_category = guild.get_channel(int(main_cat_id)) if main_cat_id else None
 
+        # Default: assume we'll need to recreate
+        channel: typing.Optional[discord.TextChannel] = None
+
+        # If move-behavior and channel still exists, move it back and restore overwrites
         if behavior == "move" and isinstance(self.channel, discord.TextChannel):
-            # Channel exists but is snoozed in another category; move back
             try:
                 await self.channel.edit(
                     category=orig_category,
                     position=self.snooze_data.get("position", self.channel.position),
                     reason="Thread unsnoozed/restored",
                 )
-                # After moving back, restore original overwrites captured at snooze time
+                # Restore original overwrites captured at snooze time
                 try:
-                    overwrites = {}
+                    ow_map: dict = {}
                     for role_id, perm_values in self.snooze_data.get("overwrites", []):
                         target = guild.get_role(role_id) or guild.get_member(role_id)
-                        if target:
-                            overwrites[target] = discord.PermissionOverwrite(**perm_values)
-                    if overwrites:
-                        await self.channel.edit(overwrites=overwrites, reason="Restore original overwrites")
+                        if target is None:
+                            continue
+                        ow_map[target] = discord.PermissionOverwrite(**perm_values)
+                    if ow_map:
+                        await self.channel.edit(overwrites=ow_map, reason="Restore original overwrites")
                 except Exception as e:
                     logger.warning("Failed to restore original overwrites on unsnooze: %s", e)
 
@@ -358,50 +365,55 @@ class Thread:
             except Exception as e:
                 logger.warning("Failed to move snoozed channel back, recreating: %s", e)
                 channel = None
-        else:
-            channel = None
 
+        # If we couldn't move back (or behavior=delete), recreate the channel
         if channel is None:
-            # Recreate channel and replay messages (delete behavior or move fallback)
-            overwrites = {}
-            for role_id, perm_values in self.snooze_data["overwrites"]:
-                role = guild.get_role(role_id) or guild.get_member(role_id)
-                if role:
-                    overwrites[role] = discord.PermissionOverwrite(**perm_values)
-            channel = await guild.create_text_channel(
-                name=self.snooze_data["name"],
-                category=orig_category,
-                topic=self.snooze_data["topic"],
-                slowmode_delay=self.snooze_data["slowmode_delay"],
-                overwrites=overwrites,
-                nsfw=self.snooze_data["nsfw"],
-                position=self.snooze_data["position"],
-                reason="Thread unsnoozed/restored",
-            )
-            self._channel = channel
-        else:
-            self._channel = channel
+            try:
+                ow_map: dict = {}
+                for role_id, perm_values in self.snooze_data.get("overwrites", []):
+                    target = guild.get_role(role_id) or guild.get_member(role_id)
+                    if target is None:
+                        continue
+                    ow_map[target] = discord.PermissionOverwrite(**perm_values)
+
+                channel = await guild.create_text_channel(
+                    name=self.snooze_data.get("name") or f"thread-{self.id}",
+                    category=orig_category,
+                    overwrites=ow_map or None,
+                    position=self.snooze_data.get("position"),
+                    topic=self.snooze_data.get("topic"),
+                    slowmode_delay=self.snooze_data.get("slowmode_delay") or 0,
+                    nsfw=bool(self.snooze_data.get("nsfw")),
+                    reason="Thread unsnoozed/restored (recreated)",
+                )
+                self._channel = channel
+            except Exception:
+                logger.error("Failed to recreate thread channel during unsnooze.", exc_info=True)
+                return False
         # Strictly restore the log_key from snooze_data (never create a new one)
         self.log_key = self.snooze_data.get("log_key")
+
         # Replay messages only if we re-created the channel (delete behavior or move fallback)
         if behavior != "move" or (behavior == "move" and not self.snooze_data.get("moved", False)):
-            for msg in self.snooze_data["messages"]:
+            for msg in self.snooze_data.get("messages", []):
                 try:
                     author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
                         msg["author_id"]
                     )
                 except discord.NotFound:
                     author = None
-                content = msg["content"]
+
+                content = msg.get("content")
                 embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
                 attachments = msg.get("attachments", [])
-                msg_type = msg.get("type")
-                # Only send if there is content, embeds, or attachments
+
+                # Only send if there is something to send
                 if not content and not embeds and not attachments:
-                    continue  # Skip empty messages
+                    continue
+
                 author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
                 if author_is_mod:
-                    # Prioritize stored author_name from snooze data over fetched user
+                    # Prefer stored author_name/avatar
                     username = (
                         msg.get("author_name")
                         or (getattr(author, "name", None) if author else None)
@@ -409,6 +421,7 @@ class Thread:
                     )
                     user_id = msg.get("author_id")
                     if embeds:
+                        # Ensure embeds show author details
                         embeds[0].set_author(
                             name=f"{username} ({user_id})",
                             icon_url=msg.get("author_avatar")
@@ -418,21 +431,22 @@ class Thread:
                                 else None
                             ),
                         )
-                        await channel.send(
-                            embeds=embeds, allowed_mentions=discord.AllowedMentions.none()
-                        )
+                        await channel.send(embeds=embeds, allowed_mentions=discord.AllowedMentions.none())
                     else:
-                        formatted = (
-                            f"**{username} ({user_id})**: {content}"
-                            if content
-                            else f"**{username} ({user_id})**"
-                        )
-                        await channel.send(
-                            formatted, allowed_mentions=discord.AllowedMentions.none()
-                        )
+                        # Build a non-empty message; include attachment URLs if no content
+                        header = f"**{username} ({user_id})**"
+                        if content:
+                            formatted = f"{header}: {content}"
+                        elif attachments:
+                            formatted = header + "\n" + "\n".join(attachments)
+                        else:
+                            formatted = header
+                        await channel.send(formatted, allowed_mentions=discord.AllowedMentions.none())
                 else:
+                    # Recipient message: include attachment URLs if content is empty
+                    content_to_send = content if content else ("\n".join(attachments) if attachments else None)
                     await channel.send(
-                        content=content or None,
+                        content=content_to_send,
                         embeds=embeds or None,
                         allowed_mentions=discord.AllowedMentions.none(),
                     )
