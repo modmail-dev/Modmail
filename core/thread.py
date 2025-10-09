@@ -418,16 +418,24 @@ class Thread:
                                 else None
                             ),
                         )
-                        await channel.send(embeds=embeds)
+                        await channel.send(
+                            embeds=embeds, allowed_mentions=discord.AllowedMentions.none()
+                        )
                     else:
                         formatted = (
                             f"**{username} ({user_id})**: {content}"
                             if content
                             else f"**{username} ({user_id})**"
                         )
-                        await channel.send(formatted)
+                        await channel.send(
+                            formatted, allowed_mentions=discord.AllowedMentions.none()
+                        )
                 else:
-                    await channel.send(content=content or None, embeds=embeds or None)
+                    await channel.send(
+                        content=content or None,
+                        embeds=embeds or None,
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
         self.snoozed = False
         # Store snooze_data for notification before clearing
         snooze_data_for_notify = self.snooze_data
@@ -458,18 +466,23 @@ class Thread:
         notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
         notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
         if notify_channel == "thread":
-            await channel.send(notify_text)
+            await channel.send(
+                notify_text, allowed_mentions=discord.AllowedMentions.none()
+            )
         else:
             ch = self.bot.get_channel(int(notify_channel))
             if ch:
-                await ch.send(f"Thread for user <@{self.id}> has been unsnoozed and restored.")
+                await ch.send(
+                    f"Thread for user <@{self.id}> has been unsnoozed and restored.",
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
         # Show who ran the snooze command and the command used
         # Use snooze_data_for_notify to avoid accessing self.snooze_data after it is set to None
         snoozed_by = snooze_data_for_notify.get("snoozed_by") if snooze_data_for_notify else None
         snooze_command = snooze_data_for_notify.get("snooze_command") if snooze_data_for_notify else None
         if snoozed_by or snooze_command:
             info = f"Snoozed by: {snoozed_by or 'Unknown'} | Command: {snooze_command or '?snooze'}"
-            await channel.send(info)
+            await channel.send(info, allowed_mentions=discord.AllowedMentions.none())
         return True
 
     @classmethod
