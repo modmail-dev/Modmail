@@ -390,6 +390,40 @@ class Thread:
             except Exception:
                 logger.error("Failed to recreate thread channel during unsnooze.", exc_info=True)
                 return False
+        # Helper to safely send to thread channel, recreating once if deleted
+        async def _safe_send_to_channel(*, content=None, embeds=None, allowed_mentions=None):
+            nonlocal channel
+            try:
+                return await channel.send(
+                    content=content, embeds=embeds, allowed_mentions=allowed_mentions
+                )
+            except discord.NotFound:
+                # Channel was deleted between restore and send; try to recreate once
+                try:
+                    ow_map: dict = {}
+                    for role_id, perm_values in (self.snooze_data.get("overwrites", []) or []):
+                        target = guild.get_role(role_id) or guild.get_member(role_id)
+                        if target is None:
+                            continue
+                        ow_map[target] = discord.PermissionOverwrite(**perm_values)
+                    channel = await guild.create_text_channel(
+                        name=(self.snooze_data.get("name") or f"thread-{self.id}"),
+                        category=orig_category,
+                        overwrites=ow_map or None,
+                        position=self.snooze_data.get("position"),
+                        topic=self.snooze_data.get("topic"),
+                        slowmode_delay=self.snooze_data.get("slowmode_delay") or 0,
+                        nsfw=bool(self.snooze_data.get("nsfw")),
+                        reason="Thread unsnoozed/restored (recreated after NotFound)",
+                    )
+                    self._channel = channel
+                    return await channel.send(
+                        content=content, embeds=embeds, allowed_mentions=allowed_mentions
+                    )
+                except Exception:
+                    logger.error("Failed to recreate channel during unsnooze send.", exc_info=True)
+                    return None
+
         # Strictly restore the log_key from snooze_data (never create a new one)
         self.log_key = self.snooze_data.get("log_key")
 
@@ -439,7 +473,9 @@ class Thread:
                                 )
                             except Exception:
                                 pass
-                        await channel.send(embeds=embeds, allowed_mentions=discord.AllowedMentions.none())
+                        await _safe_send_to_channel(
+                            embeds=embeds, allowed_mentions=discord.AllowedMentions.none()
+                        )
                     else:
                         # Build a non-empty message; include attachment URLs if no content
                         header = f"**{username} ({user_id})**"
@@ -449,13 +485,15 @@ class Thread:
                             formatted = header + "\n" + "\n".join(attachments)
                         else:
                             formatted = header
-                        await channel.send(formatted, allowed_mentions=discord.AllowedMentions.none())
+                        await _safe_send_to_channel(
+                            content=formatted, allowed_mentions=discord.AllowedMentions.none()
+                        )
                 else:
                     # Recipient message: include attachment URLs if content is empty
                     content_to_send = (
                         content if content else ("\n".join(attachments) if attachments else None)
                     )
-                    await channel.send(
+                    await _safe_send_to_channel(
                         content=content_to_send,
                         embeds=embeds or None,
                         allowed_mentions=discord.AllowedMentions.none(),
@@ -490,7 +528,9 @@ class Thread:
         notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
         notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
         if notify_channel == "thread":
-            await channel.send(notify_text, allowed_mentions=discord.AllowedMentions.none())
+            await _safe_send_to_channel(
+                content=notify_text, allowed_mentions=discord.AllowedMentions.none()
+            )
         else:
             ch = self.bot.get_channel(int(notify_channel))
             if ch:
@@ -882,11 +922,13 @@ class Thread:
         tasks = [self.bot.config.update()]
 
         if self.bot.log_channel is not None and self.channel is not None:
-            if self.bot.config["show_log_url_button"]:
+            # Only create a URL button if we actually have a valid log_url
+            view = None
+            if self.bot.config.get("show_log_url_button") and log_url:
                 view = discord.ui.View()
-                view.add_item(discord.ui.Button(label="Log link", url=log_url, style=discord.ButtonStyle.url))
-            else:
-                view = None
+                view.add_item(
+                    discord.ui.Button(label="Log link", url=log_url, style=discord.ButtonStyle.url)
+                )
             tasks.append(self.bot.log_channel.send(embed=embed, view=view))
 
         # Thread closed message
