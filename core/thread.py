@@ -476,27 +476,41 @@ class Thread:
                             embeds=embeds, allowed_mentions=discord.AllowedMentions.none()
                         )
                     else:
-                        # Build a non-empty message; include attachment URLs if no content
+                        # Plain-text path (no embeds): prefix with username and user id
                         header = f"**{username} ({user_id})**"
-                        if content:
-                            formatted = f"{header}: {content}"
-                        elif attachments:
-                            formatted = header + "\n" + "\n".join(attachments)
-                        else:
-                            formatted = header
+                        body = content or ""
+                        if attachments and not body:
+                            # no content; include attachment URLs on new lines
+                            body = "\n".join(attachments)
+                        formatted = f"{header}: {body}" if body else header
                         await _safe_send_to_channel(
                             content=formatted, allowed_mentions=discord.AllowedMentions.none()
                         )
                 else:
                     # Recipient message: include attachment URLs if content is empty
-                    content_to_send = (
-                        content if content else ("\n".join(attachments) if attachments else None)
+                    # When no embeds, prefix plain text with username and user id
+                    username = (
+                        msg.get("author_name")
+                        or (getattr(author, "name", None) if author else None)
+                        or "Unknown"
                     )
-                    await _safe_send_to_channel(
-                        content=content_to_send,
-                        embeds=embeds or None,
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
+                    user_id = msg.get("author_id")
+                    if embeds:
+                        await _safe_send_to_channel(
+                            content=None,
+                            embeds=embeds or None,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
+                    else:
+                        header = f"**{username} ({user_id})**"
+                        body = content or ""
+                        if attachments and not body:
+                            body = "\n".join(attachments)
+                        formatted = f"{header}: {body}" if body else header
+                        await _safe_send_to_channel(
+                            content=formatted,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
         self.snoozed = False
         # Store snooze_data for notification before clearing
         snooze_data_for_notify = self.snooze_data
