@@ -34,6 +34,7 @@ Configuration Options:
 * `snooze_text`: Customizes the text for snooze notifications.
 * `unsnooze_text`: Customizes the text for unsnooze notifications.
 * `unsnooze_notify_channel`: Specifies the channel for unsnooze notifications.
+* `unsnooze_history_limit`: Limits the number of messages replayed when unsnoozing (genesis message and notes are always shown).
 * `snooze_behavior`: Choose between `delete` (legacy) or `move` behavior for snoozing.
 * `snoozed_category_id`: Target category for `move` snoozing; required when `snooze_behavior` is `move`.
 * `thread_min_characters`: Minimum number of characters required.

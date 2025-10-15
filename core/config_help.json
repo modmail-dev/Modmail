@@ -1369,5 +1369,18 @@
       "This cap helps prevent hitting MongoDB's 16MB per-document limit when storing large attachments.",
       "Non-image files are not stored as base64 and will be preserved as their original URLs if available."
     ]
+  },
+  "unsnooze_history_limit": {
+    "default": "None (all messages replayed)",
+    "description": "Limits the number of messages replayed when a thread is unsnoozed. When set, only the last N messages will be displayed in the restored channel.",
+    "examples": [
+      "`{prefix}config set unsnooze_history_limit 50`",
+      "`{prefix}config set unsnooze_history_limit 100`"
+    ],
+    "notes": [
+      "All messages remain stored in the database regardless of this limit.",
+      "Set to None or delete this config to replay all messages when unsnoozing.",
+      "See also: `snooze_behavior`, `unsnooze_text`."
+    ]
   }
 }

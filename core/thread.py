@@ -71,6 +71,9 @@ class Thread:
         self.snoozed = False  # True if thread is snoozed
         self.snooze_data = None  # Dict with channel/category/position/messages for restoration
         self.log_key = None  # Ensure log_key always exists
+        # --- UNSNOOZE COMMAND QUEUE ---
+        self._unsnoozing = False  # True while restore_from_snooze is running
+        self._command_queue = []  # Queue of (ctx, command) tuples; close commands always last
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
@@ -312,12 +315,16 @@ class Thread:
         - If channel was moved (move behavior), move back to original category and position.
         Mark as not snoozed and clear snooze data.
         """
+        # Mark that unsnooze is in progress
+        self._unsnoozing = True
+
         if not self.snooze_data or not isinstance(self.snooze_data, dict):
             import logging
 
             logging.warning(
                 f"[UNSNOOZE] Tried to restore thread {self.id} but snooze_data is None or not a dict."
             )
+            self._unsnoozing = False
             return False
 
         # Cache some fields we need later (before we potentially clear snooze_data)
@@ -428,7 +435,87 @@ class Thread:
 
         # Replay messages only if we re-created the channel (delete behavior or move fallback)
         if behavior != "move" or (behavior == "move" and not self.snooze_data.get("moved", False)):
-            for msg in self.snooze_data.get("messages", []):
+            # Get history limit from config (0 or None = show all)
+            history_limit = self.bot.config.get("unsnooze_history_limit")
+            all_messages = self.snooze_data.get("messages", [])
+
+            # Separate genesis, notes, and regular messages
+            genesis_msg = None
+            notes = []
+            regular_messages = []
+
+            for msg in all_messages:
+                msg_type = msg.get("type")
+                # Check if it's the genesis message (has Roles field)
+                if msg.get("embeds"):
+                    for embed_dict in msg.get("embeds", []):
+                        if embed_dict.get("fields"):
+                            for field in embed_dict.get("fields", []):
+                                if field.get("name") == "Roles":
+                                    genesis_msg = msg
+                                    break
+                            if genesis_msg:
+                                break
+                # Check if it's a note
+                if msg_type == "mod_only":
+                    notes.append(msg)
+                elif genesis_msg != msg:
+                    regular_messages.append(msg)
+
+            # Apply limit if set
+            limited = False
+            if history_limit:
+                try:
+                    history_limit = int(history_limit)
+                    if history_limit > 0 and len(regular_messages) > history_limit:
+                        regular_messages = regular_messages[-history_limit:]
+                        limited = True
+                except (ValueError, TypeError):
+                    pass
+
+            # Replay genesis first
+            if genesis_msg:
+                msg = genesis_msg
+                try:
+                    author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
+                        msg["author_id"]
+                    )
+                except discord.NotFound:
+                    author = None
+                embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
+                if embeds:
+                    await _safe_send_to_channel(
+                        embeds=embeds, allowed_mentions=discord.AllowedMentions.none()
+                    )
+
+            # Send history limit notification after genesis
+            if limited:
+                prefix = self.bot.config["log_url_prefix"].strip("/")
+                if prefix == "NONE":
+                    prefix = ""
+                log_url = (
+                    f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{self.log_key}"
+                    if self.log_key
+                    else None
+                )
+
+                limit_embed = discord.Embed(
+                    color=0xFFA500,
+                    title="⚠️ History Limited",
+                    description=f"Only showing the last **{history_limit}** messages due to the `unsnooze_history_limit` setting.",
+                )
+                if log_url:
+                    limit_embed.description += f"\n\n[View full history in logs]({log_url})"
+                await _safe_send_to_channel(
+                    embeds=[limit_embed], allowed_mentions=discord.AllowedMentions.none()
+                )
+
+            # Build list of remaining messages to show
+            messages_to_show = []
+            messages_to_show.extend(notes)
+            messages_to_show.extend(regular_messages)
+
+            for msg in messages_to_show:
                 try:
                     author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
                         msg["author_id"]
@@ -556,6 +643,16 @@ class Thread:
         if snoozed_by or snooze_command:
             info = f"Snoozed by: {snoozed_by or 'Unknown'} | Command: {snooze_command or '?snooze'}"
             await channel.send(info, allowed_mentions=discord.AllowedMentions.none())
+
+        # Ensure channel is set before processing commands
+        self._channel = channel
+
+        # Mark unsnooze as complete
+        self._unsnoozing = False
+
+        # Process queued commands
+        await self._process_command_queue()
+
         return True
 
     @classmethod
@@ -1909,6 +2006,59 @@ class Thread:
 
         await self.channel.edit(topic=topic)
         await self._update_users_genesis()
+
+    async def queue_command(self, ctx, command) -> bool:
+        """
+        Queue a command to be executed after unsnooze completes.
+        Close commands are automatically moved to the end of the queue.
+        Returns True if command was queued, False if it should execute immediately.
+        """
+        if self._unsnoozing:
+            command_name = command.qualified_name if command else ""
+
+            # If it's a close command, always add to end
+            if command_name == "close":
+                self._command_queue.append((ctx, command))
+            else:
+                # For non-close commands, insert before any close commands
+                close_index = None
+                for i, (_, cmd) in enumerate(self._command_queue):
+                    if cmd and cmd.qualified_name == "close":
+                        close_index = i
+                        break
+
+                if close_index is not None:
+                    self._command_queue.insert(close_index, (ctx, command))
+                else:
+                    self._command_queue.append((ctx, command))
+
+            return True
+        return False
+
+    async def _process_command_queue(self) -> None:
+        """
+        Process all queued commands after unsnooze completes.
+        Close commands are always last, so processing stops naturally after close.
+        """
+        if not self._command_queue:
+            return
+
+        logger.info(f"Processing {len(self._command_queue)} queued commands for thread {self.id}")
+
+        # Process commands in order
+        while self._command_queue:
+            ctx, command = self._command_queue.pop(0)
+            try:
+                command_name = command.qualified_name if command else ""
+                await self.bot.invoke(ctx)
+
+                # If close command was executed, stop (it's always last anyway)
+                if command_name == "close":
+                    logger.info(f"Close command executed, queue processing complete")
+                    break
+
+            except Exception as e:
+                logger.error(f"Error processing queued command: {e}", exc_info=True)
 
 
 class ThreadManager:

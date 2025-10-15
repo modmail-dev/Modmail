@@ -591,7 +591,7 @@ class ModmailBot(commands.Bot):
             )
 
         for log in await self.api.get_open_logs():
-            if self.get_channel(int(log["channel_id"])) is None:
+            if log.get("channel_id") is None or self.get_channel(int(log["channel_id"])) is None:
                 logger.debug("Unable to resolve thread with channel %s.", log["channel_id"])
                 log_data = await self.api.post_log(
                     log["channel_id"],
@@ -1392,6 +1392,18 @@ class ModmailBot(commands.Bot):
                         ctx.command.qualified_name,
                     )
                     checks.has_permissions(PermissionLevel.INVALID)(ctx.command)
+
+                # Check if thread is unsnoozing and queue command if so
+                thread = await self.threads.find(channel=ctx.channel)
+                if thread and thread._unsnoozing:
+                    queued = await thread.queue_command(ctx, ctx.command)
+                    if queued:
+                        # Send a brief acknowledgment that command is queued
+                        try:
+                            await ctx.message.add_reaction("⏳")
+                        except Exception:
+                            pass
+                        continue
 
                 await self.invoke(ctx)
                 continue

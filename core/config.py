@@ -146,6 +146,7 @@ class ConfigManager:
         # attachments persistence for delete-behavior snooze
         "snooze_store_attachments": False,  # when True, store image attachments as base64 in snooze_data
         "snooze_attachment_max_bytes": 4_194_304,  # 4 MiB per attachment cap to avoid Mongo 16MB limit
+        "unsnooze_history_limit": None,  # Limit number of messages replayed when unsnoozing (None = all messages)
     }
 
     private_keys = {
