@@ -1599,6 +1599,19 @@ class ModmailBot(commands.Bot):
             )
             return await member.send(embed=embed)
 
+        # Check if user has a snoozed thread
+        existing_thread = await self.threads.find(recipient=member)
+        if existing_thread and existing_thread.snoozed:
+            # Unsnooze the thread
+            await existing_thread.restore_from_snooze()
+            self.threads.cache[existing_thread.id] = existing_thread
+            # Send notification to the thread channel
+            if existing_thread.channel:
+                await existing_thread.channel.send(
+                    f"ℹ️ {member.mention} reacted to contact and their snoozed thread has been unsnoozed."
+                )
+            return
+
         ctx = await self.get_context(message)
         await ctx.invoke(self.get_command("contact"), users=[member], manual_trigger=False)
 

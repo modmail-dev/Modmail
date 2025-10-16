@@ -1584,6 +1584,25 @@ class Modmail(commands.Cog):
     @checks.has_permissions(PermissionLevel.REGULAR)
     async def selfcontact(self, ctx):
         """Creates a thread with yourself"""
+        # Check if user already has a thread
+        existing_thread = await self.bot.threads.find(recipient=ctx.author)
+        if existing_thread:
+            if existing_thread.snoozed:
+                # Unsnooze the thread
+                await ctx.send(f"ℹ️ You had a snoozed thread. Unsnoozing now...")
+                await existing_thread.restore_from_snooze()
+                self.bot.threads.cache[existing_thread.id] = existing_thread
+                return
+            else:
+                # Thread already exists and is active
+                embed = discord.Embed(
+                    title="Thread not created",
+                    description=f"A thread for you already exists in {existing_thread.channel.mention}.",
+                    color=self.bot.error_color,
+                )
+                await ctx.send(embed=embed, delete_after=10)
+                return
+
         await ctx.invoke(self.contact, users=[ctx.author])
 
     @commands.command(usage="<user> [category] [options]")
@@ -1642,9 +1661,14 @@ class Modmail(commands.Cog):
                 users += u.members
                 users.remove(u)
 
+        snoozed_users = []
         for u in list(users):
             exists = await self.bot.threads.find(recipient=u)
             if exists:
+                # Check if thread is snoozed
+                if exists.snoozed:
+                    snoozed_users.append(u)
+                    continue
                 errors.append(f"A thread for {u} already exists.")
                 if exists.channel:
                     errors[-1] += f" in {exists.channel.mention}"
@@ -1657,6 +1681,17 @@ class Modmail(commands.Cog):
                 ref = f"{u.mention} is" if ctx.author != u else "You are"
                 errors.append(f"{ref} currently blocked from contacting {self.bot.user.name}.")
                 users.remove(u)
+
+        # Handle snoozed users - unsnooze them and return early
+        if snoozed_users:
+            for u in snoozed_users:
+                thread = await self.bot.threads.find(recipient=u)
+                if thread and thread.snoozed:
+                    await ctx.send(f"ℹ️ {u.mention} had a snoozed thread. Unsnoozing now...")
+                    await thread.restore_from_snooze()
+                    self.bot.threads.cache[thread.id] = thread
+            # Don't try to create a new thread - we just unsnoozed existing ones
+            return
 
         if len(users) > 5:
             errors.append("Group conversations only support 5 users.")
@@ -1674,7 +1709,6 @@ class Modmail(commands.Cog):
                 await ctx.send(embed=embed, delete_after=10)
 
             if not users:
-                # end
                 return
 
         creator = ctx.author if manual_trigger else users[0]
