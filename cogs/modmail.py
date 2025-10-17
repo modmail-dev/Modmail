@@ -29,6 +29,52 @@ class Modmail(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self._snoozed_cache = []
+        self._auto_unsnooze_task = self.bot.loop.create_task(self.auto_unsnooze_task())
+
+    async def auto_unsnooze_task(self):
+        await self.bot.wait_until_ready()
+        last_db_query = 0
+        while not self.bot.is_closed():
+            now = datetime.now(timezone.utc)
+            try:
+                # Query DB every 2 minutes
+                if (now.timestamp() - last_db_query) > 120:
+                    snoozed_threads = await self.bot.api.logs.find(
+                        {"snooze_until": {"$gte": now.isoformat()}}
+                    ).to_list(None)
+                    self._snoozed_cache = snoozed_threads or []
+                    last_db_query = now.timestamp()
+                # Check cache every 10 seconds
+                to_unsnooze = []
+                for thread_data in list(self._snoozed_cache):
+                    snooze_until = thread_data.get("snooze_until")
+                    thread_id = int(thread_data.get("recipient.id"))
+                    if snooze_until:
+                        try:
+                            dt = parser.isoparse(snooze_until)
+                        except Exception:
+                            continue
+                        if now >= dt:
+                            to_unsnooze.append(thread_data)
+                for thread_data in to_unsnooze:
+                    thread_id = int(thread_data.get("recipient.id"))
+                    thread = self.bot.threads.cache.get(thread_id) or await self.bot.threads.find(
+                        id=thread_id
+                    )
+                    if thread and thread.snoozed:
+                        await thread.restore_from_snooze()
+                        logging.info(f"[AUTO-UNSNOOZE] Thread {thread_id} auto-unsnoozed.")
+                        try:
+                            channel = thread.channel
+                            if channel:
+                                await channel.send("⏰ This thread has been automatically unsnoozed.")
+                        except Exception:
+                            pass
+                        self._snoozed_cache.remove(thread_data)
+            except Exception as e:
+                logging.error(f"Error in auto_unsnooze_task: {e}")
+            await asyncio.sleep(10)
 
     def _resolve_user(self, user_str):
         """Helper to resolve a user from mention, ID, or username."""
