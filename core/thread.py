@@ -315,6 +315,11 @@ class Thread:
         - If channel was moved (move behavior), move back to original category and position.
         Mark as not snoozed and clear snooze data.
         """
+        # Prevent concurrent unsnooze operations
+        if self._unsnoozing:
+            logger.warning(f"Unsnooze already in progress for thread {self.id}, skipping duplicate call")
+            return False
+        
         # Mark that unsnooze is in progress
         self._unsnoozing = True
 
