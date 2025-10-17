@@ -2336,8 +2336,8 @@ class Modmail(commands.Cog):
             default_snooze = 604800
         else:
             try:
-                default_snooze = int((ShortTime(str(default_snooze)).dt - ShortTime("0s").dt).total_seconds())
-            except Exception:
+                default_snooze = int(default_snooze)
+            except (ValueError, TypeError):
                 default_snooze = 604800
         if duration:
             snooze_for = int((duration.dt - duration.now).total_seconds())
