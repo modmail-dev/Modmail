@@ -49,7 +49,10 @@ class Modmail(commands.Cog):
                 to_unsnooze = []
                 for thread_data in list(self._snoozed_cache):
                     snooze_until = thread_data.get("snooze_until")
-                    thread_id = int(thread_data.get("recipient.id"))
+                    recipient = thread_data.get("recipient")
+                    if not recipient or not recipient.get("id"):
+                        continue
+                    thread_id = int(recipient.get("id"))
                     if snooze_until:
                         try:
                             dt = parser.isoparse(snooze_until)
@@ -58,7 +61,10 @@ class Modmail(commands.Cog):
                         if now >= dt:
                             to_unsnooze.append(thread_data)
                 for thread_data in to_unsnooze:
-                    thread_id = int(thread_data.get("recipient.id"))
+                    recipient = thread_data.get("recipient")
+                    if not recipient or not recipient.get("id"):
+                        continue
+                    thread_id = int(recipient.get("id"))
                     thread = self.bot.threads.cache.get(thread_id) or await self.bot.threads.find(
                         id=thread_id
                     )
