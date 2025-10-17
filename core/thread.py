@@ -319,7 +319,7 @@ class Thread:
         if self._unsnoozing:
             logger.warning(f"Unsnooze already in progress for thread {self.id}, skipping duplicate call")
             return False
-        
+
         # Mark that unsnooze is in progress
         self._unsnoozing = True
 

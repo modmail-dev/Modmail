@@ -2322,7 +2322,7 @@ class Modmail(commands.Cog):
         - delete (default): deletes the channel and restores it later
         - move: moves the channel to the configured snoozed category
             Optionally specify a duration, e.g. 'snooze 2d' for 2 days.
-            Uses config: max_snooze_time, snooze_title, snooze_text
+            Uses config: default_snooze_time, snooze_title, snooze_text
         """
         thread = ctx.thread
         if thread.snoozed:
@@ -2331,20 +2331,20 @@ class Modmail(commands.Cog):
             return
         from core.time import ShortTime
 
-        max_snooze = self.bot.config.get("max_snooze_time")
-        if max_snooze is None:
-            max_snooze = 604800
+        default_snooze = self.bot.config.get("default_snooze_time")
+        if default_snooze is None:
+            default_snooze = 604800
         else:
             try:
-                max_snooze = int((ShortTime(str(max_snooze)).dt - ShortTime("0s").dt).total_seconds())
+                default_snooze = int((ShortTime(str(default_snooze)).dt - ShortTime("0s").dt).total_seconds())
             except Exception:
-                max_snooze = 604800
+                default_snooze = 604800
         if duration:
             snooze_for = int((duration.dt - duration.now).total_seconds())
-            if snooze_for > max_snooze:
-                snooze_for = max_snooze
+            if snooze_for > default_snooze:
+                snooze_for = default_snooze
         else:
-            snooze_for = max_snooze
+            snooze_for = default_snooze
 
         # Capacity pre-check: if behavior is move, ensure snoozed category has room (<49 channels)
         behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
@@ -2425,11 +2425,18 @@ class Modmail(commands.Cog):
                 except Exception:
                     pass
 
-        # Storing snooze_start and snooze_for in the log entry
+        # Store snooze_until timestamp for reliable auto-unsnooze
         now = datetime.now(timezone.utc)
+        snooze_until = now + timedelta(seconds=snooze_for)
         await self.bot.api.logs.update_one(
             {"recipient.id": str(thread.id)},
-            {"$set": {"snooze_start": now.isoformat(), "snooze_for": snooze_for}},
+            {
+                "$set": {
+                    "snooze_start": now.isoformat(),
+                    "snooze_for": snooze_for,
+                    "snooze_until": snooze_until.isoformat(),
+                }
+            },
         )
         embed = discord.Embed(
             title=self.bot.config.get("snooze_title") or "Thread Snoozed",
@@ -2557,24 +2564,17 @@ class Modmail(commands.Cog):
             now = datetime.now(timezone.utc)
             snoozed = await self.bot.api.logs.find({"snoozed": True}).to_list(None)
             for entry in snoozed:
-                start = entry.get("snooze_start")
-                snooze_for = entry.get("snooze_for")
-                if not start:
-                    continue
-                start_dt = datetime.fromisoformat(start)
-                if snooze_for is not None:
-                    duration = int(snooze_for)
-                else:
-                    max_snooze = self.bot.config.get("max_snooze_time")
-                    if max_snooze is None:
-                        max_snooze = 604800
-                    duration = int(max_snooze)
-                if (now - start_dt).total_seconds() > duration:
-                    # Auto-unsnooze
-                    thread = await self.bot.threads.find(recipient_id=int(entry["recipient"]["id"]))
-                    if thread and thread.snoozed:
-                        await thread.restore_from_snooze()
-            await asyncio.sleep(60)
+                snooze_until = entry.get("snooze_until")
+                if snooze_until:
+                    try:
+                        until_dt = datetime.fromisoformat(snooze_until)
+                        if now >= until_dt:
+                            thread = await self.bot.threads.find(recipient_id=int(entry["recipient"]["id"]))
+                            if thread and thread.snoozed:
+                                await thread.restore_from_snooze()
+                    except (ValueError, TypeError):
+                        pass
+            await asyncio.sleep(10)
 
     async def process_dm_modmail(self, message: discord.Message) -> None:
         # ... existing code ...
