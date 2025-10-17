@@ -1266,12 +1266,12 @@
       "See also: `thread_min_characters`, `thread_min_characters_title`, `thread_min_characters_response`."
     ]
   },
-  "max_snooze_time": {
+  "default_snooze_time": {
     "default": "604800 (7 days in seconds)",
-    "description": "The maximum duration in seconds that a thread can be snoozed. When a thread is snoozed, it is temporarily hidden until the user replies or a moderator unsnoozes it.",
+    "description": "The default duration in seconds that a thread will be snoozed when no duration is specified. When a thread is snoozed, it is temporarily hidden until the user replies or a moderator unsnoozes it.",
     "examples": [
-      "`{prefix}config set max_snooze_time 86400` (1 day)",
-      "`{prefix}config set max_snooze_time 1209600` (14 days)"
+      "`{prefix}config set default_snooze_time 86400` (1 day)",
+      "`{prefix}config set default_snooze_time 1209600` (14 days)"
     ],
     "notes": [
       "The value must be specified in seconds.",
@@ -1285,7 +1285,7 @@
       "`{prefix}config set snooze_title Thread Paused`"
     ],
     "notes": [
-      "See also: `snooze_text`, `unsnooze_title`, `max_snooze_time`."
+      "See also: `snooze_text`, `unsnooze_title`, `default_snooze_time`."
     ]
   },
   "snooze_text": {
@@ -1296,7 +1296,7 @@
     ],
     "notes": [
       "Discord flavoured markdown is fully supported in `snooze_text`.",
-      "See also: `snooze_title`, `unsnooze_text`, `max_snooze_time`."
+      "See also: `snooze_title`, `unsnooze_text`, `default_snooze_time`."
     ]
   },
   "unsnooze_text": {
@@ -1307,7 +1307,7 @@
     ],
     "notes": [
       "Discord flavoured markdown is fully supported in `unsnooze_text`.",
-      "See also: `snooze_text`, `unsnooze_notify_channel`, `max_snooze_time`."
+      "See also: `snooze_text`, `unsnooze_notify_channel`, `default_snooze_time`."
     ]
   },
   "unsnooze_notify_channel": {
@@ -1320,7 +1320,7 @@
     "notes": [
       "If set to \"thread\", the notification will be sent in the thread channel itself.",
       "If set to a channel ID, the notification will be sent to that specific channel.",
-      "See also: `unsnooze_text`, `max_snooze_time`."
+      "See also: `unsnooze_text`, `default_snooze_time`."
     ]
   },
   "snooze_behavior": {
