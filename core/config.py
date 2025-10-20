@@ -207,6 +207,8 @@ class ConfigManager:
 
     time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown", "log_expiration"}
 
+    duration_seconds = {"snooze_default_duration"}
+
     booleans = {
         "use_user_id_channel_name",
         "use_timestamp_channel_name",
@@ -369,6 +371,14 @@ class ConfigManager:
                 logger.warning("Invalid %s %s.", key, value)
                 value = self.remove(key)
 
+        elif key in self.duration_seconds:
+            if not isinstance(value, int):
+                try:
+                    value = int(value)
+                except (ValueError, TypeError):
+                    logger.warning("Invalid %s %s.", key, value)
+                    value = self.remove(key)
+
         elif key in self.force_str:
             # Temporary: as we saved in int previously, leading to int32 overflow,
             #            this is transitioning IDs to strings
@@ -452,6 +462,25 @@ class ConfigManager:
                 return self.__setitem__(key, strtobool(item))
             except ValueError:
                 raise InvalidConfigError("Must be a yes/no value.")
+
+        elif key in self.duration_seconds:
+            if isinstance(item, int):
+                return self.__setitem__(key, item)
+            try:
+                converter = UserFriendlyTime()
+                time = await converter.convert(None, str(item), now=discord.utils.utcnow())
+                if time.arg:
+                    raise ValueError
+            except BadArgument as exc:
+                raise InvalidConfigError(*exc.args)
+            except Exception as e:
+                logger.debug(e)
+                raise InvalidConfigError(
+                    "Unrecognized time, please use a duration like '5 days' or '2 hours'."
+                )
+            now = discord.utils.utcnow()
+            duration_seconds = int((time.dt - now).total_seconds())
+            return self.__setitem__(key, duration_seconds)
 
         elif key in self.enums:
             if isinstance(item, self.enums[key]):
