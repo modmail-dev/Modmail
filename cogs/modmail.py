@@ -2374,7 +2374,7 @@ class Modmail(commands.Cog):
         - delete (default): deletes the channel and restores it later
         - move: moves the channel to the configured snoozed category
             Optionally specify a duration, e.g. 'snooze 2d' for 2 days.
-            Uses config: default_snooze_time, snooze_title, snooze_text
+            Uses config: snooze_default_duration, snooze_title, snooze_text
         """
         thread = ctx.thread
         if thread.snoozed:
@@ -2383,7 +2383,7 @@ class Modmail(commands.Cog):
             return
         from core.time import ShortTime
 
-        default_snooze = self.bot.config.get("default_snooze_time")
+        default_snooze = self.bot.config.get("snooze_default_duration")
         if default_snooze is None:
             default_snooze = 604800
         else:

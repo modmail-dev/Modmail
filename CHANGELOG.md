@@ -29,7 +29,7 @@ Commands:
 * `clearsnoozed`: Clears all snoozed items.
 
 Configuration Options:
-* `default_snooze_time`: Sets the maximum duration for snooze.
+* `snooze_default_duration`: Sets the maximum duration for snooze.
 * `snooze_title`: Customizes the title for snooze notifications.
 * `snooze_text`: Customizes the text for snooze notifications.
 * `unsnooze_text`: Customizes the text for unsnooze notifications.
