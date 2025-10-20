@@ -397,6 +397,10 @@ class ConfigManager:
         if not convert:
             return self.__setitem__(key, item)
 
+        if "channel" in key or "category" in key:
+            if isinstance(item, str) and item not in {"thread", "NONE"}:
+                item = item.strip("<#>")
+
         if key in self.colors:
             try:
                 hex_ = str(item)

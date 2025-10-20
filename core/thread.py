@@ -635,7 +635,9 @@ class Thread:
         if notify_channel == "thread":
             await _safe_send_to_channel(content=notify_text, allowed_mentions=discord.AllowedMentions.none())
         else:
-            ch = self.bot.get_channel(int(notify_channel))
+            # Extract channel ID from mention format <#123> or use raw ID
+            channel_id = str(notify_channel).strip("<#>")
+            ch = self.bot.get_channel(int(channel_id))
             if ch:
                 await ch.send(
                     f"⏰ Thread for user <@{self.id}> has been unsnoozed and restored in {channel.mention}",
