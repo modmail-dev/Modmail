@@ -638,7 +638,7 @@ class Thread:
             ch = self.bot.get_channel(int(notify_channel))
             if ch:
                 await ch.send(
-                    f"Thread for user <@{self.id}> has been unsnoozed and restored.",
+                    f"⏰ Thread for user <@{self.id}> has been unsnoozed and restored in {channel.mention}",
                     allowed_mentions=discord.AllowedMentions.none(),
                 )
         # Show who ran the snooze command and the command used
