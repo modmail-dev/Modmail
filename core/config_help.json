@@ -1268,13 +1268,14 @@
   },
   "snooze_default_duration": {
     "default": "604800 (7 days in seconds)",
-    "description": "The default duration in seconds that a thread will be snoozed when no duration is specified. When a thread is snoozed, it is temporarily hidden until the user replies or a moderator unsnoozes it.",
+    "description": "The default duration that a thread will be snoozed when no duration is specified. When a thread is snoozed, it is temporarily hidden until the user replies or a moderator unsnoozes it.",
     "examples": [
-      "`{prefix}config set snooze_default_duration 86400` (1 day)",
-      "`{prefix}config set snooze_default_duration 1209600` (14 days)"
+      "`{prefix}config set snooze_default_duration 7 days`",
+      "`{prefix}config set snooze_default_duration 2 hours`",
+      "`{prefix}config set snooze_default_duration 86400` (raw seconds also accepted)"
     ],
     "notes": [
-      "The value must be specified in seconds.",
+      "Accepts user-friendly time like '5 days', '2 hours', or raw seconds.",
       "See also: `snooze_title`, `snooze_text`, `unsnooze_text`, `unsnooze_notify_channel`."
     ]
   },
