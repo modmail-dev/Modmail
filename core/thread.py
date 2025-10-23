@@ -1652,10 +1652,9 @@ class Thread:
                 # Anonymously sending to the user.
                 tag = self.bot.config["mod_tag"]
                 if tag is None:
-                    tag = str(get_top_role(author, self.bot.config["use_hoisted_top_role"]))
-                name = self.bot.config["anon_username"]
-                if name is None:
-                    name = tag
+                    top_role = get_top_role(author, self.bot.config["use_hoisted_top_role"])
+                    tag = str(top_role) if top_role else None
+                name = self.bot.config["anon_username"] or tag or "Anonymous"
                 avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
                     avatar_url = self.bot.get_guild_icon(guild=self.bot.guild, size=128)
