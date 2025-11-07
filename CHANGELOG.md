@@ -42,9 +42,26 @@ Configuration Options:
 * `thread_min_characters_response`: Response shown to the user if their message is too short.
 * `thread_min_characters_footer`: Footer displaying the minimum required characters.
 
+Features:
+* Thread-creation menu: Adds an interactive select step before a thread channel is created.
+  * Commands:
+    * `threadmenu toggle`: Enable/disable the menu.
+    * `threadmenu show`: List current top-level options.
+    * `threadmenu option add`: Interactive wizard to create an option.
+    * `threadmenu option edit/remove/show`: Manage or inspect an existing option.
+    * `threadmenu submenu create/delete/list/show`: Manage submenus.
+    * `threadmenu submenu option add/edit/remove`: Manage options inside a submenu.
+    * `threadmenu config <timeout|close_on_timeout|embed_text|dropdown_placeholder|anonymous_menu>`: Adjust global settings.
+  * Configuration / Behavior:
+    * Per-option `category` targeting when creating a thread; falls back to `main_category_id` if invalid/missing.
+    * Optional selection logging (`thread_creation_menu_selection_log`) posts the chosen option in the new thread.
+    * Anonymous prompt support (`thread_creation_menu_anonymous_menu`).
+
+
 Behavioral changes:
 - When `snooze_behavior` is set to `move`, the snoozed category now has a hard limit of 49 channels. New snoozes are blocked once it’s full until space is freed.
 - When switching `snooze_behavior` to `move` via `?config set`, the bot reminds admins to set `snoozed_category_id` if it’s missing.
+- Thread-creation menu options & submenu options now support an optional per-option `category` target. The interactive wizards (`threadmenu option add` / `threadmenu submenu option add`) and edit commands allow specifying or updating a category. If the stored category is missing or invalid at selection time, channel creation automatically falls back to `main_category_id`.
 
 # v4.1.2
 

@@ -523,21 +523,24 @@ class Modmail(commands.Cog):
         await self.bot.add_reaction(ctx.message, sent_emoji)
 
     async def send_scheduled_close_message(self, ctx, after, silent=False):
-        human_delta = human_timedelta(after.dt)
+        """Send a scheduled close notice only to the staff thread channel.
 
+        Uses Discord relative timestamp formatting for better UX.
+        """
+        ts = int((after.dt if after.dt.tzinfo else after.dt.replace(tzinfo=timezone.utc)).timestamp())
         embed = discord.Embed(
             title="Scheduled close",
-            description=f"This thread will{' silently' if silent else ''} close in {human_delta}.",
+            description=f"This thread will{' silently' if silent else ''} close <t:{ts}:R>.",
             color=self.bot.error_color,
         )
-
         if after.arg and not silent:
             embed.add_field(name="Message", value=after.arg)
-
         embed.set_footer(text="Closing will be cancelled if a thread message is sent.")
         embed.timestamp = after.dt
 
-        await ctx.send(embed=embed)
+        thread = getattr(ctx, "thread", None)
+        if thread and ctx.channel == thread.channel:
+            await thread.channel.send(embed=embed)
 
     @commands.command(usage="[after] [close message]")
     @checks.has_permissions(PermissionLevel.SUPPORTER)

@@ -14,11 +14,13 @@ from types import SimpleNamespace
 import isodate
 
 import discord
+from discord.ext import commands
 from discord.ext.commands import MissingRequiredArgument, CommandError
 from lottie.importers import importers as l_importers
 from lottie.exporters import exporters as l_exporters
 
-from core.models import DMDisabled, DummyMessage, getLogger
+from core.models import DMDisabled, DummyMessage, PermissionLevel, getLogger
+from core import checks
 from core.time import human_timedelta
 from core.utils import (
     is_image_url,
@@ -391,7 +393,8 @@ class Thread:
                 channel = await guild.create_text_channel(
                     name=self.snooze_data.get("name") or f"thread-{self.id}",
                     category=orig_category,
-                    overwrites=ow_map or None,
+                    # discord.py expects a dict for overwrites; use empty dict if none
+                    overwrites=ow_map or {},
                     position=self.snooze_data.get("position"),
                     topic=self.snooze_data.get("topic"),
                     slowmode_delay=self.snooze_data.get("slowmode_delay") or 0,
@@ -420,7 +423,8 @@ class Thread:
                     channel = await guild.create_text_channel(
                         name=(self.snooze_data.get("name") or f"thread-{self.id}"),
                         category=orig_category,
-                        overwrites=ow_map or None,
+                        # discord.py expects a dict for overwrites; use empty dict if none
+                        overwrites=ow_map or {},
                         position=self.snooze_data.get("position"),
                         topic=self.snooze_data.get("topic"),
                         slowmode_delay=self.snooze_data.get("slowmode_delay") or 0,
@@ -434,6 +438,62 @@ class Thread:
                 except Exception:
                     logger.error("Failed to recreate channel during unsnooze send.", exc_info=True)
                     return None
+
+        # Ensure genesis message exists; always present after unsnooze
+        genesis_already_sent = False
+
+        async def _ensure_genesis(force: bool = False):
+            nonlocal genesis_already_sent
+            try:
+                existing = await self.get_genesis_message()
+            except Exception:
+                existing = None
+            if existing is None or force:
+                # Build log_url and log_count best-effort
+                prefix = (self.bot.config.get("log_url_prefix") or "").strip("/")
+                if prefix == "NONE":
+                    prefix = ""
+                key = self.snooze_data.get("log_key") or self.log_key
+                log_url = (
+                    f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{key}"
+                    if key
+                    else None
+                )
+                log_count = None
+                try:
+                    logs = await self.bot.api.get_user_logs(self.id)
+                    log_count = sum(1 for log in logs if not log.get("open"))
+                except Exception:
+                    log_count = None
+                # Resolve recipient object
+                user = self.recipient
+                if user is None:
+                    try:
+                        user = await self.bot.get_or_fetch_user(self.id)
+                    except Exception:
+                        user = SimpleNamespace(
+                            id=self.id, mention=f"<@{self.id}>", created_at=datetime.now(timezone.utc)
+                        )
+                try:
+                    info_embed = self._format_info_embed(user, log_url, log_count, self.bot.main_color)
+                    msg = await channel.send(embed=info_embed)
+                    try:
+                        await msg.pin()
+                    except Exception:
+                        pass
+                    self._genesis_message = msg
+                    genesis_already_sent = True
+                except Exception:
+                    logger.warning("Failed to send genesis message during unsnooze.", exc_info=True)
+
+        # If we recreated the channel, force-send genesis; if moved back, ensure it's present
+        try:
+            if behavior == "move" and isinstance(channel, discord.TextChannel):
+                await _ensure_genesis(force=False)
+            else:
+                await _ensure_genesis(force=True)
+        except Exception:
+            logger.debug("Genesis ensure step encountered an error.")
 
         # Strictly restore the log_key from snooze_data (never create a new one)
         self.log_key = self.snooze_data.get("log_key")
@@ -478,8 +538,8 @@ class Thread:
                 except (ValueError, TypeError):
                     pass
 
-            # Replay genesis first
-            if genesis_msg:
+            # Replay genesis first (only if we didn't already create it above)
+            if genesis_msg and not genesis_already_sent:
                 msg = genesis_msg
                 try:
                     author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
@@ -706,22 +766,25 @@ class Thread:
         if category is not None:
             overwrites = {}
 
-        try:
-            channel = await create_thread_channel(self.bot, recipient, category, overwrites)
-        except discord.HTTPException as e:  # Failed to create due to missing perms.
-            logger.critical("An error occurred while creating a thread.", exc_info=True)
-            self.manager.cache.pop(self.id)
+        # If thread menu is enabled and this setup call is marked as deferred genesis (initial_message carries flag),
+        # then we may have already created the channel earlier. Only create if channel missing.
+        if self._channel is None:
+            try:
+                channel = await create_thread_channel(self.bot, recipient, category, overwrites)
+            except discord.HTTPException as e:  # Failed to create due to missing perms.
+                logger.critical("An error occurred while creating a thread.", exc_info=True)
+                self.manager.cache.pop(self.id)
 
-            embed = discord.Embed(color=self.bot.error_color)
-            embed.title = "Error while trying to create a thread."
-            embed.description = str(e)
-            embed.add_field(name="Recipient", value=recipient.mention)
+                embed = discord.Embed(color=self.bot.error_color)
+                embed.title = "Error while trying to create a thread."
+                embed.description = str(e)
+                embed.add_field(name="Recipient", value=recipient.mention)
 
-            if self.bot.log_channel is not None:
-                await self.bot.log_channel.send(embed=embed)
-            return
-
-        self._channel = channel
+                if self.bot.log_channel is not None:
+                    await self.bot.log_channel.send(embed=embed)
+                return
+            else:
+                self._channel = channel
 
         try:
             log_url, log_data = await asyncio.gather(
@@ -748,6 +811,18 @@ class Thread:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self._genesis_message = msg
+                # Option selection logging (if a thread-creation menu option was chosen prior to creation)
+                if getattr(self, "_selected_thread_creation_menu_option", None) and self.bot.config.get(
+                    "thread_creation_menu_selection_log"
+                ):
+                    opt = self._selected_thread_creation_menu_option
+                    try:
+                        log_txt = f"Selected menu option: {opt.get('label')} ({opt.get('type')})"
+                        if opt.get("type") == "command":
+                            log_txt += f" -> {opt.get('callback')}"
+                        await channel.send(embed=discord.Embed(description=log_txt, color=self.bot.mod_color))
+                    except Exception:
+                        logger.warning("Failed logging thread-creation menu selection", exc_info=True)
             except Exception:
                 logger.error("Failed unexpectedly:", exc_info=True)
 
@@ -1666,8 +1741,15 @@ class Thread:
                 )
             else:
                 # Normal message
-                name = str(author)
-                avatar_url = avatar_url
+                # If this message originated from a thread-creation menu command callback
+                # (user selected an option whose type is command), we force the author
+                # display to be the bot to avoid showing the user as a replying moderator.
+                if getattr(message, "_menu_invoked", False):
+                    name = str(self.bot.user)
+                    avatar_url = getattr(self.bot.user.display_avatar, "url", system_avatar_url)
+                else:
+                    name = str(author)
+                    avatar_url = avatar_url
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,
@@ -1825,9 +1907,20 @@ class Thread:
                     embed.set_footer(text="Anonymous Reply")
                 # Normal messages
                 elif not anonymous:
+                    # Use configured mod_tag if provided; otherwise fallback to
+                    # the author's top role when available, or their display name.
                     mod_tag = self.bot.config["mod_tag"]
                     if mod_tag is None:
-                        mod_tag = str(get_top_role(message.author, self.bot.config["use_hoisted_top_role"]))
+                        if hasattr(message.author, "roles"):
+                            try:
+                                mod_tag = str(
+                                    get_top_role(message.author, self.bot.config["use_hoisted_top_role"])  # type: ignore[arg-type]
+                                )
+                            except Exception:
+                                # As a safe fallback, prefer a stable display string
+                                mod_tag = getattr(message.author, "display_name", str(message.author))
+                        else:
+                            mod_tag = getattr(message.author, "display_name", str(message.author))
                     embed.set_footer(text=mod_tag)  # Normal messages
                 else:
                     embed.set_footer(text=self.bot.config["anon_tag"])
@@ -1841,7 +1934,14 @@ class Thread:
 
         if (from_mod or note) and not thread_creation:
             delete_message = not bool(message.attachments)
-            if delete_message and destination == self.channel:
+            # Only delete the source command message when it's in a guild text
+            # channel; attempting to delete a DM message can raise 50003.
+            if (
+                delete_message
+                and destination == self.channel
+                and hasattr(message, "channel")
+                and isinstance(message.channel, discord.TextChannel)
+            ):
                 try:
                     await message.delete()
                 except Exception as e:
@@ -2294,6 +2394,193 @@ class ThreadManager:
                 del self.cache[recipient.id]
                 return thread
 
+        # --- THREAD-CREATION MENU (deferred channel creation) ---
+        adv_enabled = self.bot.config.get("thread_creation_menu_enabled") and bool(
+            self.bot.config.get("thread_creation_menu_options")
+        )
+        # Only defer if user initiated (creator is recipient) and not staff contact command
+        user_initiated = (creator is None or creator == recipient) and manual_trigger
+        if adv_enabled and user_initiated:
+            # Send menu prompt FIRST, wait for selection, then create channel.
+            # Build dummy message for menu DM
+            try:
+                embed_text = self.bot.config.get("thread_creation_menu_embed_text")
+                placeholder = self.bot.config.get("thread_creation_menu_dropdown_placeholder")
+                timeout = int(self.bot.config.get("thread_creation_menu_timeout") or 20)
+            except Exception:
+                embed_text = "Please select an option."
+                placeholder = "Select an option to contact the staff team."
+                timeout = 20
+
+            options = self.bot.config.get("thread_creation_menu_options") or {}
+            submenus = self.bot.config.get("thread_creation_menu_submenus") or {}
+
+            # Minimal inline view implementation (avoid importing plugin code)
+            import discord
+
+            thread.ready = False  # not ready yet
+
+            class _ThreadCreationMenuSelect(discord.ui.Select):
+                def __init__(self, outer_thread: Thread):
+                    self.outer_thread = outer_thread
+                    opts = [
+                        discord.SelectOption(label=o["label"], description=o["description"], emoji=o["emoji"])
+                        for o in options.values()
+                    ]
+                    super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=opts)
+
+                async def callback(self, interaction: discord.Interaction):
+                    await interaction.response.defer(ephemeral=False)
+                    chosen_label = self.values[0]
+                    # Resolve option key
+                    key = chosen_label.lower().replace(" ", "_")
+                    selected = options.get(key)
+                    self.outer_thread._selected_thread_creation_menu_option = selected
+                    # FIX: use the parent view reference rather than undefined closure variable
+                    if self.view:
+                        self.view.stop()
+                    try:
+                        await interaction.edit_original_response(view=None)
+                    except Exception:
+                        pass
+                    # Now create channel
+                    # Determine category: prefer option-specific category if configured and valid
+                    sel_category = None
+                    try:
+                        cat_id = selected.get("category_id") if isinstance(selected, dict) else None
+                        if cat_id:
+                            guild = self.outer_thread.bot.modmail_guild
+                            if guild:
+                                ch = guild.get_channel(cat_id)
+                                if isinstance(ch, discord.CategoryChannel):
+                                    sel_category = ch
+                    except Exception:
+                        sel_category = None
+                    # Fallback to provided category (from outer scope) or main category
+                    fallback_category = category or self.outer_thread.bot.main_category
+                    use_category = sel_category or fallback_category
+                    self.outer_thread.bot.loop.create_task(
+                        self.outer_thread.setup(
+                            creator=creator,
+                            category=use_category,
+                            initial_message=message,
+                        )
+                    )
+                    # Wait until channel is ready, then forward the original message like usual
+                    try:
+                        await self.outer_thread.wait_until_ready()
+                        # Forward the user's initial DM to the thread channel
+                        try:
+                            await self.outer_thread.send(message)
+                        except Exception:
+                            logger.error(
+                                "Failed to relay initial message after menu selection", exc_info=True
+                            )
+                        else:
+                            # React to the user's DM with the 'sent' emoji
+                            try:
+                                sent_emoji, _ = await self.outer_thread.bot.retrieve_emoji()
+                                await self.outer_thread.bot.add_reaction(message, sent_emoji)
+                            except Exception:
+                                pass
+                            # Dispatch thread_reply event for parity
+                            self.outer_thread.bot.dispatch(
+                                "thread_reply", self.outer_thread, False, message, False, False
+                            )
+                        # Clear pending flag
+                        setattr(self.outer_thread, "_pending_menu", False)
+                    except Exception:
+                        pass
+                    # Invoke command callback AFTER channel ready if type == command
+                    if selected and selected.get("type") == "command":
+                        alias = selected.get("callback")
+                        if alias:
+                            from discord.ext.commands.view import StringView
+                            from core.utils import normalize_alias
+
+                            ctxs = []
+                            for al in normalize_alias(alias):
+                                view_ = StringView(self.outer_thread.bot.prefix + al)
+                                # Create a synthetic message object that makes the bot appear
+                                # as the author for menu-invoked command replies so the user
+                                # selecting the option is not shown as a "mod" sender.
+                                synthetic = DummyMessage(copy.copy(message))
+                                try:
+                                    synthetic.author = (
+                                        self.outer_thread.bot.modmail_guild.me or self.outer_thread.bot.user
+                                    )
+                                except Exception:
+                                    synthetic.author = self.outer_thread.bot.user
+                                # Mark this message as menu-invoked for downstream formatting
+                                setattr(synthetic, "_menu_invoked", True)
+                                ctx_ = commands.Context(
+                                    prefix=self.outer_thread.bot.prefix,
+                                    view=view_,
+                                    bot=self.outer_thread.bot,
+                                    message=synthetic,
+                                )
+                                ctx_.thread = self.outer_thread
+                                discord.utils.find(
+                                    view_.skip_string, await self.outer_thread.bot.get_prefix()
+                                )
+                                ctx_.invoked_with = view_.get_word().lower()
+                                ctx_.command = self.outer_thread.bot.all_commands.get(ctx_.invoked_with)
+                                # Mark context so downstream send/reply logic can treat as system/bot
+                                setattr(ctx_, "_menu_invoked", True)
+                                ctxs.append(ctx_)
+                            for ctx_ in ctxs:
+                                if ctx_.command:
+                                    old_checks = copy.copy(ctx_.command.checks)
+                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+                                    try:
+                                        await self.outer_thread.bot.invoke(ctx_)
+                                    finally:
+                                        ctx_.command.checks = old_checks
+
+            class _ThreadCreationMenuView(discord.ui.View):
+                def __init__(self, outer_thread: Thread):
+                    super().__init__(timeout=timeout)
+                    self.outer_thread = outer_thread
+                    self.add_item(_ThreadCreationMenuSelect(outer_thread))
+
+                async def on_timeout(self):
+                    # Timeout -> abort thread creation
+                    if self.outer_thread.bot.config.get("thread_creation_menu_close_on_timeout"):
+                        try:
+                            await menu_msg.edit(content="Menu timed out.", view=None)
+                        except Exception:
+                            pass
+                        # remove thread from cache
+                        try:
+                            self.outer_thread.manager.cache.pop(self.outer_thread.id, None)
+                        except Exception:
+                            pass
+                        self.outer_thread.cancelled = True
+                    else:
+                        try:
+                            await menu_msg.edit(
+                                content="Menu timed out. Please send a new message to start again.", view=None
+                            )
+                        except Exception:
+                            pass
+
+            # Send DM prompt
+            try:
+                embed = discord.Embed(description=embed_text, color=self.bot.mod_color)
+                menu_view = _ThreadCreationMenuView(thread)
+                menu_msg = await recipient.send(embed=embed, view=menu_view)
+                # mark thread as pending menu selection
+                thread._pending_menu = True
+            except Exception:
+                logger.warning(
+                    "Failed to send thread-creation menu DM, falling back to immediate thread creation."
+                )
+                self.bot.loop.create_task(
+                    thread.setup(creator=creator, category=category, initial_message=message)
+                )
+            return thread
+
+        # Regular immediate creation
         self.bot.loop.create_task(thread.setup(creator=creator, category=category, initial_message=message))
         return thread
 

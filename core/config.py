@@ -147,6 +147,16 @@ class ConfigManager:
         "snooze_store_attachments": False,  # when True, store image attachments as base64 in snooze_data
         "snooze_attachment_max_bytes": 4_194_304,  # 4 MiB per attachment cap to avoid Mongo 16MB limit
         "unsnooze_history_limit": None,  # Limit number of messages replayed when unsnoozing (None = all messages)
+        # --- THREAD CREATION MENU ---
+        "thread_creation_menu_enabled": False,
+        "thread_creation_menu_options": {},  # main menu options mapping key -> {label, description, emoji, type, callback}
+        "thread_creation_menu_submenus": {},  # submenu name -> submenu options (same structure as options)
+        "thread_creation_menu_timeout": 20,
+        "thread_creation_menu_close_on_timeout": False,
+        "thread_creation_menu_anonymous_menu": False,
+        "thread_creation_menu_embed_text": "Please select an option.",
+        "thread_creation_menu_dropdown_placeholder": "Select an option to contact the staff team.",
+        "thread_creation_menu_selection_log": True,  # log selected option in newly created thread channel
     }
 
     private_keys = {
@@ -250,6 +260,11 @@ class ConfigManager:
         "registry_plugins_only",
         # snooze
         "snooze_store_attachments",
+        # thread creation menu booleans
+        "thread_creation_menu_enabled",
+        "thread_creation_menu_close_on_timeout",
+        "thread_creation_menu_anonymous_menu",
+        "thread_creation_menu_selection_log",
     }
 
     enums = {
@@ -286,6 +301,7 @@ class ConfigManager:
                     data.update({k.lower(): v for k, v in json.load(f).items() if k.lower() in self.all_keys})
                 except json.JSONDecodeError:
                     logger.critical("Failed to load config.json env values.", exc_info=True)
+
         self._cache = data
 
         config_help_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config_help.json")

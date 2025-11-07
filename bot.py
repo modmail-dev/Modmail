@@ -84,7 +84,7 @@ class ModmailBot(commands.Bot):
         self.session = None
         self._api = None
         self.formatter = SafeFormatter()
-        self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility"]
+        self.loaded_cogs = ["cogs.modmail", "cogs.plugins", "cogs.utility", "cogs.threadmenu"]
         self._connected = None
         self.start_time = discord.utils.utcnow()
         self._started = False
@@ -1115,6 +1115,9 @@ class ModmailBot(commands.Bot):
                 return await message.channel.send(embed=embed)
 
             thread = await self.threads.create(message.author, message=message)
+            # If thread menu is enabled, thread creation is deferred until user selects an option.
+            if getattr(thread, "_pending_menu", False):
+                return
         else:
             if self.config["dm_disabled"] == DMDisabled.ALL_THREADS:
                 embed = discord.Embed(

@@ -1383,5 +1383,108 @@
       "Set to None or delete this config to replay all messages when unsnoozing.",
       "See also: `snooze_behavior`, `unsnooze_text`."
     ]
+  },
+  "thread_creation_menu_enabled": {
+    "default": "Disabled",
+    "description": "Enables the thread creation menu which asks users to pick an option before the Modmail thread channel is created.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_enabled yes`"
+    ],
+    "notes": [
+      "When enabled and at least one option is configured, incoming user DMs are paused until a selection is made.",
+      "If the menu times out without a selection and `thread_creation_menu_close_on_timeout` is enabled, the thread is aborted silently.",
+      "See also: `thread_creation_menu_options`, `thread_creation_menu_timeout`."
+    ]
+  },
+  "thread_creation_menu_options": {
+    "default": "Empty (no options)",
+    "description": "Mapping of menu option keys to their data (label, description, emoji, type, callback). A non-empty mapping is required to display the menu.",
+    "examples": [
+  "`{prefix}threadmenu option add` (interactive wizard)",
+  "`{prefix}threadmenu show`"
+    ],
+    "notes": [
+      "Type can be 'command' (executes a command after creation) or 'submenu' (opens a submenu).",
+      "Submenu callbacks must reference keys stored in `thread_creation_menu_submenus`.",
+      "See also: `thread_creation_menu_submenus`."
+    ]
+  },
+  "thread_creation_menu_submenus": {
+    "default": "Empty (no submenus)",
+    "description": "Mapping of submenu keys to submenu option mappings, identical structure to `thread_creation_menu_options` allowing nested selection.",
+    "examples": [
+  "`{prefix}threadmenu submenu create Appeals`",
+  "`{prefix}threadmenu submenu option add Appeals`"
+    ],
+    "notes": [
+      "Submenus allow categorizing options beyond the 25 main menu limit (each submenu limited by Discord select menu rules).",
+      "See also: `thread_creation_menu_options`."
+    ]
+  },
+  "thread_creation_menu_timeout": {
+    "default": "20 (seconds)",
+    "description": "Number of seconds to wait for a user to pick a menu option before timing out.",
+    "examples": [
+  "`{prefix}threadmenu config timeout 30`"
+    ],
+    "notes": [
+      "If the timeout is reached, `thread_creation_menu_close_on_timeout` controls whether the attempt is aborted or the user is asked to message again.",
+      "See also: `thread_creation_menu_close_on_timeout`."
+    ]
+  },
+  "thread_creation_menu_close_on_timeout": {
+    "default": "No",
+    "description": "Silently aborts thread creation if the user does not select an option before the timeout expires.",
+    "examples": [
+  "`{prefix}threadmenu config close_on_timeout yes`"
+    ],
+    "notes": [
+      "If disabled, the user receives a message telling them to send a new DM to start again.",
+      "See also: `thread_creation_menu_timeout`."
+    ]
+  },
+  "thread_creation_menu_anonymous_menu": {
+    "default": "No",
+    "description": "If enabled, the initial menu prompt relayed to staff (after creation) is anonymized; only selection details are logged, not the original prompt message author context.",
+    "examples": [
+  "`{prefix}threadmenu config anonymous_menu yes`"
+    ],
+    "notes": [
+      "Does not affect the DM the user sees, only how it's displayed/logged internally.",
+      "See also: `thread_creation_menu_selection_log`."
+    ]
+  },
+  "thread_creation_menu_embed_text": {
+    "default": "\"Please select an option.\"",
+    "description": "Text shown in the embed above the selection dropdown in the user's DM.",
+    "examples": [
+  "`{prefix}threadmenu config embed_text Please choose a department`"
+    ],
+    "notes": [
+      "Keep this concise; users cannot proceed until choosing.",
+      "See also: `thread_creation_menu_dropdown_placeholder`."
+    ]
+  },
+  "thread_creation_menu_dropdown_placeholder": {
+    "default": "\"Select an option to contact the staff team.\"",
+    "description": "Placeholder text displayed in the dropdown before selection.",
+    "examples": [
+  "`{prefix}threadmenu config dropdown_placeholder Pick a topic...`"
+    ],
+    "notes": [
+      "Appears grayed out inside the select component.",
+      "See also: `thread_creation_menu_embed_text`."
+    ]
+  },
+  "thread_creation_menu_selection_log": {
+    "default": "Yes",
+    "description": "Logs the chosen menu option (label, type, callback) as a message in the newly created thread channel for moderator visibility.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_selection_log no`"
+    ],
+    "notes": [
+      "When disabled, the staff will not see an automatic message with the selection details though commands may still act.",
+      "See also: `thread_creation_menu_enabled`, `thread_creation_menu_options`."
+    ]
   }
 }
