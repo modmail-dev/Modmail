@@ -1121,9 +1121,10 @@ class Modmail(commands.Cog):
 
             tag = self.bot.config["mod_tag"]
             if tag is None:
-                top_role = get_top_role(ctx.author, self.bot.config["use_hoisted_top_role"])
-                tag = str(top_role) if top_role else None
-            name = self.bot.config["anon_username"] or tag or "Anonymous"
+                tag = str(get_top_role(ctx.author, self.bot.config["use_hoisted_top_role"]))
+            name = self.bot.config["anon_username"]
+            if name is None:
+                name = "Anonymous"
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
                 avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
@@ -1211,9 +1212,10 @@ class Modmail(commands.Cog):
 
             tag = self.bot.config["mod_tag"]
             if tag is None:
-                top_role = get_top_role(ctx.author, self.bot.config["use_hoisted_top_role"])
-                tag = str(top_role) if top_role else None
-            name = self.bot.config["anon_username"] or tag or "Anonymous"
+                tag = str(get_top_role(ctx.author, self.bot.config["use_hoisted_top_role"]))
+            name = self.bot.config["anon_username"]
+            if name is None:
+                name = "Anonymous"
             avatar_url = self.bot.config["anon_avatar_url"]
             if avatar_url is None:
                 avatar_url = self.bot.get_guild_icon(guild=ctx.guild, size=128)
