@@ -2218,7 +2218,18 @@ class ThreadManager:
             try:
                 await thread.wait_until_ready()
             except asyncio.CancelledError:
-                logger.warning("Thread for %s cancelled.", recipient)
+                # Improve logging: include username and user ID when possible
+                try:
+                    if recipient is not None:
+                        label = f"{recipient} ({recipient.id})"
+                    elif recipient_id is not None:
+                        user = await self.bot.get_or_fetch_user(recipient_id)
+                        label = f"{user} ({recipient_id})" if user else f"User ({recipient_id})"
+                    else:
+                        label = "Unknown User"
+                except Exception:
+                    label = f"User ({recipient_id})" if recipient_id is not None else "Unknown User"
+                logger.warning("Thread for %s cancelled.", label)
                 return thread
             else:
                 # If the thread is snoozed (channel is None), return it for restoration
@@ -2335,7 +2346,12 @@ class ThreadManager:
             try:
                 await thread.wait_until_ready()
             except asyncio.CancelledError:
-                logger.warning("Thread for %s cancelled, abort creating.", recipient)
+                # Improve logging to include username and ID
+                try:
+                    label = f"{recipient} ({recipient.id})"
+                except Exception:
+                    label = f"User ({getattr(recipient, 'id', 'unknown')})"
+                logger.warning("Thread for %s cancelled, abort creating.", label)
                 return thread
             else:
                 if thread.channel and self.bot.get_channel(thread.channel.id):
@@ -2350,7 +2366,18 @@ class ThreadManager:
 
         self.cache[recipient.id] = thread
 
-        if (message or not manual_trigger) and self.bot.config["confirm_thread_creation"]:
+        # Determine if the advanced thread-creation menu is enabled; if so and the user
+        # initiated via DM, we defer confirmation until AFTER the user selects an option.
+        adv_menu_enabled = self.bot.config.get("thread_creation_menu_enabled") and bool(
+            self.bot.config.get("thread_creation_menu_options")
+        )
+        user_initiated_dm = (creator is None or creator == recipient) and manual_trigger
+
+        if (
+            (message or not manual_trigger)
+            and self.bot.config["confirm_thread_creation"]
+            and not (adv_menu_enabled and user_initiated_dm)
+        ):
             if not manual_trigger:
                 destination = recipient
             else:
@@ -2416,7 +2443,6 @@ class ThreadManager:
             submenus = self.bot.config.get("thread_creation_menu_submenus") or {}
 
             # Minimal inline view implementation (avoid importing plugin code)
-            import discord
 
             thread.ready = False  # not ready yet
 
@@ -2459,6 +2485,69 @@ class ThreadManager:
                     # Fallback to provided category (from outer scope) or main category
                     fallback_category = category or self.outer_thread.bot.main_category
                     use_category = sel_category or fallback_category
+                    # If confirmation is enabled, prompt now (after option selection)
+                    try:
+                        if self.outer_thread.bot.config.get("confirm_thread_creation"):
+                            dest = message.channel if manual_trigger else recipient
+                            view = ConfirmThreadCreationView()
+                            view.add_item(
+                                AcceptButton(
+                                    "accept-thread-creation",
+                                    self.outer_thread.bot.config["confirm_thread_creation_accept"],
+                                )
+                            )
+                            view.add_item(
+                                DenyButton(
+                                    "deny-thread-creation",
+                                    self.outer_thread.bot.config["confirm_thread_creation_deny"],
+                                )
+                            )
+                            confirm = await dest.send(
+                                embed=discord.Embed(
+                                    title=self.outer_thread.bot.config["confirm_thread_creation_title"],
+                                    description=self.outer_thread.bot.config["confirm_thread_response"],
+                                    color=self.outer_thread.bot.main_color,
+                                ),
+                                view=view,
+                            )
+                            await view.wait()
+                            if view.value is None:
+                                # Timed out
+                                self.outer_thread.cancelled = True
+                                try:
+                                    await dest.send(
+                                        embed=discord.Embed(
+                                            title=self.outer_thread.bot.config["thread_cancelled"],
+                                            description="Timed out",
+                                            color=self.outer_thread.bot.error_color,
+                                        )
+                                    )
+                                    await confirm.edit(view=None)
+                                except Exception:
+                                    pass
+                            elif view.value is False:
+                                self.outer_thread.cancelled = True
+                                try:
+                                    await dest.send(
+                                        embed=discord.Embed(
+                                            title=self.outer_thread.bot.config["thread_cancelled"],
+                                            color=self.outer_thread.bot.error_color,
+                                        )
+                                    )
+                                except Exception:
+                                    pass
+                            if self.outer_thread.cancelled:
+                                # Clear pending/menu state and cache
+                                try:
+                                    setattr(self.outer_thread, "_pending_menu", False)
+                                    self.outer_thread.manager.cache.pop(self.outer_thread.id, None)
+                                except Exception:
+                                    pass
+                                return
+                    except Exception:
+                        # If confirm step fails, proceed to create thread to avoid dead-ends
+                        logger.warning("Confirm step failed after menu selection; continuing.")
+
                     self.outer_thread.bot.loop.create_task(
                         self.outer_thread.setup(
                             creator=creator,
@@ -2555,6 +2644,8 @@ class ThreadManager:
                             self.outer_thread.manager.cache.pop(self.outer_thread.id, None)
                         except Exception:
                             pass
+                        # Clear pending menu flag so a new message can recreate a fresh thread
+                        setattr(self.outer_thread, "_pending_menu", False)
                         self.outer_thread.cancelled = True
                     else:
                         try:
@@ -2563,6 +2654,18 @@ class ThreadManager:
                             )
                         except Exception:
                             pass
+                        # Allow subsequent messages to trigger a new menu/thread by clearing state
+                        setattr(self.outer_thread, "_pending_menu", False)
+                        try:
+                            self.outer_thread.manager.cache.pop(self.outer_thread.id, None)
+                        except Exception:
+                            pass
+                        self.outer_thread.cancelled = True
+                    # Ensure view is stopped to release any internal tasks
+                    try:
+                        self.stop()
+                    except Exception:
+                        pass
 
             # Send DM prompt
             try:
@@ -2571,6 +2674,11 @@ class ThreadManager:
                 menu_msg = await recipient.send(embed=embed, view=menu_view)
                 # mark thread as pending menu selection
                 thread._pending_menu = True
+                # Explicitly attach the message to the view for safety in callbacks
+                try:
+                    menu_view.message = menu_msg
+                except Exception:
+                    pass
             except Exception:
                 logger.warning(
                     "Failed to send thread-creation menu DM, falling back to immediate thread creation."

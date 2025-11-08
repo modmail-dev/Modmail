@@ -13,6 +13,7 @@ from json import JSONDecodeError, loads
 from subprocess import PIPE
 from textwrap import indent
 from typing import Union
+import typing
 
 import discord
 from discord.enums import ActivityType, Status
@@ -898,21 +899,44 @@ class Utility(commands.Cog):
                 )
 
         else:
-            embed = discord.Embed(
-                color=self.bot.main_color,
-                description="Here is a list of currently set configuration variable(s).",
-            )
-            embed.set_author(
-                name="Current config(s):",
-                icon_url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None,
-            )
+            # Build one or more embeds, each with up to 25 fields
+            base_desc = "Here is a list of currently set configuration variable(s)."
+            author_name = "Current config(s):"
+            icon = self.bot.user.display_avatar.url if self.bot.user.display_avatar else None
+
             config = self.bot.config.filter_default(self.bot.config)
+            items = [(name, value) for name, value in config.items() if name in self.bot.config.public_keys]
 
-            for name, value in config.items():
-                if name in self.bot.config.public_keys:
-                    embed.add_field(name=name, value=f"`{value}`", inline=False)
+            embeds: list[discord.Embed] = []
+            chunk: list[tuple[str, typing.Any]] = []
+            for pair in items:
+                chunk.append(pair)
+                if len(chunk) == 15:
+                    e = discord.Embed(color=self.bot.main_color, description=base_desc)
+                    e.set_author(name=author_name, icon_url=icon)
+                    for name, value in chunk:
+                        e.add_field(name=name, value=f"`{value}`", inline=False)
+                    embeds.append(e)
+                    chunk = []
 
-        return await ctx.send(embed=embed)
+            if chunk:
+                e = discord.Embed(color=self.bot.main_color, description=base_desc)
+                e.set_author(name=author_name, icon_url=icon)
+                for name, value in chunk:
+                    e.add_field(name=name, value=f"`{value}`", inline=False)
+                embeds.append(e)
+
+        # Send one or many embeds depending on count.
+        # In the single-key branch above, variable 'embed' exists; in this multi branch, we only use 'embeds'.
+        if key:
+            return await ctx.send(embed=embed)
+        else:
+            if not embeds:
+                return await ctx.send("No public configuration keys are set.")
+            # Use the existing paginator consistently
+            paginator = EmbedPaginatorSession(ctx, *embeds)
+            await paginator.run()
+            return
 
     @config.command(name="help", aliases=["info"])
     @checks.has_permissions(PermissionLevel.OWNER)
