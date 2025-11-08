@@ -2670,7 +2670,28 @@ class ThreadManager:
 
             # Send DM prompt
             try:
-                embed = discord.Embed(description=embed_text, color=self.bot.mod_color)
+                # Build embed with new customizable settings
+                try:
+                    embed_title = self.bot.config.get("thread_creation_menu_embed_title")
+                    embed_footer = self.bot.config.get("thread_creation_menu_embed_footer")
+                    embed_thumb = self.bot.config.get("thread_creation_menu_embed_thumbnail_url")
+                    embed_footer_icon = self.bot.config.get("thread_creation_menu_embed_footer_icon_url")
+                    embed_color_raw = self.bot.config.get("thread_creation_menu_embed_color")
+                except Exception:
+                    embed_title = None
+                    embed_footer = None
+                    embed_thumb = None
+                    embed_footer_icon = None
+                    embed_color_raw = None
+                embed_color = embed_color_raw or self.bot.mod_color
+                embed = discord.Embed(title=embed_title, description=embed_text, color=embed_color)
+                if embed_footer:
+                    embed.set_footer(text=embed_footer, icon_url=embed_footer_icon or discord.Embed.Empty)
+                if embed_thumb:
+                    try:
+                        embed.set_thumbnail(url=embed_thumb)
+                    except Exception:
+                        pass
                 menu_view = _ThreadCreationMenuView(thread)
                 menu_msg = await recipient.send(embed=embed, view=menu_view)
                 # mark thread as pending menu selection
@@ -2812,7 +2833,28 @@ class ThreadManager:
                         pass
 
             try:
-                embed = discord.Embed(description=embed_text, color=self.bot.mod_color)
+                # Build embed with new customizable settings (precreate flow)
+                try:
+                    embed_title = self.bot.config.get("thread_creation_menu_embed_title")
+                    embed_footer = self.bot.config.get("thread_creation_menu_embed_footer")
+                    embed_thumb = self.bot.config.get("thread_creation_menu_embed_thumbnail_url")
+                    embed_footer_icon = self.bot.config.get("thread_creation_menu_embed_footer_icon_url")
+                    embed_color_raw = self.bot.config.get("thread_creation_menu_embed_color")
+                except Exception:
+                    embed_title = None
+                    embed_footer = None
+                    embed_thumb = None
+                    embed_footer_icon = None
+                    embed_color_raw = None
+                embed_color = embed_color_raw or self.bot.mod_color
+                embed = discord.Embed(title=embed_title, description=embed_text, color=embed_color)
+                if embed_footer:
+                    embed.set_footer(text=embed_footer, icon_url=embed_footer_icon or discord.Embed.Empty)
+                if embed_thumb:
+                    try:
+                        embed.set_thumbnail(url=embed_thumb)
+                    except Exception:
+                        pass
                 menu_view = _PrecreateMenuView(thread)
                 # Send menu DM AFTER channel creation initiation (channel will be created below)
                 menu_msg = await recipient.send(embed=embed, view=menu_view)

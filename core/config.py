@@ -158,6 +158,12 @@ class ConfigManager:
         "thread_creation_menu_dropdown_placeholder": "Select an option to contact the staff team.",
         "thread_creation_menu_selection_log": True,  # log selected option in newly created thread channel
         "thread_creation_menu_precreate_channel": False,
+        # thread-creation menu embed customization
+        "thread_creation_menu_embed_title": None,
+        "thread_creation_menu_embed_footer": None,
+        "thread_creation_menu_embed_thumbnail_url": None,
+        "thread_creation_menu_embed_footer_icon_url": None,
+        "thread_creation_menu_embed_color": str(discord.Color.green()),
     }
 
     private_keys = {
@@ -214,7 +220,7 @@ class ConfigManager:
         "data_collection": True,
     }
 
-    colors = {"mod_color", "recipient_color", "main_color", "error_color"}
+    colors = {"mod_color", "recipient_color", "main_color", "error_color", "thread_creation_menu_embed_color"}
 
     time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown", "log_expiration"}
 

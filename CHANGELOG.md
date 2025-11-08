@@ -51,7 +51,6 @@ Features:
     * `threadmenu option edit/remove/show`: Manage or inspect an existing option.
     * `threadmenu submenu create/delete/list/show`: Manage submenus.
     * `threadmenu submenu option add/edit/remove`: Manage options inside a submenu.
-    * `threadmenu config <timeout|close_on_timeout|embed_text|dropdown_placeholder|anonymous_menu>`: Adjust global settings.
   * Configuration / Behavior:
     * Per-option `category` targeting when creating a thread; falls back to `main_category_id` if invalid/missing.
     * Optional selection logging (`thread_creation_menu_selection_log`) posts the chosen option in the new thread.

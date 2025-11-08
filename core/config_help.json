@@ -1425,7 +1425,7 @@
     "default": "30 (seconds)",
     "description": "Number of seconds to wait for a user to pick a menu option before timing out.",
     "examples": [
-  "`{prefix}threadmenu config timeout 30`"
+  "`{prefix}config set thread_creation_menu_timeout 30`"
     ],
     "notes": [
       "If the timeout is reached, `thread_creation_menu_close_on_timeout` controls whether the attempt is aborted or the user is asked to message again.",
@@ -1436,7 +1436,7 @@
     "default": "No",
     "description": "Silently aborts thread creation if the user does not select an option before the timeout expires.",
     "examples": [
-  "`{prefix}threadmenu config close_on_timeout yes`"
+  "`{prefix}config set thread_creation_menu_close_on_timeout yes`"
     ],
     "notes": [
       "If disabled, the user receives a message telling them to send a new DM to start again.",
@@ -1447,7 +1447,7 @@
     "default": "No",
     "description": "If enabled, the initial menu prompt relayed to staff (after creation) is anonymized; only selection details are logged, not the original prompt message author context.",
     "examples": [
-  "`{prefix}threadmenu config anonymous_menu yes`"
+  "`{prefix}config set thread_creation_menu_anonymous_menu yes`"
     ],
     "notes": [
       "Does not affect the DM the user sees, only how it's displayed/logged internally.",
@@ -1458,7 +1458,7 @@
     "default": "\"Please select an option.\"",
     "description": "Text shown in the embed above the selection dropdown in the user's DM.",
     "examples": [
-  "`{prefix}threadmenu config embed_text Please choose a department`"
+  "`{prefix}config set thread_creation_menu_embed_text Please choose a department`"
     ],
     "notes": [
       "Keep this concise; users cannot proceed until choosing.",
@@ -1469,7 +1469,7 @@
     "default": "\"Select an option to contact the staff team.\"",
     "description": "Placeholder text displayed in the dropdown before selection.",
     "examples": [
-  "`{prefix}threadmenu config dropdown_placeholder Pick a topic...`"
+  "`{prefix}config set thread_creation_menu_dropdown_placeholder Pick a topic...`"
     ],
     "notes": [
       "Appears grayed out inside the select component.",
@@ -1498,6 +1498,62 @@
       "Category-specific option selections will move the channel afterward if a category_id is configured on the option.",
       "Confirmation (`confirm_thread_creation`) is only applied in the deferred mode; enabling precreate bypasses the confirm step for menu flows.",
       "See also: `thread_creation_menu_enabled`, `thread_creation_menu_options`, `confirm_thread_creation`."
+    ]
+  },
+  "thread_creation_menu_embed_title": {
+    "default": "Empty (no title)",
+    "description": "Optional title at the top of the thread-creation menu embed in the user's DM.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_title Contact the staff team`",
+      "`{prefix}config delete thread_creation_menu_embed_title` (clear)"
+    ],
+    "notes": [
+      "See also: `thread_creation_menu_embed_text`."
+    ]
+  },
+  "thread_creation_menu_embed_footer": {
+    "default": "Empty (no footer)",
+    "description": "Optional footer text at the bottom of the menu embed.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_footer Please choose the most relevant option`",
+      "`{prefix}config delete thread_creation_menu_embed_footer` (clear)"
+    ],
+    "notes": [
+      "You can also configure an optional footer icon via `thread_creation_menu_embed_footer_icon_url`."
+    ]
+  },
+  "thread_creation_menu_embed_footer_icon_url": {
+    "default": "Empty (no icon)",
+    "description": "Optional URL for the small footer icon displayed next to the footer text.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_footer_icon_url https://example.com/icon.png`",
+      "`{prefix}config delete thread_creation_menu_embed_footer_icon_url` (clear)"
+    ],
+    "notes": [
+      "Use a direct image URL (PNG/JPEG/GIF)."
+    ]
+  },
+  "thread_creation_menu_embed_thumbnail_url": {
+    "default": "Empty (no thumbnail)",
+    "description": "Optional thumbnail image shown in the top-right of the menu embed.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_thumbnail_url https://example.com/logo.png`",
+      "`{prefix}config delete thread_creation_menu_embed_thumbnail_url` (clear)"
+    ],
+    "notes": [
+      "Use a direct image URL; recommended square image.",
+      "Consider file size/CDN reliability so it loads quickly for users."
+    ]
+  },
+  "thread_creation_menu_embed_color": {
+    "default": "Green (hex for Discord Color.green)",
+    "description": "Color for the menu embed's side strip. Accepts hex (e.g. #5865F2) or one of the supported color names.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_color #5865F2`",
+      "`{prefix}config set thread_creation_menu_embed_color blurple`"
+    ],
+    "notes": [
+      "Color names map to the built-in palette (e.g., 'red', 'green', 'blurple')."
     ]
   }
 }

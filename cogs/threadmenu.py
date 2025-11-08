@@ -31,6 +31,11 @@ class ThreadCreationMenuCore(commands.Cog):
             or "Please select an option.",
             "dropdown_placeholder": self.bot.config.get("thread_creation_menu_dropdown_placeholder")
             or "Select an option to contact the staff team.",
+            "embed_title": self.bot.config.get("thread_creation_menu_embed_title"),
+            "embed_footer": self.bot.config.get("thread_creation_menu_embed_footer"),
+            "embed_thumbnail_url": self.bot.config.get("thread_creation_menu_embed_thumbnail_url"),
+            "embed_footer_icon_url": self.bot.config.get("thread_creation_menu_embed_footer_icon_url"),
+            "embed_color": self.bot.config.get("thread_creation_menu_embed_color"),
         }
 
     async def _save_conf(self, conf: dict):
@@ -49,6 +54,17 @@ class ThreadCreationMenuCore(commands.Cog):
             "thread_creation_menu_dropdown_placeholder",
             conf.get("dropdown_placeholder", "Select an option to contact the staff team."),
         )
+        await self.bot.config.set("thread_creation_menu_embed_title", conf.get("embed_title"))
+        await self.bot.config.set("thread_creation_menu_embed_footer", conf.get("embed_footer"))
+        await self.bot.config.set("thread_creation_menu_embed_thumbnail_url", conf.get("embed_thumbnail_url"))
+        await self.bot.config.set(
+            "thread_creation_menu_embed_footer_icon_url", conf.get("embed_footer_icon_url")
+        )
+        if conf.get("embed_color"):
+            try:
+                await self.bot.config.set("thread_creation_menu_embed_color", conf.get("embed_color"))
+            except Exception:
+                pass
         await self.bot.config.update()
 
     # ----- commands -----
@@ -57,80 +73,6 @@ class ThreadCreationMenuCore(commands.Cog):
     async def threadmenu(self, ctx):
         """Thread-creation menu settings (core)."""
         await ctx.send_help(ctx.command)
-
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @threadmenu.group(name="config", invoke_without_command=True)
-    async def threadmenu_config(self, ctx):
-        """Thread-creation menu config settings (core)."""
-        await ctx.send_help(ctx.command)
-
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @threadmenu_config.command(name="get")
-    async def threadmenu_config_get(self, ctx):
-        """Get current core thread-creation menu config."""
-        conf = self._get_conf()
-        embed = discord.Embed(
-            title="Thread-creation menu config (Core)",
-            description="The current config for the thread menu.",
-            color=discord.Color.blurple(),
-        )
-        embed.add_field(name="Enabled", value=conf["enabled"])
-        embed.add_field(name="Timeout", value=conf["timeout"])
-        embed.add_field(name="Close on timeout", value=conf["close_on_timeout"])
-        embed.add_field(name="Embed text", value=conf["embed_text"], inline=False)
-        embed.add_field(name="Dropdown placeholder", value=conf["dropdown_placeholder"], inline=False)
-        await ctx.send(embed=embed)
-
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @threadmenu_config.command(name="timeout")
-    async def threadmenu_config_timeout(self, ctx, timeout: int):
-        """Set the menu interaction timeout in seconds.
-
-        After this period of inactivity the view times out; if
-        `close_on_timeout` is true the menu message is removed.
-        """
-        if timeout < 1:
-            return await ctx.send("Timeout must be greater than 1.")
-        conf = self._get_conf()
-        conf["timeout"] = timeout
-        await self._save_conf(conf)
-        await ctx.send("Timeout set.")
-
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @threadmenu_config.command(name="close_on_timeout")
-    async def threadmenu_config_close_on_timeout(self, ctx, close_on_timeout: bool):
-        """Toggle deleting the menu message when it times out."""
-        conf = self._get_conf()
-        conf["close_on_timeout"] = close_on_timeout
-        await self._save_conf(conf)
-        await ctx.send("Done.")
-
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @threadmenu_config.command(name="embed_text")
-    async def threadmenu_config_embed_text(self, ctx, *, embed_text: str):
-        """Set the embed body text shown above the select menu."""
-        conf = self._get_conf()
-        conf["embed_text"] = embed_text
-        await self._save_conf(conf)
-        await ctx.send("Done.")
-
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @threadmenu_config.command(name="dropdown_placeholder")
-    async def threadmenu_config_dropdown_placeholder(self, ctx, *, dropdown_placeholder: str):
-        """Set the placeholder text inside the dropdown before selection."""
-        conf = self._get_conf()
-        conf["dropdown_placeholder"] = dropdown_placeholder
-        await self._save_conf(conf)
-        await ctx.send("Done.")
-
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @threadmenu_config.command(name="anonymous_menu")
-    async def threadmenu_config_anonymous_menu(self, ctx, option: bool):
-        """Toggle whether the menu is posted anonymously (no user mention)."""
-        conf = self._get_conf()
-        conf["anonymous_menu"] = option
-        await self._save_conf(conf)
-        await ctx.send("Done.")
 
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @threadmenu.command(name="toggle")
