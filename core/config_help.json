@@ -1422,7 +1422,7 @@
     ]
   },
   "thread_creation_menu_timeout": {
-    "default": "20 (seconds)",
+    "default": "30 (seconds)",
     "description": "Number of seconds to wait for a user to pick a menu option before timing out.",
     "examples": [
   "`{prefix}threadmenu config timeout 30`"
@@ -1485,6 +1485,19 @@
     "notes": [
       "When disabled, the staff will not see an automatic message with the selection details though commands may still act.",
       "See also: `thread_creation_menu_enabled`, `thread_creation_menu_options`."
+    ]
+  },
+  "thread_creation_menu_precreate_channel": {
+    "default": "No",
+    "description": "When enabled, a thread channel is created immediately upon the user's first DM even if the thread creation menu is enabled. The menu is still shown but selection becomes optional and happens after channel creation.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_precreate_channel yes`"
+    ],
+    "notes": [
+      "If a user never selects an option the thread remains open in the default/main category.",
+      "Category-specific option selections will move the channel afterward if a category_id is configured on the option.",
+      "Confirmation (`confirm_thread_creation`) is only applied in the deferred mode; enabling precreate bypasses the confirm step for menu flows.",
+      "See also: `thread_creation_menu_enabled`, `thread_creation_menu_options`, `confirm_thread_creation`."
     ]
   }
 }

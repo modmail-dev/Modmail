@@ -151,12 +151,13 @@ class ConfigManager:
         "thread_creation_menu_enabled": False,
         "thread_creation_menu_options": {},  # main menu options mapping key -> {label, description, emoji, type, callback}
         "thread_creation_menu_submenus": {},  # submenu name -> submenu options (same structure as options)
-        "thread_creation_menu_timeout": 20,
+        "thread_creation_menu_timeout": 30,  # Default interaction timeout for the thread-creation menu (in seconds)
         "thread_creation_menu_close_on_timeout": False,
         "thread_creation_menu_anonymous_menu": False,
         "thread_creation_menu_embed_text": "Please select an option.",
         "thread_creation_menu_dropdown_placeholder": "Select an option to contact the staff team.",
         "thread_creation_menu_selection_log": True,  # log selected option in newly created thread channel
+        "thread_creation_menu_precreate_channel": False,
     }
 
     private_keys = {
@@ -265,6 +266,7 @@ class ConfigManager:
         "thread_creation_menu_close_on_timeout",
         "thread_creation_menu_anonymous_menu",
         "thread_creation_menu_selection_log",
+        "thread_creation_menu_precreate_channel",
     }
 
     enums = {

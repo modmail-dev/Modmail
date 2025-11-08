@@ -2425,9 +2425,10 @@ class ThreadManager:
         adv_enabled = self.bot.config.get("thread_creation_menu_enabled") and bool(
             self.bot.config.get("thread_creation_menu_options")
         )
-        # Only defer if user initiated (creator is recipient) and not staff contact command
+        # Always treat user-initiated DM threads as precreate: create channel immediately in main_category
         user_initiated = (creator is None or creator == recipient) and manual_trigger
-        if adv_enabled and user_initiated:
+        precreate = adv_enabled and user_initiated  # force precreate semantics for user DM origin
+        if adv_enabled and user_initiated and not precreate:  # condition will never be true now
             # Send menu prompt FIRST, wait for selection, then create channel.
             # Build dummy message for menu DM
             try:
@@ -2688,8 +2689,149 @@ class ThreadManager:
                 )
             return thread
 
-        # Regular immediate creation
-        self.bot.loop.create_task(thread.setup(creator=creator, category=category, initial_message=message))
+        # If menu is enabled but precreate is requested, send the menu DM but do NOT defer creation.
+        # Selection becomes optional; thread channel will already be created below.
+        if adv_enabled and user_initiated and precreate:
+            try:
+                embed_text = self.bot.config.get("thread_creation_menu_embed_text")
+                placeholder = self.bot.config.get("thread_creation_menu_dropdown_placeholder")
+                timeout = int(self.bot.config.get("thread_creation_menu_timeout") or 20)
+            except Exception:
+                embed_text = "Please select an option."
+                placeholder = "Select an option to contact the staff team."
+                timeout = 20
+
+            options = self.bot.config.get("thread_creation_menu_options") or {}
+
+            class _PrecreateMenuSelect(discord.ui.Select):
+                def __init__(self, outer_thread: Thread):
+                    self.outer_thread = outer_thread
+                    opts = [
+                        discord.SelectOption(label=o["label"], description=o["description"], emoji=o["emoji"])
+                        for o in options.values()
+                    ]
+                    super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=opts)
+
+                async def callback(self, interaction: discord.Interaction):
+                    await interaction.response.defer(ephemeral=False)
+                    chosen_label = self.values[0]
+                    key = chosen_label.lower().replace(" ", "_")
+                    selected = options.get(key)
+                    self.outer_thread._selected_thread_creation_menu_option = selected
+                    # Remove the view
+                    if self.view:
+                        try:
+                            await interaction.edit_original_response(view=None)
+                        except Exception:
+                            pass
+                        try:
+                            self.view.stop()
+                        except Exception:
+                            pass
+                    # Log selection to thread channel if configured
+                    try:
+                        await self.outer_thread.wait_until_ready()
+                        if self.outer_thread.bot.config.get("thread_creation_menu_selection_log"):
+                            opt = selected or {}
+                            log_txt = f"Selected menu option: {opt.get('label')} ({opt.get('type')})"
+                            if opt.get("type") == "command":
+                                log_txt += f" -> {opt.get('callback')}"
+                            await self.outer_thread.channel.send(
+                                embed=discord.Embed(
+                                    description=log_txt, color=self.outer_thread.bot.mod_color
+                                )
+                            )
+                        # If a category_id is set on the option, move the channel accordingly
+                        try:
+                            cat_id = selected.get("category_id") if isinstance(selected, dict) else None
+                            if cat_id:
+                                guild = self.outer_thread.bot.modmail_guild
+                                target = guild and guild.get_channel(int(cat_id))
+                                if isinstance(target, discord.CategoryChannel):
+                                    await self.outer_thread.channel.edit(
+                                        category=target, reason="Menu selection: move to category"
+                                    )
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+                    # If the option type is command, invoke it now within the created thread
+                    if selected and selected.get("type") == "command":
+                        alias = selected.get("callback")
+                        if alias:
+                            from discord.ext.commands.view import StringView
+                            from core.utils import normalize_alias
+
+                            ctxs = []
+                            for al in normalize_alias(alias):
+                                view_ = StringView(self.outer_thread.bot.prefix + al)
+                                synthetic = DummyMessage(copy.copy(message))
+                                try:
+                                    synthetic.author = (
+                                        self.outer_thread.bot.modmail_guild.me or self.outer_thread.bot.user
+                                    )
+                                except Exception:
+                                    synthetic.author = self.outer_thread.bot.user
+                                setattr(synthetic, "_menu_invoked", True)
+                                ctx_ = commands.Context(
+                                    prefix=self.outer_thread.bot.prefix,
+                                    view=view_,
+                                    bot=self.outer_thread.bot,
+                                    message=synthetic,
+                                )
+                                ctx_.thread = self.outer_thread
+                                discord.utils.find(
+                                    view_.skip_string, await self.outer_thread.bot.get_prefix()
+                                )
+                                ctx_.invoked_with = view_.get_word().lower()
+                                ctx_.command = self.outer_thread.bot.all_commands.get(ctx_.invoked_with)
+                                setattr(ctx_, "_menu_invoked", True)
+                                ctxs.append(ctx_)
+                            for ctx_ in ctxs:
+                                if ctx_.command:
+                                    old_checks = copy.copy(ctx_.command.checks)
+                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+                                    try:
+                                        await self.outer_thread.bot.invoke(ctx_)
+                                    finally:
+                                        ctx_.command.checks = old_checks
+
+            class _PrecreateMenuView(discord.ui.View):
+                def __init__(self, outer_thread: Thread):
+                    super().__init__(timeout=timeout)
+                    self.add_item(_PrecreateMenuSelect(outer_thread))
+
+                async def on_timeout(self):
+                    try:
+                        await menu_msg.edit(content="Menu timed out.", view=None)
+                    except Exception:
+                        pass
+                    try:
+                        self.stop()
+                    except Exception:
+                        pass
+
+            try:
+                embed = discord.Embed(description=embed_text, color=self.bot.mod_color)
+                menu_view = _PrecreateMenuView(thread)
+                # Send menu DM AFTER channel creation initiation (channel will be created below)
+                menu_msg = await recipient.send(embed=embed, view=menu_view)
+                try:
+                    menu_view.message = menu_msg
+                except Exception:
+                    pass
+            except Exception:
+                logger.debug("Failed to send precreate menu DM; proceeding without menu.")
+
+        # Regular immediate creation (force main_category for user-initiated menu flows)
+        forced_category = None
+        if adv_enabled and user_initiated:
+            # Always use main_category for initial creation regardless of passed category
+            forced_category = self.bot.main_category
+        chosen_category = forced_category or category
+        self.bot.loop.create_task(
+            thread.setup(creator=creator, category=chosen_category, initial_message=message)
+        )
         return thread
 
     async def find_or_create(self, recipient) -> Thread:

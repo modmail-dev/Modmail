@@ -632,7 +632,8 @@ class DenyButton(discord.ui.Button):
 
 class ConfirmThreadCreationView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=20)
+        # Match thread_creation_menu_timeout default (30s) for consistency in UX
+        super().__init__(timeout=30)
         self.value = None
 
 
