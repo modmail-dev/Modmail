@@ -492,6 +492,18 @@
       "See also: `thread_creation_response`, `thread_creation_footer`, `thread_close_title`."
     ]
   },
+  "thread_creation_send_dm_embed": {
+    "default": "Yes",
+    "description": "When set to `yes`, the bot will send an embed message to the recipient notifying them that a new thread was created. Set to `no` to suppress the initial DM embed. When suppressed and `recipient_thread_close` is enabled, the close emoji will be added to the user's original message instead so they may still close the thread.",
+    "examples": [
+      "`{prefix}config set thread_creation_send_dm_embed no`",
+      "`{prefix}config set thread_creation_send_dm_embed yes`"
+    ],
+    "notes": [
+      "Useful if you prefer not to send an extra DM to recipients when creating threads.",
+      "See also: `recipient_thread_close`, `thread_creation_response`, `thread_creation_title`."
+    ]
+  },
   "thread_close_footer": {
     "default": "\"Replying will create a new thread\"",
     "description": "This is the message embed footer sent to the recipient upon the closure of a thread.",
