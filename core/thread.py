@@ -1625,18 +1625,29 @@ class Thread:
             )
         else:
             # Send the same thing in the thread channel.
-            msg = await self.send(
-                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain
-            )
-
-            tasks.append(
-                self.bot.api.append_log(
-                    message,
-                    message_id=msg.id,
-                    channel_id=self.channel.id,
-                    type_="anonymous" if anonymous else "thread_message",
+            try:
+                msg = await self.send(
+                    message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain
                 )
-            )
+            except discord.NotFound:
+                logger.warning(
+                    "Thread channel not found while replying; skipping thread-channel copy of the message."
+                )
+                msg = None
+
+            if msg is not None:
+                tasks.append(
+                    self.bot.api.append_log(
+                        message,
+                        message_id=msg.id,
+                        channel_id=self.channel.id,
+                        type_="anonymous" if anonymous else "thread_message",
+                    )
+                )
+            else:
+                logger.warning(
+                    "Thread channel message failed to send; skipping append_log. Channel may be missing."
+                )
 
             # Cancel closing if a thread message is sent.
             if self.close_task is not None:
@@ -1725,11 +1736,9 @@ class Thread:
         if destination is None:
             logger.error("Attempted to send a message to a thread with no channel (destination is None).")
             return
-        try:
-            await destination.typing()
-        except discord.NotFound:
-            logger.warning("Channel not found when trying to send message.")
-            return
+        # Initial typing was attempted here previously, but returning on NotFound caused callers to
+        # receive None and crash when accessing attributes on the message. We rely on the
+        # snooze-aware typing block below to handle typing and NotFound cases robustly.
 
         author = message.author
         member = self.bot.guild.get_member(author.id)
@@ -2509,14 +2518,17 @@ class ThreadManager:
                 del self.cache[recipient.id]
                 return thread
 
-        # --- THREAD-CREATION MENU (deferred channel creation) ---
+        # --- THREAD-CREATION MENU (deferred or precreate channel creation) ---
         adv_enabled = self.bot.config.get("thread_creation_menu_enabled") and bool(
             self.bot.config.get("thread_creation_menu_options")
         )
-        # Always treat user-initiated DM threads as precreate: create channel immediately in main_category
         user_initiated = (creator is None or creator == recipient) and manual_trigger
-        precreate = adv_enabled and user_initiated  # force precreate semantics for user DM origin
-        if adv_enabled and user_initiated and not precreate:  # condition will never be true now
+        precreate = (
+            adv_enabled
+            and user_initiated
+            and bool(self.bot.config.get("thread_creation_menu_precreate_channel"))
+        )
+        if adv_enabled and user_initiated and not precreate:
             # Send menu prompt FIRST, wait for selection, then create channel.
             # Build dummy message for menu DM
             try:
@@ -3028,8 +3040,8 @@ class ThreadManager:
 
         # Regular immediate creation (force main_category for user-initiated menu flows)
         forced_category = None
-        if adv_enabled and user_initiated:
-            # Always use main_category for initial creation regardless of passed category
+        if adv_enabled and user_initiated and precreate:
+            # In precreate mode we still create immediately (main category override optional)
             forced_category = self.bot.main_category
         chosen_category = forced_category or category
         self.bot.loop.create_task(
