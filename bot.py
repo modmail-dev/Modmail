@@ -1165,9 +1165,6 @@ class ModmailBot(commands.Bot):
             except Exception:
                 logger.error("Failed to send message:", exc_info=True)
                 await self.add_reaction(message, blocked_emoji)
-                # If the failure was due to a missing channel (closed thread lingering), attempt a fresh thread.
-                # We intentionally only check for discord.NotFound to avoid duplicating threads on other errors.
-                import discord as _d
 
                 try:
                     # Re-check channel existence
