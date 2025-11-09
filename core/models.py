@@ -30,15 +30,15 @@ if ".heroku" in os.environ.get("PYTHONHOME", ""):
 class ModmailLogger(logging.Logger):
     @staticmethod
     def _debug_(*msgs):
-        return f'{Fore.CYAN}{" ".join(msgs)}{Style.RESET_ALL}'
+        return f"{Fore.CYAN}{' '.join(msgs)}{Style.RESET_ALL}"
 
     @staticmethod
     def _info_(*msgs):
-        return f'{Fore.LIGHTMAGENTA_EX}{" ".join(msgs)}{Style.RESET_ALL}'
+        return f"{Fore.LIGHTMAGENTA_EX}{' '.join(msgs)}{Style.RESET_ALL}"
 
     @staticmethod
     def _error_(*msgs):
-        return f'{Fore.RED}{" ".join(msgs)}{Style.RESET_ALL}'
+        return f"{Fore.RED}{' '.join(msgs)}{Style.RESET_ALL}"
 
     def debug(self, msg, *args, **kwargs):
         if self.isEnabledFor(logging.DEBUG):
@@ -70,7 +70,10 @@ class ModmailLogger(logging.Logger):
         if self.isEnabledFor(level):
             self._log(
                 level,
-                Fore.BLACK + Style.BRIGHT + "-------------------------" + Style.RESET_ALL,
+                Fore.BLACK
+                + Style.BRIGHT
+                + "-------------------------"
+                + Style.RESET_ALL,
                 [],
             )
 
@@ -95,7 +98,9 @@ class JsonFormatter(logging.Formatter):
         time_format: str = "%Y-%m-%dT%H:%M:%S",
         msec_format: str = "%s.%03dZ",
     ):
-        self.fmt_dict: Dict[str, str] = fmt_dict if fmt_dict is not None else {"message": "message"}
+        self.fmt_dict: Dict[str, str] = (
+            fmt_dict if fmt_dict is not None else {"message": "message"}
+        )
         self.default_time_format: str = time_format
         self.default_msec_format: str = msec_format
         self.datefmt: Optional[str] = None
@@ -111,7 +116,10 @@ class JsonFormatter(logging.Formatter):
         Overwritten to return a dictionary of the relevant LogRecord attributes instead of a string.
         KeyError is raised if an unknown attribute is provided in the fmt_dict.
         """
-        return {fmt_key: record.__dict__[fmt_val] for fmt_key, fmt_val in self.fmt_dict.items()}
+        return {
+            fmt_key: record.__dict__[fmt_val]
+            for fmt_key, fmt_val in self.fmt_dict.items()
+        }
 
     def format(self, record) -> str:
         """
@@ -149,7 +157,8 @@ class FileFormatter(logging.Formatter):
 
 
 log_stream_formatter = logging.Formatter(
-    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+    datefmt="%m/%d/%y %H:%M:%S",
 )
 
 log_file_formatter = FileFormatter(
@@ -221,7 +230,9 @@ def create_log_handler(
     depending on the `rotating` value.
     """
     if filename is None and rotating:
-        raise ValueError("`filename` must be set to instantiate a `RotatingFileHandler`.")
+        raise ValueError(
+            "`filename` must be set to instantiate a `RotatingFileHandler`."
+        )
 
     if filename is None:
         handler = StreamHandler(stream=sys.stdout, **kwargs)
@@ -231,7 +242,12 @@ def create_log_handler(
         formatter = log_file_formatter
     else:
         handler = RotatingFileHandler(
-            filename, mode=mode, encoding=encoding, maxBytes=maxBytes, backupCount=backupCount, **kwargs
+            filename,
+            mode=mode,
+            encoding=encoding,
+            maxBytes=maxBytes,
+            backupCount=backupCount,
+            **kwargs,
         )
         formatter = log_file_formatter
 
@@ -264,7 +280,10 @@ def getLogger(name=None) -> ModmailLogger:
 def configure_logging(bot) -> None:
     global ch_debug, log_level, ch
 
-    stream_log_format, file_log_format = bot.config["stream_log_format"], bot.config["file_log_format"]
+    stream_log_format, file_log_format = (
+        bot.config["stream_log_format"],
+        bot.config["file_log_format"],
+    )
     if stream_log_format == "json":
         ch.setFormatter(json_formatter)
 
@@ -318,8 +337,13 @@ def configure_logging(bot) -> None:
     non_verbose_log_level = max(d_level, logging.INFO)
     stream_handler = create_log_handler(level=non_verbose_log_level)
     if non_verbose_log_level != d_level:
-        logger.info("Discord logging level (stdout): %s.", logging.getLevelName(non_verbose_log_level))
-        logger.info("Discord logging level (logfile): %s.", logging.getLevelName(d_level))
+        logger.info(
+            "Discord logging level (stdout): %s.",
+            logging.getLevelName(non_verbose_log_level),
+        )
+        logger.info(
+            "Discord logging level (logfile): %s.", logging.getLevelName(d_level)
+        )
     else:
         logger.info("Discord logging level: %s.", logging.getLevelName(d_level))
     d_logger.addHandler(stream_handler)
@@ -336,7 +360,9 @@ class InvalidConfigError(commands.BadArgument):
     @property
     def embed(self):
         # Single reference of Color.red()
-        return discord.Embed(title="Error", description=self.msg, color=discord.Color.red())
+        return discord.Embed(
+            title="Error", description=self.msg, color=discord.Color.red()
+        )
 
 
 class _Default:
@@ -403,7 +429,9 @@ class SimilarCategoryConverter(commands.CategoryChannelConverter):
                     if isinstance(c, discord.CategoryChannel)
                 }
 
-            result = get_close_matches(argument.casefold(), categories.keys(), n=1, cutoff=0.75)
+            result = get_close_matches(
+                argument.casefold(), categories.keys(), n=1, cutoff=0.75
+            )
             if result:
                 result = categories[result[0]]
 

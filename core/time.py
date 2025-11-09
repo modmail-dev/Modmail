@@ -64,7 +64,9 @@ class ShortTime:
         if match is None or not match.group(0):
             match = self.discord_fmt.fullmatch(argument)
             if match is not None:
-                self.dt = datetime.datetime.utcfromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc)
+                self.dt = datetime.datetime.utcfromtimestamp(
+                    int(match.group("ts")), tz=datetime.timezone.utc
+                )
                 return
             else:
                 raise commands.BadArgument("invalid time provided")
@@ -85,11 +87,18 @@ class HumanTime:
         now = now or datetime.datetime.utcnow()
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
         if not status.hasDateOrTime:
-            raise commands.BadArgument('invalid time provided, try e.g. "tomorrow" or "3 days"')
+            raise commands.BadArgument(
+                'invalid time provided, try e.g. "tomorrow" or "3 days"'
+            )
 
         if not status.hasTime:
             # replace it with the current time
-            dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
+            dt = dt.replace(
+                hour=now.hour,
+                minute=now.minute,
+                second=now.second,
+                microsecond=now.microsecond,
+            )
 
         self.dt: datetime.datetime = dt
         self._past: bool = dt < now
@@ -158,7 +167,11 @@ class FriendlyTimeResult:
         self.arg = ""
 
     async def ensure_constraints(
-        self, ctx: Context, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
+        self,
+        ctx: Context,
+        uft: UserFriendlyTime,
+        now: datetime.datetime,
+        remaining: str,
     ) -> None:
         # Strip stray connector words like "in", "to", or "at" that may
         # remain when the natural language parser isolates the time token
@@ -217,7 +230,9 @@ class UserFriendlyTime(commands.Converter):
         self.converter: commands.Converter = converter  # type: ignore  # It doesn't understand this narrowing
         self.default: Any = default
 
-    async def convert(self, ctx: Context, argument: str, *, now=None) -> FriendlyTimeResult:
+    async def convert(
+        self, ctx: Context, argument: str, *, now=None
+    ) -> FriendlyTimeResult:
         calendar = HumanTime.calendar
         regex = ShortTime.compiled
         if now is None:
@@ -255,7 +270,9 @@ class UserFriendlyTime(commands.Converter):
             match = ShortTime.discord_fmt.match(argument)
             if match is not None:
                 result = FriendlyTimeResult(
-                    datetime.datetime.utcfromtimestamp(int(match.group("ts")), now, tz=datetime.timezone.utc)
+                    datetime.datetime.utcfromtimestamp(
+                        int(match.group("ts")), now, tz=datetime.timezone.utc
+                    )
                 )
                 remaining = argument[match.end() :].strip()
                 await result.ensure_constraints(ctx, self, now, remaining)
@@ -287,7 +304,9 @@ class UserFriendlyTime(commands.Converter):
         dt, status, begin, end, dt_string = elements[0]
 
         if not status.hasDateOrTime:
-            raise commands.BadArgument('Invalid time provided, try e.g. "tomorrow" or "3 days".')
+            raise commands.BadArgument(
+                'Invalid time provided, try e.g. "tomorrow" or "3 days".'
+            )
 
         # If the parsed time token is embedded in the text but only followed by
         # trailing punctuation/whitespace, treat it as if it's positioned at the end.
@@ -301,7 +320,12 @@ class UserFriendlyTime(commands.Converter):
 
         if not status.hasTime:
             # replace it with the current time
-            dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
+            dt = dt.replace(
+                hour=now.hour,
+                minute=now.minute,
+                second=now.second,
+                microsecond=now.microsecond,
+            )
 
         # if midnight is provided, just default to next day
         if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
@@ -331,7 +355,9 @@ class UserFriendlyTime(commands.Converter):
                     raise commands.BadArgument("Expected quote before time input...")
 
                 if not (end < len(argument) and argument[end] == '"'):
-                    raise commands.BadArgument("If the time is quoted, you must unquote it.")
+                    raise commands.BadArgument(
+                        "If the time is quoted, you must unquote it."
+                    )
 
                 remaining = argument[end + 1 :].lstrip(" ,.!")
             else:
