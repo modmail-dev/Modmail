@@ -160,6 +160,8 @@ class ConfigManager:
         "thread_creation_menu_embed_title": None,
         "thread_creation_menu_embed_footer": None,
         "thread_creation_menu_embed_thumbnail_url": None,
+        "thread_creation_menu_embed_image_url": None,
+        "thread_creation_menu_embed_large_image": False,
         "thread_creation_menu_embed_footer_icon_url": None,
         "thread_creation_menu_embed_color": str(discord.Color.green()),
     }
@@ -276,6 +278,7 @@ class ConfigManager:
         "thread_creation_menu_anonymous_menu",
         "thread_creation_menu_selection_log",
         "thread_creation_menu_precreate_channel",
+        "thread_creation_menu_embed_large_image",
     }
 
     enums = {

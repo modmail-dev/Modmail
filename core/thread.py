@@ -95,9 +95,10 @@ class Thread:
         try:
             await task
         except asyncio.TimeoutError:
-            pass
-
-        self.wait_tasks.remove(task)
+            logger.warning("Waiting for thread setup timed out.")
+        finally:
+            if task in self.wait_tasks:
+                self.wait_tasks.remove(task)
 
     @property
     def id(self) -> int:
@@ -120,10 +121,19 @@ class Thread:
         return self._ready_event.is_set()
 
     @ready.setter
-    def ready(self, flag: bool):
+    def ready(self, flag: bool) -> None:
+        """Set the ready state and dispatch thread_create when transitioning to ready.
+
+        Some legacy code paths set thread.ready = True/False. This setter preserves that API by
+        updating the internal event and emitting the creation event when entering the ready state.
+        """
         if flag:
-            self._ready_event.set()
-            self.bot.dispatch("thread_create", self)
+            if not self._ready_event.is_set():
+                self._ready_event.set()
+                try:
+                    self.bot.dispatch("thread_create", self)
+                except Exception:
+                    pass
         else:
             self._ready_event.clear()
 
@@ -1212,23 +1222,12 @@ class Thread:
             return
         except Exception:
             return
-        # Remove components to make the menu unavailable. Keep the embed/text intact.
         try:
             closed_text = "This thread has been closed. Send a new message to start a new thread."  # Grammar-friendly guidance
-            if msg.embeds:
-                emb = msg.embeds[0]
-                # Only overwrite if not already showing a closed message
-                if not (emb.description and "closed" in emb.description.lower()):
-                    emb.description = closed_text
-                await msg.edit(embed=emb, view=None)
-            else:
-                # Overwrite content similarly
-                if not (msg.content and "closed" in msg.content.lower()):
-                    await msg.edit(content=closed_text, view=None)
-                else:
-                    await msg.edit(view=None)
+            closed_embed = discord.Embed(description=closed_text)
+            await msg.edit(content=None, embed=closed_embed, view=None)
         except Exception:
-            # Fallback: at least remove interaction
+            # Fallback: at least remove interaction so menu cannot be used
             try:
                 await msg.edit(view=None)
             except Exception:
@@ -2809,23 +2808,37 @@ class ThreadManager:
                     embed_title = self.bot.config.get("thread_creation_menu_embed_title")
                     embed_footer = self.bot.config.get("thread_creation_menu_embed_footer")
                     embed_thumb = self.bot.config.get("thread_creation_menu_embed_thumbnail_url")
+                    embed_image = self.bot.config.get("thread_creation_menu_embed_image_url")
                     embed_footer_icon = self.bot.config.get("thread_creation_menu_embed_footer_icon_url")
                     embed_color_raw = self.bot.config.get("thread_creation_menu_embed_color")
                 except Exception:
                     embed_title = None
                     embed_footer = None
                     embed_thumb = None
+                    embed_image = None
                     embed_footer_icon = None
                     embed_color_raw = None
                 embed_color = embed_color_raw or self.bot.mod_color
                 embed = discord.Embed(title=embed_title, description=embed_text, color=embed_color)
                 if embed_footer:
-                    embed.set_footer(text=embed_footer, icon_url=embed_footer_icon or discord.Embed.Empty)
-                if embed_thumb:
+                    try:
+                        if embed_footer_icon:
+                            embed.set_footer(text=embed_footer, icon_url=embed_footer_icon)
+                        else:
+                            embed.set_footer(text=embed_footer)
+                    except Exception as e:
+                        logger.debug("Footer build failed (ignored): %s", e)
+                # Option A: prefer dedicated large image when provided
+                if embed_image:
+                    try:
+                        embed.set_image(url=embed_image)
+                    except Exception as e:
+                        logger.debug("Image set failed (ignored): %s", e)
+                elif embed_thumb:
                     try:
                         embed.set_thumbnail(url=embed_thumb)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("Thumbnail set failed (ignored): %s", e)
                 menu_view = _ThreadCreationMenuView(thread)
                 menu_msg = await recipient.send(embed=embed, view=menu_view)
                 # mark thread as pending menu selection
@@ -2841,9 +2854,10 @@ class ThreadManager:
                     thread._dm_menu_channel_id = menu_msg.channel.id
                 except Exception:
                     pass
-            except Exception:
+            except Exception as e:
                 logger.warning(
-                    "Failed to send thread-creation menu DM, falling back to immediate thread creation."
+                    "Failed to send thread-creation menu DM, falling back to immediate thread creation.",
+                    exc_info=True,
                 )
                 self.bot.loop.create_task(
                     thread.setup(creator=creator, category=category, initial_message=message)
@@ -3005,23 +3019,41 @@ class ThreadManager:
                     embed_title = self.bot.config.get("thread_creation_menu_embed_title")
                     embed_footer = self.bot.config.get("thread_creation_menu_embed_footer")
                     embed_thumb = self.bot.config.get("thread_creation_menu_embed_thumbnail_url")
+                    embed_image = self.bot.config.get("thread_creation_menu_embed_image_url")
+                    embed_large = bool(self.bot.config.get("thread_creation_menu_embed_large_image"))
                     embed_footer_icon = self.bot.config.get("thread_creation_menu_embed_footer_icon_url")
                     embed_color_raw = self.bot.config.get("thread_creation_menu_embed_color")
                 except Exception:
                     embed_title = None
                     embed_footer = None
                     embed_thumb = None
+                    embed_image = None
+                    embed_large = False
                     embed_footer_icon = None
                     embed_color_raw = None
                 embed_color = embed_color_raw or self.bot.mod_color
                 embed = discord.Embed(title=embed_title, description=embed_text, color=embed_color)
                 if embed_footer:
-                    embed.set_footer(text=embed_footer, icon_url=embed_footer_icon or discord.Embed.Empty)
-                if embed_thumb:
                     try:
-                        embed.set_thumbnail(url=embed_thumb)
-                    except Exception:
-                        pass
+                        if embed_footer_icon:
+                            embed.set_footer(text=embed_footer, icon_url=embed_footer_icon)
+                        else:
+                            embed.set_footer(text=embed_footer)
+                    except Exception as e:
+                        logger.debug("Footer build failed (ignored precreate): %s", e)
+                if embed_image:
+                    try:
+                        embed.set_image(url=embed_image)
+                    except Exception as e:
+                        logger.debug("Image set failed (ignored precreate): %s", e)
+                elif embed_thumb:
+                    try:
+                        if embed_large:
+                            embed.set_image(url=embed_thumb)
+                        else:
+                            embed.set_thumbnail(url=embed_thumb)
+                    except Exception as e:
+                        logger.debug("Thumbnail/image set failed (ignored precreate): %s", e)
                 menu_view = _PrecreateMenuView(thread)
                 # Send menu DM AFTER channel creation initiation (channel will be created below)
                 menu_msg = await recipient.send(embed=embed, view=menu_view)

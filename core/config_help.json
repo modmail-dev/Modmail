@@ -1557,6 +1557,32 @@
       "Consider file size/CDN reliability so it loads quickly for users."
     ]
   },
+  "thread_creation_menu_embed_image_url": {
+    "default": "Empty (no image)",
+    "description": "Optional large hero image displayed in the body of the menu embed. If set, this image is shown prominently and takes precedence over the thumbnail.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_image_url https://example.com/banner.png`",
+      "`{prefix}config delete thread_creation_menu_embed_image_url` (clear)"
+    ],
+    "notes": [
+      "Use a direct image URL (PNG/JPEG/GIF).",
+      "When both a thumbnail and image URL are set, the image URL is used as the large embed image while the thumbnail may still be shown in the top-right.",
+      "See also: `thread_creation_menu_embed_thumbnail_url`, `thread_creation_menu_embed_large_image`."
+    ]
+  },
+  "thread_creation_menu_embed_large_image": {
+    "default": "No",
+    "description": "Promotes the thumbnail to a large hero image when no `thread_creation_menu_embed_image_url` is set. Useful if you want a big image without specifying a separate URL.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_large_image yes`",
+      "`{prefix}config set thread_creation_menu_embed_large_image no`"
+    ],
+    "notes": [
+      "Only applies when `thread_creation_menu_embed_image_url` is not set.",
+      "If both are provided, the explicit image URL takes precedence.",
+      "See also: `thread_creation_menu_embed_thumbnail_url`, `thread_creation_menu_embed_image_url`."
+    ]
+  },
   "thread_creation_menu_embed_color": {
     "default": "Green (hex for Discord Color.green)",
     "description": "Color for the menu embed's side strip. Accepts hex (e.g. #5865F2) or one of the supported color names.",
