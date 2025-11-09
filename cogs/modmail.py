@@ -1771,7 +1771,7 @@ class Modmail(commands.Cog):
                 await existing_thread.restore_from_snooze()
                 self.bot.threads.cache[existing_thread.id] = existing_thread
                 try:
-                    await msg.delete(delay=3)
+                    await msg.delete(delay=10)
                 except (discord.Forbidden, discord.NotFound):
                     pass
                 return
@@ -1882,7 +1882,7 @@ class Modmail(commands.Cog):
                     await thread.restore_from_snooze()
                     self.bot.threads.cache[thread.id] = thread
                     try:
-                        await msg.delete(delay=3)
+                        await msg.delete(delay=10)
                     except (discord.Forbidden, discord.NotFound):
                         pass
             # Don't try to create a new thread - we just unsnoozed existing ones
