@@ -545,7 +545,9 @@ class Thread:
                     try:
                         await msg.pin()
                     except Exception as e:
-                        logger.warning("Failed to pin genesis message during unsnooze: %s", e)
+                        logger.warning(
+                            "Failed to pin genesis message during unsnooze: %s", e
+                        )
                     self._genesis_message = msg
                     genesis_already_sent = True
                 except Exception:
@@ -701,7 +703,10 @@ class Thread:
                                     inline=False,
                                 )
                             except Exception as e:
-                                logger.info("Failed to add attachments field while replaying unsnoozed messages: %s", e)
+                                logger.info(
+                                    "Failed to add attachments field while replaying unsnoozed messages: %s",
+                                    e,
+                                )
                         await _safe_send_to_channel(
                             embeds=embeds,
                             allowed_mentions=discord.AllowedMentions.none(),
@@ -963,7 +968,9 @@ class Thread:
                         close_emoji = await self.bot.convert_emoji(close_emoji)
                         await self.bot.add_reaction(initial_message, close_emoji)
                 except Exception as e:
-                    logger.info("Failed to add self-close reaction to initial message: %s", e)
+                    logger.info(
+                        "Failed to add self-close reaction to initial message: %s", e
+                    )
                 return
 
             thread_creation_response = self.bot.config["thread_creation_response"]
@@ -1744,7 +1751,10 @@ class Thread:
                     if log_entry:
                         self.snooze_data = log_entry.get("snooze_data")
                 except Exception as e:
-                    logger.info("Failed to fetch snooze_data before auto-unsnooze on reply: %s", e)
+                    logger.info(
+                        "Failed to fetch snooze_data before auto-unsnooze on reply: %s",
+                        e,
+                    )
             try:
                 await self.restore_from_snooze()
             except Exception as e:
@@ -1757,7 +1767,10 @@ class Thread:
                 if await self.bot.get_or_fetch_member(guild, self.id):
                     break
             except discord.NotFound:
-                logger.info("Recipient not found in guild %s when checking mutual servers.", guild.id if hasattr(guild,'id') else guild)
+                logger.info(
+                    "Recipient not found in guild %s when checking mutual servers.",
+                    guild.id if hasattr(guild, "id") else guild,
+                )
         else:
             return await message.channel.send(
                 embed=discord.Embed(
@@ -2912,13 +2925,18 @@ class ThreadManager:
                         try:
                             await interaction.edit_original_response(view=None)
                         except Exception as inner_e:
-                            logger.debug("Failed to remove view after selection failure: %s", inner_e)
+                            logger.debug(
+                                "Failed to remove view after selection failure: %s",
+                                inner_e,
+                            )
                     # Stop the view to end the interaction lifecycle
                     if self.view:
                         try:
                             self.view.stop()
                         except Exception as e:
-                            logger.debug("Failed to stop menu view after selection: %s", e)
+                            logger.debug(
+                                "Failed to stop menu view after selection: %s", e
+                            )
                     # Now create channel
                     # Determine category: prefer option-specific category if configured and valid
                     sel_category = None
