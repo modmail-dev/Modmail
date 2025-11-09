@@ -167,7 +167,9 @@ class ThreadCreationMenuCore(commands.Cog):
         if len(conf["options"]) >= 25:
             return await ctx.send("You can only have a maximum of 25 options due to discord limitations.")
 
-        await ctx.send("You can type `cancel` at any time to cancel the process.")
+        await ctx.send(
+            "You can type `skip` for non-required steps or `cancel` to cancel the process at any time."
+        )
         await ctx.send("What is the label of the option?")
         label = (await self.bot.wait_for("message", check=check)).content
         sanitized_label = label.lower().replace(" ", "_")
@@ -179,7 +181,7 @@ class ThreadCreationMenuCore(commands.Cog):
             await ctx.send("That option already exists. Use `threadmenu edit` to edit it.")
             return
 
-        await ctx.send("What is the description of the option?")
+        await ctx.send("What is the description of the option? (not required)")
         description = (await self.bot.wait_for("message", check=check)).content
 
         if description.lower() == "cancel":
@@ -190,11 +192,17 @@ class ThreadCreationMenuCore(commands.Cog):
                 "The description must be less than 100 characters due to discord limitations."
             )
 
-        await ctx.send("What is the emoji of the option?")
+        if description.lower() == "skip":
+            description = None
+
+        await ctx.send("What is the emoji of the option? (not required)")
         emoji = (await self.bot.wait_for("message", check=check)).content
 
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
+
+        if emoji.lower() == "skip":
+            emoji = None
 
         await ctx.send("What is the type of the option? (command/submenu)")
         type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()
@@ -295,20 +303,38 @@ class ThreadCreationMenuCore(commands.Cog):
                 ]
             )
 
-        await ctx.send("You can send `cancel` at any time to cancel the process.")
-        await ctx.send("What is the new description of the option?")
+        await ctx.send(
+            "You can type `skip` for non-required steps (uses previous value) or `cancel` to cancel the process at any time."
+            "Use `none` to clear the value for non-required steps."
+        )
+        await ctx.send("What is the new description of the option? (not required)")
         description = (await self.bot.wait_for("message", check=check)).content
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
-        if len(description) > 100:
-            return await ctx.send(
-                "The description must be less than 100 characters due to discord limitations."
-            )
+
+        old_description = conf["options"][key]["description"]
+
+        if description.lower() == "skip":
+            description = old_description
+        elif description.lower() == "none":
+            description = None
+        else:
+            if len(description) > 100:
+                return await ctx.send(
+                    "The description must be less than 100 characters due to discord limitations."
+                )
 
         await ctx.send("What is the new emoji of the option?")
         emoji = (await self.bot.wait_for("message", check=check)).content
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
+
+        old_emoji = conf["options"][key].get("emoji")
+
+        if emoji.lower() == "skip":
+            emoji = old_emoji
+        elif emoji.lower() == "none":
+            emoji = None
 
         await ctx.send("What is the new type of the option? (command/submenu)")
         type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()
@@ -363,6 +389,9 @@ class ThreadCreationMenuCore(commands.Cog):
                 await ctx.send("Couldn't resolve that category. Keeping previous setting.")
 
         old_label = conf["options"][key]["label"]
+        new_description = None
+        if description.lower() == "skip":
+            new_description = conf["options"][key]["description"]
         conf["options"][key] = {
             "label": old_label,
             "description": description,
@@ -471,7 +500,9 @@ class ThreadCreationMenuCore(commands.Cog):
         if len(conf["submenus"][submenu]) >= 24:
             return await ctx.send("You can only have a maximum of 24 options due to discord limitations.")
 
-        await ctx.send("You can send `cancel` at any time to cancel the process.")
+        await ctx.send(
+            "You can type `skip` for non-required steps or `cancel` to cancel the process at any time."
+        )
         await ctx.send("What is the label of the option?")
         label = (await self.bot.wait_for("message", check=check)).content
         sanitized_label = label.lower().replace(" ", "_")
@@ -484,7 +515,7 @@ class ThreadCreationMenuCore(commands.Cog):
             await ctx.send("That option already exists. Use `threadmenu submenu edit` to edit it.")
             return
 
-        await ctx.send("What is the description of the option?")
+        await ctx.send("What is the description of the option? (not required)")
         description = (await self.bot.wait_for("message", check=check)).content
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
@@ -493,10 +524,16 @@ class ThreadCreationMenuCore(commands.Cog):
                 "The description must be less than 100 characters due to discord limitations."
             )
 
-        await ctx.send("What is the emoji of the option?")
+        if description.lower() == "skip":
+            description = None
+
+        await ctx.send("What is the emoji of the option? (not required)")
         emoji = (await self.bot.wait_for("message", check=check)).content
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
+
+        if emoji.lower() == "skip":
+            emoji = None
 
         await ctx.send("What is the type for the option? (command/submenu)")
         type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()
@@ -603,7 +640,10 @@ class ThreadCreationMenuCore(commands.Cog):
                 ]
             )
 
-        await ctx.send("You can send `cancel` at any time to cancel the process.")
+        await ctx.send(
+            "You can type `skip` for non-required steps (uses previous value) or `cancel` to cancel the process at any time."
+            "Use `none` to clear the value for non-required steps."
+        )
         await ctx.send("What is the label of the option to edit?")
         label = (await self.bot.wait_for("message", check=check)).content
         key = label.lower().replace(" ", "_")
@@ -612,19 +652,34 @@ class ThreadCreationMenuCore(commands.Cog):
         if key not in conf["submenus"][submenu]:
             return await ctx.send("That label does not exist.")
 
-        await ctx.send("What is the new description of the option?")
+        await ctx.send("What is the new description of the option? (not required)")
         description = (await self.bot.wait_for("message", check=check)).content
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
-        if len(description) > 100:
-            return await ctx.send(
-                "The description must be less than 100 characters due to discord limitations."
-            )
 
-        await ctx.send("What is the new emoji of the option?")
+        old_description = conf["options"][key]["description"]
+
+        if description.lower() == "skip":
+            description = old_description
+        elif description.lower() == "none":
+            description = None
+        else:
+            if len(description) > 100:
+                return await ctx.send(
+                    "The description must be less than 100 characters due to discord limitations."
+                )
+
+        await ctx.send("What is the new emoji of the option? (not required)")
         emoji = (await self.bot.wait_for("message", check=check)).content
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
+
+        old_emoji = conf["options"][key].get("emoji")
+
+        if emoji.lower() == "skip":
+            emoji = old_emoji
+        elif emoji.lower() == "none":
+            emoji = None
 
         await ctx.send("What is the new type for the option? (command/submenu)")
         type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()

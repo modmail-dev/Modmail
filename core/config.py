@@ -149,9 +149,6 @@ class ConfigManager:
         "snooze_attachment_max_bytes": 4_194_304,  # 4 MiB per attachment cap to avoid Mongo 16MB limit
         "unsnooze_history_limit": None,  # Limit number of messages replayed when unsnoozing (None = all messages)
         # --- THREAD CREATION MENU ---
-        "thread_creation_menu_enabled": False,
-        "thread_creation_menu_options": {},  # main menu options mapping key -> {label, description, emoji, type, callback}
-        "thread_creation_menu_submenus": {},  # submenu name -> submenu options (same structure as options)
         "thread_creation_menu_timeout": 30,  # Default interaction timeout for the thread-creation menu (in seconds)
         "thread_creation_menu_close_on_timeout": False,
         "thread_creation_menu_anonymous_menu": False,
@@ -186,6 +183,10 @@ class ConfigManager:
         "notification_squad": {},
         "subscriptions": {},
         "closures": {},
+        # Thread creation menu
+        "thread_creation_menu_enabled": False,
+        "thread_creation_menu_options": {},  # main menu options mapping key -> {label, description, emoji, type, callback}
+        "thread_creation_menu_submenus": {},  # submenu name -> submenu options (same structure as options)
         # misc
         "plugins": [],
         "aliases": {},
