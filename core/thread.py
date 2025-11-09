@@ -830,6 +830,20 @@ class Thread:
 
         async def send_recipient_genesis_message():
             # Once thread is ready, tell the recipient (don't send if using contact on others)
+            # Allow disabling the DM receipt embed via config
+            if not self.bot.config.get("thread_creation_send_dm_embed"):
+                # If self-closable is enabled, add the close reaction to the user's
+                # original message instead so functionality is preserved without an embed.
+                try:
+                    recipient_thread_close = self.bot.config.get("recipient_thread_close")
+                    if recipient_thread_close and initial_message is not None:
+                        close_emoji = self.bot.config["close_emoji"]
+                        close_emoji = await self.bot.convert_emoji(close_emoji)
+                        await self.bot.add_reaction(initial_message, close_emoji)
+                except Exception:
+                    pass
+                return
+
             thread_creation_response = self.bot.config["thread_creation_response"]
 
             embed = discord.Embed(
@@ -1200,9 +1214,25 @@ class Thread:
             return
         # Remove components to make the menu unavailable. Keep the embed/text intact.
         try:
-            await msg.edit(view=None)
+            closed_text = "This thread has been closed. Send a new message to start a new thread."  # Grammar-friendly guidance
+            if msg.embeds:
+                emb = msg.embeds[0]
+                # Only overwrite if not already showing a closed message
+                if not (emb.description and "closed" in emb.description.lower()):
+                    emb.description = closed_text
+                await msg.edit(embed=emb, view=None)
+            else:
+                # Overwrite content similarly
+                if not (msg.content and "closed" in msg.content.lower()):
+                    await msg.edit(content=closed_text, view=None)
+                else:
+                    await msg.edit(view=None)
         except Exception:
-            pass
+            # Fallback: at least remove interaction
+            try:
+                await msg.edit(view=None)
+            except Exception:
+                pass
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
         if self.close_task is not None and (not auto_close or all):
@@ -2274,6 +2304,25 @@ class ThreadManager:
                 # If the thread is snoozed (channel is None), return it for restoration
                 if thread.cancelled:
                     thread = None
+                else:
+                    # If the cached thread points to a deleted channel, treat as non-existent
+                    try:
+                        ch = getattr(thread, "channel", None)
+                        if (
+                            ch
+                            and isinstance(ch, discord.TextChannel)
+                            and self.bot.get_channel(getattr(ch, "id", None)) is None
+                        ):
+                            logger.info(
+                                "Cached thread for %s references a deleted channel. Dropping stale cache entry.",
+                                recipient_id,
+                            )
+                            self.cache.pop(thread.id, None)
+                            thread = None
+                    except Exception:
+                        # If any attribute access fails, be safe and drop it.
+                        self.cache.pop(getattr(thread, "id", None), None)
+                        thread = None
         else:
 
             def check(topic):
@@ -2497,18 +2546,47 @@ class ThreadManager:
 
                 async def callback(self, interaction: discord.Interaction):
                     await interaction.response.defer(ephemeral=False)
+                    # If the thread was snoozed before the user selected an option,
+                    # restore it first so channel creation/setup & message relay work.
+                    try:
+                        if self.outer_thread.snoozed:
+                            await self.outer_thread.restore_from_snooze()
+                    except Exception:
+                        logger.warning("Failed unsnoozing thread prior to menu selection; continuing.")
                     chosen_label = self.values[0]
                     # Resolve option key
                     key = chosen_label.lower().replace(" ", "_")
                     selected = options.get(key)
                     self.outer_thread._selected_thread_creation_menu_option = selected
-                    # FIX: use the parent view reference rather than undefined closure variable
+                    # Reflect the selection in the original DM by editing the embed/body
+                    try:
+                        msg = getattr(interaction, "message", None)
+                        if msg is None and self.view and hasattr(self.view, "message"):
+                            msg = self.view.message
+                        if msg is not None:
+                            if msg.embeds:
+                                emb = msg.embeds[0]
+                                emb.description = f"You selected: {chosen_label}"
+                                await msg.edit(embed=emb, view=None)
+                            else:
+                                await msg.edit(content=f"You selected: {chosen_label}", view=None)
+                        else:
+                            try:
+                                await interaction.edit_original_response(
+                                    content=f"You selected: {chosen_label}", view=None
+                                )
+                            except Exception:
+                                # Fallback: best-effort remove the view at least
+                                await interaction.edit_original_response(view=None)
+                    except Exception:
+                        # Ensure the menu is removed even if content edit failed
+                        try:
+                            await interaction.edit_original_response(view=None)
+                        except Exception:
+                            pass
+                    # Stop the view to end the interaction lifecycle
                     if self.view:
                         self.view.stop()
-                    try:
-                        await interaction.edit_original_response(view=None)
-                    except Exception:
-                        pass
                     # Now create channel
                     # Determine category: prefer option-specific category if configured and valid
                     sel_category = None
@@ -2598,6 +2676,11 @@ class ThreadManager:
                     # Wait until channel is ready, then forward the original message like usual
                     try:
                         await self.outer_thread.wait_until_ready()
+                        # Edge-case: unsnoozed restore might have re-created the channel but genesis send failed; ensure ready channel exists
+                        if not self.outer_thread.channel:
+                            logger.warning("Thread has no channel after unsnooze+selection; abort relay.")
+                            setattr(self.outer_thread, "_pending_menu", False)
+                            return
                         # Forward the user's initial DM to the thread channel
                         try:
                             await self.outer_thread.send(message)
@@ -2780,16 +2863,43 @@ class ThreadManager:
 
                 async def callback(self, interaction: discord.Interaction):
                     await interaction.response.defer(ephemeral=False)
+                    # If thread somehow got snoozed before selection in precreate flow (rare), restore first.
+                    try:
+                        if self.outer_thread.snoozed:
+                            await self.outer_thread.restore_from_snooze()
+                    except Exception:
+                        logger.warning(
+                            "Failed unsnoozing thread prior to precreate menu selection; continuing."
+                        )
                     chosen_label = self.values[0]
                     key = chosen_label.lower().replace(" ", "_")
                     selected = options.get(key)
                     self.outer_thread._selected_thread_creation_menu_option = selected
                     # Remove the view
-                    if self.view:
+                    try:
+                        msg = getattr(interaction, "message", None)
+                        if msg is None and self.view and hasattr(self.view, "message"):
+                            msg = self.view.message
+                        if msg is not None:
+                            if msg.embeds:
+                                emb = msg.embeds[0]
+                                emb.description = f"You choose: {chosen_label}"
+                                await msg.edit(embed=emb, view=None)
+                            else:
+                                await msg.edit(content=f"You choose: {chosen_label}", view=None)
+                        else:
+                            try:
+                                await interaction.edit_original_response(
+                                    content=f"You choose: {chosen_label}", view=None
+                                )
+                            except Exception:
+                                await interaction.edit_original_response(view=None)
+                    except Exception:
                         try:
                             await interaction.edit_original_response(view=None)
                         except Exception:
                             pass
+                    if self.view:
                         try:
                             self.view.stop()
                         except Exception:

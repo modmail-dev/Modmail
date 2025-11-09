@@ -1088,6 +1088,32 @@ class ModmailBot(commands.Bot):
             self.threads.cache[thread.id] = thread
             # No need to re-fetch the thread - it's already restored and cached properly
 
+        # If the previous thread was closed with delete_channel=True the channel object
+        # stored on the thread will now be invalid (deleted). In some rare race cases
+        # the thread can still be returned from the cache (or reconstructed) while the
+        # channel lookup returns None, causing downstream relay attempts to raise
+        # discord.NotFound ("Channel not found when trying to send message."). Treat
+        # this situation as "no active thread" so the user's new DM starts a fresh
+        # thread instead of silently failing.
+        try:
+            if (
+                thread
+                and thread.channel
+                and isinstance(thread.channel, discord.TextChannel)
+                and self.get_channel(getattr(thread.channel, "id", None)) is None
+            ):
+                logger.info(
+                    "Stale thread detected for %s (channel deleted). Purging cache entry and creating new thread.",
+                    message.author,
+                )
+                # Best-effort removal; ignore if already gone.
+                self.threads.cache.pop(thread.id, None)
+                thread = None
+        except Exception:
+            # If any attribute access fails, fall back to treating it as closed.
+            self.threads.cache.pop(getattr(thread, "id", None), None)
+            thread = None
+
         if thread is None:
             delta = await self.get_thread_cooldown(message.author)
             if delta:
@@ -1139,6 +1165,41 @@ class ModmailBot(commands.Bot):
             except Exception:
                 logger.error("Failed to send message:", exc_info=True)
                 await self.add_reaction(message, blocked_emoji)
+                # If the failure was due to a missing channel (closed thread lingering), attempt a fresh thread.
+                # We intentionally only check for discord.NotFound to avoid duplicating threads on other errors.
+                import discord as _d
+
+                try:
+                    # Re-check channel existence
+                    if thread and thread.channel and isinstance(thread.channel, _d.TextChannel):
+                        if self.get_channel(thread.channel.id) is None:
+                            logger.info(
+                                "Relay failed due to deleted channel for %s; creating new thread.",
+                                message.author,
+                            )
+                            self.threads.cache.pop(thread.id, None)
+                            new_thread = await self.threads.create(message.author, message=message)
+                            if not getattr(new_thread, "_pending_menu", False) and not new_thread.cancelled:
+                                try:
+                                    await new_thread.send(message)
+                                except Exception:
+                                    logger.error(
+                                        "Failed to relay message after creating new thread:", exc_info=True
+                                    )
+                                else:
+                                    for user in new_thread.recipients:
+                                        if user != message.author:
+                                            try:
+                                                await new_thread.send(message, user)
+                                            except Exception:
+                                                logger.error(
+                                                    "Failed to send message to additional recipient:",
+                                                    exc_info=True,
+                                                )
+                                    await self.add_reaction(message, sent_emoji)
+                                    self.dispatch("thread_reply", new_thread, False, message, False, False)
+                except Exception:
+                    pass
             else:
                 for user in thread.recipients:
                     # send to all other recipients
