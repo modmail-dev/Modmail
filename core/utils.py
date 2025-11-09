@@ -760,8 +760,9 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
                                     f" (+{len(ref_msg.attachments) - 3} more)"
                                 )
                             return f"**{ref_author_name}:** [Attachments: {attachment_info}]"
-                except Exception:
-                    pass
+                except Exception as e:
+                    # Log and continue; failing to extract a reference preview shouldn't break flow
+                    logger.debug("Failed to extract reference preview: %s", e)
     except Exception:
         # Silently handle any unexpected errors
         pass

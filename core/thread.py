@@ -544,8 +544,8 @@ class Thread:
                     msg = await channel.send(embed=info_embed)
                     try:
                         await msg.pin()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning("Failed to pin genesis message during unsnooze: %s", e)
                     self._genesis_message = msg
                     genesis_already_sent = True
                 except Exception:
@@ -700,8 +700,8 @@ class Thread:
                                     value="\n".join(attachments),
                                     inline=False,
                                 )
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                logger.info("Failed to add attachments field while replaying unsnoozed messages: %s", e)
                         await _safe_send_to_channel(
                             embeds=embeds,
                             allowed_mentions=discord.AllowedMentions.none(),
@@ -962,8 +962,8 @@ class Thread:
                         close_emoji = self.bot.config["close_emoji"]
                         close_emoji = await self.bot.convert_emoji(close_emoji)
                         await self.bot.add_reaction(initial_message, close_emoji)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.info("Failed to add self-close reaction to initial message: %s", e)
                 return
 
             thread_creation_response = self.bot.config["thread_creation_response"]
@@ -1354,7 +1354,8 @@ class Thread:
         if dm is None:
             try:
                 dm = await user.create_dm()
-            except Exception:
+            except Exception as e:
+                logger.info("Failed creating DM channel for menu disable: %s", e)
                 dm = None
         if not isinstance(dm, discord.DMChannel):
             return
@@ -1369,12 +1370,13 @@ class Thread:
             closed_text = "This thread has been closed. Send a new message to start a new thread."  # Grammar-friendly guidance
             closed_embed = discord.Embed(description=closed_text)
             await msg.edit(content=None, embed=closed_embed, view=None)
-        except Exception:
+        except Exception as e:
             # Fallback: at least remove interaction so menu cannot be used
+            logger.warning("Failed editing DM menu message on close: %s", e)
             try:
                 await msg.edit(view=None)
-            except Exception:
-                pass
+            except Exception as inner_e:
+                logger.debug("Failed removing view from DM menu message: %s", inner_e)
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
         if self.close_task is not None and (not auto_close or all):
@@ -1741,8 +1743,8 @@ class Thread:
                     )
                     if log_entry:
                         self.snooze_data = log_entry.get("snooze_data")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.info("Failed to fetch snooze_data before auto-unsnooze on reply: %s", e)
             try:
                 await self.restore_from_snooze()
             except Exception as e:
@@ -1755,7 +1757,7 @@ class Thread:
                 if await self.bot.get_or_fetch_member(guild, self.id):
                     break
             except discord.NotFound:
-                pass
+                logger.info("Recipient not found in guild %s when checking mutual servers.", guild.id if hasattr(guild,'id') else guild)
         else:
             return await message.channel.send(
                 embed=discord.Embed(
@@ -2897,18 +2899,26 @@ class ThreadManager:
                                 await interaction.edit_original_response(
                                     content=f"You selected: {chosen_label}", view=None
                                 )
-                            except Exception:
+                            except Exception as e:
                                 # Fallback: best-effort remove the view at least
+                                logger.info(
+                                    "Primary edit_original_response failed; trying to remove view only: %s",
+                                    e,
+                                )
                                 await interaction.edit_original_response(view=None)
-                    except Exception:
+                    except Exception as e:
                         # Ensure the menu is removed even if content edit failed
+                        logger.warning("Failed to update selection message: %s", e)
                         try:
                             await interaction.edit_original_response(view=None)
-                        except Exception:
-                            pass
+                        except Exception as inner_e:
+                            logger.debug("Failed to remove view after selection failure: %s", inner_e)
                     # Stop the view to end the interaction lifecycle
                     if self.view:
-                        self.view.stop()
+                        try:
+                            self.view.stop()
+                        except Exception as e:
+                            logger.debug("Failed to stop menu view after selection: %s", e)
                     # Now create channel
                     # Determine category: prefer option-specific category if configured and valid
                     sel_category = None
@@ -2978,7 +2988,10 @@ class ThreadManager:
                                     )
                                     await confirm.edit(view=None)
                                 except Exception:
-                                    pass
+                                    logger.warning(
+                                        "Failed notifying user of thread creation timeout.",
+                                        exc_info=True,
+                                    )
                             elif view.value is False:
                                 self.outer_thread.cancelled = True
                                 try:
@@ -2991,7 +3004,10 @@ class ThreadManager:
                                         )
                                     )
                                 except Exception:
-                                    pass
+                                    logger.warning(
+                                        "Failed notifying user of thread creation denial.",
+                                        exc_info=True,
+                                    )
                             if self.outer_thread.cancelled:
                                 # Clear pending/menu state and cache
                                 try:
@@ -3000,7 +3016,10 @@ class ThreadManager:
                                         self.outer_thread.id, None
                                     )
                                 except Exception:
-                                    pass
+                                    logger.debug(
+                                        "Failed clearing pending menu/cache after cancellation.",
+                                        exc_info=True,
+                                    )
                                 return
                     except Exception:
                         # If confirm step fails, proceed to create thread to avoid dead-ends
@@ -3043,8 +3062,11 @@ class ThreadManager:
                                 await self.outer_thread.bot.add_reaction(
                                     message, sent_emoji
                                 )
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                logger.debug(
+                                    "Failed to add sent reaction to user's DM: %s",
+                                    e,
+                                )
                             # Dispatch thread_reply event for parity
                             self.outer_thread.bot.dispatch(
                                 "thread_reply",
@@ -3057,7 +3079,10 @@ class ThreadManager:
                         # Clear pending flag
                         setattr(self.outer_thread, "_pending_menu", False)
                     except Exception:
-                        pass
+                        logger.warning(
+                            "Unhandled failure after menu selection while waiting for channel readiness.",
+                            exc_info=True,
+                        )
                     # Invoke command callback AFTER channel ready if type == command
                     if selected and selected.get("type") == "command":
                         alias = selected.get("callback")
@@ -3124,14 +3149,20 @@ class ThreadManager:
                         try:
                             await menu_msg.edit(content="Menu timed out.", view=None)
                         except Exception:
-                            pass
+                            logger.info(
+                                "Failed editing menu message on timeout (close_on_timeout enabled).",
+                                exc_info=True,
+                            )
                         # remove thread from cache
                         try:
                             self.outer_thread.manager.cache.pop(
                                 self.outer_thread.id, None
                             )
                         except Exception:
-                            pass
+                            logger.debug(
+                                "Failed popping thread from cache on timeout (close_on_timeout).",
+                                exc_info=True,
+                            )
                         # Clear pending menu flag so a new message can recreate a fresh thread
                         setattr(self.outer_thread, "_pending_menu", False)
                         self.outer_thread.cancelled = True
@@ -3142,7 +3173,10 @@ class ThreadManager:
                                 view=None,
                             )
                         except Exception:
-                            pass
+                            logger.info(
+                                "Failed editing menu message on timeout (keep alive mode).",
+                                exc_info=True,
+                            )
                         # Allow subsequent messages to trigger a new menu/thread by clearing state
                         setattr(self.outer_thread, "_pending_menu", False)
                         try:
@@ -3150,13 +3184,19 @@ class ThreadManager:
                                 self.outer_thread.id, None
                             )
                         except Exception:
-                            pass
+                            logger.debug(
+                                "Failed popping thread from cache on timeout (keep alive mode).",
+                                exc_info=True,
+                            )
                         self.outer_thread.cancelled = True
                     # Ensure view is stopped to release any internal tasks
                     try:
                         self.stop()
                     except Exception:
-                        pass
+                        logger.debug(
+                            "Failed stopping ThreadCreationMenuView on timeout.",
+                            exc_info=True,
+                        )
 
             # Send DM prompt
             try:
@@ -3219,14 +3259,20 @@ class ThreadManager:
                 # Explicitly attach the message to the view for safety in callbacks
                 try:
                     menu_view.message = menu_msg
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.info(
+                        "Failed attaching menu message reference (initial menu send): %s",
+                        e,
+                    )
                 # Store for later disabling on thread close
                 try:
                     thread._dm_menu_msg_id = menu_msg.id
                     thread._dm_menu_channel_id = menu_msg.channel.id
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.info(
+                        "Failed storing DM menu identifiers (initial menu send): %s",
+                        e,
+                    )
             except Exception:
                 logger.warning(
                     "Failed to send thread-creation menu DM, falling back to immediate thread creation.",
@@ -3281,7 +3327,8 @@ class ThreadManager:
                             await self.outer_thread.restore_from_snooze()
                     except Exception:
                         logger.warning(
-                            "Failed unsnoozing thread prior to precreate menu selection; continuing."
+                            "Failed unsnoozing thread prior to precreate menu selection; continuing.",
+                            exc_info=True,
                         )
                     chosen_label = self.values[0]
                     key = chosen_label.lower().replace(" ", "_")
@@ -3312,12 +3359,18 @@ class ThreadManager:
                         try:
                             await interaction.edit_original_response(view=None)
                         except Exception:
-                            pass
+                            logger.debug(
+                                "Failed secondary edit_original_response path removing view.",
+                                exc_info=True,
+                            )
                     if self.view:
                         try:
                             self.view.stop()
                         except Exception:
-                            pass
+                            logger.debug(
+                                "Failed removing view after selection (stop).",
+                                exc_info=True,
+                            )
                     # Log selection to thread channel if configured
                     try:
                         await self.outer_thread.wait_until_ready()
@@ -3350,9 +3403,15 @@ class ThreadManager:
                                         reason="Menu selection: move to category",
                                     )
                         except Exception:
-                            pass
+                            logger.debug(
+                                "Failed moving thread channel based on selected category_id.",
+                                exc_info=True,
+                            )
                     except Exception:
-                        pass
+                        logger.debug(
+                            "Failed logging menu selection or moving category in precreate flow.",
+                            exc_info=True,
+                        )
                     # If the option type is command, invoke it now within the created thread
                     if selected and selected.get("type") == "command":
                         alias = selected.get("callback")
@@ -3409,11 +3468,17 @@ class ThreadManager:
                     try:
                         await menu_msg.edit(content="Menu timed out.", view=None)
                     except Exception:
-                        pass
+                        logger.info(
+                            "Failed editing precreate menu message on timeout.",
+                            exc_info=True,
+                        )
                     try:
                         self.stop()
                     except Exception:
-                        pass
+                        logger.debug(
+                            "Failed stopping PrecreateMenuView on timeout.",
+                            exc_info=True,
+                        )
 
             try:
                 # Build embed with new customizable settings (precreate flow)
@@ -3482,13 +3547,19 @@ class ThreadManager:
                 try:
                     menu_view.message = menu_msg
                 except Exception:
-                    pass
+                    logger.debug(
+                        "Failed attaching menu message reference (precreate menu).",
+                        exc_info=True,
+                    )
                 # Store for later disabling on thread close
                 try:
                     thread._dm_menu_msg_id = menu_msg.id
                     thread._dm_menu_channel_id = menu_msg.channel.id
                 except Exception:
-                    pass
+                    logger.debug(
+                        "Failed storing DM menu identifiers (precreate menu).",
+                        exc_info=True,
+                    )
             except Exception:
                 logger.debug(
                     "Failed to send precreate menu DM; proceeding without menu."

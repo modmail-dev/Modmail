@@ -1325,7 +1325,10 @@ class ModmailBot(commands.Bot):
                                         False,
                                     )
                 except Exception:
-                    pass
+                    logger.warning(
+                        "Unexpected failure in DM relay/new-thread follow-up block.",
+                        exc_info=True,
+                    )
             else:
                 for user in thread.recipients:
                     # send to all other recipients
@@ -1615,8 +1618,8 @@ class ModmailBot(commands.Bot):
                         # Send a brief acknowledgment that command is queued
                         try:
                             await ctx.message.add_reaction("⏳")
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.warning("Failed to add queued-reaction: %s", e)
                         continue
 
                 await self.invoke(ctx)
@@ -1635,7 +1638,10 @@ class ModmailBot(commands.Bot):
                             if log_entry:
                                 thread.snooze_data = log_entry.get("snooze_data")
                         except Exception:
-                            pass
+                            logger.debug(
+                                "Failed to add queued command reaction (⏳).",
+                                exc_info=True,
+                            )
                     try:
                         await thread.restore_from_snooze()
                         # refresh local cache
@@ -1677,7 +1683,10 @@ class ModmailBot(commands.Bot):
                 try:
                     await thread.channel.typing()
                 except Exception:
-                    pass
+                    logger.debug(
+                        "Failed to trigger typing indicator in recipient DM.",
+                        exc_info=True,
+                    )
         else:
             if not self.config.get("mod_typing"):
                 return
@@ -1690,7 +1699,11 @@ class ModmailBot(commands.Bot):
                     try:
                         await user.typing()
                     except Exception:
-                        pass
+                        logger.debug(
+                            "Failed to trigger typing for recipient %s.",
+                            getattr(user, "id", "?"),
+                            exc_info=True,
+                        )
 
     async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
@@ -2046,7 +2059,10 @@ class ModmailBot(commands.Bot):
             try:
                 await context.typing()
             except Exception:
-                pass
+                logger.debug(
+                    "Failed to start typing context for command error feedback.",
+                    exc_info=True,
+                )
             await context.send(
                 embed=discord.Embed(color=self.error_color, description=str(exception))
             )

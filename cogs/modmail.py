@@ -80,8 +80,11 @@ class Modmail(commands.Cog):
                                 await channel.send(
                                     "⏰ This thread has been automatically unsnoozed."
                                 )
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.info(
+                                "Failed to notify channel after auto-unsnooze: %s",
+                                e,
+                            )
                         self._snoozed_cache.remove(thread_data)
             except Exception as e:
                 logging.error(f"Error in auto_unsnooze_task: {e}")
@@ -2629,8 +2632,11 @@ class Modmail(commands.Cog):
                             await ctx.send(
                                 "⚠️ Created snoozed category but failed to save it to config. Please set `snoozed_category_id` manually."
                             )
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logging.info(
+                                "Failed to notify about snoozed category persistence issue: %s",
+                                e,
+                            )
                     await ctx.send(
                         embed=discord.Embed(
                             title="Snoozed category created",
@@ -2668,8 +2674,10 @@ class Modmail(commands.Cog):
                             )
                         )
                         return
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.debug(
+                        "Failed to check snoozed category channel count: %s", e
+                    )
 
         # Store snooze_until timestamp for reliable auto-unsnooze
         now = datetime.now(timezone.utc)
@@ -2721,6 +2729,11 @@ class Modmail(commands.Cog):
                 try:
                     user_obj = await self.bot.get_or_fetch_user(user_id)
                 except Exception:
+                    logger.debug(
+                        "Failed fetching user during unsnooze; falling back to partial object (%s).",
+                        user_id,
+                        exc_info=True,
+                    )
                     user_obj = discord.Object(user_id)
             if user_obj:
                 thread = await self.bot.threads.find(recipient=user_obj)
@@ -2839,8 +2852,11 @@ class Modmail(commands.Cog):
                         )
                         if thread and thread.snoozed:
                             await thread.restore_from_snooze()
-                except (ValueError, TypeError):
-                    pass
+                except (ValueError, TypeError) as e:
+                    logger.debug(
+                        "Failed parsing snooze_until timestamp for auto-unsnooze loop: %s",
+                        e,
+                    )
 
     @snooze_auto_unsnooze.before_loop
     async def _snooze_auto_unsnooze_before(self):
