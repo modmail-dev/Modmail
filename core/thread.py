@@ -69,6 +69,8 @@ class Thread:
         self.close_task = None
         self.auto_close_task = None
         self._cancelled = False
+        self._dm_menu_msg_id = None
+        self._dm_menu_channel_id = None
         # --- SNOOZE STATE ---
         self.snoozed = False  # True if thread is snoozed
         self.snooze_data = None  # Dict with channel/category/position/messages for restoration
@@ -1026,6 +1028,13 @@ class Thread:
             await self._close(closer, silent, delete_channel, message)
 
     async def _close(self, closer, silent=False, delete_channel=True, message=None, scheduled=False):
+        # Proactively disable any DM thread-creation menu so users can't keep interacting
+        # with the menu after the thread is closed.
+        try:
+            await self._disable_dm_creation_menu()
+        except Exception:
+            # Non-fatal; continue closing even if we can't edit the DM menu
+            pass
         if self.channel:
             self.manager.closing.add(self.channel.id)
         try:
@@ -1164,6 +1173,36 @@ class Thread:
                 self.manager.closing.discard(self.channel.id)
 
         self.bot.dispatch("thread_close", self, closer, silent, delete_channel, message, scheduled)
+
+    async def _disable_dm_creation_menu(self) -> None:
+        """Best-effort removal of the interactive DM menu view sent during thread creation."""
+        if not self._dm_menu_msg_id:
+            return
+        # We only ever send the menu to the main recipient
+        user = self.recipient
+        if not isinstance(user, (discord.User, discord.Member)):
+            return
+        # Ensure we have a DM channel
+        dm: typing.Optional[discord.DMChannel] = getattr(user, "dm_channel", None)
+        if dm is None:
+            try:
+                dm = await user.create_dm()
+            except Exception:
+                dm = None
+        if not isinstance(dm, discord.DMChannel):
+            return
+        # If we stored the channel id and it differs, but it's still a DM, continue anyway
+        try:
+            msg = await dm.fetch_message(self._dm_menu_msg_id)
+        except (discord.NotFound, discord.Forbidden):
+            return
+        except Exception:
+            return
+        # Remove components to make the menu unavailable. Keep the embed/text intact.
+        try:
+            await msg.edit(view=None)
+        except Exception:
+            pass
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
         if self.close_task is not None and (not auto_close or all):
@@ -2701,6 +2740,12 @@ class ThreadManager:
                     menu_view.message = menu_msg
                 except Exception:
                     pass
+                # Store for later disabling on thread close
+                try:
+                    thread._dm_menu_msg_id = menu_msg.id
+                    thread._dm_menu_channel_id = menu_msg.channel.id
+                except Exception:
+                    pass
             except Exception:
                 logger.warning(
                     "Failed to send thread-creation menu DM, falling back to immediate thread creation."
@@ -2860,6 +2905,12 @@ class ThreadManager:
                 menu_msg = await recipient.send(embed=embed, view=menu_view)
                 try:
                     menu_view.message = menu_msg
+                except Exception:
+                    pass
+                # Store for later disabling on thread close
+                try:
+                    thread._dm_menu_msg_id = menu_msg.id
+                    thread._dm_menu_channel_id = menu_msg.channel.id
                 except Exception:
                     pass
             except Exception:
