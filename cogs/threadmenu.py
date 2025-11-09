@@ -1,4 +1,5 @@
 import json
+import asyncio
 from copy import copy as _copy
 
 import discord
@@ -749,6 +750,52 @@ class ThreadCreationMenuCore(commands.Cog):
         with open("thread_creation_menu_config.json", "w", encoding="utf-8") as f:
             json.dump(conf, f, indent=4)
         await ctx.send(file=discord.File("thread_creation_menu_config.json"))
+
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @threadmenu.command(name="reset")
+    async def threadmenu_reset(self, ctx):
+        """Reset ALL thread-creation menu settings to their defaults.
+
+        This clears options and submenus and restores every key starting with
+        `thread_creation_menu_` back to the default values. Confirmation required.
+        This action is irreversible.
+        """
+        warning = (
+            "This will clear ALL thread menu options, submenus, and related settings and restore defaults.\n"
+            "This action is irreversible. Type `confirm` within 30 seconds to proceed, or anything else to cancel."
+        )
+        await ctx.send(warning)
+
+        def check(m: discord.Message) -> bool:
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        try:
+            reply = await self.bot.wait_for("message", check=check, timeout=30)
+        except asyncio.TimeoutError:
+            return await ctx.send("Timed out — reset cancelled.")
+
+        if reply.content.strip().lower() != "confirm":
+            return await ctx.send("Reset cancelled.")
+
+        # Reset all `thread_creation_menu_` keys to defaults
+        defaults = getattr(self.bot.config, "defaults", {})
+        keys = [k for k in defaults.keys() if k.startswith("thread_creation_menu_")]
+
+        # Ensure we handle mappings without unwanted conversion
+        for k in keys:
+            v = defaults[k]
+            if k in {"thread_creation_menu_options", "thread_creation_menu_submenus"}:
+                await self.bot.config.set(k, v, convert=False)
+            else:
+                await self.bot.config.set(k, v)
+
+        # Also disable the menu explicitly for clarity
+        await self.bot.config.set("thread_creation_menu_enabled", False)
+        await self.bot.config.update()
+
+        await ctx.send(
+            f"Thread-creation menu configuration has been reset to defaults (reset {len(keys)} keys)."
+        )
 
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @threadmenu.command(name="load_config")
