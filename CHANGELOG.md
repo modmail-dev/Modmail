@@ -9,7 +9,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 # v4.2.0
 
 Upgraded discord.py to version 2.6.3, added support for CV2.
-Forwarded messages now properly show in threads, rather then showing as an empty embed.
+Forwarded messages now properly show in threads, rather than showing as an empty embed.
 
 ### Fixed
 - Make Modmail keep working when typing is disabled due to an outage caused by Discord.
