@@ -1451,10 +1451,8 @@ class Modmail(commands.Cog):
         automatically embedding image URLs.
         """
 
-        ctx.message.content = msg
-
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message)
+            await ctx.thread.reply(ctx.message, msg)
 
     @commands.command(aliases=["formatreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1477,9 +1475,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
-        ctx.message.content = msg
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message)
+            await ctx.thread.reply(ctx.message, msg)
 
     @commands.command(aliases=["formatanonreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1502,9 +1499,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
-        ctx.message.content = msg
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message, anonymous=True)
+            await ctx.thread.reply(ctx.message, msg, anonymous=True)
 
     @commands.command(aliases=["formatplainreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1527,9 +1523,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
-        ctx.message.content = msg
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message, plain=True)
+            await ctx.thread.reply(ctx.message, msg, plain=True)
 
     @commands.command(aliases=["formatplainanonreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1552,9 +1547,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
-        ctx.message.content = msg
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message, anonymous=True, plain=True)
+            await ctx.thread.reply(ctx.message, msg, anonymous=True, plain=True)
 
     @commands.command(aliases=["anonreply", "anonymousreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1569,9 +1563,8 @@ class Modmail(commands.Cog):
         Edit the `anon_username`, `anon_avatar_url`
         and `anon_tag` config variables to do so.
         """
-        ctx.message.content = msg
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message, anonymous=True)
+            await ctx.thread.reply(ctx.message, msg, anonymous=True)
 
     @commands.command(aliases=["plainreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1583,9 +1576,8 @@ class Modmail(commands.Cog):
         Supports attachments and images as well as
         automatically embedding image URLs.
         """
-        ctx.message.content = msg
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message, plain=True)
+            await ctx.thread.reply(ctx.message, msg, plain=True)
 
     @commands.command(aliases=["plainanonreply", "plainanonymousreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
@@ -1597,9 +1589,8 @@ class Modmail(commands.Cog):
         Supports attachments and images as well as
         automatically embedding image URLs.
         """
-        ctx.message.content = msg
         async with safe_typing(ctx):
-            await ctx.thread.reply(ctx.message, anonymous=True, plain=True)
+            await ctx.thread.reply(ctx.message, msg, anonymous=True, plain=True)
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)

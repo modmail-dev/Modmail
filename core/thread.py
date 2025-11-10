@@ -1586,9 +1586,32 @@ class Thread:
         return msg
 
     async def reply(
-        self, message: discord.Message, anonymous: bool = False, plain: bool = False
+        self,
+        message: discord.Message,
+        content: typing.Optional[str] = None,
+        anonymous: bool = False,
+        plain: bool = False,
     ) -> typing.Tuple[typing.List[discord.Message], discord.Message]:
-        """Returns List[user_dm_msg] and thread_channel_msg"""
+        """Send a moderator reply to the thread.
+
+        Parameters
+        ----------
+        message: discord.Message
+            The invoking command message (contains attachments, stickers, etc.).
+        content: Optional[str]
+            Raw reply text to send instead of using ``message.content``. This avoids
+            mutating ``message.content`` upstream and lets command handlers pass the
+            processed text directly.
+        anonymous: bool
+            Whether to mask the moderator identity in the recipient DM.
+        plain: bool
+            Whether to send a plain (non-embed) message to the recipient.
+
+        Returns
+        -------
+        Tuple[List[discord.Message], discord.Message]
+            A list of messages sent to recipients and the copy sent in the thread channel.
+        """
         # If this thread was snoozed using move-behavior, unsnooze automatically when a mod replies
         try:
             behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
@@ -1644,6 +1667,7 @@ class Thread:
                     from_mod=True,
                     anonymous=anonymous,
                     plain=plain,
+                    content_override=content,
                 )
             )
 
@@ -1680,6 +1704,7 @@ class Thread:
                     from_mod=True,
                     anonymous=anonymous,
                     plain=plain,
+                    content_override=content,
                 )
             except discord.NotFound:
                 logger.warning(
@@ -1729,7 +1754,26 @@ class Thread:
         plain: bool = False,
         persistent_note: bool = False,
         thread_creation: bool = False,
+        *,
+        content_override: typing.Optional[str] = None,
     ) -> None:
+        """Low-level send routine used by reply/note logic.
+
+        Parameters
+        ----------
+        message: discord.Message
+            The command invocation message (source of attachments/stickers).
+        destination: Channel/User/Member
+            Where to send the constructed message/embed.
+        from_mod: bool
+            Indicates this is a staff reply (affects author display + logging).
+        note: bool
+            Internal note style instead of a regular reply.
+        anonymous / plain / persistent_note / thread_creation: Various flags controlling style.
+        content_override: Optional[str]
+            Explicit text to use instead of ``message.content``. Provided by refactored
+            reply commands to avoid mutating the original message object.
+        """
         # Handle notes with Discord-like system message format - return early
         if note:
             destination = destination or self.channel
@@ -1838,7 +1882,7 @@ class Thread:
             ):
                 content = "No content"
             else:
-                content = message.content or ""
+                content = (content_override if content_override is not None else message.content) or ""
 
         # Only set description if there's actual content to show
         if content:

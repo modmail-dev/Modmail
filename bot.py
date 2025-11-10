@@ -1559,7 +1559,9 @@ class ModmailBot(commands.Bot):
                     or self.config.get("anon_reply_without_command")
                     or self.config.get("plain_reply_without_command")
                 ):
-                    await thread.reply(message, anonymous=anonymous, plain=plain)
+                    # When replying without a command in a thread channel, use the raw content
+                    # from the sent message as reply text while still preserving attachments.
+                    await thread.reply(message, message.content, anonymous=anonymous, plain=plain)
             elif ctx.invoked_with:
                 exc = commands.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
                 self.dispatch("command_error", ctx, exc)
