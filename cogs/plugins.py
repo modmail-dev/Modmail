@@ -52,9 +52,7 @@ class Plugin:
     def path(self):
         if self.local:
             return PurePath("plugins") / "@local" / self.name
-        return (
-            PurePath("plugins") / self.user / self.repo / f"{self.name}-{self.branch}"
-        )
+        return PurePath("plugins") / self.user / self.repo / f"{self.name}-{self.branch}"
 
     @property
     def abs_path(self):
@@ -149,14 +147,10 @@ class Plugins(commands.Cog):
                     # For backwards compat
                     plugin = Plugin.from_string(plugin_name)
                 except InvalidPluginError:
-                    logger.error(
-                        "Failed to parse plugin name: %s.", plugin_name, exc_info=True
-                    )
+                    logger.error("Failed to parse plugin name: %s.", plugin_name, exc_info=True)
                     continue
 
-                logger.info(
-                    "Migrated legacy plugin name: %s, now %s.", plugin_name, str(plugin)
-                )
+                logger.info("Migrated legacy plugin name: %s, now %s.", plugin_name, str(plugin))
                 self.bot.config["plugins"].append(str(plugin))
 
             try:
@@ -208,9 +202,7 @@ class Plugins(commands.Cog):
                     if raw == "Not Found":
                         raise InvalidPluginError("Plugin not found")
                     else:
-                        raise InvalidPluginError(
-                            "Invalid download received, non-bytes object"
-                        )
+                        raise InvalidPluginError("Invalid download received, non-bytes object")
 
             plugin_io = io.BytesIO(raw)
             if not plugin.cache_path.parent.exists():
@@ -242,9 +234,7 @@ class Plugins(commands.Cog):
         if req_txt.exists():
             # Install PIP requirements
 
-            venv = hasattr(sys, "real_prefix") or hasattr(
-                sys, "base_prefix"
-            )  # in a virtual env
+            venv = hasattr(sys, "real_prefix") or hasattr(sys, "base_prefix")  # in a virtual env
             user_install = " --user" if not venv else ""
             proc = await asyncio.create_subprocess_shell(
                 f'"{sys.executable}" -m pip install --upgrade{user_install} -r {req_txt} -q -q',
@@ -266,9 +256,7 @@ class Plugins(commands.Cog):
                     plugin.ext_string,
                     exc_info=True,
                 )
-                raise InvalidPluginError(
-                    f"Unable to download requirements: ```\n{stderr.decode()}\n```"
-                )
+                raise InvalidPluginError(f"Unable to download requirements: ```\n{stderr.decode()}\n```")
 
             if os.path.exists(USER_SITE):
                 sys.path.insert(0, USER_SITE)
@@ -463,9 +451,7 @@ class Plugins(commands.Cog):
             return
 
         if str(plugin) not in self.bot.config["plugins"]:
-            embed = discord.Embed(
-                description="Plugin is not installed.", color=self.bot.error_color
-            )
+            embed = discord.Embed(description="Plugin is not installed.", color=self.bot.error_color)
             return await ctx.send(embed=embed)
 
         if self.bot.config.get("enable_plugins"):
@@ -503,9 +489,7 @@ class Plugins(commands.Cog):
             return
 
         if str(plugin) not in self.bot.config["plugins"]:
-            embed = discord.Embed(
-                description="Plugin is not installed.", color=self.bot.error_color
-            )
+            embed = discord.Embed(description="Plugin is not installed.", color=self.bot.error_color)
             return await ctx.send(embed=embed)
 
         async with safe_typing(ctx):
@@ -528,9 +512,7 @@ class Plugins(commands.Cog):
                         color=self.bot.error_color,
                     )
                     self.bot.config["plugins"].remove(str(plugin))
-                    logger.debug(
-                        "Failed to update %s. Removed plugin from config.", plugin
-                    )
+                    logger.debug("Failed to update %s. Removed plugin from config.", plugin)
                 else:
                     logger.debug("Updated %s.", plugin)
             else:
@@ -570,9 +552,7 @@ class Plugins(commands.Cog):
                 continue
             logger.error("Unloading plugin: %s.", ext)
             try:
-                plugin = next(
-                    (p for p in self.loaded_plugins if p.ext_string == ext), None
-                )
+                plugin = next((p for p in self.loaded_plugins if p.ext_string == ext), None)
                 if plugin:
                     await self.unload_plugin(plugin)
                     self.loaded_plugins.remove(plugin)
@@ -648,20 +628,14 @@ class Plugins(commands.Cog):
 
         embeds = []
         for page in pages:
-            embed = discord.Embed(
-                title="Loaded plugins:", description=page, color=self.bot.main_color
-            )
+            embed = discord.Embed(title="Loaded plugins:", description=page, color=self.bot.main_color)
             embeds.append(embed)
         paginator = EmbedPaginatorSession(ctx, *embeds)
         await paginator.run()
 
-    @plugins.group(
-        invoke_without_command=True, name="registry", aliases=["list", "info"]
-    )
+    @plugins.group(invoke_without_command=True, name="registry", aliases=["list", "info"])
     @checks.has_permissions(PermissionLevel.OWNER)
-    async def plugins_registry(
-        self, ctx, *, plugin_name: typing.Union[int, str] = None
-    ):
+    async def plugins_registry(self, ctx, *, plugin_name: typing.Union[int, str] = None):
         """
         Shows a list of all approved plugins.
 
@@ -692,9 +666,7 @@ class Plugins(commands.Cog):
             if index >= len(registry):
                 index = len(registry) - 1
         else:
-            index = next(
-                (i for i, (n, _) in enumerate(registry) if plugin_name == n), 0
-            )
+            index = next((i for i, (n, _) in enumerate(registry) if plugin_name == n), 0)
 
         if not index and plugin_name is not None:
             embed = discord.Embed(
@@ -726,13 +698,9 @@ class Plugins(commands.Cog):
                 title=details["repository"],
             )
 
-            embed.add_field(
-                name="Installation", value=f"```{self.bot.prefix}plugins add {name}```"
-            )
+            embed.add_field(name="Installation", value=f"```{self.bot.prefix}plugins add {name}```")
 
-            embed.set_author(
-                name=details["title"], icon_url=details.get("icon_url"), url=plugin.link
-            )
+            embed.set_author(name=details["title"], icon_url=details.get("icon_url"), url=plugin.link)
 
             if details.get("thumbnail_url"):
                 embed.set_thumbnail(url=details.get("thumbnail_url"))
@@ -778,9 +746,7 @@ class Plugins(commands.Cog):
 
             plugin = Plugin(user, repo, plugin_name, branch)
 
-            desc = discord.utils.escape_markdown(
-                details["description"].replace("\n", "")
-            )
+            desc = discord.utils.escape_markdown(details["description"].replace("\n", ""))
 
             name = f"[`{plugin.name}`]({plugin.link})"
             fmt = f"{name} - {desc}"
@@ -809,9 +775,7 @@ class Plugins(commands.Cog):
             embed = discord.Embed(color=self.bot.main_color, description=page)
             embed.set_author(
                 name="Plugin Registry",
-                icon_url=self.bot.user.display_avatar.url
-                if self.bot.user.display_avatar
-                else None,
+                icon_url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None,
             )
             embeds.append(embed)
 

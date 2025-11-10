@@ -486,9 +486,7 @@ def get_top_role(member: discord.Member, hoisted=True):
             return role
 
 
-async def create_thread_channel(
-    bot, recipient, category, overwrites, *, name=None, errors_raised=None
-):
+async def create_thread_channel(bot, recipient, category, overwrites, *, name=None, errors_raised=None):
     name = name or bot.format_channel_name(recipient)
     errors_raised = errors_raised or []
 
@@ -511,9 +509,7 @@ async def create_thread_channel(
             fallback = None
             fallback_id = bot.config["fallback_category_id"]
             if fallback_id:
-                fallback = discord.utils.get(
-                    category.guild.categories, id=int(fallback_id)
-                )
+                fallback = discord.utils.get(category.guild.categories, id=int(fallback_id))
                 if fallback and len(fallback.channels) >= 49:
                     fallback = None
 
@@ -584,10 +580,7 @@ def extract_block_timestamp(reason, id_):
             # found a deprecated version
             try:
                 after = (
-                    datetime.fromisoformat(end_time.group(1)).replace(
-                        tzinfo=timezone.utc
-                    )
-                    - now
+                    datetime.fromisoformat(end_time.group(1)).replace(tzinfo=timezone.utc) - now
                 ).total_seconds()
             except ValueError:
                 logger.warning(
@@ -602,10 +595,7 @@ def extract_block_timestamp(reason, id_):
     else:
         try:
             after = (
-                datetime.utcfromtimestamp(int(end_time.group(1))).replace(
-                    tzinfo=timezone.utc
-                )
-                - now
+                datetime.utcfromtimestamp(int(end_time.group(1))).replace(tzinfo=timezone.utc) - now
             ).total_seconds()
         except ValueError:
             logger.warning(
@@ -625,9 +615,7 @@ def return_or_truncate(text, max_length):
 
 class AcceptButton(discord.ui.Button):
     def __init__(self, custom_id: str, emoji: str):
-        super().__init__(
-            style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id
-        )
+        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = True
@@ -637,9 +625,7 @@ class AcceptButton(discord.ui.Button):
 
 class DenyButton(discord.ui.Button):
     def __init__(self, custom_id: str, emoji: str):
-        super().__init__(
-            style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id
-        )
+        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = False
@@ -677,9 +663,7 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
                 forwarded_parts = []
                 for snap in message.message_snapshots:
                     author = getattr(snap, "author", None)
-                    author_name = (
-                        getattr(author, "name", "Unknown") if author else "Unknown"
-                    )
+                    author_name = getattr(author, "name", "Unknown") if author else "Unknown"
                     snap_content = getattr(snap, "content", "")
 
                     if snap_content:
@@ -693,22 +677,15 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
                                 embed_desc = embed.description
                                 if len(embed_desc) > 300:
                                     embed_desc = embed_desc[:297] + "..."
-                                forwarded_parts.append(
-                                    f"**{author_name}:** {embed_desc}"
-                                )
+                                forwarded_parts.append(f"**{author_name}:** {embed_desc}")
                                 break
                     elif getattr(snap, "attachments", None):
                         attachment_info = ", ".join(
-                            [
-                                getattr(a, "filename", "Unknown")
-                                for a in snap.attachments[:3]
-                            ]
+                            [getattr(a, "filename", "Unknown") for a in snap.attachments[:3]]
                         )
                         if len(snap.attachments) > 3:
                             attachment_info += f" (+{len(snap.attachments) - 3} more)"
-                        forwarded_parts.append(
-                            f"**{author_name}:** [Attachments: {attachment_info}]"
-                        )
+                        forwarded_parts.append(f"**{author_name}:** [Attachments: {attachment_info}]")
                     else:
                         forwarded_parts.append(f"**{author_name}:** [No content]")
 
@@ -716,25 +693,18 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
                     return "\n".join(forwarded_parts)
 
         # Handle single-message forward
-        elif getattr(message, "type", None) == getattr(
-            discord.MessageType, "forward", None
-        ):
+        elif getattr(message, "type", None) == getattr(discord.MessageType, "forward", None):
             ref = getattr(message, "reference", None)
             if (
                 ref
                 and hasattr(discord, "MessageReferenceType")
-                and getattr(ref, "type", None)
-                == getattr(discord.MessageReferenceType, "forward", None)
+                and getattr(ref, "type", None) == getattr(discord.MessageReferenceType, "forward", None)
             ):
                 try:
                     ref_msg = getattr(ref, "resolved", None)
                     if ref_msg:
                         ref_author = getattr(ref_msg, "author", None)
-                        ref_author_name = (
-                            getattr(ref_author, "name", "Unknown")
-                            if ref_author
-                            else "Unknown"
-                        )
+                        ref_author_name = getattr(ref_author, "name", "Unknown") if ref_author else "Unknown"
                         ref_content = getattr(ref_msg, "content", "")
 
                         if ref_content:
@@ -750,15 +720,10 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
                                     return f"**{ref_author_name}:** {embed_desc}"
                         elif getattr(ref_msg, "attachments", None):
                             attachment_info = ", ".join(
-                                [
-                                    getattr(a, "filename", "Unknown")
-                                    for a in ref_msg.attachments[:3]
-                                ]
+                                [getattr(a, "filename", "Unknown") for a in ref_msg.attachments[:3]]
                             )
                             if len(ref_msg.attachments) > 3:
-                                attachment_info += (
-                                    f" (+{len(ref_msg.attachments) - 3} more)"
-                                )
+                                attachment_info += f" (+{len(ref_msg.attachments) - 3} more)"
                             return f"**{ref_author_name}:** [Attachments: {attachment_info}]"
                 except Exception as e:
                     # Log and continue; failing to extract a reference preview shouldn't break flow
