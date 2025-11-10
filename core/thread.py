@@ -2663,12 +2663,22 @@ class ThreadManager:
                         if msg is None and self.view and hasattr(self.view, "message"):
                             msg = self.view.message
                         if msg is not None:
-                            if msg.embeds:
-                                emb = msg.embeds[0]
-                                emb.description = f"You selected: {chosen_label}"
-                                await msg.edit(embed=emb, view=None)
-                            else:
-                                await msg.edit(content=f"You selected: {chosen_label}", view=None)
+                            # Replace entire embed so only the selection line remains
+                            try:
+                                base_color = (msg.embeds[0].color if msg.embeds else None) or getattr(
+                                    self.outer_thread.bot, "mod_color", None
+                                )
+                            except Exception:
+                                base_color = getattr(self.outer_thread.bot, "mod_color", None)
+                            selection_embed = (
+                                discord.Embed(
+                                    description=f"You selected: {chosen_label}",
+                                    color=base_color,
+                                )
+                                if base_color is not None
+                                else discord.Embed(description=f"You selected: {chosen_label}")
+                            )
+                            await msg.edit(content=None, embed=selection_embed, view=None)
                         else:
                             try:
                                 await interaction.edit_original_response(
@@ -3094,16 +3104,26 @@ class ThreadManager:
                         if msg is None and self.view and hasattr(self.view, "message"):
                             msg = self.view.message
                         if msg is not None:
-                            if msg.embeds:
-                                emb = msg.embeds[0]
-                                emb.description = f"You choose: {chosen_label}"
-                                await msg.edit(embed=emb, view=None)
-                            else:
-                                await msg.edit(content=f"You choose: {chosen_label}", view=None)
+                            # Replace entire embed so only the selection line remains
+                            try:
+                                base_color = (msg.embeds[0].color if msg.embeds else None) or getattr(
+                                    self.outer_thread.bot, "mod_color", None
+                                )
+                            except Exception:
+                                base_color = getattr(self.outer_thread.bot, "mod_color", None)
+                            selection_embed = (
+                                discord.Embed(
+                                    description=f"You selected: {chosen_label}",
+                                    color=base_color,
+                                )
+                                if base_color is not None
+                                else discord.Embed(description=f"You selected: {chosen_label}")
+                            )
+                            await msg.edit(content=None, embed=selection_embed, view=None)
                         else:
                             try:
                                 await interaction.edit_original_response(
-                                    content=f"You choose: {chosen_label}", view=None
+                                    content=f"You selected: {chosen_label}", view=None
                                 )
                             except Exception:
                                 await interaction.edit_original_response(view=None)
