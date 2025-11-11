@@ -108,7 +108,7 @@ class Modmail(commands.Cog):
             name="Thanks for using our bot!",
             value="If you like what you see, consider giving the "
             "[repo a star](https://github.com/modmail-dev/modmail) :star: and if you are "
-            "feeling extra generous, buy us coffee on [Patreon](https://patreon.com/kyber) :heart:!",
+            "feeling extra generous, buy us coffee on [Buy Me A Coffee](https://buymeacoffee.com/modmaildev) :heart:!",
         )
 
         embed.set_footer(text=f'Type "{self.bot.prefix}help" for a complete list of commands.')

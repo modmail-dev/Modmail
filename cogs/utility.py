@@ -362,7 +362,7 @@ class Utility(commands.Cog):
         embed.add_field(
             name="Support the Developers",
             value="This bot is completely free for everyone. We rely on kind individuals "
-            "like you to support us on [`Patreon`](https://patreon.com/kyber) (perks included) "
+            "like you to support us on [`Buy Me A Coffee`](https://buymeacoffee.com/modmaildev) (perks included for memberships) "
             "to keep this bot free forever!",
             inline=False,
         )
@@ -1731,7 +1731,7 @@ class Utility(commands.Cog):
         """
         Commands relating to logviewer oauth2 login authentication.
 
-        This functionality on your logviewer site is a [**Patron**](https://patreon.com/kyber) only feature.
+        This functionality on your logviewer site is a [**Buy Me A Coffee**](https://buymeacoffee.com/modmaildev/membership) only feature.
         """
         await ctx.send_help(ctx.command)
 

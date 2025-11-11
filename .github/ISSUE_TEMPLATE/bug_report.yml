@@ -20,7 +20,7 @@ body:
         - Heroku
         - Systemd
         - PM2
-        - Patreon
+        - Buy Me A Coffee / Patreon
         - Other
     validations:
       required: true
