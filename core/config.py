@@ -129,6 +129,17 @@ class ConfigManager:
         # regex
         "use_regex_autotrigger": False,
         "use_hoisted_top_role": True,
+        # Minimum characters for thread creation
+        "thread_min_characters": 0,
+        "thread_min_characters_title": "Message too short",
+        "thread_min_characters_response": "Your message is too short to create a thread. Please provide more details.",
+        "thread_min_characters_footer": "Minimum {min_characters} characters required.",
+        # --- SNOOZE FEATURE CONFIG ---
+        "max_snooze_time": 604800,  # in seconds, default 7 days
+        "snooze_title": "Thread Snoozed",
+        "snooze_text": "This thread has been snoozed. The channel will be restored when the user replies or a moderator unsnoozes it.",
+        "unsnooze_text": "This thread has been unsnoozed and restored.",
+        "unsnooze_notify_channel": "thread",  # Can be a channel ID or 'thread' for the thread's own channel
     }
 
     private_keys = {

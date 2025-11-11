@@ -3,6 +3,7 @@ UserFriendlyTime by Rapptz
 Source:
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 """
+
 from __future__ import annotations
 
 import datetime
@@ -159,6 +160,30 @@ class FriendlyTimeResult:
     async def ensure_constraints(
         self, ctx: Context, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
     ) -> None:
+        # Strip stray connector words like "in", "to", or "at" that may
+        # remain when the natural language parser isolates the time token
+        # positioned at the end (e.g. "in 10m" leaves "in" before the token).
+        if isinstance(remaining, str):
+            cleaned = remaining.strip(" ,.!")
+            stray_tokens = {
+                "in",
+                "to",
+                "at",
+                "me",
+                # also treat vague times of day as stray tokens when they are the only leftover word
+                "evening",
+                "night",
+                "midnight",
+                "morning",
+                "afternoon",
+                "tonight",
+                "noon",
+                "today",
+                "tomorrow",
+            }
+            if cleaned.lower() in stray_tokens:
+                remaining = ""
+
         if self.dt < now:
             raise commands.BadArgument("This time is in the past.")
 
@@ -197,6 +222,26 @@ class UserFriendlyTime(commands.Converter):
         regex = ShortTime.compiled
         if now is None:
             now = ctx.message.created_at
+
+        # Heuristic: If the user provides only certain single words that are commonly
+        # used as salutations or vague times of day, interpret them as a message
+        # rather than a schedule. This avoids accidental scheduling when the intent
+        # is a short message (e.g. '?close evening'). Explicit scheduling still works
+        # via 'in 2h', '2m30s', 'at 8pm', etc.
+        if argument.strip().lower() in {
+            "evening",
+            "night",
+            "midnight",
+            "morning",
+            "afternoon",
+            "tonight",
+            "noon",
+            "today",
+            "tomorrow",
+        }:
+            result = FriendlyTimeResult(now)
+            await result.ensure_constraints(ctx, self, now, argument)
+            return result
 
         match = regex.match(argument)
         if match is not None and match.group(0):
@@ -244,7 +289,10 @@ class UserFriendlyTime(commands.Converter):
         if not status.hasDateOrTime:
             raise commands.BadArgument('Invalid time provided, try e.g. "tomorrow" or "3 days".')
 
-        if begin not in (0, 1) and end != len(argument):
+        # If the parsed time token is embedded in the text but only followed by
+        # trailing punctuation/whitespace, treat it as if it's positioned at the end.
+        trailing = argument[end:].strip(" ,.!")
+        if begin not in (0, 1) and trailing != "":
             raise commands.BadArgument(
                 "Time is either in an inappropriate location, which "
                 "must be either at the end or beginning of your input, "
@@ -258,6 +306,20 @@ class UserFriendlyTime(commands.Converter):
         # if midnight is provided, just default to next day
         if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
             dt = dt.replace(day=now.day + 1)
+
+        # Heuristic: If the matched time string is a vague time-of-day (e.g.,
+        # 'evening', 'morning', 'afternoon', 'night') and there's additional
+        # non-punctuation text besides that token, assume the user intended a
+        # closing message rather than scheduling. This avoids cases like
+        # '?close Have a good evening!' being treated as a scheduled close.
+        vague_tod = {"evening", "morning", "afternoon", "night"}
+        matched_text = dt_string.strip().strip('"').rstrip(" ,.!").lower()
+        pre_text = argument[:begin].strip(" ,.!")
+        post_text = argument[end:].strip(" ,.!")
+        if matched_text in vague_tod and (pre_text or post_text):
+            result = FriendlyTimeResult(now)
+            await result.ensure_constraints(ctx, self, now, argument)
+            return result
 
         result = FriendlyTimeResult(dt.replace(tzinfo=datetime.timezone.utc), now)
         remaining = ""

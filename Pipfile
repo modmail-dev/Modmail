@@ -8,11 +8,12 @@ bandit = ">=1.7.5"
 black = "==23.11.0"
 pylint = "==3.0.2"
 typing-extensions = "==4.8.0"
+tomli = "==2.2.1"  # Needed for black on Python < 3.11
 
 [packages]
 aiohttp = "==3.9.0"
 colorama = "==0.4.6"
-"discord.py" = {version = "==2.3.2", extras = ["speed"]}
+"discord.py" = {version = "==2.6.3", extras = ["speed"]}
 emoji = "==2.8.0"
 isodate = "==0.6.1"
 motor = "==3.3.2"

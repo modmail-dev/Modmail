@@ -8,7 +8,7 @@ import time
 import traceback
 import typing
 import warnings
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from types import SimpleNamespace
 
 import isodate
@@ -33,6 +33,7 @@ from core.utils import (
     DenyButton,
     ConfirmThreadCreationView,
     DummyParam,
+    extract_forwarded_content,
 )
 
 logger = getLogger(__name__)
@@ -66,6 +67,10 @@ class Thread:
         self.close_task = None
         self.auto_close_task = None
         self._cancelled = False
+        # --- SNOOZE STATE ---
+        self.snoozed = False  # True if thread is snoozed
+        self.snooze_data = None  # Dict with channel/category/position/messages for restoration
+        self.log_key = None  # Ensure log_key always exists
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
@@ -125,6 +130,202 @@ class Thread:
         if flag:
             for i in self.wait_tasks:
                 i.cancel()
+
+    async def snooze(self, moderator=None, command_used=None, snooze_for=None):
+        """
+        Save channel/category/position/messages to DB, mark as snoozed, delete channel.
+        """
+        if self.snoozed:
+            return False  # Already snoozed
+        channel = self.channel
+        if not isinstance(channel, discord.TextChannel):
+            return False
+        # Ensure self.log_key is set before snoozing
+        if not self.log_key:
+            # Try to fetch from DB using channel_id
+            log_entry = await self.bot.api.get_log(self.channel.id)
+            if log_entry and "key" in log_entry:
+                self.log_key = log_entry["key"]
+            # Fallback: try by recipient id
+            elif hasattr(self, "id"):
+                log_entry = await self.bot.api.get_log(str(self.id))
+                if log_entry and "key" in log_entry:
+                    self.log_key = log_entry["key"]
+
+        now = datetime.now(timezone.utc)
+        self.snooze_data = {
+            "category_id": channel.category_id,
+            "position": channel.position,
+            "name": channel.name,
+            "topic": channel.topic,
+            "slowmode_delay": channel.slowmode_delay,
+            "nsfw": channel.nsfw,
+            "overwrites": [(role.id, perm._values) for role, perm in channel.overwrites.items()],
+            "messages": [
+                {
+                    "author_id": m.author.id,
+                    "content": m.content,
+                    "attachments": [a.url for a in m.attachments],
+                    "embeds": [e.to_dict() for e in m.embeds],
+                    "created_at": m.created_at.isoformat(),
+                    "type": (
+                        "mod_only"
+                        if (
+                            m.embeds
+                            and getattr(m.embeds[0], "author", None)
+                            and (
+                                getattr(m.embeds[0].author, "name", "").startswith("📝 Note")
+                                or getattr(m.embeds[0].author, "name", "").startswith("📝 Persistent Note")
+                            )
+                        )
+                        else None
+                    ),
+                    "author_name": getattr(m.author, "name", None),
+                }
+                async for m in channel.history(limit=None, oldest_first=True)
+                if not (
+                    m.embeds
+                    and getattr(m.embeds[0], "author", None)
+                    and (
+                        getattr(m.embeds[0].author, "name", "").startswith("📝 Note")
+                        or getattr(m.embeds[0].author, "name", "").startswith("📝 Persistent Note")
+                    )
+                )
+                and getattr(m, "type", None) not in ("internal", "note")
+            ],
+            "snoozed_by": getattr(moderator, "name", None) if moderator else None,
+            "snooze_command": command_used,
+            "log_key": self.log_key,
+            "snooze_start": now.isoformat(),
+            "snooze_for": snooze_for,
+        }
+        self.snoozed = True
+        # Save to DB (robust: try recipient.id, then channel_id)
+        result = await self.bot.api.logs.update_one(
+            {"recipient.id": str(self.id)},
+            {"$set": {"snoozed": True, "snooze_data": self.snooze_data}},
+        )
+        if result.modified_count == 0 and self.channel:
+            result = await self.bot.api.logs.update_one(
+                {"channel_id": str(self.channel.id)},
+                {"$set": {"snoozed": True, "snooze_data": self.snooze_data}},
+            )
+        import logging
+
+        logging.info(f"[SNOOZE] DB update result: {result.modified_count}")
+        # Delete channel
+        await channel.delete(reason="Thread snoozed by moderator")
+        self._channel = None
+        return True
+
+    async def restore_from_snooze(self):
+        """
+        Recreate channel in original category/position, replay messages, mark as not snoozed.
+        """
+        if not self.snooze_data or not isinstance(self.snooze_data, dict):
+            import logging
+
+            logging.warning(
+                f"[UNSNOOZE] Tried to restore thread {self.id} but snooze_data is None or not a dict."
+            )
+            return False
+        # Now safe to access self.snooze_data
+        snoozed_by = self.snooze_data.get("snoozed_by")
+        snooze_command = self.snooze_data.get("snooze_command")
+        guild = self.bot.modmail_guild
+        category = guild.get_channel(self.snooze_data["category_id"])
+        overwrites = {}
+        for role_id, perm_values in self.snooze_data["overwrites"]:
+            role = guild.get_role(role_id) or guild.get_member(role_id)
+            if role:
+                overwrites[role] = discord.PermissionOverwrite(**perm_values)
+        channel = await guild.create_text_channel(
+            name=self.snooze_data["name"],
+            category=category,
+            topic=self.snooze_data["topic"],
+            slowmode_delay=self.snooze_data["slowmode_delay"],
+            overwrites=overwrites,
+            nsfw=self.snooze_data["nsfw"],
+            position=self.snooze_data["position"],
+            reason="Thread unsnoozed/restored",
+        )
+        self._channel = channel
+        # Strictly restore the log_key from snooze_data (never create a new one)
+        self.log_key = self.snooze_data.get("log_key")
+        # Replay messages
+        for msg in self.snooze_data["messages"]:
+            author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(msg["author_id"])
+            content = msg["content"]
+            embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
+            attachments = msg.get("attachments", [])
+            msg_type = msg.get("type")
+            # Only send if there is content, embeds, or attachments
+            if not content and not embeds and not attachments:
+                continue  # Skip empty messages
+            author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
+            if author_is_mod:
+                username = msg.get("author_name") or (getattr(author, "name", None)) or "Unknown"
+                user_id = msg.get("author_id")
+                if embeds:
+                    embeds[0].set_author(
+                        name=f"{username} ({user_id})",
+                        icon_url=(
+                            author.display_avatar.url
+                            if author and hasattr(author, "display_avatar")
+                            else None
+                        ),
+                    )
+                    await channel.send(embeds=embeds)
+                else:
+                    formatted = (
+                        f"**{username} ({user_id})**: {content}" if content else f"**{username} ({user_id})**"
+                    )
+                    await channel.send(formatted)
+            else:
+                await channel.send(content=content or None, embeds=embeds or None)
+        self.snoozed = False
+        # Store snooze_data for notification before clearing
+        snooze_data_for_notify = self.snooze_data
+        self.snooze_data = None
+        # Update channel_id in DB and clear snooze_data (robust: try log_key first)
+        if self.log_key:
+            result = await self.bot.api.logs.update_one(
+                {"key": self.log_key},
+                {"$set": {"channel_id": str(channel.id)}, "$unset": {"snoozed": "", "snooze_data": ""}},
+            )
+        else:
+            result = await self.bot.api.logs.update_one(
+                {"recipient.id": str(self.id)},
+                {"$set": {"channel_id": str(channel.id)}, "$unset": {"snoozed": "", "snooze_data": ""}},
+            )
+            if result.modified_count == 0:
+                result = await self.bot.api.logs.update_one(
+                    {"channel_id": str(channel.id)},
+                    {
+                        "$set": {"channel_id": str(channel.id)},
+                        "$unset": {"snoozed": "", "snooze_data": ""},
+                    },
+                )
+        import logging
+
+        logging.info(f"[UNSNOOZE] DB update result: {result.modified_count}")
+        # Notify in the configured channel
+        notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
+        notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
+        if notify_channel == "thread":
+            await channel.send(notify_text)
+        else:
+            ch = self.bot.get_channel(int(notify_channel))
+            if ch:
+                await ch.send(f"Thread for user <@{self.id}> has been unsnoozed and restored.")
+        # Show who ran the snooze command and the command used
+        # Use snooze_data_for_notify to avoid accessing self.snooze_data after it is set to None
+        snoozed_by = snooze_data_for_notify.get("snoozed_by") if snooze_data_for_notify else None
+        snooze_command = snooze_data_for_notify.get("snooze_command") if snooze_data_for_notify else None
+        if snoozed_by or snooze_command:
+            info = f"Snoozed by: {snoozed_by or 'Unknown'} | Command: {snooze_command or '?snooze'}"
+            await channel.send(info)
+        return True
 
     @classmethod
     async def from_channel(cls, manager: "ThreadManager", channel: discord.TextChannel) -> "Thread":
@@ -415,6 +616,8 @@ class Thread:
             await self._close(closer, silent, delete_channel, message)
 
     async def _close(self, closer, silent=False, delete_channel=True, message=None, scheduled=False):
+        if self.channel:
+            self.manager.closing.add(self.channel.id)
         try:
             self.manager.cache.pop(self.id)
         except KeyError as e:
@@ -541,10 +744,15 @@ class Thread:
                 if user is not None:
                     tasks.append(user.send(embed=embed))
 
-        if delete_channel:
+        if delete_channel and self.channel:
             tasks.append(self.channel.delete())
 
-        await asyncio.gather(*tasks)
+        try:
+            await asyncio.gather(*tasks)
+        finally:
+            if self.channel:
+                self.manager.closing.discard(self.channel.id)
+
         self.bot.dispatch("thread_close", self, closer, silent, delete_channel, message, scheduled)
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
@@ -620,10 +828,7 @@ class Thread:
             ):
                 raise ValueError("Thread message not found.")
 
-            if message1.embeds[0].color.value == self.bot.main_color and (
-                message1.embeds[0].author.name.startswith("Note")
-                or message1.embeds[0].author.name.startswith("Persistent Note")
-            ):
+            if message1.embeds[0].footer and "Internal Message" in message1.embeds[0].footer.text:
                 if not note:
                     raise ValueError("Thread message not found.")
                 return message1, None
@@ -686,7 +891,7 @@ class Thread:
         embed1.description = message
 
         tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
-        if message1.embeds[0].author.name.startswith("Persistent Note"):
+        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.edit_note(message1.id, message)]
         else:
             for m2 in message2:
@@ -713,7 +918,7 @@ class Thread:
             if m2 is not None:
                 tasks += [m2.delete()]
 
-        if message1.embeds[0].author.name.startswith("Persistent Note"):
+        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.delete_note(message1.id)]
 
         if tasks:
@@ -811,8 +1016,9 @@ class Thread:
             thread_creation=thread_creation,
         )
 
+        # Log as 'note' type for logviewer
         self.bot.loop.create_task(
-            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="system")
+            self.bot.api.append_log(message, message_id=msg.id, channel_id=self.channel.id, type_="note")
         )
 
         return msg
@@ -920,6 +1126,38 @@ class Thread:
         persistent_note: bool = False,
         thread_creation: bool = False,
     ) -> None:
+        # Handle notes with Discord-like system message format - return early
+        if note:
+            destination = destination or self.channel
+            content = message.content or "[No content]"
+
+            # Create embed for note with Discord system message style
+            embed = discord.Embed(
+                description=content, color=0x5865F2  # Discord blurple color for system messages
+            )
+
+            # Set author with note icon and username
+            if persistent_note:
+                note_type = "Persistent Note"
+            else:
+                note_type = "Note"
+
+            embed.set_author(
+                name=f"📝 {note_type} ({message.author.name})", icon_url=message.author.display_avatar.url
+            )
+
+            # Add timestamp if enabled
+            if self.bot.config["show_timestamp"]:
+                embed.timestamp = message.created_at
+
+            # Add a subtle footer to distinguish from replies
+            if persistent_note:
+                embed.set_footer(text="Persistent Internal Note")
+            else:
+                embed.set_footer(text="Internal Note")
+
+            return await destination.send(embed=embed)
+
         if not note and from_mod:
             self.bot.loop.create_task(self._restart_close_timer())  # Start or restart thread auto close
 
@@ -943,6 +1181,15 @@ class Thread:
 
         destination = destination or self.channel
 
+        if destination is None:
+            logger.error("Attempted to send a message to a thread with no channel (destination is None).")
+            return
+        try:
+            await destination.typing()
+        except discord.NotFound:
+            logger.warning("Channel not found when trying to send message.")
+            return
+
         author = message.author
         member = self.bot.guild.get_member(author.id)
         if member:
@@ -950,9 +1197,56 @@ class Thread:
         else:
             avatar_url = author.display_avatar.url
 
-        embed = discord.Embed(description=message.content)
+        # Handle forwarded messages first
+        forwarded_jump_url = None
+        if hasattr(message, "message_snapshots") and len(message.message_snapshots) > 0:
+            snap = message.message_snapshots[0]
+            # Only show "No content" if there's truly no content (no text, attachments, embeds, or stickers)
+            if not snap.content and not message.attachments and not message.embeds and not message.stickers:
+                content = "No content"
+            else:
+                content = snap.content or ""
+
+            # Get jump_url from cached_message, fetch if not cached
+            if hasattr(snap, "cached_message") and snap.cached_message is not None:
+                forwarded_jump_url = snap.cached_message.jump_url
+            else:
+                if (
+                    hasattr(message, "reference")
+                    and message.reference
+                    and message.reference.type == discord.MessageReferenceType.forward
+                ):
+                    try:
+                        original_msg_channel = self.bot.get_channel(message.reference.channel_id)
+                        original_msg = await original_msg_channel.fetch_message(message.reference.message_id)
+                        forwarded_jump_url = original_msg.jump_url
+                    except (discord.NotFound, discord.Forbidden, AttributeError):
+                        pass
+
+            content = f"📨 **Forwarded message:**\n{content}" if content else "📨 **Forwarded message:**"
+        else:
+            # Only show "No content" if there's truly no content (no text, attachments, embeds, or stickers)
+            if (
+                not message.content
+                and not message.attachments
+                and not message.embeds
+                and not message.stickers
+            ):
+                content = "No content"
+            else:
+                content = message.content or ""
+
+        # Only set description if there's actual content to show
+        if content:
+            embed = discord.Embed(description=content)
+        else:
+            embed = discord.Embed()
         if self.bot.config["show_timestamp"]:
             embed.timestamp = message.created_at
+
+        # Add forwarded message context
+        if forwarded_jump_url:
+            embed.add_field(name="Context", value=f"- {forwarded_jump_url}", inline=True)
 
         system_avatar_url = "https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png"
 
@@ -983,12 +1277,18 @@ class Thread:
                     url=f"https://discordapp.com/users/{author.id}#{message.id}",
                 )
         else:
-            # Special note messages
+            # Notes use system message style with note icon
+            if persistent_note:
+                note_type = "Persistent Note"
+            else:
+                note_type = "Note"
+
             embed.set_author(
-                name=f"{'Persistent' if persistent_note else ''} Note ({author.name})",
-                icon_url=system_avatar_url,
+                name=f"📝 {note_type} ({str(author)})",
+                icon_url=avatar_url,
                 url=f"https://discordapp.com/users/{author.id}#{message.id}",
             )
+            embed.color = 0x5865F2  # Discord blurple for system messages
 
         ext = [(a.url, a.filename, False) for a in message.attachments]
 
@@ -1001,7 +1301,7 @@ class Thread:
                 attachments.append(attachment)
 
         image_urls = re.findall(
-            r"http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$\-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            r"http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
             message.content,
         )
 
@@ -1113,22 +1413,33 @@ class Thread:
             file_upload_count += 1
 
         if from_mod:
-            embed.colour = self.bot.mod_color
-            # Anonymous reply sent in thread channel
-            if anonymous and isinstance(destination, discord.TextChannel):
-                embed.set_footer(text="Anonymous Reply")
-            # Normal messages
-            elif not anonymous:
-                mod_tag = self.bot.config["mod_tag"]
-                if mod_tag is None:
-                    mod_tag = str(get_top_role(message.author, self.bot.config["use_hoisted_top_role"]))
-                embed.set_footer(text=mod_tag)  # Normal messages
+            if note:
+                # Notes use Discord blurple and special footer
+                embed.colour = 0x5865F2
+                if persistent_note:
+                    embed.set_footer(text="Persistent Internal Note")
+                else:
+                    embed.set_footer(text="Internal Note")
             else:
-                embed.set_footer(text=self.bot.config["anon_tag"])
-        elif note:
-            embed.colour = self.bot.main_color
+                # Regular mod messages
+                embed.colour = self.bot.mod_color
+                # Anonymous reply sent in thread channel
+                if anonymous and isinstance(destination, discord.TextChannel):
+                    embed.set_footer(text="Anonymous Reply")
+                # Normal messages
+                elif not anonymous:
+                    mod_tag = self.bot.config["mod_tag"]
+                    if mod_tag is None:
+                        mod_tag = str(get_top_role(message.author, self.bot.config["use_hoisted_top_role"]))
+                    embed.set_footer(text=mod_tag)  # Normal messages
+                else:
+                    embed.set_footer(text=self.bot.config["anon_tag"])
         else:
-            embed.set_footer(text=f"Message ID: {message.id}")
+            # Add forwarded message indicator in footer for mods
+            footer_text = f"Message ID: {message.id}"
+            if hasattr(message, "message_snapshots") and len(message.message_snapshots) > 0:
+                footer_text += " • Forwarded"
+            embed.set_footer(text=footer_text)
             embed.colour = self.bot.recipient_color
 
         if (from_mod or note) and not thread_creation:
@@ -1146,11 +1457,14 @@ class Thread:
         ):
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
+        # Best-effort typing: never block message delivery if typing fails
         try:
             await destination.typing()
         except discord.NotFound:
             logger.warning("Channel not found.")
             raise
+        except (discord.Forbidden, discord.HTTPException, Exception) as e:
+            logger.warning("Unable to send typing to %s: %s. Continuing without typing.", destination, e)
 
         if not from_mod and not note:
             mentions = await self.get_notifications()
@@ -1278,6 +1592,7 @@ class ThreadManager:
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
+        self.closing = set()
 
     async def populate_cache(self) -> None:
         for channel in self.bot.modmail_guild.text_channels:
@@ -1301,6 +1616,8 @@ class ThreadManager:
     ) -> typing.Optional[Thread]:
         """Finds a thread from cache or from discord channel topics."""
         if recipient is None and channel is not None and isinstance(channel, discord.TextChannel):
+            if channel.id in self.closing:
+                return None
             thread = await self._find_from_channel(channel)
             if thread is None:
                 user_id, thread = next(
@@ -1322,11 +1639,8 @@ class ThreadManager:
                 logger.warning("Thread for %s cancelled.", recipient)
                 return thread
             else:
-                if not thread.cancelled and (
-                    not thread.channel or not self.bot.get_channel(thread.channel.id)
-                ):
-                    logger.warning("Found existing thread for %s but the channel is invalid.", recipient_id)
-                    await thread.close(closer=self.bot.user, silent=True, delete_channel=False)
+                # If the thread is snoozed (channel is None), return it for restoration
+                if thread.cancelled:
                     thread = None
         else:
 
@@ -1406,6 +1720,33 @@ class ThreadManager:
     ) -> Thread:
         """Creates a Modmail thread"""
 
+        # Minimum character check
+        min_chars = self.bot.config.get("thread_min_characters")
+        if min_chars is None:
+            min_chars = 0
+        try:
+            min_chars = int(min_chars)
+        except ValueError:
+            min_chars = 0
+        if min_chars > 0 and message is not None and message.content is not None:
+            if len(message.content.strip()) < min_chars:
+                embed = discord.Embed(
+                    title=self.bot.config["thread_min_characters_title"],
+                    description=self.bot.config["thread_min_characters_response"].replace(
+                        "{min_characters}", str(min_chars)
+                    ),
+                    color=self.bot.error_color,
+                )
+                embed.set_footer(
+                    text=self.bot.config["thread_min_characters_footer"].replace(
+                        "{min_characters}", str(min_chars)
+                    )
+                )
+                await message.channel.send(embed=embed)
+                thread = Thread(self, recipient)
+                thread.cancelled = True
+                return thread
+
         # checks for existing thread in cache
         thread = self.cache.get(recipient.id)
         if thread:
@@ -1433,8 +1774,10 @@ class ThreadManager:
             else:
                 destination = message.channel
             view = ConfirmThreadCreationView()
-            view.add_item(AcceptButton(self.bot.config["confirm_thread_creation_accept"]))
-            view.add_item(DenyButton(self.bot.config["confirm_thread_creation_deny"]))
+            view.add_item(
+                AcceptButton("accept-thread-creation", self.bot.config["confirm_thread_creation_accept"])
+            )
+            view.add_item(DenyButton("deny-thread-creation", self.bot.config["confirm_thread_creation_deny"]))
             confirm = await destination.send(
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],

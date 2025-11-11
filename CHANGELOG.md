@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/modmail-dev/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v4.2.0
+
+Upgraded discord.py to version 2.6.3, added support for CV2.
+Forwarded messages now properly show in threads, rather than showing as an empty embed.
+
+### Fixed
+- Make Modmail keep working when typing is disabled due to an outage caused by Discord.
+- Resolved an issue where forwarded messages appeared as empty embeds.
+- Fixed internal message handling and restoration processes.
+- Eliminated duplicate logs and notes.
+- Addressed inconsistent use of `logkey` after ticket restoration.
+- Fixed issues with identifying the user who sent internal messages.
+- Solved an ancient bug where closing with words like `evening` wouldn't work.
+- Fixed the command from being included in the reply  in rare conditions.
+
+### Added
+Commands:
+* `snooze`: Initiates a snooze action.
+* `snoozed`: Displays snoozed items.
+* `unsnooze`: Reverses the snooze action.
+* `clearsnoozed`: Clears all snoozed items.
+
+Configuration Options:
+* `max_snooze_time`: Sets the maximum duration for snooze.
+* `snooze_title`: Customizes the title for snooze notifications.
+* `snooze_text`: Customizes the text for snooze notifications.
+* `unsnooze_text`: Customizes the text for unsnooze notifications.
+* `unsnooze_notify_channel`: Specifies the channel for unsnooze notifications.
+* `thread_min_characters`: Minimum number of characters required.
+* `thread_min_characters_title`: Title shown when the message is too short.
+* `thread_min_characters_response`: Response shown to the user if their message is too short.
+* `thread_min_characters_footer`: Footer displaying the minimum required characters.
+
 # v4.1.2
 
 ### Fixed

@@ -149,16 +149,27 @@ class PaginatorSession:
         """Returns the index of the last page"""
         return len(self.pages) - 1
 
-    async def run(self) -> typing.Optional[Message]:
+    async def run(self) -> None:
         """
         Starts the pagination session.
         """
         if not self.running:
             await self.show_page(self.current)
 
-            if self.view is not None:
-                await self.view.wait()
+        # Don't block command execution while waiting for the View timeout.
+        # Schedule the wait-and-close sequence in the background so the command
+        # returns immediately (prevents typing indicator from hanging).
+        if self.view is not None:
 
+            async def _wait_and_close():
+                try:
+                    await self.view.wait()
+                finally:
+                    await self.close(delete=False)
+
+            # Fire and forget
+            self.ctx.bot.loop.create_task(_wait_and_close())
+        else:
             await self.close(delete=False)
 
     async def close(
@@ -223,8 +234,7 @@ class PaginatorView(View):
         self.clear_items()  # clear first so we can control the order
         self.fill_items()
 
-    @discord.ui.button(label="Stop", style=ButtonStyle.danger)
-    async def stop_button(self, interaction: Interaction, button: Button):
+    async def stop_callback(self, interaction: Interaction):
         await self.handler.close(interaction=interaction)
 
     def fill_items(self):
@@ -244,7 +254,10 @@ class PaginatorView(View):
 
             self.handler._buttons_map[label] = button
             self.add_item(button)
-        self.add_item(self.stop_button)
+
+        stop_button = Button(label="Stop", style=ButtonStyle.danger)
+        stop_button.callback = self.stop_callback
+        self.add_item(stop_button)
 
     async def interaction_check(self, interaction: Interaction):
         """Only allow the message author to interact"""
@@ -314,7 +327,7 @@ class EmbedPaginatorSession(PaginatorSession):
                     footer_text = footer_text + " • " + embed.footer.text
 
                 if embed.footer.icon:
-                    icon_url = embed.footer.icon.url
+                    icon_url = embed.footer.icon.url if embed.footer.icon else None
                 else:
                     icon_url = None
                 embed.set_footer(text=footer_text, icon_url=icon_url)
@@ -375,7 +388,7 @@ class MessagePaginatorSession(PaginatorSession):
                 footer_text = footer_text + " • " + self.footer_text
 
             if self.embed.footer.icon:
-                icon_url = self.embed.footer.icon.url
+                icon_url = self.embed.footer.icon.url if self.embed.footer.icon else None
             else:
                 icon_url = None
 

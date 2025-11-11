@@ -1,4 +1,4 @@
-__version__ = "4.1.2"
+__version__ = "4.2.0"
 
 
 import asyncio
@@ -48,7 +48,15 @@ from core.models import (
 )
 from core.thread import ThreadManager
 from core.time import human_timedelta
-from core.utils import extract_block_timestamp, normalize_alias, parse_alias, truncate, tryint, human_join
+from core.utils import (
+    extract_block_timestamp,
+    normalize_alias,
+    parse_alias,
+    truncate,
+    tryint,
+    human_join,
+    extract_forwarded_content,
+)
 
 logger = getLogger(__name__)
 
@@ -879,10 +887,182 @@ class ModmailBot(commands.Bot):
             return
         sent_emoji, blocked_emoji = await self.retrieve_emoji()
 
+        # Handle forwarded messages (Discord forwards)
+        # See: https://discord.com/developers/docs/resources/message#message-reference-content-attribution-forwards
+        # 1. Multi-forward (message_snapshots)
+        if hasattr(message, "flags") and getattr(message.flags, "has_snapshot", False):
+            if hasattr(message, "message_snapshots") and message.message_snapshots:
+                thread = await self.threads.find(recipient=message.author)
+                if thread is None:
+                    delta = await self.get_thread_cooldown(message.author)
+                    if delta:
+                        await message.channel.send(
+                            embed=discord.Embed(
+                                title=self.config["cooldown_thread_title"],
+                                description=self.config["cooldown_thread_response"].format(delta=delta),
+                                color=self.error_color,
+                            )
+                        )
+                        return
+                    if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
+                        embed = discord.Embed(
+                            title=self.config["disabled_new_thread_title"],
+                            color=self.error_color,
+                            description=self.config["disabled_new_thread_response"],
+                        )
+                        embed.set_footer(
+                            text=self.config["disabled_new_thread_footer"],
+                            icon_url=self.get_guild_icon(guild=message.guild, size=128),
+                        )
+                        logger.info(
+                            "A new thread was blocked from %s due to disabled Modmail.", message.author
+                        )
+                        await self.add_reaction(message, blocked_emoji)
+                        return await message.channel.send(embed=embed)
+                    thread = await self.threads.create(message.author, message=message)
+                else:
+                    if self.config["dm_disabled"] == DMDisabled.ALL_THREADS:
+                        embed = discord.Embed(
+                            title=self.config["disabled_current_thread_title"],
+                            color=self.error_color,
+                            description=self.config["disabled_current_thread_response"],
+                        )
+                        embed.set_footer(
+                            text=self.config["disabled_current_thread_footer"],
+                            icon_url=self.get_guild_icon(guild=message.guild, size=128),
+                        )
+                        logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
+                        await self.add_reaction(message, blocked_emoji)
+                        return await message.channel.send(embed=embed)
+                # Extract forwarded content using utility function
+                combined_content = extract_forwarded_content(message) or "[Forwarded message with no content]"
+
+                class ForwardedMessage:
+                    def __init__(self, original_message, forwarded_content):
+                        self.author = original_message.author
+                        self.content = forwarded_content
+                        self.attachments = []
+                        self.stickers = []
+                        self.created_at = original_message.created_at
+                        self.embeds = []
+                        self.id = original_message.id
+                        self.flags = original_message.flags
+                        self.message_snapshots = original_message.message_snapshots
+                        self.type = getattr(original_message, "type", None)
+
+                forwarded_msg = ForwardedMessage(message, combined_content)
+                await thread.send(forwarded_msg)
+                await self.add_reaction(message, sent_emoji)
+                self.dispatch("thread_reply", thread, False, message, False, False)
+                return
+            else:
+                message.content = "[Forwarded message with no content]"
+        # 2. Single-message forward (MessageType.forward)
+        elif getattr(message, "type", None) == getattr(discord.MessageType, "forward", None):
+            # Check for message.reference and its type
+            ref = getattr(message, "reference", None)
+            if ref and getattr(ref, "type", None) == getattr(discord, "MessageReferenceType", None).forward:
+                # Try to fetch the referenced message
+                ref_msg = None
+                try:
+                    if ref.resolved:
+                        ref_msg = ref.resolved
+                    elif ref.message_id and ref.channel_id:
+                        channel = self.get_channel(ref.channel_id) or (
+                            await self.fetch_channel(ref.channel_id)
+                        )
+                        ref_msg = await channel.fetch_message(ref.message_id)
+                except Exception:
+                    ref_msg = None
+                if ref_msg:
+                    # Forward the referenced message as if it was sent
+                    thread = await self.threads.find(recipient=message.author)
+                    if thread is None:
+                        delta = await self.get_thread_cooldown(message.author)
+                        if delta:
+                            await message.channel.send(
+                                embed=discord.Embed(
+                                    title=self.config["cooldown_thread_title"],
+                                    description=self.config["cooldown_thread_response"].format(delta=delta),
+                                    color=self.error_color,
+                                )
+                            )
+                            return
+                        if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
+                            embed = discord.Embed(
+                                title=self.config["disabled_new_thread_title"],
+                                color=self.error_color,
+                                description=self.config["disabled_new_thread_response"],
+                            )
+                            embed.set_footer(
+                                text=self.config["disabled_new_thread_footer"],
+                                icon_url=self.get_guild_icon(guild=message.guild, size=128),
+                            )
+                            logger.info(
+                                "A new thread was blocked from %s due to disabled Modmail.", message.author
+                            )
+                            await self.add_reaction(message, blocked_emoji)
+                            return await message.channel.send(embed=embed)
+                        thread = await self.threads.create(message.author, message=message)
+                    else:
+                        if self.config["dm_disabled"] == DMDisabled.ALL_THREADS:
+                            embed = discord.Embed(
+                                title=self.config["disabled_current_thread_title"],
+                                color=self.error_color,
+                                description=self.config["disabled_current_thread_response"],
+                            )
+                            embed.set_footer(
+                                text=self.config["disabled_current_thread_footer"],
+                                icon_url=self.get_guild_icon(guild=message.guild, size=128),
+                            )
+                            logger.info(
+                                "A message was blocked from %s due to disabled Modmail.", message.author
+                            )
+                            await self.add_reaction(message, blocked_emoji)
+                            return await message.channel.send(embed=embed)
+
+                    # Create a forwarded message wrapper to preserve forward info
+                    class ForwardedMessage:
+                        def __init__(self, original_message, ref_message):
+                            self.author = original_message.author
+                            # Use the utility function to extract content or fallback to ref message content
+                            extracted_content = extract_forwarded_content(original_message)
+                            self.content = (
+                                extracted_content
+                                or ref_message.content
+                                or "[Forwarded message with no text content]"
+                            )
+                            self.attachments = getattr(ref_message, "attachments", [])
+                            self.stickers = getattr(ref_message, "stickers", [])
+                            self.created_at = original_message.created_at
+                            self.embeds = getattr(ref_message, "embeds", [])
+                            self.id = original_message.id
+                            self.type = getattr(original_message, "type", None)
+                            self.reference = original_message.reference
+
+                    forwarded_msg = ForwardedMessage(message, ref_msg)
+                    await thread.send(forwarded_msg)
+                    await self.add_reaction(message, sent_emoji)
+                    self.dispatch("thread_reply", thread, False, message, False, False)
+                    return
+                else:
+                    message.content = "[Forwarded message with no content]"
+
         if message.type not in [discord.MessageType.default, discord.MessageType.reply]:
             return
 
         thread = await self.threads.find(recipient=message.author)
+        if thread and thread.snoozed:
+            await thread.restore_from_snooze()
+            self.threads.cache[thread.id] = thread
+            # Update the DB with the new channel_id after restoration
+            if thread.channel:
+                await self.api.logs.update_one(
+                    {"recipient.id": str(thread.id)}, {"$set": {"channel_id": str(thread.channel.id)}}
+                )
+        # Re-fetch the thread object to ensure channel is valid
+        thread = await self.threads.find(recipient=message.author)
+
         if thread is None:
             delta = await self.get_thread_cooldown(message.author)
             if delta:
@@ -1156,6 +1336,19 @@ class ModmailBot(commands.Bot):
                 content = ""
             await self.mention_channel.send(content=content, embed=em)
 
+        # --- MODERATOR-ONLY MESSAGE LOGGING ---
+        # If a moderator sends a message directly in a thread channel (not via modmail command), log it
+        if not message.author.bot and not isinstance(message.channel, discord.DMChannel):
+            thread = await self.threads.find(channel=message.channel)
+            if thread is not None:
+                ctxs = await self.get_contexts(message)
+                is_command = any(ctx.command for ctx in ctxs)
+                if not is_command:
+                    # Only log if not a command
+                    perms = message.channel.permissions_for(message.author)
+                    if perms.manage_messages or perms.administrator:
+                        await self.api.append_log(message, type_="internal")
+
         await self.process_commands(message)
 
     async def process_commands(self, message):
@@ -1193,8 +1386,6 @@ class ModmailBot(commands.Bot):
                     or self.config.get("plain_reply_without_command")
                 ):
                     await thread.reply(message, anonymous=anonymous, plain=plain)
-                else:
-                    await self.api.append_log(message, type_="internal")
             elif ctx.invoked_with:
                 exc = commands.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
                 self.dispatch("command_error", ctx, exc)
@@ -1212,7 +1403,10 @@ class ModmailBot(commands.Bot):
             thread = await self.threads.find(recipient=user)
 
             if thread:
-                await thread.channel.typing()
+                try:
+                    await thread.channel.typing()
+                except Exception:
+                    pass
         else:
             if not self.config.get("mod_typing"):
                 return
@@ -1222,7 +1416,10 @@ class ModmailBot(commands.Bot):
                 for user in thread.recipients:
                     if await self.is_blocked(user):
                         continue
-                    await user.typing()
+                    try:
+                        await user.typing()
+                    except Exception:
+                        pass
 
     async def handle_reaction_events(self, payload):
         user = self.get_user(payload.user_id)
@@ -1529,7 +1726,10 @@ class ModmailBot(commands.Bot):
                 return
 
         if isinstance(exception, (commands.BadArgument, commands.BadUnionArgument)):
-            await context.typing()
+            try:
+                await context.typing()
+            except Exception:
+                pass
             await context.send(embed=discord.Embed(color=self.error_color, description=str(exception)))
         elif isinstance(exception, commands.CommandNotFound):
             logger.warning("CommandNotFound: %s", exception)
@@ -1820,7 +2020,7 @@ def main():
         sys.exit(0)
 
     # check discord version
-    discord_version = "2.3.2"
+    discord_version = "2.6.3"
     if discord.__version__ != discord_version:
         logger.error(
             "Dependencies are not updated, run pipenv install. discord.py version expected %s, received %s",

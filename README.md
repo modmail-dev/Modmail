@@ -23,8 +23,8 @@
     <img src="https://img.shields.io/discord/1079074933008781362.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge" alt="Support">
   </a>
 
-  <a href="https://patreon.com/kyber">
-    <img src="https://img.shields.io/badge/patreon-donate-orange.svg?style=for-the-badge&logo=Patreon" alt="Patreon">
+  <a href="https://buymeacoffee.com/modmaildev">
+    <img src="https://img.shields.io/badge/buymeacoffee-donate-ff813f.svg?style=for-the-badge&logo=buy-me-a-coffee" alt="Buy Me A Coffee">
   </a>
 
   <a href="https://www.python.org/downloads/">
@@ -48,7 +48,7 @@
 
 Modmail is similar to Reddit's Modmail, both in functionality and purpose. It serves as a shared inbox for server staff to communicate with their users in a seamless way.
 
-This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, you can support us on **[Patreon](https://www.patreon.com/kyber)**, cool benefits included! 
+This bot is free for everyone and always will be. If you like this project and would like to show your appreciation, you can support us on **[Buy Me A Coffee](https://buymeacoffee.com/modmaildev)**, cool benefits included! 
 
 For up-to-date setup instructions, please visit our [**documentation**](https://docs.modmail.dev/installation) page.
 
@@ -72,7 +72,7 @@ Our Logviewer will save the threads so you can view previous threads through the
   * When you close a thread, Modmail will generate a log link and post it to your log channel.
   * Native Discord dark-mode feel.
   * Markdown/formatting support.
-  * Login via Discord to protect your logs ([premium Patreon feature](https://patreon.com/kyber)).
+  * Login via Discord to protect your logs ([premium feature](https://buymeacoffee.com/modmaildev/membership)).
   * See past logs of a user with `?logs`.
   * Searchable by text queries using `?logs search`.
 
@@ -90,15 +90,15 @@ There are a number of options for hosting your very own dedicated Modmail bot.
 
 Visit our [**documentation**](https://docs.modmail.dev/installation) page for detailed guidance on how to deploy your Modmail bot.
 
-### Patreon Hosting
+### Paid Hosting
 
-If you don't want the trouble of renting and configuring your server to host Modmail, we got a solution for you! We offer hosting and maintenance of your own, private Modmail bot (including a Logviewer) through [**Patreon**](https://patreon.com/kyber).
+If you don't want the trouble of renting and configuring your server to host Modmail, we got a solution for you! We offer hosting and maintenance of your own, private Modmail bot (including a Logviewer) through [**Buy Me A Coffee**](https://buymeacoffee.com/modmaildev/membership).
 
 ## FAQ
 
 **Q: Where can I find the Modmail bot invite link?**
 
-**A:** Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following our [**documentation**](https://docs.modmail.dev/installation) steps or subscribe to [**Patreon**](https://patreon.com/kyber).
+**A:** Unfortunately, due to how this bot functions, it cannot be invited. The lack of an invite link is to ensure an individuality to your server and grant you full control over your bot and data. Nonetheless, you can quickly obtain a free copy of Modmail for your server by following our [**documentation**](https://docs.modmail.dev/installation) steps or subscribe to [**Buy Me A Coffee**](https://buymeacoffee.com/modmaildev/membership).
 
 **Q: Where can I find out more info about Modmail?**
 
@@ -147,13 +147,6 @@ Advertise Your Server:
 </a>
 <br>
 <br>
-Help Us • Help Other's:
-<br>
-<a href='https://discord.gg/5yQCFzY6HU'>
-  <img height=100 src='https://i.imgur.com/Gi3jxeH.gif' style='margin:5px'>
-</a>
-<br>
-<br>
 Discord Advice Center:
 <br>
 <a href='https://discord.gg/zmwZy5fd9v'>
@@ -161,20 +154,19 @@ Discord Advice Center:
 </a>
 <br>
 <br>
-Blacklight Promotions:
+Kistó Bakery:
 <br>
-<a href='https://blacklightpromotions.online'>
-  <img height=100 src='https://i.imgur.com/yLgE6h6.png' style='margin:5px'>
+<a href='https://www.roblox.com/communities/9318596/Kist#!/about'>
+  <img height=100 src='https://i.imgur.com/ck81JiJ.jpeg' style='margin:5px'>
 </a>
 
-
-Become a sponsor on [Patreon](https://patreon.com/kyber).
+Become a sponsor on [Buy Me A Coffee](https://buymeacoffee.com/modmaildev/membership).
 
 ## Contributing
 
 Contributions to Modmail are always welcome, whether it be improvements to the documentation or new functionality, please feel free to make the change. Check out our [contributing guidelines](https://github.com/modmail-dev/modmail/blob/master/.github/CONTRIBUTING.md) before you get started.
 
-If you like this project and would like to show your appreciation, support us on **[Patreon](https://www.patreon.com/kyber)**!
+If you like this project and would like to show your appreciation, support us on **[Buy Me A Coffee](https://buymeacoffee.com/modmaildev)**!
 
 ## Beta Testing
 
