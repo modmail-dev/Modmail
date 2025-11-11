@@ -1527,7 +1527,7 @@ class ModmailBot(commands.Bot):
             thread = await self.threads.find(channel=ctx.channel)
             if thread is not None:
                 # If thread is snoozed (moved), auto-unsnooze when a mod sends a message directly in channel
-                behavior = self.config.get("snooze_behavior", "delete").lower()
+                behavior = (self.config.get("snooze_behavior") or "delete").lower()
                 if thread.snoozed and behavior == "move":
                     if not thread.snooze_data:
                         try:
