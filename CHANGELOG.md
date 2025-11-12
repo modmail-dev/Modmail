@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/modmail-dev/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v4.2.1
+
+### Fixed
+- `?logs [user]` can be used outside of a Modmail thread again.
+
 # v4.2.0
 
 Upgraded discord.py to version 2.6.3, added support for CV2.
