@@ -1450,6 +1450,8 @@ class Modmail(commands.Cog):
         automatically embedding image URLs.
         """
 
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg)
 
@@ -1474,6 +1476,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg)
 
@@ -1498,6 +1502,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg, anonymous=True)
 
@@ -1522,6 +1528,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg, plain=True)
 
@@ -1546,6 +1554,8 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg, anonymous=True, plain=True)
 
@@ -1562,6 +1572,8 @@ class Modmail(commands.Cog):
         Edit the `anon_username`, `anon_avatar_url`
         and `anon_tag` config variables to do so.
         """
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg, anonymous=True)
 
@@ -1575,6 +1587,8 @@ class Modmail(commands.Cog):
         Supports attachments and images as well as
         automatically embedding image URLs.
         """
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg, plain=True)
 
@@ -1588,6 +1602,8 @@ class Modmail(commands.Cog):
         Supports attachments and images as well as
         automatically embedding image URLs.
         """
+        # Ensure logs record only the reply text, not the command.
+        ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg, anonymous=True, plain=True)
 
