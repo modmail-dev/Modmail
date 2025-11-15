@@ -1,10 +1,10 @@
 import base64
 import functools
+import contextlib
 import re
 import typing
 from datetime import datetime, timezone
 from difflib import get_close_matches
-from distutils.util import strtobool as _stb  # pylint: disable=import-error
 from itertools import takewhile, zip_longest
 from urllib import parse
 
@@ -34,15 +34,18 @@ __all__ = [
     "normalize_alias",
     "format_description",
     "trigger_typing",
+    "safe_typing",
     "escape_code_block",
     "tryint",
     "get_top_role",
     "get_joint_id",
     "extract_block_timestamp",
+    "return_or_truncate",
     "AcceptButton",
     "DenyButton",
     "ConfirmThreadCreationView",
     "DummyParam",
+    "extract_forwarded_content",
 ]
 
 
@@ -52,15 +55,12 @@ logger = getLogger(__name__)
 def strtobool(val):
     if isinstance(val, bool):
         return val
-    try:
-        return _stb(str(val))
-    except ValueError:
-        val = val.lower()
-        if val == "enable":
-            return 1
-        if val == "disable":
-            return 0
-        raise
+    val = str(val).lower()
+    if val in ("y", "yes", "on", "1", "true", "t", "enable"):
+        return 1
+    if val in ("n", "no", "off", "0", "false", "f", "disable"):
+        return 0
+    raise ValueError(f"invalid truth value {val}")
 
 
 class User(commands.MemberConverter):
@@ -391,7 +391,7 @@ def parse_alias(alias, *, split=True):
         iterate = [alias]
 
     for a in iterate:
-        a = re.sub("\x1AU(.+?)\x1AU", decode_alias, a)
+        a = re.sub(r"\x1AU(.+?)\x1AU", decode_alias, a)
         if a[0] == a[-1] == '"':
             a = a[1:-1]
         aliases.append(a)
@@ -423,11 +423,42 @@ def format_description(i, names):
     )
 
 
+class _SafeTyping:
+    """Best-effort typing context manager.
+
+    Suppresses errors from Discord's typing endpoint so core flows continue
+    when typing is disabled or experiencing outages.
+    """
+
+    def __init__(self, target):
+        # target can be a Context or any Messageable (channel/DM/user)
+        self._target = target
+        self._cm = None
+
+    async def __aenter__(self):
+        try:
+            self._cm = self._target.typing()
+            return await self._cm.__aenter__()
+        except Exception:
+            # typing is best-effort; ignore any failure
+            self._cm = None
+
+    async def __aexit__(self, exc_type, exc, tb):
+        if self._cm is not None:
+            with contextlib.suppress(Exception):
+                return await self._cm.__aexit__(exc_type, exc, tb)
+
+
+def safe_typing(target):
+    return _SafeTyping(target)
+
+
 def trigger_typing(func):
     @functools.wraps(func)
     async def wrapper(self, ctx: commands.Context, *args, **kwargs):
-        await ctx.typing()
-        return await func(self, ctx, *args, **kwargs)
+        # Keep typing active for the duration of the command; suppress failures
+        async with safe_typing(ctx):
+            return await func(self, ctx, *args, **kwargs)
 
     return wrapper
 
@@ -573,9 +604,15 @@ def extract_block_timestamp(reason, id_):
     return end_time, after
 
 
+def return_or_truncate(text, max_length):
+    if len(text) <= max_length:
+        return text
+    return text[: max_length - 3] + "..."
+
+
 class AcceptButton(discord.ui.Button):
-    def __init__(self, emoji):
-        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji)
+    def __init__(self, custom_id: str, emoji: str):
+        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = True
@@ -584,8 +621,8 @@ class AcceptButton(discord.ui.Button):
 
 
 class DenyButton(discord.ui.Button):
-    def __init__(self, emoji):
-        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji)
+    def __init__(self, custom_id: str, emoji: str):
+        super().__init__(style=discord.ButtonStyle.gray, emoji=emoji, custom_id=custom_id)
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = False
@@ -597,6 +634,100 @@ class ConfirmThreadCreationView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=20)
         self.value = None
+
+
+def extract_forwarded_content(message) -> typing.Optional[str]:
+    """
+    Extract forwarded message content from Discord forwarded messages.
+
+    Parameters
+    ----------
+    message : discord.Message
+        The message to extract forwarded content from.
+
+    Returns
+    -------
+    Optional[str]
+        The extracted forwarded content, or None if not a forwarded message.
+    """
+    import discord
+
+    try:
+        # Handle multi-forward (message_snapshots)
+        if hasattr(message, "flags") and getattr(message.flags, "has_snapshot", False):
+            if hasattr(message, "message_snapshots") and message.message_snapshots:
+                forwarded_parts = []
+                for snap in message.message_snapshots:
+                    author = getattr(snap, "author", None)
+                    author_name = getattr(author, "name", "Unknown") if author else "Unknown"
+                    snap_content = getattr(snap, "content", "")
+
+                    if snap_content:
+                        # Truncate very long messages to prevent spam
+                        if len(snap_content) > 500:
+                            snap_content = snap_content[:497] + "..."
+                        forwarded_parts.append(f"**{author_name}:** {snap_content}")
+                    elif getattr(snap, "embeds", None):
+                        for embed in snap.embeds:
+                            if hasattr(embed, "description") and embed.description:
+                                embed_desc = embed.description
+                                if len(embed_desc) > 300:
+                                    embed_desc = embed_desc[:297] + "..."
+                                forwarded_parts.append(f"**{author_name}:** {embed_desc}")
+                                break
+                    elif getattr(snap, "attachments", None):
+                        attachment_info = ", ".join(
+                            [getattr(a, "filename", "Unknown") for a in snap.attachments[:3]]
+                        )
+                        if len(snap.attachments) > 3:
+                            attachment_info += f" (+{len(snap.attachments) - 3} more)"
+                        forwarded_parts.append(f"**{author_name}:** [Attachments: {attachment_info}]")
+                    else:
+                        forwarded_parts.append(f"**{author_name}:** [No content]")
+
+                if forwarded_parts:
+                    return "\n".join(forwarded_parts)
+
+        # Handle single-message forward
+        elif getattr(message, "type", None) == getattr(discord.MessageType, "forward", None):
+            ref = getattr(message, "reference", None)
+            if (
+                ref
+                and hasattr(discord, "MessageReferenceType")
+                and getattr(ref, "type", None) == getattr(discord.MessageReferenceType, "forward", None)
+            ):
+                try:
+                    ref_msg = getattr(ref, "resolved", None)
+                    if ref_msg:
+                        ref_author = getattr(ref_msg, "author", None)
+                        ref_author_name = getattr(ref_author, "name", "Unknown") if ref_author else "Unknown"
+                        ref_content = getattr(ref_msg, "content", "")
+
+                        if ref_content:
+                            if len(ref_content) > 500:
+                                ref_content = ref_content[:497] + "..."
+                            return f"**{ref_author_name}:** {ref_content}"
+                        elif getattr(ref_msg, "embeds", None):
+                            for embed in ref_msg.embeds:
+                                if hasattr(embed, "description") and embed.description:
+                                    embed_desc = embed.description
+                                    if len(embed_desc) > 300:
+                                        embed_desc = embed_desc[:297] + "..."
+                                    return f"**{ref_author_name}:** {embed_desc}"
+                        elif getattr(ref_msg, "attachments", None):
+                            attachment_info = ", ".join(
+                                [getattr(a, "filename", "Unknown") for a in ref_msg.attachments[:3]]
+                            )
+                            if len(ref_msg.attachments) > 3:
+                                attachment_info += f" (+{len(ref_msg.attachments) - 3} more)"
+                            return f"**{ref_author_name}:** [Attachments: {attachment_info}]"
+                except Exception:
+                    pass
+    except Exception:
+        # Silently handle any unexpected errors
+        pass
+
+    return None
 
 
 class DummyParam:

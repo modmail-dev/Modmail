@@ -1222,5 +1222,105 @@
       "If this configuration is enabled, only roles that are hoisted (displayed seperately in member list) will be used. If a user has no hoisted roles, it will return 'None'.",
       "If you would like to display the top role of a user regardless of if it's hoisted or not, disable `use_hoisted_top_role`."
     ]
+  },
+  "thread_min_characters": {
+    "default": "0",
+    "description": "The minimum number of characters required in the initial message to create a thread. Set to 0 to disable.",
+    "examples": [
+      "`{prefix}config set thread_min_characters 20`"
+    ],
+    "notes": [
+      "If a user tries to create a thread with a message shorter than this, an error will be shown.",
+      "See also: `thread_min_characters_title`, `thread_min_characters_response`, `thread_min_characters_footer`."
+    ]
+  },
+  "thread_min_characters_title": {
+    "default": "Message too short",
+    "description": "The title of the error embed when a user tries to create a thread with too few characters.",
+    "examples": [
+      "`{prefix}config set thread_min_characters_title Too short!`"
+    ],
+    "notes": [
+      "See also: `thread_min_characters`, `thread_min_characters_response`, `thread_min_characters_footer`."
+    ]
+  },
+  "thread_min_characters_response": {
+    "default": "Your message is too short to create a thread. Please provide more details.",
+    "description": "The description of the error embed when a user tries to create a thread with too few characters.",
+    "examples": [
+      "`{prefix}config set thread_min_characters_response Please write a longer message.`"
+    ],
+    "notes": [
+      "You can use `{min_characters}` as a placeholder for the minimum required characters.",
+      "See also: `thread_min_characters`, `thread_min_characters_title`, `thread_min_characters_footer`."
+    ]
+  },
+  "thread_min_characters_footer": {
+    "default": "Minimum {min_characters} characters required.",
+    "description": "The footer of the error embed when a user tries to create a thread with too few characters.",
+    "examples": [
+      "`{prefix}config set thread_min_characters_footer At least {min_characters} characters needed.`"
+    ],
+    "notes": [
+      "You can use `{min_characters}` as a placeholder for the minimum required characters.",
+      "See also: `thread_min_characters`, `thread_min_characters_title`, `thread_min_characters_response`."
+    ]
+  },
+  "max_snooze_time": {
+    "default": "604800 (7 days in seconds)",
+    "description": "The maximum duration in seconds that a thread can be snoozed. When a thread is snoozed, it is temporarily hidden until the user replies or a moderator unsnoozes it.",
+    "examples": [
+      "`{prefix}config set max_snooze_time 86400` (1 day)",
+      "`{prefix}config set max_snooze_time 1209600` (14 days)"
+    ],
+    "notes": [
+      "The value must be specified in seconds.",
+      "See also: `snooze_title`, `snooze_text`, `unsnooze_text`, `unsnooze_notify_channel`."
+    ]
+  },
+  "snooze_title": {
+    "default": "\"Thread Snoozed\"",
+    "description": "This is the message embed title sent when a thread is snoozed.",
+    "examples": [
+      "`{prefix}config set snooze_title Thread Paused`"
+    ],
+    "notes": [
+      "See also: `snooze_text`, `unsnooze_title`, `max_snooze_time`."
+    ]
+  },
+  "snooze_text": {
+    "default": "\"This thread has been snoozed. The channel will be restored when the user replies or a moderator unsnoozes it.\"",
+    "description": "This is the message embed content sent when a thread is snoozed.",
+    "examples": [
+      "`{prefix}config set snooze_text This conversation is on hold temporarily.`"
+    ],
+    "notes": [
+      "Discord flavoured markdown is fully supported in `snooze_text`.",
+      "See also: `snooze_title`, `unsnooze_text`, `max_snooze_time`."
+    ]
+  },
+  "unsnooze_text": {
+    "default": "\"This thread has been unsnoozed and restored.\"",
+    "description": "This is the message content sent when a thread is unsnoozed and restored.",
+    "examples": [
+      "`{prefix}config set unsnooze_text Thread has been reactivated.`"
+    ],
+    "notes": [
+      "Discord flavoured markdown is fully supported in `unsnooze_text`.",
+      "See also: `snooze_text`, `unsnooze_notify_channel`, `max_snooze_time`."
+    ]
+  },
+  "unsnooze_notify_channel": {
+    "default": "\"thread\"",
+    "description": "This is the channel where the unsnooze notification will be sent. Set to \"thread\" to send in the thread's own channel, or provide a specific channel ID.",
+    "examples": [
+      "`{prefix}config set unsnooze_notify_channel thread`",
+      "`{prefix}config set unsnooze_notify_channel 9234932582312` (9234932582312 is the channel ID)"
+    ],
+    "notes": [
+      "If set to \"thread\", the notification will be sent in the thread channel itself.",
+      "If set to a channel ID, the notification will be sent to that specific channel.",
+      "See also: `unsnooze_text`, `max_snooze_time`."
+    ]
   }
 }
