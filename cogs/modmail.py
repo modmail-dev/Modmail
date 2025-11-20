@@ -1200,7 +1200,6 @@ class Modmail(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    @checks.thread_only()
     async def logs(self, ctx, *, user: User = None):
         """
         Get previous Modmail thread logs of a member.
