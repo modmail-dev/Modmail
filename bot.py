@@ -1773,12 +1773,30 @@ class ModmailBot(commands.Bot):
             await self.config.update()
             return
 
-        audit_logs = self.modmail_guild.audit_logs(limit=10, action=discord.AuditLogAction.channel_delete)
-        found_entry = False
-        async for entry in audit_logs:
-            if int(entry.target.id) == channel.id:
-                found_entry = True
-                break
+        # Attempt to attribute channel deletion to a moderator via audit logs.
+        # This requires the "View Audit Log" permission; if missing, skip silently.
+        if not self.modmail_guild.me.guild_permissions.view_audit_log:
+            logger.debug(
+                "Skipping audit log lookup for deleted channel %d: missing view_audit_log permission.",
+                channel.id,
+            )
+            return
+
+        try:
+            audit_logs = self.modmail_guild.audit_logs(limit=10, action=discord.AuditLogAction.channel_delete)
+            found_entry = False
+            async for entry in audit_logs:
+                if int(entry.target.id) == channel.id:
+                    found_entry = True
+                    break
+        except discord.Forbidden:
+            logger.debug(
+                "Forbidden when fetching audit logs for deleted channel %d (missing permission).", channel.id
+            )
+            return
+        except discord.HTTPException as e:
+            logger.debug("HTTPException when fetching audit logs for deleted channel %d: %s", channel.id, e)
+            return
 
         if not found_entry:
             logger.debug("Cannot find the audit log entry for channel delete of %d.", channel.id)
