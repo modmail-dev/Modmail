@@ -390,9 +390,6 @@ class ThreadCreationMenuCore(commands.Cog):
                 await ctx.send("Couldn't resolve that category. Keeping previous setting.")
 
         old_label = conf["options"][key]["label"]
-        new_description = None
-        if description.lower() == "skip":
-            new_description = conf["options"][key]["description"]
         conf["options"][key] = {
             "label": old_label,
             "description": description,
@@ -658,7 +655,8 @@ class ThreadCreationMenuCore(commands.Cog):
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
-        old_description = conf["options"][key]["description"]
+        option_data = conf["submenus"][submenu][key]
+        old_description = option_data.get("description")
 
         if description.lower() == "skip":
             description = old_description
@@ -675,7 +673,7 @@ class ThreadCreationMenuCore(commands.Cog):
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
-        old_emoji = conf["options"][key].get("emoji")
+        old_emoji = option_data.get("emoji")
 
         if emoji.lower() == "skip":
             emoji = old_emoji
