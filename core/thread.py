@@ -224,12 +224,16 @@ class Thread:
                     "author_name": (
                         getattr(m.embeds[0].author, "name", "").split(" (")[0]
                         if m.embeds and m.embeds[0].author and m.author == self.bot.user
-                        else getattr(m.author, "name", None) if m.author != self.bot.user else None
+                        else getattr(m.author, "name", None)
+                        if m.author != self.bot.user
+                        else None
                     ),
                     "author_avatar": (
                         getattr(m.embeds[0].author, "icon_url", None)
                         if m.embeds and m.embeds[0].author and m.author == self.bot.user
-                        else m.author.display_avatar.url if m.author != self.bot.user else None
+                        else m.author.display_avatar.url
+                        if m.author != self.bot.user
+                        else None
                     ),
                 }
                 async for m in channel.history(limit=None, oldest_first=True)

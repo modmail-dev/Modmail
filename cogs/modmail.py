@@ -1803,7 +1803,9 @@ class Modmail(commands.Cog):
                     try:
                         await msg.delete(delay=10)
                     except (discord.Forbidden, discord.NotFound) as e:
-                        logger.debug(f"Failed to delete message (likely already deleted or lacking permissions): {e}")
+                        logger.debug(
+                            f"Failed to delete message (likely already deleted or lacking permissions): {e}"
+                        )
             # Don't try to create a new thread - we just unsnoozed existing ones
             return
 
