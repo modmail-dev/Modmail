@@ -1802,8 +1802,8 @@ class Modmail(commands.Cog):
                     self.bot.threads.cache[thread.id] = thread
                     try:
                         await msg.delete(delay=10)
-                    except (discord.Forbidden, discord.NotFound):
-                        pass
+                    except (discord.Forbidden, discord.NotFound) as e:
+                        logger.debug(f"Failed to delete message (likely already deleted or lacking permissions): {e}")
             # Don't try to create a new thread - we just unsnoozed existing ones
             return
 
