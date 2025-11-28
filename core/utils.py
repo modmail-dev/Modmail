@@ -258,7 +258,9 @@ TOPIC_REGEX = re.compile(
 UID_REGEX = re.compile(r"\bUser ID:\s*(\d{17,21})\b", flags=re.IGNORECASE)
 
 
-def parse_channel_topic(text: str) -> typing.Tuple[typing.Optional[str], int, typing.List[int]]:
+def parse_channel_topic(
+    text: str,
+) -> typing.Tuple[typing.Optional[str], int, typing.List[int]]:
     """
     A helper to parse channel topics and respectivefully returns all the required values
     at once.
@@ -359,7 +361,8 @@ def match_other_recipients(text: str) -> typing.List[int]:
 def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discord.Embed:
     # Single reference of Color.red()
     embed = discord.Embed(
-        color=discord.Color.red(), description=f"**{name.capitalize()} `{word}` cannot be found.**"
+        color=discord.Color.red(),
+        description=f"**{name.capitalize()} `{word}` cannot be found.**",
     )
     val = get_close_matches(word, possibilities, n=n, cutoff=cutoff)
     if val:
@@ -369,7 +372,7 @@ def create_not_found_embed(word, possibilities, name, n=2, cutoff=0.6) -> discor
 
 def parse_alias(alias, *, split=True):
     def encode_alias(m):
-        return "\x1AU" + base64.b64encode(m.group(1).encode()).decode() + "\x1AU"
+        return "\x1aU" + base64.b64encode(m.group(1).encode()).decode() + "\x1aU"
 
     def decode_alias(m):
         return base64.b64decode(m.group(1).encode()).decode()
@@ -632,7 +635,8 @@ class DenyButton(discord.ui.Button):
 
 class ConfirmThreadCreationView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=20)
+        # Match thread_creation_menu_timeout default (30s) for consistency in UX
+        super().__init__(timeout=30)
         self.value = None
 
 
@@ -721,8 +725,9 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
                             if len(ref_msg.attachments) > 3:
                                 attachment_info += f" (+{len(ref_msg.attachments) - 3} more)"
                             return f"**{ref_author_name}:** [Attachments: {attachment_info}]"
-                except Exception:
-                    pass
+                except Exception as e:
+                    # Log and continue; failing to extract a reference preview shouldn't break flow
+                    logger.debug("Failed to extract reference preview: %s", e)
     except Exception:
         # Silently handle any unexpected errors
         pass

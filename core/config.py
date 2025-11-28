@@ -70,6 +70,7 @@ class ConfigManager:
         "thread_creation_self_contact_response": "You have opened a Modmail thread.",
         "thread_creation_contact_response": "{creator.name} has opened a Modmail thread.",
         "thread_creation_title": "Thread Created",
+        "thread_creation_send_dm_embed": True,
         "thread_close_footer": "Replying will create a new thread",
         "thread_close_title": "Thread Closed",
         "thread_close_response": "{closer.mention} has closed this Modmail thread.",
@@ -135,11 +136,34 @@ class ConfigManager:
         "thread_min_characters_response": "Your message is too short to create a thread. Please provide more details.",
         "thread_min_characters_footer": "Minimum {min_characters} characters required.",
         # --- SNOOZE FEATURE CONFIG ---
-        "max_snooze_time": 604800,  # in seconds, default 7 days
+        "snooze_default_duration": 604800,  # in seconds, default 7 days
         "snooze_title": "Thread Snoozed",
         "snooze_text": "This thread has been snoozed. The channel will be restored when the user replies or a moderator unsnoozes it.",
         "unsnooze_text": "This thread has been unsnoozed and restored.",
         "unsnooze_notify_channel": "thread",  # Can be a channel ID or 'thread' for the thread's own channel
+        # snooze behavior
+        "snooze_behavior": "delete",  # 'delete' to delete channel, 'move' to move channel to snoozed_category_id
+        "snoozed_category_id": None,  # Category ID to move snoozed channels into when snooze_behavior == 'move'
+        # attachments persistence for delete-behavior snooze
+        "snooze_store_attachments": False,  # when True, store image attachments as base64 in snooze_data
+        "snooze_attachment_max_bytes": 4_194_304,  # 4 MiB per attachment cap to avoid Mongo 16MB limit
+        "unsnooze_history_limit": None,  # Limit number of messages replayed when unsnoozing (None = all messages)
+        # --- THREAD CREATION MENU ---
+        "thread_creation_menu_timeout": 30,  # Default interaction timeout for the thread-creation menu (in seconds)
+        "thread_creation_menu_close_on_timeout": False,
+        "thread_creation_menu_anonymous_menu": False,
+        "thread_creation_menu_embed_text": "Please select an option.",
+        "thread_creation_menu_dropdown_placeholder": "Select an option to contact the staff team.",
+        "thread_creation_menu_selection_log": True,  # log selected option in newly created thread channel
+        "thread_creation_menu_precreate_channel": False,
+        # thread-creation menu embed customization
+        "thread_creation_menu_embed_title": None,
+        "thread_creation_menu_embed_footer": None,
+        "thread_creation_menu_embed_thumbnail_url": None,
+        "thread_creation_menu_embed_image_url": None,
+        "thread_creation_menu_embed_large_image": False,
+        "thread_creation_menu_embed_footer_icon_url": None,
+        "thread_creation_menu_embed_color": str(discord.Color.green()),
     }
 
     private_keys = {
@@ -161,6 +185,10 @@ class ConfigManager:
         "notification_squad": {},
         "subscriptions": {},
         "closures": {},
+        # Thread creation menu
+        "thread_creation_menu_enabled": False,
+        "thread_creation_menu_options": {},  # main menu options mapping key -> {label, description, emoji, type, callback}
+        "thread_creation_menu_submenus": {},  # submenu name -> submenu options (same structure as options)
         # misc
         "plugins": [],
         "aliases": {},
@@ -196,9 +224,23 @@ class ConfigManager:
         "data_collection": True,
     }
 
-    colors = {"mod_color", "recipient_color", "main_color", "error_color"}
+    colors = {
+        "mod_color",
+        "recipient_color",
+        "main_color",
+        "error_color",
+        "thread_creation_menu_embed_color",
+    }
 
-    time_deltas = {"account_age", "guild_age", "thread_auto_close", "thread_cooldown", "log_expiration"}
+    time_deltas = {
+        "account_age",
+        "guild_age",
+        "thread_auto_close",
+        "thread_cooldown",
+        "log_expiration",
+    }
+
+    duration_seconds = {"snooze_default_duration"}
 
     booleans = {
         "use_user_id_channel_name",
@@ -239,6 +281,16 @@ class ConfigManager:
         "use_hoisted_top_role",
         "enable_presence_intent",
         "registry_plugins_only",
+        # snooze
+        "snooze_store_attachments",
+        # thread creation menu booleans
+        "thread_creation_send_dm_embed",
+        "thread_creation_menu_enabled",
+        "thread_creation_menu_close_on_timeout",
+        "thread_creation_menu_anonymous_menu",
+        "thread_creation_menu_selection_log",
+        "thread_creation_menu_precreate_channel",
+        "thread_creation_menu_embed_large_image",
     }
 
     enums = {
@@ -275,6 +327,7 @@ class ConfigManager:
                     data.update({k.lower(): v for k, v in json.load(f).items() if k.lower() in self.all_keys})
                 except json.JSONDecodeError:
                     logger.critical("Failed to load config.json env values.", exc_info=True)
+
         self._cache = data
 
         config_help_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config_help.json")
@@ -360,6 +413,14 @@ class ConfigManager:
                 logger.warning("Invalid %s %s.", key, value)
                 value = self.remove(key)
 
+        elif key in self.duration_seconds:
+            if not isinstance(value, int):
+                try:
+                    value = int(value)
+                except (ValueError, TypeError):
+                    logger.warning("Invalid %s %s.", key, value)
+                    value = self.remove(key)
+
         elif key in self.force_str:
             # Temporary: as we saved in int previously, leading to int32 overflow,
             #            this is transitioning IDs to strings
@@ -387,6 +448,10 @@ class ConfigManager:
     async def set(self, key: str, item: typing.Any, convert=True) -> None:
         if not convert:
             return self.__setitem__(key, item)
+
+        if "channel" in key or "category" in key:
+            if isinstance(item, str) and item not in {"thread", "NONE"}:
+                item = item.strip("<#>")
 
         if key in self.colors:
             try:
@@ -439,6 +504,25 @@ class ConfigManager:
                 return self.__setitem__(key, strtobool(item))
             except ValueError:
                 raise InvalidConfigError("Must be a yes/no value.")
+
+        elif key in self.duration_seconds:
+            if isinstance(item, int):
+                return self.__setitem__(key, item)
+            try:
+                converter = UserFriendlyTime()
+                time = await converter.convert(None, str(item), now=discord.utils.utcnow())
+                if time.arg:
+                    raise ValueError
+            except BadArgument as exc:
+                raise InvalidConfigError(*exc.args)
+            except Exception as e:
+                logger.debug(e)
+                raise InvalidConfigError(
+                    "Unrecognized time, please use a duration like '5 days' or '2 hours'."
+                )
+            now = discord.utils.utcnow()
+            duration_seconds = int((time.dt - now).total_seconds())
+            return self.__setitem__(key, duration_seconds)
 
         elif key in self.enums:
             if isinstance(item, self.enums[key]):
