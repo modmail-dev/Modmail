@@ -34,6 +34,7 @@ from core.utils import (
     DenyButton,
     ConfirmThreadCreationView,
     DummyParam,
+    extract_forwarded_content,
 )
 
 logger = getLogger(__name__)
@@ -700,18 +701,12 @@ class Thread:
         if self.log_key:
             result = await self.bot.api.logs.update_one(
                 {"key": self.log_key},
-                {
-                    "$set": {"channel_id": str(channel.id)},
-                    "$unset": {"snoozed": "", "snooze_data": ""},
-                },
+                {"$set": {"channel_id": str(channel.id)}, "$unset": {"snoozed": "", "snooze_data": ""}},
             )
         else:
             result = await self.bot.api.logs.update_one(
                 {"recipient.id": str(self.id)},
-                {
-                    "$set": {"channel_id": str(channel.id)},
-                    "$unset": {"snoozed": "", "snooze_data": ""},
-                },
+                {"$set": {"channel_id": str(channel.id)}, "$unset": {"snoozed": "", "snooze_data": ""}},
             )
             if result.modified_count == 0:
                 result = await self.bot.api.logs.update_one(
@@ -1781,8 +1776,7 @@ class Thread:
 
             # Create embed for note with Discord system message style
             embed = discord.Embed(
-                description=content,
-                color=0x5865F2,  # Discord blurple color for system messages
+                description=content, color=0x5865F2  # Discord blurple color for system messages
             )
 
             # Set author with note icon and username
@@ -1792,8 +1786,7 @@ class Thread:
                 note_type = "Note"
 
             embed.set_author(
-                name=f"📝 {note_type} ({message.author.name})",
-                icon_url=message.author.display_avatar.url,
+                name=f"📝 {note_type} ({message.author.name})", icon_url=message.author.display_avatar.url
             )
 
             # Add timestamp if enabled

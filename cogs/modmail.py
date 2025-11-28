@@ -99,6 +99,19 @@ class Modmail(commands.Cog):
             return int(match.group(1))
         return None
 
+    def _resolve_user(self, user_str):
+        """Helper to resolve a user from mention, ID, or username."""
+        import re
+
+        if not user_str:
+            return None
+        if user_str.isdigit():
+            return int(user_str)
+        match = re.match(r"<@!?(\d+)>", user_str)
+        if match:
+            return int(match.group(1))
+        return None
+
     @commands.command()
     @trigger_typing
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -220,8 +233,7 @@ class Modmail(commands.Cog):
                     description = format_description(i, names)
                     embed = discord.Embed(color=self.bot.main_color, description=description)
                     embed.set_author(
-                        name="Snippets",
-                        icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
+                        name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128)
                     )
                     embeds.append(embed)
 
@@ -256,10 +268,7 @@ class Modmail(commands.Cog):
 
         embeds = [discord.Embed(color=self.bot.main_color) for _ in range((len(self.bot.snippets) // 10) + 1)]
         for embed in embeds:
-            embed.set_author(
-                name="Snippets",
-                icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
-            )
+            embed.set_author(name="Snippets", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
 
         for i, snippet in enumerate(sorted(self.bot.snippets.items())):
             embeds[i // 10].add_field(
@@ -974,8 +983,7 @@ class Modmail(commands.Cog):
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
             em.set_footer(
-                text=f"{users[0]}",
-                icon_url=users[0].display_avatar.url if users[0].display_avatar else None,
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
             )
 
             for i in ctx.thread.recipients:
@@ -1074,8 +1082,7 @@ class Modmail(commands.Cog):
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
             em.set_footer(
-                text=f"{users[0]}",
-                icon_url=users[0].display_avatar.url if users[0].display_avatar else None,
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
             )
 
             for i in ctx.thread.recipients:
@@ -1171,8 +1178,7 @@ class Modmail(commands.Cog):
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
             em.set_footer(
-                text=f"{users[0]}",
-                icon_url=users[0].display_avatar.url if users[0].display_avatar else None,
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
             )
 
             for i in ctx.thread.recipients:
@@ -1263,8 +1269,7 @@ class Modmail(commands.Cog):
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
             em.set_footer(
-                text=f"{users[0]}",
-                icon_url=users[0].display_avatar.url if users[0].display_avatar else None,
+                text=f"{users[0]}", icon_url=users[0].display_avatar.url if users[0].display_avatar else None
             )
 
             for i in ctx.thread.recipients:
@@ -1859,8 +1864,7 @@ class Modmail(commands.Cog):
             if self.bot.config["show_timestamp"]:
                 em.timestamp = discord.utils.utcnow()
             em.set_footer(
-                text=f"{creator}",
-                icon_url=creator.display_avatar.url if creator.display_avatar else None,
+                text=f"{creator}", icon_url=creator.display_avatar.url if creator.display_avatar else None
             )
 
             for u in users:

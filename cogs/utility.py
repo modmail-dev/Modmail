@@ -93,8 +93,7 @@ class ModmailHelpCommand(commands.HelpCommand):
 
             name = cog.qualified_name + " - Help" if not no_cog else "Miscellaneous Commands"
             embed.set_author(
-                name=name,
-                icon_url=bot.user.display_avatar.url if bot.user.display_avatar else None,
+                name=name, icon_url=bot.user.display_avatar.url if bot.user.display_avatar else None
             )
 
             embed.set_footer(

@@ -953,10 +953,7 @@ class ModmailBot(commands.Bot):
                             )
                         )
                         return
-                    if self.config["dm_disabled"] in (
-                        DMDisabled.NEW_THREADS,
-                        DMDisabled.ALL_THREADS,
-                    ):
+                    if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                         embed = discord.Embed(
                             title=self.config["disabled_new_thread_title"],
                             color=self.error_color,
@@ -967,8 +964,7 @@ class ModmailBot(commands.Bot):
                             icon_url=self.get_guild_icon(guild=message.guild, size=128),
                         )
                         logger.info(
-                            "A new thread was blocked from %s due to disabled Modmail.",
-                            message.author,
+                            "A new thread was blocked from %s due to disabled Modmail.", message.author
                         )
                         await self.add_reaction(message, blocked_emoji)
                         return await message.channel.send(embed=embed)
@@ -984,10 +980,7 @@ class ModmailBot(commands.Bot):
                             text=self.config["disabled_current_thread_footer"],
                             icon_url=self.get_guild_icon(guild=message.guild, size=128),
                         )
-                        logger.info(
-                            "A message was blocked from %s due to disabled Modmail.",
-                            message.author,
-                        )
+                        logger.info("A message was blocked from %s due to disabled Modmail.", message.author)
                         await self.add_reaction(message, blocked_emoji)
                         return await message.channel.send(embed=embed)
                 # Extract forwarded content using utility function
@@ -1044,10 +1037,7 @@ class ModmailBot(commands.Bot):
                                 )
                             )
                             return
-                        if self.config["dm_disabled"] in (
-                            DMDisabled.NEW_THREADS,
-                            DMDisabled.ALL_THREADS,
-                        ):
+                        if self.config["dm_disabled"] in (DMDisabled.NEW_THREADS, DMDisabled.ALL_THREADS):
                             embed = discord.Embed(
                                 title=self.config["disabled_new_thread_title"],
                                 color=self.error_color,
@@ -1058,8 +1048,7 @@ class ModmailBot(commands.Bot):
                                 icon_url=self.get_guild_icon(guild=message.guild, size=128),
                             )
                             logger.info(
-                                "A new thread was blocked from %s due to disabled Modmail.",
-                                message.author,
+                                "A new thread was blocked from %s due to disabled Modmail.", message.author
                             )
                             await self.add_reaction(message, blocked_emoji)
                             return await message.channel.send(embed=embed)
@@ -1076,8 +1065,7 @@ class ModmailBot(commands.Bot):
                                 icon_url=self.get_guild_icon(guild=message.guild, size=128),
                             )
                             logger.info(
-                                "A message was blocked from %s due to disabled Modmail.",
-                                message.author,
+                                "A message was blocked from %s due to disabled Modmail.", message.author
                             )
                             await self.add_reaction(message, blocked_emoji)
                             return await message.channel.send(embed=embed)
