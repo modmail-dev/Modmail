@@ -1650,8 +1650,8 @@ class Modmail(commands.Cog):
         await self.bot.add_reaction(ctx.message, sent_emoji)
         try:
             await ctx.message.delete(delay=3)
-        except (discord.Forbidden, discord.NotFound):
-            pass
+        except (discord.Forbidden, discord.NotFound) as e:
+            logger.debug(f"Failed to delete note command message: {e}")
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
