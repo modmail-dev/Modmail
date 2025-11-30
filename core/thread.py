@@ -2695,7 +2695,6 @@ class ThreadManager:
                     except Exception:
                         logger.warning("Failed unsnoozing thread prior to menu selection; continuing.")
                     chosen_label = self.values[0]
-                    self.path.append(chosen_label)
                     # Resolve option key
                     key = chosen_label.lower().replace(" ", "_")
                     if key == "main_menu":
@@ -2710,8 +2709,9 @@ class ThreadManager:
                             is_home=True,
                         )
                         return await self.menu_msg.edit(view=new_view)
+                    self.path.append(chosen_label)
                     selected: dict = self.option_data.get(key, {})
-                    if selected["type"] == "submenu":
+                    if selected.get("type", "command") == "submenu":
                         # Build new view for submenu
                         submenu_data = self.bot.config.get("thread_creation_menu_submenus") or {}
                         option_data = submenu_data.get(key, {})
@@ -2964,7 +2964,7 @@ class ThreadManager:
                                         ctx_.command.checks = old_checks
 
             class _ThreadCreationMenuView(discord.ui.View):
-                def __init__(self, bot, outer_thread: Thread, option_data: dict, menu_msg: discord.Message, path: list = [], is_home: bool = True):
+                def __init__(self, bot, outer_thread: Thread, option_data: dict, menu_msg: discord.Message, path: list, is_home: bool = True):
                     super().__init__(timeout=timeout)
                     self.outer_thread = outer_thread
                     self.path = path
@@ -3094,7 +3094,7 @@ class ThreadManager:
                         logger.debug("Thumbnail set failed (ignored): %s", e)
                 menu_msg = await recipient.send(embed=embed)
                 option_data = self.bot.config.get("thread_creation_menu_options") or {}
-                menu_view = _ThreadCreationMenuView(self.bot, thread, option_data, menu_msg)
+                menu_view = _ThreadCreationMenuView(self.bot, thread, option_data, menu_msg, path=[], is_home=True)
                 menu_msg = await menu_msg.edit(view=menu_view)
                 # mark thread as pending menu selection
                 thread._pending_menu = True
