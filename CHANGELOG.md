@@ -16,7 +16,6 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 * `snoozed_category_id`: Target category for `move` snoozing; required when `snooze_behavior` is `move`.
 * `snooze_store_attachments`: When enabled, image attachments are stored as base64 when snoozing with delete behavior, allowing them to be re-uploaded on unsnooze.
 * `snooze_attachment_max_bytes`: Maximum size per attachment to store as base64 (default: 4 MiB).
-* `thread_creation_menu_enabled`: Enable/disable the thread-creation menu feature.
 * `thread_creation_menu_timeout`: Timeout duration for user interaction with the menu (default: 30 seconds).
 * `thread_creation_menu_close_on_timeout`: Silently abort thread creation if user doesn't select an option.
 * `thread_creation_menu_anonymous_menu`: Anonymize the initial menu prompt relayed to staff.
