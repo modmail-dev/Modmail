@@ -2150,6 +2150,14 @@ class Utility(commands.Cog):
                     )
                 await ctx.send(embed=embed)
             else:
+                if self.bot.check_local_git() is False:
+                    embed = discord.Embed(
+                        title="Update Command Unavailable",
+                        description="The bot cannot be updated due to not being installed via git."
+                        "You need to manually update the bot according to your hosting method.",
+                        color=discord.Color.red(),
+                    )
+                    return await ctx.send(embed=embed)
                 command = "git pull"
                 proc = await asyncio.create_subprocess_shell(
                     command,
