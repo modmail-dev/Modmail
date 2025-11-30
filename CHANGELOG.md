@@ -6,6 +6,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/modmail-dev/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
+# v4.2.1
+
+### Added
+* `unsnooze_history_limit`: Limits the number of messages replayed when unsnoozing (genesis message and notes are always shown).
+* `snooze_behavior`: Choose between `delete` (legacy) or `move` behavior for snoozing.
+* `snoozed_category_id`: Target category for `move` snoozing; required when `snooze_behavior` is `move`.
+* Thread-creation menu: Adds an interactive select step before a thread channel is created.
+  * Commands:
+    * `threadmenu toggle`: Enable/disable the menu.
+    * `threadmenu show`: List current top-level options.
+    * `threadmenu option add`: Interactive wizard to create an option.
+    * `threadmenu option edit/remove/show`: Manage or inspect an existing option.
+    * `threadmenu submenu create/delete/list/show`: Manage submenus.
+    * `threadmenu submenu option add/edit/remove`: Manage options inside a submenu.
+  * Configuration / Behavior:
+    * Per-option `category` targeting when creating a thread; falls back to `main_category_id` if invalid/missing.
+    * Optional selection logging (`thread_creation_menu_selection_log`) posts the chosen option in the new thread.
+    * Anonymous prompt support (`thread_creation_menu_anonymous_menu`).
+
+### Changed
+- Renamed `max_snooze_time` to `snooze_default_duration`. The old config will be invalidated.
+- When `snooze_behavior` is set to `move`, the snoozed category now has a hard limit of 49 channels. New snoozes are blocked once it’s full until space is freed.
+- When switching `snooze_behavior` to `move` via `?config set`, the bot reminds admins to set `snoozed_category_id` if it’s missing.
+- Thread-creation menu options & submenu options now support an optional per-option `category` target. The interactive wizards (`threadmenu option add` / `threadmenu submenu option add`) and edit commands allow specifying or updating a category. If the stored category is missing or invalid at selection time, channel creation automatically falls back to `main_category_id`.
+
+
+# v4.2.0
+
+Upgraded discord.py to version 2.6.3, added support for CV2.
+Forwarded messages now properly show in threads, rather than showing as an empty embed.
+
+### Fixed
+- Make Modmail keep working when typing is disabled due to an outage caused by Discord.
+- Resolved an issue where forwarded messages appeared as empty embeds.
+- Fixed internal message handling and restoration processes.
+- Eliminated duplicate logs and notes.
+- Addressed inconsistent use of `logkey` after ticket restoration.
+- Fixed issues with identifying the user who sent internal messages.
+- Solved an ancient bug where closing with words like `evening` wouldn't work.
+- Fixed the command from being included in the reply  in rare conditions.
+
+### Added
+Commands:
+* `snooze`: Initiates a snooze action.
+* `snoozed`: Displays snoozed items.
+* `unsnooze`: Reverses the snooze action.
+* `clearsnoozed`: Clears all snoozed items.
+
+Configuration Options:
+* `max_snooze_time`: Sets the maximum duration for snooze.
+* `snooze_title`: Customizes the title for snooze notifications.
+* `snooze_text`: Customizes the text for snooze notifications.
+* `unsnooze_text`: Customizes the text for unsnooze notifications.
+* `unsnooze_notify_channel`: Specifies the channel for unsnooze notifications.
+* `thread_min_characters`: Minimum number of characters required.
+* `thread_min_characters_title`: Title shown when the message is too short.
+* `thread_min_characters_response`: Response shown to the user if their message is too short.
+* `thread_min_characters_footer`: Footer displaying the minimum required characters.
+
 # v4.1.2
 
 ### Fixed

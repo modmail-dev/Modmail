@@ -114,33 +114,6 @@
     },
     {
         "embed": {
-            "author": {
-                "name": "Help us • Help Others"
-            },
-            "title": "Join Today",
-            "url": "https://discord.gg/5yQCFzY6HU",
-            "description": "At Help Us • Help Others, we accept as true with inside the transformative electricity of cooperation and kindness. Each one people has the capability to make a meaningful impact by means of helping and caring for others. Whether you want assistance or want to offer it, this is the right region for you!",
-            "fields": [
-                {
-                    "name": "What we offer:",
-                    "value": "`🎬` - Active community\n`👮` - Active staff around the globe! \n`🛜` - 40+ Advertising channels to grow your socials!\n`💎` - Boosting Perks\n`🎉` - Event's monthly especially bank holiday roles!!\n`🔢` - Unique levelling systems\n`📞` - Multiple voice channels including gaming!\n`🎁` - Exclusive giveaways!"
-                },
-                {
-                    "name": "We Are Hiring",
-                    "value": "`🔵` - Moderators\n`🔵` - Human Resources\n`🔵` - Community Team\n`🔵` - Partnership Manager\n`🔵` - Growth Manager\n`🚀` Much more to come!\n\n\nJoin Today!"
-                }
-            ],
-            "image": {
-                "url": "https://cdn.discordapp.com/attachments/1218338794416246874/1243635366326567002/AD_animated.gif"
-            },
-            "color": 45300,
-            "footer": {
-                "text": "Help Us • Help Others"
-            }
-        }
-    },
-    {
-        "embed": {
             "description": "> Be apart of our community as we start to grow! and embark on a long journey.\n——————————————————-\n**What we offer?**\n\n➺〚🖌️〛Custom Liveries \n➺〚❤️〛Friendly and Growing community.\n➺〚🤝〛Partnerships.\n➺〚🎮〛Daily SSUs. \n➺〚🚨〛Great roleplays.\n➺〚💬〛Kind and Professional staff\n➺〚🎉〛Giveaways!!! \n——————————————————-\n**Emergency Services**\n\n➺〚🚔〛NY Police Force\n➺〚🚒〛Fire & Emergency NY\n➺〚🚧〛NY department of transportation \n\n——————————————————-\n**Whitelisted**\nComing soon!\n——————————————————-\n**What are we looking for!**\n\n➺〚💬〛More members\n➺〚⭐〛Staff Members - **WE'RE HIRING!**\n➺〚🤝〛Partnerships\n➺〚💎〛Boosters\n——————————————————\n\n**[Join now](https://discord.com/invite/qt62qSnKVa)**",
             "author": {
                 "name": "New York Roleplay",
@@ -157,6 +130,22 @@
             "title": "CityStore PLC",
             "description": "*Your Retail Journey*\n*\"Better choice and better value in food, fashion & homewares.\"*\n\n\n**------------------------------------------**\n*__About us__*\nSupermarket, CityStore PLC! Attend a training to become staff!\n\nThis game is currently in V3\n\nWe have a training Centre and applications center!\n\n**------------------------------------------**\n\n> *❤️ Don't hesitate! Dive into the excitement today by joining our vibrant community on Discord. Experience our unique perspective and become an integral part of our group. Your **journey** with us promises to be unforgettable no regrets, only great memories await! ❤️*\n\n*We hope to see you. *\n\n*Signed,*\n**CityStore PLC**\n> Discord: https://discord.gg/yjFQb5mrSk\n> Roblox Group: https://www.roblox.com/groups/32819373/CityStore-PLC#!/about\n\nJoin us now and become apart of Citystore PLC community!  🎉",
             "color": 15523550
+        }
+    },
+    {
+        "embed": {
+            "description": "✨ *\"Let's bake it!\"* ✨  \n\nKistó is a very successful and well-known **Bakery Group** on the platform. Its goal is to give every guest the **ultimate bakery experience**.  \n\nWe have a wide variety of hand-made treats, from our rich **drinks** to our freshly baked **pastries**. Every item is made with care by our **skilled and passionate team**, redefining what it means to be a modern bakery.  \n\n💖 Come visit us today and taste the *sweet side of perfection* at **Kistó Bakery.**  \n\n**Roblox Group:** [Click here!](https://www.roblox.com/communities/9318596/Kist#!/about)  \n**Discord Server:** [Click here!](https://discord.gg/aGt8Wv3gP9)",
+            "color": 16736255,
+            "author": {
+                "name": "Kistó Bakery",
+                "icon_url": "https://cdn.discordapp.com/attachments/1413609998797242522/1436882475883298887/noFilter_10_1.png"
+            },
+            "footer": {
+                "text": "Proudly serving since 2021"
+            },
+            "image": {
+                "url": "https://cdn.discordapp.com/attachments/1413609998797242522/1436882475543429260/0904.png"
+            }
         }
     }
 ]
