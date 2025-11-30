@@ -480,6 +480,61 @@ class Modmail(commands.Cog):
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         await ctx.send(embed=embed)
 
+    @snippet.command(name="rename")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def snippet_rename(self, ctx, name: str.lower, *, value):
+        """
+        Rename a snippet.
+
+        To rename a multi-word snippet name, use quotes: ```
+        {prefix}snippet rename "two word" this is a new two word snippet.
+        ```
+        """
+        if name in self.bot.snippets:
+            if self.bot.get_command(value):
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description=f"A command with the same name already exists: `{value}`.",
+                )
+                return await ctx.send(embed=embed)
+            elif value in self.bot.snippets:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description=f"Snippet `{value}` already exists.",
+                )
+                return await ctx.send(embed=embed)
+
+            if value in self.bot.aliases:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description=f"An alias that shares the same name exists: `{value}`.",
+                )
+                return await ctx.send(embed=embed)
+
+            if len(value) > 120:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="Snippet names cannot be longer than 120 characters.",
+                )
+                return await ctx.send(embed=embed)
+            old_snippet_value = self.bot.snippets[name]
+            self.bot.snippets.pop(name)
+            self.bot.snippets[value] = old_snippet_value
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Renamed snippet",
+                color=self.bot.main_color,
+                description=f'`{name}` has been renamed to "{value}".',
+            )
+        else:
+            embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
+        await ctx.send(embed=embed)
+
     @commands.command(usage="<category> [options]")
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @checks.thread_only()

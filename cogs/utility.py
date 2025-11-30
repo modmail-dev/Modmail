@@ -1275,6 +1275,58 @@ class Utility(commands.Cog):
         embed = await self.make_alias(name, value, "Edited")
         return await ctx.send(embed=embed)
 
+    @alias.command(name="rename")
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    async def alias_rename(self, ctx, name: str.lower, *, value):
+        """
+        Rename an alias.
+        """
+        if name not in self.bot.aliases:
+            embed = utils.create_not_found_embed(name, self.bot.aliases.keys(), "Alias")
+            return await ctx.send(embed=embed)
+
+        embed = None
+        if self.bot.get_command(value):
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"A command with the same name already exists: `{value}`.",
+            )
+
+        elif value in self.bot.aliases:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Another alias with the same name already exists: `{value}`.",
+            )
+
+        elif value in self.bot.snippets:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"A snippet with the same name already exists: `{value}`.",
+            )
+
+        elif len(value) > 120:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description="Alias names cannot be longer than 120 characters.",
+            )
+
+        if embed is None:
+            old_alias_value = self.bot.aliases[name]
+            self.bot.aliases.pop(name)
+            self.bot.aliases[value] = old_alias_value
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Alias renamed",
+                color=self.bot.main_color,
+                description=f'`{name}` has been renamed to "{value}".',
+            )
+        return await ctx.send(embed=embed)
+
     @commands.group(aliases=["perms"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions(self, ctx):
