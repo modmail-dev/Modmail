@@ -2967,7 +2967,7 @@ class ThreadManager:
                 def __init__(self, bot, outer_thread: Thread, option_data: dict, menu_msg: discord.Message, path: list = [], is_home: bool = True):
                     super().__init__(timeout=timeout)
                     self.outer_thread = outer_thread
-                    self.path = [] if is_home else path
+                    self.path = path
                     self.menu_msg = menu_msg
                     self.option_data = option_data
                     self.add_item(_ThreadCreationMenuSelect(bot, outer_thread, option_data=option_data, menu_msg=menu_msg, path=self.path, is_home=is_home))
