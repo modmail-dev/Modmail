@@ -1,13 +1,4 @@
 {
-    "advanced-menu": {
-        "repository": "sebkuip/mm-plugins",
-        "branch": "master",
-        "description": "Advanced menu plugin using dropdown selectors. Supports submenus (and sub-submenus infinitely).",
-        "bot_version": "v4.0.0",
-        "title": "Advanced menu",
-        "icon_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png",
-        "thumbnail_url": "https://raw.githubusercontent.com/sebkuip/mm-plugins/master/advanced-menu/logo.png"
-    },
     "announcement": {
         "repository": "Jerrie-Aries/modmail-plugins",
         "branch": "master",

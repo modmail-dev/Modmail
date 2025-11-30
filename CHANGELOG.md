@@ -9,27 +9,65 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 # v4.2.1
 
 ### Added
+
+**New Configuration Options:**
 * `unsnooze_history_limit`: Limits the number of messages replayed when unsnoozing (genesis message and notes are always shown).
 * `snooze_behavior`: Choose between `delete` (legacy) or `move` behavior for snoozing.
 * `snoozed_category_id`: Target category for `move` snoozing; required when `snooze_behavior` is `move`.
-* Thread-creation menu: Adds an interactive select step before a thread channel is created.
-  * Commands:
-    * `threadmenu toggle`: Enable/disable the menu.
-    * `threadmenu show`: List current top-level options.
-    * `threadmenu option add`: Interactive wizard to create an option.
-    * `threadmenu option edit/remove/show`: Manage or inspect an existing option.
-    * `threadmenu submenu create/delete/list/show`: Manage submenus.
-    * `threadmenu submenu option add/edit/remove`: Manage options inside a submenu.
-  * Configuration / Behavior:
-    * Per-option `category` targeting when creating a thread; falls back to `main_category_id` if invalid/missing.
-    * Optional selection logging (`thread_creation_menu_selection_log`) posts the chosen option in the new thread.
-    * Anonymous prompt support (`thread_creation_menu_anonymous_menu`).
+* `snooze_store_attachments`: When enabled, image attachments are stored as base64 when snoozing with delete behavior, allowing them to be re-uploaded on unsnooze.
+* `snooze_attachment_max_bytes`: Maximum size per attachment to store as base64 (default: 4 MiB).
+* `thread_creation_menu_timeout`: Timeout duration for user interaction with the menu (default: 30 seconds).
+* `thread_creation_menu_close_on_timeout`: Silently abort thread creation if user doesn't select an option.
+* `thread_creation_menu_anonymous_menu`: Anonymize the initial menu prompt relayed to staff.
+* `thread_creation_menu_embed_text`: Text shown in the embed above the selection dropdown.
+* `thread_creation_menu_dropdown_placeholder`: Placeholder text in the dropdown before selection.
+* `thread_creation_menu_selection_log`: Log the chosen menu option in the newly created thread channel.
+* `thread_creation_menu_precreate_channel`: Create thread channel immediately upon first DM even if menu is enabled.
+* `thread_creation_menu_embed_title`: Optional title for the thread-creation menu embed.
+* `thread_creation_menu_embed_footer`: Optional footer text for the menu embed.
+* `thread_creation_menu_embed_footer_icon_url`: Optional URL for the footer icon.
+* `thread_creation_menu_embed_thumbnail_url`: Optional thumbnail image URL.
+* `thread_creation_menu_embed_image_url`: Optional large hero image URL for the menu embed.
+* `thread_creation_menu_embed_large_image`: Promote thumbnail to large hero image if no separate image URL is set.
+* `thread_creation_menu_embed_color`: Color for the menu embed's side strip.
+
+**Thread-Creation Menu Feature:**
+* Full thread-creation menu system with interactive select menus:
+  * `?threadmenu toggle`: Enable/disable the menu globally.
+  * `?threadmenu show`: List current top-level options.
+  * `?threadmenu option add`: Interactive wizard to create an option.
+  * `?threadmenu option edit/remove/show`: Manage or inspect existing options.
+  * `?threadmenu submenu create/delete/list/show`: Manage submenus (nested menu levels).
+  * `?threadmenu submenu option add/edit/remove`: Manage options inside submenus.
+  * `?threadmenu dump_config`: Export current configuration to a file.
+  * `?threadmenu load_config`: Import configuration from a file.
+  * `?threadmenu reset`: Reset all thread-creation menu settings to defaults.
+* Per-option category targeting: Each menu option can specify a target category where threads are created.
+* Submenu support: Create up to 25 main-level options, each with up to 24 nested options.
+* Optional selection logging: Log which menu option was chosen in the newly created thread channel.
+* Anonymous menu support: Hide original prompt author context from staff when menu is anonymized.
+* Category fallback: If an option's category is invalid/missing, creation falls back to `main_category_id`.
+
+**Snooze Enhancements:**
+* Attachment persistence for delete-behavior snoozing: Image attachments can now be stored as base64 data.
+* Enhanced unsnooze functionality with configurable message replay limits.
+* Auto-unsnooze task continuously monitors and automatically unsnoozes threads when duration expires.
 
 ### Changed
-- Renamed `max_snooze_time` to `snooze_default_duration`. The old config will be invalidated.
+- Renamed `max_snooze_time` to `snooze_default_duration` (accepts seconds or human-readable time like "7 days").
 - When `snooze_behavior` is set to `move`, the snoozed category now has a hard limit of 49 channels. New snoozes are blocked once it’s full until space is freed.
 - When switching `snooze_behavior` to `move` via `?config set`, the bot reminds admins to set `snoozed_category_id` if it’s missing.
-- Thread-creation menu options & submenu options now support an optional per-option `category` target. The interactive wizards (`threadmenu option add` / `threadmenu submenu option add`) and edit commands allow specifying or updating a category. If the stored category is missing or invalid at selection time, channel creation automatically falls back to `main_category_id`.
+- Thread-creation menu options and submenu options now support per-option `category` targeting.
+- Category selection in menu option wizards allows specifying ID, name, or mention format.
+- Snoozed thread restoration now respects `unsnooze_history_limit` (if set) to replay only the last N messages.
+- Enhanced auto-unsnooze task monitors and automatically unsnoozes threads when their snooze duration expires.
+- Snoozed threads can now be moved to a dedicated category instead of being deleted (via `snooze_behavior: move`).
+
+### Fixed
+
+- Corrected behavior when snooze channel count reaches the 49-channel limit in move-based snoozing.
+- Improved category resolution in threadmenu wizards (handles ID, name, and mention formats reliably).
+- Enhanced thread state restoration after unsnoozing to properly re-add all recipients.
 
 
 # v4.2.0
