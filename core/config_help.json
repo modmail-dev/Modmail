@@ -533,7 +533,7 @@
     "notes": [
       "When `recipient_thread_close` is enabled and the recipient closed their own thread, `thread_self_close_response` is used instead of this configuration.",
       "You may use the `{{closer}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that closed the thread.",
-      "`{{loglink}}` can be used as a placeholder substitute for the full URL linked to the thread in the log viewer and `{{loglink}}` for the unique key (ie. s3kf91a) of the log.",
+      "`{{loglink}}` can be used as a placeholder substitute for the full URL linked to the thread in the log viewer and `{{logkey}}` for the unique key (ie. s3kf91a) of the log.",
       "Discord flavoured markdown is fully supported in `thread_close_response`.",
       "See also: `thread_close_title`, `thread_close_footer`, `thread_self_close_response`, `thread_creation_response`."
     ]
@@ -547,7 +547,7 @@
     "notes": [
       "When `recipient_thread_close` is disabled or the thread wasn't closed by the recipient, `thread_close_response` is used instead of this configuration.",
       "You may use the `{{closer}}` variable for access to the [Member](https://discordpy.readthedocs.io/en/latest/api.html#discord.Member) that closed the thread.",
-      "`{{loglink}}` can be used as a placeholder substitute for the full URL linked to the thread in the log viewer and `{{loglink}}` for the unique key (ie. s3kf91a) of the log.",
+      "`{{loglink}}` can be used as a placeholder substitute for the full URL linked to the thread in the log viewer and `{{logkey}}` for the unique key (ie. s3kf91a) of the log.",
       "Discord flavoured markdown is fully supported in `thread_self_close_response`.",
       "See also: `thread_close_title`, `thread_close_footer`, `thread_close_response`."
     ]
