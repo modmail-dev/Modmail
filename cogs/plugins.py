@@ -113,7 +113,7 @@ class Plugins(commands.Cog):
     These addons could have a range of features from moderation to simply
     making your life as a moderator easier!
     Learn how to create a plugin yourself here:
-    https://github.com/modmail-dev/modmail/wiki/Plugins
+    https://docs.modmail.dev/usage-guide/plugins
     """
 
     def __init__(self, bot):
@@ -332,7 +332,7 @@ class Plugins(commands.Cog):
                 embed = discord.Embed(
                     description="Invalid plugin name, double check the plugin name "
                     "or use one of the following formats: "
-                    "username/repo/plugin-name, username/repo/plugin-name@branch, local/plugin-name.",
+                    "username/repo/plugin-name, username/repo/plugin-name@branch, @local/plugin-name.",
                     color=self.bot.error_color,
                 )
                 await ctx.send(embed=embed)
@@ -357,7 +357,7 @@ class Plugins(commands.Cog):
 
         `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`,
         or a direct reference to a GitHub hosted plugin (in the format `user/repo/name[@branch]`)
-        or `local/name` for local plugins.
+        or `@local/name` for local plugins.
         """
 
         plugin = await self.parse_user_input(ctx, plugin_name, check_version=True)
@@ -444,7 +444,7 @@ class Plugins(commands.Cog):
         Remove an installed plugin of the bot.
 
         `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
-        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `local/name` for local plugins.
+        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `@local/name` for local plugins.
         """
         plugin = await self.parse_user_input(ctx, plugin_name)
         if plugin is None:
@@ -526,7 +526,7 @@ class Plugins(commands.Cog):
         Update a plugin for the bot.
 
         `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
-        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `local/name` for local plugins.
+        to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `@local/name` for local plugins.
 
         To update all plugins, do `{prefix}plugins update`.
         """
