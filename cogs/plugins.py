@@ -251,7 +251,11 @@ class Plugins(commands.Cog):
 
             if stderr:
                 logger.debug("[stderr]\n%s.", stderr.decode())
-                logger.error("Failed to download requirements for %s.", plugin.ext_string, exc_info=True)
+                logger.error(
+                    "Failed to download requirements for %s.",
+                    plugin.ext_string,
+                    exc_info=True,
+                )
                 raise InvalidPluginError(f"Unable to download requirements: ```\n{stderr.decode()}\n```")
 
             if os.path.exists(USER_SITE):
@@ -361,7 +365,10 @@ class Plugins(commands.Cog):
             return
 
         if str(plugin) in self.bot.config["plugins"]:
-            embed = discord.Embed(description="This plugin is already installed.", color=self.bot.error_color)
+            embed = discord.Embed(
+                description="This plugin is already installed.",
+                color=self.bot.error_color,
+            )
             return await ctx.send(embed=embed)
 
         if plugin.name in self.bot.cogs:
@@ -470,7 +477,8 @@ class Plugins(commands.Cog):
                 pass  # dir not empty
 
         embed = discord.Embed(
-            description="The plugin is successfully uninstalled.", color=self.bot.main_color
+            description="The plugin is successfully uninstalled.",
+            color=self.bot.main_color,
         )
         await ctx.send(embed=embed)
 
@@ -486,7 +494,8 @@ class Plugins(commands.Cog):
 
         async with safe_typing(ctx):
             embed = discord.Embed(
-                description=f"Successfully updated {plugin.name}.", color=self.bot.main_color
+                description=f"Successfully updated {plugin.name}.",
+                color=self.bot.main_color,
             )
             await self.download_plugin(plugin, force=True)
             if self.bot.config.get("enable_plugins"):
@@ -570,7 +579,8 @@ class Plugins(commands.Cog):
                 logger.warning("Removing %s.", entry.name)
 
         embed = discord.Embed(
-            description="Successfully purged all plugins from the bot.", color=self.bot.main_color
+            description="Successfully purged all plugins from the bot.",
+            color=self.bot.main_color,
         )
         return await ctx.send(embed=embed)
 
@@ -598,7 +608,8 @@ class Plugins(commands.Cog):
 
         if not self.loaded_plugins:
             embed = discord.Embed(
-                description="There are no plugins currently loaded.", color=self.bot.error_color
+                description="There are no plugins currently loaded.",
+                color=self.bot.error_color,
             )
             return await ctx.send(embed=embed)
 
@@ -666,7 +677,10 @@ class Plugins(commands.Cog):
             matches = get_close_matches(plugin_name, self.registry.keys())
 
             if matches:
-                embed.add_field(name="Perhaps you meant:", value="\n".join(f"`{m}`" for m in matches))
+                embed.add_field(
+                    name="Perhaps you meant:",
+                    value="\n".join(f"`{m}`" for m in matches),
+                )
 
             return await ctx.send(embed=embed)
 

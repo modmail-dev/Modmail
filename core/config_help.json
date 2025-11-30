@@ -492,6 +492,18 @@
       "See also: `thread_creation_response`, `thread_creation_footer`, `thread_close_title`."
     ]
   },
+  "thread_creation_send_dm_embed": {
+    "default": "Yes",
+    "description": "When set to `yes`, the bot will send an embed message to the recipient notifying them that a new thread was created. Set to `no` to suppress the initial DM embed. When suppressed and `recipient_thread_close` is enabled, the close emoji will be added to the user's original message instead so they may still close the thread.",
+    "examples": [
+      "`{prefix}config set thread_creation_send_dm_embed no`",
+      "`{prefix}config set thread_creation_send_dm_embed yes`"
+    ],
+    "notes": [
+      "Useful if you prefer not to send an extra DM to recipients when creating threads.",
+      "See also: `recipient_thread_close`, `thread_creation_response`, `thread_creation_title`."
+    ]
+  },
   "thread_close_footer": {
     "default": "\"Replying will create a new thread\"",
     "description": "This is the message embed footer sent to the recipient upon the closure of a thread.",
@@ -1266,15 +1278,16 @@
       "See also: `thread_min_characters`, `thread_min_characters_title`, `thread_min_characters_response`."
     ]
   },
-  "max_snooze_time": {
+  "snooze_default_duration": {
     "default": "604800 (7 days in seconds)",
-    "description": "The maximum duration in seconds that a thread can be snoozed. When a thread is snoozed, it is temporarily hidden until the user replies or a moderator unsnoozes it.",
+    "description": "The default duration that a thread will be snoozed when no duration is specified. When a thread is snoozed, it is temporarily hidden until the user replies or a moderator unsnoozes it.",
     "examples": [
-      "`{prefix}config set max_snooze_time 86400` (1 day)",
-      "`{prefix}config set max_snooze_time 1209600` (14 days)"
+      "`{prefix}config set snooze_default_duration 7 days`",
+      "`{prefix}config set snooze_default_duration 2 hours`",
+      "`{prefix}config set snooze_default_duration 86400` (raw seconds also accepted)"
     ],
     "notes": [
-      "The value must be specified in seconds.",
+      "Accepts user-friendly time like '5 days', '2 hours', or raw seconds.",
       "See also: `snooze_title`, `snooze_text`, `unsnooze_text`, `unsnooze_notify_channel`."
     ]
   },
@@ -1285,7 +1298,7 @@
       "`{prefix}config set snooze_title Thread Paused`"
     ],
     "notes": [
-      "See also: `snooze_text`, `unsnooze_title`, `max_snooze_time`."
+      "See also: `snooze_text`, `unsnooze_title`, `snooze_default_duration`."
     ]
   },
   "snooze_text": {
@@ -1296,7 +1309,7 @@
     ],
     "notes": [
       "Discord flavoured markdown is fully supported in `snooze_text`.",
-      "See also: `snooze_title`, `unsnooze_text`, `max_snooze_time`."
+      "See also: `snooze_title`, `unsnooze_text`, `snooze_default_duration`."
     ]
   },
   "unsnooze_text": {
@@ -1307,7 +1320,7 @@
     ],
     "notes": [
       "Discord flavoured markdown is fully supported in `unsnooze_text`.",
-      "See also: `snooze_text`, `unsnooze_notify_channel`, `max_snooze_time`."
+      "See also: `snooze_text`, `unsnooze_notify_channel`, `snooze_default_duration`."
     ]
   },
   "unsnooze_notify_channel": {
@@ -1320,7 +1333,265 @@
     "notes": [
       "If set to \"thread\", the notification will be sent in the thread channel itself.",
       "If set to a channel ID, the notification will be sent to that specific channel.",
-      "See also: `unsnooze_text`, `max_snooze_time`."
+      "See also: `unsnooze_text`, `snooze_default_duration`."
+    ]
+  },
+  "snooze_behavior": {
+    "default": "\"delete\"",
+    "description": "Controls how snoozing behaves. 'delete' removes the thread channel and restores it later; 'move' moves the channel into the 'snoozed_category_id' without deleting it.",
+    "examples": [
+      "`{prefix}config set snooze_behavior delete`",
+      "`{prefix}config set snooze_behavior move`"
+    ],
+    "notes": [
+      "When set to 'move', set `snoozed_category_id` to a valid Category ID.",
+      "When unsnoozed, channels moved will return to their original category and position when possible; if original no longer exists they will be moved under `main_category_id`."
+    ]
+  },
+  "snoozed_category_id": {
+    "default": "None",
+    "description": "The category ID where snoozed threads are moved when `snooze_behavior` is set to 'move'.",
+    "examples": [
+      "`{prefix}config set snoozed_category_id 123456789012345678`"
+    ],
+    "notes": [
+      "Only used when `snooze_behavior` is 'move'.",
+      "If not set or invalid, the channel will remain in its current category or the bot will fall back to deleting on failure."
+    ]
+  },
+  "snooze_store_attachments": {
+    "default": "No",
+    "description": "When enabled and `snooze_behavior` is 'delete', image attachments are stored as base64 within the snooze data so they can be re-uploaded on unsnooze, preserving media even if the original channel was deleted.",
+    "examples": [
+      "`{prefix}config set snooze_store_attachments yes`",
+      "`{prefix}config set snooze_store_attachments no`"
+    ],
+    "notes": [
+      "Only applies to delete-behavior snoozes. In move-behavior, attachments remain in the channel history.",
+      "To avoid exceeding Mongo's 16MB document size, consider also adjusting `snooze_attachment_max_bytes`."
+    ]
+  },
+  "snooze_attachment_max_bytes": {
+    "default": "4194304 (4 MiB)",
+    "description": "Maximum size per attachment to store as base64 when `snooze_store_attachments` is enabled.",
+    "examples": [
+      "`{prefix}config set snooze_attachment_max_bytes 2097152` (2 MiB)",
+      "`{prefix}config set snooze_attachment_max_bytes 0` (disable size check; not recommended)"
+    ],
+    "notes": [
+      "This cap helps prevent hitting MongoDB's 16MB per-document limit when storing large attachments.",
+      "Non-image files are not stored as base64 and will be preserved as their original URLs if available."
+    ]
+  },
+  "unsnooze_history_limit": {
+    "default": "None (all messages replayed)",
+    "description": "Limits the number of messages replayed when a thread is unsnoozed. When set, only the last N messages will be displayed in the restored channel.",
+    "examples": [
+      "`{prefix}config set unsnooze_history_limit 50`",
+      "`{prefix}config set unsnooze_history_limit 100`"
+    ],
+    "notes": [
+      "All messages remain stored in the database regardless of this limit.",
+      "Set to None or delete this config to replay all messages when unsnoozing.",
+      "See also: `snooze_behavior`, `unsnooze_text`."
+    ]
+  },
+  "thread_creation_menu_enabled": {
+    "default": "Disabled",
+    "description": "Enables the thread creation menu which asks users to pick an option before the Modmail thread channel is created.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_enabled yes`"
+    ],
+    "notes": [
+      "When enabled and at least one option is configured, incoming user DMs are paused until a selection is made.",
+      "If the menu times out without a selection and `thread_creation_menu_close_on_timeout` is enabled, the thread is aborted silently.",
+      "See also: `thread_creation_menu_options`, `thread_creation_menu_timeout`."
+    ]
+  },
+  "thread_creation_menu_options": {
+    "default": "Empty (no options)",
+    "description": "Mapping of menu option keys to their data (label, description, emoji, type, callback). A non-empty mapping is required to display the menu.",
+    "examples": [
+  "`{prefix}threadmenu option add` (interactive wizard)",
+  "`{prefix}threadmenu show`"
+    ],
+    "notes": [
+      "Type can be 'command' (executes a command after creation) or 'submenu' (opens a submenu).",
+      "Submenu callbacks must reference keys stored in `thread_creation_menu_submenus`.",
+      "See also: `thread_creation_menu_submenus`."
+    ]
+  },
+  "thread_creation_menu_submenus": {
+    "default": "Empty (no submenus)",
+    "description": "Mapping of submenu keys to submenu option mappings, identical structure to `thread_creation_menu_options` allowing nested selection.",
+    "examples": [
+  "`{prefix}threadmenu submenu create Appeals`",
+  "`{prefix}threadmenu submenu option add Appeals`"
+    ],
+    "notes": [
+      "Submenus allow categorizing options beyond the 25 main menu limit (each submenu limited by Discord select menu rules).",
+      "See also: `thread_creation_menu_options`."
+    ]
+  },
+  "thread_creation_menu_timeout": {
+    "default": "30 (seconds)",
+    "description": "Number of seconds to wait for a user to pick a menu option before timing out.",
+    "examples": [
+  "`{prefix}config set thread_creation_menu_timeout 30`"
+    ],
+    "notes": [
+      "If the timeout is reached, `thread_creation_menu_close_on_timeout` controls whether the attempt is aborted or the user is asked to message again.",
+      "See also: `thread_creation_menu_close_on_timeout`."
+    ]
+  },
+  "thread_creation_menu_close_on_timeout": {
+    "default": "No",
+    "description": "Silently aborts thread creation if the user does not select an option before the timeout expires.",
+    "examples": [
+  "`{prefix}config set thread_creation_menu_close_on_timeout yes`"
+    ],
+    "notes": [
+      "If disabled, the user receives a message telling them to send a new DM to start again.",
+      "See also: `thread_creation_menu_timeout`."
+    ]
+  },
+  "thread_creation_menu_anonymous_menu": {
+    "default": "No",
+    "description": "If enabled, the initial menu prompt relayed to staff (after creation) is anonymized; only selection details are logged, not the original prompt message author context.",
+    "examples": [
+  "`{prefix}config set thread_creation_menu_anonymous_menu yes`"
+    ],
+    "notes": [
+      "Does not affect the DM the user sees, only how it's displayed/logged internally.",
+      "See also: `thread_creation_menu_selection_log`."
+    ]
+  },
+  "thread_creation_menu_embed_text": {
+    "default": "\"Please select an option.\"",
+    "description": "Text shown in the embed above the selection dropdown in the user's DM.",
+    "examples": [
+  "`{prefix}config set thread_creation_menu_embed_text Please choose a department`"
+    ],
+    "notes": [
+      "Keep this concise; users cannot proceed until choosing.",
+      "See also: `thread_creation_menu_dropdown_placeholder`."
+    ]
+  },
+  "thread_creation_menu_dropdown_placeholder": {
+    "default": "\"Select an option to contact the staff team.\"",
+    "description": "Placeholder text displayed in the dropdown before selection.",
+    "examples": [
+  "`{prefix}config set thread_creation_menu_dropdown_placeholder Pick a topic...`"
+    ],
+    "notes": [
+      "Appears grayed out inside the select component.",
+      "See also: `thread_creation_menu_embed_text`."
+    ]
+  },
+  "thread_creation_menu_selection_log": {
+    "default": "Yes",
+    "description": "Logs the chosen menu option (label, type, callback) as a message in the newly created thread channel for moderator visibility.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_selection_log no`"
+    ],
+    "notes": [
+      "When disabled, the staff will not see an automatic message with the selection details though commands may still act.",
+      "See also: `thread_creation_menu_enabled`, `thread_creation_menu_options`."
+    ]
+  },
+  "thread_creation_menu_precreate_channel": {
+    "default": "No",
+    "description": "When enabled, a thread channel is created immediately upon the user's first DM even if the thread creation menu is enabled. The menu is still shown but selection becomes optional and happens after channel creation.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_precreate_channel yes`"
+    ],
+    "notes": [
+      "If a user never selects an option the thread remains open in the default/main category.",
+      "Category-specific option selections will move the channel afterward if a category_id is configured on the option.",
+      "Confirmation (`confirm_thread_creation`) is only applied in the deferred mode; enabling precreate bypasses the confirm step for menu flows.",
+      "See also: `thread_creation_menu_enabled`, `thread_creation_menu_options`, `confirm_thread_creation`."
+    ]
+  },
+  "thread_creation_menu_embed_title": {
+    "default": "Empty (no title)",
+    "description": "Optional title at the top of the thread-creation menu embed in the user's DM.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_title Contact the staff team`",
+      "`{prefix}config delete thread_creation_menu_embed_title` (clear)"
+    ],
+    "notes": [
+      "See also: `thread_creation_menu_embed_text`."
+    ]
+  },
+  "thread_creation_menu_embed_footer": {
+    "default": "Empty (no footer)",
+    "description": "Optional footer text at the bottom of the menu embed.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_footer Please choose the most relevant option`",
+      "`{prefix}config delete thread_creation_menu_embed_footer` (clear)"
+    ],
+    "notes": [
+      "You can also configure an optional footer icon via `thread_creation_menu_embed_footer_icon_url`."
+    ]
+  },
+  "thread_creation_menu_embed_footer_icon_url": {
+    "default": "Empty (no icon)",
+    "description": "Optional URL for the small footer icon displayed next to the footer text.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_footer_icon_url https://example.com/icon.png`",
+      "`{prefix}config delete thread_creation_menu_embed_footer_icon_url` (clear)"
+    ],
+    "notes": [
+      "Use a direct image URL (PNG/JPEG/GIF)."
+    ]
+  },
+  "thread_creation_menu_embed_thumbnail_url": {
+    "default": "Empty (no thumbnail)",
+    "description": "Optional thumbnail image shown in the top-right of the menu embed.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_thumbnail_url https://example.com/logo.png`",
+      "`{prefix}config delete thread_creation_menu_embed_thumbnail_url` (clear)"
+    ],
+    "notes": [
+      "Use a direct image URL; recommended square image.",
+      "Consider file size/CDN reliability so it loads quickly for users."
+    ]
+  },
+  "thread_creation_menu_embed_image_url": {
+    "default": "Empty (no image)",
+    "description": "Optional large hero image displayed in the body of the menu embed. If set, this image is shown prominently and takes precedence over the thumbnail.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_image_url https://example.com/banner.png`",
+      "`{prefix}config delete thread_creation_menu_embed_image_url` (clear)"
+    ],
+    "notes": [
+      "Use a direct image URL (PNG/JPEG/GIF).",
+      "When both a thumbnail and image URL are set, the image URL is used as the large embed image while the thumbnail may still be shown in the top-right.",
+      "See also: `thread_creation_menu_embed_thumbnail_url`, `thread_creation_menu_embed_large_image`."
+    ]
+  },
+  "thread_creation_menu_embed_large_image": {
+    "default": "No",
+    "description": "Promotes the thumbnail to a large hero image when no `thread_creation_menu_embed_image_url` is set. Useful if you want a big image without specifying a separate URL.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_large_image yes`",
+      "`{prefix}config set thread_creation_menu_embed_large_image no`"
+    ],
+    "notes": [
+      "Only applies when `thread_creation_menu_embed_image_url` is not set.",
+      "If both are provided, the explicit image URL takes precedence.",
+      "See also: `thread_creation_menu_embed_thumbnail_url`, `thread_creation_menu_embed_image_url`."
+    ]
+  },
+  "thread_creation_menu_embed_color": {
+    "default": "Green (hex for Discord Color.green)",
+    "description": "Color for the menu embed's side strip. Accepts hex (e.g. #5865F2) or one of the supported color names.",
+    "examples": [
+      "`{prefix}config set thread_creation_menu_embed_color #5865F2`",
+      "`{prefix}config set thread_creation_menu_embed_color blurple`"
+    ],
+    "notes": [
+      "Color names map to the built-in palette (e.g., 'red', 'green', 'blurple')."
     ]
   }
 }

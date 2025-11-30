@@ -89,7 +89,12 @@ class HumanTime:
 
         if not status.hasTime:
             # replace it with the current time
-            dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
+            dt = dt.replace(
+                hour=now.hour,
+                minute=now.minute,
+                second=now.second,
+                microsecond=now.microsecond,
+            )
 
         self.dt: datetime.datetime = dt
         self._past: bool = dt < now
@@ -158,7 +163,11 @@ class FriendlyTimeResult:
         self.arg = ""
 
     async def ensure_constraints(
-        self, ctx: Context, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
+        self,
+        ctx: Context,
+        uft: UserFriendlyTime,
+        now: datetime.datetime,
+        remaining: str,
     ) -> None:
         # Strip stray connector words like "in", "to", or "at" that may
         # remain when the natural language parser isolates the time token
@@ -301,7 +310,12 @@ class UserFriendlyTime(commands.Converter):
 
         if not status.hasTime:
             # replace it with the current time
-            dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
+            dt = dt.replace(
+                hour=now.hour,
+                minute=now.minute,
+                second=now.second,
+                microsecond=now.microsecond,
+            )
 
         # if midnight is provided, just default to next day
         if status.accuracy == pdt.pdtContext.ACU_HALFDAY:

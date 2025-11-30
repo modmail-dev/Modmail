@@ -1,6 +1,6 @@
 import asyncio
-import base64
 import copy
+import base64
 import functools
 import io
 import re
@@ -14,12 +14,13 @@ from types import SimpleNamespace
 import isodate
 
 import discord
+from discord.ext import commands
 from discord.ext.commands import MissingRequiredArgument, CommandError
 from lottie.importers import importers as l_importers
 from lottie.exporters import exporters as l_exporters
 
-from core.models import DMDisabled, DummyMessage, getLogger
-from core.time import human_timedelta
+from core.models import DMDisabled, DummyMessage, PermissionLevel, getLogger
+from core import checks
 from core.utils import (
     is_image_url,
     parse_channel_topic,
@@ -67,10 +68,15 @@ class Thread:
         self.close_task = None
         self.auto_close_task = None
         self._cancelled = False
+        self._dm_menu_msg_id = None
+        self._dm_menu_channel_id = None
         # --- SNOOZE STATE ---
         self.snoozed = False  # True if thread is snoozed
         self.snooze_data = None  # Dict with channel/category/position/messages for restoration
         self.log_key = None  # Ensure log_key always exists
+        # --- UNSNOOZE COMMAND QUEUE ---
+        self._unsnoozing = False  # True while restore_from_snooze is running
+        self._command_queue = []  # Queue of (ctx, command) tuples; close commands always last
 
     def __repr__(self):
         return f'Thread(recipient="{self.recipient or self.id}", channel={self.channel.id}, other_recipients={len(self._other_recipients)})'
@@ -88,9 +94,10 @@ class Thread:
         try:
             await task
         except asyncio.TimeoutError:
-            pass
-
-        self.wait_tasks.remove(task)
+            logger.warning("Waiting for thread setup timed out.")
+        finally:
+            if task in self.wait_tasks:
+                self.wait_tasks.remove(task)
 
     @property
     def id(self) -> int:
@@ -113,10 +120,19 @@ class Thread:
         return self._ready_event.is_set()
 
     @ready.setter
-    def ready(self, flag: bool):
+    def ready(self, flag: bool) -> None:
+        """Set the ready state and dispatch thread_create when transitioning to ready.
+
+        Some legacy code paths set thread.ready = True/False. This setter preserves that API by
+        updating the internal event and emitting the creation event when entering the ready state.
+        """
         if flag:
-            self._ready_event.set()
-            self.bot.dispatch("thread_create", self)
+            if not self._ready_event.is_set():
+                self._ready_event.set()
+                try:
+                    self.bot.dispatch("thread_create", self)
+                except Exception as e:
+                    logger.warning("Error dispatching thread_create: %s", e)
         else:
             self._ready_event.clear()
 
@@ -133,13 +149,38 @@ class Thread:
 
     async def snooze(self, moderator=None, command_used=None, snooze_for=None):
         """
-        Save channel/category/position/messages to DB, mark as snoozed, delete channel.
+        Save channel/category/position/messages to DB, mark as snoozed.
+        Behavior is configurable:
+        - delete (default): delete the channel and store all data for full restore later
+        - move: move channel to a configured snoozed category and hide it (keeps channel alive)
         """
         if self.snoozed:
             return False  # Already snoozed
         channel = self.channel
         if not isinstance(channel, discord.TextChannel):
             return False
+        # If using move-based snooze, hard-cap snoozed category to 49 channels
+        behavior_pre = (self.bot.config.get("snooze_behavior") or "delete").lower()
+        if behavior_pre == "move":
+            snoozed_cat_id = self.bot.config.get("snoozed_category_id")
+            target_category = None
+            if snoozed_cat_id:
+                try:
+                    target_category = self.bot.modmail_guild.get_channel(int(snoozed_cat_id))
+                except Exception:
+                    target_category = None
+            if isinstance(target_category, discord.CategoryChannel):
+                try:
+                    if len(target_category.channels) >= 49:
+                        logger.warning(
+                            "Snoozed category (%s) is full (>=49 channels). Blocking snooze for thread %s.",
+                            target_category.id,
+                            self.id,
+                        )
+                        return False
+                except Exception:
+                    # If we cannot determine channel count, proceed; downstream will handle errors
+                    pass
         # Ensure self.log_key is set before snoozing
         if not self.log_key:
             # Try to fetch from DB using channel_id
@@ -180,18 +221,22 @@ class Thread:
                         )
                         else None
                     ),
-                    "author_name": getattr(m.author, "name", None),
+                    "author_name": (
+                        getattr(m.embeds[0].author, "name", "").split(" (")[0]
+                        if m.embeds and m.embeds[0].author and m.author == self.bot.user
+                        else getattr(m.author, "name", None)
+                        if m.author != self.bot.user
+                        else None
+                    ),
+                    "author_avatar": (
+                        getattr(m.embeds[0].author, "icon_url", None)
+                        if m.embeds and m.embeds[0].author and m.author == self.bot.user
+                        else m.author.display_avatar.url
+                        if m.author != self.bot.user
+                        else None
+                    ),
                 }
                 async for m in channel.history(limit=None, oldest_first=True)
-                if not (
-                    m.embeds
-                    and getattr(m.embeds[0], "author", None)
-                    and (
-                        getattr(m.embeds[0].author, "name", "").startswith("📝 Note")
-                        or getattr(m.embeds[0].author, "name", "").startswith("📝 Persistent Note")
-                    )
-                )
-                and getattr(m, "type", None) not in ("internal", "note")
             ],
             "snoozed_by": getattr(moderator, "name", None) if moderator else None,
             "snooze_command": command_used,
@@ -213,76 +258,445 @@ class Thread:
         import logging
 
         logging.info(f"[SNOOZE] DB update result: {result.modified_count}")
-        # Delete channel
-        await channel.delete(reason="Thread snoozed by moderator")
-        self._channel = None
+
+        behavior = behavior_pre
+        if behavior == "move":
+            # Move the channel to the snoozed category (if configured) and optionally apply a prefix
+            snoozed_cat_id = self.bot.config.get("snoozed_category_id")
+            target_category = None
+            guild = self.bot.modmail_guild
+            if snoozed_cat_id:
+                try:
+                    target_category = guild.get_channel(int(snoozed_cat_id))
+                except Exception:
+                    target_category = None
+            # If no valid snooze category is configured, create one automatically
+            if not isinstance(target_category, discord.CategoryChannel):
+                try:
+                    # By default, hide the snoozed category from everyone and allow only the bot to see it
+                    overwrites = {guild.default_role: discord.PermissionOverwrite(view_channel=False)}
+                    bot_member = guild.me
+                    if bot_member is not None:
+                        overwrites[bot_member] = discord.PermissionOverwrite(
+                            view_channel=True,
+                            send_messages=True,
+                            read_message_history=True,
+                            manage_channels=True,
+                            manage_messages=True,
+                            attach_files=True,
+                            embed_links=True,
+                            add_reactions=True,
+                        )
+
+                    target_category = await guild.create_category(
+                        name="Snoozed Threads",
+                        overwrites=overwrites,
+                        reason="Auto-created snoozed category for move-based snoozing",
+                    )
+                    # Persist the newly created category ID into config for future runs
+                    try:
+                        await self.bot.config.set("snoozed_category_id", target_category.id)
+                        await self.bot.config.update()
+                    except Exception:
+                        logger.warning("Failed to persist snoozed_category_id after auto-creation.")
+                except Exception as e:
+                    logger.warning(
+                        "Failed to auto-create snoozed category (%s). Falling back to current category.",
+                        e,
+                    )
+                    target_category = channel.category
+            try:
+                # Move and sync permissions so the channel inherits the hidden snoozed-category perms
+                await channel.edit(
+                    category=target_category,
+                    reason="Thread snoozed (moved)",
+                    sync_permissions=True,
+                )
+                # Keep channel reference; just moved
+                self._channel = channel
+                # mark in snooze data that this was a move-based snooze
+                self.snooze_data["moved"] = True
+            except Exception as e:
+                logger.warning(
+                    "Failed to move channel to snoozed category: %s. Falling back to delete.",
+                    e,
+                )
+                await channel.delete(reason="Thread snoozed by moderator (fallback delete)")
+                self._channel = None
+        else:
+            # Delete channel
+            await channel.delete(reason="Thread snoozed by moderator")
+            self._channel = None
         return True
 
     async def restore_from_snooze(self):
         """
-        Recreate channel in original category/position, replay messages, mark as not snoozed.
+        Restore a snoozed thread.
+        - If channel was deleted (delete behavior), recreate and replay messages.
+        - If channel was moved (move behavior), move back to original category and position.
+        Mark as not snoozed and clear snooze data.
         """
+        # Prevent concurrent unsnooze operations
+        if self._unsnoozing:
+            logger.warning(f"Unsnooze already in progress for thread {self.id}, skipping duplicate call")
+            return False
+
+        # Mark that unsnooze is in progress
+        self._unsnoozing = True
+
         if not self.snooze_data or not isinstance(self.snooze_data, dict):
             import logging
 
             logging.warning(
                 f"[UNSNOOZE] Tried to restore thread {self.id} but snooze_data is None or not a dict."
             )
+            self._unsnoozing = False
             return False
-        # Now safe to access self.snooze_data
+
+        # Cache some fields we need later (before we potentially clear snooze_data)
         snoozed_by = self.snooze_data.get("snoozed_by")
         snooze_command = self.snooze_data.get("snooze_command")
+
         guild = self.bot.modmail_guild
-        category = guild.get_channel(self.snooze_data["category_id"])
-        overwrites = {}
-        for role_id, perm_values in self.snooze_data["overwrites"]:
-            role = guild.get_role(role_id) or guild.get_member(role_id)
-            if role:
-                overwrites[role] = discord.PermissionOverwrite(**perm_values)
-        channel = await guild.create_text_channel(
-            name=self.snooze_data["name"],
-            category=category,
-            topic=self.snooze_data["topic"],
-            slowmode_delay=self.snooze_data["slowmode_delay"],
-            overwrites=overwrites,
-            nsfw=self.snooze_data["nsfw"],
-            position=self.snooze_data["position"],
-            reason="Thread unsnoozed/restored",
+        behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
+
+        # Determine original category; fall back to main_category_id if original missing
+        orig_category = (
+            guild.get_channel(self.snooze_data.get("category_id"))
+            if self.snooze_data.get("category_id")
+            else None
         )
-        self._channel = channel
+        if not isinstance(orig_category, discord.CategoryChannel):
+            main_cat_id = self.bot.config.get("main_category_id")
+            orig_category = guild.get_channel(int(main_cat_id)) if main_cat_id else None
+
+        # Default: assume we'll need to recreate
+        channel: typing.Optional[discord.TextChannel] = None
+
+        # If move-behavior and channel still exists, move it back and restore overwrites
+        if behavior == "move" and isinstance(self.channel, discord.TextChannel):
+            try:
+                await self.channel.edit(
+                    category=orig_category,
+                    position=self.snooze_data.get("position", self.channel.position),
+                    reason="Thread unsnoozed/restored",
+                )
+                # Restore original overwrites captured at snooze time
+                try:
+                    ow_map: dict = {}
+                    for role_id, perm_values in self.snooze_data.get("overwrites", []):
+                        target = guild.get_role(role_id) or guild.get_member(role_id)
+                        if target is None:
+                            continue
+                        ow_map[target] = discord.PermissionOverwrite(**perm_values)
+                    if ow_map:
+                        await self.channel.edit(overwrites=ow_map, reason="Restore original overwrites")
+                except Exception as e:
+                    logger.warning("Failed to restore original overwrites on unsnooze: %s", e)
+
+                channel = self.channel
+            except Exception as e:
+                logger.warning("Failed to move snoozed channel back, recreating: %s", e)
+                channel = None
+
+        # If we couldn't move back (or behavior=delete), recreate the channel
+        if channel is None:
+            try:
+                ow_map: dict = {}
+                for role_id, perm_values in self.snooze_data.get("overwrites", []):
+                    target = guild.get_role(role_id) or guild.get_member(role_id)
+                    if target is None:
+                        continue
+                    ow_map[target] = discord.PermissionOverwrite(**perm_values)
+
+                channel = await guild.create_text_channel(
+                    name=self.snooze_data.get("name") or f"thread-{self.id}",
+                    category=orig_category,
+                    # discord.py expects a dict for overwrites; use empty dict if none
+                    overwrites=ow_map or {},
+                    position=self.snooze_data.get("position"),
+                    topic=self.snooze_data.get("topic"),
+                    slowmode_delay=self.snooze_data.get("slowmode_delay") or 0,
+                    nsfw=bool(self.snooze_data.get("nsfw")),
+                    reason="Thread unsnoozed/restored (recreated)",
+                )
+                self._channel = channel
+            except Exception:
+                logger.error("Failed to recreate thread channel during unsnooze.", exc_info=True)
+                return False
+
+        # Helper to safely send to thread channel, recreating once if deleted
+        async def _safe_send_to_channel(*, content=None, embeds=None, allowed_mentions=None):
+            nonlocal channel
+            try:
+                return await channel.send(content=content, embeds=embeds, allowed_mentions=allowed_mentions)
+            except discord.NotFound:
+                # Channel was deleted between restore and send; try to recreate once
+                try:
+                    ow_map: dict = {}
+                    for role_id, perm_values in self.snooze_data.get("overwrites", []) or []:
+                        target = guild.get_role(role_id) or guild.get_member(role_id)
+                        if target is None:
+                            continue
+                        ow_map[target] = discord.PermissionOverwrite(**perm_values)
+                    channel = await guild.create_text_channel(
+                        name=(self.snooze_data.get("name") or f"thread-{self.id}"),
+                        category=orig_category,
+                        # discord.py expects a dict for overwrites; use empty dict if none
+                        overwrites=ow_map or {},
+                        position=self.snooze_data.get("position"),
+                        topic=self.snooze_data.get("topic"),
+                        slowmode_delay=self.snooze_data.get("slowmode_delay") or 0,
+                        nsfw=bool(self.snooze_data.get("nsfw")),
+                        reason="Thread unsnoozed/restored (recreated after NotFound)",
+                    )
+                    self._channel = channel
+                    return await channel.send(
+                        content=content,
+                        embeds=embeds,
+                        allowed_mentions=allowed_mentions,
+                    )
+                except Exception:
+                    logger.error(
+                        "Failed to recreate channel during unsnooze send.",
+                        exc_info=True,
+                    )
+                    return None
+
+        # Ensure genesis message exists; always present after unsnooze
+        genesis_already_sent = False
+
+        async def _ensure_genesis(force: bool = False):
+            nonlocal genesis_already_sent
+            try:
+                existing = await self.get_genesis_message()
+            except Exception:
+                existing = None
+            if existing is None or force:
+                # Build log_url and log_count best-effort
+                prefix = (self.bot.config.get("log_url_prefix") or "").strip("/")
+                if prefix == "NONE":
+                    prefix = ""
+                key = self.snooze_data.get("log_key") or self.log_key
+                log_url = (
+                    f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{key}"
+                    if key
+                    else None
+                )
+                log_count = None
+                try:
+                    logs = await self.bot.api.get_user_logs(self.id)
+                    log_count = sum(1 for log in logs if not log.get("open"))
+                except Exception:
+                    log_count = None
+                # Resolve recipient object
+                user = self.recipient
+                if user is None:
+                    try:
+                        user = await self.bot.get_or_fetch_user(self.id)
+                    except Exception:
+                        user = SimpleNamespace(
+                            id=self.id,
+                            mention=f"<@{self.id}>",
+                            created_at=datetime.now(timezone.utc),
+                        )
+                try:
+                    info_embed = self._format_info_embed(user, log_url, log_count, self.bot.main_color)
+                    msg = await channel.send(embed=info_embed)
+                    try:
+                        await msg.pin()
+                    except Exception as e:
+                        logger.warning("Failed to pin genesis message during unsnooze: %s", e)
+                    self._genesis_message = msg
+                    genesis_already_sent = True
+                except Exception:
+                    logger.warning("Failed to send genesis message during unsnooze.", exc_info=True)
+
+        # If we recreated the channel, force-send genesis; if moved back, ensure it's present
+        try:
+            if behavior == "move" and isinstance(channel, discord.TextChannel):
+                await _ensure_genesis(force=False)
+            else:
+                await _ensure_genesis(force=True)
+        except Exception:
+            logger.debug("Genesis ensure step encountered an error.")
+
         # Strictly restore the log_key from snooze_data (never create a new one)
         self.log_key = self.snooze_data.get("log_key")
-        # Replay messages
-        for msg in self.snooze_data["messages"]:
-            author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(msg["author_id"])
-            content = msg["content"]
-            embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
-            attachments = msg.get("attachments", [])
-            msg_type = msg.get("type")
-            # Only send if there is content, embeds, or attachments
-            if not content and not embeds and not attachments:
-                continue  # Skip empty messages
-            author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
-            if author_is_mod:
-                username = msg.get("author_name") or (getattr(author, "name", None)) or "Unknown"
-                user_id = msg.get("author_id")
+
+        # Replay messages only if we re-created the channel (delete behavior or move fallback)
+        if behavior != "move" or (behavior == "move" and not self.snooze_data.get("moved", False)):
+            # Get history limit from config (0 or None = show all)
+            history_limit = self.bot.config.get("unsnooze_history_limit")
+            all_messages = self.snooze_data.get("messages", [])
+
+            # Separate genesis, notes, and regular messages
+            genesis_msg = None
+            notes = []
+            regular_messages = []
+
+            for msg in all_messages:
+                msg_type = msg.get("type")
+                # Check if it's the genesis message (has Roles field)
+                if msg.get("embeds"):
+                    for embed_dict in msg.get("embeds", []):
+                        if embed_dict.get("fields"):
+                            for field in embed_dict.get("fields", []):
+                                if field.get("name") == "Roles":
+                                    genesis_msg = msg
+                                    break
+                            if genesis_msg:
+                                break
+                # Check if it's a note
+                if msg_type == "mod_only":
+                    notes.append(msg)
+                elif genesis_msg != msg:
+                    regular_messages.append(msg)
+
+            # Apply limit if set
+            limited = False
+            if history_limit:
+                try:
+                    history_limit = int(history_limit)
+                    if history_limit > 0 and len(regular_messages) > history_limit:
+                        regular_messages = regular_messages[-history_limit:]
+                        limited = True
+                except (ValueError, TypeError):
+                    pass
+
+            # Replay genesis first (only if we didn't already create it above)
+            if genesis_msg and not genesis_already_sent:
+                msg = genesis_msg
+                try:
+                    author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
+                        msg["author_id"]
+                    )
+                except discord.NotFound:
+                    author = None
+                embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
                 if embeds:
-                    embeds[0].set_author(
-                        name=f"{username} ({user_id})",
-                        icon_url=(
-                            author.display_avatar.url
-                            if author and hasattr(author, "display_avatar")
-                            else None
-                        ),
+                    await _safe_send_to_channel(
+                        embeds=embeds, allowed_mentions=discord.AllowedMentions.none()
                     )
-                    await channel.send(embeds=embeds)
+
+            # Send history limit notification after genesis
+            if limited:
+                prefix = self.bot.config["log_url_prefix"].strip("/")
+                if prefix == "NONE":
+                    prefix = ""
+                log_url = (
+                    f"{self.bot.config['log_url'].strip('/')}{'/' + prefix if prefix else ''}/{self.log_key}"
+                    if self.log_key
+                    else None
+                )
+
+                limit_embed = discord.Embed(
+                    color=0xFFA500,
+                    title="⚠️ History Limited",
+                    description=f"Only showing the last **{history_limit}** messages due to the `unsnooze_history_limit` setting.",
+                )
+                if log_url:
+                    limit_embed.description += f"\n\n[View full history in logs]({log_url})"
+                await _safe_send_to_channel(
+                    embeds=[limit_embed],
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
+
+            # Build list of remaining messages to show
+            messages_to_show = []
+            messages_to_show.extend(notes)
+            messages_to_show.extend(regular_messages)
+
+            for msg in messages_to_show:
+                try:
+                    author = self.bot.get_user(msg["author_id"]) or await self.bot.get_or_fetch_user(
+                        msg["author_id"]
+                    )
+                except discord.NotFound:
+                    author = None
+
+                content = msg.get("content")
+                embeds = [discord.Embed.from_dict(e) for e in msg.get("embeds", []) if e]
+                attachments = msg.get("attachments", [])
+
+                # Only send if there is something to send
+                if not content and not embeds and not attachments:
+                    continue
+
+                author_is_mod = msg["author_id"] not in [r.id for r in self.recipients]
+                if author_is_mod:
+                    # Prefer stored author_name/avatar
+                    username = (
+                        msg.get("author_name")
+                        or (getattr(author, "name", None) if author else None)
+                        or "Unknown"
+                    )
+                    user_id = msg.get("author_id")
+                    if embeds:
+                        # Ensure embeds show author details
+                        embeds[0].set_author(
+                            name=f"{username} ({user_id})",
+                            icon_url=msg.get("author_avatar")
+                            or (
+                                author.display_avatar.url
+                                if author and hasattr(author, "display_avatar")
+                                else None
+                            ),
+                        )
+                        # If there were attachment URLs, include them as a field so mods can access them
+                        if attachments:
+                            try:
+                                embeds[0].add_field(
+                                    name="Attachments",
+                                    value="\n".join(attachments),
+                                    inline=False,
+                                )
+                            except Exception as e:
+                                logger.info(
+                                    "Failed to add attachments field while replaying unsnoozed messages: %s",
+                                    e,
+                                )
+                        await _safe_send_to_channel(
+                            embeds=embeds,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
+                    else:
+                        # Plain-text path (no embeds): prefix with username and user id
+                        header = f"**{username} ({user_id})**"
+                        body = content or ""
+                        if attachments and not body:
+                            # no content; include attachment URLs on new lines
+                            body = "\n".join(attachments)
+                        formatted = f"{header}: {body}" if body else header
+                        await _safe_send_to_channel(
+                            content=formatted,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
                 else:
-                    formatted = (
-                        f"**{username} ({user_id})**: {content}" if content else f"**{username} ({user_id})**"
+                    # Recipient message: include attachment URLs if content is empty
+                    # When no embeds, prefix plain text with username and user id
+                    username = (
+                        msg.get("author_name")
+                        or (getattr(author, "name", None) if author else None)
+                        or "Unknown"
                     )
-                    await channel.send(formatted)
-            else:
-                await channel.send(content=content or None, embeds=embeds or None)
+                    user_id = msg.get("author_id")
+                    if embeds:
+                        await _safe_send_to_channel(
+                            content=None,
+                            embeds=embeds or None,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
+                    else:
+                        header = f"**{username} ({user_id})**"
+                        body = content or ""
+                        if attachments and not body:
+                            body = "\n".join(attachments)
+                        formatted = f"{header}: {body}" if body else header
+                        await _safe_send_to_channel(
+                            content=formatted,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
         self.snoozed = False
         # Store snooze_data for notification before clearing
         snooze_data_for_notify = self.snooze_data
@@ -313,18 +727,33 @@ class Thread:
         notify_channel = self.bot.config.get("unsnooze_notify_channel") or "thread"
         notify_text = self.bot.config.get("unsnooze_text") or "This thread has been unsnoozed and restored."
         if notify_channel == "thread":
-            await channel.send(notify_text)
+            await _safe_send_to_channel(content=notify_text, allowed_mentions=discord.AllowedMentions.none())
         else:
-            ch = self.bot.get_channel(int(notify_channel))
+            # Extract channel ID from mention format <#123> or use raw ID
+            channel_id = str(notify_channel).strip("<#>")
+            ch = self.bot.get_channel(int(channel_id))
             if ch:
-                await ch.send(f"Thread for user <@{self.id}> has been unsnoozed and restored.")
+                await ch.send(
+                    f"⏰ Thread for user <@{self.id}> has been unsnoozed and restored in {channel.mention}",
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
         # Show who ran the snooze command and the command used
         # Use snooze_data_for_notify to avoid accessing self.snooze_data after it is set to None
         snoozed_by = snooze_data_for_notify.get("snoozed_by") if snooze_data_for_notify else None
         snooze_command = snooze_data_for_notify.get("snooze_command") if snooze_data_for_notify else None
         if snoozed_by or snooze_command:
             info = f"Snoozed by: {snoozed_by or 'Unknown'} | Command: {snooze_command or '?snooze'}"
-            await channel.send(info)
+            await channel.send(info, allowed_mentions=discord.AllowedMentions.none())
+
+        # Ensure channel is set before processing commands
+        self._channel = channel
+
+        # Mark unsnooze as complete
+        self._unsnoozing = False
+
+        # Process queued commands
+        await self._process_command_queue()
+
         return True
 
     @classmethod
@@ -371,22 +800,25 @@ class Thread:
         if category is not None:
             overwrites = {}
 
-        try:
-            channel = await create_thread_channel(self.bot, recipient, category, overwrites)
-        except discord.HTTPException as e:  # Failed to create due to missing perms.
-            logger.critical("An error occurred while creating a thread.", exc_info=True)
-            self.manager.cache.pop(self.id)
+        # If thread menu is enabled and this setup call is marked as deferred genesis (initial_message carries flag),
+        # then we may have already created the channel earlier. Only create if channel missing.
+        if self._channel is None:
+            try:
+                channel = await create_thread_channel(self.bot, recipient, category, overwrites)
+            except discord.HTTPException as e:  # Failed to create due to missing perms.
+                logger.critical("An error occurred while creating a thread.", exc_info=True)
+                self.manager.cache.pop(self.id)
 
-            embed = discord.Embed(color=self.bot.error_color)
-            embed.title = "Error while trying to create a thread."
-            embed.description = str(e)
-            embed.add_field(name="Recipient", value=recipient.mention)
+                embed = discord.Embed(color=self.bot.error_color)
+                embed.title = "Error while trying to create a thread."
+                embed.description = str(e)
+                embed.add_field(name="Recipient", value=recipient.mention)
 
-            if self.bot.log_channel is not None:
-                await self.bot.log_channel.send(embed=embed)
-            return
-
-        self._channel = channel
+                if self.bot.log_channel is not None:
+                    await self.bot.log_channel.send(embed=embed)
+                return
+            else:
+                self._channel = channel
 
         try:
             log_url, log_data = await asyncio.gather(
@@ -413,11 +845,40 @@ class Thread:
                 msg = await channel.send(mention, embed=info_embed)
                 self.bot.loop.create_task(msg.pin())
                 self._genesis_message = msg
+                # Option selection logging (if a thread-creation menu option was chosen prior to creation)
+                if getattr(self, "_selected_thread_creation_menu_option", None) and self.bot.config.get(
+                    "thread_creation_menu_selection_log"
+                ):
+                    opt = self._selected_thread_creation_menu_option
+                    try:
+                        log_txt = f"Selected menu option: {opt.get('label')} ({opt.get('type')})"
+                        if opt.get("type") == "command":
+                            log_txt += f" -> {opt.get('callback')}"
+                        await channel.send(embed=discord.Embed(description=log_txt, color=self.bot.mod_color))
+                    except Exception:
+                        logger.warning(
+                            "Failed logging thread-creation menu selection",
+                            exc_info=True,
+                        )
             except Exception:
                 logger.error("Failed unexpectedly:", exc_info=True)
 
         async def send_recipient_genesis_message():
             # Once thread is ready, tell the recipient (don't send if using contact on others)
+            # Allow disabling the DM receipt embed via config
+            if not self.bot.config.get("thread_creation_send_dm_embed"):
+                # If self-closable is enabled, add the close reaction to the user's
+                # original message instead so functionality is preserved without an embed.
+                try:
+                    recipient_thread_close = self.bot.config.get("recipient_thread_close")
+                    if recipient_thread_close and initial_message is not None:
+                        close_emoji = self.bot.config["close_emoji"]
+                        close_emoji = await self.bot.convert_emoji(close_emoji)
+                        await self.bot.add_reaction(initial_message, close_emoji)
+                except Exception as e:
+                    logger.info("Failed to add self-close reaction to initial message: %s", e)
+                return
+
             thread_creation_response = self.bot.config["thread_creation_response"]
 
             embed = discord.Embed(
@@ -434,7 +895,8 @@ class Thread:
                 footer = self.bot.config["thread_creation_footer"]
 
             embed.set_footer(
-                text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.modmail_guild, size=128)
+                text=footer,
+                icon_url=self.bot.get_guild_icon(guild=self.bot.guild, size=128),
             )
             embed.title = self.bot.config["thread_creation_title"]
 
@@ -616,6 +1078,13 @@ class Thread:
             await self._close(closer, silent, delete_channel, message)
 
     async def _close(self, closer, silent=False, delete_channel=True, message=None, scheduled=False):
+        # Proactively disable any DM thread-creation menu so users can't keep interacting
+        # with the menu after the thread is closed.
+        try:
+            await self._disable_dm_creation_menu()
+        except Exception:
+            # Non-fatal; continue closing even if we can't edit the DM menu
+            pass
         if self.channel:
             self.manager.closing.add(self.channel.id)
         try:
@@ -702,11 +1171,11 @@ class Thread:
         tasks = [self.bot.config.update()]
 
         if self.bot.log_channel is not None and self.channel is not None:
-            if self.bot.config["show_log_url_button"]:
+            # Only create a URL button if we actually have a valid log_url
+            view = None
+            if self.bot.config.get("show_log_url_button") and log_url:
                 view = discord.ui.View()
                 view.add_item(discord.ui.Button(label="Log link", url=log_url, style=discord.ButtonStyle.url))
-            else:
-                view = None
             tasks.append(self.bot.log_channel.send(embed=embed, view=view))
 
         # Thread closed message
@@ -725,12 +1194,18 @@ class Thread:
                 message = self.bot.config["thread_close_response"]
 
         message = self.bot.formatter.format(
-            message, closer=closer, loglink=log_url, logkey=log_data["key"] if log_data else None
+            message,
+            closer=closer,
+            loglink=log_url,
+            logkey=log_data["key"] if log_data else None,
         )
 
         embed.description = message
         footer = self.bot.config["thread_close_footer"]
-        embed.set_footer(text=footer, icon_url=self.bot.get_guild_icon(guild=self.bot.guild, size=128))
+        embed.set_footer(
+            text=footer,
+            icon_url=self.bot.get_guild_icon(guild=self.bot.guild, size=128),
+        )
 
         if not silent:
             for user in self.recipients:
@@ -754,6 +1229,43 @@ class Thread:
                 self.manager.closing.discard(self.channel.id)
 
         self.bot.dispatch("thread_close", self, closer, silent, delete_channel, message, scheduled)
+
+    async def _disable_dm_creation_menu(self) -> None:
+        """Best-effort removal of the interactive DM menu view sent during thread creation."""
+        if not self._dm_menu_msg_id:
+            return
+        # We only ever send the menu to the main recipient
+        user = self.recipient
+        if not isinstance(user, (discord.User, discord.Member)):
+            return
+        # Ensure we have a DM channel
+        dm: typing.Optional[discord.DMChannel] = getattr(user, "dm_channel", None)
+        if dm is None:
+            try:
+                dm = await user.create_dm()
+            except Exception as e:
+                logger.info("Failed creating DM channel for menu disable: %s", e)
+                dm = None
+        if not isinstance(dm, discord.DMChannel):
+            return
+        # If we stored the channel id and it differs, but it's still a DM, continue anyway
+        try:
+            msg = await dm.fetch_message(self._dm_menu_msg_id)
+        except (discord.NotFound, discord.Forbidden):
+            return
+        except Exception:
+            return
+        try:
+            closed_text = "This thread has been closed. Send a new message to start a new thread."  # Grammar-friendly guidance
+            closed_embed = discord.Embed(description=closed_text)
+            await msg.edit(content=None, embed=closed_embed, view=None)
+        except Exception as e:
+            # Fallback: at least remove interaction so menu cannot be used
+            logger.warning("Failed editing DM menu message on close: %s", e)
+            try:
+                await msg.edit(view=None)
+            except Exception as inner_e:
+                logger.debug("Failed removing view from DM menu message: %s", inner_e)
 
     async def cancel_closure(self, auto_close: bool = False, all: bool = False) -> None:
         if self.close_task is not None and (not auto_close or all):
@@ -801,7 +1313,12 @@ class Thread:
                 time_marker_regex,
             )
 
-        await self.close(closer=self.bot.user, after=int(seconds), message=close_message, auto_close=True)
+        await self.close(
+            closer=self.bot.user,
+            after=int(seconds),
+            message=close_message,
+            auto_close=True,
+        )
 
     async def find_linked_messages(
         self,
@@ -811,31 +1328,73 @@ class Thread:
         note: bool = True,
     ) -> typing.Tuple[discord.Message, typing.List[typing.Optional[discord.Message]]]:
         if message1 is not None:
-            if not message1.embeds or not message1.embeds[0].author.url or message1.author != self.bot.user:
-                raise ValueError("Malformed thread message.")
+            if note:
+                # For notes, don't require author.url; rely on footer/author.name markers
+                if not message1.embeds or message1.author != self.bot.user:
+                    logger.warning(
+                        f"Malformed note for deletion: embeds={bool(message1.embeds)}, author={message1.author}"
+                    )
+                    raise ValueError("Malformed note message.")
+            else:
+                if (
+                    not message1.embeds
+                    or not message1.embeds[0].author.url
+                    or message1.author != self.bot.user
+                ):
+                    logger.debug(
+                        f"Malformed thread message for deletion: embeds={bool(message1.embeds)}, author_url={getattr(message1.embeds[0], 'author', None) and message1.embeds[0].author.url}, author={message1.author}"
+                    )
+                    # Keep original error string to avoid extra failure embeds in on_message_delete
+                    raise ValueError("Malformed thread message.")
 
         elif message_id is not None:
             try:
                 message1 = await self.channel.fetch_message(message_id)
             except discord.NotFound:
+                logger.warning(f"Message ID {message_id} not found in channel history.")
                 raise ValueError("Thread message not found.")
 
+            if note:
+                # Try to treat as note/persistent note first
+                if message1.embeds and message1.author == self.bot.user:
+                    footer_text = (message1.embeds[0].footer and message1.embeds[0].footer.text) or ""
+                    author_name = getattr(message1.embeds[0].author, "name", "") or ""
+                    is_note = (
+                        "internal note" in footer_text.lower()
+                        or "persistent internal note" in footer_text.lower()
+                        or author_name.startswith("📝 Note")
+                        or author_name.startswith("📝 Persistent Note")
+                    )
+                    if is_note:
+                        # Notes have no linked DM counterpart; keep None sentinel
+                        return message1, None
+                # else: fall through to relay checks below
+
+            # Non-note path (regular relayed messages): require author.url and colors
             if not (
                 message1.embeds
                 and message1.embeds[0].author.url
                 and message1.embeds[0].color
                 and message1.author == self.bot.user
             ):
+                logger.warning(
+                    f"Message {message_id} is not a valid modmail relay message. embeds={bool(message1.embeds)}, author_url={getattr(message1.embeds[0], 'author', None) and message1.embeds[0].author.url}, color={getattr(message1.embeds[0], 'color', None)}, author={message1.author}"
+                )
                 raise ValueError("Thread message not found.")
 
             if message1.embeds[0].footer and "Internal Message" in message1.embeds[0].footer.text:
                 if not note:
-                    raise ValueError("Thread message not found.")
+                    logger.warning(
+                        f"Message {message_id} is an internal message, but note deletion not requested."
+                    )
+                    raise ValueError("Thread message is an internal message, not a note.")
+                # Internal bot-only message treated similarly; keep None sentinel
                 return message1, None
 
             if message1.embeds[0].color.value != self.bot.mod_color and not (
                 either_direction and message1.embeds[0].color.value == self.bot.recipient_color
             ):
+                logger.warning("Message color does not match mod/recipient colors.")
                 raise ValueError("Thread message not found.")
         else:
             async for message1 in self.channel.history():
@@ -890,8 +1449,11 @@ class Thread:
         embed1 = message1.embeds[0]
         embed1.description = message
 
-        tasks = [self.bot.api.edit_message(message1.id, message), message1.edit(embed=embed1)]
-        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
+        tasks = [
+            self.bot.api.edit_message(message1.id, message),
+            message1.edit(embed=embed1),
+        ]
+        if message1.embeds[0].footer and "Persistent Internal Note" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.edit_note(message1.id, message)]
         else:
             for m2 in message2:
@@ -910,15 +1472,14 @@ class Thread:
         else:
             message1, *message2 = await self.find_linked_messages(message, note=note)
         tasks = []
-
-        if not isinstance(message, discord.Message):
-            tasks += [message1.delete()]
+        # Always delete the primary thread message
+        tasks += [message1.delete()]
 
         for m2 in message2:
             if m2 is not None:
                 tasks += [m2.delete()]
 
-        if message1.embeds[0].footer and "Persistent Internal Message" in message1.embeds[0].footer.text:
+        if message1.embeds[0].footer and "Persistent Internal Note" in message1.embeds[0].footer.text:
             tasks += [self.bot.api.delete_note(message1.id)]
 
         if tasks:
@@ -1024,9 +1585,56 @@ class Thread:
         return msg
 
     async def reply(
-        self, message: discord.Message, anonymous: bool = False, plain: bool = False
+        self,
+        message: discord.Message,
+        content: typing.Optional[str] = None,
+        anonymous: bool = False,
+        plain: bool = False,
     ) -> typing.Tuple[typing.List[discord.Message], discord.Message]:
-        """Returns List[user_dm_msg] and thread_channel_msg"""
+        """Send a moderator reply to the thread.
+
+        Parameters
+        ----------
+        message: discord.Message
+            The invoking command message (contains attachments, stickers, etc.).
+        content: Optional[str]
+            Raw reply text to send instead of using ``message.content``. This avoids
+            mutating ``message.content`` upstream and lets command handlers pass the
+            processed text directly.
+        anonymous: bool
+            Whether to mask the moderator identity in the recipient DM.
+        plain: bool
+            Whether to send a plain (non-embed) message to the recipient.
+
+        Returns
+        -------
+        Tuple[List[discord.Message], discord.Message]
+            A list of messages sent to recipients and the copy sent in the thread channel.
+        """
+        # If this thread was snoozed using move-behavior, unsnooze automatically when a mod replies
+        try:
+            behavior = (self.bot.config.get("snooze_behavior") or "delete").lower()
+        except Exception:
+            behavior = "delete"
+        if self.snoozed and behavior == "move":
+            # Ensure we have snooze_data to restore location
+            if not self.snooze_data:
+                try:
+                    log_entry = await self.bot.api.logs.find_one(
+                        {"recipient.id": str(self.id), "snoozed": True}
+                    )
+                    if log_entry:
+                        self.snooze_data = log_entry.get("snooze_data")
+                except Exception as e:
+                    logger.info(
+                        "Failed to fetch snooze_data before auto-unsnooze on reply: %s",
+                        e,
+                    )
+            try:
+                await self.restore_from_snooze()
+            except Exception as e:
+                logger.warning("Auto-unsnooze on reply failed: %s", e)
+
         if not message.content and not message.attachments and not message.stickers:
             raise MissingRequiredArgument(DummyParam("msg"))
         for guild in self.bot.guilds:
@@ -1034,7 +1642,10 @@ class Thread:
                 if await self.bot.get_or_fetch_member(guild, self.id):
                     break
             except discord.NotFound:
-                pass
+                logger.info(
+                    "Recipient not found in guild %s when checking mutual servers.",
+                    guild.id if hasattr(guild, "id") else guild,
+                )
         else:
             return await message.channel.send(
                 embed=discord.Embed(
@@ -1055,6 +1666,7 @@ class Thread:
                     from_mod=True,
                     anonymous=anonymous,
                     plain=plain,
+                    content_override=content,
                 )
             )
 
@@ -1084,18 +1696,34 @@ class Thread:
             )
         else:
             # Send the same thing in the thread channel.
-            msg = await self.send(
-                message, destination=self.channel, from_mod=True, anonymous=anonymous, plain=plain
-            )
-
-            tasks.append(
-                self.bot.api.append_log(
+            try:
+                msg = await self.send(
                     message,
-                    message_id=msg.id,
-                    channel_id=self.channel.id,
-                    type_="anonymous" if anonymous else "thread_message",
+                    destination=self.channel,
+                    from_mod=True,
+                    anonymous=anonymous,
+                    plain=plain,
+                    content_override=content,
                 )
-            )
+            except discord.NotFound:
+                logger.warning(
+                    "Thread channel not found while replying; skipping thread-channel copy of the message."
+                )
+                msg = None
+
+            if msg is not None:
+                tasks.append(
+                    self.bot.api.append_log(
+                        message,
+                        message_id=msg.id,
+                        channel_id=self.channel.id,
+                        type_="anonymous" if anonymous else "thread_message",
+                    )
+                )
+            else:
+                logger.warning(
+                    "Thread channel message failed to send; skipping append_log. Channel may be missing."
+                )
 
             # Cancel closing if a thread message is sent.
             if self.close_task is not None:
@@ -1125,7 +1753,26 @@ class Thread:
         plain: bool = False,
         persistent_note: bool = False,
         thread_creation: bool = False,
+        *,
+        content_override: typing.Optional[str] = None,
     ) -> None:
+        """Low-level send routine used by reply/note logic.
+
+        Parameters
+        ----------
+        message: discord.Message
+            The command invocation message (source of attachments/stickers).
+        destination: Channel/User/Member
+            Where to send the constructed message/embed.
+        from_mod: bool
+            Indicates this is a staff reply (affects author display + logging).
+        note: bool
+            Internal note style instead of a regular reply.
+        anonymous / plain / persistent_note / thread_creation: Various flags controlling style.
+        content_override: Optional[str]
+            Explicit text to use instead of ``message.content``. Provided by refactored
+            reply commands to avoid mutating the original message object.
+        """
         # Handle notes with Discord-like system message format - return early
         if note:
             destination = destination or self.channel
@@ -1184,11 +1831,9 @@ class Thread:
         if destination is None:
             logger.error("Attempted to send a message to a thread with no channel (destination is None).")
             return
-        try:
-            await destination.typing()
-        except discord.NotFound:
-            logger.warning("Channel not found when trying to send message.")
-            return
+        # Initial typing was attempted here previously, but returning on NotFound caused callers to
+        # receive None and crash when accessing attributes on the message. We rely on the
+        # snooze-aware typing block below to handle typing and NotFound cases robustly.
 
         author = message.author
         member = self.bot.guild.get_member(author.id)
@@ -1234,7 +1879,7 @@ class Thread:
             ):
                 content = "No content"
             else:
-                content = message.content or ""
+                content = (content_override if content_override is not None else message.content) or ""
 
         # Only set description if there's actual content to show
         if content:
@@ -1258,7 +1903,7 @@ class Thread:
                     tag = str(get_top_role(author, self.bot.config["use_hoisted_top_role"]))
                 name = self.bot.config["anon_username"]
                 if name is None:
-                    name = tag
+                    name = "Anonymous"
                 avatar_url = self.bot.config["anon_avatar_url"]
                 if avatar_url is None:
                     avatar_url = self.bot.get_guild_icon(guild=self.bot.guild, size=128)
@@ -1269,8 +1914,15 @@ class Thread:
                 )
             else:
                 # Normal message
-                name = str(author)
-                avatar_url = avatar_url
+                # If this message originated from a thread-creation menu command callback
+                # (user selected an option whose type is command), we force the author
+                # display to be the bot to avoid showing the user as a replying moderator.
+                if getattr(message, "_menu_invoked", False):
+                    name = str(self.bot.user)
+                    avatar_url = getattr(self.bot.user.display_avatar, "url", system_avatar_url)
+                else:
+                    name = str(author)
+                    avatar_url = avatar_url
                 embed.set_author(
                     name=name,
                     icon_url=avatar_url,
@@ -1332,7 +1984,11 @@ class Thread:
                 discord.StickerFormatType.gif,
             ):
                 images.append(
-                    (f"https://media.discordapp.net/stickers/{i.id}.{i.format.file_extension}", i.name, True)
+                    (
+                        f"https://media.discordapp.net/stickers/{i.id}.{i.format.file_extension}",
+                        i.name,
+                        True,
+                    )
                 )
             elif i.format == discord.StickerFormatType.lottie:
                 # save the json lottie representation
@@ -1428,9 +2084,23 @@ class Thread:
                     embed.set_footer(text="Anonymous Reply")
                 # Normal messages
                 elif not anonymous:
+                    # Use configured mod_tag if provided; otherwise fallback to
+                    # the author's top role when available, or their display name.
                     mod_tag = self.bot.config["mod_tag"]
                     if mod_tag is None:
-                        mod_tag = str(get_top_role(message.author, self.bot.config["use_hoisted_top_role"]))
+                        if hasattr(message.author, "roles"):
+                            try:
+                                mod_tag = str(
+                                    get_top_role(
+                                        message.author,
+                                        self.bot.config["use_hoisted_top_role"],
+                                    )  # type: ignore[arg-type]
+                                )
+                            except Exception:
+                                # As a safe fallback, prefer a stable display string
+                                mod_tag = getattr(message.author, "display_name", str(message.author))
+                        else:
+                            mod_tag = getattr(message.author, "display_name", str(message.author))
                     embed.set_footer(text=mod_tag)  # Normal messages
                 else:
                     embed.set_footer(text=self.bot.config["anon_tag"])
@@ -1444,7 +2114,14 @@ class Thread:
 
         if (from_mod or note) and not thread_creation:
             delete_message = not bool(message.attachments)
-            if delete_message and destination == self.channel:
+            # Only delete the source command message when it's in a guild text
+            # channel; attempting to delete a DM message can raise 50003.
+            if (
+                delete_message
+                and destination == self.channel
+                and hasattr(message, "channel")
+                and isinstance(message.channel, discord.TextChannel)
+            ):
                 try:
                     await message.delete()
                 except Exception as e:
@@ -1457,14 +2134,31 @@ class Thread:
         ):
             logger.info("Sending a message to %s when DM disabled is set.", self.recipient)
 
-        # Best-effort typing: never block message delivery if typing fails
+        # Best-effort typing with snooze-aware retry: if channel was deleted during snooze, restore and retry once
+        restored = False
         try:
             await destination.typing()
         except discord.NotFound:
-            logger.warning("Channel not found.")
-            raise
+            # Unknown Channel: if snoozed or we have snooze data, attempt to restore and retry once
+            if isinstance(destination, discord.TextChannel) and (self.snoozed or self.snooze_data):
+                logger.info("Thread channel missing while typing; attempting restore from snooze.")
+                try:
+                    await self.restore_from_snooze()
+                    destination = self.channel or destination
+                    restored = True
+                    await destination.typing()
+                except Exception as e:
+                    logger.warning("Restore/typing retry failed: %s", e)
+                    raise
+            else:
+                logger.warning("Channel not found.")
+                raise
         except (discord.Forbidden, discord.HTTPException, Exception) as e:
-            logger.warning("Unable to send typing to %s: %s. Continuing without typing.", destination, e)
+            logger.warning(
+                "Unable to send typing to %s: %s. Continuing without typing.",
+                destination,
+                e,
+            )
 
         if not from_mod and not note:
             mentions = await self.get_notifications()
@@ -1473,29 +2167,45 @@ class Thread:
 
         if plain:
             if from_mod and not isinstance(destination, discord.TextChannel):
-                # Plain to user
+                # Plain to user (DM)
                 with warnings.catch_warnings():
-                    # Catch coroutines not awaited warning
                     warnings.simplefilter("ignore")
                     additional_images = []
 
-                if embed.footer.text:
-                    plain_message = f"**{embed.footer.text} "
-                else:
-                    plain_message = "**"
-                plain_message += f"{embed.author.name}:** {embed.description}"
-                files = []
-                for i in message.attachments:
-                    files.append(await i.to_file())
+                prefix = f"**{embed.footer.text} " if embed.footer and embed.footer.text else "**"
+                body = embed.description or ""
+                plain_message = f"{prefix}{embed.author.name}:** {body}"
 
-                msg = await destination.send(plain_message, files=files)
+                files = []
+                for att in message.attachments:
+                    try:
+                        files.append(await att.to_file())
+                    except Exception:
+                        logger.warning("Failed to attach file in plain DM.", exc_info=True)
+
+                msg = await destination.send(plain_message, files=files or None)
             else:
                 # Plain to mods
-                embed.set_footer(text="[PLAIN] " + embed.footer.text)
+                footer_text = embed.footer.text if embed.footer else ""
+                embed.set_footer(text=f"[PLAIN] {footer_text}".strip())
                 msg = await destination.send(mentions, embed=embed)
 
         else:
-            msg = await destination.send(mentions, embed=embed)
+            try:
+                msg = await destination.send(mentions, embed=embed)
+            except discord.NotFound:
+                if (
+                    isinstance(destination, discord.TextChannel)
+                    and (self.snoozed or self.snooze_data)
+                    and not restored
+                ):
+                    logger.info("Thread channel missing while sending; attempting restore and resend.")
+                    await self.restore_from_snooze()
+                    destination = self.channel or destination
+                    msg = await destination.send(mentions, embed=embed)
+                else:
+                    logger.warning("Channel not found during send.")
+                    raise
 
         if additional_images:
             self.ready = False
@@ -1506,16 +2216,19 @@ class Thread:
 
     async def get_notifications(self) -> str:
         key = str(self.id)
+        mentions: typing.List[str] = []
+        subs = self.bot.config["subscriptions"].get(key, [])
+        mentions.extend(subs)
+        one_time = self.bot.config["notification_squad"].get(key, [])
+        mentions.extend(one_time)
 
-        mentions = []
-        mentions.extend(self.bot.config["subscriptions"].get(key, []))
-
-        if key in self.bot.config["notification_squad"]:
-            mentions.extend(self.bot.config["notification_squad"][key])
-            self.bot.config["notification_squad"].pop(key)
+        if one_time:
+            self.bot.config["notification_squad"].pop(key, None)
             self.bot.loop.create_task(self.bot.config.update())
 
-        return " ".join(set(mentions))
+        if not mentions:
+            return ""
+        return " ".join(list(dict.fromkeys(mentions)))
 
     async def set_title(self, title: str) -> None:
         topic = f"Title: {title}\n"
@@ -1585,6 +2298,59 @@ class Thread:
         await self.channel.edit(topic=topic)
         await self._update_users_genesis()
 
+    async def queue_command(self, ctx, command) -> bool:
+        """
+        Queue a command to be executed after unsnooze completes.
+        Close commands are automatically moved to the end of the queue.
+        Returns True if command was queued, False if it should execute immediately.
+        """
+        if self._unsnoozing:
+            command_name = command.qualified_name if command else ""
+
+            # If it's a close command, always add to end
+            if command_name == "close":
+                self._command_queue.append((ctx, command))
+            else:
+                # For non-close commands, insert before any close commands
+                close_index = None
+                for i, (_, cmd) in enumerate(self._command_queue):
+                    if cmd and cmd.qualified_name == "close":
+                        close_index = i
+                        break
+
+                if close_index is not None:
+                    self._command_queue.insert(close_index, (ctx, command))
+                else:
+                    self._command_queue.append((ctx, command))
+
+            return True
+        return False
+
+    async def _process_command_queue(self) -> None:
+        """
+        Process all queued commands after unsnooze completes.
+        Close commands are always last, so processing stops naturally after close.
+        """
+        if not self._command_queue:
+            return
+
+        logger.info(f"Processing {len(self._command_queue)} queued commands for thread {self.id}")
+
+        # Process commands in order
+        while self._command_queue:
+            ctx, command = self._command_queue.pop(0)
+            try:
+                command_name = command.qualified_name if command else ""
+                await self.bot.invoke(ctx)
+
+                # If close command was executed, stop (it's always last anyway)
+                if command_name == "close":
+                    logger.info("Close command executed, queue processing complete")
+                    break
+
+            except Exception as e:
+                logger.error(f"Error processing queued command: {e}", exc_info=True)
+
 
 class ThreadManager:
     """Class that handles storing, finding and creating Modmail threads."""
@@ -1621,7 +2387,8 @@ class ThreadManager:
             thread = await self._find_from_channel(channel)
             if thread is None:
                 user_id, thread = next(
-                    ((k, v) for k, v in self.cache.items() if v.channel == channel), (-1, None)
+                    ((k, v) for k, v in self.cache.items() if v.channel == channel),
+                    (-1, None),
                 )
                 if thread is not None:
                     logger.debug("Found thread with tempered ID.")
@@ -1636,12 +2403,42 @@ class ThreadManager:
             try:
                 await thread.wait_until_ready()
             except asyncio.CancelledError:
-                logger.warning("Thread for %s cancelled.", recipient)
+                # Improve logging: include username and user ID when possible
+                try:
+                    if recipient is not None:
+                        label = f"{recipient} ({recipient.id})"
+                    elif recipient_id is not None:
+                        user = await self.bot.get_or_fetch_user(recipient_id)
+                        label = f"{user} ({recipient_id})" if user else f"User ({recipient_id})"
+                    else:
+                        label = "Unknown User"
+                except Exception:
+                    label = f"User ({recipient_id})" if recipient_id is not None else "Unknown User"
+                logger.warning("Thread for %s cancelled.", label)
                 return thread
             else:
                 # If the thread is snoozed (channel is None), return it for restoration
                 if thread.cancelled:
                     thread = None
+                else:
+                    # If the cached thread points to a deleted channel, treat as non-existent
+                    try:
+                        ch = getattr(thread, "channel", None)
+                        if (
+                            ch
+                            and isinstance(ch, discord.TextChannel)
+                            and self.bot.get_channel(getattr(ch, "id", None)) is None
+                        ):
+                            logger.info(
+                                "Cached thread for %s references a deleted channel. Dropping stale cache entry.",
+                                recipient_id,
+                            )
+                            self.cache.pop(thread.id, None)
+                            thread = None
+                    except Exception:
+                        # If any attribute access fails, be safe and drop it.
+                        self.cache.pop(getattr(thread, "id", None), None)
+                        thread = None
         else:
 
             def check(topic):
@@ -1753,13 +2550,21 @@ class ThreadManager:
             try:
                 await thread.wait_until_ready()
             except asyncio.CancelledError:
-                logger.warning("Thread for %s cancelled, abort creating.", recipient)
+                # Improve logging to include username and ID
+                try:
+                    label = f"{recipient} ({recipient.id})"
+                except Exception:
+                    label = f"User ({getattr(recipient, 'id', 'unknown')})"
+                logger.warning("Thread for %s cancelled, abort creating.", label)
                 return thread
             else:
                 if thread.channel and self.bot.get_channel(thread.channel.id):
                     logger.warning("Found an existing thread for %s, abort creating.", recipient)
                     return thread
-                logger.warning("Found an existing thread for %s, closing previous thread.", recipient)
+                logger.warning(
+                    "Found an existing thread for %s, closing previous thread.",
+                    recipient,
+                )
                 self.bot.loop.create_task(
                     thread.close(closer=self.bot.user, silent=True, delete_channel=False)
                 )
@@ -1768,16 +2573,35 @@ class ThreadManager:
 
         self.cache[recipient.id] = thread
 
-        if (message or not manual_trigger) and self.bot.config["confirm_thread_creation"]:
+        # Determine if the advanced thread-creation menu is enabled; if so and the user
+        # initiated via DM, we defer confirmation until AFTER the user selects an option.
+        adv_menu_enabled = self.bot.config.get("thread_creation_menu_enabled") and bool(
+            self.bot.config.get("thread_creation_menu_options")
+        )
+        user_initiated_dm = (creator is None or creator == recipient) and manual_trigger
+
+        if (
+            (message or not manual_trigger)
+            and self.bot.config["confirm_thread_creation"]
+            and not (adv_menu_enabled and user_initiated_dm)
+        ):
             if not manual_trigger:
                 destination = recipient
             else:
                 destination = message.channel
             view = ConfirmThreadCreationView()
             view.add_item(
-                AcceptButton("accept-thread-creation", self.bot.config["confirm_thread_creation_accept"])
+                AcceptButton(
+                    "accept-thread-creation",
+                    self.bot.config["confirm_thread_creation_accept"],
+                )
             )
-            view.add_item(DenyButton("deny-thread-creation", self.bot.config["confirm_thread_creation_deny"]))
+            view.add_item(
+                DenyButton(
+                    "deny-thread-creation",
+                    self.bot.config["confirm_thread_creation_deny"],
+                )
+            )
             confirm = await destination.send(
                 embed=discord.Embed(
                     title=self.bot.config["confirm_thread_creation_title"],
@@ -1804,7 +2628,8 @@ class ThreadManager:
                 self.bot.loop.create_task(
                     destination.send(
                         embed=discord.Embed(
-                            title=self.bot.config["thread_cancelled"], color=self.bot.error_color
+                            title=self.bot.config["thread_cancelled"],
+                            color=self.bot.error_color,
                         )
                     )
                 )
@@ -1812,7 +2637,738 @@ class ThreadManager:
                 del self.cache[recipient.id]
                 return thread
 
-        self.bot.loop.create_task(thread.setup(creator=creator, category=category, initial_message=message))
+        # --- THREAD-CREATION MENU (deferred or precreate channel creation) ---
+        adv_enabled = self.bot.config.get("thread_creation_menu_enabled") and bool(
+            self.bot.config.get("thread_creation_menu_options")
+        )
+        user_initiated = (creator is None or creator == recipient) and manual_trigger
+        precreate = (
+            adv_enabled
+            and user_initiated
+            and bool(self.bot.config.get("thread_creation_menu_precreate_channel"))
+        )
+        if adv_enabled and user_initiated and not precreate:
+            # Send menu prompt FIRST, wait for selection, then create channel.
+            # Build dummy message for menu DM
+            try:
+                embed_text = self.bot.config.get("thread_creation_menu_embed_text")
+                placeholder = self.bot.config.get("thread_creation_menu_dropdown_placeholder")
+                timeout = int(self.bot.config.get("thread_creation_menu_timeout") or 20)
+            except Exception:
+                embed_text = "Please select an option."
+                placeholder = "Select an option to contact the staff team."
+                timeout = 20
+
+            options = self.bot.config.get("thread_creation_menu_options") or {}
+            submenus = self.bot.config.get("thread_creation_menu_submenus") or {}
+
+            # Minimal inline view implementation (avoid importing plugin code)
+
+            thread.ready = False  # not ready yet
+
+            class _ThreadCreationMenuSelect(discord.ui.Select):
+                def __init__(self, outer_thread: Thread):
+                    self.outer_thread = outer_thread
+                    opts = [
+                        discord.SelectOption(
+                            label=o["label"],
+                            description=o["description"],
+                            emoji=o["emoji"],
+                        )
+                        for o in options.values()
+                    ]
+                    super().__init__(
+                        placeholder=placeholder,
+                        min_values=1,
+                        max_values=1,
+                        options=opts,
+                    )
+
+                async def callback(self, interaction: discord.Interaction):
+                    await interaction.response.defer(ephemeral=False)
+                    # If the thread was snoozed before the user selected an option,
+                    # restore it first so channel creation/setup & message relay work.
+                    try:
+                        if self.outer_thread.snoozed:
+                            await self.outer_thread.restore_from_snooze()
+                    except Exception:
+                        logger.warning("Failed unsnoozing thread prior to menu selection; continuing.")
+                    chosen_label = self.values[0]
+                    # Resolve option key
+                    key = chosen_label.lower().replace(" ", "_")
+                    selected = options.get(key)
+                    self.outer_thread._selected_thread_creation_menu_option = selected
+                    # Reflect the selection in the original DM by editing the embed/body
+                    try:
+                        msg = getattr(interaction, "message", None)
+                        if msg is None and self.view and hasattr(self.view, "message"):
+                            msg = self.view.message
+                        if msg is not None:
+                            # Replace entire embed so only the selection line remains
+                            try:
+                                base_color = (msg.embeds[0].color if msg.embeds else None) or getattr(
+                                    self.outer_thread.bot, "mod_color", None
+                                )
+                            except Exception:
+                                base_color = getattr(self.outer_thread.bot, "mod_color", None)
+                            selection_embed = (
+                                discord.Embed(
+                                    description=f"You selected: {chosen_label}",
+                                    color=base_color,
+                                )
+                                if base_color is not None
+                                else discord.Embed(description=f"You selected: {chosen_label}")
+                            )
+                            await msg.edit(content=None, embed=selection_embed, view=None)
+                        else:
+                            try:
+                                await interaction.edit_original_response(
+                                    content=f"You selected: {chosen_label}", view=None
+                                )
+                            except Exception as e:
+                                # Fallback: best-effort remove the view at least
+                                logger.info(
+                                    "Primary edit_original_response failed; trying to remove view only: %s",
+                                    e,
+                                )
+                                await interaction.edit_original_response(view=None)
+                    except Exception as e:
+                        # Ensure the menu is removed even if content edit failed
+                        logger.warning("Failed to update selection message: %s", e)
+                        try:
+                            await interaction.edit_original_response(view=None)
+                        except Exception as inner_e:
+                            logger.debug(
+                                "Failed to remove view after selection failure: %s",
+                                inner_e,
+                            )
+                    # Stop the view to end the interaction lifecycle
+                    if self.view:
+                        try:
+                            self.view.stop()
+                        except Exception as e:
+                            logger.debug("Failed to stop menu view after selection: %s", e)
+                    # Now create channel
+                    # Determine category: prefer option-specific category if configured and valid
+                    sel_category = None
+                    try:
+                        cat_id = selected.get("category_id") if isinstance(selected, dict) else None
+                        if cat_id:
+                            guild = self.outer_thread.bot.modmail_guild
+                            if guild:
+                                ch = guild.get_channel(cat_id)
+                                if isinstance(ch, discord.CategoryChannel):
+                                    sel_category = ch
+                    except Exception:
+                        sel_category = None
+                    # Fallback to provided category (from outer scope) or main category
+                    fallback_category = category or self.outer_thread.bot.main_category
+                    use_category = sel_category or fallback_category
+                    # If confirmation is enabled, prompt now (after option selection)
+                    try:
+                        if self.outer_thread.bot.config.get("confirm_thread_creation"):
+                            dest = message.channel if manual_trigger else recipient
+                            view = ConfirmThreadCreationView()
+                            view.add_item(
+                                AcceptButton(
+                                    "accept-thread-creation",
+                                    self.outer_thread.bot.config["confirm_thread_creation_accept"],
+                                )
+                            )
+                            view.add_item(
+                                DenyButton(
+                                    "deny-thread-creation",
+                                    self.outer_thread.bot.config["confirm_thread_creation_deny"],
+                                )
+                            )
+                            confirm = await dest.send(
+                                embed=discord.Embed(
+                                    title=self.outer_thread.bot.config["confirm_thread_creation_title"],
+                                    description=self.outer_thread.bot.config["confirm_thread_response"],
+                                    color=self.outer_thread.bot.main_color,
+                                ),
+                                view=view,
+                            )
+                            await view.wait()
+                            if view.value is None:
+                                # Timed out
+                                self.outer_thread.cancelled = True
+                                try:
+                                    await dest.send(
+                                        embed=discord.Embed(
+                                            title=self.outer_thread.bot.config["thread_cancelled"],
+                                            description="Timed out",
+                                            color=self.outer_thread.bot.error_color,
+                                        )
+                                    )
+                                    await confirm.edit(view=None)
+                                except Exception:
+                                    logger.warning(
+                                        "Failed notifying user of thread creation timeout.",
+                                        exc_info=True,
+                                    )
+                            elif view.value is False:
+                                self.outer_thread.cancelled = True
+                                try:
+                                    await dest.send(
+                                        embed=discord.Embed(
+                                            title=self.outer_thread.bot.config["thread_cancelled"],
+                                            color=self.outer_thread.bot.error_color,
+                                        )
+                                    )
+                                except Exception:
+                                    logger.warning(
+                                        "Failed notifying user of thread creation denial.",
+                                        exc_info=True,
+                                    )
+                            if self.outer_thread.cancelled:
+                                # Clear pending/menu state and cache
+                                try:
+                                    setattr(self.outer_thread, "_pending_menu", False)
+                                    self.outer_thread.manager.cache.pop(self.outer_thread.id, None)
+                                except Exception:
+                                    logger.debug(
+                                        "Failed clearing pending menu/cache after cancellation.",
+                                        exc_info=True,
+                                    )
+                                return
+                    except Exception:
+                        # If confirm step fails, proceed to create thread to avoid dead-ends
+                        logger.warning("Confirm step failed after menu selection; continuing.")
+
+                    self.outer_thread.bot.loop.create_task(
+                        self.outer_thread.setup(
+                            creator=creator,
+                            category=use_category,
+                            initial_message=message,
+                        )
+                    )
+                    # Wait until channel is ready, then forward the original message like usual
+                    try:
+                        await self.outer_thread.wait_until_ready()
+                        # Edge-case: unsnoozed restore might have re-created the channel but genesis send failed; ensure ready channel exists
+                        if not self.outer_thread.channel:
+                            logger.warning("Thread has no channel after unsnooze+selection; abort relay.")
+                            setattr(self.outer_thread, "_pending_menu", False)
+                            return
+                        # Forward the user's initial DM to the thread channel
+                        try:
+                            await self.outer_thread.send(message)
+                        except Exception:
+                            logger.error(
+                                "Failed to relay initial message after menu selection",
+                                exc_info=True,
+                            )
+                        else:
+                            # React to the user's DM with the 'sent' emoji
+                            try:
+                                (
+                                    sent_emoji,
+                                    _,
+                                ) = await self.outer_thread.bot.retrieve_emoji()
+                                await self.outer_thread.bot.add_reaction(message, sent_emoji)
+                            except Exception as e:
+                                logger.debug(
+                                    "Failed to add sent reaction to user's DM: %s",
+                                    e,
+                                )
+                            # Dispatch thread_reply event for parity
+                            self.outer_thread.bot.dispatch(
+                                "thread_reply",
+                                self.outer_thread,
+                                False,
+                                message,
+                                False,
+                                False,
+                            )
+                        # Clear pending flag
+                        setattr(self.outer_thread, "_pending_menu", False)
+                    except Exception:
+                        logger.warning(
+                            "Unhandled failure after menu selection while waiting for channel readiness.",
+                            exc_info=True,
+                        )
+                    # Invoke command callback AFTER channel ready if type == command
+                    if selected and selected.get("type") == "command":
+                        alias = selected.get("callback")
+                        if alias:
+                            from discord.ext.commands.view import StringView
+                            from core.utils import normalize_alias
+
+                            ctxs = []
+                            for al in normalize_alias(alias):
+                                view_ = StringView(self.outer_thread.bot.prefix + al)
+                                # Create a synthetic message object that makes the bot appear
+                                # as the author for menu-invoked command replies so the user
+                                # selecting the option is not shown as a "mod" sender.
+                                synthetic = DummyMessage(copy.copy(message))
+                                try:
+                                    synthetic.author = (
+                                        self.outer_thread.bot.modmail_guild.me or self.outer_thread.bot.user
+                                    )
+                                except Exception:
+                                    synthetic.author = self.outer_thread.bot.user
+                                # Mark this message as menu-invoked for downstream formatting
+                                setattr(synthetic, "_menu_invoked", True)
+                                ctx_ = commands.Context(
+                                    prefix=self.outer_thread.bot.prefix,
+                                    view=view_,
+                                    bot=self.outer_thread.bot,
+                                    message=synthetic,
+                                )
+                                ctx_.thread = self.outer_thread
+                                discord.utils.find(
+                                    view_.skip_string,
+                                    await self.outer_thread.bot.get_prefix(),
+                                )
+                                ctx_.invoked_with = view_.get_word().lower()
+                                ctx_.command = self.outer_thread.bot.all_commands.get(ctx_.invoked_with)
+                                # Mark context so downstream send/reply logic can treat as system/bot
+                                setattr(ctx_, "_menu_invoked", True)
+                                ctxs.append(ctx_)
+                            for ctx_ in ctxs:
+                                if ctx_.command:
+                                    old_checks = copy.copy(ctx_.command.checks)
+                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+                                    try:
+                                        await self.outer_thread.bot.invoke(ctx_)
+                                    finally:
+                                        ctx_.command.checks = old_checks
+
+            class _ThreadCreationMenuView(discord.ui.View):
+                def __init__(self, outer_thread: Thread):
+                    super().__init__(timeout=timeout)
+                    self.outer_thread = outer_thread
+                    self.add_item(_ThreadCreationMenuSelect(outer_thread))
+
+                async def on_timeout(self):
+                    # Timeout -> abort thread creation
+                    if self.outer_thread.bot.config.get("thread_creation_menu_close_on_timeout"):
+                        try:
+                            # Replace the entire embed with a minimal one containing only the timeout text
+                            try:
+                                color = (menu_msg.embeds[0].color if menu_msg.embeds else None) or getattr(
+                                    self.outer_thread.bot, "mod_color", None
+                                )
+                            except Exception:
+                                color = getattr(self.outer_thread.bot, "mod_color", None)
+                            timeout_embed = (
+                                discord.Embed(
+                                    description="Menu timed out. Please send a new message to start again.",
+                                    color=color,
+                                )
+                                if color
+                                else discord.Embed(
+                                    description="Menu timed out. Please send a new message to start again."
+                                )
+                            )
+                            await menu_msg.edit(content=None, embed=timeout_embed, view=None)
+                        except Exception:
+                            logger.info(
+                                "Failed editing menu message on timeout (close_on_timeout enabled).",
+                                exc_info=True,
+                            )
+                        # remove thread from cache
+                        try:
+                            self.outer_thread.manager.cache.pop(self.outer_thread.id, None)
+                        except Exception:
+                            logger.debug(
+                                "Failed popping thread from cache on timeout (close_on_timeout).",
+                                exc_info=True,
+                            )
+                        # Clear pending menu flag so a new message can recreate a fresh thread
+                        setattr(self.outer_thread, "_pending_menu", False)
+                        self.outer_thread.cancelled = True
+                    else:
+                        try:
+                            # Replace the entire embed with a minimal one containing only the timeout text
+                            try:
+                                color = (menu_msg.embeds[0].color if menu_msg.embeds else None) or getattr(
+                                    self.outer_thread.bot, "mod_color", None
+                                )
+                            except Exception:
+                                color = getattr(self.outer_thread.bot, "mod_color", None)
+                            timeout_embed = (
+                                discord.Embed(
+                                    description="Menu timed out. Please send a new message to start again.",
+                                    color=color,
+                                )
+                                if color
+                                else discord.Embed(
+                                    description="Menu timed out. Please send a new message to start again."
+                                )
+                            )
+                            await menu_msg.edit(content=None, embed=timeout_embed, view=None)
+                        except Exception:
+                            logger.info(
+                                "Failed editing menu message on timeout (keep alive mode).",
+                                exc_info=True,
+                            )
+                        # Allow subsequent messages to trigger a new menu/thread by clearing state
+                        setattr(self.outer_thread, "_pending_menu", False)
+                        try:
+                            self.outer_thread.manager.cache.pop(self.outer_thread.id, None)
+                        except Exception:
+                            logger.debug(
+                                "Failed popping thread from cache on timeout (keep alive mode).",
+                                exc_info=True,
+                            )
+                        self.outer_thread.cancelled = True
+                    # Ensure view is stopped to release any internal tasks
+                    try:
+                        self.stop()
+                    except Exception:
+                        logger.debug(
+                            "Failed stopping ThreadCreationMenuView on timeout.",
+                            exc_info=True,
+                        )
+
+            # Send DM prompt
+            try:
+                # Build embed with new customizable settings
+                try:
+                    embed_title = self.bot.config.get("thread_creation_menu_embed_title")
+                    embed_footer = self.bot.config.get("thread_creation_menu_embed_footer")
+                    embed_thumb = self.bot.config.get("thread_creation_menu_embed_thumbnail_url")
+                    embed_image = self.bot.config.get("thread_creation_menu_embed_image_url")
+                    embed_footer_icon = self.bot.config.get("thread_creation_menu_embed_footer_icon_url")
+                    embed_color_raw = self.bot.config.get("thread_creation_menu_embed_color")
+                except Exception:
+                    embed_title = None
+                    embed_footer = None
+                    embed_thumb = None
+                    embed_image = None
+                    embed_footer_icon = None
+                    embed_color_raw = None
+                embed_color = embed_color_raw or self.bot.mod_color
+                embed = discord.Embed(title=embed_title, description=embed_text, color=embed_color)
+                if embed_footer:
+                    try:
+                        if embed_footer_icon:
+                            embed.set_footer(text=embed_footer, icon_url=embed_footer_icon)
+                        else:
+                            embed.set_footer(text=embed_footer)
+                    except Exception as e:
+                        logger.debug("Footer build failed (ignored): %s", e)
+                # Option A: prefer dedicated large image when provided
+                if embed_image:
+                    try:
+                        embed.set_image(url=embed_image)
+                    except Exception as e:
+                        logger.debug("Image set failed (ignored): %s", e)
+                elif embed_thumb:
+                    try:
+                        embed.set_thumbnail(url=embed_thumb)
+                    except Exception as e:
+                        logger.debug("Thumbnail set failed (ignored): %s", e)
+                menu_view = _ThreadCreationMenuView(thread)
+                menu_msg = await recipient.send(embed=embed, view=menu_view)
+                # mark thread as pending menu selection
+                thread._pending_menu = True
+                # Explicitly attach the message to the view for safety in callbacks
+                try:
+                    menu_view.message = menu_msg
+                except Exception as e:
+                    logger.info(
+                        "Failed attaching menu message reference (initial menu send): %s",
+                        e,
+                    )
+                # Store for later disabling on thread close
+                try:
+                    thread._dm_menu_msg_id = menu_msg.id
+                    thread._dm_menu_channel_id = menu_msg.channel.id
+                except Exception as e:
+                    logger.info(
+                        "Failed storing DM menu identifiers (initial menu send): %s",
+                        e,
+                    )
+            except Exception:
+                logger.warning(
+                    "Failed to send thread-creation menu DM, falling back to immediate thread creation.",
+                    exc_info=True,
+                )
+                self.bot.loop.create_task(
+                    thread.setup(creator=creator, category=category, initial_message=message)
+                )
+            return thread
+
+        # If menu is enabled but precreate is requested, send the menu DM but do NOT defer creation.
+        # Selection becomes optional; thread channel will already be created below.
+        if adv_enabled and user_initiated and precreate:
+            try:
+                embed_text = self.bot.config.get("thread_creation_menu_embed_text")
+                placeholder = self.bot.config.get("thread_creation_menu_dropdown_placeholder")
+                timeout = int(self.bot.config.get("thread_creation_menu_timeout") or 20)
+            except Exception:
+                embed_text = "Please select an option."
+                placeholder = "Select an option to contact the staff team."
+                timeout = 20
+
+            options = self.bot.config.get("thread_creation_menu_options") or {}
+
+            class _PrecreateMenuSelect(discord.ui.Select):
+                def __init__(self, outer_thread: Thread):
+                    self.outer_thread = outer_thread
+                    opts = [
+                        discord.SelectOption(
+                            label=o["label"],
+                            description=o["description"],
+                            emoji=o["emoji"],
+                        )
+                        for o in options.values()
+                    ]
+                    super().__init__(
+                        placeholder=placeholder,
+                        min_values=1,
+                        max_values=1,
+                        options=opts,
+                    )
+
+                async def callback(self, interaction: discord.Interaction):
+                    await interaction.response.defer(ephemeral=False)
+                    # If thread somehow got snoozed before selection in precreate flow (rare), restore first.
+                    try:
+                        if self.outer_thread.snoozed:
+                            await self.outer_thread.restore_from_snooze()
+                    except Exception:
+                        logger.warning(
+                            "Failed unsnoozing thread prior to precreate menu selection; continuing.",
+                            exc_info=True,
+                        )
+                    chosen_label = self.values[0]
+                    key = chosen_label.lower().replace(" ", "_")
+                    selected = options.get(key)
+                    self.outer_thread._selected_thread_creation_menu_option = selected
+                    # Remove the view
+                    try:
+                        msg = getattr(interaction, "message", None)
+                        if msg is None and self.view and hasattr(self.view, "message"):
+                            msg = self.view.message
+                        if msg is not None:
+                            # Replace entire embed so only the selection line remains
+                            try:
+                                base_color = (msg.embeds[0].color if msg.embeds else None) or getattr(
+                                    self.outer_thread.bot, "mod_color", None
+                                )
+                            except Exception:
+                                base_color = getattr(self.outer_thread.bot, "mod_color", None)
+                            selection_embed = (
+                                discord.Embed(
+                                    description=f"You selected: {chosen_label}",
+                                    color=base_color,
+                                )
+                                if base_color is not None
+                                else discord.Embed(description=f"You selected: {chosen_label}")
+                            )
+                            await msg.edit(content=None, embed=selection_embed, view=None)
+                        else:
+                            try:
+                                await interaction.edit_original_response(
+                                    content=f"You selected: {chosen_label}", view=None
+                                )
+                            except Exception:
+                                await interaction.edit_original_response(view=None)
+                    except Exception:
+                        try:
+                            await interaction.edit_original_response(view=None)
+                        except Exception:
+                            logger.debug(
+                                "Failed secondary edit_original_response path removing view.",
+                                exc_info=True,
+                            )
+                    if self.view:
+                        try:
+                            self.view.stop()
+                        except Exception:
+                            logger.debug(
+                                "Failed removing view after selection (stop).",
+                                exc_info=True,
+                            )
+                    # Log selection to thread channel if configured
+                    try:
+                        await self.outer_thread.wait_until_ready()
+                        if self.outer_thread.bot.config.get("thread_creation_menu_selection_log"):
+                            opt = selected or {}
+                            log_txt = f"Selected menu option: {opt.get('label')} ({opt.get('type')})"
+                            if opt.get("type") == "command":
+                                log_txt += f" -> {opt.get('callback')}"
+                            await self.outer_thread.channel.send(
+                                embed=discord.Embed(
+                                    description=log_txt,
+                                    color=self.outer_thread.bot.mod_color,
+                                )
+                            )
+                        # If a category_id is set on the option, move the channel accordingly
+                        try:
+                            cat_id = selected.get("category_id") if isinstance(selected, dict) else None
+                            if cat_id:
+                                guild = self.outer_thread.bot.modmail_guild
+                                target = guild and guild.get_channel(int(cat_id))
+                                if isinstance(target, discord.CategoryChannel):
+                                    await self.outer_thread.channel.edit(
+                                        category=target,
+                                        reason="Menu selection: move to category",
+                                    )
+                        except Exception:
+                            logger.debug(
+                                "Failed moving thread channel based on selected category_id.",
+                                exc_info=True,
+                            )
+                    except Exception:
+                        logger.debug(
+                            "Failed logging menu selection or moving category in precreate flow.",
+                            exc_info=True,
+                        )
+                    # If the option type is command, invoke it now within the created thread
+                    if selected and selected.get("type") == "command":
+                        alias = selected.get("callback")
+                        if alias:
+                            from discord.ext.commands.view import StringView
+                            from core.utils import normalize_alias
+
+                            ctxs = []
+                            for al in normalize_alias(alias):
+                                view_ = StringView(self.outer_thread.bot.prefix + al)
+                                synthetic = DummyMessage(copy.copy(message))
+                                try:
+                                    synthetic.author = (
+                                        self.outer_thread.bot.modmail_guild.me or self.outer_thread.bot.user
+                                    )
+                                except Exception:
+                                    synthetic.author = self.outer_thread.bot.user
+                                setattr(synthetic, "_menu_invoked", True)
+                                ctx_ = commands.Context(
+                                    prefix=self.outer_thread.bot.prefix,
+                                    view=view_,
+                                    bot=self.outer_thread.bot,
+                                    message=synthetic,
+                                )
+                                ctx_.thread = self.outer_thread
+                                discord.utils.find(
+                                    view_.skip_string,
+                                    await self.outer_thread.bot.get_prefix(),
+                                )
+                                ctx_.invoked_with = view_.get_word().lower()
+                                ctx_.command = self.outer_thread.bot.all_commands.get(ctx_.invoked_with)
+                                setattr(ctx_, "_menu_invoked", True)
+                                ctxs.append(ctx_)
+                            for ctx_ in ctxs:
+                                if ctx_.command:
+                                    old_checks = copy.copy(ctx_.command.checks)
+                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+                                    try:
+                                        await self.outer_thread.bot.invoke(ctx_)
+                                    finally:
+                                        ctx_.command.checks = old_checks
+
+            class _PrecreateMenuView(discord.ui.View):
+                def __init__(self, outer_thread: Thread):
+                    super().__init__(timeout=timeout)
+                    self.add_item(_PrecreateMenuSelect(outer_thread))
+
+                async def on_timeout(self):
+                    try:
+                        # Replace the entire embed with a minimal one containing only the timeout text
+                        try:
+                            color = menu_msg.embeds[0].color if menu_msg.embeds else None
+                        except Exception:
+                            color = None
+                        timeout_embed = (
+                            discord.Embed(
+                                description="Menu timed out. Please send a new message to start again.",
+                                color=color,
+                            )
+                            if color
+                            else discord.Embed(
+                                description="Menu timed out. Please send a new message to start again."
+                            )
+                        )
+                        await menu_msg.edit(content=None, embed=timeout_embed, view=None)
+                    except Exception:
+                        logger.info(
+                            "Failed editing precreate menu message on timeout.",
+                            exc_info=True,
+                        )
+                    try:
+                        self.stop()
+                    except Exception:
+                        logger.debug(
+                            "Failed stopping PrecreateMenuView on timeout.",
+                            exc_info=True,
+                        )
+
+            try:
+                # Build embed with new customizable settings (precreate flow)
+                try:
+                    embed_title = self.bot.config.get("thread_creation_menu_embed_title")
+                    embed_footer = self.bot.config.get("thread_creation_menu_embed_footer")
+                    embed_thumb = self.bot.config.get("thread_creation_menu_embed_thumbnail_url")
+                    embed_image = self.bot.config.get("thread_creation_menu_embed_image_url")
+                    embed_large = bool(self.bot.config.get("thread_creation_menu_embed_large_image"))
+                    embed_footer_icon = self.bot.config.get("thread_creation_menu_embed_footer_icon_url")
+                    embed_color_raw = self.bot.config.get("thread_creation_menu_embed_color")
+                except Exception:
+                    embed_title = None
+                    embed_footer = None
+                    embed_thumb = None
+                    embed_image = None
+                    embed_large = False
+                    embed_footer_icon = None
+                    embed_color_raw = None
+                embed_color = embed_color_raw or self.bot.mod_color
+                embed = discord.Embed(title=embed_title, description=embed_text, color=embed_color)
+                if embed_footer:
+                    try:
+                        if embed_footer_icon:
+                            embed.set_footer(text=embed_footer, icon_url=embed_footer_icon)
+                        else:
+                            embed.set_footer(text=embed_footer)
+                    except Exception as e:
+                        logger.debug("Footer build failed (ignored precreate): %s", e)
+                if embed_image:
+                    try:
+                        embed.set_image(url=embed_image)
+                    except Exception as e:
+                        logger.debug("Image set failed (ignored precreate): %s", e)
+                elif embed_thumb:
+                    try:
+                        if embed_large:
+                            embed.set_image(url=embed_thumb)
+                        else:
+                            embed.set_thumbnail(url=embed_thumb)
+                    except Exception as e:
+                        logger.debug("Thumbnail/image set failed (ignored precreate): %s", e)
+                menu_view = _PrecreateMenuView(thread)
+                # Send menu DM AFTER channel creation initiation (channel will be created below)
+                menu_msg = await recipient.send(embed=embed, view=menu_view)
+                try:
+                    menu_view.message = menu_msg
+                except Exception:
+                    logger.debug(
+                        "Failed attaching menu message reference (precreate menu).",
+                        exc_info=True,
+                    )
+                # Store for later disabling on thread close
+                try:
+                    thread._dm_menu_msg_id = menu_msg.id
+                    thread._dm_menu_channel_id = menu_msg.channel.id
+                except Exception:
+                    logger.debug(
+                        "Failed storing DM menu identifiers (precreate menu).",
+                        exc_info=True,
+                    )
+            except Exception:
+                logger.debug("Failed to send precreate menu DM; proceeding without menu.")
+
+        # Regular immediate creation (force main_category for user-initiated menu flows)
+        forced_category = None
+        if adv_enabled and user_initiated and precreate:
+            # In precreate mode we still create immediately (main category override optional)
+            forced_category = self.bot.main_category
+        chosen_category = forced_category or category
+        self.bot.loop.create_task(
+            thread.setup(creator=creator, category=chosen_category, initial_message=message)
+        )
         return thread
 
     async def find_or_create(self, recipient) -> Thread:

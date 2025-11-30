@@ -1,4 +1,4 @@
-from core.utils import trigger_typing, truncate, safe_typing
+from core.utils import trigger_typing, truncate
 import asyncio
 import inspect
 import os
@@ -13,6 +13,7 @@ from json import JSONDecodeError, loads
 from subprocess import PIPE
 from textwrap import indent
 from typing import Union
+import typing
 
 import discord
 from discord.enums import ActivityType, Status
@@ -31,7 +32,7 @@ from core.models import (
     UnseenFormatter,
     getLogger,
 )
-from core.utils import trigger_typing, truncate, DummyParam
+from core.utils import DummyParam
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
 
 
@@ -118,7 +119,11 @@ class ModmailHelpCommand(commands.HelpCommand):
         bot = self.context.bot
 
         # always come first
-        default_cogs = [bot.get_cog("Modmail"), bot.get_cog("Utility"), bot.get_cog("Plugins")]
+        default_cogs = [
+            bot.get_cog("Modmail"),
+            bot.get_cog("Utility"),
+            bot.get_cog("Plugins"),
+        ]
 
         default_cogs.extend(c for c in cogs if c not in default_cogs)
 
@@ -200,7 +205,9 @@ class ModmailHelpCommand(commands.HelpCommand):
 
             if snippet_aliases:
                 embed.add_field(
-                    name="Aliases to this snippet:", value=",".join(snippet_aliases), inline=False
+                    name="Aliases to this snippet:",
+                    value=",".join(snippet_aliases),
+                    inline=False,
                 )
 
             return await self.get_destination().send(embed=embed)
@@ -221,7 +228,10 @@ class ModmailHelpCommand(commands.HelpCommand):
                 await self.context.bot.config.update()
             else:
                 if len(values) == 1:
-                    embed = discord.Embed(title=f"{command} is an alias.", color=self.context.bot.main_color)
+                    embed = discord.Embed(
+                        title=f"{command} is an alias.",
+                        color=self.context.bot.main_color,
+                    )
                     embed.add_field(name=f"`{command}` points to:", value=values[0])
                 else:
                     embed = discord.Embed(
@@ -693,7 +703,9 @@ class Utility(commands.Cog):
         current = self.bot.config["mention"]
         if not user_or_role:
             embed = discord.Embed(
-                title="Current mention:", color=self.bot.main_color, description=str(current)
+                title="Current mention:",
+                color=self.bot.main_color,
+                description=str(current),
             )
         elif (
             len(user_or_role) == 1
@@ -810,11 +822,38 @@ class Utility(commands.Cog):
                     color=self.bot.main_color,
                     description=f"Set `{key}` to `{self.bot.config[key]}`.",
                 )
+                # If turning on move-based snoozing, remind to set snoozed_category_id
+                if key == "snooze_behavior":
+                    behavior = (
+                        str(self.bot.config.get("snooze_behavior", convert=False)).strip().lower().strip('"')
+                    )
+                    if behavior == "move":
+                        cat_id = self.bot.config.get("snoozed_category_id", convert=False)
+                        valid = False
+                        if cat_id:
+                            try:
+                                cat_obj = self.bot.modmail_guild.get_channel(int(str(cat_id)))
+                                valid = isinstance(cat_obj, discord.CategoryChannel)
+                            except Exception:
+                                valid = False
+                        if not valid:
+                            example = f"`{self.bot.prefix}config set snoozed_category_id <category_id>`"
+                            embed.add_field(
+                                name="Action required",
+                                value=(
+                                    "You set `snooze_behavior` to `move`. Please set `snoozed_category_id` "
+                                    "to the category where snoozed threads should be moved.\n"
+                                    f"For example: {example}"
+                                ),
+                                inline=False,
+                            )
             except InvalidConfigError as exc:
                 embed = exc.embed
         else:
             embed = discord.Embed(
-                title="Error", color=self.bot.error_color, description=f"{key} is an invalid key."
+                title="Error",
+                color=self.bot.error_color,
+                description=f"{key} is an invalid key.",
             )
             valid_keys = [f"`{k}`" for k in sorted(keys)]
             embed.add_field(name="Valid keys", value=truncate(", ".join(valid_keys), 1024))
@@ -836,7 +875,9 @@ class Utility(commands.Cog):
             )
         else:
             embed = discord.Embed(
-                title="Error", color=self.bot.error_color, description=f"{key} is an invalid key."
+                title="Error",
+                color=self.bot.error_color,
+                description=f"{key} is an invalid key.",
             )
             valid_keys = [f"`{k}`" for k in sorted(keys)]
             embed.add_field(name="Valid keys", value=", ".join(valid_keys))
@@ -873,21 +914,44 @@ class Utility(commands.Cog):
                 )
 
         else:
-            embed = discord.Embed(
-                color=self.bot.main_color,
-                description="Here is a list of currently set configuration variable(s).",
-            )
-            embed.set_author(
-                name="Current config(s):",
-                icon_url=self.bot.user.display_avatar.url if self.bot.user.display_avatar else None,
-            )
+            # Build one or more embeds, each with up to 25 fields
+            base_desc = "Here is a list of currently set configuration variable(s)."
+            author_name = "Current config(s):"
+            icon = self.bot.user.display_avatar.url if self.bot.user.display_avatar else None
+
             config = self.bot.config.filter_default(self.bot.config)
+            items = [(name, value) for name, value in config.items() if name in self.bot.config.public_keys]
 
-            for name, value in config.items():
-                if name in self.bot.config.public_keys:
-                    embed.add_field(name=name, value=f"`{value}`", inline=False)
+            embeds: list[discord.Embed] = []
+            chunk: list[tuple[str, typing.Any]] = []
+            for pair in items:
+                chunk.append(pair)
+                if len(chunk) == 15:
+                    e = discord.Embed(color=self.bot.main_color, description=base_desc)
+                    e.set_author(name=author_name, icon_url=icon)
+                    for name, value in chunk:
+                        e.add_field(name=name, value=f"`{value}`", inline=False)
+                    embeds.append(e)
+                    chunk = []
 
-        return await ctx.send(embed=embed)
+            if chunk:
+                e = discord.Embed(color=self.bot.main_color, description=base_desc)
+                e.set_author(name=author_name, icon_url=icon)
+                for name, value in chunk:
+                    e.add_field(name=name, value=f"`{value}`", inline=False)
+                embeds.append(e)
+
+        # Send one or many embeds depending on count.
+        # In the single-key branch above, variable 'embed' exists; in this multi branch, we only use 'embeds'.
+        if key:
+            return await ctx.send(embed=embed)
+        else:
+            if not embeds:
+                return await ctx.send("No public configuration keys are set.")
+            # Use the existing paginator consistently
+            paginator = EmbedPaginatorSession(ctx, *embeds)
+            await paginator.run()
+            return
 
     @config.command(name="help", aliases=["info"])
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -907,7 +971,10 @@ class Utility(commands.Cog):
                 description=f"`{key}` is an invalid key.",
             )
             if closest:
-                embed.add_field(name="Perhaps you meant:", value="\n".join(f"`{x}`" for x in closest))
+                embed.add_field(
+                    name="Perhaps you meant:",
+                    value="\n".join(f"`{x}`" for x in closest),
+                )
             return await ctx.send(embed=embed)
 
         config_help = self.bot.config.config_help
@@ -998,7 +1065,9 @@ class Utility(commands.Cog):
 
             if len(values) == 1:
                 embed = discord.Embed(
-                    title=f'Alias - "{name}":', description=values[0], color=self.bot.main_color
+                    title=f'Alias - "{name}":',
+                    description=values[0],
+                    color=self.bot.main_color,
                 )
                 return await ctx.send(embed=embed)
 
@@ -1016,10 +1085,14 @@ class Utility(commands.Cog):
 
         if not self.bot.aliases:
             embed = discord.Embed(
-                color=self.bot.error_color, description="You dont have any aliases at the moment."
+                color=self.bot.error_color,
+                description="You dont have any aliases at the moment.",
             )
             embed.set_footer(text=f'Do "{self.bot.prefix}help alias" for more commands.')
-            embed.set_author(name="Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
+            embed.set_author(
+                name="Aliases",
+                icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
+            )
             return await ctx.send(embed=embed)
 
         embeds = []
@@ -1028,7 +1101,8 @@ class Utility(commands.Cog):
             description = utils.format_description(i, names)
             embed = discord.Embed(color=self.bot.main_color, description=description)
             embed.set_author(
-                name="Command Aliases", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128)
+                name="Command Aliases",
+                icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
             )
             embeds.append(embed)
 
@@ -1048,7 +1122,9 @@ class Utility(commands.Cog):
 
         val = utils.truncate(utils.escape_code_block(val), 2048 - 7)
         embed = discord.Embed(
-            title=f'Raw alias - "{name}":', description=f"```\n{val}```", color=self.bot.main_color
+            title=f'Raw alias - "{name}":',
+            description=f"```\n{val}```",
+            color=self.bot.main_color,
         )
 
         return await ctx.send(embed=embed)
@@ -1066,7 +1142,9 @@ class Utility(commands.Cog):
 
         if len(values) > 25:
             embed = discord.Embed(
-                title="Error", description="Too many steps, max=25.", color=self.bot.error_color
+                title="Error",
+                description="Too many steps, max=25.",
+                color=self.bot.error_color,
             )
             return embed
 
@@ -1558,7 +1636,11 @@ class Utility(commands.Cog):
     @permissions.command(name="get", usage="[@user] or [command/level/override] [name]")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def permissions_get(
-        self, ctx, user_or_role: Union[discord.Role, utils.User, str], *, name: str = None
+        self,
+        ctx,
+        user_or_role: Union[discord.Role, utils.User, str],
+        *,
+        name: str = None,
     ):
         """
         View the currently-set permissions.
@@ -2080,7 +2162,11 @@ class Utility(commands.Cog):
                 res = res.decode("utf-8").rstrip()
 
                 if err and not res:
-                    embed = discord.Embed(title="Update failed", description=err, color=self.bot.error_color)
+                    embed = discord.Embed(
+                        title="Update failed",
+                        description=err,
+                        color=self.bot.error_color,
+                    )
                     await ctx.send(embed=embed)
 
                 elif res != "Already up to date.":
@@ -2134,7 +2220,7 @@ class Utility(commands.Cog):
         body = utils.cleanup_code(body)
         stdout = StringIO()
 
-        to_compile = f'async def func():\n{indent(body, "  ")}'
+        to_compile = f"async def func():\n{indent(body, '  ')}"
 
         def paginate(text: str):
             """Simple generator that paginates text."""
