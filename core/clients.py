@@ -133,7 +133,9 @@ class GitHub:
             return await self._get_response_data(resp)
 
     @staticmethod
-    async def _get_response_data(response: ClientResponse) -> Union[Dict[str, Any], str]:
+    async def _get_response_data(
+        response: ClientResponse,
+    ) -> Union[Dict[str, Any], str]:
         """
         Internal method to convert the response data to `dict` if the data is a
         json object, or to `str` (raw response) if the data is not a valid json.
@@ -476,7 +478,11 @@ class MongoDBClient(ApiClient):
             logger.info('Creating "text" index for logs collection.')
             logger.info("Name: %s", index_name)
             await coll.create_index(
-                [("messages.content", "text"), ("messages.author.name", "text"), ("key", "text")]
+                [
+                    ("messages.content", "text"),
+                    ("messages.author.name", "text"),
+                    ("key", "text"),
+                ]
             )
         logger.debug("Successfully configured and verified database indexes.")
 
@@ -540,7 +546,11 @@ class MongoDBClient(ApiClient):
         return await self.logs.find(query, projection).to_list(None)
 
     async def get_latest_user_logs(self, user_id: Union[str, int]):
-        query = {"recipient.id": str(user_id), "guild_id": str(self.bot.guild_id), "open": False}
+        query = {
+            "recipient.id": str(user_id),
+            "guild_id": str(self.bot.guild_id),
+            "open": False,
+        }
         projection = {"messages": {"$slice": 5}}
         logger.debug("Retrieving user %s latest logs.", user_id)
 
@@ -592,14 +602,14 @@ class MongoDBClient(ApiClient):
                     "id": str(recipient.id),
                     "name": recipient.name,
                     "discriminator": recipient.discriminator,
-                    "avatar_url": recipient.display_avatar.url,
+                    "avatar_url": recipient.display_avatar.url if recipient.display_avatar else None,
                     "mod": False,
                 },
                 "creator": {
                     "id": str(creator.id),
                     "name": creator.name,
                     "discriminator": creator.discriminator,
-                    "avatar_url": creator.display_avatar.url,
+                    "avatar_url": creator.display_avatar.url if creator.display_avatar else None,
                     "mod": isinstance(creator, Member),
                 },
                 "closer": None,
@@ -661,7 +671,7 @@ class MongoDBClient(ApiClient):
                 "id": str(message.author.id),
                 "name": message.author.name,
                 "discriminator": message.author.discriminator,
-                "avatar_url": message.author.display_avatar.url,
+                "avatar_url": message.author.display_avatar.url if message.author.display_avatar else None,
                 "mod": not isinstance(message.channel, DMChannel),
             },
             "content": message.content,
@@ -679,7 +689,9 @@ class MongoDBClient(ApiClient):
         }
 
         return await self.logs.find_one_and_update(
-            {"channel_id": channel_id}, {"$push": {"messages": data}}, return_document=True
+            {"channel_id": channel_id},
+            {"$push": {"messages": data}},
+            return_document=True,
         )
 
     async def post_log(self, channel_id: Union[int, str], data: dict) -> dict:
@@ -689,7 +701,11 @@ class MongoDBClient(ApiClient):
 
     async def search_closed_by(self, user_id: Union[int, str]):
         return await self.logs.find(
-            {"guild_id": str(self.bot.guild_id), "open": False, "closer.id": str(user_id)},
+            {
+                "guild_id": str(self.bot.guild_id),
+                "open": False,
+                "closer.id": str(user_id),
+            },
             {"messages": {"$slice": 5}},
         ).to_list(None)
 
@@ -711,7 +727,9 @@ class MongoDBClient(ApiClient):
                     "id": str(message.author.id),
                     "name": message.author.name,
                     "discriminator": message.author.discriminator,
-                    "avatar_url": message.author.display_avatar.url,
+                    "avatar_url": (
+                        message.author.display_avatar.url if message.author.display_avatar else None
+                    ),
                 },
                 "message": message.content,
                 "message_id": str(message_id),

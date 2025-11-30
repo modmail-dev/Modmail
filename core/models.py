@@ -30,15 +30,15 @@ if ".heroku" in os.environ.get("PYTHONHOME", ""):
 class ModmailLogger(logging.Logger):
     @staticmethod
     def _debug_(*msgs):
-        return f'{Fore.CYAN}{" ".join(msgs)}{Style.RESET_ALL}'
+        return f"{Fore.CYAN}{' '.join(msgs)}{Style.RESET_ALL}"
 
     @staticmethod
     def _info_(*msgs):
-        return f'{Fore.LIGHTMAGENTA_EX}{" ".join(msgs)}{Style.RESET_ALL}'
+        return f"{Fore.LIGHTMAGENTA_EX}{' '.join(msgs)}{Style.RESET_ALL}"
 
     @staticmethod
     def _error_(*msgs):
-        return f'{Fore.RED}{" ".join(msgs)}{Style.RESET_ALL}'
+        return f"{Fore.RED}{' '.join(msgs)}{Style.RESET_ALL}"
 
     def debug(self, msg, *args, **kwargs):
         if self.isEnabledFor(logging.DEBUG):
@@ -149,7 +149,8 @@ class FileFormatter(logging.Formatter):
 
 
 log_stream_formatter = logging.Formatter(
-    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s", datefmt="%m/%d/%y %H:%M:%S"
+    "%(asctime)s %(name)s[%(lineno)d] - %(levelname)s: %(message)s",
+    datefmt="%m/%d/%y %H:%M:%S",
 )
 
 log_file_formatter = FileFormatter(
@@ -231,7 +232,12 @@ def create_log_handler(
         formatter = log_file_formatter
     else:
         handler = RotatingFileHandler(
-            filename, mode=mode, encoding=encoding, maxBytes=maxBytes, backupCount=backupCount, **kwargs
+            filename,
+            mode=mode,
+            encoding=encoding,
+            maxBytes=maxBytes,
+            backupCount=backupCount,
+            **kwargs,
         )
         formatter = log_file_formatter
 
@@ -264,7 +270,10 @@ def getLogger(name=None) -> ModmailLogger:
 def configure_logging(bot) -> None:
     global ch_debug, log_level, ch
 
-    stream_log_format, file_log_format = bot.config["stream_log_format"], bot.config["file_log_format"]
+    stream_log_format, file_log_format = (
+        bot.config["stream_log_format"],
+        bot.config["file_log_format"],
+    )
     if stream_log_format == "json":
         ch.setFormatter(json_formatter)
 
@@ -318,7 +327,10 @@ def configure_logging(bot) -> None:
     non_verbose_log_level = max(d_level, logging.INFO)
     stream_handler = create_log_handler(level=non_verbose_log_level)
     if non_verbose_log_level != d_level:
-        logger.info("Discord logging level (stdout): %s.", logging.getLevelName(non_verbose_log_level))
+        logger.info(
+            "Discord logging level (stdout): %s.",
+            logging.getLevelName(non_verbose_log_level),
+        )
         logger.info("Discord logging level (logfile): %s.", logging.getLevelName(d_level))
     else:
         logger.info("Discord logging level: %s.", logging.getLevelName(d_level))
