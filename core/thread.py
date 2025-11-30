@@ -3195,6 +3195,10 @@ class ThreadManager:
                             "Failed unsnoozing thread prior to precreate menu selection; continuing.",
                             exc_info=True,
                         )
+                    # Define selection variables
+                    chosen_label = self.values[0]
+                    key = chosen_label.lower().replace(" ", "_")
+                    selected = options.get(key)
                     # Remove the view
                     try:
                         msg = getattr(interaction, "message", None)
