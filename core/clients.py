@@ -10,6 +10,7 @@ from discord.ext import commands
 from aiohttp import ClientResponseError, ClientResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConfigurationError
+from pymongo.uri_parser import parse_uri
 
 from core.models import InvalidConfigError, getLogger
 
@@ -450,7 +451,8 @@ class MongoDBClient(ApiClient):
                 raise RuntimeError
 
         try:
-            db = AsyncIOMotorClient(mongo_uri).modmail_bot
+            database = parse_uri(mongo_uri).get('database') or 'modmail_bot'
+            db = AsyncIOMotorClient(mongo_uri)[database]
         except ConfigurationError as e:
             logger.critical(
                 "Your MongoDB CONNECTION_URI might be copied wrong, try re-copying from the source again. "
@@ -506,7 +508,8 @@ class MongoDBClient(ApiClient):
                     'run "Certificate.command" on MacOS, '
                     'and check certifi is up to date "pip3 install --upgrade certifi".'
                 )
-                self.db = AsyncIOMotorClient(mongo_uri, tlsAllowInvalidCertificates=True).modmail_bot
+                database = parse_uri(mongo_uri).get('database') or 'modmail_bot'
+                self.db = AsyncIOMotorClient(mongo_uri, tlsAllowInvalidCertificates=True)[database]
                 return await self.validate_database_connection(ssl_retry=False)
             if "ServerSelectionTimeoutError" in message:
                 logger.critical(
