@@ -16,7 +16,7 @@ from discord.utils import escape_markdown
 from dateutil import parser
 
 from core import checks
-from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, getLogger
+from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, UnseenFormatter, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.thread import Thread
 from core.time import UserFriendlyTime, human_timedelta
@@ -533,6 +533,199 @@ class Modmail(commands.Cog):
             )
         else:
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
+        await ctx.send(embed=embed)
+
+    @commands.group(invoke_without_command=True)
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def args(self, ctx, *, name: str.lower = None):
+        """
+        Create dynamic arguments for use in replies.
+
+        When `{prefix}args` is used by itself, this will retrieve
+        a list of args that are currently set. `{prefix}args name` will show what the
+        arg point to.
+
+        To create an arg:
+        - `{prefix}args add arg-name A value.`
+
+        You can use your arg in a reply with `{arg-name}`.
+        """
+
+        if name is not None:
+            if name == "compact":
+                embeds = []
+
+                for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.args)),) * 15)):
+                    description = format_description(i, names)
+                    embed = discord.Embed(color=self.bot.main_color, description=description)
+                    embed.set_author(
+                        name="Args", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128)
+                    )
+                    embeds.append(embed)
+
+                session = EmbedPaginatorSession(ctx, *embeds)
+                await session.run()
+                return
+
+            if name not in self.bot.args:
+                embed = create_not_found_embed(name, self.bot.args.keys(), "Arg")
+            else:
+                val = self.bot.args[name]
+                embed = discord.Embed(
+                    title=f'Arg - "{name}":',
+                    description=val,
+                    color=self.bot.main_color,
+                )
+            return await ctx.send(embed=embed)
+
+        if not self.bot.args:
+            embed = discord.Embed(
+                color=self.bot.error_color,
+                description="You dont have any args at the moment.",
+            )
+            embed.set_footer(text=f'Check "{self.bot.prefix}help args add" to add an arg.')
+            embed.set_author(
+                name="Args",
+                icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
+            )
+            return await ctx.send(embed=embed)
+
+        embeds = [discord.Embed(color=self.bot.main_color) for _ in range((len(self.bot.args) // 10) + 1)]
+        for embed in embeds:
+            embed.set_author(name="Args", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
+
+        for i, arg in enumerate(sorted(self.bot.args.items())):
+            embeds[i // 10].add_field(
+                name=arg[0], value=return_or_truncate(arg[1], 350), inline=False
+            )
+
+        session = EmbedPaginatorSession(ctx, *embeds)
+        await session.run()
+
+    @args.command(name="raw")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def args_raw(self, ctx, *, name: str.lower):
+        """
+        View the raw content of an arg.
+        """
+        if name not in self.bot.args:
+            embed = create_not_found_embed(name, self.bot.args.keys(), "Arg")
+        else:
+            val = truncate(escape_code_block(self.bot.args[name]), 2048 - 7)
+            embed = discord.Embed(
+                title=f'Raw arg - "{name}":',
+                description=f"```\n{val}```",
+                color=self.bot.main_color,
+            )
+
+        return await ctx.send(embed=embed)
+
+    @args.command(name="add", aliases=["create", "make"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def args_add(self, ctx, name: str.lower, *, value: commands.clean_content):
+        """
+        Add an arg.
+
+        Simply to add an arg, do: ```
+        {prefix}args add name value
+        ```
+        """
+        if name in self.bot.args:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Arg `{name}` already exists.",
+            )
+            return await ctx.send(embed=embed)
+
+        if len(name) > 120:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description="Arg names cannot be longer than 120 characters.",
+            )
+            return await ctx.send(embed=embed)
+
+        self.bot.args[name] = value
+        await self.bot.config.update()
+
+        embed = discord.Embed(
+            title="Added arg",
+            color=self.bot.main_color,
+            description="Successfully created arg.",
+        )
+        return await ctx.send(embed=embed)
+
+    @args.command(name="remove", aliases=["del", "delete"])
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def args_remove(self, ctx, *, name: str.lower):
+        """Remove an arg."""
+        if name in self.bot.args:
+            self.bot.args.pop(name)
+            await self.bot.config.update()
+            embed = discord.Embed(
+                title="Removed arg",
+                color=self.bot.main_color,
+                description=f"Arg `{name}` is now deleted.",
+            )
+        else:
+            embed = create_not_found_embed(name, self.bot.args.keys(), "Arg")
+        await ctx.send(embed=embed)
+
+    @args.command(name="edit")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def args_edit(self, ctx, name: str.lower, *, value):
+        """
+        Edit an arg.
+        """
+        if name in self.bot.args:
+            self.bot.args[name] = value
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Edited arg",
+                color=self.bot.main_color,
+                description=f'`{name}` will now be replaced with "{value}".',
+            )
+        else:
+            embed = create_not_found_embed(name, self.bot.args.keys(), "Arg")
+        await ctx.send(embed=embed)
+
+    @args.command(name="rename")
+    @checks.has_permissions(PermissionLevel.SUPPORTER)
+    async def args_rename(self, ctx, name: str.lower, *, value):
+        """
+        Rename an arg.
+        """
+        if name in self.bot.args:
+            if value in self.bot.args:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description=f"Arg `{value}` already exists.",
+                )
+                return await ctx.send(embed=embed)
+
+            if len(value) > 120:
+                embed = discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="Arg names cannot be longer than 120 characters.",
+                )
+                return await ctx.send(embed=embed)
+
+            old_arg_value = self.bot.args[name]
+            self.bot.args.pop(name)
+            self.bot.args[value] = old_arg_value
+            await self.bot.config.update()
+
+            embed = discord.Embed(
+                title="Renamed arg",
+                color=self.bot.main_color,
+                description=f'`{name}` has been renamed to "{value}".',
+            )
+        else:
+            embed = create_not_found_embed(name, self.bot.args.keys(), "Arg")
         await ctx.send(embed=embed)
 
     @commands.command(usage="<category> [options]")
@@ -1510,6 +1703,9 @@ class Modmail(commands.Cog):
         automatically embedding image URLs.
         """
 
+        if self.bot.args:
+            msg = UnseenFormatter().format(msg, **self.bot.args)
+
         # Ensure logs record only the reply text, not the command.
         ctx.message.content = msg
         async with safe_typing(ctx):
@@ -1532,6 +1728,7 @@ class Modmail(commands.Cog):
         """
         msg = self.bot.formatter.format(
             msg,
+            **self.bot.args,
             channel=ctx.channel,
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
@@ -1558,6 +1755,7 @@ class Modmail(commands.Cog):
         """
         msg = self.bot.formatter.format(
             msg,
+            **self.bot.args,
             channel=ctx.channel,
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
@@ -1584,6 +1782,7 @@ class Modmail(commands.Cog):
         """
         msg = self.bot.formatter.format(
             msg,
+            **self.bot.args,
             channel=ctx.channel,
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
@@ -1610,6 +1809,7 @@ class Modmail(commands.Cog):
         """
         msg = self.bot.formatter.format(
             msg,
+            **self.bot.args,
             channel=ctx.channel,
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
