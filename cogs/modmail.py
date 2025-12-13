@@ -558,9 +558,7 @@ class Modmail(commands.Cog):
                 for i, names in enumerate(zip_longest(*(iter(sorted(self.bot.args)),) * 15)):
                     description = format_description(i, names)
                     embed = discord.Embed(color=self.bot.main_color, description=description)
-                    embed.set_author(
-                        name="Args", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128)
-                    )
+                    embed.set_author(name="Args", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
                     embeds.append(embed)
 
                 session = EmbedPaginatorSession(ctx, *embeds)
@@ -595,9 +593,7 @@ class Modmail(commands.Cog):
             embed.set_author(name="Args", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
 
         for i, arg in enumerate(sorted(self.bot.args.items())):
-            embeds[i // 10].add_field(
-                name=arg[0], value=return_or_truncate(arg[1], 350), inline=False
-            )
+            embeds[i // 10].add_field(name=arg[0], value=return_or_truncate(arg[1], 350), inline=False)
 
         session = EmbedPaginatorSession(ctx, *embeds)
         await session.run()
