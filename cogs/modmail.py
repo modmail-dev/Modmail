@@ -539,7 +539,7 @@ class Modmail(commands.Cog):
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     async def args(self, ctx, *, name: str.lower = None):
         """
-        Create dynamic arguments for use in replies.
+        Create dynamic args for use in replies.
 
         When `{prefix}args` is used by itself, this will retrieve
         a list of args that are currently set. `{prefix}args name` will show what the
