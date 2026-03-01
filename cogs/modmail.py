@@ -543,7 +543,7 @@ class Modmail(commands.Cog):
 
         When `{prefix}args` is used by itself, this will retrieve
         a list of args that are currently set. `{prefix}args name` will show what the
-        arg point to.
+        arg points to.
 
         To create an arg:
         - `{prefix}args add arg-name A value.`
