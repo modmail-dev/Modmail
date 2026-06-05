@@ -2036,6 +2036,17 @@ class Modmail(commands.Cog):
                 await ctx.send(embed=embed, delete_after=10)
                 return
 
+        delta = await self.bot.get_thread_cooldown(ctx.message.author)
+        if delta:
+            await ctx.send(
+                embed=discord.Embed(
+                    title=self.bot.config["cooldown_thread_title"],
+                    description=self.bot.config["cooldown_thread_response"].format(delta=delta),
+                    color=self.bot.error_color,
+                )
+            )
+            return
+
         await ctx.invoke(self.contact, users=[ctx.author])
 
     @commands.command(usage="<user> [category] [options]")
