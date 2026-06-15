@@ -109,7 +109,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         return embeds
 
     def process_help_msg(self, help_: str):
-        return help_.replace("{prefix}", self.context.clean_prefix) if help_ else "No help message."
+        return help_.format(prefix=self.context.clean_prefix) if help_ else "No help message."
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -1048,7 +1048,7 @@ class Utility(commands.Cog):
 
         When `{prefix}alias` is used by itself, this will retrieve
         a list of alias that are currently set. `{prefix}alias-name` will show what the
-        alias point to.
+        alias points to.
 
         To use alias:
 

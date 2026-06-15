@@ -16,13 +16,17 @@ from discord.utils import escape_markdown
 from dateutil import parser
 
 from core import checks
-from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, UnseenFormatter, getLogger
+from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.thread import Thread
 from core.time import UserFriendlyTime, human_timedelta
 from core.utils import *
 
 logger = getLogger(__name__)
+
+
+# Arg names reserved by formatreply commands (channel, recipient, author).
+RESERVED_ARG_NAMES = {"channel", "recipient", "author"}
 
 
 class Modmail(commands.Cog):
@@ -209,7 +213,7 @@ class Modmail(commands.Cog):
 
         When `{prefix}snippet` is used by itself, this will retrieve
         a list of snippets that are currently set. `{prefix}snippet-name` will show what the
-        snippet point to.
+        snippet points to.
 
         To create a snippet:
         - `{prefix}snippet add snippet-name A pre-defined text.`
@@ -634,6 +638,15 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
+        if name in RESERVED_ARG_NAMES:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Arg name `{name}` is reserved (used by formatreply commands). "
+                f"Reserved names: {', '.join(f'`{n}`' for n in sorted(RESERVED_ARG_NAMES))}.",
+            )
+            return await ctx.send(embed=embed)
+
         if len(name) > 120:
             embed = discord.Embed(
                 title="Error",
@@ -693,35 +706,45 @@ class Modmail(commands.Cog):
         """
         Rename an arg.
         """
-        if name in self.bot.args:
-            if value in self.bot.args:
-                embed = discord.Embed(
-                    title="Error",
-                    color=self.bot.error_color,
-                    description=f"Arg `{value}` already exists.",
-                )
-                return await ctx.send(embed=embed)
-
-            if len(value) > 120:
-                embed = discord.Embed(
-                    title="Error",
-                    color=self.bot.error_color,
-                    description="Arg names cannot be longer than 120 characters.",
-                )
-                return await ctx.send(embed=embed)
-
-            old_arg_value = self.bot.args[name]
-            self.bot.args.pop(name)
-            self.bot.args[value] = old_arg_value
-            await self.bot.config.update()
-
-            embed = discord.Embed(
-                title="Renamed arg",
-                color=self.bot.main_color,
-                description=f'`{name}` has been renamed to "{value}".',
-            )
-        else:
+        if name not in self.bot.args:
             embed = create_not_found_embed(name, self.bot.args.keys(), "Arg")
+            return await ctx.send(embed=embed)
+
+        if value in self.bot.args:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Arg `{value}` already exists.",
+            )
+            return await ctx.send(embed=embed)
+
+        if value in RESERVED_ARG_NAMES:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description=f"Arg name `{value}` is reserved (used by formatreply commands). "
+                f"Reserved names: {', '.join(f'`{n}`' for n in sorted(RESERVED_ARG_NAMES))}.",
+            )
+            return await ctx.send(embed=embed)
+
+        if len(value) > 120:
+            embed = discord.Embed(
+                title="Error",
+                color=self.bot.error_color,
+                description="Arg names cannot be longer than 120 characters.",
+            )
+            return await ctx.send(embed=embed)
+
+        old_arg_value = self.bot.args[name]
+        self.bot.args.pop(name)
+        self.bot.args[value] = old_arg_value
+        await self.bot.config.update()
+
+        embed = discord.Embed(
+            title="Renamed arg",
+            color=self.bot.main_color,
+            description=f'`{name}` has been renamed to "{value}".',
+        )
         await ctx.send(embed=embed)
 
     @commands.command(usage="<category> [options]")
@@ -1700,7 +1723,17 @@ class Modmail(commands.Cog):
         """
 
         if self.bot.args:
-            msg = UnseenFormatter().format(msg, **self.bot.args)
+            msg = self.bot.formatter.format(msg, **self.bot.args)
+
+        if len(msg) > 4096:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="The resulting message is too long to fit in an embed description "
+                    f"({len(msg)}/4096 characters). Please shorten your message or args.",
+                )
+            )
 
         # Ensure logs record only the reply text, not the command.
         ctx.message.content = msg
@@ -1729,6 +1762,17 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+
+        if len(msg) > 4096:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="The resulting message is too long to fit in an embed description "
+                    f"({len(msg)}/4096 characters). Please shorten your message or args.",
+                )
+            )
+
         # Ensure logs record only the reply text, not the command.
         ctx.message.content = msg
         async with safe_typing(ctx):
@@ -1756,6 +1800,17 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+
+        if len(msg) > 4096:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="The resulting message is too long to fit in an embed description "
+                    f"({len(msg)}/4096 characters). Please shorten your message or args.",
+                )
+            )
+
         # Ensure logs record only the reply text, not the command.
         ctx.message.content = msg
         async with safe_typing(ctx):
@@ -1783,6 +1838,17 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+
+        if len(msg) > 4096:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="The resulting message is too long to fit in an embed description "
+                    f"({len(msg)}/4096 characters). Please shorten your message or args.",
+                )
+            )
+
         # Ensure logs record only the reply text, not the command.
         ctx.message.content = msg
         async with safe_typing(ctx):
@@ -1810,6 +1876,17 @@ class Modmail(commands.Cog):
             recipient=ctx.thread.recipient,
             author=ctx.message.author,
         )
+
+        if len(msg) > 4096:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    color=self.bot.error_color,
+                    description="The resulting message is too long to fit in an embed description "
+                    f"({len(msg)}/4096 characters). Please shorten your message or args.",
+                )
+            )
+
         # Ensure logs record only the reply text, not the command.
         ctx.message.content = msg
         async with safe_typing(ctx):
