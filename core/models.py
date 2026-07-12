@@ -438,6 +438,10 @@ class DummyMessage:
         self._message = message
 
     def __getattr__(self, name: str):
+        if self._message is None:
+            # If we're wrapping None, we can't delegate attributes.
+            # This mimics behavior where the attribute doesn't exist.
+            raise AttributeError(f"'DummyMessage' object has no attribute '{name}' (wrapped message is None)")
         return getattr(self._message, name)
 
     def __bool__(self):

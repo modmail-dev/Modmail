@@ -46,6 +46,7 @@ __all__ = [
     "ConfirmThreadCreationView",
     "DummyParam",
     "extract_forwarded_content",
+    "extract_forwarded_attachments",
 ]
 
 
@@ -640,6 +641,35 @@ class ConfirmThreadCreationView(discord.ui.View):
         self.value = None
 
 
+def extract_forwarded_attachments(message) -> typing.List[typing.Tuple[str, str]]:
+    """
+    Extract attachment URLs from forwarded messages.
+
+    Parameters
+    ----------
+    message : discord.Message
+        The message to extract attachments from.
+
+    Returns
+    -------
+    List[Tuple[str, str]]
+        List of (url, filename) tuples for attachments.
+    """
+    attachments = []
+    try:
+        if hasattr(message, "message_snapshots") and message.message_snapshots:
+            for snap in message.message_snapshots:
+                if hasattr(snap, "attachments") and snap.attachments:
+                    for a in snap.attachments:
+                        url = getattr(a, "url", None)
+                        filename = getattr(a, "filename", "Unknown")
+                        if url:
+                            attachments.append((url.split("?")[0], filename))
+    except Exception:
+        pass
+    return attachments
+
+
 def extract_forwarded_content(message) -> typing.Optional[str]:
     """
     Extract forwarded message content from Discord forwarded messages.
@@ -654,46 +684,54 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
     Optional[str]
         The extracted forwarded content, or None if not a forwarded message.
     """
-    import discord
-
     try:
         # Handle multi-forward (message_snapshots)
-        if hasattr(message, "flags") and getattr(message.flags, "has_snapshot", False):
-            if hasattr(message, "message_snapshots") and message.message_snapshots:
-                forwarded_parts = []
-                for snap in message.message_snapshots:
-                    author = getattr(snap, "author", None)
-                    author_name = getattr(author, "name", "Unknown") if author else "Unknown"
-                    snap_content = getattr(snap, "content", "")
+        # Check directly for snapshots as flags.has_snapshot can be unreliable in some versions
+        if hasattr(message, "message_snapshots") and message.message_snapshots:
+            forwarded_parts = []
+            for snap in message.message_snapshots:
+                # If author is missing, we can try to rely on the container message context or just omit.
+                # Since we can't reliably get the original author from snapshot in this state, we focus on content.
 
-                    if snap_content:
-                        # Truncate very long messages to prevent spam
-                        if len(snap_content) > 500:
-                            snap_content = snap_content[:497] + "..."
-                        forwarded_parts.append(f"**{author_name}:** {snap_content}")
-                    elif getattr(snap, "embeds", None):
-                        for embed in snap.embeds:
-                            if hasattr(embed, "description") and embed.description:
-                                embed_desc = embed.description
-                                if len(embed_desc) > 300:
-                                    embed_desc = embed_desc[:297] + "..."
-                                forwarded_parts.append(f"**{author_name}:** {embed_desc}")
-                                break
-                    elif getattr(snap, "attachments", None):
-                        attachment_info = ", ".join(
-                            [getattr(a, "filename", "Unknown") for a in snap.attachments[:3]]
-                        )
-                        if len(snap.attachments) > 3:
-                            attachment_info += f" (+{len(snap.attachments) - 3} more)"
-                        forwarded_parts.append(f"**{author_name}:** [Attachments: {attachment_info}]")
-                    else:
-                        forwarded_parts.append(f"**{author_name}:** [No content]")
+                snap_content = getattr(snap, "content", "")
 
-                if forwarded_parts:
-                    return "\n".join(forwarded_parts)
+                formatted_part = "📨 **Forwarded Message**\n"
+
+                if snap_content:
+                    if len(snap_content) > 500:
+                        snap_content = snap_content[:497] + "..."
+                    formatted_part += "\n".join([f"{line}" for line in snap_content.splitlines()]) + "\n"
+
+                if hasattr(snap, "embeds") and snap.embeds:
+                    for embed in snap.embeds:
+                        if hasattr(embed, "description") and embed.description:
+                            embed_desc = embed.description
+                            if len(embed_desc) > 300:
+                                embed_desc = embed_desc[:297] + "..."
+                            formatted_part += (
+                                "\n".join([f"> {line}" for line in embed_desc.splitlines()]) + "\n"
+                            )
+                            break  # One embed preview is usually enough
+
+                if hasattr(snap, "attachments") and snap.attachments:
+                    attachment_urls = []
+                    for a in snap.attachments[:3]:
+                        url = getattr(a, "url", None)
+                        if url:
+                            # Use direct URL for proper embedding in logviewer
+                            attachment_urls.append(url.split("?")[0])
+                    if len(snap.attachments) > 3:
+                        formatted_part += f"📎 (+{len(snap.attachments) - 3} more attachments)\n"
+                    # Add URLs on separate lines for proper embedding
+                    for url in attachment_urls:
+                        formatted_part += f"{url}\n"
+                forwarded_parts.append(formatted_part)
+
+            if forwarded_parts:
+                return "\n".join(forwarded_parts)
 
         # Handle single-message forward
-        elif getattr(message, "type", None) == getattr(discord.MessageType, "forward", None):
+        elif hasattr(message, "type") and message.type == getattr(discord.MessageType, "forward", None):
             ref = getattr(message, "reference", None)
             if (
                 ref
@@ -711,20 +749,27 @@ def extract_forwarded_content(message) -> typing.Optional[str]:
                             if len(ref_content) > 500:
                                 ref_content = ref_content[:497] + "..."
                             return f"**{ref_author_name}:** {ref_content}"
-                        elif getattr(ref_msg, "embeds", None):
+                        elif hasattr(ref_msg, "embeds") and ref_msg.embeds:
                             for embed in ref_msg.embeds:
                                 if hasattr(embed, "description") and embed.description:
                                     embed_desc = embed.description
                                     if len(embed_desc) > 300:
                                         embed_desc = embed_desc[:297] + "..."
                                     return f"**{ref_author_name}:** {embed_desc}"
-                        elif getattr(ref_msg, "attachments", None):
-                            attachment_info = ", ".join(
-                                [getattr(a, "filename", "Unknown") for a in ref_msg.attachments[:3]]
-                            )
+                        elif hasattr(ref_msg, "attachments") and ref_msg.attachments:
+                            attachment_urls = []
+                            for a in ref_msg.attachments[:3]:
+                                url = getattr(a, "url", None)
+                                if url:
+                                    # Use direct URL for proper embedding in logviewer
+                                    attachment_urls.append(url.split("?")[0])
+                            result = f"**{ref_author_name}:** 📎\n"
                             if len(ref_msg.attachments) > 3:
-                                attachment_info += f" (+{len(ref_msg.attachments) - 3} more)"
-                            return f"**{ref_author_name}:** [Attachments: {attachment_info}]"
+                                result += f"(+{len(ref_msg.attachments) - 3} more attachments)\n"
+                            # Add URLs on separate lines for proper embedding
+                            for url in attachment_urls:
+                                result += f"{url}\n"
+                            return result
                 except Exception as e:
                     # Log and continue; failing to extract a reference preview shouldn't break flow
                     logger.debug("Failed to extract reference preview: %s", e)

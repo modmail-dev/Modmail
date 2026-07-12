@@ -1018,6 +1018,8 @@ class ModmailBot(commands.Bot):
                         self.author = original_message.author
                         self.content = forwarded_content
                         self.attachments = []
+                        for snap in getattr(original_message, "message_snapshots", []):
+                            self.attachments.extend(getattr(snap, "attachments", []))
                         self.stickers = []
                         self.created_at = original_message.created_at
                         self.embeds = []
@@ -1913,6 +1915,8 @@ class ModmailBot(commands.Bot):
                 "DM message not found.",
                 "Malformed thread message.",
                 "Thread message not found.",
+                "Linked DM message not found.",
+                "Thread message is an internal message, not a note.",
             }:
                 logger.debug("Failed to find linked message to delete: %s", e)
                 embed = discord.Embed(description="Failed to delete message.", color=self.error_color)

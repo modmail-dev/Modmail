@@ -63,13 +63,13 @@
         "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
     },
     "claim": {
-        "repository": "fourjr/modmail-plugins",
-        "branch": "v4",
-        "description": "Allows supporters to claim thread by sending ?claim in the thread channel",
-        "bot_version": "4.0.0",
+        "repository": "martinbndr/kyb3r-modmail-plugins",
+        "branch": "master",
+        "description": "Adds claim functionality to your modmail bot.",
+        "bot_version": "4.2.1",
         "title": "Claim Thread",
-        "icon_url": "https://i.imgur.com/Mo60CdK.png",
-        "thumbnail_url": "https://i.imgur.com/Mo60CdK.png"
+        "icon_url": "https://i.ibb.co/dsPjgKLj/87249157.png",
+        "thumbnail_url": "https://i.ibb.co/dsPjgKLj/87249157.png"
     },
     "emote-manager": {
         "repository": "fourjr/modmail-plugins",
