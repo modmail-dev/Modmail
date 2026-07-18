@@ -388,14 +388,13 @@ class SafeFormatter(Formatter):
 
 
 class UnseenFormatter(Formatter):
-    def get_value(self, key, args, kwds):
-        if isinstance(key, str):
-            try:
-                return kwds[key]
-            except KeyError:
-                return "{" + key + "}"
-        else:
-            return super().get_value(key, args, kwds)
+    def get_field(self, field_name, args, kwargs):
+        """Resolve only complete field names and preserve unknown fields."""
+        if field_name in kwargs:
+            return kwargs[field_name], field_name
+        if field_name.isdecimal():
+            return super().get_field(field_name, args, kwargs)
+        return "{" + field_name + "}", field_name
 
 
 class SimilarCategoryConverter(commands.CategoryChannelConverter):
