@@ -16,7 +16,7 @@ from discord.utils import escape_markdown
 from dateutil import parser
 
 from core import checks
-from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, getLogger
+from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, UnseenFormatter, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.thread import Thread
 from core.time import UserFriendlyTime, human_timedelta
@@ -583,9 +583,9 @@ class Modmail(commands.Cog):
         if not self.bot.args:
             embed = discord.Embed(
                 color=self.bot.error_color,
-                description="You dont have any args at the moment.",
+                description="You don't have any args at the moment.",
             )
-            embed.set_footer(text=f'Check "{self.bot.prefix}help args add" to add an arg.')
+            embed.set_footer(text=f'See "{self.bot.prefix}help args add" for how to add an arg.')
             embed.set_author(
                 name="Args",
                 icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
@@ -626,7 +626,7 @@ class Modmail(commands.Cog):
         """
         Add an arg.
 
-        Simply to add an arg, do: ```
+        To add an arg, simply do: ```
         {prefix}args add name value
         ```
         """
@@ -1723,7 +1723,7 @@ class Modmail(commands.Cog):
         """
 
         if self.bot.args:
-            msg = self.bot.formatter.format(msg, **self.bot.args)
+            msg = UnseenFormatter().format(msg, **self.bot.args)
 
         if len(msg) > 4096:
             return await ctx.send(
