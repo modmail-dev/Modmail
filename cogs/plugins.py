@@ -153,6 +153,14 @@ class Plugins(commands.Cog):
                 logger.info("Migrated legacy plugin name: %s, now %s.", plugin_name, str(plugin))
                 self.bot.config["plugins"].append(str(plugin))
 
+            if self.bot.config.get("registry_plugins_only") and not plugin_name in self.registry:
+                self.bot.config["plugins"].remove(plugin_name)
+                logger.info(
+                    "Loading of plugin %s was skipped and the plugin was removed because it is not present in the registry.",
+                    plugin_name,
+                )
+                continue
+
             try:
                 await self.download_plugin(plugin)
                 await self.load_plugin(plugin)
@@ -281,7 +289,7 @@ class Plugins(commands.Cog):
             if module == ext_parent or module.startswith(ext_parent + "."):
                 del sys.modules[module]
 
-    async def parse_user_input(self, ctx, plugin_name, check_version=False):
+    async def parse_user_input(self, ctx, plugin_name, check_version=False, check_registry=True):
         if not self.bot.config["enable_plugins"]:
             embed = discord.Embed(
                 description="Plugins are disabled, enable them by setting `ENABLE_PLUGINS=true`",
@@ -318,7 +326,7 @@ class Plugins(commands.Cog):
             plugin = Plugin(user, repo, plugin_name, branch)
 
         else:
-            if self.bot.config.get("registry_plugins_only"):
+            if check_registry and self.bot.config.get("registry_plugins_only"):
                 embed = discord.Embed(
                     description="This plugin is not in the registry. To install this plugin, "
                     "you must set `REGISTRY_PLUGINS_ONLY=no` or remove this key in your .env file.",
@@ -337,7 +345,7 @@ class Plugins(commands.Cog):
                 )
                 await ctx.send(embed=embed)
                 return
-        return plugin
+            return plugin
 
     @commands.group(aliases=["plugin"], invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
@@ -446,7 +454,7 @@ class Plugins(commands.Cog):
         `plugin_name` can be the name of the plugin found in `{prefix}plugin registry`, or a direct reference
         to a GitHub hosted plugin (in the format `user/repo/name[@branch]`) or `@local/name` for local plugins.
         """
-        plugin = await self.parse_user_input(ctx, plugin_name)
+        plugin = await self.parse_user_input(ctx, plugin_name, check_registry=False)
         if plugin is None:
             return
 
