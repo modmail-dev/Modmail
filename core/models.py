@@ -360,6 +360,9 @@ Default = _Default()
 
 class SafeFormatter(Formatter):
     def get_field(self, field_name, args, kwargs):
+        if field_name in kwargs:
+            return kwargs[field_name], field_name
+
         first, rest = _string.formatter_field_name_split(field_name)
 
         try:
