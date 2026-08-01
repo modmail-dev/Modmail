@@ -359,6 +359,31 @@ Default = _Default()
 
 
 class SafeFormatter(Formatter):
+    _FIELD_PATTERN = re.compile(r"(?<!{)\{[^{}]+\}(?!})")
+    _UNMATCHED_BRACE_ERRORS = {
+        "Single '{' encountered in format string",
+        "Single '}' encountered in format string",
+        "expected '}' before end of string",
+    }
+
+    def format(self, format_string, /, *args, **kwargs):
+        try:
+            return super().format(format_string, *args, **kwargs)
+        except ValueError as exc:
+            if str(exc) not in self._UNMATCHED_BRACE_ERRORS:
+                raise
+
+        # A malformed literal brace makes Formatter reject the entire message.
+        # Format complete fields individually so the remaining text can still
+        # be sent as written.
+        def format_field(match):
+            try:
+                return Formatter.format(self, match.group(), *args, **kwargs)
+            except ValueError:
+                return match.group()
+
+        return self._FIELD_PATTERN.sub(format_field, format_string)
+
     def get_field(self, field_name, args, kwargs):
         if field_name in kwargs:
             return kwargs[field_name], field_name
