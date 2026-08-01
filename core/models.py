@@ -391,6 +391,28 @@ class SafeFormatter(Formatter):
 
 
 class UnseenFormatter(Formatter):
+    _FIELD_PATTERN = re.compile(r"(?<!{)\{[^{}]+\}(?!})")
+    _UNMATCHED_BRACE_ERRORS = {
+        "Single '{' encountered in format string",
+        "Single '}' encountered in format string",
+        "expected '}' before end of string",
+    }
+
+    def format(self, format_string, /, *args, **kwargs):
+        try:
+            return super().format(format_string, *args, **kwargs)
+        except ValueError as exc:
+            if str(exc) not in self._UNMATCHED_BRACE_ERRORS:
+                raise
+
+        def format_field(match):
+            try:
+                return Formatter.format(self, match.group(), *args, **kwargs)
+            except ValueError:
+                return match.group()
+
+        return self._FIELD_PATTERN.sub(format_field, format_string)
+
     def get_field(self, field_name, args, kwargs):
         """Resolve only complete field names and preserve unknown fields."""
         if field_name in kwargs:
