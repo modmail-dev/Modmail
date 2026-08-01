@@ -592,7 +592,7 @@ class Modmail(commands.Cog):
             )
             return await ctx.send(embed=embed)
 
-        embeds = [discord.Embed(color=self.bot.main_color) for _ in range((len(self.bot.args) // 10) + 1)]
+        embeds = [discord.Embed(color=self.bot.main_color) for _ in range((len(self.bot.args) + 9) // 10)]
         for embed in embeds:
             embed.set_author(name="Args", icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128))
 
@@ -702,7 +702,7 @@ class Modmail(commands.Cog):
 
     @args.command(name="rename")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
-    async def args_rename(self, ctx, name: str.lower, *, value):
+    async def args_rename(self, ctx, name: str.lower, *, value: commands.clean_content):
         """
         Rename an arg.
         """
