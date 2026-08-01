@@ -364,8 +364,8 @@ class SafeFormatter(Formatter):
         "Single '{' encountered in format string",
         "Single '}' encountered in format string",
         "expected '}' before end of string",
+        "unexpected '{' in field name",
     }
-
     def format(self, format_string, /, *args, **kwargs):
         try:
             return super().format(format_string, *args, **kwargs)
