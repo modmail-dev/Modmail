@@ -184,6 +184,7 @@ class ConfigManager:
         "override_command_level": {},
         # threads
         "snippets": {},
+        "args": {},
         "notification_squad": {},
         "subscriptions": {},
         "closures": {},
