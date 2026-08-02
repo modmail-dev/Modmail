@@ -1048,7 +1048,7 @@ class Utility(commands.Cog):
 
         When `{prefix}alias` is used by itself, this will retrieve
         a list of alias that are currently set. `{prefix}alias-name` will show what the
-        alias point to.
+        alias points to.
 
         To use alias:
 
