@@ -1750,12 +1750,18 @@ class Thread:
                 msg = None
 
             if msg is not None:
+                log_attachments = None
+                if any(
+                    getattr(attachment, "is_snippet_attachment", False) for attachment in message.attachments
+                ):
+                    log_attachments = msg.attachments
                 tasks.append(
                     self.bot.api.append_log(
                         message,
                         message_id=msg.id,
                         channel_id=self.channel.id,
                         type_="anonymous" if anonymous else "thread_message",
+                        attachments=log_attachments,
                     )
                 )
             else:
@@ -2011,16 +2017,16 @@ class Thread:
 
         for i, a in enumerate(message.attachments):
             attachment = ext[i]
-            if getattr(a, "is_snippet_image", False):
-                # If it's a snippet image, we want to embed it using attachment:// syntax
-                snippet_images_to_upload.append(a)
+            if getattr(a, "is_snippet_attachment", False):
+                if getattr(a, "is_snippet_image", False):
+                    # Embed snippet images using attachment:// syntax.
+                    snippet_images_to_upload.append(a)
+                else:
+                    files_to_upload.append(a)
             elif is_image_url(attachment[0]):
                 images.append(attachment)
             else:
-                if hasattr(a, "to_file") and callable(a.to_file):
-                    files_to_upload.append(a)
-                else:
-                    attachments.append(attachment)
+                attachments.append(attachment)
 
         image_urls = re.findall(
             r"http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
@@ -2192,7 +2198,9 @@ class Thread:
             embed.colour = self.bot.recipient_color
 
         if (from_mod or note) and not thread_creation:
-            delete_message = not bool(message.attachments)
+            delete_message = not any(
+                not getattr(attachment, "is_snippet_attachment", False) for attachment in message.attachments
+            )
             # Only delete the source command message when it's in a guild text
             # channel; attempting to delete a DM message can raise 50003.
             if (
@@ -2249,7 +2257,7 @@ class Thread:
             try:
                 discord_files.append(await att.to_file())
             except Exception:
-                logger.warning("Failed to convert AttachmentWrapper to file.", exc_info=True)
+                logger.warning("Failed to convert snippet attachment to file.", exc_info=True)
 
         if plain:
             if from_mod and not isinstance(destination, discord.TextChannel):
@@ -2264,11 +2272,12 @@ class Thread:
 
                 files = discord_files[:]
                 for att in message.attachments:
-                    if not (hasattr(att, "to_file") and callable(att.to_file)):
-                        try:
-                            files.append(await att.to_file())
-                        except Exception:
-                            logger.warning("Failed to attach file in plain DM.", exc_info=True)
+                    if getattr(att, "is_snippet_attachment", False):
+                        continue
+                    try:
+                        files.append(await att.to_file())
+                    except Exception:
+                        logger.warning("Failed to attach file in plain DM.", exc_info=True)
 
                 msg = await destination.send(plain_message, files=files or None)
             else:

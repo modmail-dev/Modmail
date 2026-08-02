@@ -400,6 +400,7 @@ class ApiClient:
         message_id: str = "",
         channel_id: str = "",
         type_: str = "thread_message",
+        attachments=None,
     ) -> dict:
         return NotImplemented
 
@@ -663,11 +664,13 @@ class MongoDBClient(ApiClient):
         message_id: str = "",
         channel_id: str = "",
         type_: str = "thread_message",
+        attachments=None,
     ) -> dict:
         channel_id = str(channel_id) or (str(message.channel.id) if message else "")
         message_id = str(message_id) or (str(message.id) if message else "")
 
         if message:
+            log_attachments = message.attachments if attachments is None else attachments
             content = message.content or ""
             if forwarded := extract_forwarded_content(message):
                 if content:
@@ -697,7 +700,7 @@ class MongoDBClient(ApiClient):
                         "size": a.size,
                         "url": a.url,
                     }
-                    for a in message.attachments
+                    for a in log_attachments
                 ],
             }
         else:
@@ -717,7 +720,6 @@ class MongoDBClient(ApiClient):
                 "type": type_,
                 "attachments": [],
             }
-
         return await self.logs.find_one_and_update(
             {"channel_id": channel_id},
             {"$push": {"messages": data}},

@@ -495,7 +495,13 @@ class Modmail(commands.Cog):
             snippet_data["file_id"] = file_id
 
         self.bot.snippets[name] = snippet_data
-        await self.bot.config.update()
+        try:
+            await self.bot.config.update()
+        except Exception:
+            self.bot.snippets.pop(name, None)
+            if file_id:
+                await self.bot.api.delete_snippet_attachment(file_id)
+            raise
 
         description = "Successfully created snippet."
         if attachment_info:
@@ -566,13 +572,8 @@ class Modmail(commands.Cog):
     async def snippet_remove(self, ctx, *, name: str.lower):
         """Remove a snippet."""
         if name in self.bot.snippets:
-            # Delete GridFS attachment if present
             snippet_data = self.bot.snippets[name]
-            if isinstance(snippet_data, dict) and snippet_data.get("file_id"):
-                try:
-                    await self.bot.api.delete_snippet_attachment(snippet_data["file_id"])
-                except Exception as e:
-                    logger.warning("Failed to delete snippet attachment for %s: %s", name, e)
+            file_id = snippet_data.get("file_id") if isinstance(snippet_data, dict) else None
 
             deleted_aliases, edited_aliases = self._fix_aliases(name)
 
@@ -619,6 +620,8 @@ class Modmail(commands.Cog):
             )
             self.bot.snippets.pop(name)
             await self.bot.config.update()
+            if file_id and not await self.bot.api.delete_snippet_attachment(file_id):
+                logger.warning("Failed to delete snippet attachment for %s.", name)
         else:
             embed = create_not_found_embed(name, self.bot.snippets.keys(), "Snippet")
         await ctx.send(embed=embed)
@@ -665,13 +668,6 @@ class Modmail(commands.Cog):
                     )
                     return await ctx.send(embed=embed)
 
-                # Delete old attachment if present
-                if old_file_id:
-                    try:
-                        await self.bot.api.delete_snippet_attachment(old_file_id)
-                    except Exception as e:
-                        logger.warning("Failed to delete old attachment for %s: %s", name, e)
-
                 # Upload new attachment
                 try:
                     file_data = await attachment.read()
@@ -708,7 +704,17 @@ class Modmail(commands.Cog):
                 updated_snippet["file_id"] = new_file_id
 
             self.bot.snippets[name] = updated_snippet
-            await self.bot.config.update()
+            try:
+                await self.bot.config.update()
+            except Exception:
+                self.bot.snippets[name] = snippet_data
+                if attachment_info and new_file_id != old_file_id:
+                    await self.bot.api.delete_snippet_attachment(new_file_id)
+                raise
+
+            if attachment_info and old_file_id:
+                if not await self.bot.api.delete_snippet_attachment(old_file_id):
+                    logger.warning("Failed to delete old attachment for %s.", name)
 
             description = f"`{name}` has been updated."
             if value:
@@ -2020,13 +2026,6 @@ class Modmail(commands.Cog):
         ctx.message.content = msg
         async with safe_typing(ctx):
             await ctx.thread.reply(ctx.message, msg)
-
-        # Delete the snippet command message if it was invoked via snippet
-        if getattr(ctx, "snippet_invoked", False):
-            try:
-                await ctx.message.delete()
-            except Exception as e:
-                logger.warning("Failed to delete snippet command message: %s", e)
 
     @commands.command(aliases=["formatanonreply"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
