@@ -11,7 +11,7 @@ however, insignificant breaking changes do not guarantee a major version bump, s
 ### Fixed
 * Confirm thread creation (react to contact) no longer leaves a thread stuck in a "not ready" cache state when the recipient has DMs disabled. The bot now catches `discord.Forbidden` when sending the confirmation prompt, cancels the thread, and clears the cache entry immediately instead of requiring a bot restart. (#3442)
 
-# v4.2.1
+# v4.3.0
 
 ### Added
 

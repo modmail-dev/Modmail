@@ -6,7 +6,7 @@
   <br>
 
   <a href="#">
-    <img src="https://img.shields.io/badge/Latest%20Version-v4.2.1-7289da?style=for-the-badge&logo=data:image/gif;base64,R0lGODlhGAAYAPcAAAAAADQ+Yj5MdThCaEFOekNQfWt5e1lqfEdVhVpriVx1iVtsnFZpll1xlF1znFx5mGNtjGR7hWNzjGd5iWJunGNslmN0lGl1lGN5lWt7lWR0nGp1nWR5nGt8nHJ9l3J9jFxto1xtqlZqqF5zpF15pV10rVx5q1Z2ql1us150s114sV50uVd1smJupGNurGN0pGp1pGR6o2t7o2F0rml0rGR5rGt8q3J9pGNus2Fvu2Bzs2p2smR5s2t7tGF0u2N6vGp7u2l1uXJ+uGJ1wWV7w2l+xWl+yl5zwHWDiWyCmHODnHiGmHSLkW2CpGuEqnSCpHqMo3ODrHWKrXyMq3iHp3yTqGyEtWqFunKDs3uLtHSGvXSMvHuMu3eItnyTs3yTu3iUuW+RsV+ApmuCxG2Dy22LxnSMxHuMxHGGzXSLzXqLzXWFxXyTw3uSy3WSx26E0W+N2m+L1XKG03SL1XmL1HOL2HmL23WF2XiS1m+QyHOK4XmL4XaH4nGM5ImXm4WOlJSjnoOOq4OOpYSUrImXqJOcqYONt4OUtIybtIOUu4ycvImYt5OcuIyiqZekqYyiupOjvJurvJimtp+yvqKruae2ua23trLCucPHvIOMxoOUxIuaw4eYyJKbyISW1YiW0o2kyJWlxJqpxZWkzJury5aoxp6xxZ2zyZio1Jyy2Yuk0aOsyKOyxKOzzKy8zKq2yLO7xqOr1KSz1Ku706W026y73Ki21bK716u75LS95KSu4Zyx6bPDzLjGx63B2LPD1LTE3LvL3brI17/S2bbKzrTE47rF47zM5L3M67bH577R5L7R67zK8rjM8MLM3MPK1sTT3crU3MjW2dLZ2srUy8PN5MTO68nP68jL48TS5MnT5cbR68jS7M3b7Mva5dTb6MTO8srO8szF8MXR8snS8c3a8cnY+NXb9tDL7dnm6dzk8tro99Pq9uTp6+r17fr77eTr/efr+Oz09OXz/Ov0/e37/uj39fX19fX89fz+9vP1/fX9/f7//vr2/ODl4sK75yH5BAEAAAAALAAAAAAYABgAAAj/AAEAmFOnoMGDCAvGmRNHYMKHEOdIhEgRIcGKGDMeTJVO00WNBj194/frFik5IOvgqdaP371N26xpefORYq57/HI+s7Vtmy0eKCmmapcz575FPXt+SfHmociiRae1SroNWIoVTQ2uxAk15yJg1awl7ZSCaUE82uRxhTpt1TNXq0Ip2pSobIqCc0iVoqsI0ipXr1bhywfVXxYdiA3Sourz2dqc8lbNQJz4bDWqix73E7ZjhgrKOjYmvfWLbZcZqCdTPjjHGLdtibi2U5Q6NWiEqqq64ifvVe3at1nX2tTuWQ/QyIMfxHOGi+rkyeMklPMDuvWaBqlbj469IPUU2ykPCOw+53t4AAEBADs=">
+    <img src="https://img.shields.io/badge/Latest%20Version-v4.3.0-7289da?style=for-the-badge&logo=data:image/gif;base64,R0lGODlhGAAYAPcAAAAAADQ+Yj5MdThCaEFOekNQfWt5e1lqfEdVhVpriVx1iVtsnFZpll1xlF1znFx5mGNtjGR7hWNzjGd5iWJunGNslmN0lGl1lGN5lWt7lWR0nGp1nWR5nGt8nHJ9l3J9jFxto1xtqlZqqF5zpF15pV10rVx5q1Z2ql1us150s114sV50uVd1smJupGNurGN0pGp1pGR6o2t7o2F0rml0rGR5rGt8q3J9pGNus2Fvu2Bzs2p2smR5s2t7tGF0u2N6vGp7u2l1uXJ+uGJ1wWV7w2l+xWl+yl5zwHWDiWyCmHODnHiGmHSLkW2CpGuEqnSCpHqMo3ODrHWKrXyMq3iHp3yTqGyEtWqFunKDs3uLtHSGvXSMvHuMu3eItnyTs3yTu3iUuW+RsV+ApmuCxG2Dy22LxnSMxHuMxHGGzXSLzXqLzXWFxXyTw3uSy3WSx26E0W+N2m+L1XKG03SL1XmL1HOL2HmL23WF2XiS1m+QyHOK4XmL4XaH4nGM5ImXm4WOlJSjnoOOq4OOpYSUrImXqJOcqYONt4OUtIybtIOUu4ycvImYt5OcuIyiqZekqYyiupOjvJurvJimtp+yvqKruae2ua23trLCucPHvIOMxoOUxIuaw4eYyJKbyISW1YiW0o2kyJWlxJqpxZWkzJury5aoxp6xxZ2zyZio1Jyy2Yuk0aOsyKOyxKOzzKy8zKq2yLO7xqOr1KSz1Ku706W026y73Ki21bK716u75LS95KSu4Zyx6bPDzLjGx63B2LPD1LTE3LvL3brI17/S2bbKzrTE47rF47zM5L3M67bH577R5L7R67zK8rjM8MLM3MPK1sTT3crU3MjW2dLZ2srUy8PN5MTO68nP68jL48TS5MnT5cbR68jS7M3b7Mva5dTb6MTO8srO8szF8MXR8snS8c3a8cnY+NXb9tDL7dnm6dzk8tro99Pq9uTp6+r17fr77eTr/efr+Oz09OXz/Ov0/e37/uj39fX19fX89fz+9vP1/fX9/f7//vr2/ODl4sK75yH5BAEAAAAALAAAAAAYABgAAAj/AAEAmFOnoMGDCAvGmRNHYMKHEOdIhEgRIcGKGDMeTJVO00WNBj194/frFik5IOvgqdaP371N26xpefORYq57/HI+s7Vtmy0eKCmmapcz575FPXt+SfHmociiRae1SroNWIoVTQ2uxAk15yJg1awl7ZSCaUE82uRxhTpt1TNXq0Ip2pSobIqCc0iVoqsI0ipXr1bhywfVXxYdiA3Sourz2dqc8lbNQJz4bDWqix73E7ZjhgrKOjYmvfWLbZcZqCdTPjjHGLdtibi2U5Q6NWiEqqq64ifvVe3at1nX2tTuWQ/QyIMfxHOGi+rkyeMklPMDuvWaBqlbj469IPUU2ykPCOw+53t4AAEBADs=">
   </a>
 
   <br>
@@ -61,7 +61,7 @@ Our Logviewer will save the threads so you can view previous threads through the
 ## Features
 
 * **Highly Customisable:**
-  * Bot activity, prefix, category, log channel, etc.
+  * Bot activity, categories, log channels, command interfaces, etc.
   * Command permission system.
   * Interface elements (color, responses, reactions, etc.).
   * Snippets and *command aliases*.
@@ -73,16 +73,35 @@ Our Logviewer will save the threads so you can view previous threads through the
   * Native Discord dark-mode feel.
   * Markdown/formatting support.
   * Login via Discord to protect your logs ([premium feature](https://buymeacoffee.com/modmaildev/membership)).
-  * See past logs of a user with `?logs`.
-  * Searchable by text queries using `?logs search`.
+  * See past logs of a user with `/logs view`.
+  * Searchable by text queries using `/logs search`.
 
 * **Robust implementation:**
-  * Schedule tasks in human time, e.g. `?close in 2 hours silently`.
+  * Schedule tasks in human time, e.g. `/close after:in 2 hours silently`.
   * Editing and deleting messages are synced.
   * Support for the diverse range of message contents (multiple images, files).
   * Paginated commands interfaces via reactions.
 
-This list is ever-growing thanks to active development and our exceptional contributors. See a full list of documented commands by using the `?help` command.
+This list is ever-growing thanks to active development and our exceptional contributors. See a full list of documented commands by using `/help`.
+
+## Commands
+
+Slash commands are enabled by default and are registered only in the inbox server
+configured by `MODMAIL_GUILD_ID`, falling back to `GUILD_ID` for a single-server setup.
+Setting `USE_SLASH_COMMANDS=false` removes the guild-scoped commands from both configured
+servers on startup. Commands with subcommands are grouped naturally, for example
+`/config set` and `/logs search`. Each command only exposes the named options it supports:
+simple commands such as `/selfcontact` have no options, `/snippet add` has `name`, `value`,
+and `attachment`, and replies require `message` with an optional `attachment`. Values are
+translated back through the existing converters so aliases, snippets, mentions, and
+human-readable durations keep working consistently. Parameters with a fixed set of valid
+values, such as `/close option`, use Discord choices instead of unrestricted text.
+
+Commands can also be invoked with `@bot command`. This mention form does not require
+the privileged message-content intent. Legacy text-prefix commands are disabled by
+default; set `ENABLE_PREFIX_COMMANDS=true` and restart the bot only when Discord has
+approved that intent for the application. Slash registration can be controlled with
+`USE_SLASH_COMMANDS`, which defaults to `true`.
 
 ## Installation
 
@@ -109,7 +128,7 @@ If you don't want the trouble of renting and configuring your server to host Mod
 Modmail supports the use of third-party plugins to extend or add functionalities to the bot.
 Plugins allow niche features as well as anything else outside of the scope of the core functionality of Modmail. 
 
-You can find a list of third-party plugins using the `?plugins registry`  command or visit the [Unofficial List of Plugins](https://github.com/modmail-dev/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
+You can find a list of third-party plugins using `/plugins registry browse` or visit the [Unofficial List of Plugins](https://github.com/modmail-dev/modmail/wiki/Unofficial-List-of-Plugins) for a list of plugins contributed by the community.
 
 To develop your own, check out the [plugins documentation](https://github.com/modmail-dev/modmail/wiki/Plugins).
 

@@ -210,6 +210,9 @@ class ConfigManager:
         "owners": None,
         "enable_presence_intent": False,
         "registry_plugins_only": False,
+        # command interfaces (environment/config.json only)
+        "use_slash_commands": True,
+        "enable_prefix_commands": False,
         # bot
         "token": None,
         "enable_plugins": True,
@@ -286,6 +289,8 @@ class ConfigManager:
         "use_hoisted_top_role",
         "enable_presence_intent",
         "registry_plugins_only",
+        "use_slash_commands",
+        "enable_prefix_commands",
         # snooze
         "snooze_store_attachments",
         # thread creation menu booleans

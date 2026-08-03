@@ -195,7 +195,7 @@ class Modmail(commands.Cog):
 
         embed = discord.Embed(
             title="Friendly Reminder",
-            description=f"You may use the `{self.bot.prefix}config set log_channel_id "
+            description=f"You may use the `{self.bot.command_display_prefix}config set log_channel_id "
             "<channel-id>` command to set up a custom log channel, then you can delete this default "
             f"{log_channel.mention} log channel.",
             color=self.bot.main_color,
@@ -208,7 +208,9 @@ class Modmail(commands.Cog):
             "feeling extra generous, buy us coffee on [Buy Me A Coffee](https://buymeacoffee.com/modmaildev) :heart:!",
         )
 
-        embed.set_footer(text=f'Type "{self.bot.prefix}help" for a complete list of commands.')
+        embed.set_footer(
+            text=f'Type "{self.bot.command_display_prefix}help" for a complete list of commands.'
+        )
         await log_channel.send(embed=embed)
 
         self.bot.config["main_category_id"] = category.id
@@ -219,9 +221,10 @@ class Modmail(commands.Cog):
             "**Successfully set up server.**\n"
             "Consider setting permission levels to give access to roles "
             "or users the ability to use Modmail.\n\n"
-            f"Type:\n- `{self.bot.prefix}permissions` and `{self.bot.prefix}permissions add` "
+            f"Type:\n- `{self.bot.command_display_prefix}permissions` and "
+            f"`{self.bot.command_display_prefix}permissions add` "
             "for more info on setting permissions.\n"
-            f"- `{self.bot.prefix}config help` for a list of available customizations."
+            f"- `{self.bot.command_display_prefix}config help` for a list of available customizations."
         )
 
         if not self.bot.config["command_permissions"] and not self.bot.config["level_permissions"]:
@@ -294,7 +297,9 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color,
                 description="You dont have any snippets at the moment.",
             )
-            embed.set_footer(text=f'Check "{self.bot.prefix}help snippet add" to add a snippet.')
+            embed.set_footer(
+                text=f'Check "{self.bot.command_display_prefix}help snippet add" to add a snippet.'
+            )
             embed.set_author(
                 name="Snippets",
                 icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
@@ -834,7 +839,9 @@ class Modmail(commands.Cog):
                 color=self.bot.error_color,
                 description="You don't have any args at the moment.",
             )
-            embed.set_footer(text=f'See "{self.bot.prefix}help args add" for how to add an arg.')
+            embed.set_footer(
+                text=f'See "{self.bot.command_display_prefix}help args add" for how to add an arg.'
+            )
             embed.set_author(
                 name="Args",
                 icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
@@ -2749,7 +2756,8 @@ class Modmail(commands.Cog):
                 embed.set_footer(
                     text="However, if the original system block reason still applies, "
                     f"{name} will be automatically blocked again. "
-                    f'Use "{self.bot.prefix}blocked whitelist {user_or_role.id}" to whitelist the user.'
+                    f'Use "{self.bot.command_display_prefix}blocked whitelist '
+                    f'{user_or_role.id}" to whitelist the user.'
                 )
             else:
                 embed = discord.Embed(

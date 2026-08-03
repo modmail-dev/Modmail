@@ -1,4 +1,4 @@
-__version__ = "4.2.1"
+__version__ = "4.3.0"
 
 
 import asyncio
@@ -46,6 +46,7 @@ from core.models import (
     configure_logging,
     getLogger,
 )
+from core.slash_commands import SlashCommandManager
 from core.thread import ThreadManager
 from core.time import human_timedelta
 from core.utils import (
@@ -97,8 +98,13 @@ class ModmailBot(commands.Bot):
         intents = discord.Intents.all()
         if not self.config["enable_presence_intent"]:
             intents.presences = False
+        # Prefix commands are the only guild feature that requires privileged
+        # message content. Mentions and direct messages remain available under
+        # Discord's message-content exceptions.
+        intents.message_content = bool(self.config["enable_prefix_commands"])
 
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
+        self.slash_commands = SlashCommandManager(self)
         self.session = None
         self._api = None
         self.formatter = SafeFormatter()
@@ -239,7 +245,12 @@ class ModmailBot(commands.Bot):
         return self.api.db
 
     async def get_prefix(self, message=None):
-        return [self.prefix, f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
+        prefixes = []
+        if self.config["enable_prefix_commands"]:
+            prefixes.append(self.prefix)
+        if self.user is not None:
+            prefixes.extend((f"<@{self.user.id}> ", f"<@!{self.user.id}> "))
+        return prefixes
 
     def run(self):
         async def runner():
@@ -438,6 +449,19 @@ class ModmailBot(commands.Bot):
         return discord.utils.get(self.guilds, id=self.guild_id)
 
     @property
+    def inbox_guild_id(self) -> typing.Optional[int]:
+        """The server where Modmail ticket channels and staff commands belong."""
+        guild_id = self.config["modmail_guild_id"]
+        if guild_id is None:
+            return self.guild_id
+        try:
+            return int(str(guild_id))
+        except ValueError:
+            self.config.remove("modmail_guild_id")
+            logger.critical("Invalid MODMAIL_GUILD_ID set; falling back to GUILD_ID.")
+            return self.guild_id
+
+    @property
     def modmail_guild(self) -> typing.Optional[discord.Guild]:
         """
         The guild that the bot is operating in
@@ -499,6 +523,13 @@ class ModmailBot(commands.Bot):
         return str(self.config["prefix"])
 
     @property
+    def command_display_prefix(self) -> str:
+        """Prefix used in user-facing command examples."""
+        if self.config["enable_prefix_commands"]:
+            return self.prefix
+        return "/"
+
+    @property
     def mod_color(self) -> int:
         return self.config.get("mod_color")
 
@@ -547,6 +578,11 @@ class ModmailBot(commands.Bot):
         await self.config.refresh()
         await self.api.setup_indexes()
         await self.load_extensions()
+        if self.config["use_slash_commands"]:
+            await self.slash_commands.sync()
+        else:
+            logger.warning("Slash commands are disabled by USE_SLASH_COMMANDS=false.")
+            await self.slash_commands.disable()
         self._connected.set()
 
     async def on_ready(self):
@@ -574,7 +610,11 @@ class ModmailBot(commands.Bot):
             getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.bot_owner_ids
         )
         logger.info("Owners: %s", owners)
-        logger.info("Prefix: %s", self.prefix)
+        logger.info("Slash commands: %s", "enabled" if self.config["use_slash_commands"] else "disabled")
+        logger.info(
+            "Prefix commands: %s",
+            f"enabled ({self.prefix})" if self.config["enable_prefix_commands"] else "disabled",
+        )
         logger.info("Guild Name: %s", self.guild.name)
         logger.info("Guild ID: %s", self.guild.id)
         if self.using_multiple_server_setup:
@@ -1324,6 +1364,16 @@ class ModmailBot(commands.Bot):
         content_type = metadata.get("content_type", "")
         return SnippetAttachment(file_data, metadata, content_type.startswith("image/"))
 
+    @staticmethod
+    def _get_message_interaction(message):
+        """Return interaction data without accessing discord.py's deprecated property."""
+        try:
+            return message.interaction_metadata
+        except AttributeError:
+            # Synthetic slash-command messages and discord.py versions older
+            # than interaction_metadata expose the interaction directly.
+            return getattr(message, "interaction", None)
+
     async def get_contexts(self, message, *, cls=commands.Context):
         """
         Returns all invocation contexts from the message.
@@ -1331,7 +1381,15 @@ class ModmailBot(commands.Bot):
         """
 
         view = StringView(message.content)
-        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        interaction = self._get_message_interaction(message)
+        context_prefix = "/" if interaction is not None else self.prefix
+        ctx = cls(
+            prefix=context_prefix,
+            view=view,
+            bot=self,
+            message=message,
+            interaction=interaction,
+        )
         thread = await self.threads.find(channel=ctx.channel)
 
         if message.author.id == self.user.id:  # type: ignore
@@ -1392,7 +1450,13 @@ class ModmailBot(commands.Bot):
                     command = self._get_snippet_command()
                     command_invocation_text = f"{invoked_prefix}{command} {snippet_text}"
                 view = StringView(invoked_prefix + command_invocation_text)
-                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=context_message)
+                ctx_ = cls(
+                    prefix=context_prefix,
+                    view=view,
+                    bot=self,
+                    message=context_message,
+                    interaction=interaction,
+                )
                 ctx_.thread = thread
                 discord.utils.find(view.skip_string, prefixes)
                 ctx_.invoked_with = view.get_word().lower()
@@ -1428,7 +1492,15 @@ class ModmailBot(commands.Bot):
         message.guild = channel.guild
 
         view = StringView(message.content)
-        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        interaction = self._get_message_interaction(message)
+        context_prefix = "/" if interaction is not None else self.prefix
+        ctx = cls(
+            prefix=context_prefix,
+            view=view,
+            bot=self,
+            message=message,
+            interaction=interaction,
+        )
         thread = await self.threads.find(channel=ctx.channel)
 
         invoked_prefix = self.prefix
@@ -1483,7 +1555,15 @@ class ModmailBot(commands.Bot):
         """
 
         view = StringView(message.content)
-        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        interaction = self._get_message_interaction(message)
+        context_prefix = "/" if interaction is not None else self.prefix
+        ctx = cls(
+            prefix=context_prefix,
+            view=view,
+            bot=self,
+            message=message,
+            interaction=interaction,
+        )
 
         if message.author.id == self.user.id:
             return ctx
@@ -1572,14 +1652,14 @@ class ModmailBot(commands.Bot):
 
         await self.process_commands(message)
 
-    async def process_commands(self, message):
+    async def process_commands(self, message, *, cls=commands.Context):
         if message.author.bot:
             return
 
         if isinstance(message.channel, discord.DMChannel):
             return await self._queue_dm_message(message)
 
-        ctxs = await self.get_contexts(message)
+        ctxs = await self.get_contexts(message, cls=cls)
         for ctx in ctxs:
             if ctx.command:
                 if not any(1 for check in ctx.command.checks if hasattr(check, "permission_level")):
