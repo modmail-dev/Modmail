@@ -1365,6 +1365,13 @@ class ModmailBot(commands.Bot):
         return SnippetAttachment(file_data, metadata, content_type.startswith("image/"))
 
     @staticmethod
+    def _message_with_snippet_attachment(message, attachment):
+        """Copy a command message and append a stored snippet attachment."""
+        snippet_message = copy.copy(message)
+        snippet_message.attachments = [*message.attachments, attachment]
+        return snippet_message
+
+    @staticmethod
     def _get_message_interaction(message):
         """Return interaction data without accessing discord.py's deprecated property."""
         try:
@@ -1440,7 +1447,7 @@ class ModmailBot(commands.Bot):
                         snippet_text = snippet_data.get("text", "")
                         attachment = await self._download_snippet_attachment(snippet_data)
                         if attachment is not None:
-                            context_message.attachments = [attachment]
+                            context_message = self._message_with_snippet_attachment(message, attachment)
                     else:
                         snippet_text = None
                 except KeyError:
@@ -1472,9 +1479,7 @@ class ModmailBot(commands.Bot):
             snippet_data = self.snippets.get(snippet_name)
             attachment = await self._download_snippet_attachment(snippet_data)
             if attachment is not None:
-                snippet_message = copy.copy(message)
-                snippet_message.attachments = [attachment]
-                ctx.message = snippet_message
+                ctx.message = self._message_with_snippet_attachment(message, attachment)
             ctx.command = self._get_snippet_command()
             reply_view = StringView(f"{invoked_prefix}{ctx.command} {snippet_text}")
             discord.utils.find(reply_view.skip_string, prefixes)

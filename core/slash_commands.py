@@ -47,9 +47,9 @@ class SlashCommandMessage:
 
     @property
     def jump_url(self) -> str:
-        if self.guild is None or self.channel is None:
-            return ""
-        return f"https://discord.com/channels/{self.guild.id}/{self.channel.id}/{self.id}"
+        # An interaction ID is not a message ID, and slash invocations do not
+        # provide a user-authored message that can be linked to.
+        return ""
 
     async def add_reaction(self, _emoji) -> None:
         # Interactions have no invocation message to react to. The slash-command

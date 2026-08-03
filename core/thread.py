@@ -1622,6 +1622,19 @@ class Thread:
 
         return msg
 
+    @staticmethod
+    def _get_log_attachments(message: discord.Message, sent_message: discord.Message):
+        """Use uploaded snippet URLs while retaining ordinary source attachments."""
+        if not any(getattr(attachment, "is_snippet_attachment", False) for attachment in message.attachments):
+            return None
+
+        source_attachments = [
+            attachment
+            for attachment in message.attachments
+            if not getattr(attachment, "is_snippet_attachment", False)
+        ]
+        return [*sent_message.attachments, *source_attachments]
+
     async def reply(
         self,
         message: discord.Message,
@@ -1750,11 +1763,7 @@ class Thread:
                 msg = None
 
             if msg is not None:
-                log_attachments = None
-                if any(
-                    getattr(attachment, "is_snippet_attachment", False) for attachment in message.attachments
-                ):
-                    log_attachments = msg.attachments
+                log_attachments = self._get_log_attachments(message, msg)
                 tasks.append(
                     self.bot.api.append_log(
                         message,

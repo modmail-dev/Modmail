@@ -365,7 +365,8 @@ class Modmail(commands.Cog):
         {prefix}snippet add "two word" this is a two word snippet.
         ```
 
-        You can also attach a file (max 10 MB) to include with the snippet.
+        You can also attach a file (up to the configured
+        `snippet_attachment_max_size`, default 10 MB) to include with the snippet.
         """
         if self.bot.get_command(name):
             embed = discord.Embed(
