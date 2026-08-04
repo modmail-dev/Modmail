@@ -243,7 +243,7 @@ class ConfigManager:
         "log_expiration",
     }
 
-    duration_seconds = {"snooze_default_duration"}
+    duration_seconds = {"snooze_default_duration", "thread_creation_menu_timeout"}
 
     megabytes = {"snippet_attachment_max_size"}
 
