@@ -165,7 +165,7 @@ class ConfigManager:
         "thread_creation_menu_embed_footer_icon_url": None,
         "thread_creation_menu_embed_color": str(discord.Color.green()),
         # snippet attachments
-        "snippet_attachment_max_size": 10,  # in MB
+        "snippet_attachment_max_size": 10,  # in MiB
     }
 
     private_keys = {
@@ -245,7 +245,7 @@ class ConfigManager:
 
     duration_seconds = {"snooze_default_duration", "thread_creation_menu_timeout"}
 
-    megabytes = {"snippet_attachment_max_size"}
+    mebibytes = {"snippet_attachment_max_size"}
 
     booleans = {
         "use_user_id_channel_name",
@@ -317,6 +317,23 @@ class ConfigManager:
 
     def __repr__(self):
         return repr(self._cache)
+
+    @staticmethod
+    def _convert_mebibytes(value: typing.Any) -> int:
+        """Convert a positive whole-number MiB value without rounding it."""
+        if isinstance(value, bool):
+            raise InvalidConfigError("Must be a positive whole number of MiB.")
+
+        if isinstance(value, int):
+            converted = value
+        elif isinstance(value, str) and re.fullmatch(r"[1-9]\d*", value.strip()):
+            converted = int(value)
+        else:
+            raise InvalidConfigError("Must be a positive whole number of MiB.")
+
+        if converted <= 0:
+            raise InvalidConfigError("Must be a positive whole number of MiB.")
+        return converted
 
     def populate_cache(self) -> dict:
         data = deepcopy(self.defaults)
@@ -426,13 +443,12 @@ class ConfigManager:
                     logger.warning("Invalid %s %s.", key, value)
                     value = self.remove(key)
 
-        elif key in self.megabytes:
-            if not isinstance(value, int):
-                try:
-                    value = int(value)
-                except (ValueError, TypeError):
-                    logger.warning("Invalid %s %s.", key, value)
-                    value = self.remove(key)
+        elif key in self.mebibytes:
+            try:
+                value = self._convert_mebibytes(value)
+            except InvalidConfigError:
+                logger.warning("Invalid %s %s.", key, value)
+                value = self.remove(key)
 
         elif key in self.force_str:
             # Temporary: as we saved in int previously, leading to int32 overflow,
@@ -536,6 +552,9 @@ class ConfigManager:
             now = discord.utils.utcnow()
             duration_seconds = int((time.dt - now).total_seconds())
             return self.__setitem__(key, duration_seconds)
+
+        elif key in self.mebibytes:
+            return self.__setitem__(key, self._convert_mebibytes(item))
 
         elif key in self.enums:
             if isinstance(item, self.enums[key]):

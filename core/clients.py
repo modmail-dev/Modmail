@@ -9,6 +9,8 @@ from discord.ext import commands
 
 from aiohttp import ClientResponseError, ClientResponse
 from bson import ObjectId
+from bson.errors import InvalidId
+from gridfs.errors import NoFile
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 from pymongo.errors import ConfigurationError
 
@@ -886,6 +888,9 @@ class MongoDBClient(ApiClient):
         try:
             await self.fs.delete(ObjectId(file_id))
             logger.debug("Deleted snippet attachment with file_id %s.", file_id)
+            return True
+        except (InvalidId, NoFile):
+            logger.info("Snippet attachment %s was already absent.", file_id)
             return True
         except Exception as e:
             logger.warning("Failed to delete snippet attachment %s: %s", file_id, e)

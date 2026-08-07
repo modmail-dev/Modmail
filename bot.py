@@ -393,7 +393,7 @@ class ModmailBot(commands.Bot):
         await self.config.wait_until_ready()
 
     @property
-    def snippets(self) -> typing.Dict[str, str]:
+    def snippets(self) -> typing.Dict[str, typing.Union[str, typing.Dict[str, str]]]:
         return self.config["snippets"]
 
     @property
@@ -1382,7 +1382,7 @@ class ModmailBot(commands.Bot):
                         snippet_text = snippet_data.get("text", "")
                         attachment = await self._download_snippet_attachment(snippet_data)
                         if attachment is not None:
-                            context_message.attachments = [attachment]
+                            context_message.attachments = [*message.attachments, attachment]
                     else:
                         snippet_text = None
                 except KeyError:
@@ -1409,7 +1409,7 @@ class ModmailBot(commands.Bot):
             attachment = await self._download_snippet_attachment(snippet_data)
             if attachment is not None:
                 snippet_message = copy.copy(message)
-                snippet_message.attachments = [attachment]
+                snippet_message.attachments = [*message.attachments, attachment]
                 ctx.message = snippet_message
             ctx.command = self._get_snippet_command()
             reply_view = StringView(f"{invoked_prefix}{ctx.command} {snippet_text}")

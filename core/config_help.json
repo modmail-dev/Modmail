@@ -857,15 +857,16 @@
     ]
   },
   "snippet_attachment_max_size": {
-    "default": "10 (MB)",
-    "description": "Maximum file size in megabytes (MB) for attachments when creating or editing snippets.",
+    "default": "10 MiB",
+    "description": "Maximum file size in mebibytes (MiB) for attachments when creating or editing snippets.",
     "examples": [
-      "`{prefix}config set snippet_attachment_max_size 5` (5 MB)",
-      "`{prefix}config set snippet_attachment_max_size 20` (20 MB)"
+      "`{prefix}config set snippet_attachment_max_size 5` (5 MiB)",
+      "`{prefix}config set snippet_attachment_max_size 20` (20 MiB)"
     ],
     "notes": [
       "Attachments larger than this size will be rejected when adding or editing snippets.",
-      "Value is specified in megabytes (MB)."
+      "The value must be a positive whole number of MiB; fractional and negative values are rejected.",
+      "Increasing this limit can substantially increase long-term database storage usage, especially when attachments are used frequently."
     ]
   },
   "require_close_reason": {

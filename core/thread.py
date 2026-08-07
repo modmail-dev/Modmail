@@ -1754,7 +1754,12 @@ class Thread:
                 if any(
                     getattr(attachment, "is_snippet_attachment", False) for attachment in message.attachments
                 ):
-                    log_attachments = msg.attachments
+                    original_attachments = [
+                        attachment
+                        for attachment in message.attachments
+                        if not getattr(attachment, "is_snippet_attachment", False)
+                    ]
+                    log_attachments = [*original_attachments, *msg.attachments]
                 tasks.append(
                     self.bot.api.append_log(
                         message,
