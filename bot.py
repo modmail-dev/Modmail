@@ -378,6 +378,10 @@ class ModmailBot(commands.Bot):
         return self.config["snippets"]
 
     @property
+    def args(self) -> typing.Dict[str, str]:
+        return self.config["args"]
+
+    @property
     def aliases(self) -> typing.Dict[str, str]:
         return self.config["aliases"]
 

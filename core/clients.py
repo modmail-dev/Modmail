@@ -662,39 +662,59 @@ class MongoDBClient(ApiClient):
         channel_id: str = "",
         type_: str = "thread_message",
     ) -> dict:
-        channel_id = str(channel_id) or str(message.channel.id)
-        message_id = str(message_id) or str(message.id)
+        channel_id = str(channel_id) or (str(message.channel.id) if message else "")
+        message_id = str(message_id) or (str(message.id) if message else "")
 
-        content = message.content or ""
-        if forwarded := extract_forwarded_content(message):
-            if content:
-                content += "\n" + forwarded
-            else:
-                content = forwarded
+        if message:
+            content = message.content or ""
+            if forwarded := extract_forwarded_content(message):
+                if content:
+                    content += "\n" + forwarded
+                else:
+                    content = forwarded
 
-        data = {
-            "timestamp": str(message.created_at),
-            "message_id": message_id,
-            "author": {
-                "id": str(message.author.id),
-                "name": message.author.name,
-                "discriminator": message.author.discriminator,
-                "avatar_url": message.author.display_avatar.url if message.author.display_avatar else None,
-                "mod": not isinstance(message.channel, DMChannel),
-            },
-            "content": content,
-            "type": type_,
-            "attachments": [
-                {
-                    "id": a.id,
-                    "filename": a.filename,
-                    "is_image": a.width is not None,
-                    "size": a.size,
-                    "url": a.url,
-                }
-                for a in message.attachments
-            ],
-        }
+            data = {
+                "timestamp": str(message.created_at),
+                "message_id": message_id,
+                "author": {
+                    "id": str(message.author.id),
+                    "name": message.author.name,
+                    "discriminator": message.author.discriminator,
+                    "avatar_url": (
+                        message.author.display_avatar.url if message.author.display_avatar else None
+                    ),
+                    "mod": not isinstance(message.channel, DMChannel),
+                },
+                "content": content,
+                "type": type_,
+                "attachments": [
+                    {
+                        "id": a.id,
+                        "filename": a.filename,
+                        "is_image": a.width is not None,
+                        "size": a.size,
+                        "url": a.url,
+                    }
+                    for a in message.attachments
+                ],
+            }
+        else:
+            # Fallback for when message is None but we still want to log something (e.g. system note)
+            # This requires at least some manual data to be useful.
+            data = {
+                "timestamp": str(discord.utils.utcnow()),
+                "message_id": message_id or "0",
+                "author": {
+                    "id": "0",
+                    "name": "System",
+                    "discriminator": "0000",
+                    "avatar_url": None,
+                    "mod": True,
+                },
+                "content": "System Message (No Content)",
+                "type": type_,
+                "attachments": [],
+            }
 
         return await self.logs.find_one_and_update(
             {"channel_id": channel_id},

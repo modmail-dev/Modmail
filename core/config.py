@@ -182,6 +182,7 @@ class ConfigManager:
         "override_command_level": {},
         # threads
         "snippets": {},
+        "args": {},
         "notification_squad": {},
         "subscriptions": {},
         "closures": {},
@@ -240,7 +241,7 @@ class ConfigManager:
         "log_expiration",
     }
 
-    duration_seconds = {"snooze_default_duration"}
+    duration_seconds = {"snooze_default_duration", "thread_creation_menu_timeout"}
 
     booleans = {
         "use_user_id_channel_name",
