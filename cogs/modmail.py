@@ -212,11 +212,18 @@ class Modmail(commands.Cog):
         confirmed = None
         past_tense = {"create": "created", "update": "updated"}[action]
 
+        def error_embed(description):
+            return discord.Embed(
+                title="Error",
+                description=description,
+                color=self.bot.error_color,
+            )
+
         async def confirm_callback(interaction: discord.Interaction):
             nonlocal confirmed
             if interaction.user.id != ctx.author.id:
                 return await interaction.response.send_message(
-                    "Only the command author can confirm.", ephemeral=True
+                    embed=error_embed("Only the command author can confirm."), ephemeral=True
                 )
             confirmed = True
             await interaction.response.edit_message(view=None)
@@ -226,11 +233,13 @@ class Modmail(commands.Cog):
             nonlocal confirmed
             if interaction.user.id != ctx.author.id:
                 return await interaction.response.send_message(
-                    "Only the command author can cancel.", ephemeral=True
+                    embed=error_embed("Only the command author can cancel."), ephemeral=True
                 )
             confirmed = False
             await interaction.response.edit_message(
-                content=f"Cancelled. Snippet not {past_tense}.", view=None, embed=None
+                content=None,
+                embed=error_embed(f"Cancelled. Snippet not {past_tense}."),
+                view=None,
             )
             view.stop()
 
@@ -254,7 +263,11 @@ class Modmail(commands.Cog):
         await view.wait()
 
         if confirmed is None:
-            await confirm_msg.edit(content=f"Timed out. Snippet not {past_tense}.", view=None, embed=None)
+            await confirm_msg.edit(
+                content=None,
+                embed=error_embed(f"Timed out. Snippet not {past_tense}."),
+                view=None,
+            )
         return confirmed is True, confirm_msg
 
     @commands.command()
@@ -576,7 +589,10 @@ class Modmail(commands.Cog):
                 "Please try again with another name."
             )
             if cleanup_failed:
-                description += " The uploaded file could not be cleaned up."
+                description += (
+                    " The uploaded file could not be cleaned up. If this error happens again, "
+                    "contact the bot owner and ask them to check the logs."
+                )
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
@@ -601,7 +617,10 @@ class Modmail(commands.Cog):
 
             description = "Failed to save the snippet. Please try again."
             if cleanup_failed:
-                description += " The uploaded file could not be cleaned up."
+                description += (
+                    " The uploaded file could not be cleaned up. If this error happens again, "
+                    "contact the bot owner and ask them to check the logs."
+                )
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
@@ -857,7 +876,10 @@ class Modmail(commands.Cog):
                 f"Snippet `{name}` changed while the attachment was being uploaded. Please try again."
             )
             if cleanup_failed:
-                description += " The uploaded file could not be cleaned up."
+                description += (
+                    " The uploaded file could not be cleaned up. If this error happens again, "
+                    "contact the bot owner and ask them to check the logs."
+                )
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
@@ -881,7 +903,10 @@ class Modmail(commands.Cog):
 
             description = "Failed to save the snippet changes. Please try again."
             if cleanup_failed:
-                description += " The newly uploaded file could not be cleaned up."
+                description += (
+                    " The newly uploaded file could not be cleaned up. If this error happens again, "
+                    "contact the bot owner and ask them to check the logs."
+                )
             embed = discord.Embed(
                 title="Error",
                 color=self.bot.error_color,
@@ -918,7 +943,10 @@ class Modmail(commands.Cog):
                         "be deleted. Please try again."
                     )
                     if cleanup_failed:
-                        description += " The newly uploaded file could not be cleaned up."
+                        description += (
+                            " The newly uploaded file could not be cleaned up. If this error happens "
+                            "again, contact the bot owner and ask them to check the logs."
+                        )
                 embed = discord.Embed(
                     title="Error",
                     color=self.bot.error_color,
