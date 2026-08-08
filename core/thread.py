@@ -2109,15 +2109,26 @@ class Thread:
                 images.append((None, i.name, True))
 
         embedded_image = False
+        discord_files = []
 
         # Handle snippet images first (embedded directly)
         for a in snippet_images_to_upload:
+            try:
+                file = await a.to_file()
+            except Exception:
+                logger.warning(
+                    "Failed to convert snippet image %s to file.",
+                    getattr(a, "filename", "unknown"),
+                    exc_info=True,
+                )
+                continue
+
             if not embedded_image:
                 embed.set_image(url=f"attachment://{a.filename}")
                 embed.add_field(name="Image", value=a.filename)
                 embedded_image = True
-            # Always add to files_to_upload so the attachment is physically present
-            files_to_upload.append(a)
+            # Only reference images that were successfully converted and will be sent.
+            discord_files.append(file)
 
         prioritize_uploads = any(i[1] is not None for i in images)
 
@@ -2265,7 +2276,6 @@ class Thread:
         else:
             mentions = None
 
-        discord_files = []
         for att in files_to_upload:
             try:
                 discord_files.append(await att.to_file())
