@@ -164,6 +164,8 @@ class ConfigManager:
         "thread_creation_menu_embed_large_image": False,
         "thread_creation_menu_embed_footer_icon_url": None,
         "thread_creation_menu_embed_color": str(discord.Color.green()),
+        # snippet attachments
+        "snippet_attachment_max_size": 10,  # in MB
     }
 
     private_keys = {
@@ -208,6 +210,9 @@ class ConfigManager:
         "owners": None,
         "enable_presence_intent": False,
         "registry_plugins_only": False,
+        # command interfaces (environment/config.json only)
+        "use_slash_commands": True,
+        "enable_prefix_commands": False,
         # bot
         "token": None,
         "enable_plugins": True,
@@ -242,6 +247,8 @@ class ConfigManager:
     }
 
     duration_seconds = {"snooze_default_duration", "thread_creation_menu_timeout"}
+
+    megabytes = {"snippet_attachment_max_size"}
 
     booleans = {
         "use_user_id_channel_name",
@@ -282,6 +289,8 @@ class ConfigManager:
         "use_hoisted_top_role",
         "enable_presence_intent",
         "registry_plugins_only",
+        "use_slash_commands",
+        "enable_prefix_commands",
         # snooze
         "snooze_store_attachments",
         # thread creation menu booleans
@@ -415,6 +424,14 @@ class ConfigManager:
                 value = self.remove(key)
 
         elif key in self.duration_seconds:
+            if not isinstance(value, int):
+                try:
+                    value = int(value)
+                except (ValueError, TypeError):
+                    logger.warning("Invalid %s %s.", key, value)
+                    value = self.remove(key)
+
+        elif key in self.megabytes:
             if not isinstance(value, int):
                 try:
                     value = int(value)

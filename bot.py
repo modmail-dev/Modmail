@@ -1,9 +1,10 @@
-__version__ = "4.2.1"
+__version__ = "4.4.0"
 
 
 import asyncio
 import copy
 import hashlib
+import io
 import os
 import re
 import string
@@ -45,6 +46,7 @@ from core.models import (
     configure_logging,
     getLogger,
 )
+from core.slash_commands import SlashCommandManager
 from core.thread import ThreadManager
 from core.time import human_timedelta
 from core.utils import (
@@ -58,6 +60,24 @@ from core.utils import (
 )
 
 logger = getLogger(__name__)
+
+
+class SnippetAttachment:
+    """In-memory attachment loaded from the snippet GridFS bucket."""
+
+    def __init__(self, file_data, metadata, is_image):
+        self.file_data = file_data
+        self.id = 0
+        self.url = f"attachment://{metadata['filename']}"
+        self.filename = metadata["filename"]
+        self.size = metadata["length"]
+        self.width = None
+        self.is_snippet_attachment = True
+        self.is_snippet_image = is_image
+
+    async def to_file(self):
+        return discord.File(io.BytesIO(self.file_data), filename=self.filename)
+
 
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
@@ -78,8 +98,13 @@ class ModmailBot(commands.Bot):
         intents = discord.Intents.all()
         if not self.config["enable_presence_intent"]:
             intents.presences = False
+        # Prefix commands are the only guild feature that requires privileged
+        # message content. Mentions and direct messages remain available under
+        # Discord's message-content exceptions.
+        intents.message_content = bool(self.config["enable_prefix_commands"])
 
         super().__init__(command_prefix=None, intents=intents)  # implemented in `get_prefix`
+        self.slash_commands = SlashCommandManager(self)
         self.session = None
         self._api = None
         self.formatter = SafeFormatter()
@@ -220,7 +245,12 @@ class ModmailBot(commands.Bot):
         return self.api.db
 
     async def get_prefix(self, message=None):
-        return [self.prefix, f"<@{self.user.id}> ", f"<@!{self.user.id}> "]
+        prefixes = []
+        if self.config["enable_prefix_commands"]:
+            prefixes.append(self.prefix)
+        if self.user is not None:
+            prefixes.extend((f"<@{self.user.id}> ", f"<@!{self.user.id}> "))
+        return prefixes
 
     def run(self):
         async def runner():
@@ -419,6 +449,19 @@ class ModmailBot(commands.Bot):
         return discord.utils.get(self.guilds, id=self.guild_id)
 
     @property
+    def inbox_guild_id(self) -> typing.Optional[int]:
+        """The server where Modmail ticket channels and staff commands belong."""
+        guild_id = self.config["modmail_guild_id"]
+        if guild_id is None:
+            return self.guild_id
+        try:
+            return int(str(guild_id))
+        except ValueError:
+            self.config.remove("modmail_guild_id")
+            logger.critical("Invalid MODMAIL_GUILD_ID set; falling back to GUILD_ID.")
+            return self.guild_id
+
+    @property
     def modmail_guild(self) -> typing.Optional[discord.Guild]:
         """
         The guild that the bot is operating in
@@ -480,6 +523,13 @@ class ModmailBot(commands.Bot):
         return str(self.config["prefix"])
 
     @property
+    def command_display_prefix(self) -> str:
+        """Prefix used in user-facing command examples."""
+        if self.config["enable_prefix_commands"]:
+            return self.prefix
+        return "/"
+
+    @property
     def mod_color(self) -> int:
         return self.config.get("mod_color")
 
@@ -528,6 +578,11 @@ class ModmailBot(commands.Bot):
         await self.config.refresh()
         await self.api.setup_indexes()
         await self.load_extensions()
+        if self.config["use_slash_commands"]:
+            await self.slash_commands.sync()
+        else:
+            logger.warning("Slash commands are disabled by USE_SLASH_COMMANDS=false.")
+            await self.slash_commands.disable()
         self._connected.set()
 
     async def on_ready(self):
@@ -555,7 +610,11 @@ class ModmailBot(commands.Bot):
             getattr(self.get_user(owner_id), "name", str(owner_id)) for owner_id in self.bot_owner_ids
         )
         logger.info("Owners: %s", owners)
-        logger.info("Prefix: %s", self.prefix)
+        logger.info("Slash commands: %s", "enabled" if self.config["use_slash_commands"] else "disabled")
+        logger.info(
+            "Prefix commands: %s",
+            f"enabled ({self.prefix})" if self.config["enable_prefix_commands"] else "disabled",
+        )
         logger.info("Guild Name: %s", self.guild.name)
         logger.info("Guild ID: %s", self.guild.id)
         if self.using_multiple_server_setup:
@@ -1291,6 +1350,37 @@ class ModmailBot(commands.Bot):
 
         return self.get_command(f"{modifiers}reply")
 
+    async def _download_snippet_attachment(self, snippet_data):
+        """Download and wrap a snippet attachment, returning None on failure."""
+        if not isinstance(snippet_data, dict) or not snippet_data.get("file_id"):
+            return None
+
+        try:
+            file_data, metadata = await self.api.download_snippet_attachment(snippet_data["file_id"])
+        except Exception as e:
+            logger.warning("Failed to download snippet attachment: %s", e)
+            return None
+
+        content_type = metadata.get("content_type", "")
+        return SnippetAttachment(file_data, metadata, content_type.startswith("image/"))
+
+    @staticmethod
+    def _message_with_snippet_attachment(message, attachment):
+        """Copy a command message and append a stored snippet attachment."""
+        snippet_message = copy.copy(message)
+        snippet_message.attachments = [*message.attachments, attachment]
+        return snippet_message
+
+    @staticmethod
+    def _get_message_interaction(message):
+        """Return interaction data without accessing discord.py's deprecated property."""
+        try:
+            return message.interaction_metadata
+        except AttributeError:
+            # Synthetic slash-command messages and discord.py versions older
+            # than interaction_metadata expose the interaction directly.
+            return getattr(message, "interaction", None)
+
     async def get_contexts(self, message, *, cls=commands.Context):
         """
         Returns all invocation contexts from the message.
@@ -1298,7 +1388,15 @@ class ModmailBot(commands.Bot):
         """
 
         view = StringView(message.content)
-        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        interaction = self._get_message_interaction(message)
+        context_prefix = "/" if interaction is not None else self.prefix
+        ctx = cls(
+            prefix=context_prefix,
+            view=view,
+            bot=self,
+            message=message,
+            interaction=interaction,
+        )
         thread = await self.threads.find(channel=ctx.channel)
 
         if message.author.id == self.user.id:  # type: ignore
@@ -1317,7 +1415,14 @@ class ModmailBot(commands.Bot):
         # snippets can have multiple words.
         try:
             # Use removeprefix once PY3.9+
-            snippet_text = self.snippets[message.content[len(invoked_prefix) :]]
+            snippet_data = self.snippets[message.content[len(invoked_prefix) :]]
+            # Extract text from snippet (handle both old string format and new dict format)
+            if isinstance(snippet_data, str):
+                snippet_text = snippet_data
+            elif isinstance(snippet_data, dict):
+                snippet_text = snippet_data.get("text", "")
+            else:
+                snippet_text = None
         except KeyError:
             snippet_text = None
 
@@ -1332,15 +1437,33 @@ class ModmailBot(commands.Bot):
 
             for alias in aliases:
                 command = None
+                context_message = copy.copy(message)
                 try:
-                    snippet_text = self.snippets[alias]
+                    snippet_data = self.snippets[alias]
+                    # Extract text from snippet (handle both old string format and new dict format)
+                    if isinstance(snippet_data, str):
+                        snippet_text = snippet_data
+                    elif isinstance(snippet_data, dict):
+                        snippet_text = snippet_data.get("text", "")
+                        attachment = await self._download_snippet_attachment(snippet_data)
+                        if attachment is not None:
+                            context_message = self._message_with_snippet_attachment(message, attachment)
+                    else:
+                        snippet_text = None
                 except KeyError:
                     command_invocation_text = alias
+                    snippet_text = None
                 else:
                     command = self._get_snippet_command()
                     command_invocation_text = f"{invoked_prefix}{command} {snippet_text}"
                 view = StringView(invoked_prefix + command_invocation_text)
-                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                ctx_ = cls(
+                    prefix=context_prefix,
+                    view=view,
+                    bot=self,
+                    message=context_message,
+                    interaction=interaction,
+                )
                 ctx_.thread = thread
                 discord.utils.find(view.skip_string, prefixes)
                 ctx_.invoked_with = view.get_word().lower()
@@ -1352,6 +1475,11 @@ class ModmailBot(commands.Bot):
 
         if snippet_text is not None:
             # Process snippets
+            snippet_name = message.content[len(invoked_prefix) :]
+            snippet_data = self.snippets.get(snippet_name)
+            attachment = await self._download_snippet_attachment(snippet_data)
+            if attachment is not None:
+                ctx.message = self._message_with_snippet_attachment(message, attachment)
             ctx.command = self._get_snippet_command()
             reply_view = StringView(f"{invoked_prefix}{ctx.command} {snippet_text}")
             discord.utils.find(reply_view.skip_string, prefixes)
@@ -1369,7 +1497,15 @@ class ModmailBot(commands.Bot):
         message.guild = channel.guild
 
         view = StringView(message.content)
-        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        interaction = self._get_message_interaction(message)
+        context_prefix = "/" if interaction is not None else self.prefix
+        ctx = cls(
+            prefix=context_prefix,
+            view=view,
+            bot=self,
+            message=message,
+            interaction=interaction,
+        )
         thread = await self.threads.find(channel=ctx.channel)
 
         invoked_prefix = self.prefix
@@ -1424,7 +1560,15 @@ class ModmailBot(commands.Bot):
         """
 
         view = StringView(message.content)
-        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
+        interaction = self._get_message_interaction(message)
+        context_prefix = "/" if interaction is not None else self.prefix
+        ctx = cls(
+            prefix=context_prefix,
+            view=view,
+            bot=self,
+            message=message,
+            interaction=interaction,
+        )
 
         if message.author.id == self.user.id:
             return ctx
@@ -1513,14 +1657,14 @@ class ModmailBot(commands.Bot):
 
         await self.process_commands(message)
 
-    async def process_commands(self, message):
+    async def process_commands(self, message, *, cls=commands.Context):
         if message.author.bot:
             return
 
         if isinstance(message.channel, discord.DMChannel):
             return await self._queue_dm_message(message)
 
-        ctxs = await self.get_contexts(message)
+        ctxs = await self.get_contexts(message, cls=cls)
         for ctx in ctxs:
             if ctx.command:
                 if not any(1 for check in ctx.command.checks if hasattr(check, "permission_level")):

@@ -109,7 +109,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         return embeds
 
     def process_help_msg(self, help_: str):
-        return help_.format(prefix=self.context.clean_prefix) if help_ else "No help message."
+        return help_.replace("{prefix}", self.context.clean_prefix) if help_ else "No help message."
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -379,7 +379,10 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name="Project Sponsors",
-            value=f"Checkout the people who supported Modmail with command `{self.bot.prefix}sponsors`!",
+            value=(
+                "Checkout the people who supported Modmail with command "
+                f"`{self.bot.command_display_prefix}sponsors`!"
+            ),
             inline=False,
         )
 
@@ -760,6 +763,15 @@ class Utility(commands.Cog):
         current = self.bot.prefix
         embed = discord.Embed(title="Current prefix", color=self.bot.main_color, description=f"{current}")
 
+        if not self.bot.config["enable_prefix_commands"]:
+            embed.title = "Prefix commands are disabled"
+            embed.description = (
+                "Slash commands and `@bot command` mentions are active. Set "
+                "`ENABLE_PREFIX_COMMANDS=true` in the environment and restart the bot "
+                "to enable the configured legacy prefix."
+            )
+            return await ctx.send(embed=embed)
+
         if prefix is None:
             await ctx.send(embed=embed)
         else:
@@ -837,7 +849,10 @@ class Utility(commands.Cog):
                             except Exception:
                                 valid = False
                         if not valid:
-                            example = f"`{self.bot.prefix}config set snoozed_category_id <category_id>`"
+                            example = (
+                                f"`{self.bot.command_display_prefix}config set "
+                                "snoozed_category_id <category_id>`"
+                            )
                             embed.add_field(
                                 name="Action required",
                                 value=(
@@ -929,7 +944,10 @@ class Utility(commands.Cog):
                     description=f"`{key}` is an invalid key.",
                 )
                 embed.set_footer(
-                    text=f'Type "{self.bot.prefix}config options" for a list of config variables.'
+                    text=(
+                        f'Type "{self.bot.command_display_prefix}config options" '
+                        "for a list of config variables."
+                    )
                 )
 
         else:
@@ -1007,7 +1025,11 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         def fmt(val):
-            return UnseenFormatter().format(val, prefix=self.bot.prefix, bot=self.bot)
+            return UnseenFormatter().format(
+                val,
+                prefix=self.bot.command_display_prefix,
+                bot=self.bot,
+            )
 
         index = 0
         embeds = []
@@ -1107,7 +1129,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color,
                 description="You dont have any aliases at the moment.",
             )
-            embed.set_footer(text=f'Do "{self.bot.prefix}help alias" for more commands.')
+            embed.set_footer(text=f'Do "{self.bot.command_display_prefix}help alias" for more commands.')
             embed.set_author(
                 name="Aliases",
                 icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
@@ -1156,7 +1178,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color,
                 description="Invalid multi-step alias, try wrapping each steps in quotes.",
             )
-            embed.set_footer(text=f'See "{self.bot.prefix}alias add" for more details.')
+            embed.set_footer(text=f'See "{self.bot.command_display_prefix}alias add" for more details.')
             return embed
 
         if len(values) > 25:
@@ -2331,7 +2353,9 @@ class Utility(commands.Cog):
                 discord.Embed(
                     title="No autotrigger set",
                     color=self.bot.error_color,
-                    description=f"Use `{self.bot.prefix}autotrigger add` to add new autotriggers.",
+                    description=(
+                        f"Use `{self.bot.command_display_prefix}autotrigger add` " "to add new autotriggers."
+                    ),
                 )
             )
 

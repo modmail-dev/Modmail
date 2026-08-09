@@ -856,6 +856,18 @@
       "See also: `anonymous_snippets`."
     ]
   },
+  "snippet_attachment_max_size": {
+    "default": "10 (MB)",
+    "description": "Maximum file size in megabytes (MB) for attachments when creating or editing snippets.",
+    "examples": [
+      "`{prefix}config set snippet_attachment_max_size 5` (5 MB)",
+      "`{prefix}config set snippet_attachment_max_size 20` (20 MB)"
+    ],
+    "notes": [
+      "Attachments larger than this size will be rejected when adding or editing snippets.",
+      "Value is specified in megabytes (MB)."
+    ]
+  },
   "require_close_reason": {
     "default" : "No",
     "description": "Require a reason to close threads.",
