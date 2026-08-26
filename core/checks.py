@@ -39,15 +39,21 @@ def has_permissions(permission_level: PermissionLevel = PermissionLevel.REGULAR)
 
 async def check_permissions(ctx, command_name) -> bool:
     """Logic for checking permissions for a command for a user"""
-    if await ctx.bot.is_owner(ctx.author) or ctx.author.id == ctx.bot.user.id:
-        # Bot owner(s) (and creator) has absolute power over the bot
+    if ctx.author.id == ctx.bot.user.id:
+        logger.warning("Refusing bot-authored command context for %s.", command_name)
+        return False
+
+    if await ctx.bot.is_owner(ctx.author):
+        # Bot owner(s) (and creator) has absolute power over the bot. Internal
+        # automation uses a separate, explicitly allowlisted server action path;
+        # a bot-authored command context must not implicitly become OWNER.
         return True
 
     permission_level = ctx.bot.command_perm(command_name)
 
     if permission_level is PermissionLevel.INVALID:
         logger.warning("Invalid permission level for command %s.", command_name)
-        return True
+        return False
 
     if (
         permission_level is not PermissionLevel.OWNER

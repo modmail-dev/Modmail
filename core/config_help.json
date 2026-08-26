@@ -1416,7 +1416,8 @@
   "`{prefix}threadmenu show`"
     ],
     "notes": [
-      "Type can be 'command' (executes a command after creation) or 'submenu' (opens a submenu).",
+      "Type can be 'command' (executes a safe reply callback after creation) or 'submenu' (opens a submenu).",
+      "Command callbacks are limited to reply commands, snippets, and aliases made only of reply commands.",
       "Submenu callbacks must reference keys stored in `thread_creation_menu_submenus`.",
       "See also: `thread_creation_menu_submenus`."
     ]

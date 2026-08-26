@@ -39,6 +39,26 @@ class ThreadCreationMenuCore(commands.Cog):
             "embed_color": self.bot.config.get("thread_creation_menu_embed_color"),
         }
 
+    def _has_unsafe_callback(self, conf: dict) -> bool:
+        """Check every root and submenu command callback before importing it."""
+        option_groups = [conf.get("options")]
+        submenus = conf.get("submenus")
+        if not isinstance(submenus, dict):
+            return True
+        option_groups.extend(submenus.values())
+
+        for options in option_groups:
+            if not isinstance(options, dict):
+                return True
+            for option in options.values():
+                if not isinstance(option, dict):
+                    return True
+                if option.get("type") == "command" and not self.bot.is_automation_callback_safe(
+                    option.get("callback")
+                ):
+                    return True
+        return False
+
     async def _save_conf(self, conf: dict):
         await self.bot.config.set("thread_creation_menu_enabled", conf.get("enabled", False))
         await self.bot.config.set("thread_creation_menu_options", conf.get("options", {}), convert=False)
@@ -228,7 +248,7 @@ class ThreadCreationMenuCore(commands.Cog):
             return await ctx.send("Cancelled.")
 
         if type_ == "command":
-            await ctx.send("What is the command to run for the option?")
+            await ctx.send("What safe reply callback should run for the option?")
         else:
             await ctx.send("What is the label of the submenu for the option?")
         callback = (await self.bot.wait_for("message", check=check)).content
@@ -238,6 +258,10 @@ class ThreadCreationMenuCore(commands.Cog):
         if callback.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
+        if type_ == "command" and not self.bot.is_automation_callback_safe(callback):
+            return await ctx.send(
+                "Command callbacks must be reply commands, snippets, or aliases made only of reply commands."
+            )
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist. Use `threadmenu submenu create` to add it.")
 
@@ -359,7 +383,7 @@ class ThreadCreationMenuCore(commands.Cog):
             return await ctx.send("Cancelled.")
 
         if type_ == "command":
-            await ctx.send("What is the new command to run for the option?")
+            await ctx.send("What is the new safe reply callback for the option?")
         else:
             await ctx.send("What is the new label of the new submenu for the option?")
         callback = (await self.bot.wait_for("message", check=check)).content
@@ -367,6 +391,10 @@ class ThreadCreationMenuCore(commands.Cog):
             callback = callback.lower().replace(" ", "_")
         if callback.lower() == "cancel":
             return await ctx.send("Cancelled.")
+        if type_ == "command" and not self.bot.is_automation_callback_safe(callback):
+            return await ctx.send(
+                "Command callbacks must be reply commands, snippets, or aliases made only of reply commands."
+            )
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist. Use `threadmenu submenu create` to add it.")
 
@@ -555,12 +583,18 @@ class ThreadCreationMenuCore(commands.Cog):
             return await ctx.send("Cancelled.")
 
         if type_ == "command":
-            await ctx.send("What is the command to run for the option?")
+            await ctx.send("What safe reply callback should run for the option?")
         else:
             await ctx.send("What is the label of the submenu for the option?")
         callback = (await self.bot.wait_for("message", check=check)).content
         if type_ != "command":
             callback = callback.lower().replace(" ", "_")
+        if callback.lower() == "cancel":
+            return await ctx.send("Cancelled.")
+        if type_ == "command" and not self.bot.is_automation_callback_safe(callback):
+            return await ctx.send(
+                "Command callbacks must be reply commands, snippets, or aliases made only of reply commands."
+            )
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist. Use `threadmenu submenu create` to add it.")
 
@@ -702,7 +736,7 @@ class ThreadCreationMenuCore(commands.Cog):
             return await ctx.send("Cancelled.")
 
         if type_ == "command":
-            await ctx.send("What is the command to run for the option?")
+            await ctx.send("What is the new safe reply callback for the option?")
         else:
             await ctx.send("What is the label of the submenu for the option?")
         callback = (await self.bot.wait_for("message", check=check)).content
@@ -710,6 +744,10 @@ class ThreadCreationMenuCore(commands.Cog):
             callback = callback.lower().replace(" ", "_")
         if callback.lower() == "cancel":
             return await ctx.send("Cancelled.")
+        if type_ == "command" and not self.bot.is_automation_callback_safe(callback):
+            return await ctx.send(
+                "Command callbacks must be reply commands, snippets, or aliases made only of reply commands."
+            )
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist.")
 
@@ -835,8 +873,13 @@ class ThreadCreationMenuCore(commands.Cog):
             "embed_text",
             "dropdown_placeholder",
         }
-        if not required.issubset(set(data.keys())):
+        if not isinstance(data, dict) or not required.issubset(set(data.keys())):
             return await ctx.send("Config file missing required keys.")
+        if self._has_unsafe_callback(data):
+            return await ctx.send(
+                "Config contains an unsafe command callback. Only reply commands, snippets, and "
+                "aliases made only of reply commands can be imported."
+            )
 
         await self._save_conf(data)
         await ctx.send("Successfully loaded config into core.")

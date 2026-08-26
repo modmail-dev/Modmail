@@ -32,16 +32,17 @@ try:
 except ImportError:
     pass
 
-from core import checks
 from core.changelog import Changelog
 from core.clients import ApiClient, MongoDBClient, PluginDatabaseClient
 from core.config import ConfigManager
 from core.models import (
     DMDisabled,
+    DummyMessage,
     HostingMethod,
     InvalidConfigError,
     PermissionLevel,
     SafeFormatter,
+    UnseenFormatter,
     configure_logging,
     getLogger,
 )
@@ -58,6 +59,21 @@ from core.utils import (
 )
 
 logger = getLogger(__name__)
+
+
+# Automation callbacks are recipient-triggered, even though their text is
+# configured by staff. Keep this list deliberately small and dispatch these
+# actions through Thread.reply instead of the command framework.
+AUTOMATION_REPLY_COMMANDS = {
+    "reply": (False, False, False),
+    "freply": (True, False, False),
+    "fareply": (True, True, False),
+    "fpreply": (True, False, True),
+    "fpareply": (True, True, True),
+    "areply": (False, True, False),
+    "preply": (False, False, True),
+    "pareply": (False, True, True),
+}
 
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
@@ -1363,59 +1379,192 @@ class ModmailBot(commands.Bot):
 
         return [ctx]
 
-    async def trigger_auto_triggers(self, message, channel, *, cls=commands.Context):
-        message.author = self.modmail_guild.me
-        message.channel = channel
-        message.guild = channel.guild
+    def resolve_automation_callback(
+        self, callback: str
+    ) -> typing.Optional[typing.List[typing.Tuple[str, str]]]:
+        """Resolve a configured callback into explicitly supported thread actions.
 
-        view = StringView(message.content)
-        ctx = cls(prefix=self.prefix, view=view, bot=self, message=message)
-        thread = await self.threads.find(channel=ctx.channel)
+        Snippets and aliases remain supported, but aliases are expanded and every
+        resulting action is checked each time it runs. This prevents a safe alias
+        from being retargeted to a privileged command after configuration.
+        """
+        if not isinstance(callback, str):
+            return None
 
-        invoked_prefix = self.prefix
-        invoker = None
+        actions: typing.List[typing.Tuple[str, str]] = []
+
+        def resolve_invocation(invocation: str, seen_aliases: typing.FrozenSet[str]) -> bool:
+            invocation = invocation.strip()
+            if not invocation:
+                return False
+
+            if invocation in self.snippets:
+                command = self._get_snippet_command()
+                command_name = getattr(command, "qualified_name", None)
+                snippet = self.snippets[invocation]
+                if command_name not in AUTOMATION_REPLY_COMMANDS or not isinstance(snippet, str):
+                    return False
+                actions.append((command_name, snippet))
+                return len(actions) <= 25
+
+            parts = invocation.split(maxsplit=1)
+            invoker = parts[0].lower()
+            arguments = parts[1] if len(parts) == 2 else ""
+
+            alias = self.aliases.get(invoker)
+            if alias is not None:
+                if not isinstance(alias, str) or invoker in seen_aliases or len(seen_aliases) >= 25:
+                    return False
+                expanded = normalize_alias(alias, arguments)
+                if not expanded:
+                    return False
+                next_seen = seen_aliases | {invoker}
+                return all(resolve_invocation(value, next_seen) for value in expanded)
+
+            command = self.all_commands.get(invoker)
+            command_name = getattr(command, "qualified_name", None)
+            if command_name not in AUTOMATION_REPLY_COMMANDS:
+                return False
+
+            actions.append((command_name, arguments))
+            return len(actions) <= 25
+
+        invocations = normalize_alias(callback)
+        if not invocations or not all(resolve_invocation(value, frozenset()) for value in invocations):
+            return None
+        return actions
+
+    def is_automation_callback_safe(self, callback: str) -> bool:
+        """Return whether a callback resolves only to supported automation actions."""
+        return self.resolve_automation_callback(callback) is not None
+
+    @staticmethod
+    def _copy_automation_message(message):
+        """Copy a source message without carrying recipient-provided payloads into a reply."""
+        while isinstance(message, DummyMessage):
+            message = message._message
+        if message is None:
+            return None
+        message = DummyMessage(copy.copy(message))
+        message.attachments = []
+        message.embeds = []
+        message.stickers = []
+        message.message_snapshots = []
+        return message
+
+    def _format_automation_content(self, command_name: str, content: str, thread) -> str:
+        formatted, _, _ = AUTOMATION_REPLY_COMMANDS[command_name]
+        if command_name == "reply" and self.args:
+            return UnseenFormatter().format(content, **self.args)
+        if formatted:
+            system_author = getattr(self.modmail_guild, "me", None) or self.user
+            return self.formatter.format(
+                content,
+                **self.args,
+                channel=thread.channel,
+                recipient=thread.recipient,
+                author=system_author,
+            )
+        return content
+
+    async def execute_thread_automation(self, thread, callback: str, message, *, source: str) -> bool:
+        """Execute a recipient-triggered callback through the safe server action path."""
+        actions = self.resolve_automation_callback(callback)
+        if actions is None:
+            logger.warning("Blocked unsafe or invalid %s callback.", source)
+            return False
+
+        prepared_actions = []
+        for command_name, content in actions:
+            try:
+                content = self._format_automation_content(command_name, content, thread)
+            except Exception:
+                logger.warning("Failed to format %s callback.", source, exc_info=True)
+                return False
+
+            if not content:
+                logger.warning("Blocked empty %s reply callback.", source)
+                return False
+            if len(content) > 4096:
+                logger.warning("Blocked overlong %s reply callback.", source)
+                return False
+
+            _, anonymous, plain = AUTOMATION_REPLY_COMMANDS[command_name]
+            prepared_actions.append((content, anonymous, plain))
+
+        system_author = getattr(self.modmail_guild, "me", None) or self.user
+        for content, anonymous, plain in prepared_actions:
+            system_message = self._copy_automation_message(message)
+            if system_message is None:
+                logger.warning("Cannot execute %s callback without a source message.", source)
+                return False
+
+            system_message.author = system_author
+            system_message.channel = thread.channel
+            system_message.guild = getattr(thread.channel, "guild", None)
+            system_message.content = content
+            system_message._automation_source = source
+            system_message._automation_triggered_by = thread.recipient
+
+            try:
+                await thread.reply(system_message, content, anonymous=anonymous, plain=plain)
+            except Exception:
+                logger.warning("Failed to execute %s reply callback.", source, exc_info=True)
+                return False
+
+        return True
+
+    def match_auto_trigger(self, content: str) -> typing.Optional[str]:
+        """Return the first configured autotrigger matching ``content``."""
+        if not isinstance(content, str):
+            return None
 
         if self.config.get("use_regex_autotrigger"):
-            trigger = next(filter(lambda x: re.search(x, message.content), self.auto_triggers.keys()))
-            if trigger:
-                invoker = re.search(trigger, message.content).group(0)
-        else:
-            trigger = next(
-                filter(
-                    lambda x: x.lower() in message.content.lower(),
-                    self.auto_triggers.keys(),
-                )
-            )
-            if trigger:
-                invoker = trigger.lower()
+            for candidate in self.auto_triggers:
+                if not isinstance(candidate, str):
+                    logger.warning("Ignoring non-string autotrigger key %r.", candidate)
+                    continue
+                try:
+                    if re.search(candidate, content):
+                        return candidate
+                except re.error:
+                    logger.warning("Ignoring invalid autotrigger regex %r.", candidate)
+            return None
 
-        alias = self.auto_triggers[trigger]
+        content = content.casefold()
+        return next(
+            (
+                candidate
+                for candidate in self.auto_triggers
+                if isinstance(candidate, str) and candidate.casefold() in content
+            ),
+            None,
+        )
 
-        ctxs = []
+    async def trigger_auto_triggers(self, message, channel, *, cls=commands.Context):
+        del cls  # Kept in the public signature for compatibility with existing extensions.
 
-        if alias is not None:
-            ctxs = []
-            aliases = normalize_alias(alias)
-            if not aliases:
-                logger.warning("Alias %s is invalid as called in autotrigger.", invoker)
+        trigger = self.match_auto_trigger(message.content)
 
-        message.author = thread.recipient  # Allow for get_contexts to work
+        if trigger is None:
+            return False
 
-        for alias in aliases:
-            message.content = invoked_prefix + alias
-            ctxs += await self.get_contexts(message)
+        callback = self.auto_triggers.get(trigger)
+        if not callback:
+            logger.warning("Autotrigger %r has an empty callback.", trigger)
+            return False
 
-        message.author = self.modmail_guild.me  # Fix message so commands execute properly
+        thread = await self.threads.find(channel=channel)
+        if thread is None:
+            logger.warning("Autotrigger %r fired without a matching thread.", trigger)
+            return False
 
-        for ctx in ctxs:
-            if ctx.command:
-                old_checks = copy.copy(ctx.command.checks)
-                ctx.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
-
-                await self.invoke(ctx)
-
-                ctx.command.checks = old_checks
-                continue
+        return await self.execute_thread_automation(
+            thread,
+            callback,
+            message,
+            source=f"autotrigger {trigger!r}",
+        )
 
     async def get_context(self, message, *, cls=commands.Context):
         """
@@ -1525,10 +1674,9 @@ class ModmailBot(commands.Bot):
             if ctx.command:
                 if not any(1 for check in ctx.command.checks if hasattr(check, "permission_level")):
                     logger.debug(
-                        "Command %s has no permissions check, adding invalid level.",
+                        "Command %s has no Modmail permission level; using its declared checks.",
                         ctx.command.qualified_name,
                     )
-                    checks.has_permissions(PermissionLevel.INVALID)(ctx.command)
 
                 # Check if thread is unsnoozing and queue command if so
                 thread = await self.threads.find(channel=ctx.channel)

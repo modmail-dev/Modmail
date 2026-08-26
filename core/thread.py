@@ -14,13 +14,11 @@ from types import SimpleNamespace
 import isodate
 
 import discord
-from discord.ext import commands
 from discord.ext.commands import MissingRequiredArgument, CommandError
 from lottie.importers import importers as l_importers
 from lottie.exporters import exporters as l_exporters
 
-from core.models import DMDisabled, DummyMessage, PermissionLevel, getLogger
-from core import checks
+from core.models import DMDisabled, DummyMessage, getLogger
 from core.utils import (
     is_image_url,
     parse_channel_topic,
@@ -1967,10 +1965,9 @@ class Thread:
                 )
             else:
                 # Normal message
-                # If this message originated from a thread-creation menu command callback
-                # (user selected an option whose type is command), we force the author
-                # display to be the bot to avoid showing the user as a replying moderator.
-                if getattr(message, "_menu_invoked", False):
+                # Server automation has a distinct triggering user and display actor.
+                # Render it as the bot rather than presenting the recipient as staff.
+                if getattr(message, "_automation_source", None) or getattr(message, "_menu_invoked", False):
                     name = str(self.bot.user)
                     avatar_url = getattr(self.bot.user.display_avatar, "url", system_avatar_url)
                 else:
@@ -3016,52 +3013,17 @@ class ThreadManager:
                             "Unhandled failure after menu selection while waiting for channel readiness.",
                             exc_info=True,
                         )
-                    # Invoke command callback AFTER channel ready if type == command
+                    # Execute the configured callback through the restricted server
+                    # automation path after the channel is ready.
                     if selected and selected.get("type") == "command":
-                        alias = selected.get("callback")
-                        if alias:
-                            from discord.ext.commands.view import StringView
-                            from core.utils import normalize_alias
-
-                            ctxs = []
-                            for al in normalize_alias(alias):
-                                view_ = StringView(self.outer_thread.bot.prefix + al)
-                                # Create a synthetic message object that makes the bot appear
-                                # as the author for menu-invoked command replies so the user
-                                # selecting the option is not shown as a "mod" sender.
-                                synthetic = DummyMessage(copy.copy(self.outer_thread._genesis_message))
-                                try:
-                                    synthetic.author = (
-                                        self.outer_thread.bot.modmail_guild.me or self.outer_thread.bot.user
-                                    )
-                                except Exception:
-                                    synthetic.author = self.outer_thread.bot.user
-                                # Mark this message as menu-invoked for downstream formatting
-                                setattr(synthetic, "_menu_invoked", True)
-                                ctx_ = commands.Context(
-                                    prefix=self.outer_thread.bot.prefix,
-                                    view=view_,
-                                    bot=self.outer_thread.bot,
-                                    message=synthetic,
-                                )
-                                ctx_.thread = self.outer_thread
-                                discord.utils.find(
-                                    view_.skip_string,
-                                    await self.outer_thread.bot.get_prefix(),
-                                )
-                                ctx_.invoked_with = view_.get_word().lower()
-                                ctx_.command = self.outer_thread.bot.all_commands.get(ctx_.invoked_with)
-                                # Mark context so downstream send/reply logic can treat as system/bot
-                                setattr(ctx_, "_menu_invoked", True)
-                                ctxs.append(ctx_)
-                            for ctx_ in ctxs:
-                                if ctx_.command:
-                                    old_checks = copy.copy(ctx_.command.checks)
-                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
-                                    try:
-                                        await self.outer_thread.bot.invoke(ctx_)
-                                    finally:
-                                        ctx_.command.checks = old_checks
+                        callback = selected.get("callback")
+                        if callback:
+                            await self.outer_thread.bot.execute_thread_automation(
+                                self.outer_thread,
+                                callback,
+                                self.outer_thread._genesis_message,
+                                source="thread creation menu",
+                            )
 
             class _ThreadCreationMenuView(discord.ui.View):
                 def __init__(
@@ -3371,47 +3333,16 @@ class ThreadManager:
                             "Failed logging menu selection or moving category in precreate flow.",
                             exc_info=True,
                         )
-                    # If the option type is command, invoke it now within the created thread
+                    # If the option type is command, run its restricted server action now.
                     if selected and selected.get("type") == "command":
-                        alias = selected.get("callback")
-                        if alias:
-                            from discord.ext.commands.view import StringView
-                            from core.utils import normalize_alias
-
-                            ctxs = []
-                            for al in normalize_alias(alias):
-                                view_ = StringView(self.outer_thread.bot.prefix + al)
-                                synthetic = DummyMessage(copy.copy(self.outer_thread._genesis_message))
-                                try:
-                                    synthetic.author = (
-                                        self.outer_thread.bot.modmail_guild.me or self.outer_thread.bot.user
-                                    )
-                                except Exception:
-                                    synthetic.author = self.outer_thread.bot.user
-                                setattr(synthetic, "_menu_invoked", True)
-                                ctx_ = commands.Context(
-                                    prefix=self.outer_thread.bot.prefix,
-                                    view=view_,
-                                    bot=self.outer_thread.bot,
-                                    message=synthetic,
-                                )
-                                ctx_.thread = self.outer_thread
-                                discord.utils.find(
-                                    view_.skip_string,
-                                    await self.outer_thread.bot.get_prefix(),
-                                )
-                                ctx_.invoked_with = view_.get_word().lower()
-                                ctx_.command = self.outer_thread.bot.all_commands.get(ctx_.invoked_with)
-                                setattr(ctx_, "_menu_invoked", True)
-                                ctxs.append(ctx_)
-                            for ctx_ in ctxs:
-                                if ctx_.command:
-                                    old_checks = copy.copy(ctx_.command.checks)
-                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
-                                    try:
-                                        await self.outer_thread.bot.invoke(ctx_)
-                                    finally:
-                                        ctx_.command.checks = old_checks
+                        callback = selected.get("callback")
+                        if callback:
+                            await self.outer_thread.bot.execute_thread_automation(
+                                self.outer_thread,
+                                callback,
+                                self.outer_thread._genesis_message,
+                                source="thread creation menu",
+                            )
 
             class _PrecreateMenuView(discord.ui.View):
                 def __init__(self, outer_thread: Thread):

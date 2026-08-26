@@ -3,7 +3,6 @@ import asyncio
 import inspect
 import os
 import random
-import re
 import traceback
 from contextlib import redirect_stdout
 from difflib import get_close_matches
@@ -2176,13 +2175,13 @@ class Utility(commands.Cog):
     @commands.group(invoke_without_command=True)
     @checks.has_permissions(PermissionLevel.OWNER)
     async def autotrigger(self, ctx):
-        """Automatically trigger alias-like commands based on a certain keyword in the user's inital message"""
+        """Automatically send configured reply callbacks based on a keyword in the user's initial message."""
         await ctx.send_help(ctx.command)
 
     @autotrigger.command(name="add")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def autotrigger_add(self, ctx, keyword, *, command):
-        """Adds a trigger to automatically trigger an alias-like command"""
+        """Add a trigger for a safe reply command, snippet, or reply-only alias."""
         if keyword in self.bot.auto_triggers:
             embed = discord.Embed(
                 title="Error",
@@ -2190,21 +2189,7 @@ class Utility(commands.Cog):
                 description=f"Another autotrigger with the same name already exists: `{keyword}`.",
             )
         else:
-            # command validation
-            valid = False
-            split_cmd = command.split(" ")
-            for n in range(1, len(split_cmd) + 1):
-                if self.bot.get_command(" ".join(split_cmd[0:n])):
-                    valid = True
-                    break
-
-            if not valid and self.bot.aliases:
-                for n in range(1, len(split_cmd) + 1):
-                    if self.bot.aliases.get(" ".join(split_cmd[0:n])):
-                        valid = True
-                        break
-
-            if valid:
+            if self.bot.is_automation_callback_safe(command):
                 self.bot.auto_triggers[keyword] = command
                 await self.bot.config.update()
 
@@ -2217,7 +2202,10 @@ class Utility(commands.Cog):
                 embed = discord.Embed(
                     title="Error",
                     color=self.bot.error_color,
-                    description="Invalid command. Please provide a valid command or alias.",
+                    description=(
+                        "Invalid autotrigger callback. Use a reply command, snippet, or an alias "
+                        "that resolves only to reply commands."
+                    ),
                 )
 
         await ctx.send(embed=embed)
@@ -2225,25 +2213,11 @@ class Utility(commands.Cog):
     @autotrigger.command(name="edit")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def autotrigger_edit(self, ctx, keyword, *, command):
-        """Edits a pre-existing trigger to automatically trigger an alias-like command"""
+        """Edit a trigger's safe reply callback."""
         if keyword not in self.bot.auto_triggers:
             embed = utils.create_not_found_embed(keyword, self.bot.auto_triggers.keys(), "Autotrigger")
         else:
-            # command validation
-            valid = False
-            split_cmd = command.split(" ")
-            for n in range(1, len(split_cmd) + 1):
-                if self.bot.get_command(" ".join(split_cmd[0:n])):
-                    valid = True
-                    break
-
-            if not valid and self.bot.aliases:
-                for n in range(1, len(split_cmd) + 1):
-                    if self.bot.aliases.get(" ".join(split_cmd[0:n])):
-                        valid = True
-                        break
-
-            if valid:
+            if self.bot.is_automation_callback_safe(command):
                 self.bot.auto_triggers[keyword] = command
                 await self.bot.config.update()
 
@@ -2256,7 +2230,10 @@ class Utility(commands.Cog):
                 embed = discord.Embed(
                     title="Error",
                     color=self.bot.error_color,
-                    description="Invalid command. Please provide a valid command or alias.",
+                    description=(
+                        "Invalid autotrigger callback. Use a reply command, snippet, or an alias "
+                        "that resolves only to reply commands."
+                    ),
                 )
 
         await ctx.send(embed=embed)
@@ -2288,22 +2265,21 @@ class Utility(commands.Cog):
     @checks.has_permissions(PermissionLevel.OWNER)
     async def autotrigger_test(self, ctx, *, text):
         """Tests a string against the current autotrigger setup"""
-        for keyword in self.bot.auto_triggers:
-            if self.bot.config.get("use_regex_autotrigger"):
-                check = re.search(keyword, text)
-                regex = True
-            else:
-                check = keyword.lower() in text.lower()
-                regex = False
-
-            if check:
-                alias = self.bot.auto_triggers[keyword]
-                embed = discord.Embed(
-                    title=f"{'Regex ' if regex else ''}Keyword Found",
-                    color=self.bot.main_color,
-                    description=f"autotrigger keyword `{keyword}` found. Command executed: `{alias}`",
-                )
-                return await ctx.send(embed=embed)
+        keyword = self.bot.match_auto_trigger(text)
+        if keyword is not None:
+            callback = self.bot.auto_triggers[keyword]
+            callback_status = (
+                "safe" if self.bot.is_automation_callback_safe(callback) else "blocked at execution"
+            )
+            embed = discord.Embed(
+                title=(f"{'Regex ' if self.bot.config.get('use_regex_autotrigger') else ''}Keyword Found"),
+                color=self.bot.main_color,
+                description=(
+                    f"Autotrigger keyword `{keyword}` matched. Configured callback: `{callback}` "
+                    f"({callback_status})."
+                ),
+            )
+            return await ctx.send(embed=embed)
 
         embed = discord.Embed(
             title="Keyword Not Found",
