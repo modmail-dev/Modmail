@@ -8,8 +8,8 @@ import typing
 import zipfile
 from difflib import get_close_matches
 from importlib import invalidate_caches
-from pathlib import Path, PurePath
-from re import match
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
+from re import fullmatch
 from site import USER_SITE
 from subprocess import PIPE
 
@@ -24,6 +24,8 @@ from core.utils import trigger_typing, truncate, safe_typing
 
 logger = getLogger(__name__)
 
+PLUGIN_COMPONENT_PATTERN = r"[A-Za-z0-9._-]+"
+
 
 class InvalidPluginError(commands.BadArgument):
     pass
@@ -32,6 +34,7 @@ class InvalidPluginError(commands.BadArgument):
 class Plugin:
     def __init__(self, user, repo=None, name=None, branch=None):
         if repo is None:
+            self._validate_component(user, "name")
             self.user = "@local"
             self.repo = "@local"
             self.name = user
@@ -40,13 +43,30 @@ class Plugin:
             self.url = f"@local/{user}"
             self.link = f"@local/{user}"
         else:
+            branch = branch if branch is not None else "master"
+            self._validate_component(user, "user")
+            self._validate_component(repo, "repository")
+            self._validate_component(name, "name")
+            self._validate_component(branch, "branch")
             self.user = user
             self.repo = repo
             self.name = name
             self.local = False
-            self.branch = branch if branch is not None else "master"
+            self.branch = branch
             self.url = f"https://github.com/{user}/{repo}/archive/{self.branch}.zip"
             self.link = f"https://github.com/{user}/{repo}/tree/{self.branch}/{name}"
+
+    @staticmethod
+    def _validate_component(value, component):
+        if (
+            not isinstance(value, str)
+            or fullmatch(PLUGIN_COMPONENT_PATTERN, value) is None
+            or value in {".", ".."}
+        ):
+            raise InvalidPluginError(
+                f"Invalid plugin {component}. Plugin identifiers may only contain ASCII letters, "
+                "numbers, dots, underscores, and hyphens."
+            )
 
     @property
     def path(self):
@@ -85,16 +105,24 @@ class Plugin:
 
     @classmethod
     def from_string(cls, s, strict=False):
-        m = match(r"^@?local/(.+)$", s)
+        m = fullmatch(rf"@?local/({PLUGIN_COMPONENT_PATTERN})", s)
         if m is None:
             if not strict:
-                m = match(r"^(.+?)/(.+?)/(.+?)(?:@(.+?))?$", s)
+                m = fullmatch(
+                    rf"({PLUGIN_COMPONENT_PATTERN})/({PLUGIN_COMPONENT_PATTERN})/"
+                    rf"({PLUGIN_COMPONENT_PATTERN})(?:@({PLUGIN_COMPONENT_PATTERN}))?",
+                    s,
+                )
             else:
-                m = match(r"^(.+?)/(.+?)/(.+?)@(.+?)$", s)
+                m = fullmatch(
+                    rf"({PLUGIN_COMPONENT_PATTERN})/({PLUGIN_COMPONENT_PATTERN})/"
+                    rf"({PLUGIN_COMPONENT_PATTERN})@({PLUGIN_COMPONENT_PATTERN})",
+                    s,
+                )
 
         if m is not None:
             return Plugin(*m.groups())
-        raise InvalidPluginError("Cannot decipher %s.", s)  # pylint: disable=raising-format-tuple
+        raise InvalidPluginError(f"Cannot decipher {s}.")
 
     def __hash__(self):
         return hash((self.user, self.repo, self.name, self.branch))
@@ -187,8 +215,6 @@ class Plugins(commands.Cog):
         if plugin.local:
             raise InvalidPluginError(f"Local plugin {plugin} not found!")
 
-        plugin.abs_path.mkdir(parents=True, exist_ok=True)
-
         if plugin.cache_path.exists() and not force:
             plugin_io = plugin.cache_path.open("rb")
             logger.debug("Loading cached %s.", plugin.cache_path)
@@ -219,19 +245,58 @@ class Plugins(commands.Cog):
             with plugin.cache_path.open("wb") as f:
                 f.write(raw)
 
-        with zipfile.ZipFile(plugin_io) as zipf:
-            for info in zipf.infolist():
-                path = PurePath(info.filename)
-                if len(path.parts) >= 3 and path.parts[1] == plugin.name:
-                    plugin_path = plugin.abs_path / Path(*path.parts[2:])
+        try:
+            with zipfile.ZipFile(plugin_io) as zipf:
+                plugin_root = plugin.abs_path.resolve()
+                extraction_plan = []
+
+                # ZIP member names always use forward slashes. Validate every selected path
+                # before extracting anything so an unsafe path cannot leave a partial install.
+                for info in zipf.infolist():
+                    filename = info.orig_filename
+                    candidate_path = PurePosixPath(filename.replace("\\", "/"))
+
+                    if len(candidate_path.parts) < 3 or candidate_path.parts[1] != plugin.name:
+                        continue
+
+                    archive_path = PurePosixPath(filename)
+                    relative_parts = candidate_path.parts[2:]
+                    windows_archive_path = PureWindowsPath(filename)
+                    windows_relative_path = PureWindowsPath(*relative_parts)
+
+                    if (
+                        "\x00" in filename
+                        or "\\" in filename
+                        or archive_path.is_absolute()
+                        or windows_archive_path.is_absolute()
+                        or windows_archive_path.drive
+                        or windows_relative_path.is_absolute()
+                        or windows_relative_path.drive
+                        or any(part in {".", ".."} for part in filename.split("/"))
+                        or any(":" in part for part in relative_parts)
+                        or any(part.endswith((" ", ".")) for part in relative_parts)
+                    ):
+                        raise InvalidPluginError("Plugin archive contains an unsafe path.")
+
+                    relative_path = Path(*relative_parts)
+                    plugin_path = (plugin_root / relative_path).resolve()
+                    try:
+                        plugin_path.relative_to(plugin_root)
+                    except ValueError as exc:
+                        raise InvalidPluginError("Plugin archive contains an unsafe path.") from exc
+
+                    extraction_plan.append((info, plugin_path))
+
+                plugin_root.mkdir(parents=True, exist_ok=True)
+                for info, plugin_path in extraction_plan:
                     if info.is_dir():
                         plugin_path.mkdir(parents=True, exist_ok=True)
                     else:
                         plugin_path.parent.mkdir(parents=True, exist_ok=True)
                         with zipf.open(info) as src, plugin_path.open("wb") as dst:
                             shutil.copyfileobj(src, dst)
-
-        plugin_io.close()
+        finally:
+            plugin_io.close()
 
     async def load_plugin(self, plugin):
         if not (plugin.abs_path / f"{plugin.name}.py").exists():
@@ -242,10 +307,14 @@ class Plugins(commands.Cog):
         if req_txt.exists():
             # Install PIP requirements
 
-            venv = hasattr(sys, "real_prefix") or hasattr(sys, "base_prefix")  # in a virtual env
-            user_install = " --user" if not venv else ""
-            proc = await asyncio.create_subprocess_shell(
-                f'"{sys.executable}" -m pip install --upgrade{user_install} -r {req_txt} -q -q',
+            venv = hasattr(sys, "real_prefix") or sys.prefix != getattr(sys, "base_prefix", sys.prefix)
+            pip_args = [sys.executable, "-m", "pip", "install", "--upgrade"]
+            if not venv:
+                pip_args.append("--user")
+            pip_args.extend(("-r", os.fspath(req_txt), "-q", "-q"))
+
+            proc = await asyncio.create_subprocess_exec(
+                *pip_args,
                 stderr=PIPE,
                 stdout=PIPE,
             )
@@ -255,16 +324,20 @@ class Plugins(commands.Cog):
             stdout, stderr = await proc.communicate()
 
             if stdout:
-                logger.debug("[stdout]\n%s.", stdout.decode())
+                logger.debug("[stdout]\n%s.", stdout.decode(errors="replace"))
 
             if stderr:
-                logger.debug("[stderr]\n%s.", stderr.decode())
+                logger.debug("[stderr]\n%s.", stderr.decode(errors="replace"))
+
+            if proc.returncode:
+                error_message = (stderr or stdout).decode(errors="replace")
+                if not error_message:
+                    error_message = f"pip exited with status {proc.returncode}"
                 logger.error(
                     "Failed to download requirements for %s.",
                     plugin.ext_string,
-                    exc_info=True,
                 )
-                raise InvalidPluginError(f"Unable to download requirements: ```\n{stderr.decode()}\n```")
+                raise InvalidPluginError(f"Unable to download requirements: ```\n{error_message}\n```")
 
             if os.path.exists(USER_SITE):
                 sys.path.insert(0, USER_SITE)
