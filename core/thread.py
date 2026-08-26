@@ -230,16 +230,12 @@ class Thread:
                     "author_name": (
                         getattr(m.embeds[0].author, "name", "").split(" (")[0]
                         if m.embeds and m.embeds[0].author and m.author == self.bot.user
-                        else getattr(m.author, "name", None)
-                        if m.author != self.bot.user
-                        else None
+                        else getattr(m.author, "name", None) if m.author != self.bot.user else None
                     ),
                     "author_avatar": (
                         getattr(m.embeds[0].author, "icon_url", None)
                         if m.embeds and m.embeds[0].author and m.author == self.bot.user
-                        else m.author.display_avatar.url
-                        if m.author != self.bot.user
-                        else None
+                        else m.author.display_avatar.url if m.author != self.bot.user else None
                     ),
                 }
                 async for m in channel.history(limit=None, oldest_first=True)
@@ -3036,6 +3032,9 @@ class ThreadManager:
                                     )
                                 except Exception:
                                     synthetic.author = self.outer_thread.bot.user
+                                if self.outer_thread.channel:
+                                    synthetic.channel = self.outer_thread.channel
+                                    synthetic.guild = self.outer_thread.channel.guild
                                 # Mark this message as menu-invoked for downstream formatting
                                 setattr(synthetic, "_menu_invoked", True)
                                 ctx_ = commands.Context(
@@ -3056,12 +3055,26 @@ class ThreadManager:
                                 ctxs.append(ctx_)
                             for ctx_ in ctxs:
                                 if ctx_.command:
-                                    old_checks = copy.copy(ctx_.command.checks)
-                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+                                    perm_level = self.outer_thread.bot.command_perm(
+                                        ctx_.command.qualified_name
+                                    )
+                                    if (
+                                        perm_level is PermissionLevel.OWNER
+                                        or ctx_.command.qualified_name in {"eval", "eval_"}
+                                    ):
+                                        logger.warning(
+                                            "Blocked unauthorized execution of OWNER-level command %s via thread creation menu callback.",
+                                            ctx_.command.qualified_name,
+                                        )
+                                        continue
                                     try:
                                         await self.outer_thread.bot.invoke(ctx_)
-                                    finally:
-                                        ctx_.command.checks = old_checks
+                                    except Exception:
+                                        logger.error(
+                                            "Error invoking thread menu command callback %s:",
+                                            ctx_.command.qualified_name,
+                                            exc_info=True,
+                                        )
 
             class _ThreadCreationMenuView(discord.ui.View):
                 def __init__(
@@ -3388,6 +3401,9 @@ class ThreadManager:
                                     )
                                 except Exception:
                                     synthetic.author = self.outer_thread.bot.user
+                                if self.outer_thread.channel:
+                                    synthetic.channel = self.outer_thread.channel
+                                    synthetic.guild = self.outer_thread.channel.guild
                                 setattr(synthetic, "_menu_invoked", True)
                                 ctx_ = commands.Context(
                                     prefix=self.outer_thread.bot.prefix,
@@ -3406,12 +3422,26 @@ class ThreadManager:
                                 ctxs.append(ctx_)
                             for ctx_ in ctxs:
                                 if ctx_.command:
-                                    old_checks = copy.copy(ctx_.command.checks)
-                                    ctx_.command.checks = [checks.has_permissions(PermissionLevel.INVALID)]
+                                    perm_level = self.outer_thread.bot.command_perm(
+                                        ctx_.command.qualified_name
+                                    )
+                                    if (
+                                        perm_level is PermissionLevel.OWNER
+                                        or ctx_.command.qualified_name in {"eval", "eval_"}
+                                    ):
+                                        logger.warning(
+                                            "Blocked unauthorized execution of OWNER-level command %s via thread creation menu callback.",
+                                            ctx_.command.qualified_name,
+                                        )
+                                        continue
                                     try:
                                         await self.outer_thread.bot.invoke(ctx_)
-                                    finally:
-                                        ctx_.command.checks = old_checks
+                                    except Exception:
+                                        logger.error(
+                                            "Error invoking thread menu command callback %s:",
+                                            ctx_.command.qualified_name,
+                                            exc_info=True,
+                                        )
 
             class _PrecreateMenuView(discord.ui.View):
                 def __init__(self, outer_thread: Thread):

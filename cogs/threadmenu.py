@@ -4,9 +4,11 @@ from copy import copy as _copy
 
 import discord
 from discord.ext import commands
+from discord.ext.commands.view import StringView
 
 from core import checks
 from core.models import PermissionLevel
+from core.utils import normalize_alias
 
 
 class ThreadCreationMenuCore(commands.Cog):
@@ -18,6 +20,56 @@ class ThreadCreationMenuCore(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    async def _validate_command_callback(self, ctx, callback: str, _depth: int = 0) -> tuple[bool, str]:
+        """Validates that a command callback is safe and the user has permission to configure it."""
+        if _depth > 5:
+            return False, "Alias recursion limit exceeded."
+
+        if not callback or not callback.strip():
+            return False, "Callback cannot be empty."
+
+        steps = normalize_alias(callback)
+        if not steps:
+            return False, "Invalid command callback format."
+
+        blocked_commands = {"eval", "eval_"}
+
+        for step in steps:
+            view = StringView(step)
+            cmd_name = view.get_word().lower()
+            if not cmd_name:
+                return False, "Empty command name in callback."
+
+            # Check if it's a snippet
+            if cmd_name in self.bot.snippets:
+                continue
+
+            # Check if it's an alias
+            if cmd_name in self.bot.aliases:
+                alias_val = self.bot.aliases[cmd_name]
+                valid, err = await self._validate_command_callback(ctx, alias_val, _depth + 1)
+                if not valid:
+                    return False, err
+                continue
+
+            cmd = self.bot.get_command(cmd_name) or self.bot.all_commands.get(cmd_name)
+            if cmd is None:
+                return False, f"Command `{cmd_name}` does not exist."
+
+            if cmd.qualified_name in blocked_commands:
+                return False, f"The `{cmd.qualified_name}` command cannot be configured as a menu callback."
+
+            perm_level = self.bot.command_perm(cmd.qualified_name)
+            if perm_level is PermissionLevel.OWNER:
+                if not await self.bot.is_owner(ctx.author):
+                    return False, f"The `{cmd.qualified_name}` command requires OWNER permission."
+
+            has_perm = await checks.check_permissions(ctx, cmd.qualified_name)
+            if not has_perm:
+                return False, f"You do not have permission to use the command `{cmd.qualified_name}`."
+
+        return True, ""
 
     # ----- helpers -----
     def _get_conf(self) -> dict:
@@ -241,6 +293,11 @@ class ThreadCreationMenuCore(commands.Cog):
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist. Use `threadmenu submenu create` to add it.")
 
+        if type_ == "command":
+            valid, err = await self._validate_command_callback(ctx, callback)
+            if not valid:
+                return await ctx.send(f"Invalid command callback: {err}")
+
         # Optional: category where the thread should be created when this option is chosen
         await ctx.send(
             "Optionally provide a category for threads created via this option (mention, ID, or name).\n"
@@ -369,6 +426,10 @@ class ThreadCreationMenuCore(commands.Cog):
             return await ctx.send("Cancelled.")
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist. Use `threadmenu submenu create` to add it.")
+        if type_ == "command":
+            valid, err = await self._validate_command_callback(ctx, callback)
+            if not valid:
+                return await ctx.send(f"Invalid command callback: {err}")
 
         # Category edit (optional)
         await ctx.send(
@@ -564,6 +625,11 @@ class ThreadCreationMenuCore(commands.Cog):
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist. Use `threadmenu submenu create` to add it.")
 
+        if type_ == "command":
+            valid, err = await self._validate_command_callback(ctx, callback)
+            if not valid:
+                return await ctx.send(f"Invalid command callback: {err}")
+
         # Optional category for submenu option
         await ctx.send(
             "Optionally provide a category for threads created via this submenu option (mention, ID, or name).\n"
@@ -712,6 +778,10 @@ class ThreadCreationMenuCore(commands.Cog):
             return await ctx.send("Cancelled.")
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist.")
+        if type_ == "command":
+            valid, err = await self._validate_command_callback(ctx, callback)
+            if not valid:
+                return await ctx.send(f"Invalid command callback: {err}")
 
         # Category edit (optional)
         await ctx.send(
@@ -837,6 +907,28 @@ class ThreadCreationMenuCore(commands.Cog):
         }
         if not required.issubset(set(data.keys())):
             return await ctx.send("Config file missing required keys.")
+
+        # Validate all command callbacks in options
+        if isinstance(data.get("options"), dict):
+            for opt_name, opt in data["options"].items():
+                if isinstance(opt, dict) and opt.get("type") == "command":
+                    cb = opt.get("callback", "")
+                    valid, err = await self._validate_command_callback(ctx, cb)
+                    if not valid:
+                        return await ctx.send(f"Invalid command callback in option `{opt_name}`: {err}")
+
+        # Validate all command callbacks in submenus
+        if isinstance(data.get("submenus"), dict):
+            for sub_name, sub_opts in data["submenus"].items():
+                if isinstance(sub_opts, dict):
+                    for opt_name, opt in sub_opts.items():
+                        if isinstance(opt, dict) and opt.get("type") == "command":
+                            cb = opt.get("callback", "")
+                            valid, err = await self._validate_command_callback(ctx, cb)
+                            if not valid:
+                                return await ctx.send(
+                                    f"Invalid command callback in submenu `{sub_name}` option `{opt_name}`: {err}"
+                                )
 
         await self._save_conf(data)
         await ctx.send("Successfully loaded config into core.")
