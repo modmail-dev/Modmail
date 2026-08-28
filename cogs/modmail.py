@@ -406,14 +406,7 @@ class Modmail(commands.Cog):
             else:
                 snippet_data = self.bot.snippets[snippet_name]
                 snippet_text = self._get_snippet_text(snippet_data)
-                has_attachment = self._has_snippet_attachment(snippet_data)
-
-                if snippet_text:
-                    description = snippet_text
-                elif has_attachment:
-                    description = "This is an attachment-only snippet."
-                else:
-                    description = "(No text content)"
+                description = snippet_text or "This is an attachment-only snippet."
 
                 embed = discord.Embed(
                     title=f'Snippet - "{snippet_name}":',
@@ -446,10 +439,8 @@ class Modmail(commands.Cog):
 
             if snippet_text:
                 display_value = return_or_truncate(snippet_text, 350)
-            elif has_attachment:
-                display_value = "This is an attachment-only snippet."
             else:
-                display_value = "(No text)"
+                display_value = "This is an attachment-only snippet."
             if has_attachment:
                 display_value = "📎 " + display_value
 
@@ -474,15 +465,12 @@ class Modmail(commands.Cog):
         else:
             snippet_data = self.bot.snippets[snippet_name]
             snippet_text = self._get_snippet_text(snippet_data)
-            has_attachment = self._has_snippet_attachment(snippet_data)
 
             if snippet_text:
                 val = truncate(escape_code_block(snippet_text), 2048 - 7)
                 description = f"```\n{val}```"
-            elif has_attachment:
-                description = "This is an attachment-only snippet."
             else:
-                description = "(No text content)"
+                description = "This is an attachment-only snippet."
 
             embed = discord.Embed(
                 title=f'Raw snippet - "{snippet_name}":',

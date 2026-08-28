@@ -2124,8 +2124,8 @@ class Thread:
                 continue
 
             if not embedded_image:
-                embed.set_image(url=f"attachment://{a.filename}")
-                embed.add_field(name="Image", value=a.filename)
+                embed.set_image(url=a.url)
+                embed.add_field(name="Image", value=f"[{a.filename}]({a.url})")
                 embedded_image = True
             # Only reference images that were successfully converted and will be sent.
             discord_files.append(file)
