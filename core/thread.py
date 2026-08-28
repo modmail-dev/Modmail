@@ -2109,6 +2109,8 @@ class Thread:
                 images.append((None, i.name, True))
 
         embedded_image = False
+        snippet_image_field_index = None
+        snippet_image_filename = None
         discord_files = []
 
         # Handle snippet images first (embedded directly)
@@ -2125,7 +2127,9 @@ class Thread:
 
             if not embedded_image:
                 embed.set_image(url=a.url)
-                embed.add_field(name="Image", value=f"[{a.filename}]({a.url})")
+                snippet_image_field_index = len(embed.fields)
+                snippet_image_filename = a.filename
+                embed.add_field(name="Image", value=a.filename)
                 embedded_image = True
             # Only reference images that were successfully converted and will be sent.
             discord_files.append(file)
@@ -2325,6 +2329,37 @@ class Thread:
                 else:
                     logger.warning("Channel not found during send.")
                     raise
+
+        # ``attachment://`` is valid for embed media but not for masked links. Discord omits
+        # uploads used by embeds from ``Message.attachments`` and returns their CDN URL on the
+        # resolved embed image instead, so use that URL to make the filename clickable.
+        if snippet_image_field_index is not None and snippet_image_filename is not None and msg.embeds:
+            resolved_image_url = getattr(msg.embeds[0].image, "url", None)
+
+            # Older API responses may still expose embed uploads as regular attachments.
+            if not resolved_image_url or not resolved_image_url.startswith(("http://", "https://")):
+                uploaded_image = discord.utils.find(
+                    lambda attachment: attachment.filename == snippet_image_filename,
+                    msg.attachments,
+                )
+                resolved_image_url = getattr(uploaded_image, "url", None)
+
+            if resolved_image_url and resolved_image_url.startswith(("http://", "https://")):
+                image_field = embed.fields[snippet_image_field_index]
+                embed.set_field_at(
+                    snippet_image_field_index,
+                    name=image_field.name,
+                    value=f"[{snippet_image_filename}]({resolved_image_url})",
+                    inline=image_field.inline,
+                )
+                try:
+                    msg = await msg.edit(embed=embed)
+                except discord.HTTPException:
+                    logger.warning("Failed to link snippet image filename.", exc_info=True)
+            else:
+                logger.warning(
+                    "Discord did not return a CDN URL for snippet image %s.", snippet_image_filename
+                )
 
         if additional_images:
             self.ready = False
