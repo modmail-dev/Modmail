@@ -1750,12 +1750,23 @@ class Thread:
                 msg = None
 
             if msg is not None:
+                log_attachments = None
+                if any(
+                    getattr(attachment, "is_snippet_attachment", False) for attachment in message.attachments
+                ):
+                    original_attachments = [
+                        attachment
+                        for attachment in message.attachments
+                        if not getattr(attachment, "is_snippet_attachment", False)
+                    ]
+                    log_attachments = [*original_attachments, *msg.attachments]
                 tasks.append(
                     self.bot.api.append_log(
                         message,
                         message_id=msg.id,
                         channel_id=self.channel.id,
                         type_="anonymous" if anonymous else "thread_message",
+                        attachments=log_attachments,
                     )
                 )
             else:
@@ -2004,7 +2015,27 @@ class Thread:
 
         images = []
         attachments = []
-        for attachment in ext:
+        files_to_upload = []
+
+        # List to track snippet images that should be uploaded but not listed as file attachments
+        snippet_images_to_upload = []
+
+        for i, a in enumerate(message.attachments):
+            attachment = ext[i]
+            if getattr(a, "is_snippet_attachment", False):
+                if getattr(a, "is_snippet_image", False):
+                    # Embed snippet images using attachment:// syntax.
+                    snippet_images_to_upload.append(a)
+                else:
+                    files_to_upload.append(a)
+            elif is_image_url(attachment[0]):
+                images.append(attachment)
+            else:
+                attachments.append(attachment)
+
+        # Forwarded attachments are represented only in ``ext`` rather than
+        # ``message.attachments``, so classify the remaining entries separately.
+        for attachment in ext[len(message.attachments) :]:
             if is_image_url(attachment[0]):
                 images.append(attachment)
             else:
@@ -2078,6 +2109,30 @@ class Thread:
                 images.append((None, i.name, True))
 
         embedded_image = False
+        snippet_image_field_index = None
+        snippet_image_filename = None
+        discord_files = []
+
+        # Handle snippet images first (embedded directly)
+        for a in snippet_images_to_upload:
+            try:
+                file = await a.to_file()
+            except Exception:
+                logger.warning(
+                    "Failed to convert snippet image %s to file.",
+                    getattr(a, "filename", "unknown"),
+                    exc_info=True,
+                )
+                continue
+
+            if not embedded_image:
+                embed.set_image(url=a.url)
+                snippet_image_field_index = len(embed.fields)
+                snippet_image_filename = a.filename
+                embed.add_field(name="Image", value=a.filename)
+                embedded_image = True
+            # Only reference images that were successfully converted and will be sent.
+            discord_files.append(file)
 
         prioritize_uploads = any(i[1] is not None for i in images)
 
@@ -2171,7 +2226,9 @@ class Thread:
             embed.colour = self.bot.recipient_color
 
         if (from_mod or note) and not thread_creation:
-            delete_message = not bool(message.attachments)
+            delete_message = not any(
+                not getattr(attachment, "is_snippet_attachment", False) for attachment in message.attachments
+            )
             # Only delete the source command message when it's in a guild text
             # channel; attempting to delete a DM message can raise 50003.
             if (
@@ -2223,6 +2280,12 @@ class Thread:
         else:
             mentions = None
 
+        for att in files_to_upload:
+            try:
+                discord_files.append(await att.to_file())
+            except Exception:
+                logger.warning("Failed to convert snippet attachment to file.", exc_info=True)
+
         if plain:
             if from_mod and not isinstance(destination, discord.TextChannel):
                 # Plain to user (DM)
@@ -2234,8 +2297,10 @@ class Thread:
                 body = embed.description or ""
                 plain_message = f"{prefix}{embed.author.name}:** {body}"
 
-                files = []
+                files = discord_files[:]
                 for att in message.attachments:
+                    if getattr(att, "is_snippet_attachment", False):
+                        continue
                     try:
                         files.append(await att.to_file())
                     except Exception:
@@ -2246,11 +2311,11 @@ class Thread:
                 # Plain to mods
                 footer_text = embed.footer.text if embed.footer else ""
                 embed.set_footer(text=f"[PLAIN] {footer_text}".strip())
-                msg = await destination.send(mentions, embed=embed)
+                msg = await destination.send(mentions, embed=embed, files=discord_files or None)
 
         else:
             try:
-                msg = await destination.send(mentions, embed=embed)
+                msg = await destination.send(mentions, embed=embed, files=discord_files or None)
             except discord.NotFound:
                 if (
                     isinstance(destination, discord.TextChannel)
@@ -2260,10 +2325,41 @@ class Thread:
                     logger.info("Thread channel missing while sending; attempting restore and resend.")
                     await self.restore_from_snooze()
                     destination = self.channel or destination
-                    msg = await destination.send(mentions, embed=embed)
+                    msg = await destination.send(mentions, embed=embed, files=discord_files or None)
                 else:
                     logger.warning("Channel not found during send.")
                     raise
+
+        # ``attachment://`` is valid for embed media but not for masked links. Discord omits
+        # uploads used by embeds from ``Message.attachments`` and returns their CDN URL on the
+        # resolved embed image instead, so use that URL to make the filename clickable.
+        if snippet_image_field_index is not None and snippet_image_filename is not None and msg.embeds:
+            resolved_image_url = getattr(msg.embeds[0].image, "url", None)
+
+            # Older API responses may still expose embed uploads as regular attachments.
+            if not resolved_image_url or not resolved_image_url.startswith(("http://", "https://")):
+                uploaded_image = discord.utils.find(
+                    lambda attachment: attachment.filename == snippet_image_filename,
+                    msg.attachments,
+                )
+                resolved_image_url = getattr(uploaded_image, "url", None)
+
+            if resolved_image_url and resolved_image_url.startswith(("http://", "https://")):
+                image_field = embed.fields[snippet_image_field_index]
+                embed.set_field_at(
+                    snippet_image_field_index,
+                    name=image_field.name,
+                    value=f"[{snippet_image_filename}]({resolved_image_url})",
+                    inline=image_field.inline,
+                )
+                try:
+                    msg = await msg.edit(embed=embed)
+                except discord.HTTPException:
+                    logger.warning("Failed to link snippet image filename.", exc_info=True)
+            else:
+                logger.warning(
+                    "Discord did not return a CDN URL for snippet image %s.", snippet_image_filename
+                )
 
         if additional_images:
             self.ready = False

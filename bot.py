@@ -4,6 +4,7 @@ __version__ = "4.3.0"
 import asyncio
 import copy
 import hashlib
+import io
 import os
 import re
 import string
@@ -58,6 +59,24 @@ from core.utils import (
 )
 
 logger = getLogger(__name__)
+
+
+class SnippetAttachment:
+    """In-memory attachment loaded from the snippet GridFS bucket."""
+
+    def __init__(self, file_data, metadata, is_image):
+        self.file_data = file_data
+        self.id = 0
+        self.url = f"attachment://{metadata['filename']}"
+        self.filename = metadata["filename"]
+        self.size = metadata["length"]
+        self.width = None
+        self.is_snippet_attachment = True
+        self.is_snippet_image = is_image
+
+    async def to_file(self):
+        return discord.File(io.BytesIO(self.file_data), filename=self.filename)
+
 
 temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
 if not os.path.exists(temp_dir):
@@ -374,7 +393,7 @@ class ModmailBot(commands.Bot):
         await self.config.wait_until_ready()
 
     @property
-    def snippets(self) -> typing.Dict[str, str]:
+    def snippets(self) -> typing.Dict[str, typing.Union[str, typing.Dict[str, str]]]:
         return self.config["snippets"]
 
     @property
@@ -1291,6 +1310,20 @@ class ModmailBot(commands.Bot):
 
         return self.get_command(f"{modifiers}reply")
 
+    async def _download_snippet_attachment(self, snippet_data):
+        """Download and wrap a snippet attachment, returning None on failure."""
+        if not isinstance(snippet_data, dict) or not snippet_data.get("file_id"):
+            return None
+
+        try:
+            file_data, metadata = await self.api.download_snippet_attachment(snippet_data["file_id"])
+        except Exception as e:
+            logger.warning("Failed to download snippet attachment: %s", e)
+            return None
+
+        content_type = metadata.get("content_type", "")
+        return SnippetAttachment(file_data, metadata, content_type.startswith("image/"))
+
     async def get_contexts(self, message, *, cls=commands.Context):
         """
         Returns all invocation contexts from the message.
@@ -1317,7 +1350,14 @@ class ModmailBot(commands.Bot):
         # snippets can have multiple words.
         try:
             # Use removeprefix once PY3.9+
-            snippet_text = self.snippets[message.content[len(invoked_prefix) :]]
+            snippet_data = self.snippets[message.content[len(invoked_prefix) :]]
+            # Extract text from snippet (handle both old string format and new dict format)
+            if isinstance(snippet_data, str):
+                snippet_text = snippet_data
+            elif isinstance(snippet_data, dict):
+                snippet_text = snippet_data.get("text", "")
+            else:
+                snippet_text = None
         except KeyError:
             snippet_text = None
 
@@ -1332,15 +1372,27 @@ class ModmailBot(commands.Bot):
 
             for alias in aliases:
                 command = None
+                context_message = copy.copy(message)
                 try:
-                    snippet_text = self.snippets[alias]
+                    snippet_data = self.snippets[alias]
+                    # Extract text from snippet (handle both old string format and new dict format)
+                    if isinstance(snippet_data, str):
+                        snippet_text = snippet_data
+                    elif isinstance(snippet_data, dict):
+                        snippet_text = snippet_data.get("text", "")
+                        attachment = await self._download_snippet_attachment(snippet_data)
+                        if attachment is not None:
+                            context_message.attachments = [*message.attachments, attachment]
+                    else:
+                        snippet_text = None
                 except KeyError:
                     command_invocation_text = alias
+                    snippet_text = None
                 else:
                     command = self._get_snippet_command()
                     command_invocation_text = f"{invoked_prefix}{command} {snippet_text}"
                 view = StringView(invoked_prefix + command_invocation_text)
-                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=message)
+                ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=context_message)
                 ctx_.thread = thread
                 discord.utils.find(view.skip_string, prefixes)
                 ctx_.invoked_with = view.get_word().lower()
@@ -1352,6 +1404,13 @@ class ModmailBot(commands.Bot):
 
         if snippet_text is not None:
             # Process snippets
+            snippet_name = message.content[len(invoked_prefix) :]
+            snippet_data = self.snippets.get(snippet_name)
+            attachment = await self._download_snippet_attachment(snippet_data)
+            if attachment is not None:
+                snippet_message = copy.copy(message)
+                snippet_message.attachments = [*message.attachments, attachment]
+                ctx.message = snippet_message
             ctx.command = self._get_snippet_command()
             reply_view = StringView(f"{invoked_prefix}{ctx.command} {snippet_text}")
             discord.utils.find(reply_view.skip_string, prefixes)
