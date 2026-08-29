@@ -58,7 +58,7 @@ class PaginatorSession:
             ">": self.next_page,
             ">>": self.last_page,
         }
-        self._buttons_map = {"<<": None, "<": None, ">": None, ">>": None}
+        self._buttons_map = {k: None for k in self.callback_map.keys()}
 
     async def show_page(self, index: int) -> typing.Optional[typing.Dict]:
         """
@@ -84,34 +84,19 @@ class PaginatorSession:
         self.update_disabled_status()
         return result
 
-    def update_disabled_status(self):
-        if self.current == self.first_page():
-            # disable << button
-            if self._buttons_map["<<"] is not None:
-                self._buttons_map["<<"].disabled = True
-
-            if self._buttons_map["<"] is not None:
-                self._buttons_map["<"].disabled = True
-        else:
-            if self._buttons_map["<<"] is not None:
-                self._buttons_map["<<"].disabled = False
-
-            if self._buttons_map["<"] is not None:
-                self._buttons_map["<"].disabled = False
-
-        if self.current == self.last_page():
-            # disable >> button
-            if self._buttons_map[">>"] is not None:
-                self._buttons_map[">>"].disabled = True
-
-            if self._buttons_map[">"] is not None:
-                self._buttons_map[">"].disabled = True
-        else:
-            if self._buttons_map[">>"] is not None:
-                self._buttons_map[">>"].disabled = False
-
-            if self._buttons_map[">"] is not None:
-                self._buttons_map[">"].disabled = False
+    def update_disabled_status(self) -> None:
+        for label, button in self._buttons_map.items():
+            if button is None:
+                continue
+            elif any(
+                (
+                    self.current == self.first_page() and label in ("<<", "<"),
+                    self.current == self.last_page() and label in (">>", ">"),
+                )
+            ):
+                button.disabled = True
+            else:
+                button.disabled = False
 
     async def create_base(self, item) -> None:
         """
@@ -237,7 +222,7 @@ class PaginatorView(View):
     async def stop_callback(self, interaction: Interaction):
         await self.handler.close(interaction=interaction)
 
-    def fill_items(self):
+    def fill_items(self) -> None:
         if self.handler.select_menu is not None:
             self.add_item(self.handler.select_menu)
 
@@ -259,7 +244,7 @@ class PaginatorView(View):
         stop_button.callback = self.stop_callback
         self.add_item(stop_button)
 
-    async def interaction_check(self, interaction: Interaction):
+    async def interaction_check(self, interaction: Interaction) -> bool:
         """Only allow the message author to interact"""
         if interaction.user != self.handler.ctx.author:
             await interaction.response.send_message(
@@ -293,34 +278,87 @@ class PageButton(Button):
         self.handler = handler
         self.page_callback = page_callback
 
-    async def callback(self, interaction: Interaction):
+    async def callback(self, interaction: Interaction) -> None:
         kwargs = await self.handler.show_page(self.page_callback())
+        select_menu = self.handler.select_menu
+        if select_menu is not None:
+            select_menu.update_options(True)
         await interaction.response.edit_message(**kwargs, view=self.view)
 
 
 class PageSelect(Select):
     def __init__(self, handler: PaginatorSession, pages: typing.List[typing.Tuple[str]]):
         self.handler = handler
-        options = []
+        self._all_options = []  # no limits
         for n, (label, description) in enumerate(pages):
-            options.append(discord.SelectOption(label=label, description=description, value=str(n)))
+            self._all_options.append(discord.SelectOption(label=label, description=description, value=str(n)))
 
-        options = options[:25]  # max 25 options
+        options = self.update_options()
         super().__init__(placeholder="Select a page", min_values=1, max_values=1, options=options)
 
-    async def callback(self, interaction: Interaction):
+    def update_options(self, refresh_options: bool = False) -> typing.List[discord.SelectOption]:
+        """
+        A helper to dynamically update the select menu options based on the current page.
+        """
+        current = self.handler.current
+        differ = prev = after = 0
+
+        def max_reached():
+            return prev + after >= 25  # max select options
+
+        while not max_reached():
+            differ += 1
+            inc_prev = current - differ >= 0
+            inc_next = current + differ <= len(self._all_options)
+            if not any((inc_prev, inc_next)):
+                break
+            if inc_prev and not max_reached():
+                prev += 1
+            if inc_next and not max_reached():
+                after += 1
+
+        options = self._all_options[current - prev : current + after]
+        if refresh_options:
+            self.options.clear()
+            curr_option = self._all_options[current]
+            for option in options:
+                option.default = option == curr_option
+                self.append_option(option)
+        return options
+
+    async def callback(self, interaction: Interaction) -> None:
         page = int(self.values[0])
         kwargs = await self.handler.show_page(page)
+        self.update_options(True)
         await interaction.response.edit_message(**kwargs, view=self.view)
 
 
 class EmbedPaginatorSession(PaginatorSession):
-    def __init__(self, ctx: commands.Context, *embeds, **options):
+    """
+    Class that interactively paginates embed pages.
+    This inherits from PaginatorSession.
+
+    Parameters
+    ----------
+    ctx : Context
+        The context of the command.
+    embeds : List[discord.Embed]
+        A list of entries to paginate.
+    create_select : bool
+        Whether to create the select menu. Defaults to True.
+    """
+
+    def __init__(
+        self,
+        ctx: commands.Context,
+        *embeds: typing.List[discord.Embed],
+        create_select: bool = True,
+        **options,
+    ):
         super().__init__(ctx, *embeds, **options)
 
         if len(self.pages) > 1:
             select_options = []
-            create_select = True
             for i, embed in enumerate(self.pages):
                 footer_text = f"Page {i + 1} of {len(self.pages)}"
                 if embed.footer.text:
@@ -333,16 +371,22 @@ class EmbedPaginatorSession(PaginatorSession):
                 embed.set_footer(text=footer_text, icon_url=icon_url)
 
                 # select menu
+                if not create_select:
+                    continue
+
                 if embed.author.name:
                     title = embed.author.name[:30].strip()
                     if len(embed.author.name) > 30:
                         title += "..."
-                else:
+                elif embed.title:
                     title = embed.title[:30].strip()
                     if len(embed.title) > 30:
                         title += "..."
-                    if not title:
-                        create_select = False
+                else:
+                    title = None
+
+                if not title:
+                    create_select = False
 
                 if embed.description:
                     description = embed.description[:40].replace("*", "").replace("`", "").strip()
@@ -365,7 +409,7 @@ class EmbedPaginatorSession(PaginatorSession):
     async def _create_base(self, item: Embed, view: View) -> None:
         self.base = await self.destination.send(embed=item, view=view)
 
-    def _show_page(self, page):
+    def _show_page(self, page) -> typing.Dict:
         return dict(embed=page)
 
 
@@ -381,7 +425,7 @@ class MessagePaginatorSession(PaginatorSession):
         else:
             raise TypeError("Page must be a str object.")
 
-    def _set_footer(self):
+    def _set_footer(self) -> None:
         if self.embed is not None:
             footer_text = f"Page {self.current + 1} of {len(self.pages)}"
             if self.footer_text:
