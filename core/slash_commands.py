@@ -2,13 +2,14 @@ import asyncio
 import inspect
 import re
 import typing
+from types import SimpleNamespace
 
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord.ext.commands.view import StringView
 
 from core.models import getLogger
-
 
 logger = getLogger(__name__)
 
@@ -34,16 +35,32 @@ class SlashCommandMessage:
         self.guild = interaction.guild
         self.content = content
         self.created_at = interaction.created_at
+        self.edited_at = None
         self.attachments = [attachment] if attachment is not None else []
         self.stickers = []
         self.embeds = []
+        self.mentions = []
+        self.role_mentions = []
+        self.channel_mentions = []
         self.message_snapshots = []
         self.reference = None
         self.type = discord.MessageType.default
         self.webhook_id = None
         self.interaction = interaction
-        self.response_sent = False
+        # Snippets and aliases copy the message. Keep acknowledgement state
+        # shared so their responses are not deleted by the invocation runner.
+        self._response_state = SimpleNamespace(sent=False, contexts=[])
+        self.slash_command_path = None
+        self.slash_options = None
         self._state = interaction._state
+
+    @property
+    def response_sent(self):
+        return self._response_state.sent
+
+    @response_sent.setter
+    def response_sent(self, value):
+        self._response_state.sent = value
 
     @property
     def jump_url(self) -> str:
@@ -52,9 +69,8 @@ class SlashCommandMessage:
         return ""
 
     async def add_reaction(self, _emoji) -> None:
-        # Interactions have no invocation message to react to. The slash-command
-        # runner supplies a small completion response when a callback only used
-        # a reaction as its acknowledgement.
+        # Interactions have no invocation message to react to. The runner removes
+        # its deferred acknowledgement after successful, no-output callbacks.
         return None
 
     async def delete(self, *, delay: typing.Optional[float] = None) -> None:
@@ -69,9 +85,86 @@ class SlashCommandMessage:
 class SlashContext(commands.Context):
     """Context that records whether a legacy callback produced a response."""
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.command_error_handled = asyncio.Event()
+        self.message._response_state.contexts.append(self)
+
     async def send(self, *args, **kwargs):
+        message = await super().send(*args, **kwargs)
         self.message.response_sent = True
-        return await super().send(*args, **kwargs)
+        return message
+
+
+async def _parse_slash_options(command, ctx):
+    """Convert named options without passing them through the positional parser."""
+    ctx.args = [ctx] if command.cog is None else [command.cog, ctx]
+    ctx.kwargs = {}
+    for name, parameter in command.params.items():
+        ctx.current_parameter = parameter
+        value = ctx.message.slash_options.get(name)
+        converter = parameter.converter
+        greedy = isinstance(converter, commands.Greedy)
+        variadic = parameter.kind == inspect.Parameter.VAR_POSITIONAL
+        if value is None:
+            if greedy:
+                converted = []
+            elif variadic:
+                if command.require_var_positional:
+                    raise commands.MissingRequiredArgument(parameter)
+                continue
+            elif parameter.required:
+                raise commands.MissingRequiredArgument(parameter)
+            else:
+                converted = await parameter.get_default(ctx)
+        else:
+            # Optional's prefix-parser backtracking would silently discard an
+            # invalid named option. A supplied slash value must convert.
+            if typing.get_origin(converter) is typing.Union:
+                alternatives = tuple(t for t in typing.get_args(converter) if t is not type(None))
+                converter = typing.Union[alternatives]
+            if greedy or variadic:
+                view = StringView(value)
+                converted = []
+                while not view.eof:
+                    view.skip_ws()
+                    if view.eof:
+                        break
+                    ctx.current_argument = argument = view.get_quoted_word()
+                    converted.append(
+                        await commands.run_converters(
+                            ctx, converter.converter if greedy else converter, argument, parameter
+                        )
+                    )
+            else:
+                ctx.current_argument = value
+                converted = await commands.run_converters(ctx, converter, value, parameter)
+        if variadic:
+            ctx.args.extend(converted)
+        elif parameter.kind == inspect.Parameter.KEYWORD_ONLY:
+            ctx.kwargs[name] = converted
+        else:
+            ctx.args.append(converted)
+
+
+def _enable_slash_options(command):
+    """Add an invocation-local parser branch; leave prefix/alias parsing intact."""
+    if getattr(command, "_modmail_slash_options", False):
+        return
+    original_parser = command._parse_arguments
+
+    async def parse_arguments(ctx):
+        if (
+            isinstance(ctx, SlashContext)
+            and ctx.message.slash_command_path == command.qualified_name
+            and ctx.message.slash_options is not None
+        ):
+            await _parse_slash_options(command, ctx)
+        else:
+            await original_parser(ctx)
+
+    command._parse_arguments = parse_arguments
+    command._modmail_slash_options = True
 
 
 class SlashCommandManager:
@@ -91,16 +184,6 @@ class SlashCommandManager:
         "threadmenu load_config",
     }
     REQUIRED_ATTACHMENT_COMMANDS = {"threadmenu load_config"}
-    REQUIRED_SLASH_PARAMETERS = {
-        "areply": {"msg"},
-        "fareply": {"msg"},
-        "fpareply": {"msg"},
-        "fpreply": {"msg"},
-        "freply": {"msg"},
-        "pareply": {"msg"},
-        "preply": {"msg"},
-        "reply": {"msg"},
-    }
     PARAMETER_NAMES = {
         "activity_type": "activity",
         "msg": "message",
@@ -181,7 +264,9 @@ class SlashCommandManager:
         self.bot = bot
         self._synced = False
         self._synced_guild_id = None
-        self._registered_names = set()
+        self._managed_commands = {}
+        self._pending_guild_cleanup = set()
+        self._sync_lock = asyncio.Lock()
 
     @staticmethod
     def _description(command: commands.Command, fallback: typing.Optional[str] = None) -> str:
@@ -302,32 +387,6 @@ class SlashCommandManager:
             f"Value for {display_name.replace('-', ' ')}.",
         )
 
-    @staticmethod
-    def _quote_positional(value: str) -> str:
-        if not value or any(character.isspace() for character in value) or '"' in value:
-            escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-            return f'"{escaped}"'
-        return value
-
-    def _serialize_arguments(
-        self,
-        parameters: typing.Sequence[commands.Parameter],
-        values: typing.Dict[str, str],
-    ) -> typing.Optional[str]:
-        arguments = []
-        for parameter in parameters:
-            value = values.get(parameter.name)
-            if value is None:
-                continue
-            value = str(value)
-            converter = parameter.converter
-            greedy = converter.__class__.__name__ == "Greedy"
-            if parameter.kind in (inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.VAR_POSITIONAL) or greedy:
-                arguments.append(value)
-            else:
-                arguments.append(self._quote_positional(value))
-        return " ".join(arguments) or None
-
     def _callback(
         self,
         command: commands.Command,
@@ -347,13 +406,14 @@ class SlashCommandManager:
             if raw_arguments:
                 arguments = values.get("arguments")
             else:
-                arguments = self._serialize_arguments(parameters, values)
+                arguments = None
             await self.invoke(
                 interaction,
                 legacy_path,
                 arguments=arguments,
                 attachment=attachment,
                 raw_arguments=raw_arguments,
+                options=None if raw_arguments else values,
             )
 
         used_names = set()
@@ -362,10 +422,11 @@ class SlashCommandManager:
         if raw_arguments:
             option_specs.append(("arguments", "arguments", True, str))
         else:
-            required_parameters = self.REQUIRED_SLASH_PARAMETERS.get(command.qualified_name, set())
             for parameter in parameters:
                 display_name = self._parameter_name(parameter.name, used_names)
-                required = parameter.required or parameter.name in required_parameters
+                required = parameter.required
+                if parameter.kind == inspect.Parameter.VAR_POSITIONAL:
+                    required = command.require_var_positional
                 option_specs.append((parameter.name, display_name, required, str))
                 parameter_choices = self._parameter_choices(command, parameter)
                 if parameter_choices:
@@ -426,6 +487,8 @@ class SlashCommandManager:
         raw_arguments: bool = False,
         has_attachment: typing.Optional[bool] = None,
     ) -> app_commands.Command:
+        if not raw_arguments:
+            _enable_slash_options(command)
         qualified_name = command.qualified_name
         if has_attachment is None:
             has_attachment = qualified_name in self.ATTACHMENT_COMMANDS or bool(
@@ -584,14 +647,14 @@ class SlashCommandManager:
             except (app_commands.CommandAlreadyRegistered, app_commands.CommandLimitReached):
                 logger.exception("Slash command /%s could not be registered.", name)
                 continue
-            self._registered_names.add(name)
+            self._managed_commands[(guild.id, name, discord.AppCommandType.chat_input)] = command
             count += 1
 
         return count
 
     def _configured_guild_ids(self) -> typing.Set[int]:
         """Guilds that may contain commands from this Modmail instance."""
-        return {
+        return self._pending_guild_cleanup | {
             guild_id
             for guild_id in (
                 self.bot.guild_id,
@@ -610,12 +673,21 @@ class SlashCommandManager:
             logger.exception("Failed to remove slash commands from guild %s.", guild_id)
             return False
         logger.info("Slash commands removed from guild %s.", guild_id)
+        self._pending_guild_cleanup.discard(guild_id)
+        self._managed_commands = {
+            key: command for key, command in self._managed_commands.items() if key[0] != guild_id
+        }
         return True
 
     async def sync(self, *, force: bool = False) -> None:
-        if self._synced and not force:
-            return
+        async with self._sync_lock:
+            await self._sync(force=force)
+
+    async def _sync(self, *, force: bool = False) -> None:
         target_guild_id = self.bot.inbox_guild_id
+        if self._synced and self._synced_guild_id == target_guild_id and not force:
+            return
+        self._synced = False
         if target_guild_id is None:
             logger.error(
                 "Slash commands could not be synced because neither MODMAIL_GUILD_ID nor "
@@ -625,17 +697,29 @@ class SlashCommandManager:
 
         # Older builds registered commands in GUILD_ID. Remove that stale
         # registry when a separate MODMAIL_GUILD_ID inbox is configured.
-        for guild_id in self._configured_guild_ids() - {target_guild_id}:
-            await self._clear_guild(guild_id)
+        self._pending_guild_cleanup.update(self._configured_guild_ids() - {target_guild_id})
+        self._pending_guild_cleanup.discard(target_guild_id)
+        cleared = True
+        for guild_id in set(self._pending_guild_cleanup):
+            cleared = await self._clear_guild(guild_id) and cleared
 
         guild = discord.Object(id=target_guild_id)
-        if force:
-            for name in self._registered_names:
-                self.bot.tree.remove_command(name, guild=guild)
-            self._registered_names.clear()
+        # Remove both generated commands and copied plugin commands. Track the
+        # object as well as its name so a native replacement is never removed.
+        for key, command in list(self._managed_commands.items()):
+            guild_id, name, command_type = key
+            if guild_id != target_guild_id:
+                continue
+            if self.bot.tree.get_command(name, guild=guild, type=command_type) is command:
+                self.bot.tree.remove_command(name, guild=guild, type=command_type)
+            del self._managed_commands[key]
         # Prefer any native application commands supplied by plugins. Generated
         # compatibility commands fill only the remaining names.
-        self.bot.tree.copy_global_to(guild=guild)
+        for command in self.bot.tree.get_commands():
+            command_type = getattr(command, "type", discord.AppCommandType.chat_input)
+            if self.bot.tree.get_command(command.name, guild=guild, type=command_type) is None:
+                self.bot.tree.add_command(command, guild=guild)
+                self._managed_commands[(guild.id, command.name, command_type)] = command
         generated = self.register(guild)
         try:
             synced = await self.bot.tree.sync(guild=guild)
@@ -643,7 +727,7 @@ class SlashCommandManager:
             logger.exception("Failed to sync slash commands to guild %s.", guild.id)
             return
 
-        self._synced = True
+        self._synced = cleared
         self._synced_guild_id = target_guild_id
         logger.info(
             "Synced %d slash command roots to inbox guild %s (%d generated).",
@@ -654,11 +738,15 @@ class SlashCommandManager:
 
     async def refresh(self) -> None:
         """Refresh Discord's registry after a runtime plugin change."""
-        if self._synced:
+        if self._synced_guild_id is not None:
             await self.sync(force=True)
 
     async def disable(self) -> None:
         """Remove this instance's guild commands when slash commands are disabled."""
+        async with self._sync_lock:
+            await self._disable()
+
+    async def _disable(self) -> None:
         guild_ids = self._configured_guild_ids()
         if not guild_ids:
             logger.warning(
@@ -673,7 +761,7 @@ class SlashCommandManager:
 
         if not removed:
             return
-        self._registered_names.clear()
+        self._managed_commands.clear()
         self._synced = False
         self._synced_guild_id = None
 
@@ -685,6 +773,7 @@ class SlashCommandManager:
         arguments: typing.Optional[str],
         attachment: typing.Optional[discord.Attachment],
         raw_arguments: bool,
+        options: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
         if not interaction.response.is_done():
             await interaction.response.defer(thinking=True)
@@ -703,12 +792,17 @@ class SlashCommandManager:
             mention_prefix + command_text,
             attachment=attachment,
         )
+        if not raw_arguments:
+            message.slash_command_path = legacy_path
+            message.slash_options = options
 
         try:
             await self.bot.process_commands(message, cls=SlashContext)
-            # Bot event dispatch is scheduled; give command error handlers a
-            # chance to send their interaction response before the fallback.
-            await asyncio.sleep(0)
+            # Error handlers are dispatched as tasks and may await permissions
+            # or network requests before sending a response.
+            for context in message._response_state.contexts:
+                if context.command_failed:
+                    await context.command_error_handled.wait()
         except Exception:
             logger.exception("Unexpected failure while running slash command %s.", command_text)
             if not message.response_sent:

@@ -24,7 +24,6 @@ from discord.ext.commands.view import StringView
 from emoji import is_emoji
 from packaging.version import Version
 
-
 try:
     # noinspection PyUnresolvedReferences
     from colorama import init
@@ -46,7 +45,7 @@ from core.models import (
     configure_logging,
     getLogger,
 )
-from core.slash_commands import SlashCommandManager
+from core.slash_commands import SlashCommandManager, SlashCommandMessage, SlashContext
 from core.thread import ThreadManager
 from core.time import human_timedelta
 from core.utils import (
@@ -1373,13 +1372,8 @@ class ModmailBot(commands.Bot):
 
     @staticmethod
     def _get_message_interaction(message):
-        """Return interaction data without accessing discord.py's deprecated property."""
-        try:
-            return message.interaction_metadata
-        except AttributeError:
-            # Synthetic slash-command messages and discord.py versions older
-            # than interaction_metadata expose the interaction directly.
-            return getattr(message, "interaction", None)
+        """Only synthetic invocations carry a usable Interaction, not metadata."""
+        return message.interaction if isinstance(message, SlashCommandMessage) else None
 
     async def get_contexts(self, message, *, cls=commands.Context):
         """
@@ -1409,6 +1403,14 @@ class ModmailBot(commands.Bot):
             return [ctx]
 
         invoker = view.get_word().lower()
+
+        # Named slash actions already identify a command. Their option text
+        # must not be interpreted as a saved alias, snippet, or subcommand.
+        if isinstance(message, SlashCommandMessage) and message.slash_command_path is not None:
+            ctx.thread = thread
+            ctx.command = self.all_commands.get(invoker)
+            ctx.invoked_with = invoker
+            return [ctx]
 
         # Check if a snippet is being called.
         # This needs to be done before checking for aliases since
@@ -1455,7 +1457,7 @@ class ModmailBot(commands.Bot):
                     snippet_text = None
                 else:
                     command = self._get_snippet_command()
-                    command_invocation_text = f"{invoked_prefix}{command} {snippet_text}"
+                    command_invocation_text = f"{command} {snippet_text}"
                 view = StringView(invoked_prefix + command_invocation_text)
                 ctx_ = cls(
                     prefix=context_prefix,
@@ -1687,6 +1689,17 @@ class ModmailBot(commands.Bot):
                         continue
 
                 await self.invoke(ctx)
+                continue
+
+            if isinstance(ctx, SlashContext):
+                # Never forward an invalid /alias run or /snippet send to the
+                # recipient via reply_without_command.
+                ctx.command_failed = True
+                self.dispatch(
+                    "command_error",
+                    ctx,
+                    commands.CommandNotFound(f'Command "{ctx.invoked_with}" is not found'),
+                )
                 continue
 
             thread = await self.threads.find(channel=ctx.channel)
@@ -2104,6 +2117,29 @@ class ModmailBot(commands.Bot):
         logger.error("Unexpected exception:", exc_info=sys.exc_info())
 
     async def on_command_error(
+        self,
+        context: commands.Context,
+        exception: Exception,
+        *,
+        unhandled_by_cog: bool = False,
+    ) -> None:
+        try:
+            await self._handle_command_error(context, exception, unhandled_by_cog=unhandled_by_cog)
+            if isinstance(context, SlashContext) and not context.message.response_sent:
+                if isinstance(exception, commands.CheckFailure):
+                    message = "You do not have permission to use this command here."
+                elif isinstance(exception, commands.CommandNotFound):
+                    message = "That command, alias, or snippet could not be found."
+                elif isinstance(exception, commands.DisabledCommand):
+                    message = "This command is disabled."
+                else:
+                    message = "The command could not be completed. Check the bot logs for details."
+                await context.send(message, ephemeral=True)
+        finally:
+            if isinstance(context, SlashContext):
+                context.command_error_handled.set()
+
+    async def _handle_command_error(
         self,
         context: commands.Context,
         exception: Exception,
