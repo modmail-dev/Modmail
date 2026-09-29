@@ -6,10 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project mostly adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 however, insignificant breaking changes do not guarantee a major version bump, see the reasoning [here](https://github.com/modmail-dev/modmail/issues/319). If you're a plugin developer, note the "BREAKING" section.
 
-# Unreleased
+# v4.3.0
+
+### Added
+- Ability to rename snippets and aliases [#3383](https://github.com/modmail-dev/Modmail/pull/3412).
+- Bot events when threads is snoozed/unsnoozed [#3412](https://github.com/modmail-dev/Modmail/pull/3412).
+- Check for threadmenu and advancedmenu being enabled concurrently [#3411](https://github.com/modmail-dev/Modmail/pull/3411).
+- Check to see if bot is using Git repository for install before running update or autoupdate [#3406](https://github.com/modmail-dev/Modmail/pull/3406).
+- Ability to add attachments directly to snippets via storing image in MongoDB [#3421](https://github.com/modmail-dev/Modmail/pull/3421).
+- Customizable Arguments in Responses (?args) [#3418](https://github.com/modmail-dev/Modmail/pull/3418).
+
+### Changed
+- Updated plugin registry [#3412](https://github.com/modmail-dev/Modmail/pull/3412).
+- Updated bot dependencies to reflect more current versions [#3412](https://github.com/modmail-dev/Modmail/pull/3412).
+- Permissions override now allows override of commands in bulk `?perms override bulk` [#3417](https://github.com/modmail-dev/Modmail/pull/3417).
+- Better error messages when adding aliases [#3422](https://github.com/modmail-dev/Modmail/pull/3422).
+- Prevention of users without OWNER permissions adding eval commands to aliases for security [#3422](https://github.com/modmail-dev/Modmail/pull/3422).
 
 ### Fixed
-* Confirm thread creation (react to contact) no longer leaves a thread stuck in a "not ready" cache state when the recipient has DMs disabled. The bot now catches `discord.Forbidden` when sending the confirmation prompt, cancels the thread, and clears the cache entry immediately instead of requiring a bot restart. (#3442)
+- Forwarded messages now show when using logviewer [#3414](https://github.com/modmail-dev/Modmail/pull/3414).
+- Submenu options now work when using built-in threadmenu [#3404](https://github.com/modmail-dev/Modmail/pull/3404).
+- Missing `@` and incorrect link in plugin help command [#3322](https://github.com/modmail-dev/Modmail/pull/3322).
+- Fixed typo in config help for `thread_close_response` and `thread_self_close_response` [#3407](https://github.com/modmail-dev/Modmail/pull/3407).
+- Confirm thread creation (react to contact) no longer leaves a thread stuck in a "not ready" cache state when the recipient has DMs disabled. The bot now catches `discord.Forbidden` when sending the confirmation prompt, cancels the thread, and clears the cache entry immediately instead of requiring a bot restart (#3442).
+- Added ability to delete and edit plain replies [#3416](https://github.com/modmail-dev/Modmail/pull/3416).
+- Fixed a bug with the disabling of `thread_auto_close` when threads are open [#3423](https://github.com/modmail-dev/Modmail/pull/3423).
+- Fixed bugs with cancelled thead creation and threadmenu conflicts [#3425](https://github.com/modmail-dev/Modmail/pull/3425).
+- Ability for non-registry plugins to be added when using `registry_plugins_only=true` [#3430](https://github.com/modmail-dev/Modmail/pull/3430).
+- Silent error when using `confirm_thread_creation` and react-to-contact, when recipient has DMs disabled [#3447](https://github.com/modmail-dev/Modmail/pull/3447).
+- Freply silentenly errors after encountering an unmatched brace. Freply now ignores unmatched braces [#3452](https://github.com/modmail-dev/Modmail/pull/3452).
+- `thread_creation_menu_timeout` doesn't fail when provided an incorrect format, and instead converts it [#3451](https://github.com/modmail-dev/Modmail/pull/3451).
+- `thread_cooldown` can no longer be bypassed by users using the `selfcontact` command, it can still be bypassed by staff using the `contact` command. (#3443)[https://github.com/modmail-dev/Modmail/pull/3443]
+
 
 # v4.2.1
 
