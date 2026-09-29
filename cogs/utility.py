@@ -195,6 +195,8 @@ class ModmailHelpCommand(commands.HelpCommand):
         command = self.context.kwargs.get("command")
         val = self.context.bot.snippets.get(command)
         if val is not None:
+            if isinstance(val, dict):
+                val = val.get("text") or "This is an attachment-only snippet."
             embed = discord.Embed(title=f"{command} is a snippet.", color=self.context.bot.main_color)
             embed.add_field(name=f"`{command}` will send:", value=val, inline=False)
 

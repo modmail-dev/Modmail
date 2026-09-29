@@ -1,14 +1,17 @@
 import secrets
 import sys
 from json import JSONDecodeError
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, Union, Optional, Tuple
 
 import discord
 from discord import Member, DMChannel, TextChannel, Message
 from discord.ext import commands
 
 from aiohttp import ClientResponseError, ClientResponse
-from motor.motor_asyncio import AsyncIOMotorClient
+from bson import ObjectId
+from bson.errors import InvalidId
+from gridfs.errors import NoFile
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 from pymongo.errors import ConfigurationError
 
 from core.models import InvalidConfigError, getLogger
@@ -399,6 +402,7 @@ class ApiClient:
         message_id: str = "",
         channel_id: str = "",
         type_: str = "thread_message",
+        attachments=None,
     ) -> dict:
         return NotImplemented
 
@@ -461,6 +465,7 @@ class MongoDBClient(ApiClient):
             sys.exit(0)
 
         super().__init__(bot, db)
+        self.fs = AsyncIOMotorGridFSBucket(db, bucket_name="snippet_attachments")
 
     async def setup_indexes(self):
         """Setup text indexes so we can use the $search operator"""
@@ -661,11 +666,13 @@ class MongoDBClient(ApiClient):
         message_id: str = "",
         channel_id: str = "",
         type_: str = "thread_message",
+        attachments=None,
     ) -> dict:
         channel_id = str(channel_id) or (str(message.channel.id) if message else "")
         message_id = str(message_id) or (str(message.id) if message else "")
 
         if message:
+            log_attachments = message.attachments if attachments is None else attachments
             content = message.content or ""
             if forwarded := extract_forwarded_content(message):
                 if content:
@@ -695,7 +702,7 @@ class MongoDBClient(ApiClient):
                         "size": a.size,
                         "url": a.url,
                     }
-                    for a in message.attachments
+                    for a in log_attachments
                 ],
             }
         else:
@@ -715,7 +722,6 @@ class MongoDBClient(ApiClient):
                 "type": type_,
                 "attachments": [],
             }
-
         return await self.logs.find_one_and_update(
             {"channel_id": channel_id},
             {"$push": {"messages": data}},
@@ -806,6 +812,89 @@ class MongoDBClient(ApiClient):
                     "url": user.url,
                 }
             }
+
+    # ==================== GridFS Methods for Snippet Attachments ====================
+
+    async def upload_snippet_attachment(
+        self, file_data: bytes, filename: str, content_type: str = "application/octet-stream"
+    ) -> str:
+        """
+        Upload a file to GridFS for snippet attachments.
+
+        Parameters
+        ----------
+        file_data : bytes
+            The raw file data to upload.
+        filename : str
+            The original filename.
+        content_type : str
+            The MIME type of the file.
+
+        Returns
+        -------
+        str
+            The string representation of the GridFS file ID.
+        """
+        file_id = await self.fs.upload_from_stream(
+            filename,
+            file_data,
+            metadata={"content_type": content_type, "filename": filename},
+        )
+        logger.debug("Uploaded snippet attachment %s with file_id %s.", filename, file_id)
+        return str(file_id)
+
+    async def download_snippet_attachment(self, file_id: str) -> Tuple[bytes, Dict[str, Any]]:
+        """
+        Download a file from GridFS.
+
+        Parameters
+        ----------
+        file_id : str
+            The string representation of the GridFS file ID.
+
+        Returns
+        -------
+        Tuple[bytes, Dict[str, Any]]
+            A tuple of (file_data, metadata) where metadata includes filename and content_type.
+        """
+        grid_out = await self.fs.open_download_stream(ObjectId(file_id))
+        file_data = await grid_out.read()
+        metadata = {
+            "filename": grid_out.filename,
+            "content_type": (
+                grid_out.metadata.get("content_type", "application/octet-stream")
+                if grid_out.metadata
+                else "application/octet-stream"
+            ),
+            "length": grid_out.length,
+        }
+        logger.debug("Downloaded snippet attachment with file_id %s.", file_id)
+        return file_data, metadata
+
+    async def delete_snippet_attachment(self, file_id: str) -> bool:
+        """
+        Delete a file from GridFS.
+
+        Parameters
+        ----------
+        file_id : str
+            The string representation of the GridFS file ID.
+
+        Returns
+        -------
+        bool
+            True if deletion was successful.
+        """
+        try:
+            await self.fs.delete(ObjectId(file_id))
+            logger.debug("Deleted snippet attachment with file_id %s.", file_id)
+            return True
+        except (InvalidId, NoFile):
+            logger.info("Snippet attachment %s was already absent.", file_id)
+            return True
+        except Exception as e:
+            logger.warning("Failed to delete snippet attachment %s: %s", file_id, e)
+            return False
 
 
 class PluginDatabaseClient:
