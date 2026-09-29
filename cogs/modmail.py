@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import re
 from datetime import datetime, timezone, timedelta
 from itertools import zip_longest
@@ -32,11 +33,23 @@ SNIPPET_ATTACHMENT_BYTES_PER_MIB = 1024**2
 SNIPPET_ATTACHMENT_CONFIRMATION_SIZE = 2 * SNIPPET_ATTACHMENT_BYTES_PER_MIB
 
 
+def serialize_snippet_changes(callback):
+    """Keep config persistence, file cleanup, and rollback in one critical section."""
+
+    @functools.wraps(callback)
+    async def wrapped(self, *args, **kwargs):
+        async with self._snippet_lock:
+            return await callback(self, *args, **kwargs)
+
+    return wrapped
+
+
 class Modmail(commands.Cog):
     """Commands directly related to Modmail functionality."""
 
     def __init__(self, bot):
         self.bot = bot
+        self._snippet_lock = asyncio.Lock()
         self._snoozed_cache = []
         self._auto_unsnooze_task = self.bot.loop.create_task(self.auto_unsnooze_task())
 
@@ -484,6 +497,7 @@ class Modmail(commands.Cog):
 
     @snippet.command(name="add", aliases=["create", "make"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @serialize_snippet_changes
     async def snippet_add(self, ctx, name: str.lower, *, value: commands.clean_content = None):
         """
         Add a snippet with an optional attachment.
@@ -680,6 +694,7 @@ class Modmail(commands.Cog):
 
     @snippet.command(name="remove", aliases=["del", "delete"])
     @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @serialize_snippet_changes
     async def snippet_remove(self, ctx, *, name: str.lower):
         """Remove a snippet."""
         if name in self.bot.snippets:
@@ -780,6 +795,7 @@ class Modmail(commands.Cog):
 
     @snippet.command(name="edit")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @serialize_snippet_changes
     async def snippet_edit(self, ctx, name: str.lower, *, value: commands.clean_content = None):
         """
         Edit a snippet's text and/or attachment.
@@ -959,6 +975,7 @@ class Modmail(commands.Cog):
 
     @snippet.command(name="rename")
     @checks.has_permissions(PermissionLevel.SUPPORTER)
+    @serialize_snippet_changes
     async def snippet_rename(self, ctx, name: str.lower, *, value):
         """
         Rename a snippet.
@@ -1001,7 +1018,19 @@ class Modmail(commands.Cog):
             old_snippet_value = self.bot.snippets[name]
             self.bot.snippets.pop(name)
             self.bot.snippets[value] = old_snippet_value
-            await self.bot.config.update()
+            try:
+                await self.bot.config.update()
+            except Exception:
+                self.bot.snippets.pop(value)
+                self.bot.snippets[name] = old_snippet_value
+                logger.error("Failed to rename snippet %s.", name, exc_info=True)
+                return await ctx.send(
+                    embed=discord.Embed(
+                        title="Error",
+                        color=self.bot.error_color,
+                        description=f"Failed to rename snippet `{name}`. Please try again.",
+                    )
+                )
 
             embed = discord.Embed(
                 title="Renamed snippet",

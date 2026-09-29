@@ -1317,12 +1317,31 @@ class ModmailBot(commands.Bot):
 
         try:
             file_data, metadata = await self.api.download_snippet_attachment(snippet_data["file_id"])
+            content_type = metadata.get("content_type") or ""
+            filename = metadata["filename"]
+            embed_image = (
+                content_type.startswith("image/")
+                and filename.lower().endswith((".jpg", ".jpeg", ".png", ".webp", ".gif"))
+                and not filename.startswith("SPOILER_")
+            )
+            return SnippetAttachment(file_data, metadata, embed_image)
         except Exception as e:
             logger.warning("Failed to download snippet attachment: %s", e)
             return None
 
-        content_type = metadata.get("content_type", "")
-        return SnippetAttachment(file_data, metadata, content_type.startswith("image/"))
+    async def _check_snippet_attachment(self, ctx, snippet_data, attachment):
+        """Abort an invocation if a required stored file could not be loaded."""
+        if isinstance(snippet_data, dict) and snippet_data.get("file_id") and attachment is None:
+            await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="The snippet attachment could not be retrieved. Nothing was sent. "
+                    "Please try again.",
+                    color=self.error_color,
+                )
+            )
+            return False
+        return True
 
     async def get_contexts(self, message, *, cls=commands.Context):
         """
@@ -1381,6 +1400,8 @@ class ModmailBot(commands.Bot):
                     elif isinstance(snippet_data, dict):
                         snippet_text = snippet_data.get("text", "")
                         attachment = await self._download_snippet_attachment(snippet_data)
+                        if not await self._check_snippet_attachment(ctx, snippet_data, attachment):
+                            return []
                         if attachment is not None:
                             context_message.attachments = [*message.attachments, attachment]
                     else:
@@ -1390,7 +1411,7 @@ class ModmailBot(commands.Bot):
                     snippet_text = None
                 else:
                     command = self._get_snippet_command()
-                    command_invocation_text = f"{invoked_prefix}{command} {snippet_text}"
+                    command_invocation_text = f"{command} {snippet_text}"
                 view = StringView(invoked_prefix + command_invocation_text)
                 ctx_ = cls(prefix=self.prefix, view=view, bot=self, message=context_message)
                 ctx_.thread = thread
@@ -1407,6 +1428,8 @@ class ModmailBot(commands.Bot):
             snippet_name = message.content[len(invoked_prefix) :]
             snippet_data = self.snippets.get(snippet_name)
             attachment = await self._download_snippet_attachment(snippet_data)
+            if not await self._check_snippet_attachment(ctx, snippet_data, attachment):
+                return []
             if attachment is not None:
                 snippet_message = copy.copy(message)
                 snippet_message.attachments = [*message.attachments, attachment]

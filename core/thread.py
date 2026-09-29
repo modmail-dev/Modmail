@@ -1760,6 +1760,34 @@ class Thread:
                         if not getattr(attachment, "is_snippet_attachment", False)
                     ]
                     log_attachments = [*original_attachments, *msg.attachments]
+                    snippet_image = next(
+                        (
+                            attachment
+                            for attachment in message.attachments
+                            if getattr(attachment, "is_snippet_image", False)
+                        ),
+                        None,
+                    )
+                    if snippet_image is not None and msg.embeds:
+                        image = msg.embeds[0].image
+                        image_url = getattr(image, "url", None)
+                        if (
+                            image_url
+                            and image_url.startswith(("https://", "http://"))
+                            and not any(
+                                attachment.filename == snippet_image.filename
+                                for attachment in msg.attachments
+                            )
+                        ):
+                            log_attachments.append(
+                                SimpleNamespace(
+                                    id=snippet_image.id,
+                                    filename=snippet_image.filename,
+                                    size=snippet_image.size,
+                                    width=image.width if image.width is not None else 0,
+                                    url=image_url,
+                                )
+                            )
                 tasks.append(
                     self.bot.api.append_log(
                         message,
@@ -2117,13 +2145,13 @@ class Thread:
         for a in snippet_images_to_upload:
             try:
                 file = await a.to_file()
-            except Exception:
+            except Exception as exc:
                 logger.warning(
                     "Failed to convert snippet image %s to file.",
                     getattr(a, "filename", "unknown"),
                     exc_info=True,
                 )
-                continue
+                raise CommandError("The snippet image could not be prepared. Please try again.") from exc
 
             if not embedded_image:
                 embed.set_image(url=a.url)
@@ -2133,6 +2161,13 @@ class Thread:
                 embedded_image = True
             # Only reference images that were successfully converted and will be sent.
             discord_files.append(file)
+
+        for att in files_to_upload:
+            try:
+                discord_files.append(await att.to_file())
+            except Exception as exc:
+                logger.warning("Failed to convert snippet attachment to file.", exc_info=True)
+                raise CommandError("The snippet attachment could not be prepared. Please try again.") from exc
 
         prioritize_uploads = any(i[1] is not None for i in images)
 
@@ -2279,12 +2314,6 @@ class Thread:
             mentions = await self.get_notifications()
         else:
             mentions = None
-
-        for att in files_to_upload:
-            try:
-                discord_files.append(await att.to_file())
-            except Exception:
-                logger.warning("Failed to convert snippet attachment to file.", exc_info=True)
 
         if plain:
             if from_mod and not isinstance(destination, discord.TextChannel):
