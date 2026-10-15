@@ -351,11 +351,11 @@
         },
         "cairosvg": {
             "hashes": [
-                "sha256:07cbf4e86317b27a92318a4cac2a4bb37a5e9c1b8a27355d06874b22f85bef9f",
-                "sha256:eab46dad4674f33267a671dce39b64be245911c901c70d65d2b7b0821e852bf5"
+                "sha256:861bc28ad97ce4f537d50eb3d6ee97a7afcccec9c61ac25c4e7d073fe409aec7",
+                "sha256:f91c5628e834be024a0ed4544d76261cd84016a4c73bcdf26c386495825c05a1"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==2.8.2"
+            "version": "==2.9.1"
         },
         "certifi": {
             "hashes": [
