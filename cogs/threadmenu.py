@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 
 from core import checks
+from core.command_inputs import confirm, wait_for_reply
 from core.models import PermissionLevel
 
 
@@ -185,7 +186,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "You can type `skip` for non-required steps or `cancel` to cancel the process at any time."
         )
         await ctx.send("What is the label of the option?")
-        label = (await self.bot.wait_for("message", check=check)).content
+        label = (await wait_for_reply(ctx, check=check)).content
         sanitized_label = label.lower().replace(" ", "_")
 
         if label.lower() == "cancel":
@@ -199,7 +200,7 @@ class ThreadCreationMenuCore(commands.Cog):
             return
 
         await ctx.send("What is the description of the option? (not required)")
-        description = (await self.bot.wait_for("message", check=check)).content
+        description = (await wait_for_reply(ctx, check=check)).content
 
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
@@ -213,7 +214,7 @@ class ThreadCreationMenuCore(commands.Cog):
             description = None
 
         await ctx.send("What is the emoji of the option? (not required)")
-        emoji = (await self.bot.wait_for("message", check=check)).content
+        emoji = (await wait_for_reply(ctx, check=check)).content
 
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
@@ -222,7 +223,7 @@ class ThreadCreationMenuCore(commands.Cog):
             emoji = None
 
         await ctx.send("What is the type of the option? (command/submenu)")
-        type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()
+        type_ = (await wait_for_reply(ctx, check=typecheck)).content.lower()
 
         if type_ == "cancel":
             return await ctx.send("Cancelled.")
@@ -231,7 +232,7 @@ class ThreadCreationMenuCore(commands.Cog):
             await ctx.send("What is the command to run for the option?")
         else:
             await ctx.send("What is the label of the submenu for the option?")
-        callback = (await self.bot.wait_for("message", check=check)).content
+        callback = (await wait_for_reply(ctx, check=check)).content
         if type_ != "command":
             callback = callback.lower().replace(" ", "_")
 
@@ -246,7 +247,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "Optionally provide a category for threads created via this option (mention, ID, or name).\n"
             "Type `default` to use the main category."
         )
-        category_msg = await self.bot.wait_for("message", check=check)
+        category_msg = await wait_for_reply(ctx, check=check)
         category_raw = category_msg.content.strip()
         category_id: int | None = None
         if category_raw.lower() == "cancel":
@@ -325,7 +326,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "Use `none` to clear the value for non-required steps."
         )
         await ctx.send("What is the new description of the option? (not required)")
-        description = (await self.bot.wait_for("message", check=check)).content
+        description = (await wait_for_reply(ctx, check=check)).content
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -342,7 +343,7 @@ class ThreadCreationMenuCore(commands.Cog):
                 )
 
         await ctx.send("What is the new emoji of the option?")
-        emoji = (await self.bot.wait_for("message", check=check)).content
+        emoji = (await wait_for_reply(ctx, check=check)).content
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -354,7 +355,7 @@ class ThreadCreationMenuCore(commands.Cog):
             emoji = None
 
         await ctx.send("What is the new type of the option? (command/submenu)")
-        type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()
+        type_ = (await wait_for_reply(ctx, check=typecheck)).content.lower()
         if type_ == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -362,7 +363,7 @@ class ThreadCreationMenuCore(commands.Cog):
             await ctx.send("What is the new command to run for the option?")
         else:
             await ctx.send("What is the new label of the new submenu for the option?")
-        callback = (await self.bot.wait_for("message", check=check)).content
+        callback = (await wait_for_reply(ctx, check=check)).content
         if type_ != "command":
             callback = callback.lower().replace(" ", "_")
         if callback.lower() == "cancel":
@@ -375,7 +376,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "Optionally provide a new category for this option (mention, ID, or name).\n"
             "Send `skip` to keep current setting; send `default` or `none` to clear."
         )
-        cat_msg = await self.bot.wait_for("message", check=check)
+        cat_msg = await wait_for_reply(ctx, check=check)
         cat_raw = cat_msg.content.strip()
         if cat_raw.lower() == "cancel":
             return await ctx.send("Cancelled.")
@@ -518,7 +519,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "You can type `skip` for non-required steps or `cancel` to cancel the process at any time."
         )
         await ctx.send("What is the label of the option?")
-        label = (await self.bot.wait_for("message", check=check)).content
+        label = (await wait_for_reply(ctx, check=check)).content
         sanitized_label = label.lower().replace(" ", "_")
 
         if label.lower() == "cancel":
@@ -530,7 +531,7 @@ class ThreadCreationMenuCore(commands.Cog):
             return
 
         await ctx.send("What is the description of the option? (not required)")
-        description = (await self.bot.wait_for("message", check=check)).content
+        description = (await wait_for_reply(ctx, check=check)).content
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
         if len(description) > 100:
@@ -542,7 +543,7 @@ class ThreadCreationMenuCore(commands.Cog):
             description = None
 
         await ctx.send("What is the emoji of the option? (not required)")
-        emoji = (await self.bot.wait_for("message", check=check)).content
+        emoji = (await wait_for_reply(ctx, check=check)).content
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -550,7 +551,7 @@ class ThreadCreationMenuCore(commands.Cog):
             emoji = None
 
         await ctx.send("What is the type for the option? (command/submenu)")
-        type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()
+        type_ = (await wait_for_reply(ctx, check=typecheck)).content.lower()
         if type_ == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -558,9 +559,11 @@ class ThreadCreationMenuCore(commands.Cog):
             await ctx.send("What is the command to run for the option?")
         else:
             await ctx.send("What is the label of the submenu for the option?")
-        callback = (await self.bot.wait_for("message", check=check)).content
+        callback = (await wait_for_reply(ctx, check=check)).content
         if type_ != "command":
             callback = callback.lower().replace(" ", "_")
+        if callback.lower() == "cancel":
+            return await ctx.send("Cancelled.")
         if type_ == "submenu" and callback not in conf["submenus"]:
             return await ctx.send("That submenu does not exist. Use `threadmenu submenu create` to add it.")
 
@@ -569,7 +572,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "Optionally provide a category for threads created via this submenu option (mention, ID, or name).\n"
             "Type `default` to use the main category."
         )
-        category_msg = await self.bot.wait_for("message", check=check)
+        category_msg = await wait_for_reply(ctx, check=check)
         category_raw = category_msg.content.strip()
         category_id: int | None = None
         if category_raw.lower() == "cancel":
@@ -620,7 +623,7 @@ class ThreadCreationMenuCore(commands.Cog):
 
         await ctx.send("You can send `cancel` at any time to cancel the process.")
         await ctx.send("What is the label of the option to remove?")
-        label = (await self.bot.wait_for("message", check=check)).content
+        label = (await wait_for_reply(ctx, check=check)).content
         key = label.lower().replace(" ", "_")
         if label.lower() == "cancel":
             return await ctx.send("Cancelled.")
@@ -659,7 +662,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "Use `none` to clear the value for non-required steps."
         )
         await ctx.send("What is the label of the option to edit?")
-        label = (await self.bot.wait_for("message", check=check)).content
+        label = (await wait_for_reply(ctx, check=check)).content
         key = label.lower().replace(" ", "_")
         if label.lower() == "cancel":
             return await ctx.send("Cancelled.")
@@ -667,7 +670,7 @@ class ThreadCreationMenuCore(commands.Cog):
             return await ctx.send("That label does not exist.")
 
         await ctx.send("What is the new description of the option? (not required)")
-        description = (await self.bot.wait_for("message", check=check)).content
+        description = (await wait_for_reply(ctx, check=check)).content
         if description.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -685,7 +688,7 @@ class ThreadCreationMenuCore(commands.Cog):
                 )
 
         await ctx.send("What is the new emoji of the option? (not required)")
-        emoji = (await self.bot.wait_for("message", check=check)).content
+        emoji = (await wait_for_reply(ctx, check=check)).content
         if emoji.lower() == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -697,7 +700,7 @@ class ThreadCreationMenuCore(commands.Cog):
             emoji = None
 
         await ctx.send("What is the new type for the option? (command/submenu)")
-        type_ = (await self.bot.wait_for("message", check=typecheck)).content.lower()
+        type_ = (await wait_for_reply(ctx, check=typecheck)).content.lower()
         if type_ == "cancel":
             return await ctx.send("Cancelled.")
 
@@ -705,7 +708,7 @@ class ThreadCreationMenuCore(commands.Cog):
             await ctx.send("What is the command to run for the option?")
         else:
             await ctx.send("What is the label of the submenu for the option?")
-        callback = (await self.bot.wait_for("message", check=check)).content
+        callback = (await wait_for_reply(ctx, check=check)).content
         if type_ != "command":
             callback = callback.lower().replace(" ", "_")
         if callback.lower() == "cancel":
@@ -718,7 +721,7 @@ class ThreadCreationMenuCore(commands.Cog):
             "Optionally provide a new category for this submenu option (mention, ID, or name).\n"
             "Send `skip` to keep current setting; send `default` or `none` to clear."
         )
-        cat_msg = await self.bot.wait_for("message", check=check)
+        cat_msg = await wait_for_reply(ctx, check=check)
         cat_raw = cat_msg.content.strip()
         if cat_raw.lower() == "cancel":
             return await ctx.send("Cancelled.")
@@ -776,19 +779,14 @@ class ThreadCreationMenuCore(commands.Cog):
         """
         warning = (
             "This will clear ALL thread menu options, submenus, and related settings and restore defaults.\n"
-            "This action is irreversible. Type `confirm` within 30 seconds to proceed, or anything else to cancel."
+            "This action is irreversible. Confirm within 30 seconds to proceed."
         )
-        await ctx.send(warning)
-
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-
         try:
-            reply = await self.bot.wait_for("message", check=check, timeout=30)
+            confirmed = await confirm(ctx, warning, timeout=30)
         except asyncio.TimeoutError:
             return await ctx.send("Timed out — reset cancelled.")
 
-        if reply.content.strip().lower() != "confirm":
+        if not confirmed:
             return await ctx.send("Reset cancelled.")
 
         # Reset all `thread_creation_menu_` keys to defaults

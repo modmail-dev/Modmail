@@ -2125,7 +2125,7 @@ class ModmailBot(commands.Bot):
     ) -> None:
         try:
             await self._handle_command_error(context, exception, unhandled_by_cog=unhandled_by_cog)
-            if isinstance(context, SlashContext) and not context.message.response_sent:
+            if isinstance(context, SlashContext) and not context.response_sent:
                 if isinstance(exception, commands.CheckFailure):
                     message = "You do not have permission to use this command here."
                 elif isinstance(exception, commands.CommandNotFound):
@@ -2177,7 +2177,7 @@ class ModmailBot(commands.Bot):
             )
         elif isinstance(exception, commands.CheckFailure):
             for check in context.command.checks:
-                if not await check(context):
+                if not await discord.utils.maybe_coroutine(check, context):
                     if hasattr(check, "fail_msg"):
                         await context.send(
                             embed=discord.Embed(color=self.error_color, description=check.fail_msg)

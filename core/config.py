@@ -196,6 +196,7 @@ class ConfigManager:
         "plugins": [],
         "aliases": {},
         "auto_triggers": {},
+        "slash_command_registry": {},
     }
 
     protected_keys = {

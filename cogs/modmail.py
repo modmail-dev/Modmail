@@ -16,6 +16,8 @@ from discord.utils import escape_markdown
 from dateutil import parser
 
 from core import checks
+from core.command_inputs import confirm
+from core.slash_commands import SlashContext
 from core.models import DMDisabled, PermissionLevel, SimilarCategoryConverter, UnseenFormatter, getLogger
 from core.paginator import EmbedPaginatorSession
 from core.thread import Thread
@@ -2209,6 +2211,10 @@ class Modmail(commands.Cog):
         ctx.message.content = msg
         async with safe_typing(ctx):
             msg = await ctx.thread.note(ctx.message)
+            if isinstance(ctx, SlashContext) and ctx.message.attachments:
+                await msg.edit(
+                    attachments=[await attachment.to_file() for attachment in ctx.message.attachments]
+                )
             await msg.pin()
         # Acknowledge and clean up the invoking command message
         sent_emoji, _ = await self.bot.retrieve_emoji()
@@ -2228,6 +2234,10 @@ class Modmail(commands.Cog):
         ctx.message.content = msg
         async with safe_typing(ctx):
             msg = await ctx.thread.note(ctx.message, persistent=True)
+            if isinstance(ctx, SlashContext) and ctx.message.attachments:
+                await msg.edit(
+                    attachments=[await attachment.to_file() for attachment in ctx.message.attachments]
+                )
             await msg.pin()
         await self.bot.api.create_note(recipient=ctx.thread.recipient, message=ctx.message, message_id=msg.id)
         # Acknowledge and clean up the invoking command message
@@ -3342,21 +3352,17 @@ class Modmail(commands.Cog):
             user = entry.get("recipient", {}).get("name", "Unknown")
             user_id = entry.get("recipient", {}).get("id", "?")
             lines.append(f"- {user} (`{user_id}`)")
-        msg = await ctx.send(
+        prompt = (
             "The following threads are currently snoozed and will be unsnoozed if you confirm:\n"
             + "\n".join(lines)
-            + "\n\nType `yes` to confirm, or anything else to cancel."
+            + "\n\nConfirm to unsnooze these threads."
         )
-
-        def check(m):
-            return m.author == ctx.author and m.channel == ctx.channel
-
         try:
-            reply = await self.bot.wait_for("message", check=check, timeout=30)
+            confirmed = await confirm(ctx, prompt, timeout=30, confirmation_word="yes")
         except asyncio.TimeoutError:
             await ctx.send("Timed out. No threads were unsnoozed.")
             return
-        if reply.content.strip().lower() != "yes":
+        if not confirmed:
             await ctx.send("Cancelled. No threads were unsnoozed.")
             return
         count = 0

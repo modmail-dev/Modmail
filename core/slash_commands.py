@@ -49,7 +49,13 @@ class SlashCommandMessage:
         self.interaction = interaction
         # Snippets and aliases copy the message. Keep acknowledgement state
         # shared so their responses are not deleted by the invocation runner.
-        self._response_state = SimpleNamespace(sent=False, contexts=[])
+        self._response_state = SimpleNamespace(
+            sent=False,
+            original_response_used=False,
+            followup_started=False,
+            send_lock=asyncio.Lock(),
+            contexts=[],
+        )
         self.slash_command_path = None
         self.slash_options = None
         self._state = interaction._state
@@ -88,17 +94,62 @@ class SlashContext(commands.Context):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.command_error_handled = asyncio.Event()
+        self.response_sent = False
         self.message._response_state.contexts.append(self)
 
-    async def send(self, *args, **kwargs):
-        message = await super().send(*args, **kwargs)
+    async def send(self, content=None, **kwargs):
+        private = kwargs.pop("ephemeral", False)
+        state = self.message._response_state
+        if self.interaction is None or self.interaction.is_expired():
+            if private and self.interaction is not None:
+                raise commands.CommandError("The private response expired. Run the command again.")
+            message = await self.channel.send(content=content, **kwargs)
+        else:
+            # The first public result must fill the original public defer so
+            # Discord attributes it to the invoking moderator. Private content
+            # must never be the first followup, which inherits that visibility.
+            async with state.send_lock:
+                first = not state.followup_started
+                if first and private:
+                    await super().send("\u200b", ephemeral=False)
+                    state.followup_started = True
+                if not private and not first and not state.original_response_used:
+                    message = await self._publish_original(content, kwargs)
+                else:
+                    message = await super().send(content, ephemeral=private, **kwargs)
+                if not private:
+                    state.original_response_used = True
+                state.followup_started = True
+        self.response_sent = True
         self.message.response_sent = True
+        return message
+
+    async def _publish_original(self, content, kwargs):
+        """Replace a placeholder if private feedback preceded public output."""
+        file = kwargs.get("file")
+        files = kwargs.get("files")
+        if file is not None and files is not None:
+            raise TypeError("Cannot pass both file and files.")
+        payload = {
+            key: value
+            for key, value in kwargs.items()
+            if key in {"embed", "embeds", "view", "allowed_mentions", "poll"}
+        }
+        if file is not None or files is not None:
+            payload["attachments"] = [file] if file is not None else files
+        message = await self.interaction.edit_original_response(content=content, **payload)
+        if kwargs.get("delete_after") is not None:
+            await message.delete(delay=kwargs["delete_after"])
         return message
 
 
 async def _parse_slash_options(command, ctx):
     """Convert named options without passing them through the positional parser."""
-    ctx.args = [ctx] if command.cog is None else [command.cog, ctx]
+    # Help callbacks are already bound to a HelpCommand instance, even when
+    # the command belongs to a cog. Only unbound callbacks need cog injection.
+    ctx.args = [ctx]
+    if command.cog is not None and not inspect.ismethod(command.callback):
+        ctx.args.insert(0, command.cog)
     ctx.kwargs = {}
     for name, parameter in command.params.items():
         ctx.current_parameter = parameter
@@ -176,6 +227,8 @@ class SlashCommandManager:
         "fpareply",
         "fpreply",
         "freply",
+        "note",
+        "note persistent",
         "pareply",
         "preply",
         "reply",
@@ -536,6 +589,7 @@ class SlashCommandManager:
         subgroup = app_commands.Group(
             name=self._name(legacy_group.name),
             description=self._description(legacy_group),
+            extras={"modmail_legacy_command": legacy_group.qualified_name},
         )
         used = set()
         self._add_group_callback(subgroup, legacy_group, used)
@@ -571,6 +625,7 @@ class SlashCommandManager:
         group = app_commands.Group(
             name=self._name(legacy_group.name),
             description=self._description(legacy_group),
+            extras={"modmail_legacy_command": legacy_group.qualified_name},
         )
         used = set()
         self._add_group_callback(group, legacy_group, used)
@@ -617,8 +672,9 @@ class SlashCommandManager:
 
         return group
 
-    def register(self, guild: discord.Object) -> int:
-        count = 0
+    def _build_commands(self):
+        """Isolate incompatible plugin schemas before replacing registered roots."""
+        roots = []
         used = set()
 
         for legacy_command in sorted(self.bot.commands, key=lambda item: item.name):
@@ -633,7 +689,21 @@ class SlashCommandManager:
                     command.name = name
                 else:
                     command = self._application_command(legacy_command, name=name)
+                leaves = command.walk_commands() if isinstance(command, app_commands.Group) else [command]
+                for leaf in leaves:
+                    if isinstance(leaf, app_commands.Command) and len(leaf.parameters) > 25:
+                        raise ValueError(f"/{leaf.qualified_name} has more than 25 options")
+            except (ValueError, TypeError, app_commands.CommandAlreadyRegistered):
+                logger.exception("Skipping incompatible slash command /%s.", name)
+                continue
+            roots.append(command)
+        return roots
 
+    def register(self, guild: discord.Object, *, prepared=None) -> int:
+        count = 0
+        for command in self._build_commands() if prepared is None else prepared:
+            name = command.name
+            try:
                 existing = self.bot.tree.get_command(name, guild=guild)
                 if existing is not None:
                     logger.warning(
@@ -652,32 +722,105 @@ class SlashCommandManager:
 
         return count
 
+    def application_command_for(self, legacy_command):
+        guild_id = self.bot.inbox_guild_id
+        if guild_id is None:
+            return None
+        matches = [
+            command
+            for command in self.bot.tree.walk_commands(guild=discord.Object(id=guild_id))
+            if command.extras.get("modmail_legacy_command") == legacy_command.qualified_name
+        ]
+        # Prefer a group's intentional callback over its container or raw actions.
+        return next(
+            (
+                c
+                for c in matches
+                if isinstance(c, app_commands.Command) and c.extras.get("modmail_legacy_path")
+            ),
+            next(iter(matches), None),
+        )
+
+    def _registry(self):
+        return self.bot.config.get("slash_command_registry") or {}
+
+    async def _save_registry(self, registry):
+        self.bot.config["slash_command_registry"] = registry
+        try:
+            await discord.utils.maybe_coroutine(self.bot.config.update)
+        except Exception:
+            logger.exception("Failed to persist slash command ownership; sync will retry.")
+            return False
+        return True
+
     def _configured_guild_ids(self) -> typing.Set[int]:
         """Guilds that may contain commands from this Modmail instance."""
-        return self._pending_guild_cleanup | {
-            guild_id
-            for guild_id in (
-                self.bot.guild_id,
-                self.bot.inbox_guild_id,
-                self._synced_guild_id,
-            )
-            if guild_id is not None
-        }
+        return (
+            self._pending_guild_cleanup
+            | {int(guild_id) for guild_id in self._registry()}
+            | {
+                guild_id
+                for guild_id in (
+                    self.bot.guild_id,
+                    self.bot.inbox_guild_id,
+                    self._synced_guild_id,
+                )
+                if guild_id is not None
+            }
+        )
 
     async def _clear_guild(self, guild_id: int) -> bool:
         guild = discord.Object(id=guild_id)
-        self.bot.tree.clear_commands(guild=guild)
+        registry = dict(self._registry())
+        owned = registry.get(str(guild_id), [])
+        # Without a persisted command ID there is no reliable way to distinguish
+        # a legacy generated command from a native plugin with the same name.
+        if not owned:
+            for key, command in list(self._managed_commands.items()):
+                if key[0] != guild_id:
+                    continue
+                if self.bot.tree.get_command(key[1], guild=guild, type=key[2]) is command:
+                    self.bot.tree.remove_command(key[1], guild=guild, type=key[2])
+                del self._managed_commands[key]
+            self._pending_guild_cleanup.discard(guild_id)
+            return True
         try:
-            await self.bot.tree.sync(guild=guild)
+            remote_commands = {
+                str(command.id): command for command in await self.bot.tree.fetch_commands(guild=guild)
+            }
         except Exception:
-            logger.exception("Failed to remove slash commands from guild %s.", guild_id)
+            logger.exception("Failed to inspect slash commands in guild %s.", guild_id)
             return False
-        logger.info("Slash commands removed from guild %s.", guild_id)
-        self._pending_guild_cleanup.discard(guild_id)
-        self._managed_commands = {
-            key: command for key, command in self._managed_commands.items() if key[0] != guild_id
-        }
-        return True
+        remaining = []
+        for record in owned:
+            command_type = discord.AppCommandType(record["type"])
+            key = (guild_id, record["name"], command_type)
+            current = self.bot.tree.get_command(record["name"], guild=guild, type=command_type)
+            managed = self._managed_commands.get(key)
+            if current is not None and current is not managed:
+                # A native plugin replaced this definition. Relinquish ownership.
+                continue
+            remote = remote_commands.get(record["id"])
+            try:
+                if remote is not None and remote.name == record["name"] and remote.type == command_type:
+                    await remote.delete()
+            except discord.NotFound:
+                pass
+            except Exception:
+                logger.exception("Failed to remove /%s from guild %s.", record["name"], guild_id)
+                remaining.append(record)
+                continue
+            if current is managed and current is not None:
+                self.bot.tree.remove_command(record["name"], guild=guild, type=command_type)
+            self._managed_commands.pop(key, None)
+        if remaining:
+            registry[str(guild_id)] = remaining
+            self._pending_guild_cleanup.add(guild_id)
+        else:
+            registry.pop(str(guild_id), None)
+            self._pending_guild_cleanup.discard(guild_id)
+        saved = await self._save_registry(registry)
+        return not remaining and saved
 
     async def sync(self, *, force: bool = False) -> None:
         async with self._sync_lock:
@@ -704,6 +847,7 @@ class SlashCommandManager:
             cleared = await self._clear_guild(guild_id) and cleared
 
         guild = discord.Object(id=target_guild_id)
+        prepared = self._build_commands()
         # Remove both generated commands and copied plugin commands. Track the
         # object as well as its name so a native replacement is never removed.
         for key, command in list(self._managed_commands.items()):
@@ -718,16 +862,27 @@ class SlashCommandManager:
         for command in self.bot.tree.get_commands():
             command_type = getattr(command, "type", discord.AppCommandType.chat_input)
             if self.bot.tree.get_command(command.name, guild=guild, type=command_type) is None:
-                self.bot.tree.add_command(command, guild=guild)
+                try:
+                    self.bot.tree.add_command(command, guild=guild)
+                except (ValueError, TypeError, app_commands.CommandLimitReached):
+                    logger.exception("Native slash command /%s could not be copied.", command.name)
+                    continue
                 self._managed_commands[(guild.id, command.name, command_type)] = command
-        generated = self.register(guild)
+        generated = self.register(guild, prepared=prepared)
         try:
             synced = await self.bot.tree.sync(guild=guild)
         except Exception:
             logger.exception("Failed to sync slash commands to guild %s.", guild.id)
             return
 
-        self._synced = cleared
+        registry = dict(self._registry())
+        registry[str(guild.id)] = [
+            {"id": str(command.id), "name": command.name, "type": command.type.value}
+            for command in synced
+            if (guild.id, command.name, command.type) in self._managed_commands
+        ]
+        saved = await self._save_registry(registry)
+        self._synced = cleared and saved
         self._synced_guild_id = target_guild_id
         logger.info(
             "Synced %d slash command roots to inbox guild %s (%d generated).",
@@ -776,7 +931,7 @@ class SlashCommandManager:
         options: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
         if not interaction.response.is_done():
-            await interaction.response.defer(thinking=True)
+            await interaction.response.defer(thinking=True, ephemeral=False)
 
         command_text = (arguments or "").strip() if raw_arguments else legacy_path
         if not raw_arguments and arguments and arguments.strip():
@@ -805,13 +960,14 @@ class SlashCommandManager:
                     await context.command_error_handled.wait()
         except Exception:
             logger.exception("Unexpected failure while running slash command %s.", command_text)
-            if not message.response_sent:
-                await interaction.edit_original_response(
-                    content="The command could not be completed. Check the bot logs for details."
-                )
-            return
+            error_context = SlashContext(
+                bot=self.bot, message=message, view=StringView(""), interaction=interaction
+            )
+            await error_context.send(
+                "The command could not be completed. Check the bot logs for details.", ephemeral=True
+            )
 
-        if not message.response_sent:
+        if not message._response_state.original_response_used:
             # Commands such as /reply acknowledge prefix invocations with a
             # reaction. A slash interaction has no message to react to, so its
             # deferred response is only transport-level bookkeeping. Removing

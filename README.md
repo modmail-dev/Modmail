@@ -88,8 +88,9 @@ This list is ever-growing thanks to active development and our exceptional contr
 
 Slash commands are enabled by default and are registered only in the inbox server
 configured by `MODMAIL_GUILD_ID`, falling back to `GUILD_ID` for a single-server setup.
-Setting `USE_SLASH_COMMANDS=false` removes the guild-scoped commands from both configured
-servers on startup. Commands with subcommands are grouped naturally, for example
+Setting `USE_SLASH_COMMANDS=false` removes tracked slash registrations owned by this
+adapter on startup, preserving native plugin commands. Older registrations without
+ownership records are preserved during cleanup. Commands with subcommands are grouped naturally, for example
 `/config set` and `/logs search`. Each command only exposes the named options it supports:
 simple commands such as `/selfcontact` have no options, `/snippet add` has `name`, `value`,
 and `attachment`, and replies require `message` with an optional `attachment`. Values are

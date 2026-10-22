@@ -34,12 +34,29 @@ from core.models import (
 )
 from core.utils import DummyParam
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
-
+from core.slash_commands import SlashContext
+from core.command_inputs import AuthorView, wait_for_reply
 
 logger = getLogger(__name__)
 
 
 class ModmailHelpCommand(commands.HelpCommand):
+    def get_destination(self):
+        return self.context if isinstance(self.context, SlashContext) else super().get_destination()
+
+    def get_command_signature(self, command):
+        if isinstance(self.context, SlashContext):
+            manager = getattr(self.context.bot, "slash_commands", None)
+            application_command = manager.application_command_for(command) if manager is not None else None
+            if application_command is not None:
+                options = []
+                if isinstance(application_command, discord.app_commands.Command):
+                    for parameter in application_command.parameters:
+                        option = f"{parameter.display_name}:<value>"
+                        options.append(option if parameter.required else f"[{option}]")
+                return " ".join([f"/{application_command.qualified_name}", *options])
+        return super().get_command_signature(command)
+
     async def command_callback(self, ctx, *, command=None):
         """Overwrites original command_callback to ensure `help` without any arguments
         returns with checks, `help all` returns without checks"""
@@ -50,6 +67,15 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         if command == "all":
             command = None
+
+        if command is not None and isinstance(ctx, SlashContext):
+            manager = getattr(ctx.bot, "slash_commands", None)
+            if manager is not None and ctx.bot.inbox_guild_id is not None:
+                guild = discord.Object(id=ctx.bot.inbox_guild_id)
+                for application_command in ctx.bot.tree.walk_commands(guild=guild):
+                    if application_command.qualified_name == command:
+                        command = application_command.extras.get("modmail_legacy_command", command)
+                        break
 
         return await super().command_callback(ctx, command=command)
 
@@ -64,10 +90,15 @@ class ModmailHelpCommand(commands.HelpCommand):
             key=lambda c: (bot.command_perm(c.qualified_name), c.qualified_name),
         ):
             perm_level = bot.command_perm(cmd.qualified_name)
+            display_command = (
+                self.get_command_signature(cmd)
+                if isinstance(self.context, SlashContext)
+                else prefix + cmd.qualified_name
+            )
             if perm_level is PermissionLevel.INVALID:
-                format_ = f"`{prefix + cmd.qualified_name}` "
+                format_ = f"`{display_command}` "
             else:
-                format_ = f"`[{perm_level}] {prefix + cmd.qualified_name}` "
+                format_ = f"`[{perm_level}] {display_command}` "
 
             format_ += f"- {cmd.short_doc}\n" if cmd.short_doc else "- *No description.*\n"
             if not format_.strip():
@@ -1502,8 +1533,8 @@ class Utility(commands.Cog):
         await ctx.send(embed=embed)
 
         try:
-            msg = await self.bot.wait_for(
-                "message",
+            msg = await wait_for_reply(
+                ctx,
                 check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
                 timeout=120.0,
             )
@@ -1513,6 +1544,8 @@ class Utility(commands.Cog):
                 embed=discord.Embed(title="Error", description="Timed out.", color=self.bot.error_color)
             )
 
+        if msg.content.strip().lower() == "cancel":
+            return await ctx.send("Cancelled. No changes have been applied.")
         raw_commands = msg.content.replace(",", " ").replace("\n", " ").split(" ")
         # Filter empty strings from split
         raw_commands = [c for c in raw_commands if c.strip()]
@@ -1570,7 +1603,7 @@ class Utility(commands.Cog):
                 description=description,
                 color=self.bot.error_color,
             )
-            view = discord.ui.View()
+            view = AuthorView(ctx.author.id) if isinstance(ctx, SlashContext) else discord.ui.View()
             view.add_item(utils.AcceptButton(custom_id="continue", emoji="✅"))
             view.add_item(utils.DenyButton(custom_id="abort", emoji="❌"))
 
@@ -1633,7 +1666,7 @@ class Utility(commands.Cog):
                 self.view.stop()
                 await interaction.response.defer()
 
-        view = discord.ui.View()
+        view = AuthorView(ctx.author.id) if isinstance(ctx, SlashContext) else discord.ui.View()
         view.add_item(LevelSelect())
 
         if message:
@@ -1664,7 +1697,7 @@ class Utility(commands.Cog):
             color=self.bot.main_color,
         )
 
-        view = discord.ui.View()
+        view = AuthorView(ctx.author.id) if isinstance(ctx, SlashContext) else discord.ui.View()
         view.add_item(utils.AcceptButton(custom_id="confirm", emoji="✅"))
         view.add_item(utils.DenyButton(custom_id="cancel", emoji="❌"))
 
