@@ -10,6 +10,7 @@ from discord.ext import commands
 from discord.ext.commands.view import StringView
 
 from core.models import getLogger
+from core.slash_autocomplete import SlashAutocomplete
 
 logger = getLogger(__name__)
 
@@ -315,6 +316,7 @@ class SlashCommandManager:
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.autocomplete = SlashAutocomplete(bot)
         self._synced = False
         self._synced_guild_id = None
         self._managed_commands = {}
@@ -472,8 +474,12 @@ class SlashCommandManager:
         used_names = set()
         option_specs = []
         choices = {}
+        autocompletes = {}
         if raw_arguments:
             option_specs.append(("arguments", "arguments", True, str))
+            autocomplete = self.autocomplete.callback(command, raw_arguments=True)
+            if autocomplete is not None:
+                autocompletes["arguments"] = autocomplete
         else:
             for parameter in parameters:
                 display_name = self._parameter_name(parameter.name, used_names)
@@ -484,6 +490,10 @@ class SlashCommandManager:
                 parameter_choices = self._parameter_choices(command, parameter)
                 if parameter_choices:
                     choices[parameter.name] = parameter_choices
+                else:
+                    autocomplete = self.autocomplete.callback(command, parameter)
+                    if autocomplete is not None:
+                        autocompletes[parameter.name] = autocomplete
 
         if has_attachment:
             used_names.add("attachment")
@@ -526,6 +536,8 @@ class SlashCommandManager:
             callback = app_commands.describe(**descriptions)(callback)
         if choices:
             callback = app_commands.choices(**choices)(callback)
+        if autocompletes:
+            callback = app_commands.autocomplete(**autocompletes)(callback)
         if renames:
             callback = app_commands.rename(**renames)(callback)
         return callback
