@@ -273,6 +273,7 @@ class Plugins(commands.Cog):
             await self.bot.load_extension(plugin.ext_string)
             logger.info("Loaded plugin: %s", plugin.ext_string.split(".")[-1])
             self.loaded_plugins.add(plugin)
+            await self.bot.slash_commands.refresh()
 
         except commands.ExtensionError as exc:
             logger.error("Plugin load failure: %s", plugin.ext_string, exc_info=True)
@@ -281,6 +282,7 @@ class Plugins(commands.Cog):
     async def unload_plugin(self, plugin: Plugin) -> None:
         try:
             await self.bot.unload_extension(plugin.ext_string)
+            await self.bot.slash_commands.refresh()
         except commands.ExtensionError as exc:
             raise exc
 
@@ -706,7 +708,10 @@ class Plugins(commands.Cog):
                 title=details["repository"],
             )
 
-            embed.add_field(name="Installation", value=f"```{self.bot.prefix}plugins add {name}```")
+            embed.add_field(
+                name="Installation",
+                value=f"```{self.bot.command_display_prefix}plugins add {name}```",
+            )
 
             embed.set_author(name=details["title"], icon_url=details.get("icon_url"), url=plugin.link)
 

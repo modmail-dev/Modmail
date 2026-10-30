@@ -11,6 +11,10 @@
             "description": "The id for the server you are hosting this bot for.",
             "required": true
         },
+        "MODMAIL_GUILD_ID": {
+            "description": "Optional separate inbox server where ticket channels and slash commands belong. Defaults to GUILD_ID.",
+            "required": false
+        },
         "OWNERS": {
             "description": "Comma separated user IDs of people that are allowed to use owner only commands. (eval).",
             "required": true
@@ -33,6 +37,16 @@
         },
         "REGISTRY_PLUGINS_ONLY": {
             "description": "If set to true, only plugins that are in the registry can be loaded.",
+            "required": false
+        },
+        "USE_SLASH_COMMANDS": {
+            "description": "Register Discord slash commands only in the configured Modmail inbox server. Disabling removes them.",
+            "value": "true",
+            "required": false
+        },
+        "ENABLE_PREFIX_COMMANDS": {
+            "description": "Enable legacy text-prefix commands and the privileged message-content intent.",
+            "value": "false",
             "required": false
         }
     }

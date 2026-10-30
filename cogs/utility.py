@@ -34,12 +34,29 @@ from core.models import (
 )
 from core.utils import DummyParam
 from core.paginator import EmbedPaginatorSession, MessagePaginatorSession
-
+from core.slash_commands import SlashContext
+from core.command_inputs import AuthorView, wait_for_reply
 
 logger = getLogger(__name__)
 
 
 class ModmailHelpCommand(commands.HelpCommand):
+    def get_destination(self):
+        return self.context if isinstance(self.context, SlashContext) else super().get_destination()
+
+    def get_command_signature(self, command):
+        if isinstance(self.context, SlashContext):
+            manager = getattr(self.context.bot, "slash_commands", None)
+            application_command = manager.application_command_for(command) if manager is not None else None
+            if application_command is not None:
+                options = []
+                if isinstance(application_command, discord.app_commands.Command):
+                    for parameter in application_command.parameters:
+                        option = f"{parameter.display_name}:<value>"
+                        options.append(option if parameter.required else f"[{option}]")
+                return " ".join([f"/{application_command.qualified_name}", *options])
+        return super().get_command_signature(command)
+
     async def command_callback(self, ctx, *, command=None):
         """Overwrites original command_callback to ensure `help` without any arguments
         returns with checks, `help all` returns without checks"""
@@ -50,6 +67,15 @@ class ModmailHelpCommand(commands.HelpCommand):
 
         if command == "all":
             command = None
+
+        if command is not None and isinstance(ctx, SlashContext):
+            manager = getattr(ctx.bot, "slash_commands", None)
+            if manager is not None and ctx.bot.inbox_guild_id is not None:
+                guild = discord.Object(id=ctx.bot.inbox_guild_id)
+                for application_command in ctx.bot.tree.walk_commands(guild=guild):
+                    if application_command.qualified_name == command:
+                        command = application_command.extras.get("modmail_legacy_command", command)
+                        break
 
         return await super().command_callback(ctx, command=command)
 
@@ -64,10 +90,15 @@ class ModmailHelpCommand(commands.HelpCommand):
             key=lambda c: (bot.command_perm(c.qualified_name), c.qualified_name),
         ):
             perm_level = bot.command_perm(cmd.qualified_name)
+            display_command = (
+                self.get_command_signature(cmd)
+                if isinstance(self.context, SlashContext)
+                else prefix + cmd.qualified_name
+            )
             if perm_level is PermissionLevel.INVALID:
-                format_ = f"`{prefix + cmd.qualified_name}` "
+                format_ = f"`{display_command}` "
             else:
-                format_ = f"`[{perm_level}] {prefix + cmd.qualified_name}` "
+                format_ = f"`[{perm_level}] {display_command}` "
 
             format_ += f"- {cmd.short_doc}\n" if cmd.short_doc else "- *No description.*\n"
             if not format_.strip():
@@ -109,7 +140,7 @@ class ModmailHelpCommand(commands.HelpCommand):
         return embeds
 
     def process_help_msg(self, help_: str):
-        return help_.format(prefix=self.context.clean_prefix) if help_ else "No help message."
+        return help_.replace("{prefix}", self.context.clean_prefix) if help_ else "No help message."
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -379,7 +410,10 @@ class Utility(commands.Cog):
 
         embed.add_field(
             name="Project Sponsors",
-            value=f"Checkout the people who supported Modmail with command `{self.bot.prefix}sponsors`!",
+            value=(
+                "Checkout the people who supported Modmail with command "
+                f"`{self.bot.command_display_prefix}sponsors`!"
+            ),
             inline=False,
         )
 
@@ -760,6 +794,15 @@ class Utility(commands.Cog):
         current = self.bot.prefix
         embed = discord.Embed(title="Current prefix", color=self.bot.main_color, description=f"{current}")
 
+        if not self.bot.config["enable_prefix_commands"]:
+            embed.title = "Prefix commands are disabled"
+            embed.description = (
+                "Slash commands and `@bot command` mentions are active. Set "
+                "`ENABLE_PREFIX_COMMANDS=true` in the environment and restart the bot "
+                "to enable the configured legacy prefix."
+            )
+            return await ctx.send(embed=embed)
+
         if prefix is None:
             await ctx.send(embed=embed)
         else:
@@ -837,7 +880,10 @@ class Utility(commands.Cog):
                             except Exception:
                                 valid = False
                         if not valid:
-                            example = f"`{self.bot.prefix}config set snoozed_category_id <category_id>`"
+                            example = (
+                                f"`{self.bot.command_display_prefix}config set "
+                                "snoozed_category_id <category_id>`"
+                            )
                             embed.add_field(
                                 name="Action required",
                                 value=(
@@ -929,7 +975,10 @@ class Utility(commands.Cog):
                     description=f"`{key}` is an invalid key.",
                 )
                 embed.set_footer(
-                    text=f'Type "{self.bot.prefix}config options" for a list of config variables.'
+                    text=(
+                        f'Type "{self.bot.command_display_prefix}config options" '
+                        "for a list of config variables."
+                    )
                 )
 
         else:
@@ -1007,7 +1056,11 @@ class Utility(commands.Cog):
             return await ctx.send(embed=embed)
 
         def fmt(val):
-            return UnseenFormatter().format(val, prefix=self.bot.prefix, bot=self.bot)
+            return UnseenFormatter().format(
+                val,
+                prefix=self.bot.command_display_prefix,
+                bot=self.bot,
+            )
 
         index = 0
         embeds = []
@@ -1107,7 +1160,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color,
                 description="You dont have any aliases at the moment.",
             )
-            embed.set_footer(text=f'Do "{self.bot.prefix}help alias" for more commands.')
+            embed.set_footer(text=f'Do "{self.bot.command_display_prefix}help alias" for more commands.')
             embed.set_author(
                 name="Aliases",
                 icon_url=self.bot.get_guild_icon(guild=ctx.guild, size=128),
@@ -1156,7 +1209,7 @@ class Utility(commands.Cog):
                 color=self.bot.error_color,
                 description="Invalid multi-step alias, try wrapping each steps in quotes.",
             )
-            embed.set_footer(text=f'See "{self.bot.prefix}alias add" for more details.')
+            embed.set_footer(text=f'See "{self.bot.command_display_prefix}alias add" for more details.')
             return embed
 
         if len(values) > 25:
@@ -1480,8 +1533,8 @@ class Utility(commands.Cog):
         await ctx.send(embed=embed)
 
         try:
-            msg = await self.bot.wait_for(
-                "message",
+            msg = await wait_for_reply(
+                ctx,
                 check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
                 timeout=120.0,
             )
@@ -1491,6 +1544,8 @@ class Utility(commands.Cog):
                 embed=discord.Embed(title="Error", description="Timed out.", color=self.bot.error_color)
             )
 
+        if msg.content.strip().lower() == "cancel":
+            return await ctx.send("Cancelled. No changes have been applied.")
         raw_commands = msg.content.replace(",", " ").replace("\n", " ").split(" ")
         # Filter empty strings from split
         raw_commands = [c for c in raw_commands if c.strip()]
@@ -1548,7 +1603,7 @@ class Utility(commands.Cog):
                 description=description,
                 color=self.bot.error_color,
             )
-            view = discord.ui.View()
+            view = AuthorView(ctx.author.id) if isinstance(ctx, SlashContext) else discord.ui.View()
             view.add_item(utils.AcceptButton(custom_id="continue", emoji="✅"))
             view.add_item(utils.DenyButton(custom_id="abort", emoji="❌"))
 
@@ -1611,7 +1666,7 @@ class Utility(commands.Cog):
                 self.view.stop()
                 await interaction.response.defer()
 
-        view = discord.ui.View()
+        view = AuthorView(ctx.author.id) if isinstance(ctx, SlashContext) else discord.ui.View()
         view.add_item(LevelSelect())
 
         if message:
@@ -1642,7 +1697,7 @@ class Utility(commands.Cog):
             color=self.bot.main_color,
         )
 
-        view = discord.ui.View()
+        view = AuthorView(ctx.author.id) if isinstance(ctx, SlashContext) else discord.ui.View()
         view.add_item(utils.AcceptButton(custom_id="confirm", emoji="✅"))
         view.add_item(utils.DenyButton(custom_id="cancel", emoji="❌"))
 
@@ -2331,7 +2386,9 @@ class Utility(commands.Cog):
                 discord.Embed(
                     title="No autotrigger set",
                     color=self.bot.error_color,
-                    description=f"Use `{self.bot.prefix}autotrigger add` to add new autotriggers.",
+                    description=(
+                        f"Use `{self.bot.command_display_prefix}autotrigger add` " "to add new autotriggers."
+                    ),
                 )
             )
 
