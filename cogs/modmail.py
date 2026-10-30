@@ -1334,23 +1334,29 @@ class Modmail(commands.Cog):
     @checks.has_permissions(PermissionLevel.SUPPORTER)
     @checks.thread_only()
     async def msglink(self, ctx, message_id: int):
-        """Retrieves the link to a message in the current thread."""
-        found = False
-        for recipient in ctx.thread.recipients:
+        """Retrieve a link using a staff-thread or recipient DM message ID.
+
+        DM links can only be opened by the recipient and the bot.
+        """
+        inaccessible = False
+        for destination in (ctx.channel, *ctx.thread.recipients):
             try:
-                message = await recipient.fetch_message(message_id)
-                found = True
-                break
+                message = await destination.fetch_message(message_id)
             except discord.NotFound:
                 continue
-        if not found:
-            embed = discord.Embed(
-                color=self.bot.error_color,
-                description="Message not found or no longer exists.",
+            except discord.Forbidden:
+                inaccessible = True
+                continue
+            await ctx.send(embed=discord.Embed(color=self.bot.main_color, description=message.jump_url))
+            return
+
+        description = "Message not found or no longer exists."
+        if inaccessible:
+            description = (
+                "I couldn't access the message. Check my Read Message History permission "
+                "in this thread and my access to the recipients' DMs."
             )
-        else:
-            embed = discord.Embed(color=self.bot.main_color, description=message.jump_url)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=discord.Embed(color=self.bot.error_color, description=description))
 
     @commands.command()
     @checks.has_permissions(PermissionLevel.SUPPORTER)
